@@ -53,9 +53,14 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     extern virtual task mbox_push_datain();
     extern virtual task mbox_read_resp_data();
 
-    constraint sha_accel_op_c { sha_accel_op_rand.mailbox_mode == 1'b1; }
-    constraint mbox_cmd_c { sha_accel_op_rand.sha512_mode == 1'b0 -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_REQ;
-                            sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_REQ; 
+    constraint sha_accel_op_c { sha_accel_op_rand.mailbox_mode dist {1 := 10,
+                                                                     0 := 1}; }
+
+    constraint mbox_cmd_c { (sha_accel_op_rand.sha512_mode == 1'b0 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_REQ;
+                            (sha_accel_op_rand.sha512_mode == 1'b1 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_REQ; 
+                            (sha_accel_op_rand.sha512_mode == 1'b0 & sha_accel_op_rand.mailbox_mode == 1'b0) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_STREAM_REQ;
+                            (sha_accel_op_rand.sha512_mode == 1'b1 & sha_accel_op_rand.mailbox_mode == 1'b0) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_STREAM_REQ; 
+                            
                             solve sha_accel_op_rand before mbox_op_rand; }
     constraint mbox_resp_dlen_c {sha_accel_op_rand.sha512_mode == 1'b0 -> mbox_resp_expected_dlen == 32'd48;
                                  sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_resp_expected_dlen == 32'd64; 
@@ -167,7 +172,9 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
     //sha_block_start_dw = this.start_addr >> 2;
 
     //write the start address into the first dword
+    reg_model.mbox_csr_rm.mbox_datain_sem.get();
     reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(this.start_addr), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+    reg_model.mbox_csr_rm.mbox_datain_sem.put();
     report_reg_sts(reg_sts, "mbox_datain");
 
     //pad the data until start address
@@ -183,7 +190,9 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
         for (ii=most_sig_dword; ii >= 0 ; ii--) begin
             data = sha_block_data[ii];
             `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
+            reg_model.mbox_csr_rm.mbox_datain_sem.get();
             reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+            reg_model.mbox_csr_rm.mbox_datain_sem.put();
             report_reg_sts(reg_sts, "mbox_datain");
         end
     end

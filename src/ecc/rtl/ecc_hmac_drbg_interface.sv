@@ -209,7 +209,6 @@ module ecc_hmac_drbg_interface#(
         end
         else
             if (hmac_done_edge) begin
-                /* verilator lint_off CASEINCOMPLETE */
                 unique case (state_reg) inside
                     LFSR_ST:        lfsr_seed_reg   <= hmac_drbg_result[147 : 0];
                     LAMBDA_ST:      lambda_reg      <= hmac_drbg_result;
@@ -217,8 +216,14 @@ module ecc_hmac_drbg_interface#(
                     MASKING_RND_ST: masking_rnd_reg <= hmac_drbg_result;
                     KEYGEN_ST:      drbg_reg        <= hmac_drbg_result;
                     SIGN_ST:        drbg_reg        <= hmac_drbg_result;
+                    default: begin
+                        lambda_reg <= '0;
+                        scalar_rnd_reg <= '0;
+                        masking_rnd_reg <= '0;
+                        drbg_reg <= '0;
+                        lfsr_seed_reg <= LFSR_INIT_SEED;
+                    end
                 endcase
-                /* verilator lint_on CASEINCOMPLETE */
             end
     end //reg_update
 

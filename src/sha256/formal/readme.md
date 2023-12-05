@@ -1,0 +1,61 @@
+# SHA256
+Date: 25.07.2023
+
+Author: LUBIS EDA
+
+## Folder Structure
+The following subdirectories are part of the main directory **formal**
+
+- model: Contains the high level abstracted model 
+- properties: Contains the assertion IP(AIP) named as **fv_sha256.sv** and the constraints in place for the respective AIP **fv_constraints.sv**
+
+
+## DUT Overview
+
+The DUT sha256_core has the primary inputs and primary outputs as shown below.
+
+| S.No | Port              | Direction | Description                                                                       |
+| ---- | ----------------- | --------- | --------------------------------------------------------------------------------- |
+| 1    | clk               | input     | The positive edge of the clk is used for all the signals                          |
+| 2    | reset_n           | input     | The reset signal is active low and resets the core                                |
+| 3    | zeroize           | input     | The core is reseted when this signal is triggered.                                |
+| 4    | init_cmd          | input     | The core is initialised with respective mode constants and processes the message. |
+| 5    | next_cmd          | input     | The core processes the message block with the previously computed results         |
+| 6    | mode              | input     | Define which hash function: SHA256,SHA224.                                        |
+| 7    | block_msg[511:0]  | input     | The padded block message                                                          |
+| 8    | ready             | output    | When triggered indicates that the core is ready                                   |
+| 9    | digest[255:0]     | output    | The hashed value of the given message block                                       |
+| 10   | digest_valid      | output    | When triggered indicates that the computed digest is ready                        |
+
+When the respective mode is selected and initalised the core iterates for 63 rounds to process the hash value, if the next is triggered then the previous values of the **H** registers are in place for processing the hash value. The digest is always generated of 256 bits, in which if the mode changes to 224 then from MSB 224 bits is a valid output and rest is garbage value.
+## Assertion IP Overview
+
+The Assertion IP signals are bound with the respective signals in the dut, where for the **rst** in binded with the DUT (reset_n && !zeroize), which ensures the reset functionality. And another AIP signal block_in_valid is triggered whenever the init or next is high.
+
+- reset_a: Checks that all the resgiters are resetted and the state is idle, with the ready to high.
+
+- DONE_to_IDLE_a: Checks the necessary registers, outputs holds the values when state transits from done to idle.
+
+- SHA_Rounds_to_DONE_a: Checks if the rounds are done then the registers are updated correctly.
+
+- SHA_Rounds_to_SHA_Rounds_before_16_a: Checks if the the rounds less than 16 then the necessary registers are updated correctly and the round increments.
+
+- SHA_Rounds_to_SHA_Rounds_after_16_a: Checks if the rounds are greater than 16 and less than 80 then the respective registers are updated correctly and the round increments.
+
+- IDLE_to_SHA_Rounds_next_a: Checks if the state is in idle and there is no init signal and the next signal asserts then the register holds the past values.
+
+- IDLE_to_SHA_Rounds_256_a: Checks if the state is in idle and there is init signal and the mode selected is 256.
+
+- IDLE_to_SHA_Rounds_224_a: Checks if the state is in idle and there is init signal and the mode selected is 224.
+
+- IDLE_wait_a: Checks if there isn't either init or next signal triggered in idle state then the state stays in idle and holds the past values and the core is ready.
+- 
+## Reproduce results
+
+The AIP has been tested with two major FV tools. For both tools proves pass in less then 2 hour and coverage is at 100%. 
+
+For reproducing the results:
+Load the AIP, sha256_core and fv_constraints together in your formal tool. 
+
+Feel free to reach out to contact@lubis-eda.com to request the loadscripts. 
+

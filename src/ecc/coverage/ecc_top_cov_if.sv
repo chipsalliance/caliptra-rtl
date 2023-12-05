@@ -34,6 +34,7 @@ interface ecc_top_cov_if
     logic error_flag;
     logic privkey_input_outofrange;
     logic r_output_outofrange;
+    logic s_output_outofrange;
     logic r_input_outofrange;
     logic s_input_outofrange;
     logic pubkeyx_input_outofrange;
@@ -93,6 +94,7 @@ interface ecc_top_cov_if
     assign error_flag = ecc_top.ecc_dsa_ctrl_i.error_flag;
     assign privkey_input_outofrange = ecc_top.ecc_dsa_ctrl_i.privkey_input_outofrange;
     assign r_output_outofrange = ecc_top.ecc_dsa_ctrl_i.r_output_outofrange;
+    assign s_output_outofrange = ecc_top.ecc_dsa_ctrl_i.s_output_outofrange;
     assign r_input_outofrange = ecc_top.ecc_dsa_ctrl_i.r_input_outofrange;
     assign s_input_outofrange = ecc_top.ecc_dsa_ctrl_i.s_input_outofrange;
     assign pubkeyx_input_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_input_outofrange;
@@ -118,6 +120,7 @@ interface ecc_top_cov_if
         error_flag_cp: coverpoint error_flag;
         privkey_input_outofrange_cp: coverpoint privkey_input_outofrange;
         r_output_outofrange_cp: coverpoint r_output_outofrange;
+        s_output_outofrange_cp: coverpoint s_output_outofrange;
         r_input_outofrange_cp: coverpoint r_input_outofrange;
         s_input_outofrange_cp: coverpoint s_input_outofrange;
         pubkeyx_input_outofrange_cp: coverpoint pubkeyx_input_outofrange;

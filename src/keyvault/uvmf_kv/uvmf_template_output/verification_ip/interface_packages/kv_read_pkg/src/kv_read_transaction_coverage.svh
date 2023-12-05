@@ -30,7 +30,7 @@
 //
 //
 
-covergroup rd_data(input logic rd_data_bit);
+covergroup rd_data with function sample(input logic rd_data_bit);
   option.per_instance = 1;
   value: coverpoint rd_data_bit;
   transition:  coverpoint rd_data_bit {
@@ -55,7 +55,7 @@ class kv_read_transaction_coverage #(
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
-  rd_data rd_data_bus[KV_DATA_W];
+  rd_data rd_data_bus[KV_DATA_W-1:0];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -83,6 +83,7 @@ class kv_read_transaction_coverage #(
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     kv_read_transaction_cg=new;
+    foreach(coverage_trans.read_data[i]) rd_data_bus[i] = new;
     //`uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that transaction variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
   endfunction
 
@@ -92,6 +93,7 @@ class kv_read_transaction_coverage #(
   //
   function void build_phase(uvm_phase phase);
     kv_read_transaction_cg.set_inst_name($sformatf("kv_read_transaction_cg_%s",get_full_name()));
+    foreach(coverage_trans.read_data[i]) rd_data_bus[i].set_inst_name($sformatf("rd_data_bus[%0d]_%s",i,get_full_name()));
   endfunction
 
   // ****************************************************************************
@@ -104,11 +106,8 @@ class kv_read_transaction_coverage #(
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
 
-    foreach(rd_data_bus[i]) rd_data_bus[i] = new(coverage_trans.read_data[i]);
-    foreach(rd_data_bus[i]) rd_data_bus[i].set_inst_name($sformatf("rd_data_bus[%0d]_%s",i,get_full_name()));
-
     kv_read_transaction_cg.sample();
-    foreach(rd_data_bus[i]) rd_data_bus[i].sample();
+    foreach(rd_data_bus[i]) rd_data_bus[i].sample(coverage_trans.read_data[i]);
   endfunction
 
 endclass

@@ -32,7 +32,15 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_status_status extends soc_ifc_reg_dela
                 return;
             end
         end
-        if (rm.mbox_lock.lock.get_mirrored_value()) begin
+        if (rm.mbox_fn_state_sigs.mbox_error) begin
+            // NOTE: This is due to a logic bug in mbox.sv. Regular state transitions
+            //       take priority over error state transitions, so if an arc_..._ERROR state
+            //       goes high at the same time as that state's normal arc_<next_state> signal,
+            //       RTL won't go to the ERROR state as predicted.
+            //       Flag this as an error here, that will cause regression failures until fixed.
+            `uvm_error("SOC_IFC_REG_DELAY_JOB", $sformatf("While running [%s] (scheduled due to access against mbox_status on map [%p]), functional state value detected as: %p. Skipping delay job state transitions. This is a known RTL bug in mbox.sv", this.get_type_name(), map.get_name(), rm.mbox_fn_state_sigs))
+        end
+        else if (rm.mbox_lock.lock.get_mirrored_value()) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             if (state_nxt == MBOX_EXECUTE_SOC) begin
                 rm.mbox_fn_state_sigs = '{soc_done_stage: 1'b1, default: 1'b0};

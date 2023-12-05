@@ -32,6 +32,7 @@ class soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence extends soc_ifc_
   `uvm_object_utils( soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence )
 
   extern virtual function create_seqs();
+  extern virtual function randomize_seqs();
 
 endclass
 
@@ -41,4 +42,12 @@ function soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::create_seqs(
     if(!$cast(soc_ifc_env_cptra_mbox_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_REG_AXS_INVALID_SMALL", "soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::create_seqs() - <seq_type>.create_object() failed")
     obj = soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence_t::get_type().create_object("soc_ifc_env_soc_handler_seq");
     if(!$cast(soc_ifc_env_soc_handler_seq,obj)) `uvm_fatal("SOC_IFC_TOP_MBOX_REG_AXS_INVALID_SMALL", "soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::create_seqs() - <seq_type>.create_object() failed")
+endfunction
+
+function soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::randomize_seqs();
+    if(!soc_ifc_env_cptra_mbox_seq.randomize())
+        `uvm_fatal("SOC_IFC_TOP_MBOX_REG_AXS_INVALID_SMALL", $sformatf("soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::body() - %s randomization failed", soc_ifc_env_cptra_mbox_seq.get_type_name()));
+    soc_ifc_env_cptra_mbox_seq.mbox_sts_exp_error = 1;
+    if(!soc_ifc_env_soc_handler_seq.randomize())
+        `uvm_fatal("SOC_IFC_TOP_MBOX_REG_AXS_INVALID_SMALL", $sformatf("soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence::body() - %s randomization failed", soc_ifc_env_soc_handler_seq.get_type_name()));
 endfunction

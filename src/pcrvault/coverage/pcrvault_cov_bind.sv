@@ -14,8 +14,8 @@
 
 
 module pcrvault_cov_bind;
-    //`ifdef FCOV
-    bind dut pcrvault_cov_if i_pcrvault_cov_if(.*);
-    bind dut pcrvault_cov_props i_pcrvault_cov_props(.*);
-    //`endif
+    `ifdef FCOV
+    bind pv pcrvault_cov_if i_pcrvault_cov_if(.*);
+    bind pv pcrvault_cov_props i_pcrvault_cov_props(.*);
+    `endif
 endmodule

@@ -150,6 +150,7 @@ import el2_pkg::*;
    input  logic [77:0]               iccm_rd_data_ecc,   // Data + ECC read from ICCM.
 
    output logic                      ifu_iccm_rd_ecc_single_err, // This fetch has a single ICCM ecc  error.
+   output logic                      cptra_iccm_dma_rd_ecc_single_err, // Active DMA access has a single ICCM ecc  error.
    output logic                      cptra_iccm_rd_ecc_double_err, // Output added for Caliptra reporting
 
 // Perf counter sigs
@@ -248,6 +249,8 @@ import el2_pkg::*;
    logic ifc_fetch_req_f;
    logic ifc_fetch_req_f_raw;
    logic [1:0] iccm_rd_ecc_double_err;  // This fetch has an iccm double error.
+   logic                      iccm_dma_rd_ecc_single_err; // Active DMA access has a single ICCM ecc  error.
+   logic                      iccm_dma_rd_ecc_double_err; // Active DMA access has a double ICCM ecc  error.
 
    logic ifu_async_error_start;
 
@@ -282,7 +285,8 @@ import el2_pkg::*;
       assign ifu_bp_inst_mask_f = 1'b1;
    end
 
-   assign cptra_iccm_rd_ecc_double_err = |iccm_rd_ecc_double_err;
+   assign cptra_iccm_dma_rd_ecc_single_err = iccm_dma_rd_ecc_single_err;
+   assign cptra_iccm_rd_ecc_double_err = |iccm_rd_ecc_double_err || |iccm_dma_rd_ecc_double_err;
 
    // aligner
 

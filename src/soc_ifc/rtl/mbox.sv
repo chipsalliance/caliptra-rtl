@@ -269,14 +269,13 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
         MBOX_RDY_FOR_DLEN: begin
             if (arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_DATA;
+                rst_mbox_wrptr = 1;
             end
             else if (arc_MBOX_RDY_FOR_DLEN_MBOX_ERROR) begin
                 mbox_fsm_ns = MBOX_ERROR;
@@ -284,8 +283,6 @@ always_comb begin : mbox_fsm_combo
             end
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -312,8 +309,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -326,8 +321,6 @@ always_comb begin : mbox_fsm_combo
             inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
             end
             else if (arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
@@ -342,8 +335,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -356,8 +347,6 @@ always_comb begin : mbox_fsm_combo
             inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver));
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
             end
             else if (arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
@@ -372,8 +361,6 @@ always_comb begin : mbox_fsm_combo
                 mbox_fsm_ns = MBOX_IDLE;
                 inc_wrptr = 0;
                 inc_rdptr = 0;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -381,8 +368,6 @@ always_comb begin : mbox_fsm_combo
             mbox_protocol_error_nxt = '{default: 0};
             if (arc_FORCE_MBOX_UNLOCK) begin
                 mbox_fsm_ns = MBOX_IDLE;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
                 mbox_protocol_error_nxt = '{default: 0};
             end
         end
@@ -415,6 +400,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_wr_full <= '0;
         mbox_rdptr <= '0;
         mbox_rd_full <= '0;
+        mbox_rd_valid_f <= '0;
         mbox_protocol_sram_rd_f <= '0;
         dlen_in_dws <= '0;
         mbox_protocol_error <= '0;
@@ -451,8 +437,11 @@ always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.
 always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & req_data.write;
 always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$clog2(DEPTH)+1:2];
 
-always_comb req_hold = (dir_req_dv_q & ~req_data.write) | 
-                       (dir_req_dv & sha_sram_req_dv) |
+                       //Direct read from uC, stall 1 clock dv_q will be de-asserted second clock
+always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) |
+                       //Direct access from uC while sha accelerator is reading
+                       (dir_req_dv & ~dir_req_rd_phase & sha_sram_req_dv) |
+                       //in an update cycle for dataout register
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
 always_comb sha_sram_hold = 1'b0;
@@ -598,7 +587,7 @@ mbox_csr1(
 );
 
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, rst_b)
-`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
+//`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
 `CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data.soc_req), clk, rst_b)
 
 endmodule

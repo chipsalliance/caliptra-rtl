@@ -66,7 +66,9 @@ enum mbox_cmd_e {
     MBOX_CMD_FMC_UPDATE = 0xba5eba11,
     MBOX_CMD_RT_UPDATE  = 0xbabecafe,
     MBOX_CMD_SHA384_REQ = 0x40C0FFEE,
-    MBOX_CMD_SHA512_REQ = 0x41C0FFEE
+    MBOX_CMD_SHA512_REQ = 0x41C0FFEE,
+    MBOX_CMD_SHA384_STREAM_REQ = 0x42C0FFEE,
+    MBOX_CMD_SHA512_STREAM_REQ = 0x43C0FFEE
 };
 
 // Boundaries against which the incoming remote FW images are aligned

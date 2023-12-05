@@ -33,7 +33,7 @@ class soc_ifc_env_cptra_mbox_interference_handler_sequence extends soc_ifc_env_c
 
   extern virtual task mbox_wait_for_command(output op_sts_e op_sts);
   extern virtual task mbox_wait_and_force_unlock();
-  extern virtual task burst_random_reg_accesses(uvm_event stop);
+  extern virtual task burst_random_reg_accesses(uvm_event stop, ref process this_proc);
 
   rand uvm_reg_data_t data;
   rand uvm_reg_addr_t mem_offset;
@@ -120,29 +120,39 @@ endtask
 task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_unlock();
     uvm_reg_data_t data;
     mbox_fsm_state_e state;
-    uvm_event force_unlock_delay_complete = new("force_unlock_delay_complete");
+    process rand_reg_axs_proc;
+    uvm_event halt_rand_reg_accesses = new("halt_rand_reg_accesses");
 
     // Start the unlock proc prior to burst accesses so that the parent
     // sequence knows to wait for AHB traffic to complete before ending the
     // sequence
     unlock_proc_active = 1'b1;
+    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Starting mbox_wait_and_force_unlock with inject_force_unlock [%d] force_unlock_delay_cycles [%0d]", inject_force_unlock, force_unlock_delay_cycles), UVM_MEDIUM)
 
     // Wait...
     // If force unlock is disabled, this task will only exit upon detecting
     // an ERROR that requires servicing, whereupon force_unlock will still
     // be set to recover. In either case, only an event resulting in force
     // unlock causes this routine to break
-    force_unlock_delay_complete.reset();
+    halt_rand_reg_accesses.reset();
     fork
         begin
+            wait(rand_reg_axs_proc != null);
             if (inject_force_unlock) begin
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(force_unlock_delay_cycles);
+                halt_rand_reg_accesses.trigger();
+                while(halt_rand_reg_accesses.get_num_waiters() == 0)
+                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
             end
             else begin
                 `uvm_info("CPTRA_MBOX_HANDLER", "Not injecting force unlock - burst random reg accesses until any err interrupt is observed", UVM_HIGH)
                 forever begin
                     if (err_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
                         `uvm_info("CPTRA_MBOX_HANDLER", "Received soc_ifc_err_intr, clearing and (if needed) proceeding to mbox_unlock", UVM_MEDIUM)
+                        // Pause rand reg accesses while servicing interrupt
+                        halt_rand_reg_accesses.trigger();
+                        while(halt_rand_reg_accesses.get_num_waiters() == 0)
+                            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
                         // Read and clear any error interrupts
                         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
                         report_reg_sts(reg_sts, "error_internal_intr_r");
@@ -152,6 +162,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
                         err_rsp_count = 0;
                         // Next, check if we need to proceed to mbox_unlock step
                         if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()]) begin
+                            halt_rand_reg_accesses.reset();
                             continue;
                         end
                         reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -168,9 +179,9 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_and_force_u
                     end
                 end
             end
-            force_unlock_delay_complete.trigger();
+            rand_reg_axs_proc.kill();
         end
-        burst_random_reg_accesses(force_unlock_delay_complete);
+        burst_random_reg_accesses(halt_rand_reg_accesses, rand_reg_axs_proc);
     join
 
     // After waiting the requisite number of cycles, check mbox_status.
@@ -211,7 +222,7 @@ endtask
 //              intermixed with random delays, until the input event
 //              is triggered.
 //==========================================
-task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_accesses(uvm_event stop);
+task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_accesses(uvm_event stop, ref process this_proc);
     int unsigned burst_length;
     int unsigned delay_cycles;
 
@@ -225,6 +236,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_acce
     uvm_reg_data_t rand_data;
     uvm_status_e   rand_sts;
 
+    this_proc = process::self();
     reg_model.soc_ifc_AHB_map.get_registers(regs, UVM_HIER);
 
     // Registers we won't randomly access due to side-effects
@@ -249,6 +261,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_acce
                                                               delay_cycles inside {[1:500]};})
             `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize burst_length and delay_cycles")
         else begin
+            `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Beginning random AHB burst with delay_cycles [%d] burst_length [%d]", delay_cycles, burst_length), UVM_HIGH)
             for (ii=0; ii<burst_length; ii++) begin: XFER_LOOP
                 // Do random access to soc_ifc to trigger arb logic as cptra sequence processes
                 // incoming mailbox command
@@ -258,17 +271,17 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::burst_random_reg_acce
                     `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize reg AHB transfer in burst_random_reg_accesses")
                 end
                 else begin
-                    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Doing random AHB access of type %p to %s, which has is_busy(): %d", rand_RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_DEBUG)
+                    `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Doing random AHB access of type %p to %s, which has is_busy(): %d", rand_RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_FULL)
                     if (rand_RnW == AHB_READ) regs[reg_select].read (rand_sts, rand_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
                     else                      regs[reg_select].write(rand_sts, rand_data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
                     report_reg_sts(rand_sts, regs[reg_select].get_name());
                 end
-                if (stop.is_on()) return;
+                if (stop.is_on()) stop.wait_off();
             end
         end
         for (ii=delay_cycles; ii > 0; ii--) begin
             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-            if (stop.is_on()) return;
+            if (stop.is_on()) stop.wait_off();
         end
     end
 endtask

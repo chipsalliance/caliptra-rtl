@@ -36,6 +36,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
+#include "wdt.h"
 
 /* --------------- Global symbols/typedefs --------------- */
 extern uintptr_t STACK;
@@ -142,7 +143,7 @@ void caliptra_rt() {
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
     // Initialize rand num generator
-    VPRINTF(LOW,"\nUsing random seed = %d\n\n", MY_RANDOM_SEED);
+    VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
     // Runtime flow -- set ready for RT
@@ -154,71 +155,64 @@ void caliptra_rt() {
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
     //Generate constrained random WDT timer periods
-    wdt_rand_t1_val = rand() % 0xfff;
-    wdt_rand_t2_val = rand() % 0xfff;
+    wdt_rand_t1_val = rand() % 0xfff + 0x5;
+    wdt_rand_t2_val = rand() % 0xfff + 0x5;
     
     while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode
         VPRINTF(LOW, "Restarting WDT in cascade mode\n");
-        //Enable timer1 to start cascade mode
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
-        //Set timer1 period to a small random value, so core can see timer1 timing out
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-        //Restart timer1
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
+        // //Enable timer1 to start cascade mode
+        configure_wdt_cascade(wdt_rand_t1_val, 0x00000000, 0xffffffff, 0xffffffff);
+        service_t1_intr();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
-        //Clear timer1 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        //Disable timers before next testing
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, 0);
+        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, 0);
 
-        //Program timer1 and 2 periods to <= 0x100 to test NMI generation
-        wdt_rand_t1_val = rand() % 0x100;
-        wdt_rand_t2_val = rand() % 0x100;
-        //WDT cascade mode with t2 timeout
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, !SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
-        // lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
-    
+        //Program timer1 and 2 periods to <= 0x100 to test NMI generation. First check if there is any pending timer1 interrupt. In a corner case scenario, timer1 can timeout a second time (if the period is small enough)
+        //before its timeout value is changed in prep for NMI testing. In that case, the subsequent timer1 interrupt will not be serviced resulting in a hang
+        wdt_rand_t1_val = (rand() % 0x100) + 0x5;
+        wdt_rand_t2_val = (rand() % 0x100) + 0x5;
+
+        if (lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK)
+            lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+
+        // //WDT cascade mode with t2 timeout
+        configure_wdt_cascade(wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
         //Don't service interrupts so it can timeout and cause NMI
     }
     else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_INDEPENDENT){
-        VPRINTF(LOW, "Restarting WDT in independent mode\n");
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, wdt_rand_t1_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0x00000000);
-
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, wdt_rand_t2_val);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0x00000000);
-
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK);
+        
+        //-------------------------------------------
+        //Test independent mode - both timers enabled
+        //-------------------------------------------
+        configure_wdt_independent(BOTH_TIMERS_EN, wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
 
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK));
         //Reset timer1 period to avoid hangs in test
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_0, 0xffffffff);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_TIMEOUT_PERIOD_1, 0xffffffff);
+        set_default_t1_period();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK));
-        //Clear timer1 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        service_t1_intr();
         cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK;
 
         //Reset timer2 period to avoid hangs in test
         while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_0, 0xffffffff);
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_1, 0xffffffff);
+        set_default_t2_period();
 
-        while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK));
-        //Clear timer2 intr
-        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK);
+        service_t2_intr();
         cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
 
+        //-------------------------------------------
+        //Test independent mode - only timer2 enabled
+        //-------------------------------------------
+        configure_wdt_independent(T1_DIS_T2_EN, wdt_rand_t1_val, 0x00000000, wdt_rand_t2_val, 0x00000000);
+        
+        //Reset timer2 period to avoid hangs in test
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
+        set_default_t2_period();
+
+        service_t2_intr();
+        cptra_intr_rcv.soc_ifc_error |= SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK;
     }
 #endif
     // Initialization
@@ -331,19 +325,57 @@ void caliptra_rt() {
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
+                // Always check mbox FSM state at new command entry to detect
+                // previously-handled error scenarios (FSM is IDLE) or new error
+                // injection (FSM is in ERROR)
                 fsm_chk = soc_ifc_chk_execute_uc();
                 if (fsm_chk != 0) {
                     if (fsm_chk == 0xF) {
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                         } else {
-                            VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                            VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
                         }
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        // This oftens occurs alongside the cmd_fail bit in error injection tests...
+                        if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {
+                            CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (inv dev) after servicing\n");
+                        }
                     }
                     continue;
+                }
+                // Clear any uncorrectable ECC error interrupts that may have held over from the previous operation
+                // This can happen after the command flow is transferred back to SOC
+                // if the ECC error occurred at address 0, since ending the flow triggers
+                // rst_mbox_rdptr and a final read from 0. This might be missed by the above
+                // soc_ifc_error handler.
+                // There might also be vestigial cmd_fail/inv_dev failures held over from a previous
+                // invalid reg_axs sequence... clear those too
+                if (cptra_intr_rcv.soc_ifc_error & (SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK |
+                                                    SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK |
+                                                    SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK )) {
+                    CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK &
+                                                                         ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK &
+                                                                         ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
+                    // Run the FSM check once more for late-arrival of errors
+                    // that may correlate with the observed error interrupt
+                    fsm_chk = soc_ifc_chk_execute_uc();
+                    if (fsm_chk) {
+                        if (fsm_chk == 0xF) {
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        }
+                        continue;
+                    }
+                }
+                // Any other errors that are flagged at this point are unexpected and should cause a test failure
+                if (cptra_intr_rcv.soc_ifc_error) {
+                    VPRINTF(ERROR, "Unexpected err intr 0x%x\n", cptra_intr_rcv.soc_ifc_error);
+                    SEND_STDOUT_CTRL(0x1);
+                    while(1);
                 }
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
@@ -408,6 +440,35 @@ void caliptra_rt() {
                         }
                         soc_ifc_sha_accel_clr_lock();
                     }
+                    else if ((op.cmd == MBOX_CMD_SHA384_STREAM_REQ) | (op.cmd == MBOX_CMD_SHA512_STREAM_REQ)) {
+                        enum sha_accel_mode_e mode;
+                        mode = (op.cmd == MBOX_CMD_SHA384_STREAM_REQ) ? SHA_STREAM_384 : SHA_STREAM_512;
+                        //First dword contains the start address
+                        temp = soc_ifc_mbox_read_dataout_single();
+                        //ignore the bytes used for start address
+                        op.dlen = op.dlen - 4;
+                        //Acquire SHA Accel lock
+                        soc_ifc_sha_accel_acquire_lock();
+                        soc_ifc_sha_accel_wr_mode(mode);
+                        //write dlen in bytes
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), op.dlen);
+                        //Stream the KAT to the sha accelerator
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DATAIN), read_data);
+                        }
+                        soc_ifc_sha_accel_execute();
+                        soc_ifc_sha_accel_poll_status();
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
+                        //read the digest and write it back to the mailbox
+                        reg_addr = CLP_SHA512_ACC_CSR_DIGEST_0;
+                        while (reg_addr <= ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
+                            read_data = lsu_read_32(reg_addr);
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                            reg_addr = reg_addr + 4;
+                        }
+                        soc_ifc_sha_accel_clr_lock();
+                    }
                     else {
                         // Read provided data
                         read_data = soc_ifc_mbox_read_dataout_single();
@@ -420,8 +481,15 @@ void caliptra_rt() {
                         lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), temp);
 
                         // Write response data
-                        for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
-                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                        // If we hit a double-bit ECC error already, skip this step
+                        // (we might have gotten a huge resp dlen from the corrupted read)
+                        // and fail the command
+                        if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
+                            VPRINTF(ERROR, "Skipping resp data wr on UNC ECC err\n");
+                        } else {
+                            for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
+                                lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), rand());
+                            }
                         }
 
                     }
@@ -431,12 +499,13 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         }
                         continue;
                     }
@@ -473,12 +542,13 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         }
                         continue;
                     }

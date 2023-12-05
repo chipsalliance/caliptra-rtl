@@ -25,7 +25,8 @@ interface keyvault_cov_if
     input logic rst_b,
     input logic core_only_rst_b,
     input logic cptra_pwrgood,
-    input logic debugUnlock_or_scan_mode_switch
+    input logic debugUnlock_or_scan_mode_switch,
+    input logic cptra_in_debug_scan_mode
 );
 
     //Intermediate wires
@@ -41,30 +42,30 @@ interface keyvault_cov_if
     //Assign clear and locks of each KEY_CTRL reg to corresponding bit in the intermediate bus
     generate
         for(genvar i = 0; i < KV_NUM_KEYS; i++) begin
-            assign key_ctrl_lock_wr[i] = dut.kv_reg_hwif_out.KEY_CTRL[i].lock_wr;
-            assign key_ctrl_lock_use[i] = dut.kv_reg_hwif_out.KEY_CTRL[i].lock_use;
-            assign key_ctrl_clear[i] = dut.kv_reg_hwif_out.KEY_CTRL[i].clear;
+            assign key_ctrl_lock_wr[i] = kv.kv_reg_hwif_out.KEY_CTRL[i].lock_wr;
+            assign key_ctrl_lock_use[i] = kv.kv_reg_hwif_out.KEY_CTRL[i].lock_use;
+            assign key_ctrl_clear[i] = kv.kv_reg_hwif_out.KEY_CTRL[i].clear;
         end
     endgenerate
 
     //CLEAR_SECRETS
-    assign clear_secrets_wr = dut.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values;
-    assign clear_secrets_sel = dut.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value;
+    assign clear_secrets_wr = kv.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values;
+    assign clear_secrets_sel = kv.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value;
 
     //Crypto interface write_en
     generate
         for(genvar client = 0; client < KV_NUM_WRITE; client++) begin
-            assign kv_write_en[client] = dut.kv_write[client].write_en;
+            assign kv_write_en[client] = kv.kv_write[client].write_en;
         end
     endgenerate
 
     //AHB signals
-    assign ahb_write = dut.kv_ahb_slv1.dv & dut.kv_ahb_slv1.write;
-    assign ahb_read  = dut.kv_ahb_slv1.dv & ~dut.kv_ahb_slv1.write;
+    assign ahb_write = kv.kv_ahb_slv1.dv & kv.kv_ahb_slv1.write;
+    assign ahb_read  = kv.kv_ahb_slv1.dv & ~kv.kv_ahb_slv1.write;
 
     covergroup keyvault_top_cov_grp @(posedge clk);
         option.per_instance = 1;
-        debug: coverpoint debugUnlock_or_scan_mode_switch;
+        debug: coverpoint cptra_in_debug_scan_mode; //debugUnlock_or_scan_mode_switch;
 
         //Note: Bit transitions and values for lock_wr, lock_use and clear are covered
         //in UVM reg coverage. This coverpoint bins the 32-bit lock/clear bus so that
@@ -101,21 +102,22 @@ interface keyvault_cov_if
         debugXclear:                    cross debug, clear;
         debugXlock_wrXlock_useXclear:   cross debug, lock_wr, lock_use, clear;
         debugXclear_secrets:            cross debug, cp_clear_secrets_wr, cp_clear_secrets_sel;
+        debugXkv_write:                 cross debug, kv_write_en;
 
         //Cover warm reset assertion while regs are locked/cleared
-        lock_wrXwarm_rst:   cross lock_wr, rst_b;
-        lock_useXwarm_rst:  cross lock_use, rst_b;
-        clearXwarm_rst:     cross clear, rst_b;
+        // lock_wrXwarm_rst:   cross lock_wr, rst_b;
+        // lock_useXwarm_rst:  cross lock_use, rst_b;
+        // clearXwarm_rst:     cross clear, rst_b;
 
         //Cover cold reset while regs are locked/cleared
-        lock_wrXcold_rst:   cross lock_wr, cptra_pwrgood;
-        lock_useXcold_rst:  cross lock_use, cptra_pwrgood;
-        clearXcold_rst:     cross clear, cptra_pwrgood;
+        // lock_wrXcold_rst:   cross lock_wr, cptra_pwrgood;
+        // lock_useXcold_rst:  cross lock_use, cptra_pwrgood;
+        // clearXcold_rst:     cross clear, cptra_pwrgood;
 
         //Cover core reset while regs are locked/cleared
-        lock_wrXcore_rst:   cross lock_wr, core_only_rst_b;
-        lock_useXcore_rst:  cross lock_use, core_only_rst_b;
-        clearXcore_rst:     cross clear, core_only_rst_b;
+        // lock_wrXcore_rst:   cross lock_wr, core_only_rst_b;
+        // lock_useXcore_rst:  cross lock_use, core_only_rst_b;
+        // clearXcore_rst:     cross clear, core_only_rst_b;
 
         //Cover simultaneous locks/clear settings
         lock_wrXlock_useXclearXclear_secrets: cross lock_wr, lock_use, clear, cp_clear_secrets_wr, cp_clear_secrets_sel;
@@ -129,8 +131,10 @@ interface keyvault_cov_if
         clear_secretsXkv_write: cross kv_write_en, cp_clear_secrets_wr, cp_clear_secrets_sel;
 
         //Cover ahb write/read during crypto write and debug mode unlocked
-        ahbXkv_write:       cross cp_ahb_write, cp_ahb_read, kv_write_en;
-        ahbXdebug:          cross cp_ahb_write, cp_ahb_read, debug; //TODO: maybe not a real use case - revisit
+        ahb_writeXkv_write:      cross cp_ahb_write, kv_write_en;
+        ahb_writeXdebug:         cross cp_ahb_write, debug;
+        ahb_readXkv_write:       cross cp_ahb_read, kv_write_en;
+        ahb_readXdebug:          cross cp_ahb_read, debug;
         
 
     endgroup

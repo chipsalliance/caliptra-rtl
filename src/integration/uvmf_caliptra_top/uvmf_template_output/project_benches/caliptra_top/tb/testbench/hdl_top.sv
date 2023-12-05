@@ -372,6 +372,7 @@ import uvmf_base_pkg_hdl::*;
         .int_flag(int_flag)
     );
 
+  caliptra_top_sva sva();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 
