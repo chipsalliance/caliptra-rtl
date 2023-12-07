@@ -24,7 +24,7 @@ module fv_sha_512_m(
   input bit rst,
   input bit clk,
   input bit unsigned [1023:0] block_in,
-  input bit signed [31:0] block_sha_mode,
+  input bit unsigned [31:0] block_sha_mode,
   input bit block_init,
   input bit block_next,
   input bit block_zeroize,
@@ -172,8 +172,8 @@ property DONE_to_IDLE_p;
 endproperty
 
 
-IDLE_to_SHA_Rounds_224_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_224_p);
-property IDLE_to_SHA_Rounds_224_p;
+IDLE_to_SHA_Rounds_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_p);
+property IDLE_to_SHA_Rounds_p;
   IDLE &&
   block_in_valid &&
   block_init &&
@@ -219,8 +219,8 @@ property IDLE_to_SHA_Rounds_224_p;
 endproperty
 
 
-IDLE_to_SHA_Rounds_256_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_256_p);
-property IDLE_to_SHA_Rounds_256_p;
+IDLE_to_SHA_Rounds_1_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_1_p);
+property IDLE_to_SHA_Rounds_1_p;
   IDLE &&
   block_in_valid &&
   block_init &&
@@ -266,8 +266,8 @@ property IDLE_to_SHA_Rounds_256_p;
 endproperty
 
 
-IDLE_to_SHA_Rounds_512_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_512_p);
-property IDLE_to_SHA_Rounds_512_p;
+IDLE_to_SHA_Rounds_2_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_2_p);
+property IDLE_to_SHA_Rounds_2_p;
   IDLE &&
   block_in_valid &&
   block_init &&
@@ -313,12 +313,14 @@ property IDLE_to_SHA_Rounds_512_p;
 endproperty
 
 
-IDLE_to_SHA_Rounds_384_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_384_p);
-property IDLE_to_SHA_Rounds_384_p;
+IDLE_to_SHA_Rounds_3_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_3_p);
+property IDLE_to_SHA_Rounds_3_p;
   IDLE &&
   block_in_valid &&
   block_init &&
-  block_sha_mode == 'sd384
+  (block_sha_mode != 'sd224) &&
+  (block_sha_mode != 'sd256) &&
+  (block_sha_mode != 'sd512)
 |->
   ##1 (block_in_ready == 0) and
   ##1 (digest_valid == 0) and
@@ -360,8 +362,8 @@ property IDLE_to_SHA_Rounds_384_p;
 endproperty
 
 
-IDLE_to_SHA_Rounds_next_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_next_p);
-property IDLE_to_SHA_Rounds_next_p;
+IDLE_to_SHA_Rounds_4_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_4_p);
+property IDLE_to_SHA_Rounds_4_p;
   IDLE &&
   block_in_valid &&
   !block_init
@@ -409,6 +411,7 @@ endproperty
 SHA_Rounds_to_DONE_a: assert property (disable iff(!rst) SHA_Rounds_to_DONE_p);
 property SHA_Rounds_to_DONE_p;
   SHA_Rounds &&
+  (i >= 'sd16) &&
   (('sd1 + i) >= 'sd80)
 |->
   ##1 (block_in_ready == 0) and
@@ -451,7 +454,7 @@ property SHA_Rounds_to_DONE_p;
 endproperty
 
 
-SHA_Rounds_to_SHA_Rounds_before_16_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_p);
+SHA_Rounds_to_SHA_Rounds_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_p);
 property SHA_Rounds_to_SHA_Rounds_p;
   SHA_Rounds &&
   (i < 'sd16)
@@ -496,7 +499,7 @@ property SHA_Rounds_to_SHA_Rounds_p;
 endproperty
 
 
-SHA_Rounds_to_SHA_Rounds_after_16_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_1_p);
+SHA_Rounds_to_SHA_Rounds_1_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_1_p);
 property SHA_Rounds_to_SHA_Rounds_1_p;
   SHA_Rounds &&
   (i >= 'sd16) &&
@@ -590,52 +593,52 @@ endproperty
 endmodule
 
  bind sha512_core fv_sha_512_m fv_sha512(
-  .rst((reset_n)  && !(zeroize)),
-  .clk(clk),
-  .block_in(block_msg),
-  .block_sha_mode((mode==0)?224:(mode==1)?256:(mode==2)?384:512),
-  .block_init(init_cmd),
-  .block_next(next_cmd),
-  .block_zeroize(zeroize),
-  .digest_out(digest),
-  .block_in_valid(((init_cmd) || (next_cmd))),
-  .block_in_ready(ready),
-  .digest_valid((digest_valid) ),
-  .H_0(H0_reg),
-  .H_1(H1_reg),
-  .H_2(H2_reg),
-  .H_3(H3_reg),
-  .H_4(H4_reg),
-  .H_5(H5_reg),
-  .H_6(H6_reg),
-  .H_7(H7_reg),
-  .W_0(w_mem_inst.w_mem[00]),
-  .W_1(w_mem_inst.w_mem[01]),
-  .W_2(w_mem_inst.w_mem[02]),
-  .W_3(w_mem_inst.w_mem[03]),
-  .W_4(w_mem_inst.w_mem[04]),
-  .W_5(w_mem_inst.w_mem[05]),
-  .W_6(w_mem_inst.w_mem[06]),
-  .W_7(w_mem_inst.w_mem[07]),
-  .W_8(w_mem_inst.w_mem[08]),
-  .W_9(w_mem_inst.w_mem[09]),
-  .W_10(w_mem_inst.w_mem[10]),
-  .W_11(w_mem_inst.w_mem[11]),
-  .W_12(w_mem_inst.w_mem[12]),
-  .W_13(w_mem_inst.w_mem[13]),
-  .W_14(w_mem_inst.w_mem[14]),
-  .W_15(w_mem_inst.w_mem[15]),
-  .a(a_reg),
-  .b(b_reg),
-  .c(c_reg),
-  .d(d_reg),
-  .e(e_reg),
-  .f(f_reg),
-  .g(g_reg),
-  .h(h_reg),
-  .i(round_ctr_reg),
-  .IDLE(sha512_ctrl_reg==2'h0),
-  .SHA_Rounds(sha512_ctrl_reg==2'h1),
-  .DONE(sha512_ctrl_reg==2'h2)
+  .rst((sha512_core.reset_n)  && !(sha512_core.zeroize)),
+  .clk(sha512_core.clk),
+  .block_in(sha512_core.block_msg),
+  .block_sha_mode(get_block_sha_mode(sha512_core.mode)),
+  .block_init(sha512_core.init_cmd),
+  .block_next(sha512_core.next_cmd),
+  .block_zeroize(sha512_core.zeroize),
+  .digest_out(sha512_core.digest),
+  .block_in_valid(((sha512_core.init_cmd) || (sha512_core.next_cmd))),
+  .block_in_ready(sha512_core.ready),
+  .digest_valid((sha512_core.digest_valid) ),
+  .H_0(sha512_core.H0_reg),
+  .H_1(sha512_core.H1_reg),
+  .H_2(sha512_core.H2_reg),
+  .H_3(sha512_core.H3_reg),
+  .H_4(sha512_core.H4_reg),
+  .H_5(sha512_core.H5_reg),
+  .H_6(sha512_core.H6_reg),
+  .H_7(sha512_core.H7_reg),
+  .W_0(sha512_core.w_mem_inst.w_mem[00]),
+  .W_1(sha512_core.w_mem_inst.w_mem[01]),
+  .W_2(sha512_core.w_mem_inst.w_mem[02]),
+  .W_3(sha512_core.w_mem_inst.w_mem[03]),
+  .W_4(sha512_core.w_mem_inst.w_mem[04]),
+  .W_5(sha512_core.w_mem_inst.w_mem[05]),
+  .W_6(sha512_core.w_mem_inst.w_mem[06]),
+  .W_7(sha512_core.w_mem_inst.w_mem[07]),
+  .W_8(sha512_core.w_mem_inst.w_mem[08]),
+  .W_9(sha512_core.w_mem_inst.w_mem[09]),
+  .W_10(sha512_core.w_mem_inst.w_mem[10]),
+  .W_11(sha512_core.w_mem_inst.w_mem[11]),
+  .W_12(sha512_core.w_mem_inst.w_mem[12]),
+  .W_13(sha512_core.w_mem_inst.w_mem[13]),
+  .W_14(sha512_core.w_mem_inst.w_mem[14]),
+  .W_15(sha512_core.w_mem_inst.w_mem[15]),
+  .a(sha512_core.a_reg),
+  .b(sha512_core.b_reg),
+  .c(sha512_core.c_reg),
+  .d(sha512_core.d_reg),
+  .e(sha512_core.e_reg),
+  .f(sha512_core.f_reg),
+  .g(sha512_core.g_reg),
+  .h(sha512_core.h_reg),
+  .i(sha512_core.round_ctr_reg),
+  .IDLE(sha512_core.sha512_ctrl_reg==2'h0),
+  .SHA_Rounds(sha512_core.sha512_ctrl_reg==2'h1),
+  .DONE(sha512_core.sha512_ctrl_reg==2'h2)
 );
 

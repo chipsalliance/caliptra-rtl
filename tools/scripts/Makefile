@@ -16,6 +16,9 @@
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
+
+ABI = -mabi=ilp32 -march=rv32imc
+
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
@@ -53,8 +56,7 @@ COMP_LIB_NAMES := aes \
 		  sha256 \
 		  sha512 \
 		  soc_ifc \
-		  clk_gate \
-		  wdt
+		  clk_gate
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
@@ -66,9 +68,6 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(ISR_DIR)/riscv-interrupts.h \
 		$(ISR_DIR)/veer-csr.h \
 		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
-
-TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecdsa_secp384r1.exe \
-	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
@@ -166,35 +165,33 @@ CFLAGS += -std=c++17
 # compiles), or -O for balance.
 VERILATOR_MAKE_FLAGS = OPT_FAST="-Os"
 
-# Testbench DPI sources
-TB_DPI_SRCS = jtagdpi/jtagdpi.c \
-              tcp_server/tcp_server.c
-
-TB_DPI_INCS := $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(TB_DPI_SRCS)))
-TB_DPI_SRCS := $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(TB_DPI_SRCS))
+# Testbench libs
+VERILATOR_TB_LIBS = jtagdpi/jtagdpi.c \
+                    tcp_server/tcp_server.c
 
 # Testbench sources
-TB_VERILATOR_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp $(TB_DPI_SRCS)
+VERILATOR_TB_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp \
+                    $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(VERILATOR_TB_LIBS))
 
 # Testbench defs
-TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
+VERILATOR_TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
 
 # By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to
 # enable it.
 ifdef DEBUG_UNLOCKED
-    TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
+    VERILATOR_TB_DEFS += +define+CALIPTRA_DEBUG_UNLOCKED
 endif
 
 # To enforce holding the RISC-V core in reset add "FORCE_CPU_RESET=1".
 ifdef FORCE_CPU_RESET
-    TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
+    VERILATOR_TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
 endif
 
 # Run time arguments from command line
 VERILATOR_RUN_ARGS ?= ""
 
 # Add testbench lib include paths
-CFLAGS += $(TB_DPI_INCS)
+CFLAGS += $(addprefix -I$(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(dir $(VERILATOR_TB_LIBS)))
 
 # Targets
 all: clean verilator
@@ -210,8 +207,8 @@ clean_fw:
 
 ############ Model Builds ###############################
 
-verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS)
-	$(VERILATOR) $(TB_VERILATOR_SRCS) --cc -CFLAGS "$(CFLAGS)" \
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(VERILATOR_TB_SRCS)
+	$(VERILATOR) $(VERILATOR_TB_SRCS) --cc -CFLAGS "$(CFLAGS)" \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/1ps \
 		--timing \
@@ -220,16 +217,16 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS)
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
-	  $(TB_DEFS)
+	  $(VERILATOR_TB_DEFS)
 	$(MAKE) -j`nproc` -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1
 	touch verilator-build
 
-vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
+vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h
 	vlogan -full64 -sverilog -kdb -incr_vlogan +lint=IA_CHECKFAIL -assert svaext \
-	  +define+CLP_ASSERT_ON $(TB_DEFS) -noinherit_timescale=1ns/1ps \
+	  +define+CLP_ASSERT_ON -noinherit_timescale=1ns/1ps \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 \
-	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
+	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb
 
 ############ TEST Simulation ###############################
 
@@ -237,7 +234,6 @@ verilator: program.hex verilator-build
 	./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS)
 
 vcs: program.hex vcs-build
-	cp $(TEST_GEN_FILES) $(BUILD_DIR)
 	./simv.caliptra_top_tb
 
 ############ TEST build ###############################

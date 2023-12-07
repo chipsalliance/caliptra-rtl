@@ -16,7 +16,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 module fv_constraints_m(init_cmd, next_cmd, reset_n, clk);
     input bit init_cmd, next_cmd, reset_n, clk;
     reg init_reg;
@@ -31,12 +30,6 @@ default clocking default_clk @(posedge clk); endclocking
     property init_next_order;
         !init_reg |-> !next_cmd;
     endproperty
-
-    
-    property next_only_if_digest_valid;
-         next_cmd |-> sha512_core.digest_valid ;
-    endproperty
-    next_only_if_digtest_valid_a: assume property (next_only_if_digest_valid);
 
     always @ (posedge clk or negedge reset_n)
         begin : init_reg_order

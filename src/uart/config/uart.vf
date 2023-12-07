@@ -63,6 +63,7 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_sum_tree.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_ext.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_edge_detector.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart_tx.sv
+${CALIPTRA_ROOT}/src/uart/rtl/uart_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart_reg_top.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart_rx.sv
 ${CALIPTRA_ROOT}/src/uart/rtl/uart.sv

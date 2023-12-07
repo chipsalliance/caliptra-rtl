@@ -39,15 +39,6 @@ class kv_wr_rd_debug_sequence #(
 
     typedef kv_rst_debug_sequence kv_rst_agent_debug_sequence_t;
     kv_rst_agent_debug_sequence_t kv_rst_agent_debug_seq;
-    typedef kv_rst_debug_on_sequence kv_rst_agent_debug_on_sequence_t;
-    kv_rst_agent_debug_on_sequence_t kv_rst_agent_debug_on_seq;
-    typedef kv_rst_debug_off_sequence kv_rst_agent_debug_off_sequence_t;
-    kv_rst_agent_debug_off_sequence_t kv_rst_agent_debug_off_seq;
-
-    typedef kv_rst_scan_on_sequence kv_rst_agent_scan_on_sequence_t;
-    kv_rst_agent_scan_on_sequence_t kv_rst_agent_scan_on_seq;
-    typedef kv_rst_scan_off_sequence kv_rst_agent_scan_off_sequence_t;
-    kv_rst_agent_scan_off_sequence_t kv_rst_agent_scan_off_seq;
 
     typedef kv_write_key_entry_sequence kv_write_agent_key_entry_sequence_t;
     kv_write_agent_key_entry_sequence_t hmac_write_seq;
@@ -78,15 +69,6 @@ class kv_wr_rd_debug_sequence #(
 
         kv_rst_agent_debug_seq = kv_rst_agent_debug_sequence_t::type_id::create("kv_rst_agent_debug_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST debug seq");
-        kv_rst_agent_debug_on_seq = kv_rst_agent_debug_on_sequence_t::type_id::create("kv_rst_agent_debug_on_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST debug on seq");
-        kv_rst_agent_debug_off_seq = kv_rst_agent_debug_off_sequence_t::type_id::create("kv_rst_agent_debug_off_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST debug off seq");
-
-        kv_rst_agent_scan_on_seq = kv_rst_agent_scan_on_sequence_t::type_id::create("kv_rst_agent_scan_on_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST scan on seq");
-        kv_rst_agent_scan_off_seq = kv_rst_agent_scan_off_sequence_t::type_id::create("kv_rst_agent_scan_off_seq");
-        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST scan off seq");
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
@@ -108,6 +90,7 @@ class kv_wr_rd_debug_sequence #(
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
+        
     endfunction
 
     virtual task body();
@@ -120,30 +103,39 @@ class kv_wr_rd_debug_sequence #(
         reg [31:0] wr_data, rd_data;
         reg_model = configuration.kv_rm;
 
-        //Unlock debug mode or clear secrets randomly
-            std::randomize(debug_type); //0 - security state, 1 - clear secrets
-            // debug_type = 0;
-            
-            std::randomize(wait_cycles_from_seq) with {
-                wait_cycles_from_seq >= 5;
-                wait_cycles_from_seq <= 100;
-            };
-            std::randomize(clear_secrets_data); //wren, debug_value0/1
-            //Wait for random delay before starting debug txn
-            configuration.kv_rst_agent_config.wait_for_num_clocks(wait_cycles_from_seq);
-            case(debug_type)
-                SECURITY_STATE: begin
-                    //start debug seq on rst agent
-                    // kv_rst_agent_debug_seq.start(configuration.kv_rst_agent_config.sequencer);
-                    kv_rst_agent_debug_on_seq.start(configuration.kv_rst_agent_config.sequencer);
-                    kv_rst_agent_debug_off_seq.start(configuration.kv_rst_agent_config.sequencer);
-                end
-                CLEAR_SECRETS: begin
-                    reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-                    assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
-                end
-            endcase
 
+        //Issue and wait for reset
+        if(configuration.kv_rst_agent_config.sequencer != null)
+            kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
+        else
+            `uvm_error("KV WR RD", "kv_rst_agent_config.sequencer is null!")
+        
+        
+                //Unlock debug mode or clear secrets randomly
+                
+                    std::randomize(debug_type); //0 - security state, 1 - clear secrets
+                    
+                    std::randomize(wait_cycles_from_seq) with {
+                        wait_cycles_from_seq >= 5;
+                        wait_cycles_from_seq <= 100;
+                    };
+
+                    std::randomize(clear_secrets_data); //wren, debug_value0/1
+
+                    //Wait for random delay before starting debug txn
+                    configuration.kv_rst_agent_config.wait_for_num_clocks(wait_cycles_from_seq);
+
+                    case(debug_type)
+                        SECURITY_STATE: begin
+                            //start debug seq on rst agent
+                            kv_rst_agent_debug_seq.start(configuration.kv_rst_agent_config.sequencer);
+                        end
+                        CLEAR_SECRETS: begin
+                            reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                            assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
+                        end
+                    endcase
+                
             fork
             begin
                 //Write to all entries
@@ -164,58 +156,6 @@ class kv_wr_rd_debug_sequence #(
                         sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
                     end
                 end
-            end
-            join
-        
-            `uvm_info("DEBUG_WR_RD", "Waiting for sha512 write/read to finish", UVM_FULL)
-        configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_write_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_ecc_write_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_hmac_block_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_block_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
-
-        `uvm_info("DEBUG_WR_RD", "Scan mode and queue writes", UVM_FULL)
-        fork //debug mode
-            begin
-                kv_rst_agent_scan_on_seq.start(configuration.kv_rst_agent_config.sequencer);
-            end
-            begin
-                queue_writes();
-                //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
-                configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
-            end
-        join
-
-        `uvm_info("DEBUG_WR_RD", "clear_secrets and queue writes", UVM_FULL)
-        fork //clear secrets
-            begin
-                repeat(20) begin
-                    std::randomize(clear_secrets_data); //wren, debug_value0/1
-
-                    reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-                    assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
-
-                    configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_sha512_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_ecc_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_doe_write_agent_config.wait_for_num_clocks(2);
-                end //repeat
-            end
-            begin
-                queue_writes();
-                //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
-                configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);
-                configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
             end
         join
     endtask
