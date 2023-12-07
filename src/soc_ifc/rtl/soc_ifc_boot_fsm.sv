@@ -230,9 +230,9 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
 end
 
 //protect resets during scan mode
-//TODO dft override for reset?
-assign cptra_noncore_rst_b = cptra_noncore_rst_b_nq | scan_mode;
-assign cptra_uc_rst_b = cptra_uc_rst_b_nq | scan_mode;
+//utilize warm reset pin to drive reset during scan mode
+assign cptra_noncore_rst_b = scan_mode ? cptra_rst_b : cptra_noncore_rst_b_nq;
+assign cptra_uc_rst_b = scan_mode ? cptra_rst_b : cptra_uc_rst_b_nq;
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin
@@ -269,7 +269,7 @@ caliptra_2ff_sync #(.WIDTH(1), .RST_VAL('d1)) i_rst_window_sync (.clk(clk), .rst
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
 
 //Reset got asserted, but cptra rst window wasn't asserted to protect RDC
-`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, cptra_pwrgood)
-`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, cptra_pwrgood)
+`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, (cptra_pwrgood && ~scan_mode))
+`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, (cptra_pwrgood && ~scan_mode))
 
 endmodule

@@ -252,6 +252,16 @@ class kv_wr_rd_cold_rst_sequence #(
 
         join
         active_phase.reset;
+        configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_sha512_write_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_ecc_write_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_hmac_block_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_sha512_block_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
     endtask
 
 endclass

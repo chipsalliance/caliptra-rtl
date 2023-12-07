@@ -36,6 +36,10 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
             // Wait for all predictor callbacks to run for every intr bit accessed
             // during the current clock cycle, so mirrors are up to date
             uvm_wait_for_nba_region();
+            // There might be delay_jobs running additional bit updates
+            // at this point, so wait again
+            // FIXME -- find a better way to capture field updates at each clock edge
+            uvm_wait_for_nba_region();
             // Snapshot of current value, since next cycle may see value changes again
             val_sts_reg = sts_reg.get_mirrored_value();
             val_en_reg  = en_reg .get_mirrored_value();
@@ -47,7 +51,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
 
     virtual task do_job();
         `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Running delayed job for %s", req_fld.get_full_name()), UVM_MEDIUM)
-        if (!/*val_sts_glb*/sts_glb.get_mirrored_value() && |(val_sts_reg/*sts_reg.get_mirrored_value()*/ & val_en_reg/*en_reg.get_mirrored_value()*/) /*&& val_en_glb / * en_glb.get_mirrored_value()*/) begin
+        if (!sts_glb.get_mirrored_value() && |(val_sts_reg & val_en_reg)) begin
             sts_glb.predict(1'b1);
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
                       $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being set to 0x%0x. Values: en_reg(latched) [0x%0x(0x%0x)] sts_reg [0x%0x(0x%0x)] en_glb [0x%0x(0x%0x)] sts_glb [0x%0x(0x%0x)]",
@@ -58,7 +62,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
                                 sts_glb.get_mirrored_value(), val_sts_glb),
                       UVM_MEDIUM)
         end
-        else if (/*val_sts_glb*/sts_glb.get_mirrored_value() && !(|(val_sts_reg/*sts_reg.get_mirrored_value()*/ & val_en_reg/*en_reg.get_mirrored_value()*/) /*&& val_en_glb / * en_glb.get_mirrored_value()*/)) begin
+        else if (sts_glb.get_mirrored_value() && !(|(val_sts_reg & val_en_reg))) begin
             sts_glb.predict(1'b0);
             `uvm_info("SOC_IFC_REG_DELAY_JOB",
                       $sformatf("post_predict called through map [%p] on %s results in interrupt status bit being cleared to 0x%0x. Values: en_reg(latched) [0x%0x(0x%0x)] sts_reg [0x%0x(0x%0x)] en_glb [0x%0x(0x%0x)] sts_glb [0x%0x(0x%0x)]",

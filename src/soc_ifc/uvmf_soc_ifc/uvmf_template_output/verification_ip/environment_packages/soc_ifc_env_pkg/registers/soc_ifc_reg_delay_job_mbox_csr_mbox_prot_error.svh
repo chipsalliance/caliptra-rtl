@@ -18,6 +18,7 @@
 class soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error extends soc_ifc_reg_delay_job;
     `uvm_object_utils( soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error )
     mbox_csr_ext rm; /* mbox_csr_rm */
+    soc_ifc_reg_ext sir_rm; /* soc_ifc_reg_rm */
     uvm_reg_field fld;
     mbox_fsm_state_e state_nxt;
     uvm_reg_map map;
@@ -32,29 +33,51 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error extends soc_ifc_reg_delay_j
         end
         else if (error.axs_without_lock) begin
             uvm_reg_block top;
+            uvm_reg_block blk;
             uvm_reg_field intr_fld;
             uvm_reg_field non_fatal_fld;
 
             top           = rm.get_parent();
-            intr_fld      = top.get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("error_cmd_fail_sts");
-            non_fatal_fld = top.get_block_by_name("soc_ifc_reg_rm").get_reg_by_name("CPTRA_HW_ERROR_NON_FATAL").get_field_by_name("mbox_prot_no_lock");
+            blk           = top.get_block_by_name("soc_ifc_reg_rm");
+            $cast(sir_rm, blk);
+            intr_fld      = sir_rm.get_block_by_name("intr_block_rf_ext").get_field_by_name("error_cmd_fail_sts");
+            non_fatal_fld = sir_rm.get_reg_by_name("CPTRA_HW_ERROR_NON_FATAL").get_field_by_name("mbox_prot_no_lock");
 
             intr_fld     .predict(1'b1, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map.get_parent().get_map_by_name("soc_ifc_AHB_map")));
+            sir_rm.hwset_active.cptra_hw_error_non_fatal |= 1 << non_fatal_fld.get_lsb_pos();
             non_fatal_fld.predict(1'b1, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            fork
+                uvm_reg_data_t hwset_msk = ~(1 << non_fatal_fld.get_lsb_pos());
+                begin
+                uvm_wait_for_nba_region();
+                sir_rm.hwset_active.cptra_hw_error_non_fatal &= hwset_msk;
+                end
+            join_none
 
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("delay_job scheduled for access through map [%p] on [%s] results in Access Without Lock Error, and no state change. Functional state tracker: [%p] mbox_fsm_ps transition (ignored) [%p]", map.get_name(), fld.get_full_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
         else if (error.axs_incorrect_order && rm.mbox_lock.lock.get_mirrored_value() && !rm.mbox_unlock.unlock.get_mirrored_value()) begin
             uvm_reg_block top;
+            uvm_reg_block blk;
             uvm_reg_field intr_fld;
             uvm_reg_field non_fatal_fld;
 
             top           = rm.get_parent();
-            intr_fld      = top.get_block_by_name("soc_ifc_reg_rm").get_block_by_name("intr_block_rf_ext").get_field_by_name("error_cmd_fail_sts");
-            non_fatal_fld = top.get_block_by_name("soc_ifc_reg_rm").get_reg_by_name("CPTRA_HW_ERROR_NON_FATAL").get_field_by_name("mbox_prot_ooo");
+            blk           = top.get_block_by_name("soc_ifc_reg_rm");
+            $cast(sir_rm, blk);
+            intr_fld      = sir_rm.get_block_by_name("intr_block_rf_ext").get_field_by_name("error_cmd_fail_sts");
+            non_fatal_fld = sir_rm.get_reg_by_name("CPTRA_HW_ERROR_NON_FATAL").get_field_by_name("mbox_prot_ooo");
 
             intr_fld     .predict(1'b1, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map.get_parent().get_map_by_name("soc_ifc_AHB_map")));
+            sir_rm.hwset_active.cptra_hw_error_non_fatal |= 1 << non_fatal_fld.get_lsb_pos();
             non_fatal_fld.predict(1'b1, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
+            fork
+                uvm_reg_data_t hwset_msk = ~(1 << non_fatal_fld.get_lsb_pos());
+                begin
+                uvm_wait_for_nba_region();
+                sir_rm.hwset_active.cptra_hw_error_non_fatal &= hwset_msk;
+                end
+            join_none
 
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("delay_job scheduled for access through map [%p] on [%s] results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), fld.get_full_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)

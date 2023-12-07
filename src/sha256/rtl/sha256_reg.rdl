@@ -238,8 +238,10 @@ addrmap sha256_reg {
     reg error_intr_trig_t {
         name = "Interrupt Trigger Register type definition";
         desc = "Single bit for each interrupt event allows SW to manually
-                trigger occurrence of that event. Upon SW write, the bit
-                will pulse for 1 cycle then clear to 0.";
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
 
         default hw = na;
         default sw = rw;
@@ -257,8 +259,10 @@ addrmap sha256_reg {
     reg notif_intr_trig_t {
         name = "Interrupt Trigger Register type definition";
         desc = "Single bit for each interrupt event allows SW to manually
-                trigger occurrence of that event. Upon SW write, the bit
-                will pulse for 1 cycle then clear to 0.";
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
 
         default hw = na;
         default sw = rw;

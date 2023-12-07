@@ -38,6 +38,7 @@ function bit unsigned [63:0] Maj(bit unsigned [63:0] x, bit unsigned [63:0] y, b
   return (((x & y) ^ (x & z)) ^ (y & z));
 endfunction
 
+
 function bit unsigned [63:0] T1(bit unsigned [63:0] e, bit unsigned [63:0] f, bit unsigned [63:0] g, bit unsigned [63:0] h, bit unsigned [63:0] k, bit unsigned [63:0] w);
   return 64'(((((h + sigma1(e)) + Ch(e, f, g)) + k) + w));
 endfunction
@@ -143,41 +144,7 @@ function bit unsigned [63:0] sigma1(bit unsigned [63:0] x);
 endfunction
 
 function bit unsigned [63:0] slicer(bit unsigned [1023:0] block, bit signed [31:0] index);
-  if ((index == 'sd0))
-    return 64'((block >> 1024'd0));
-  else if ((index == 'sd1))
-    return 64'((block >> 1024'd64));
-  else if ((index == 'sd2))
-    return 64'((block >> 1024'd128));
-  else if ((index == 'sd3))
-    return 64'((block >> 1024'd192));
-  else if ((index == 'sd4))
-    return 64'((block >> 1024'd256));
-  else if ((index == 'sd5))
-    return 64'((block >> 1024'd320));
-  else if ((index == 'sd6))
-    return 64'((block >> 1024'd384));
-  else if ((index == 'sd7))
-    return 64'((block >> 1024'd448));
-  else if ((index == 'sd8))
-    return 64'((block >> 1024'd512));
-  else if ((index == 'sd9))
-    return 64'((block >> 1024'd576));
-  else if ((index == 'sd10))
-    return 64'((block >> 1024'd640));
-  else if ((index == 'sd11))
-    return 64'((block >> 1024'd704));
-  else if ((index == 'sd12))
-    return 64'((block >> 1024'd768));
-  else if ((index == 'sd13))
-    return 64'((block >> 1024'd832));
-  else if ((index == 'sd14))
-    return 64'((block >> 1024'd896));
-  else if ((index == 'sd15))
-    return 64'((block >> 1024'd960));
-  else
-    return 64'((block >> 1024'd960));
+ return(block[(64*index)+:64]);
 endfunction
-
 
 endpackage

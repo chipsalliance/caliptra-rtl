@@ -152,7 +152,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //This will be used to hold the clear until writes are finished to current entry
             //-----------------------------------------------
             for (int i = 0; i < KV_NUM_KEYS; i++) begin
-                val_ctrl_derived_data[i] /*[entry_offset[4:0]]*/ = (val_ctrl_derived_data[i] & (i == entry_offset[4:0])); //'b0; //Reset clear bit of current entry
+                val_ctrl_derived_data[i] = (val_ctrl_derived_data[i] & (i == entry_offset[4:0])); //'b0; //Reset clear bit of everything except current entry
             end
 
             val_ctrl_item = new;
@@ -182,10 +182,11 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //TODO: Revisit lock and clear condition
             //TODO: Can write to regs during debug mode. Remove check after updating sequences
             `uvm_info("KV_REG_PRED", $sformatf("OUTSIDE, lock_wr = %0d, lock_use = %0d, clear_secrets_wren = %0d, val_reg_data = %b", lock_wr, lock_use, clear_secrets_data[0], val_reg_data), UVM_FULL)
-            if (!lock_wr && !lock_use && !(clear_secrets_data[0] && val_reg_data[2]) && !val_reg_data[0]) begin
+            if (!lock_wr && !lock_use && !(clear_secrets_data[0] && val_reg_data[2]) /*&& !val_reg_data[0]*/) begin
                 `uvm_info("KV_REG_PRED", "Writing to KEY_ENTRY", UVM_FULL)
                 super.write(tr);
 
+                if ((rw.addr >= `KV_REG_KEY_ENTRY_0_0) && (rw.addr <= `KV_REG_KEY_ENTRY_31_11)) begin //Only update KEY_CTRL if it's a KEY_ENTRY write
                 `uvm_info("KV_REG_PRED", "Updating KEY_CTRL", UVM_FULL)
                 
                 //-----------------------------------------------
@@ -201,6 +202,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
                 //Update CTRL reg 
                 kv_reg_ctrl.do_predict(kv_reg_ctrl_item, UVM_PREDICT_DIRECT);
+                end
             end
             else begin
                 `uvm_info("KV_REG_PRED", "Skipping write to KEY_ENTRY", UVM_FULL)

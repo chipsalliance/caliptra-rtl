@@ -16,5 +16,5 @@ contents:
         path: "{template_basename}__{seed}.yml"
       templates:
         $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rand_test   : { weight 100 }
-        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_wdt_test    : { weight 100 }
-        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_wdt_independent_test   : { weight 100 }
+        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_wdt_test    : { weight 10 }
+        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_wdt_independent_test   : { weight 10 }

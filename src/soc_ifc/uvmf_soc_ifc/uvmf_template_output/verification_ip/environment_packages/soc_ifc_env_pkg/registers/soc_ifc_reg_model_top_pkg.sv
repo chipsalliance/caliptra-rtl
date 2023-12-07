@@ -228,10 +228,17 @@ package soc_ifc_reg_model_top_pkg;
         // the value read from CPTRA_FLOW_STATUS
         boot_fn_state_s boot_fn_state_sigs;
 
+        // Tracks when a register field is being actively updated by hardware, so
+        // prediction and scoreboard logic can detect transitions
+        struct {
+            uvm_reg_data_t cptra_hw_error_non_fatal;
+        } hwset_active;
+
         extern virtual function void reset(string kind = "HARD");
         function new(string name = "soc_ifc_reg_ext");
             super.new(name);
             boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
+            hwset_active = '{default: '0};
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -377,6 +384,11 @@ package soc_ifc_reg_model_top_pkg;
         if (kind inside {"HARD", "SOFT"}) begin
             boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
         end
+        if (kind inside {"HARD"}) begin
+            // Some signals may also be reset by a noncore reset, but all of the
+            // initial hwset_active members may be driven during warm resets
+            hwset_active = '{default: '0};
+        end
     endfunction
 
     class mbox_csr_ext extends mbox_csr;
@@ -385,6 +397,13 @@ package soc_ifc_reg_model_top_pkg;
 
         uvm_event mbox_lock_clr_miss;
         uvm_event mbox_datain_to_dataout_predict;
+
+        // This semaphore is a necessary workaround for a known bug in the UVM
+        // library uvm_reg class, as described here:
+        // https://forums.accellera.org/topic/7037-register-write-clobbers-simultaneous-access-in-multi-threaded-testbench/
+        // Essentially, the uvm_reg native atomic fails to correctly arbitrate
+        // between multiple contending accessors in separate threads.
+        semaphore mbox_datain_sem;
 
         // This tracks expected functionality of the mailbox in a way that is
         // agnostic to the internal state machine implementation and strictly
@@ -403,6 +422,7 @@ package soc_ifc_reg_model_top_pkg;
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
             mbox_lock_clr_miss = new("mbox_lock_clr_miss");
             mbox_datain_to_dataout_predict = new("mbox_datain_to_dataout_predict");
+            mbox_datain_sem = new(1);
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -459,6 +479,9 @@ package soc_ifc_reg_model_top_pkg;
             mbox_resp_q.delete();
             mbox_lock_clr_miss.reset();
             mbox_datain_to_dataout_predict.reset();
+            // In case any active sequences claimed the semaphore but didn't relinquish it.
+            void'(mbox_datain_sem.try_get());
+            mbox_datain_sem.put();
 
             // Mailbox State Changes
             // TODO what to do for FW update?

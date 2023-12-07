@@ -94,7 +94,7 @@ module soc_ifc_top
 
     //Obfuscated UDS and FE
     input  logic clear_obf_secrets,
-    input  logic scan_mode_f,
+    input  logic scan_mode,
     input  logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
     output logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
@@ -174,7 +174,7 @@ logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
 logic security_state_debug_locked_d;
 logic security_state_debug_locked_p;
-logic scan_mode_d;
+logic scan_mode_f;
 logic scan_mode_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
@@ -235,7 +235,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .clk(clk),
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b (cptra_rst_b),
-    .scan_mode(scan_mode_f),
+    .scan_mode(scan_mode),
     .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
     .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
@@ -376,12 +376,14 @@ soc_ifc_arb #(
     .sha_error(sha_error),
     //FUNC reg inf
     .soc_ifc_reg_req_dv(soc_ifc_reg_req_dv), 
-    .soc_ifc_reg_req_hold(1'b0),
+    .soc_ifc_reg_req_hold(soc_ifc_reg_req_hold),
     .soc_ifc_reg_req_data(soc_ifc_reg_req_data),
     .soc_ifc_reg_rdata(soc_ifc_reg_rdata),
     .soc_ifc_reg_error(soc_ifc_reg_error)
 
 );
+
+always_comb soc_ifc_reg_req_hold = 1'b0;
 
 
 //Functional Registers and Fuses
@@ -442,7 +444,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next = boot_fsm_ps;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = security_state.debug_locked;
-    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode_f;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode;
     //generic wires
     for (int i = 0; i < 2; i++) begin
         generic_output_wires[i] = soc_ifc_reg_hwif_out.CPTRA_GENERIC_OUTPUT_WIRES[i].generic_wires.value;
@@ -531,14 +533,14 @@ always_comb security_state_debug_locked_p = security_state.debug_locked ^ securi
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
-        scan_mode_d <= '0;
+        scan_mode_f <= '0;
     end
     else begin
-        scan_mode_d <= scan_mode_f;
+        scan_mode_f <= scan_mode;
     end
 end
 
-always_comb scan_mode_p = scan_mode_f & ~scan_mode_d;
+always_comb scan_mode_p = scan_mode & ~scan_mode_f;
 
 //Filtering by PAUSER
 always_comb begin

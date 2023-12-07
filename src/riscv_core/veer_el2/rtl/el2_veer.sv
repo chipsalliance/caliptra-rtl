@@ -400,6 +400,7 @@ import el2_pkg::*;
    logic                         ifu_pmu_instr_aligned;
    logic                         ifu_ic_error_start;
    logic                         ifu_iccm_rd_ecc_single_err;
+   logic                         cptra_iccm_dma_rd_ecc_single_err;
    logic                         cptra_iccm_rd_ecc_double_err;
 
    logic                         lsu_axi_awready_ahb;
@@ -884,7 +885,7 @@ import el2_pkg::*;
 
                             .*
                             );
-   assign cptra_iccm_ecc_single_error = ifu_iccm_rd_ecc_single_err;
+   assign cptra_iccm_ecc_single_error = ifu_iccm_rd_ecc_single_err || cptra_iccm_dma_rd_ecc_single_err;
    assign cptra_iccm_ecc_double_error = cptra_iccm_rd_ecc_double_err;
 
 
