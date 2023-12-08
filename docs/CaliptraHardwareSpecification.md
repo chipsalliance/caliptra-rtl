@@ -73,7 +73,7 @@ The RISC-V core is highly configurable and has the following settings.
 
 Internal RISC-V SRAM memory components are exported from the Caliptra subsystem to support adaptation to various fabrication processes. For more information, see the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md).
 
-#### Memory map address regions
+### Memory map address regions
 
 The 32-bit address region is subdivided into 16 fixed-sized, contiguous 256 MB regions. The following table describes the address mapping for each of the AHB devices that the RISC-V core interfaces with.
 
@@ -87,7 +87,7 @@ The 32-bit address region is subdivided into 16 fixed-sized, contiguous 256 MB r
 | RISC-V Core DCCM    | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
 | RISC-V MM CSR (PIC) | 256 MiB      | 0x6000_0000   | 0x6FFF_FFFF |
 
-##### Cryptographic subsystem
+#### Cryptographic subsystem
 
 The following table shows the memory map address ranges for each of the IP blocks in the cryptographic subsystem.
 
@@ -102,7 +102,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA512                              | 6        | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 13       | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 
-##### Peripherals subsystem
+#### Peripherals subsystem
 
 The following table shows the memory map address ranges for each of the IP blocks in the peripherals’ subsystem.
 
@@ -113,7 +113,7 @@ The following table shows the memory map address ranges for each of the IP block
 | CSRNG         | 15       | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
 | ENTROPY SRC   | 16       | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
 
-##### SoC interface subsystem
+#### SoC interface subsystem
 
 The following table shows the memory map address ranges for each of the IP blocks in the SoC interface subsystem.
 
@@ -124,7 +124,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA512 Accelerator CSR     | 10       | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
 | Mailbox                    | 10       | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 
-##### RISC-V core local memory blocks
+#### RISC-V core local memory blocks
 
 The following table shows the memory map address ranges for each of the local memory blocks that interface with RISC-V core.
 
@@ -133,7 +133,7 @@ The following table shows the memory map address ranges for each of the local me
 | ICCM0 (via DMA) | 12       | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
 | DCCM            | 11       | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
 
-#### Interrupts
+### Interrupts
 
 The VeeR-EL2 processor supports multiple types of interrupts, including non-maskable interrupts (NMI), software interrupts, timer interrupts, external interrupts, and local interrupts. Local interrupts are events not specified by the RISC-V standard, such as auxiliary timers and correctable errors.
 
@@ -141,11 +141,11 @@ Caliptra uses NMI in conjunction with a watchdog timer to support fatal error re
 
 Software and local interrupts are not implemented in the first generation of Caliptra. Standard RISC-V timer interrupts are implemented using the mtime and mtimecmp registers defined in the RISC-V Privileged Architecture Specification. Both mtime and mtimecmp are included in the soc\_ifc register bank, and are accessible by the internal microprocessor to facilitate precise timing tasks. Frequency for the timers is configured by the SoC using the dedicated timer configuration register, which satisfies the requirement prescribed in the RISC-V specification for such a mechanism. These timer registers drive the timer\_int pin into the internal microprocessor.
 
-##### Non-maskable interrupts
+#### Non-maskable interrupts
 
 <TODO> 0p8 describe a register bank that may be used to dynamically configure the NMI reset vector. (i.e., where the PC resets to).
 
-##### External interrupts
+#### External interrupts
 
 Caliptra uses the external interrupt feature to support event notification from all attached peripheral components in the subsystem. The RISC-V processor supports multiple priority levels (ranging from 1-15), which allows firmware to configure interrupt priority per component.
 
@@ -204,11 +204,11 @@ The following figure shows the two timers.
 
 Assuming a clock source of 500 MHz, a timeout value of 32’hFFFF\_FFFF results in a timeout period of ~8.5 seconds. Two 32-bit registers are provided for each timer, allowing a 64-bit timeout period to be programmed for each timer. This accommodates a maximum timeout value of over 1000 years for the same 500 Mhz clock source.
 
-### Microcontroller interface
+## Microcontroller interface
 
 The Caliptra microcontroller communicates with the mailbox through its internal AHB-Lite fabric.
 
-#### AHB-lite interface
+### AHB-lite interface
 
 AHB-lite is a subset of the full AHB specification. It is primarily used in single master systems. This interface connects VeeR EL2 Core (LSU master) to the slave devices as shown in Figure 1.
 
@@ -226,15 +226,15 @@ Each IP component in the Caliptra system uses a native AHB data width of 32-bits
 
 As a result of this implementation, 64-bit data transfers are not supported on the Caliptra AHB fabric. Firmware running on the internal microprocessor may only access memory and registers using a 32-bit or smaller request size, as 64-bit transfer requests will be corrupted.
 
-### Cryptographic subsystem
+## Cryptographic subsystem
 
 For details, see the [Cryptographic subsystem architecture](#cryptographic-subsystem-architecture) section.
 
-### Peripherals subsystem
+## Peripherals subsystem
 
 Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra includes code to enable QSPI in the RTL, but does not support the BMI profile. Therefore, QSPI must not be enabled. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
 
-#### QSPI Flash Controller
+### QSPI Flash Controller
 
 Caliptra implements a QSPI block that can communicate with 2 QSPI devices. This QSPI block is accessible to FW over the AHB-lite Interface.
 
@@ -349,7 +349,7 @@ Then for each command:
 
 Steps 4-7 are then repeated for each subsequent command.
 
-#### UART
+### UART
 
 Caliptra implements a UART block that can communicate with a serial device that is accessible to FW over the AHB-lite Interface. This is a configuration that the SoC opts-in by defining CALIPTRA\_INTERNAL\_UART.
 
@@ -394,7 +394,7 @@ The UART block architecture inputs and outputs are described in the following ta
 | cio_rx_i | input           | Serial receive bit                                        |
 | cio_tx_o | output          | Serial transmit bit                                       |
 
-### SoC mailbox
+## SoC mailbox
 
 For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/Caliptra_rtl.md#mailbox) in the Caliptra Integration Specification. TODO: Fix this!
 
@@ -429,7 +429,7 @@ The following table describes the mailbox control registers.
 | IEEE_IDEVID_CERT_CHAIN    | 0x30030390        | |
 | FUSE_DONE                 | 0x300303f0        | |
 
-### Security state
+## Security state
 
 Caliptra uses the MSB of the security state input to determine whether or not Caliptra is in debug mode.
 
@@ -455,7 +455,7 @@ Debug mode values may be set by integrators in the Caliptra configuration files.
 | Key Vault Debug Value 0     | All 0xA       |
 | Key Vault Debug Value 1     | All 0x5       |
 
-### Clock gating
+## Clock gating
 
 Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the following register.
 
@@ -477,7 +477,7 @@ There are a total of 4 clocks in Caliptra: ungated clock, gated clock, gated RDC
 | AHB Lite IF, 2to1 Mux | Clk_cg                                  |
 | TRNG                  | Clk_cg                                  |
 
-#### Wake up conditions
+### Wake up conditions
 
 For details on halting the core and waking up the core from the halt state, see section 5 of the [RISC-V VeeR EL2 Programmer's Reference Manual](https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf).
 
@@ -503,7 +503,7 @@ Activity on the APB interface only wakes up the SoC IFC clock. All other clocks 
 | 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as PSEL = 1) <br>All other clks inactive                                                   |
 | 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR PSEL = 1) <br>All other clks active (as long as condition is true) |
 
-#### Usage
+### Usage
 
 The following applies to the clock gating feature:
 
@@ -512,7 +512,7 @@ The following applies to the clock gating feature:
 * The RDC clock is similar to an ungated clock and is only disabled when a reset event occurs. This avoids metastability on flops. The RDC clock operates independently of core halt status.
 
 
-#### Timing information
+### Timing information
 
 The following figure shows the timing information for clock gating.
 
