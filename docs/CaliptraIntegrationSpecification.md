@@ -70,9 +70,6 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
-| CALIPTRA_APB_ADDR_WIDTH | config_defines.svh | Width of the APB Address field. Default to 32. |
-| CALIPTRA_APB_DATA_WIDTH | config_defines.svh | Width of the APB Data field. Default to 32. |
-| CALIPTRA_APB_USER_WIDTH | config_defines.svh | Width of the APB PAUSER field. |
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
 | CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
 | CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
