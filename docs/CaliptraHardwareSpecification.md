@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Version 0.5</p>
+<p style="text-align: center;">Version 1.0-rc2</p>
 
 <div style="page-break-after: always"></div>
 

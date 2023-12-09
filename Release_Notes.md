@@ -14,11 +14,33 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2023/11/02*_
+_*Last Update: 2023/12/08*_
 
-## Rev 1p0-rc1 ##
+## Rev 1p0-rc2 ##
 
-### Rev 1p0-rc1 release date: 2023/11/03 (1p0 version pending ROM release for official declaration) ###
+### Rev 1p0-rc2 release date: 2023/12/13 (1p0 version pending ROM release for official declaration) ###
+- Caliptra Hardware Specification: Markdown conversion
+- Caliptra Integration specification update with synthesis warnings and jtag tck requirement
+- Caliptra README updates to clarify test cases and running with VCS
+- Makefile updates to support DPI compilation in VCS
+- Verification
+  - Adding ECC, DOE, HMAC_DRBG and SHA512_masked formal Assertion IP
+  - JTAG with clock gating test cases
+  - Fixes for UVM caliptra_top test scenarios
+  - Fixes for UVM KeyVault test scenarios
+- Updated synthesis tool from Design Compiler to Fusion Compiler (sanity checks only)
+- RTL
+  - Remove TODO comments on caliptra_top ports
+  - Remove JTAG IDCODE command from RISC-V processor
+
+### Bug Fixes ###
+[MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
+
+## Previous Releases ##
+
+### Rev 1p0-rc1 ###
+
+#### Rev 1p0-rc1 release date: 2023/11/03 (1p0 version pending ROM release for official declaration) ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -59,7 +81,7 @@ _*Last Update: 2023/11/02*_
   - Automated GitHub action using OpenOCD for interactive JTAG debugging
   - SHA Formal Verification
 
-### Bug Fixes ###
+#### Bug Fixes ####
 [CLK GATING] Fatal error should wake up clks<br>
 [CLK GATING] JTAG accesses need to wake up clocks<br>
 [DOE] add zeroize to clear all internal regs<br>
@@ -113,8 +135,6 @@ _*Last Update: 2023/11/02*_
 [AHB] AHB 2:1 Mux hangs with back to back transactions after a stall<br>
 [RST] scan_mode should not corrupt resets<br>
 [TOP] EL2 Mem interface is not instantiated with a modport at all levels
-
-## Previous Releases ##
 
 ### Rev 0p8 ###
 
