@@ -154,7 +154,7 @@ Errors and notifications are allocated as interrupt events for each component, w
 
 Notification interrupts are used to alert the processor of normal operation activity, such as completion of requested operations or arrival of SoC requests through the shared interface.
 
-Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1.
+Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1. The following table shows assignment of interrupt vectors to the corresponding IP block. The illustrated interrupt priority assignment is only an example, and does not correspond with actual priorities assigned in the final Caliptra firmware. These interrupt priorities are used in the validation firmware used to test Caliptra RTL, shown [here](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/test_suites/includes/caliptra_defines.h).
 
 | IP/Peripheral                                       | Interrupt vector | Interrupt priority example<br> (Increasing, Max 15) |
 | :-------------------------------------------------- | :--------------- | :---------------------------------------------- |
@@ -397,38 +397,8 @@ The UART block architecture inputs and outputs are described in the following ta
 
 ### SoC mailbox
 
-For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification.
+For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Registers used to interact with the Mailbox are defined [here](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=caliptra_top_reg.mbox_csr).
 
-The following table describes the mailbox control registers.
-
-| Control register          | Start address     | Description        |
-| :------------------------ | :---------------- | :----------------- |
-| MBOX_LOCK                 | 0x30020000        | Mailbox lock register for mailbox access. Reading 0 sets the lock. |
-| MBOX_USER                 | 0x30020004        | Stores the user that locked the mailbox.|
-| MBOX_CMD                  | 0x30020008        | Command requested for data in mailbox. |
-| MBOX_DLEN                 | 0x3002000c        | Data length for mailbox access. |
-| MBOX_DATAIN               | 0x30020010        | Data in register. Writes the next data to mailbox. |
-| MBOX_DATAOUT              | 0x30020010        | Data out register. Reads the next data from mailbox.|
-| MBOX_EXECUTE              | 0x30020018        | Mailbox execute register indicates to the receiver that the sender is done. |
-| MBOX_STATUS               | 0x3002001c        | Status of the mailbox command: <br> CMD_BUSY - 2’b00 – Indicates the requested command is still in progress <br> DATA_READY - 2’b01 – Indicates the return data is in the mailbox for the requested command <br> CMD_COMPLETE- 2’b10 – Indicates the successful completion of the requested command <br> CMD_FAILURE- 2’b11 – Indicates the requested command failed |
-| HW_ERROR_FATAL            | 0x30030000        | Indicates fatal hardware error. |
-| HW_ERROR_NON_FATAL        | 0x30030004        | Indicates non-fatal hardware error. |
-| FW_ERROR_FATAL            | 0x30030008        | Indicates fatal firmware error. |
-| FW_ERROR_NON_FATAL        | 0x3003000c        | Indicates non-fatal firmware error. |
-| HW_ERROR_ENC              | 0x30030010        | Encoded error value for hardware errors. |
-| FW_ERROR_ENC              | 0x30030014        | Encoded error value for firmware errors. |
-| BOOT_STATUS               | 0x30030018        | Reports the boot status. |
-| FLOW_STATUS               | 0x3003001c        | Reports the status of the firmware flows. |
-| GENERIC_INPUT_WIRES       | 0x30030024        | Generic input wires connected to the SoC interface. |
-| GENERIC_OUTPUT_WIRES      | 0x3003002c        | Generic output wires connected to the SoC interface. |
-| KEY_MANIFEST_PK_HASH      | 0x300302b0        | |
-| KEY_MANIFEST_PK_HASH_MASK | 0x30030370        | |
-| KEY_MANIFEST_SVN          | 0x30030374        | |
-| BOOT_LOADER_SVN           | 0x30030384        | |
-| RUNTIME_SVN               | 0x30030388        | |
-| ANTI_ROLLBACK_DISABLE     | 0x3003038c        | |
-| IEEE_IDEVID_CERT_CHAIN    | 0x30030390        | |
-| FUSE_DONE                 | 0x300303f0        | |
 
 ### Security state
 
