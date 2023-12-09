@@ -143,7 +143,8 @@ Software and local interrupts are not implemented in the first generation of Cal
 
 ##### Non-maskable interrupts
 
-<TODO> 0p8 describe a register bank that may be used to dynamically configure the NMI reset vector. (i.e., where the PC resets to).
+Caliptra's RISC-V processor has access to an internal register that allows configuration of the Non-Maskable Interrupt vector. When an NMI occurs, the program counter will jump to the address indicated by the contents of this register.
+Refer to [NMI Vector](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_nmi_vector) for official documentation.
 
 ##### External interrupts
 
@@ -396,7 +397,7 @@ The UART block architecture inputs and outputs are described in the following ta
 
 ### SoC mailbox
 
-For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/Caliptra_rtl.md#mailbox) in the Caliptra Integration Specification. TODO: Fix this!
+For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification.
 
 The following table describes the mailbox control registers.
 
@@ -1330,10 +1331,6 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 *Figure 40: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
-
-##### Keygen TVLA
-
-TODO: provide content for this section
 
 
 ##### Signing TVLA
