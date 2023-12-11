@@ -195,6 +195,7 @@ Although fuse values (and the fuse done register) persist across a warm reset, S
 ## Interface rules
 
 The following figure shows the reset rules and timing.
+The steps illustrated should be followed by the SoC for cold boot flows.
 
 *Figure 3: Reset rules and timing diagram*
 
@@ -624,7 +625,7 @@ The following table describes SoC integration requirements.
 | SRAMs                            | SoC shall write-protect fuses that characterize the SRAM.                                                                                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | SRAMs                            | SoC shall ensure SRAM content is only destroyed on powergood cycling.                                                                                                                                                                     | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
 | SRAMs                            | SoC shall only perform SRAM repair on powergood events and prior to caliptra_rst_b deassertion.                                                                                                                                           | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
-| Backend convergence              | Caliptra is validated and backend converged at 400MHz and at process nodes - TSMC 5nm, -- \<To be filled accurately\>                                                                                                                     |                          | Functional                                        |
+| Backend convergence              | Caliptra is validated and backend converged at 400MHz using an industry standard, moderately advanced technology node as of 2023 September                                                                                                |                          | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                    |                          | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
 | PAUSER                           | SoC shall drive PAUSER input in accordance with the IP integration spec.                                                                                                                                                                  | Statement of conformance | ?                                                 |
@@ -694,7 +695,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
 # Synthesis findings
 
 Synthesis experiments have so far found the following:
-* Design converges at 400MHz 0.72V using a cutting edge TSMC process.
+* Design converges at 400MHz 0.72V using an industry standard, moderately advanced technology node as of 2023 September.
 * Design converges at 100MHz using TSMC 40nm process.
 
 Note: Any synthesis warnings of logic optimization must be reviewed and accounted for.
@@ -724,11 +725,7 @@ The target foundry technology node is an industry standard, moderately advanced 
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
 | CALIPTRA_WRAPPER | 10/4/2023 | 89279            | 7872           | 239937          | 337088         | 45601          | 31                           | SUCCEEDED     | 156211         | 0                  | 0                | 0                              |
 
-# LINT rules
-
-TODO 0p5: This is a WIP list
-
-## Recommended LINT rules
+# Recommended LINT rules
 
 The following LINT rules are the recommended minimum set for standalone analysis of Caliptra IP. The same set is recommended as a minimum subset that may be applied by Caliptra integrators.
 
