@@ -198,15 +198,16 @@ class kv_wr_rd_debug_sequence #(
         fork //clear secrets
             begin
                 repeat(20) begin
+                    configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_sha512_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_ecc_write_agent_config.wait_for_num_clocks(2);
+                    configuration.kv_doe_write_agent_config.wait_for_num_clocks(2); 
+                    
                     std::randomize(clear_secrets_data); //wren, debug_value0/1
 
                     reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
                     assert(sts == UVM_IS_OK) else `uvm_error("AHB_CLEAR_SECRETS_SET", "Failed when writing to CLEAR_SECRETS reg!")
 
-                    configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_sha512_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_ecc_write_agent_config.wait_for_num_clocks(2);
-                    configuration.kv_doe_write_agent_config.wait_for_num_clocks(2);
                 end //repeat
             end
             begin
