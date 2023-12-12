@@ -200,9 +200,9 @@ The following figure shows the reset rules and timing for cold boot flows.
 
 ![](./images/Caliptra_reset_timing.png)
 
-De-assertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
+Deassertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
 
-De-assertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
+Deassertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
 
 Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register allows the boot flow to proceed.
 
@@ -275,7 +275,7 @@ The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of thi
 
 ![](./images/Caliptra_mbox_boot_FSM.png)
 
-The boot FSM first waits for the SoC to assert cptra\_pwrgood and de-assert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
+The boot FSM first waits for the SoC to assert cptra\_pwrgood and deassert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
 BOOT\_DONE enables Caliptra reset deassertion through a two flip-flop synchronizer.
 
