@@ -194,8 +194,7 @@ Although fuse values (and the fuse done register) persist across a warm reset, S
 
 ## Interface rules
 
-The following figure shows the reset rules and timing.
-The steps illustrated should be followed by the SoC for cold boot flows.
+The following figure shows the reset rules and timing for cold boot flows.
 
 *Figure 3: Reset rules and timing diagram*
 
@@ -205,7 +204,7 @@ De-assertion of cptra\_pwrgood indicates a power cycle that results in returning
 
 De-assertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
 
-Assertion of BootFSM\_BrkPoint will stop the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register will allow the boot flow to proceed.
+Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register allows the boot flow to proceed.
 
 ### APB arbitration
 
@@ -627,7 +626,7 @@ The following table describes SoC integration requirements.
 | SRAMs                            | SoC shall write-protect fuses that characterize the SRAM.                                                                                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | SRAMs                            | SoC shall ensure SRAM content is only destroyed on powergood cycling.                                                                                                                                                                     | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
 | SRAMs                            | SoC shall only perform SRAM repair on powergood events and prior to caliptra_rst_b deassertion.                                                                                                                                           | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
-| Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September                                                                                                           |                          | Functional                                        |
+| Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                          |                          | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                    |                          | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
 | PAUSER                           | SoC shall drive PAUSER input in accordance with the IP integration spec.                                                                                                                                                                  | Statement of conformance | ?                                                 |
