@@ -201,9 +201,11 @@ The steps illustrated should be followed by the SoC for cold boot flows.
 
 ![](./images/Caliptra_reset_timing.png)
 
-Deassertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
+De-assertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
 
 De-assertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
+
+Assertion of BootFSM\_BrkPoint will stop the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register will allow the boot flow to proceed.
 
 ### APB arbitration
 
