@@ -677,7 +677,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
-*Figure 18: Caliptra cryptographic subsystem TODO: fix this image*
+*Figure 18: Caliptra cryptographic subsystem*
 
 ![](./images/crypto_subsystem.png)
 
