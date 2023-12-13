@@ -397,7 +397,7 @@ The UART block architecture inputs and outputs are described in the following ta
 
 ### SoC mailbox
 
-For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
+For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs/mbox_csr](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
 
 
 ### Security state
