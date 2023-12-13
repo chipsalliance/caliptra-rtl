@@ -497,7 +497,7 @@ Caliptra implements a true random number generator (TRNG) block for local use mo
 
 This TRNG block is a combination of entropy source and CSRNG implementations. For information, see the [ENTROPY\_SRC HWIP Technical Specification](https://opentitan.org/book/hw/ip/entropy_src/index.html) and the [CSRNG HWIP Technical Specification](https://opentitan.org/book/hw/ip/csrng/). The core code (see [entropy source](https://github.com/lowRISC/opentitan/tree/master/hw/ip/entropy_src) and [csrng](https://github.com/lowRISC/opentitan/tree/master/hw/ip/csrng)) is reused from here but the interface to the module is changed to AHB-lite. This design provides an interface to an external physical random noise generator. This is also referred to as a physical true random number generator (PTRNG). The PTRNG external source is a physical true random noise source. A noise source and its relation to an entropy source are defined by [SP 800-90B](https://csrc.nist.gov/publications/detail/sp/800-90b/final).
 
-The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the TODO: heading link in markdown.
+The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the [External-TRNG REQ HW API](#External-TRNG REQ HW API).
 
 The following figure shows the integrated TRNG block.
 
