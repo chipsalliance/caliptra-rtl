@@ -143,7 +143,7 @@ Software and local interrupts are not implemented in the first generation of Cal
 
 ##### Non-maskable interrupts
 
-Caliptra's RISC-V processor has access to an internal register that allows configuration of the Non-Maskable Interrupt vector. When an NMI occurs, the program counter will jump to the address indicated by the contents of this register.
+Caliptra's RISC-V processor has access to an internal register that allows configuration of the NMI vector. When an NMI occurs, the program counter jumps to the address indicated by the contents of this register.
 Refer to [NMI Vector](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_nmi_vector) for official documentation.
 
 ##### External interrupts
