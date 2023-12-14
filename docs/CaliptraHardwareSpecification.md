@@ -143,7 +143,8 @@ Software and local interrupts are not implemented in the first generation of Cal
 
 #### Non-maskable interrupts
 
-<TODO> 0p8 describe a register bank that may be used to dynamically configure the NMI reset vector. (i.e., where the PC resets to).
+Caliptra's RISC-V processor has access to an internal register that allows configuration of the NMI vector. When an NMI occurs, the program counter jumps to the address indicated by the contents of this register.
+For more information, see [NMI Vector](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_nmi_vector).
 
 #### External interrupts
 
@@ -153,7 +154,7 @@ Errors and notifications are allocated as interrupt events for each component, w
 
 Notification interrupts are used to alert the processor of normal operation activity, such as completion of requested operations or arrival of SoC requests through the shared interface.
 
-Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1.
+Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1. The following table shows assignment of interrupt vectors to the corresponding IP block. The illustrated interrupt priority assignment is only an example, and does not correspond with actual priorities assigned in the final Caliptra firmware. These interrupt priorities are used in the validation firmware that tests the RTL, and are defined in [caliptra_defines.h](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/test_suites/includes/caliptra_defines.h).
 
 | IP/Peripheral                                       | Interrupt vector | Interrupt priority example<br> (Increasing, Max 15) |
 | :-------------------------------------------------- | :--------------- | :---------------------------------------------- |
@@ -396,38 +397,8 @@ The UART block architecture inputs and outputs are described in the following ta
 
 ## SoC mailbox
 
-For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/Caliptra_rtl.md#mailbox) in the Caliptra Integration Specification. TODO: Fix this!
+For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs/mbox_csr](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
 
-The following table describes the mailbox control registers.
-
-| Control register          | Start address     | Description        |
-| :------------------------ | :---------------- | :----------------- |
-| MBOX_LOCK                 | 0x30020000        | Mailbox lock register for mailbox access. Reading 0 sets the lock. |
-| MBOX_USER                 | 0x30020004        | Stores the user that locked the mailbox.|
-| MBOX_CMD                  | 0x30020008        | Command requested for data in mailbox. |
-| MBOX_DLEN                 | 0x3002000c        | Data length for mailbox access. |
-| MBOX_DATAIN               | 0x30020010        | Data in register. Writes the next data to mailbox. |
-| MBOX_DATAOUT              | 0x30020010        | Data out register. Reads the next data from mailbox.|
-| MBOX_EXECUTE              | 0x30020018        | Mailbox execute register indicates to the receiver that the sender is done. |
-| MBOX_STATUS               | 0x3002001c        | Status of the mailbox command: <br> CMD_BUSY - 2’b00 – Indicates the requested command is still in progress <br> DATA_READY - 2’b01 – Indicates the return data is in the mailbox for the requested command <br> CMD_COMPLETE- 2’b10 – Indicates the successful completion of the requested command <br> CMD_FAILURE- 2’b11 – Indicates the requested command failed |
-| HW_ERROR_FATAL            | 0x30030000        | Indicates fatal hardware error. |
-| HW_ERROR_NON_FATAL        | 0x30030004        | Indicates non-fatal hardware error. |
-| FW_ERROR_FATAL            | 0x30030008        | Indicates fatal firmware error. |
-| FW_ERROR_NON_FATAL        | 0x3003000c        | Indicates non-fatal firmware error. |
-| HW_ERROR_ENC              | 0x30030010        | Encoded error value for hardware errors. |
-| FW_ERROR_ENC              | 0x30030014        | Encoded error value for firmware errors. |
-| BOOT_STATUS               | 0x30030018        | Reports the boot status. |
-| FLOW_STATUS               | 0x3003001c        | Reports the status of the firmware flows. |
-| GENERIC_INPUT_WIRES       | 0x30030024        | Generic input wires connected to the SoC interface. |
-| GENERIC_OUTPUT_WIRES      | 0x3003002c        | Generic output wires connected to the SoC interface. |
-| KEY_MANIFEST_PK_HASH      | 0x300302b0        | |
-| KEY_MANIFEST_PK_HASH_MASK | 0x30030370        | |
-| KEY_MANIFEST_SVN          | 0x30030374        | |
-| BOOT_LOADER_SVN           | 0x30030384        | |
-| RUNTIME_SVN               | 0x30030388        | |
-| ANTI_ROLLBACK_DISABLE     | 0x3003038c        | |
-| IEEE_IDEVID_CERT_CHAIN    | 0x30030390        | |
-| FUSE_DONE                 | 0x300303f0        | |
 
 ## Security state
 
@@ -526,7 +497,7 @@ Caliptra implements a true random number generator (TRNG) block for local use mo
 
 This TRNG block is a combination of entropy source and CSRNG implementations. For information, see the [ENTROPY\_SRC HWIP Technical Specification](https://opentitan.org/book/hw/ip/entropy_src/index.html) and the [CSRNG HWIP Technical Specification](https://opentitan.org/book/hw/ip/csrng/). The core code (see [entropy source](https://github.com/lowRISC/opentitan/tree/master/hw/ip/entropy_src) and [csrng](https://github.com/lowRISC/opentitan/tree/master/hw/ip/csrng)) is reused from here but the interface to the module is changed to AHB-lite. This design provides an interface to an external physical random noise generator. This is also referred to as a physical true random number generator (PTRNG). The PTRNG external source is a physical true random noise source. A noise source and its relation to an entropy source are defined by [SP 800-90B](https://csrc.nist.gov/publications/detail/sp/800-90b/final).
 
-The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the TODO: heading link in markdown.
+The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the [External-TRNG REQ HW API](#External-TRNG-REQ-HW-API).
 
 The following figure shows the integrated TRNG block.
 
@@ -706,7 +677,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
-*Figure 18: Caliptra cryptographic subsystem TODO: fix this image*
+*Figure 18: Caliptra cryptographic subsystem*
 
 ![](./images/crypto_subsystem.png)
 
@@ -1330,10 +1301,6 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 *Figure 40: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
-
-##### Keygen TVLA
-
-TODO: provide content for this section
 
 
 ##### Signing TVLA
