@@ -28,7 +28,6 @@ module el2_veer_wrapper_tb ( input bit core_clk );
 
     logic        [31:0]         reset_vector;
     logic        [31:0]         nmi_vector;
-    logic        [31:1]         jtag_id;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -411,9 +410,6 @@ module el2_veer_wrapper_tb ( input bit core_clk );
         abi_reg[30] = "t5";
         abi_reg[31] = "t6";
     // tie offs
-        jtag_id[31:28] = 4'b1;
-        jtag_id[27:12] = '0;
-        jtag_id[11:1]  = 11'h45;
         reset_vector = `RV_RESET_VEC;
         nmi_vector   = 32'hee000000;
         nmi_int   = 0;
@@ -448,7 +444,6 @@ el2_veer_wrapper rvtop (
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
-    .jtag_id                ( jtag_id[31:1]),
 
 `ifdef RV_BUILD_AHB_LITE
     .haddr                  ( ic_haddr      ),

@@ -69,8 +69,6 @@ module caliptra_top
     input  logic                                uart_rx,
 `endif
 
-    //I3C Interface
-
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
 
@@ -355,16 +353,12 @@ end
    // RTL instance
    //=========================================================================-
 //FIXME TIE OFFS
-logic [31:0] jtag_id;
 logic [31:0] reset_vector;
 logic [31:0] nmi_vector;
 logic nmi_int;
 logic soft_int;
 logic timer_int;
 
-assign jtag_id[31:28] = 4'b1;
-assign jtag_id[27:12] = '0;
-assign jtag_id[11:1]  = 11'h45;
 assign reset_vector = `RV_RESET_VEC;
 assign soft_int     = 1'b0;
 
@@ -416,7 +410,6 @@ el2_veer_wrapper rvtop (
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
-    .jtag_id                ( jtag_id[31:1]),
 
     .haddr                  ( ic_haddr      ),
     .hburst                 ( ic_hburst     ),
