@@ -34,15 +34,7 @@ The blocks described in this document are either obtained from open-source GitHu
 
 # Caliptra Core
 
-The following figure shows the Caliptra Core.
-
-*Figure 1: Caliptra block diagram*
-
-![](./images/Caliptra_HW_diagram.png)
-
-## Boot Media Dependent (passive) vs Boot Media Integrated (active) profile
-
-In the BMD profile, QSPI and I3C IO peripherals are disabled using integration-time defines passed to the hardware, which are also exposed to ROM. Peripheral IOs can be tied off appropriately for the BMD profile at SoC integration time. For more information on the BMD vs. BMI profile differences, see the boot flows in [Caliptra profiles](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#caliptra-profiles). Only the BMD profile is supported for the first generation release of Caliptra.
+For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
 # SoC interface definition
 

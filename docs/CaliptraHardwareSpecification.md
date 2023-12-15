@@ -16,11 +16,7 @@ This document provides definitions and requirements for a Caliptra cryptographic
 
 # Caliptra Core
 
-The following figure shows the Caliptra Core.
-
-*Figure 1: Caliptra Block Diagram*
-
-![](./images/Caliptra_HW_diagram.png)
+For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
 ## Boot FSM
 
@@ -233,7 +229,7 @@ For details, see the [Cryptographic subsystem architecture](#cryptographic-subsy
 
 ## Peripherals subsystem
 
-Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra includes code to enable QSPI in the RTL, but does not support the BMI profile. Therefore, QSPI must not be enabled. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
+Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra includes code to enable QSPI in the RTL. Therefore, QSPI must not be enabled. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
 
 ### QSPI Flash Controller
 
