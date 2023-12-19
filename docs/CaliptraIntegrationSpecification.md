@@ -476,6 +476,10 @@ Having an interface that is separate from the SoC mailbox ensures that this requ
 
 TRNG DATA register is tied to TRNG VALID PAUSER. SoC can program the TRNG VALID PAUSER and lock the register using TRNG\_PAUSER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the PAUSER programmed into the TRNG\_VALID\_PAUSER register. If the CPTRA\_TNRG\_PAUSER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set, only an agent with a specific TRNG\_VALID\_PAUSER can write.
 
+The ROM and firmware currently time out on the TRNG interface after 250,000
+attempts to read a DONE bit set in the architectural registers, as alluded to in
+3. above.
+
 # SRAM implementation
 
 ## Overview
