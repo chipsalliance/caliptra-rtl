@@ -478,7 +478,7 @@ TRNG DATA register is tied to TRNG VALID PAUSER. SoC can program the TRNG VALID 
 
 The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
-referenced in 3. in the preceding list.
+referenced in 3 in the preceding list.
 
 # SRAM implementation
 
