@@ -166,8 +166,8 @@ The following tables describe the interface signals.
 | CALIPTRA_ERROR_NON_FATAL | 1 | Output | Synchronous to clk | Indicates a non fatal error from Caliptra. |
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
 | eTRNG_REQ | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into iTRNG_DATA/iTRNG_VALID. |
-| iTRNG_DATA | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG digital bit stream from SoC, which is sampled when iTRNG_VALID is high. |
-| iTRNG_VALID | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. TRNG_DATA can be sampled whenever this bit is high. The expected iTRNG_VALID output rate is about 50KHz. |
+| iTRNG_DATA | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when iTRNG_VALID is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
+| iTRNG_VALID | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. iTRNG_DATA can be sampled whenever this bit is high. The expected iTRNG_VALID output rate is about 50KHz. |
 
 ## Architectural registers and fuses
 
