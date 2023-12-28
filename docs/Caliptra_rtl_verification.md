@@ -109,3 +109,12 @@ The following diagram depicts the organization of the SoC Interface UVM testbenc
 - Pivot QVIP AHB/APB to open-source agents
 - Clock gating model
 - JTAG/QSPI/I3C/UART
+
+# Terminology
+
+The following terminology is used in this document.
+
+*Table (FIXME no.): Terminology*
+| Abbreviation | Description |
+| :---------   | :--------- |
+| UVM | Universal Verification Methodology |
