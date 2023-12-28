@@ -71,6 +71,7 @@ A UVM testbench is used to facilitate testing for the SoC Interface in a standal
 The standalone SoC Interface testbench implemented in UVM provides stimulus and checking for functionality of the various SoC facing features of Caliptra. This includes mailbox operation, register interaction, SHA512 acceleration, and reset functionality. Because this testbench is designed for standalone testing, it includes both the SoC-facing interfaces (APB, fatal/non-fatal interrupts, reset inputs, etc) and the Caliptra-facing interfaces (AHB, Caliptra reset outputs, internal error status signals, RISC-V interrupts, etc). Each of these interfaces is accompanied by a full dedicated agent, along with drivers/monitors, agent-level sequences, and prediction/scoreboarding for all signal activity.
 The following diagram depicts the organization of the SoC Interface UVM testbench. SoC-facing interfaces and internal Caliptra interfaces are visually separated in the diagram to provide clarity around the implementation approach. In particular, integration of the SoC Interface testbench in the system level bench relies upon this interface separation to improve logic reuse.
 
+*Figure 1: SoC Interface UVM Testbench Design*
 ![SoC Interface UVM Testbench](./images/uvm_testbench_soc_ifc.png)
 
 ### Interface design and breakdown
