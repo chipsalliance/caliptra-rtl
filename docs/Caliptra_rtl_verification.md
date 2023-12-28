@@ -115,6 +115,6 @@ The following diagram depicts the organization of the SoC Interface UVM testbenc
 The following terminology is used in this document.
 
 *Table (FIXME no.): Terminology*
-| Abbreviation | Description |
+| Abbreviation | Description                                                                                                 |
 | :---------   | :--------- |
-| UVM | Universal Verification Methodology |
+| UVM          | Universal Verification Methodology                                                                          |
