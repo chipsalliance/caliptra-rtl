@@ -25,7 +25,8 @@ interface keyvault_cov_if
     input logic rst_b,
     input logic core_only_rst_b,
     input logic cptra_pwrgood,
-    input logic debugUnlock_or_scan_mode_switch
+    input logic debugUnlock_or_scan_mode_switch,
+    input logic cptra_in_debug_scan_mode
 );
 
     //Intermediate wires
@@ -64,7 +65,7 @@ interface keyvault_cov_if
 
     covergroup keyvault_top_cov_grp @(posedge clk);
         option.per_instance = 1;
-        debug: coverpoint debugUnlock_or_scan_mode_switch;
+        debug: coverpoint cptra_in_debug_scan_mode; //debugUnlock_or_scan_mode_switch;
 
         //Note: Bit transitions and values for lock_wr, lock_use and clear are covered
         //in UVM reg coverage. This coverpoint bins the 32-bit lock/clear bus so that
@@ -130,8 +131,10 @@ interface keyvault_cov_if
         clear_secretsXkv_write: cross kv_write_en, cp_clear_secrets_wr, cp_clear_secrets_sel;
 
         //Cover ahb write/read during crypto write and debug mode unlocked
-        ahbXkv_write:       cross cp_ahb_write, cp_ahb_read, kv_write_en;
-        ahbXdebug:          cross cp_ahb_write, cp_ahb_read, debug; //TODO: maybe not a real use case - revisit
+        ahb_writeXkv_write:      cross cp_ahb_write, kv_write_en;
+        ahb_writeXdebug:         cross cp_ahb_write, debug;
+        ahb_readXkv_write:       cross cp_ahb_read, kv_write_en;
+        ahb_readXdebug:          cross cp_ahb_read, debug;
         
 
     endgroup

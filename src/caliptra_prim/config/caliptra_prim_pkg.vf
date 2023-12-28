@@ -1,4 +1,3 @@
-
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_alert_pkg.sv

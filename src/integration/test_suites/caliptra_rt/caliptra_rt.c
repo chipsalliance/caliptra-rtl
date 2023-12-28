@@ -155,8 +155,8 @@ void caliptra_rt() {
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
     //Generate constrained random WDT timer periods
-    wdt_rand_t1_val = rand() % 0xfff;
-    wdt_rand_t2_val = rand() % 0xfff;
+    wdt_rand_t1_val = rand() % 0xfff + 0x5;
+    wdt_rand_t2_val = rand() % 0xfff + 0x5;
     
     while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode
@@ -325,17 +325,21 @@ void caliptra_rt() {
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
+                // Always check mbox FSM state at new command entry to detect
+                // previously-handled error scenarios (FSM is IDLE) or new error
+                // injection (FSM is in ERROR)
                 fsm_chk = soc_ifc_chk_execute_uc();
                 if (fsm_chk != 0) {
                     if (fsm_chk == 0xF) {
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                         } else {
-                            VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                            VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
                         }
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         // This oftens occurs alongside the cmd_fail bit in error injection tests...
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
@@ -357,6 +361,15 @@ void caliptra_rt() {
                     CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK &
                                                                          ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK &
                                                                          ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
+                    // Run the FSM check once more for late-arrival of errors
+                    // that may correlate with the observed error interrupt
+                    fsm_chk = soc_ifc_chk_execute_uc();
+                    if (fsm_chk) {
+                        if (fsm_chk == 0xF) {
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        }
+                        continue;
+                    }
                 }
                 // Any other errors that are flagged at this point are unexpected and should cause a test failure
                 if (cptra_intr_rcv.soc_ifc_error) {
@@ -427,6 +440,35 @@ void caliptra_rt() {
                         }
                         soc_ifc_sha_accel_clr_lock();
                     }
+                    else if ((op.cmd == MBOX_CMD_SHA384_STREAM_REQ) | (op.cmd == MBOX_CMD_SHA512_STREAM_REQ)) {
+                        enum sha_accel_mode_e mode;
+                        mode = (op.cmd == MBOX_CMD_SHA384_STREAM_REQ) ? SHA_STREAM_384 : SHA_STREAM_512;
+                        //First dword contains the start address
+                        temp = soc_ifc_mbox_read_dataout_single();
+                        //ignore the bytes used for start address
+                        op.dlen = op.dlen - 4;
+                        //Acquire SHA Accel lock
+                        soc_ifc_sha_accel_acquire_lock();
+                        soc_ifc_sha_accel_wr_mode(mode);
+                        //write dlen in bytes
+                        lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DLEN), op.dlen);
+                        //Stream the KAT to the sha accelerator
+                        for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                            read_data = soc_ifc_mbox_read_dataout_single();
+                            lsu_write_32((uintptr_t) (CLP_SHA512_ACC_CSR_DATAIN), read_data);
+                        }
+                        soc_ifc_sha_accel_execute();
+                        soc_ifc_sha_accel_poll_status();
+                        lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DLEN), (mode == SHA_MBOX_384) ? 48 : 64);
+                        //read the digest and write it back to the mailbox
+                        reg_addr = CLP_SHA512_ACC_CSR_DIGEST_0;
+                        while (reg_addr <= ((mode == SHA_MBOX_384) ? CLP_SHA512_ACC_CSR_DIGEST_11 : CLP_SHA512_ACC_CSR_DIGEST_15)) {
+                            read_data = lsu_read_32(reg_addr);
+                            lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
+                            reg_addr = reg_addr + 4;
+                        }
+                        soc_ifc_sha_accel_clr_lock();
+                    }
                     else {
                         // Read provided data
                         read_data = soc_ifc_mbox_read_dataout_single();
@@ -457,12 +499,13 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         }
                         continue;
                     }
@@ -499,12 +542,13 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) after servicing\n");
+                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error and resetting the mailbox with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
+                            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         }
                         continue;
                     }

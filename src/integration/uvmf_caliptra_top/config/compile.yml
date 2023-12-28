@@ -15,6 +15,7 @@ provides: [uvmf_caliptra_top]
 schema_version: 2.4.0
 requires:
   - uvmf_caliptra_top_vip
+  - asserts
   - caliptra_top
   - sha512_coverage
   - sha256_coverage
@@ -39,6 +40,7 @@ targets:
       - ${COMPILE_ROOT}/../tb/caliptra_veer_sram_export.sv
       - ${COMPILE_ROOT}/../tb/caliptra_top_tb_services.sv
       - ${COMPILE_ROOT}/../coverage/caliptra_top_cov_if.sv
+      - ${COMPILE_ROOT}/../coverage/caliptra_top_cov_props.sv
       - ${COMPILE_ROOT}/../coverage/caliptra_top_cov_bind.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hdl_top.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/caliptra_top/tb/testbench/hvl_top.sv
@@ -56,6 +58,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+UVMF_CALIPTRA_TOP
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
@@ -101,6 +104,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+UVMF_CALIPTRA_TOP
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
         # Suppress a warning due to calling $fgets as task instead of function
