@@ -8,7 +8,7 @@
 
 # Scope
 
-This document describes the Caliptra hardware verification methodology and testbench architecture. This document is intended to explain how the testbenches are conceptually designed, what scenarios are covered, and how the testplan maps to actual code implementation.
+This document describes the Caliptra hardware verification methodology and testbench architecture. This includes explanation of how the testbenches are conceptually designed, what scenarios are covered, and how the testplan maps to actual code implementation.
 
 This document is intended to enable users to reproduce and extend the Caliptra testplan, but does not provide comprehensive explanation for the Testplan itself, nor does it provided tool-specific instructions or scripting guidelines for integrating the code base into a user environment.
 
@@ -33,7 +33,7 @@ The testbench design has four major components:
 
 ## Modular testbench "services"
 
-Although production designs of Caliptra must adhere to the predefined functionality for generic input and output wires (which are used to implement standardized late-binding features), the standalone testbench heavily relies upon these signals to enable validation firmware and the testbench to easily communicate testing intent to each other.
+Although production designs of Caliptra must adhere to the predefined functionality for generic input and output wires (which are used to implement standardized late-binding features), the standalone testbench heavily relies upon these signals to enable validation firmware and the testbench to easily communicate testing intent to each other. In order to achieve this testing functionality, the testbench services implements a set of proprietary encodings and activation triggers around the generic input and output wires.
 
 ## Firmware operation
 
@@ -63,6 +63,15 @@ The following blocks have dedicated UVM testbenches:
 - SOC_IFC
 
 ## SOC Interface testbench design
+
+A UVM testbench is used to facilitate testing for the SoC Interface in a standalone mode, which allows extended coverage of the block that is decoupled from Caliptra Firmware.
+
+### Overview
+
+The standalone SoC Interface testbench implemented in UVM provides stimulus and checking for functionality of the various SoC facing features of Caliptra. This includes mailbox operation, register interaction, SHA512 acceleration, and reset functionality. Because this testbench is designed for standalone testing, it includes both the SoC-facing interfaces (APB, fatal/non-fatal interrupts, reset inputs, etc) and the Caliptra-facing interfaces (AHB, Caliptra reset outputs, internal error status signals, RISC-V interrupts, etc). Each of these interfaces is accompanied by a full dedicated agent, along with drivers/monitors, agent-level sequences, and prediction/scoreboarding for all signal activity.
+The following diagram depicts the organization of the SoC Interface UVM testbench. SoC-facing interfaces and internal Caliptra interfaces are visually separated in the diagram to provide clarity around the implementation approach. In particular, integration of the SoC Interface testbench in the system level bench relies upon this interface separation to improve logic reuse.
+
+![SoC Interface UVM Testbench](./images/uvm_testbench_soc_ifc.png)
 
 ### Interface design and breakdown
 
