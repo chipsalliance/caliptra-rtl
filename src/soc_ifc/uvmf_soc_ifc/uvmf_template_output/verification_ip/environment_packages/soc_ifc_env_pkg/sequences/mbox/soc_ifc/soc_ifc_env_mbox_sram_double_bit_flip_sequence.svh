@@ -45,6 +45,7 @@ class soc_ifc_env_mbox_sram_double_bit_flip_sequence extends soc_ifc_env_mbox_se
 
   function new(string name = "" );
     super.new(name);
+    this.mbox_sts_exp_error = 1;
   endfunction
 
   //==========================================
