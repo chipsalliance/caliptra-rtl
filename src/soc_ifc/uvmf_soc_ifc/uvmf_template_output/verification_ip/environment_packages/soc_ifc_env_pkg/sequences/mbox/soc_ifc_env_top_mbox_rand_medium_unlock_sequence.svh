@@ -46,6 +46,7 @@ endfunction
 function soc_ifc_env_top_mbox_rand_medium_unlock_sequence::randomize_seqs();
     if(!soc_ifc_env_mbox_seq.randomize())
         `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_medium_unlock_sequence::body() - %s randomization failed", soc_ifc_env_mbox_seq.get_type_name()));
+    soc_ifc_env_mbox_seq.mbox_sts_exp_error = 1'b1;
     if(!soc_ifc_env_cptra_handler_seq.randomize() with { inject_force_unlock == 1'b1; })
         `uvm_fatal("SOC_IFC_MBOX_TOP", $sformatf("soc_ifc_env_top_mbox_rand_medium_unlock_sequence::body() - %s randomization failed", soc_ifc_env_cptra_handler_seq.get_type_name()));
 endfunction

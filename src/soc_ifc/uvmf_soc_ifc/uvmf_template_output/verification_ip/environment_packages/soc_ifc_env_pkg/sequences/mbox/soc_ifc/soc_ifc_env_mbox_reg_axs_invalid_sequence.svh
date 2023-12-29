@@ -37,6 +37,7 @@ class soc_ifc_env_mbox_reg_axs_invalid_sequence extends soc_ifc_env_mbox_sequenc
 
   function new(string name = "" );
     super.new(name);
+    this.mbox_sts_exp_error = 1;
   endfunction
 
   //==========================================
