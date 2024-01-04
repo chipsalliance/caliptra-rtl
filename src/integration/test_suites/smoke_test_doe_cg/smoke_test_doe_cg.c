@@ -94,7 +94,6 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    if (rst_count == 1) {
     //Enable clk gating and halt core
     SEND_STDOUT_CTRL(0xf2);
     set_mit0(mitb0, mie_timer0_en);
@@ -106,7 +105,31 @@ void main() {
     SEND_STDOUT_CTRL(0xec);
     *doe_ctrl = 0x0000000D;
 
-    printf("Dummy\n");
+    __asm__ volatile ("csrwi    %0, %1" \
+                    : /* output: none */        \
+                    : "i" (0x7c6), "i" (0x03)  /* input : immediate  */ \
+                    : /* clobbers: none */);
+
+    // //Poll for DOE status
+    while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
+        doe_status_int = *doe_status;
+        doe_status_int = doe_status_int & (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK) ;
+    }
+
+    //Clear doe_status_int
+    doe_status_int = 0;
+    
+    //--------------------------------------------------------------------
+    //Enable clk gating and halt core
+    SEND_STDOUT_CTRL(0xf2);
+    set_mit0(mitb0, mie_timer0_en);
+    
+    printf("Rand FE\n");
+
+    //Start FE and store in KV7
+    SEND_STDOUT_CTRL(0xed);
+    *doe_ctrl = 0x0000001E;
+
     __asm__ volatile ("csrwi    %0, %1" \
                     : /* output: none */        \
                     : "i" (0x7c6), "i" (0x03)  /* input : immediate  */ \

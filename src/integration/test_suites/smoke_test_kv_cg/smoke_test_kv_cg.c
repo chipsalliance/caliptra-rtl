@@ -140,6 +140,11 @@ void main() {
     VPRINTF(LOW, "Starting UDS again\n");
     *doe_ctrl = 0x00000001;
 
+    //Enable clk gating and halt core
+    // SEND_STDOUT_CTRL(0xf2);
+    set_mit0(mitb0, mie_timer0_en);
+    halt_core();
+
     // //Poll for DOE status
     doe_status_int = 0x00000000;
         while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
