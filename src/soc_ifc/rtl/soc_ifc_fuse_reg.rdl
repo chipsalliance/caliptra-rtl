@@ -83,7 +83,7 @@ reg {
     Fuse hsm_id[32]=0;
 } fuse_idevid_manuf_hsm_id[4];
 reg {
-    desc = " Caliptra Boot Media Integrated mode usage only. SOCs that build with a Boot Media Independent profile don’t have to account for these fuses.
+    desc = " Caliptra Boot Media Integrated mode usage only. SOCs that build with a Boot Media Dependent profile don’t have to account for these fuses.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse life_cycle[2]=0;
