@@ -655,7 +655,7 @@ The following table describes SoC integration requirements.
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
-## Integrator RTL replacement requirements
+## Integrator RTL modification requirements
 
 The following files implement functionality that may be process specific, and should be replaced by integrators using components from the cell library of their fabrication vendor.
 
