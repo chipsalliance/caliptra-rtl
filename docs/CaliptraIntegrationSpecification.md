@@ -663,12 +663,9 @@ The following files implement functionality that may be process specific, and sh
 
 | Module                                                                                 | Description                                                            |
 | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
-| [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>
-                                                                                           Declare name of custom clock gate module by defining USER_ICG.<br>
-                                                                                           Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
+| [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>Declare name of custom clock gate module by defining USER_ICG.<br>Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
 | [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define PAUSER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
-| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.<br>
-                                                                                           Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
+| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
 | [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with technology specific clock gater.       |
 | [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology specific sync cell.                            |
 | [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology specific sync cell.                            |
