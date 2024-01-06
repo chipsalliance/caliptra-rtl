@@ -655,18 +655,18 @@ The following table describes SoC integration requirements.
 
 ## Integrator RTL replacement requirements
 
-The following files implement functionality that may be process specific, and should be replaced by integrators using components from their fabrication vendor library.
+The following files implement functionality that may be process specific, and should be replaced by integrators using components from the cell library of their fabrication vendor.
 
 *Table 19: Caliptra integrator custom RTL file list*
 
 | Module                                    | Description                                                                                |
 | :---------------------------------------- | :----------------------------------------------------------------------------------------- |
-| [caliptra_icg](src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.       |
-| [beh_lib](src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace with technology specific clock gater.       |
-| [config_defines](src/integration/rtl/config_defines.svh)                         | Enable Caliptra internal TRNG (if applicable)       |
-| [caliptra_prim_flop_2sync](src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology specific sync cell.         |
-| [dmi_jtag_to_core_sync](src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v) | Replace with technology specific sync cell.         |
-| [caliptra_2ff_sync](src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology specific sync cell.         |
+| [caliptra_icg](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.       |
+| [beh_lib](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace with technology specific clock gater.       |
+| [config_defines](../src/integration/rtl/config_defines.svh)                         | Enable Caliptra internal TRNG (if applicable)       |
+| [caliptra_prim_flop_2sync](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology specific sync cell.         |
+| [dmi_jtag_to_core_sync](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v) | Replace with technology specific sync cell.         |
+| [caliptra_2ff_sync](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology specific sync cell.         |
 
 
 # CDC analysis and constraints
