@@ -653,6 +653,22 @@ The following table describes SoC integration requirements.
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
+## Integrator RTL replacement requirements
+
+The following files implement functionality that may be process specific, and should be replaced by integrators using components from their fabrication vendor library.
+
+*Table 19: Caliptra integrator custom RTL file list*
+
+| Module                                    | Description                                                                                |
+| :---------------------------------------- | :----------------------------------------------------------------------------------------- |
+| [caliptra_icg](src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.       |
+| [beh_lib](src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace with technology specific clock gater.       |
+| [config_defines](src/integration/rtl/config_defines.svh)                         | Enable Caliptra internal TRNG (if applicable)       |
+| [caliptra_prim_flop_2sync](src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology specific sync cell.         |
+| [dmi_jtag_to_core_sync](src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v) | Replace with technology specific sync cell.         |
+| [caliptra_2ff_sync](src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology specific sync cell.         |
+
+
 # CDC analysis and constraints
 
 Clock Domain Crossing (CDC) analysis is performed on the Caliptra core IP. The following are the results and recommended constraints for Caliptra integrators using standard CDC analysis EDA tools.
@@ -707,7 +723,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
 
-*Table 19: Netlist synthesis data*
+*Table 20: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -870,7 +886,7 @@ Fatal: The 'default' or 'others' must be last case in a case statement
 
 The following terminology is used in this document.
 
-*Table 20: Terminology*
+*Table 21: Terminology*
 
 
 | Abbreviation | Description                                                                                      |
