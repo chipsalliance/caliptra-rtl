@@ -5,6 +5,17 @@
 
 SIM_LOG=`realpath sim.log`
 OPENOCD_LOG=`realpath openocd.log`
+GCC_PREFIX=riscv64-unknown-elf
+
+# Ensure that RISC-V toolchain is installed
+if ! which ${GCC_PREFIX}-gcc >/dev/null; then
+    GCC_PREFIX=riscv32-unknown-elf
+fi
+if ! which ${GCC_PREFIX}-gcc >/dev/null; then
+    echo "RISC-V toolchain not found, please refer to https://github.com/chipsalliance/caliptra-rtl?tab=readme-ov-file#riscv-toolchain-installation for more details."
+    exit 1
+fi
+export GCC_PREFIX
 
 set +e
 
