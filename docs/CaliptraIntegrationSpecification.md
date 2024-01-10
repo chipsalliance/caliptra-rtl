@@ -657,19 +657,19 @@ The following table describes SoC integration requirements.
 
 ## Integrator RTL modification requirements
 
-The following files implement functionality that may be process specific, and should be replaced by integrators using components from the cell library of their fabrication vendor.
+Several files contain code that may be specific to an integrator's implementation and should be overridden. This overridable code is either configuration parameters with integrator-specific values or modules that implement process specific functionality. Code in these files should be modified or replaced by integrators using components from the cell library of their fabrication vendor. The following table describes recommended modifications for each file.
 
 *Table 19: Caliptra integrator custom RTL file list*
 
-| Module                                                                                 | Description                                                            |
+| File                                                                                   | Description                                                            |
 | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
 | [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>Declare name of custom clock gate module by defining USER_ICG.<br>Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
 | [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define PAUSER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
-| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
-| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with technology specific clock gater.       |
-| [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology specific sync cell.                            |
-| [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology specific sync cell.                            |
-| [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with technology specific sync cell.                            |
+| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
+| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with technology-specific clock gater.       |
+| [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology-specific sync cell.                            |
+| [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology-specific sync cell.                            |
+| [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with technology-specific sync cell.                            |
 
 
 # CDC analysis and constraints
