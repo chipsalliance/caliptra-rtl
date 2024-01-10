@@ -578,6 +578,6 @@ module caliptra_top_sva
   fw_upd_rst_sha512_idle:  assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SHA512_PATH.i_sha512_reg.s_cpuif_req)
                            else $display("SVA ERROR: SHA512 bus not idle after Firmware Update Reset!");
   fw_upd_rst_soc_ifc_idle: assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SOC_IFC_TOP_PATH.i_ahb_slv_sif_soc_ifc.dv)
-                           else $display("SVA ERROR: SHA512 bus not idle after Firmware Update Reset!");
+                           else $display("SVA ERROR: SOC_IFC bus not idle after Firmware Update Reset!");
 
 endmodule
