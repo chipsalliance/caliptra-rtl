@@ -183,7 +183,7 @@ stages:
                 - dut: 'caliptra_top_tb'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
                 - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
-                - timeout: 30
+                - timeout: 60
 
         # This runs for a veeeery long time (~8hours)
         - ROM_tb:
