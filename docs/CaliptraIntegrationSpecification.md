@@ -65,9 +65,9 @@ The following table describes integration parameters.
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
 | CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
 | CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
-| USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module CALIPTRA_ICG defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
+| USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
 | TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
-| USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module TEC_RV_ICG defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
+| USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
 | TECH_SPECIFIC_EC_RV_ICG | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
 
 ## Interface
