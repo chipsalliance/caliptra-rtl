@@ -20,9 +20,17 @@ VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
-rv_gcc_version = $(strip $(shell $(GCC_PREFIX)-gcc --version | head -1 | sed "s/$(GCC_PREFIX)-gcc (\w\+) //"))
+# Ensure that RISC-V toolchain is installed
+ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
+GCC_PREFIX = riscv32-unknown-elf
+endif
+ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
+$(error RISC-V toolchain not found, please refer to https://github.com/chipsalliance/caliptra-rtl?tab=readme-ov-file#riscv-toolchain-installation for more details)
+endif
+
+rv_gcc_version = $(strip $(shell $(GCC_PREFIX)-gcc --version | head -1 | sed "s/$(GCC_PREFIX)-gcc (.*) //"))
 $(info rv_gcc_version is $(rv_gcc_version))
-ifeq (12.2.0, $(rv_gcc_version))
+ifeq "12.2.0" "$(word 1, $(sort 12.2.0 $(rv_gcc_version)))"
 ABI = -mabi=ilp32 -march=rv32imc_zicsr_zifencei
 else
 ABI = -mabi=ilp32 -march=rv32imc

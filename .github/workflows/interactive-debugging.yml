@@ -185,7 +185,7 @@ jobs:
       - name: Install Risc V Toolchain
         run: |
           # Building from source takes around 6.65 GB of disk and download size
-          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv64imc-3.0.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
           mkdir /opt/riscv
           tar -xzf toolchain.tar.gz -C /opt/riscv/
 
@@ -268,7 +268,7 @@ jobs:
       - name: Install Risc V Toolchain
         run: |
           # Building from source takes around 6.65 GB of disk and download size
-          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv64imc-3.0.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
           mkdir /opt/riscv
           tar -xzf toolchain.tar.gz -C /opt/riscv/
 
