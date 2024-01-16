@@ -1299,17 +1299,27 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 ![](./images/TVLA_threshold.png)
 
 
+##### KeyGen TVLA
+
+We detected a leakage using TVLA in the HMAC_DRBG algorithm during ECC key generation, based on 150,000 power traces. The leakage originated from a part of the SHA512 function (w_data) that was not fully protected by masking. Same leakage is expected for HMAC operations. 
+
+*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 150,000 traces*
+
+![](./images/TVLA_keygen.png)
+
+The issue is very unlikely to occur in practice, even though it exists in TVLA results. Therefore, we will address it in the next release.
+
 ##### Signing TVLA
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
 
-*Figure 40: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
+*Figure 41: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
 ![](./images/TVLA_privekey.png)
 
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
-*Figure 41: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+*Figure 42: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
 
 ![](./images/TVLA_msg_dependent.png)
 
