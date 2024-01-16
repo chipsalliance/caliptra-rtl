@@ -65,6 +65,10 @@ The following table describes integration parameters.
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
 | CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
 | CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
+| USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
+| TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
+| USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
+| TECH_SPECIFIC_EC_RV_ICG | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
 
 ## Interface
 
@@ -666,6 +670,23 @@ The following table describes SoC integration requirements.
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
+## Integrator RTL modification requirements
+
+Several files contain code that may be specific to an integrator's implementation and should be overridden. This overridable code is either configuration parameters with integrator-specific values or modules that implement process-specific functionality. Code in these files should be modified or replaced by integrators using components from the cell library of their fabrication vendor. The following table describes recommended modifications for each file.
+
+*Table 19: Caliptra integrator custom RTL file list*
+
+| File                                                                                   | Description                                                            |
+| :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>Declare name of custom clock gate module by defining USER_ICG.<br>Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
+| [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define PAUSER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
+| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
+| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with technology-specific clock gater.<br>Modifying this file may not be necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_EC_RV_ICG. |
+| [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology-specific sync cell.                            |
+| [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology-specific sync cell.                            |
+| [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with technology-specific sync cell.                            |
+
+
 # CDC analysis and constraints
 
 Clock Domain Crossing (CDC) analysis is performed on the Caliptra core IP. The following are the results and recommended constraints for Caliptra integrators using standard CDC analysis EDA tools.
@@ -720,7 +741,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
 
-*Table 19: Netlist synthesis data*
+*Table 20: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -883,7 +904,7 @@ Fatal: The 'default' or 'others' must be last case in a case statement
 
 The following terminology is used in this document.
 
-*Table 20: Terminology*
+*Table 21: Terminology*
 
 
 | Abbreviation | Description                                                                                      |
