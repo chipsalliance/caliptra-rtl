@@ -123,7 +123,7 @@ def getTestNames():
         # Skip clk gating tests in Verilator until PC issue is resolved
         # https://github.com/chipsalliance/Cores-VeeR-EL2/issues/88
         # https://github.com/chipsalliance/caliptra-rtl/issues/126
-        if (re.search(r'(smoke_test_clk_gating|smoke_test_cg_wdt)',x.groups()[0])) :
+        if (re.search(r'(smoke_test_clk_gating)',x.groups()[0])) :
             continue
         integrationTestSuiteList.append(x.groups()[0])
 
