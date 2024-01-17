@@ -853,7 +853,7 @@ The SHA256 architecture inputs and outputs are described as follows.
 | digest\[255:0\] | output          | The hashed value of the given block.                                                         |
 | digest_valid    | output          | When HIGH, the signal indicates the result is ready.                                         |
 
-* For more imformation about these inputs, please refer to LMS accelerator section.
+\* For more imformation about these inputs, please refer to LMS accelerator section.
 
 ### Address map
 
