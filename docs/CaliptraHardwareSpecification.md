@@ -1305,7 +1305,7 @@ We detected a leakage using TVLA in the HMAC_DRBG algorithm during ECC key gener
 
 *Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 150,000 traces*
 
-![](./images/TVLA_keygen.png)
+![](./images/tvla_keygen.png)
 
 This leakage is very unlikely to occur in practice, even though it exists in TVLA results. Therefore, we will address it in the next release.
 
