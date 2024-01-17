@@ -22,9 +22,6 @@ BUILD_DIR = $(CURDIR)
 
 # Ensure that RISC-V toolchain is installed
 ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
-GCC_PREFIX = riscv32-unknown-elf
-endif
-ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
 $(error RISC-V toolchain not found, please refer to https://github.com/chipsalliance/caliptra-rtl?tab=readme-ov-file#riscv-toolchain-installation for more details)
 endif
 
