@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 1.0-rc1</p>
+<p style="text-align: center;">Version 1.0-rc2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -27,28 +27,20 @@ The blocks described in this document are either obtained from open-source GitHu
 | IP/Block | GitHub URL | Documentation | Link |
 | :--------- | :--------- | :--------- |:--------- |
 | Cores-VeeR | [GitHub - chipsalliance/Cores-VeeR-EL2](https://github.com/chipsalliance/Cores-VeeR-EL2) | VeeR EL2 Programmer’s Reference Manual | [chipsalliance/Cores-VeeR-EL2 · GitHubPDF](http://cores-swerv-el2/RISC-V_SweRV_EL2_PRM.pdf%20at%20master%20%C2%B7) |
-| AHB Lite Bus | [aignacio/ahb_lite_bus: AHB Bus lite v3.0 (github.com)](https://github.com/aignacio/ahb_lite_bus) | AHB Lite Protocol<br> [Figure 2: SoC interface block diagram](#soc-interface-definition) | [ahb_lite_bus/docs at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/tree/master/docs)<br> [ahb_lite_bus/diagram_ahb_bus.png at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/blob/master/diagram_ahb_bus.png) |
+| AHB Lite Bus | [aignacio/ahb_lite_bus: AHB Bus lite v3.0 (github.com)](https://github.com/aignacio/ahb_lite_bus) | AHB Lite Protocol<br> [Figure 1: SoC interface block diagram](#soc-interface-definition) | [ahb_lite_bus/docs at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/tree/master/docs)<br> [ahb_lite_bus/diagram_ahb_bus.png at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/blob/master/diagram_ahb_bus.png) |
 | SHA 256 | [secworks/sha256: Hardware implementation of the SHA-256 cryptographic hash function (github.com)](https://github.com/secworks/sha256) | | |
 | SHA 512 | | | |
 | SPI Controller | <https://github.com/pulp-platform/axi_spi_master> | | |
 
 # Caliptra Core
 
-The following figure shows the Caliptra Core.
-
-*Figure 1: Caliptra block diagram*
-
-![](./images/Caliptra_HW_diagram.png)
-
-## Boot Media Dependent (passive) vs Boot Media Integrated (active) profile
-
-In the BMD profile, QSPI and I3C IO peripherals are disabled using integration-time defines passed to the hardware, which are also exposed to ROM. Peripheral IOs can be tied off appropriately for the BMD profile at SoC integration time. For more information on the BMD vs. BMI profile differences, see the boot flows in [Caliptra profiles](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#caliptra-profiles). Only the BMD profile is supported for the first generation release of Caliptra.
+For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
 # SoC interface definition
 
 The following figure shows the SoC interface definition.
 
-*Figure 2: SoC Interface Block Diagram*
+*Figure 1: SoC Interface Block Diagram*
 
 ![](./images/Caliptra_soc_interface_block.png)
 
@@ -70,12 +62,13 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
-| CALIPTRA_APB_ADDR_WIDTH | config_defines.svh | Width of the APB Address field. Default to 32. |
-| CALIPTRA_APB_DATA_WIDTH | config_defines.svh | Width of the APB Data field. Default to 32. |
-| CALIPTRA_APB_USER_WIDTH | config_defines.svh | Width of the APB PAUSER field. |
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
 | CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
 | CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
+| USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
+| TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
+| USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
+| TECH_SPECIFIC_EC_RV_ICG | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
 
 ## Interface
 
@@ -93,15 +86,15 @@ The following tables describe the interface signals.
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| PADDR | 32 | Input | Synchronous to clk | Address bus |
+| PADDR | CALIPTRA_APB_ADDR_WIDTH | Input | Synchronous to clk | Address bus |
 | PPROT | 3 | Input | Synchronous to clk | Protection level |
 | PSEL | 1 | Input | Synchronous to clk | Select line |
 | PENABLE | 1 | Input | Synchronous to clk | Indicates the second and subsequent cycles. |
 | PWRITE | 1 | Input | Synchronous to clk | Indicates transfer is a write when high or a read when low. |
-| PWDATA | 32 | Input | Synchronous to clk | Write data bus |
-| PAUSER | APB_USER_REQ_WIDTH | Input | Synchronous to clk | Sideband signal indicating requestor ID for transfer. |
+| PWDATA | CALIPTRA_APB_DATA_WIDTH | Input | Synchronous to clk | Write data bus |
+| PAUSER | CALIPTRA_APB_USER_WIDTH | Input | Synchronous to clk | Sideband signal indicating requestor ID for transfer. |
 | PREADY | 1 | Output | Synchronous to clk | Used to extend an APB transfer by completer. |
-| PRDATA | 32 | Output | Synchronous to clk | Read data bus |
+| PRDATA | CALIPTRA_APB_DATA_WIDTH | Output | Synchronous to clk | Read data bus |
 | PSLVERR | 1 | Output | Synchronous to clk | Transfer error |
 
 *Table 6: QSPI signals*
@@ -177,8 +170,8 @@ The following tables describe the interface signals.
 | CALIPTRA_ERROR_NON_FATAL | 1 | Output | Synchronous to clk | Indicates a non fatal error from Caliptra. |
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
 | eTRNG_REQ | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into iTRNG_DATA/iTRNG_VALID. |
-| iTRNG_DATA | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG digital bit stream from SoC, which is sampled when iTRNG_VALID is high. |
-| iTRNG_VALID | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. TRNG_DATA can be sampled whenever this bit is high. The expected iTRNG_VALID output rate is about 50KHz. |
+| iTRNG_DATA | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when iTRNG_VALID is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
+| iTRNG_VALID | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. iTRNG_DATA can be sampled whenever this bit is high. The expected iTRNG_VALID output rate is about 50KHz. |
 
 ## Architectural registers and fuses
 
@@ -197,15 +190,17 @@ Although fuse values (and the fuse done register) persist across a warm reset, S
 
 ## Interface rules
 
-The following figure shows the reset rules and timing.
+The following figure shows the reset rules and timing for cold boot flows.
 
-*Figure 3: Reset rules and timing diagram*
+*Figure 2: Reset rules and timing diagram*
 
 ![](./images/Caliptra_reset_timing.png)
 
 Deassertion of cptra\_pwrgood indicates a power cycle that results in returning Caliptra to its default state. All resettable flops are reset.
 
-De-assertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
+Deassertion of cptra\_rst\_b indicates a warm reset cycle that resets all but the “sticky” registers (fuses, error logging, etc.).
+
+Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register allows the boot flow to proceed.
 
 ### APB arbitration
 
@@ -233,7 +228,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either caliptra pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
 
-### Deobfuscation key
+### Obfuscation key
 
 SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge. For a given SoC construction, this can be driven using a PUF too.
 
@@ -272,11 +267,11 @@ Caliptra in turn also uses the mailbox to pass information back to the SoC. The 
 
 The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by deasserting the internal reset. The following figure shows the boot FSM state.
 
-*Figure 4: Mailbox Boot FSM state diagram*
+*Figure 3: Mailbox Boot FSM state diagram*
 
 ![](./images/Caliptra_mbox_boot_FSM.png)
 
-The boot FSM first waits for the SoC to assert cptra\_pwrgood and de-assert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
+The boot FSM first waits for the SoC to assert cptra\_pwrgood and deassert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
 BOOT\_DONE enables Caliptra reset deassertion through a two flip-flop synchronizer.
 
@@ -294,7 +289,7 @@ When a mailbox is populated by the SoC, initiation of the operation by writing t
 
 When a mailbox is populated by the microcontroller, an output wire to the SoC indicates that a command is available in the mailbox. The SoC is responsible for reading from and responding to the command.
 
-Mailboxes are generic data-passing structures with a specific protocol that defines legal operations. This protocol for writing to and reading from the mailbox is enforced in hardware as described in the [Caliptra mailbox errors](#caliptra-mailbox-errors) section. How the command and data are interpreted by the microcontroller and SoC are not enforced in this specification. \
+Mailboxes are generic data-passing structures with a specific protocol that defines legal operations. This protocol for writing to and reading from the mailbox is enforced in hardware as described in the [Caliptra mailbox errors](#caliptra-mailbox-errors) section. How the command and data are interpreted by the microcontroller and SoC are not enforced in this specification.
 
 ## Sender Protocol
 
@@ -319,7 +314,7 @@ Mailboxes are generic data-passing structures with a specific protocol that defi
 
 Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. The following figure shows the sender protocol flow.
 
-*Figure 5: Sender protocol flow chart*
+*Figure 4: Sender protocol flow chart*
 
 ![](./images/Caliptra_mbox-sender.png)
 
@@ -342,7 +337,7 @@ Caliptra will not initiate any mailbox commands that require a response from the
 
 The following figure shows the receiver protocol flow.
 
-*Figure 6: Receiver protocol flowchart*
+*Figure 5: Receiver protocol flowchart*
 
 ![](./images/Caliptra_mbox_receiver.png)
 
@@ -448,9 +443,9 @@ SHA\_LOCK register is set on read. A read of 0 indicates the SHA was unlocked an
 SHA\_MODE register sets the mode of operation for the SHA.
 
 See the Hardware specification for additional details.
-* 2’b00 - SHA384 streaming mode 
-* 2’b01 - SHA512 streaming mode 
-* 2’b10 - SHA384 mailbox mode (Caliptra only, invalid for SoC requests) 
+* 2’b00 - SHA384 streaming mode
+* 2’b01 - SHA512 streaming mode
+* 2’b10 - SHA384 mailbox mode (Caliptra only, invalid for SoC requests)
 * 2’b11 - SHA512 mailbox mode (Caliptra only, invalid for SoC requests)
 
 ## SoC Sender Protocol
@@ -485,6 +480,10 @@ Having an interface that is separate from the SoC mailbox ensures that this requ
 
 TRNG DATA register is tied to TRNG VALID PAUSER. SoC can program the TRNG VALID PAUSER and lock the register using TRNG\_PAUSER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the PAUSER programmed into the TRNG\_VALID\_PAUSER register. If the CPTRA\_TNRG\_PAUSER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set, only an agent with a specific TRNG\_VALID\_PAUSER can write.
 
+The ROM and firmware currently time out on the TRNG interface after 250,000
+attempts to read a DONE bit. This bit is set in the architectural registers, as
+referenced in 3 in the preceding list.
+
 # SRAM implementation
 
 ## Overview
@@ -514,7 +513,7 @@ Table 4 indicates the signals contained in the memory interface. Direction is re
 
 The following figure shows the SRAM interface timing.
 
-*Figure 7: SRAM interface timing*
+*Figure 6: SRAM interface timing*
 
 ![](./images/Caliptra_SRAM_interface_timing.png)
 
@@ -543,7 +542,7 @@ This example is applicable to scenarios where an integrator may need control of 
 
 Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(calitpra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
 
-*Figure 8: Example machine check reliability implementation*
+*Figure 7: Example machine check reliability implementation*
 
 ![](./images/Caliptra_machine_reliability.png)
 
@@ -593,7 +592,7 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
     2. SoC can look at the Caliptra fatal error register for error source.
     3. Assume Caliptra can report a fatal error at any time.
     4. Fatal errors are generally hardware in nature. SoC may attempt to recover by full reset of the entire SoC, or can move on and know that Caliptra will be unavailable for the remainder of the current boot.
-    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SOC MCRIP. 
+    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SOC MCRIP.
 
 # SoC integration requirements
 
@@ -603,23 +602,31 @@ The following table describes SoC integration requirements.
 
 | Category                         | Requirement                                                                                                                                                                                                                               | Definition of done       | Rationale                                         |
 | :--------- | :--------- | :--------- | :--------- |
-| Deobfuscation Key                | SoC backend flows shall generate deobfuscation key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                        | Statement of conformance | Required by UDS and Field Entropy threat model    |
-| Deobfuscation Key                | If not driven through PUF, SoC backend flows shall ECO the deobfuscation key before tapeout.                                                                                                                                              | Statement of conformance | Required by UDS and Field Entropy threat model    |
-| Deobfuscation Key                | Rotation of the deobfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                           | Statement of conformance | Required by UDS and Field Entropy threat model    |
-| Deobfuscation Key                | SoC backend flows should not insert deobfuscation key flops into the scan chain.                                                                                                                                                          | Synthesis report         | Required by UDS and Field Entropy threat model    |
-| Deobfuscation Key                | For defense in depth, it is strongly recommended that debofuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra_scan_mode_Latched_d <br> cptra_scan_mode_Latched_f <br> field_storage.internal_obf_key | Statement of conformance | Caliptra HW threat model |
+| Obfuscation Key                | SoC backend flows shall generate obfuscation key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                        | Statement of conformance | Required by UDS and Field Entropy threat model    |
+| Obfuscation Key                | If not driven through PUF, SoC backend flows shall ECO the obfuscation key before tapeout.                                                                                                                                              | Statement of conformance | Required by UDS and Field Entropy threat model    |
+| Obfuscation Key                | Rotation of the obfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                           | Statement of conformance | Required by UDS and Field Entropy threat model    |
+| Obfuscation Key                | SoC backend flows should not insert obfuscation key flops into the scan chain.                                                                                                                                                          | Synthesis report         | Required by UDS and Field Entropy threat model    |
+| Obfuscation Key                | For defense in depth, it is strongly recommended that debofuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra_scan_mode_Latched_d <br> cptra_scan_mode_Latched_f <br> field_storage.internal_obf_key | Statement of conformance | Caliptra HW threat model |
+| Obfuscation Key                  | SoC shall ensure that obfuscation key is available (and wires are stable) before Caliptra reset is de-asserted. | Statement of conformance | Functionality and security |
+| Obfuscation Key                  | SoC shall implement protections for obfuscation key generation logic and protect against debug/sw/scandump visibility.<br>1. Any flops outside of Caliptra that store obfuscation key or parts of the key should be excluded from scandump.<br>2. SoC shall ensure that the obfuscation key is sent only to Caliptra through HW wires, and it is not visible anywhere outside of Caliptra. | Statement of conformance | Required for Caliptra threat model |
 | DFT                              | Before scan is enabled (separate signal that SoC implements on scan insertion), SoC shall set Caliptra's scan_mode indication to '1 to allow secrets/assets to be flushed.                                                                | Statement of conformance | Required by Caliptra threat model                 |
 | DFT                              | Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                  | Statement of conformance | Functional requirement                            |
 | Mailbox                          | SoC shall provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs). See the [Sender Protocol](#sender-protocol) section for details about error conditions.             | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
 | Fuses                            | SoC shall burn non-field fuses during manufacturing. Required vs. optional fuses are listed in the architectural specification.                                                                                                           | Test on silicon          | Required for UDS threat model                     |
 | Fuses                            | SoC shall expose an interface for burning field fuses. Protection of this interface is the SoC vendor’s responsibility.                                                                                                                   | Test on silicon          | Required for Field Entropy                        |
 | Fuses                            | SoC shall write fuse registers and fuse done via immutable logic or ROM code.                                                                                                                                                             | Statement of conformance | Required for Caliptra threat model                |
+| Fuses                            | SoC shall expose an API for programming Field Entropy as described in the architecture documentation. SoC shall ensure that Field Entropy can only be programmed via this API and shall explicitly prohibit burning of discrete Field Entropy bits and re-burning of already burned Field Entropy entries. | Test on silicon          | Required for Field Entropy                        |
+| Fuses                            | SoC shall ensure that any debug read paths for fuses are disabled in PRODUCTION lifecycle state.| Test on silicon          | Required for Field Entropy                        |
+| Fuses                            | SoC shall ensure that UDS_SEED and Field Entropy supplied to Caliptra come directly from OTP fuses and there are no debug paths to inject new values.| Statement of conformance          | Required for Caliptra Threat model                        |
+| Fuses                            | SoC shall add integrity checks for Caliptra fuses as per SoC policy. | Statement of conformance | Reliability |
+| Fuses                            | SoC should apply shielding/obfuscation measures to protect fuse macro. | Statement of conformance | Required for Caliptra Threat model |
+| Fuses                            | SoCs that intend to undergo FIPS 140-3 zeroization shall expose zeroization API as described in zeroization requirements in architecture specification. SoC shall apply appropriate authentication for this API to protect against denial of service and side channel attacks. | Test on silicon | FIPS 140-3 certification |
 | Security State                   | SoC shall drive security state wires in accordance with the SoC's security state.                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
 | Security State                   | If SoC is under debug, then SoC shall drive debug security state to Caliptra.                                                                                                                                                             | Statement of conformance | Required for Caliptra threat model                |
 | Resets and Clocks                | SoC shall start input clock before caliptra_pwrgood assertion.                                                                                                                                                                            | Statement of conformance | Functional                                        |
 | Resets and Clocks                | SoC reset logic shall assume reset assertions are asynchronous and deassertions are synchronous.                                                                                                                                          | Statement of conformance | Functional                                        |
-| Resets and Clocks                | SoC shall ensure Caliptra's powergood is the SoC's own powergood.                                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
-| TRNG                             | SoC shall either provision Caliptra with a dedicated TRNG or shared TRNG.                                                                                                                                                                 | Statement of conformance | Required for Caliptra threat model and Functional |
+| Resets and Clocks                | SoC shall ensure Caliptra's powergood is tied to SoC’s own powergood or any other reset that triggers SoC’s cold boot flow.                                                                                                              | Statement of conformance | Required for Caliptra threat model                |
+| TRNG                             | SoC shall either provision Caliptra with a dedicated TRNG or shared TRNG. It is highly recommended to use dedicated ITRNG                                                                                                                 | Statement of conformance | Required for Caliptra threat model and Functional |
 | TRNG                             | SoC shall provision the Caliptra embedded TRNG with an entropy source if that is used (vs. SoC-shared TRNG API support).                                                                                                                  | Statement of conformance | Functional                                        |
 | TRNG                             | If the TRNG is shared, then upon TRNG_REQ, SoC shall use immutable logic or code to program Caliptra's TRNG registers.                                                                                                                    | Statement of conformance | Required for Caliptra threat model and Functional |
 | SRAMs                            | SoC shall ensure timing convergence with 1-cycle read path for SRAMs.                                                                                                                                                                     | Synthesis report         | Functional                                        |
@@ -627,7 +634,7 @@ The following table describes SoC integration requirements.
 | SRAMs                            | SoC shall write-protect fuses that characterize the SRAM.                                                                                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | SRAMs                            | SoC shall ensure SRAM content is only destroyed on powergood cycling.                                                                                                                                                                     | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
 | SRAMs                            | SoC shall only perform SRAM repair on powergood events and prior to caliptra_rst_b deassertion.                                                                                                                                           | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
-| Backend convergence              | Caliptra is validated and backend converged at 400MHz and at process nodes - TSMC 5nm, -- \<To be filled accurately\>                                                                                                                     |                          | Functional                                        |
+| Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                          |                          | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                    |                          | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
 | PAUSER                           | SoC shall drive PAUSER input in accordance with the IP integration spec.                                                                                                                                                                  | Statement of conformance | ?                                                 |
@@ -646,6 +653,11 @@ The following table describes SoC integration requirements.
 | FUSE PAUSER programming rules    | 1 PAUSER attribute register is implemented at SoC interface: CPTRA_FUSE_VALID_PAUSER.                                                                                                                                                     |                          |                                                   |
 | FUSE PAUSER programming rules    | CPTRA_FUSE_PAUSER_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                             |                          |                                                   |
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA_FUSE_VALID_PAUSER, to the desired value in RTL, and by setting CPTRA_SET_FUSE_PAUSER_INTEG to 1.                            |                          |                                                   |
+| Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing). | Statement of conformance | Functionality |
+| Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS_SEED. It is strongly advised to implement manufacturing policies to protect UDS_SEED as defense in depth measures. <br>1, Prevent leakage of UDS_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra Threat model |
+| Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra Threat model | 
+| Chain of trust                   | SoC shall limit the mutable code and configuration that persists across the Caliptra powergood reset. A statement of conformance lists what persists and why this persistence is necessary. | Statement of conformance | Required for Caliptra Threat model | 
+| Implementation                   | SoC shall apply size-only constraints on cells tagged with the "u__size_only__" string and shall ensure that these are not optimized in synthesis and PNR | Statement of conformance | Required for Caliptra Threat model                                               |
 | GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                            | GLS simulations pass                 | Functional requirement                 |
 
 *Table 18: Caliptra synthesis warnings for FEV evaluation*
@@ -657,6 +669,23 @@ The following table describes SoC integration requirements.
 | sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
+
+## Integrator RTL modification requirements
+
+Several files contain code that may be specific to an integrator's implementation and should be overridden. This overridable code is either configuration parameters with integrator-specific values or modules that implement process-specific functionality. Code in these files should be modified or replaced by integrators using components from the cell library of their fabrication vendor. The following table describes recommended modifications for each file.
+
+*Table 19: Caliptra integrator custom RTL file list*
+
+| File                                                                                   | Description                                                            |
+| :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>Declare name of custom clock gate module by defining USER_ICG.<br>Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
+| [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define PAUSER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
+| [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
+| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with technology-specific clock gater.<br>Modifying this file may not be necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_EC_RV_ICG. |
+| [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with technology-specific sync cell.                            |
+| [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with technology-specific sync cell.                            |
+| [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with technology-specific sync cell.                            |
+
 
 # CDC analysis and constraints
 
@@ -672,7 +701,7 @@ In an unconstrained environment, several CDC violations are anticipated. CDC ana
 
 The following code snippet and schematic diagram illustrate JTAG originating CDC violations.
 
-*Figure 9: Schematic diagram and code snippet showing JTAG-originating CDC violations*
+*Figure 8: Schematic diagram and code snippet showing JTAG-originating CDC violations*
 
 ![](./images/Caliptra_CDC_JTAG_code_snippet.png)
 
@@ -697,7 +726,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
 # Synthesis findings
 
 Synthesis experiments have so far found the following:
-* Design converges at 400MHz 0.72V using a cutting edge TSMC process.
+* Design converges at 400MHz 0.72V using an industry standard, moderately advanced technology node as of 2023 September.
 * Design converges at 100MHz using TSMC 40nm process.
 
 Note: Any synthesis warnings of logic optimization must be reviewed and accounted for.
@@ -712,7 +741,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
 
-*Table 19: Netlist synthesis data*
+*Table 20: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -727,11 +756,7 @@ The target foundry technology node is an industry standard, moderately advanced 
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
 | CALIPTRA_WRAPPER | 10/4/2023 | 89279            | 7872           | 239937          | 337088         | 45601          | 31                           | SUCCEEDED     | 156211         | 0                  | 0                | 0                              |
 
-# LINT rules
-
-TODO 0p5: This is a WIP list
-
-## Recommended LINT rules
+# Recommended LINT rules
 
 The following LINT rules are the recommended minimum set for standalone analysis of Caliptra IP. The same set is recommended as a minimum subset that may be applied by Caliptra integrators.
 
@@ -879,7 +904,7 @@ Fatal: The 'default' or 'others' must be last case in a case statement
 
 The following terminology is used in this document.
 
-*Table 20: Terminology*
+*Table 21: Terminology*
 
 
 | Abbreviation | Description                                                                                      |
