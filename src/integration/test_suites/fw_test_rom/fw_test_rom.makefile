@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 
 # Define test name

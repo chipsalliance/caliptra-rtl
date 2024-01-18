@@ -48,7 +48,6 @@ GCC:
  - RISCV Toolchain for generating memory initialization files
    - `Version 2023.04.29`
    - `riscv64-unknown-elf-gcc (g) 12.2.0`
-   - `riscv32-unknown-elf-gcc (g) 13.2.0`
  - G++ Used to compile Verilator objects and test firmware
    - `g++ (GCC) 11.2.0`
 

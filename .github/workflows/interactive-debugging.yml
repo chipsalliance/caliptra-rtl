@@ -22,7 +22,7 @@ jobs:
       SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
       SCCACHE_GHA_CACHE_FROM: sccache-verilator-
       # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1d
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1e
 
     steps:
       - name: Restore sccache binary
@@ -185,9 +185,8 @@ jobs:
       - name: Install Risc V Toolchain
         run: |
           # Building from source takes around 6.65 GB of disk and download size
-          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
-          mkdir /opt/riscv
-          tar -xzf toolchain.tar.gz -C /opt/riscv/
+          wget -O toolchain.tar.gz https://github.com/chipsalliance/caliptra-tools/releases/download/gcc-v12.1.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          tar -xzf toolchain.tar.gz -C /opt/
 
       - name: Install dependencies
         run: |
@@ -268,9 +267,8 @@ jobs:
       - name: Install Risc V Toolchain
         run: |
           # Building from source takes around 6.65 GB of disk and download size
-          wget -O toolchain.tar.gz https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
-          mkdir /opt/riscv
-          tar -xzf toolchain.tar.gz -C /opt/riscv/
+          wget -O toolchain.tar.gz https://github.com/chipsalliance/caliptra-tools/releases/download/gcc-v12.1.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          tar -xzf toolchain.tar.gz -C /opt/
 
       - name: Download Verilator binaries
         uses: actions/download-artifact@v3
