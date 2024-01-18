@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2023/01/17*_
+_*Last Update: 2024/01/18*_
 
 ## Rev 1p0 ##
 
-### Rev 1p0 release date: 2024/01/17 ###
+### Rev 1p0 release date: 2024/01/18 ###
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
