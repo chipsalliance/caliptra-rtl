@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2023/01/17*_
+_*Last Update: 2024/01/18*_
 
 ## Rev 1p0 ##
 
