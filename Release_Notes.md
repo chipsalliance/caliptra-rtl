@@ -18,7 +18,7 @@ _*Last Update: 2024/01/18*_
 
 ## Rev 1p0 ##
 
-### Rev 1p0 release date: 2024/01/17 ###
+### Rev 1p0 release date: 2024/01/18 ###
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
