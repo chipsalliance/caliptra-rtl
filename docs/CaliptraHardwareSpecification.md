@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Version 1.0-rc2</p>
+<p style="text-align: center;">Version 1.0</p>
 
 <div style="page-break-after: always"></div>
 
@@ -16,11 +16,7 @@ This document provides definitions and requirements for a Caliptra cryptographic
 
 # Caliptra Core
 
-The following figure shows the Caliptra Core.
-
-*Figure 1: Caliptra Block Diagram*
-
-![](./images/Caliptra_HW_diagram.png)
+For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
 ## Boot FSM
 
@@ -28,7 +24,7 @@ The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of thi
 
 The following figure shows the initial power-on arc of the Mailbox Boot FSM.
 
-*Figure 2: Mailbox Boot FSM state diagram*
+*Figure 1: Mailbox Boot FSM state diagram*
 
 ![](./images/HW_mbox_boot_fsm.png)
 
@@ -40,7 +36,7 @@ BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchroni
 
 Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB slaves are still active. All registers within the slaves and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
 
-*Figure 3: Mailbox Boot FSM state diagram for FW update reset*
+*Figure 2: Mailbox Boot FSM state diagram for FW update reset*
 
 ![](./images/mbox_boot_fsm_FW_update_reset.png)
 
@@ -143,7 +139,8 @@ Software and local interrupts are not implemented in the first generation of Cal
 
 #### Non-maskable interrupts
 
-<TODO> 0p8 describe a register bank that may be used to dynamically configure the NMI reset vector. (i.e., where the PC resets to).
+Caliptra's RISC-V processor has access to an internal register that allows configuration of the NMI vector. When an NMI occurs, the program counter jumps to the address indicated by the contents of this register.
+For more information, see [NMI Vector](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_nmi_vector).
 
 #### External interrupts
 
@@ -153,7 +150,7 @@ Errors and notifications are allocated as interrupt events for each component, w
 
 Notification interrupts are used to alert the processor of normal operation activity, such as completion of requested operations or arrival of SoC requests through the shared interface.
 
-Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1.
+Vector 0 is reserved by the RISC-V processor and may not be used, so vector assignment begins with Vector 1. Bit 0 of the interrupt port to the processor corresponds with Vector 1. The following table shows assignment of interrupt vectors to the corresponding IP block. The illustrated interrupt priority assignment is only an example, and does not correspond with actual priorities assigned in the final Caliptra firmware. These interrupt priorities are used in the validation firmware that tests the RTL, and are defined in [caliptra_defines.h](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/test_suites/includes/caliptra_defines.h).
 
 | IP/Peripheral                                       | Interrupt vector | Interrupt priority example<br> (Increasing, Max 15) |
 | :-------------------------------------------------- | :--------------- | :---------------------------------------------- |
@@ -196,7 +193,7 @@ For more details regarding the register interface to control the WDT, see the [r
 
 The following figure shows the two timers.
 
-*Figure 4: Caliptra Watchdog Timer*
+*Figure 3: Caliptra Watchdog Timer*
 
 ![](./images/WDT.png)
 
@@ -210,7 +207,7 @@ The Caliptra microcontroller communicates with the mailbox through its internal 
 
 ### AHB-lite interface
 
-AHB-lite is a subset of the full AHB specification. It is primarily used in single master systems. This interface connects VeeR EL2 Core (LSU master) to the slave devices as shown in Figure 1.
+AHB-lite is a subset of the full AHB specification. It is primarily used in single master systems. This interface connects VeeR EL2 Core (LSU master) to the slave devices. See [Caliptra Core](#caliptra-core) for information.
 
 The interface can be customized to support variable address and data widths, and a variable number of slave devices. Each slave device is assigned an address range within the 32-bit address memory map region. The interface includes address decoding logic to route data to the appropriate AHB slave device based on the address specified.
 
@@ -232,7 +229,7 @@ For details, see the [Cryptographic subsystem architecture](#cryptographic-subsy
 
 ## Peripherals subsystem
 
-Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra includes code to enable QSPI in the RTL, but does not support the BMI profile. Therefore, QSPI must not be enabled. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
+Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra does not support enabling the QSPI interface. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
 
 ### QSPI Flash Controller
 
@@ -240,7 +237,7 @@ Caliptra implements a QSPI block that can communicate with 2 QSPI devices. This 
 
 The QSPI block is composed of the spi\_host implementation. For information, see the [SPI\_HOST HWIP Technical Specification](https://opentitan.org/book/hw/ip/spi_host/index.html). The core code (see [spi\_host](https://github.com/lowRISC/opentitan/tree/master/hw/ip/spi_host)) is reused but the interface to the module is changed to AHB-lite and the number of chip select lines supported is increased to 2. The design provides support for Standard SPI, Dual SPI, or Quad SPI commands. The following figure shows the QSPI flash controller.
 
-*Figure 5: QSPI flash controller*
+*Figure 4: QSPI flash controller*
 
 ![](./images/QSPI_flash.png)
 
@@ -252,7 +249,7 @@ The structure of a command depends on the device and the command itself. In the 
 
 A typical SPI command consists of different segments that are combined as shown in the following example. Each segment can configure the length, speed, and direction. As an example, the following SPI read transaction consists of 2 segments.
 
-*Figure 6: SPI read transaction segments*
+*Figure 5: SPI read transaction segments*
 
 ![](./images/SPI_read.png)
 
@@ -272,7 +269,7 @@ QSPI consists of up to four command segments in which the host:
 
 The following example shows the QSPI segments.
 
-*Figure 7: QSPI segments*
+*Figure 6: QSPI segments*
 
 ![](./images/QSPI_segments.png)
 
@@ -307,7 +304,7 @@ CONFIGOPTS.CLKDIV = (400/(2\*100)) -1 = 1
 
 The following figure shows CONFIGOPTS.
 
-*Figure 8: CONFIGOPTS*
+*Figure 7: CONFIGOPTS*
 
 ![](./images/CONFIGOPTS.png)
 
@@ -355,7 +352,7 @@ Caliptra implements a UART block that can communicate with a serial device that 
 
 The UART block is composed of the uart implementation. For information, see the [UART HWIP Technical Specification](https://opentitan.org/book/hw/ip/uart/). The design provides support for a programmable baud rate. The UART block is shown in the following figure.
 
-*Figure 9: UART block*
+*Figure 8: UART block*
 
 ![](./images/UART_block.png)
 
@@ -365,7 +362,7 @@ Transactions flow through the UART block starting with an AHB-lite write to WDAT
 
 The following figure shows the transmit data on the serial lane, starting with the START bit, which is indicated by a high to low transition, followed by the 8 bits of data.
 
-*Figure 10: Serial transmission frame*
+*Figure 9: Serial transmission frame*
 
 ![](./images/serial_transmission.png)
 
@@ -396,38 +393,8 @@ The UART block architecture inputs and outputs are described in the following ta
 
 ## SoC mailbox
 
-For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/Caliptra_rtl.md#mailbox) in the Caliptra Integration Specification. TODO: Fix this!
+For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs/mbox_csr](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
 
-The following table describes the mailbox control registers.
-
-| Control register          | Start address     | Description        |
-| :------------------------ | :---------------- | :----------------- |
-| MBOX_LOCK                 | 0x30020000        | Mailbox lock register for mailbox access. Reading 0 sets the lock. |
-| MBOX_USER                 | 0x30020004        | Stores the user that locked the mailbox.|
-| MBOX_CMD                  | 0x30020008        | Command requested for data in mailbox. |
-| MBOX_DLEN                 | 0x3002000c        | Data length for mailbox access. |
-| MBOX_DATAIN               | 0x30020010        | Data in register. Writes the next data to mailbox. |
-| MBOX_DATAOUT              | 0x30020010        | Data out register. Reads the next data from mailbox.|
-| MBOX_EXECUTE              | 0x30020018        | Mailbox execute register indicates to the receiver that the sender is done. |
-| MBOX_STATUS               | 0x3002001c        | Status of the mailbox command: <br> CMD_BUSY - 2’b00 – Indicates the requested command is still in progress <br> DATA_READY - 2’b01 – Indicates the return data is in the mailbox for the requested command <br> CMD_COMPLETE- 2’b10 – Indicates the successful completion of the requested command <br> CMD_FAILURE- 2’b11 – Indicates the requested command failed |
-| HW_ERROR_FATAL            | 0x30030000        | Indicates fatal hardware error. |
-| HW_ERROR_NON_FATAL        | 0x30030004        | Indicates non-fatal hardware error. |
-| FW_ERROR_FATAL            | 0x30030008        | Indicates fatal firmware error. |
-| FW_ERROR_NON_FATAL        | 0x3003000c        | Indicates non-fatal firmware error. |
-| HW_ERROR_ENC              | 0x30030010        | Encoded error value for hardware errors. |
-| FW_ERROR_ENC              | 0x30030014        | Encoded error value for firmware errors. |
-| BOOT_STATUS               | 0x30030018        | Reports the boot status. |
-| FLOW_STATUS               | 0x3003001c        | Reports the status of the firmware flows. |
-| GENERIC_INPUT_WIRES       | 0x30030024        | Generic input wires connected to the SoC interface. |
-| GENERIC_OUTPUT_WIRES      | 0x3003002c        | Generic output wires connected to the SoC interface. |
-| KEY_MANIFEST_PK_HASH      | 0x300302b0        | |
-| KEY_MANIFEST_PK_HASH_MASK | 0x30030370        | |
-| KEY_MANIFEST_SVN          | 0x30030374        | |
-| BOOT_LOADER_SVN           | 0x30030384        | |
-| RUNTIME_SVN               | 0x30030388        | |
-| ANTI_ROLLBACK_DISABLE     | 0x3003038c        | |
-| IEEE_IDEVID_CERT_CHAIN    | 0x30030390        | |
-| FUSE_DONE                 | 0x300303f0        | |
 
 ## Security state
 
@@ -516,7 +483,7 @@ The following applies to the clock gating feature:
 
 The following figure shows the timing information for clock gating.
 
-*Figure 11: Clock gating timing*
+*Figure 10: Clock gating timing*
 
 ![](./images/clock_gating_timing.png)
 
@@ -526,23 +493,23 @@ Caliptra implements a true random number generator (TRNG) block for local use mo
 
 This TRNG block is a combination of entropy source and CSRNG implementations. For information, see the [ENTROPY\_SRC HWIP Technical Specification](https://opentitan.org/book/hw/ip/entropy_src/index.html) and the [CSRNG HWIP Technical Specification](https://opentitan.org/book/hw/ip/csrng/). The core code (see [entropy source](https://github.com/lowRISC/opentitan/tree/master/hw/ip/entropy_src) and [csrng](https://github.com/lowRISC/opentitan/tree/master/hw/ip/csrng)) is reused from here but the interface to the module is changed to AHB-lite. This design provides an interface to an external physical random noise generator. This is also referred to as a physical true random number generator (PTRNG). The PTRNG external source is a physical true random noise source. A noise source and its relation to an entropy source are defined by [SP 800-90B](https://csrc.nist.gov/publications/detail/sp/800-90b/final).
 
-The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the TODO: heading link in markdown.
+The block is instantiated based on a design parameter chosen at integration time. This is to provide options for SoC to reuse an existing TRNG to build an optimized SoC design. For the optimized scenarios, SoC needs to follow the [External-TRNG REQ HW API](#External-TRNG-REQ-HW-API).
 
 The following figure shows the integrated TRNG block.
 
-*Figure 12: Integrated TRNG block*
+*Figure 11: Integrated TRNG block*
 
 ![](./images/integrated_TRNG.png)
 
 The following figure shows the CSRNG block.
 
-*Figure 13: CSRNG block*
+*Figure 12: CSRNG block*
 
 ![](./images/CSRNG_block.png)
 
 The following figure shows the entropy source block.
 
-*Figure 14: Entropy source block*
+*Figure 13: Entropy source block*
 
 ![](./images/entropy_source_block.png)
 
@@ -606,7 +573,7 @@ These are the top level signals defined in caliptra\_top.
 
 The following figure shows the top level signals defined in caliptra\_top.
 
-*Figure 15: caliptra\_top signals*
+*Figure 14: caliptra\_top signals*
 
 ![](./images/caliptra_top_signals.png)
 
@@ -627,7 +594,7 @@ The following table provides descriptions of the entropy source signals.
 
 The following figure shows the entropy source signals.
 
-*Figure 16: Entropy source signals*
+*Figure 15: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
 
@@ -685,7 +652,7 @@ Caliptra’s JTAG/TAP should be implemented as a TAP EP. JTAG is open if the deb
 
 Note: If the debug security state switches to debug mode anytime, the security assets and keys are still flushed even though JTAG is not open.
 
-*Figure 17: JTAG implementation*
+*Figure 16: JTAG implementation*
 
 ![](./images/JTAG_implementation.png)
 
@@ -706,7 +673,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
-*Figure 18: Caliptra cryptographic subsystem TODO: fix this image*
+*Figure 17: Caliptra cryptographic subsystem*
 
 ![](./images/crypto_subsystem.png)
 
@@ -731,7 +698,7 @@ The message should be padded before feeding to the hash core. The input message 
 
 The total size should be equal to 128 bits short of a multiple of 1024 since the goal is to have the formatted message size as a multiple of 1024 bits (N x 1024). The following figure shows the SHA512 input formatting.
 
-*Figure 19: SHA512 input formatting*
+*Figure 18: SHA512 input formatting*
 
 ![](./images/SHA512_input.png)
 
@@ -743,7 +710,7 @@ The SHA512 core performs 80 iterative operations to process the hash value of th
 
 The SHA512 architecture has the finite-state machine as shown in the following figure.
 
-*Figure 20: SHA512 FSM*
+*Figure 19: SHA512 FSM*
 
 ![](./images/SHA512_fsm.png)
 
@@ -772,7 +739,7 @@ The SHA512 address map is shown here: [sha512\_reg — clp Reference (chipsallia
 
 The following pseudocode demonstrates how the SHA512 interface can be implemented.
 
-*Figure 21: SHA512 pseudocode*
+*Figure 20: SHA512 pseudocode*
 
 ![](./images/SHA512_pseudo.png)
 
@@ -850,7 +817,7 @@ The total size should be equal to 64 bits, short of a multiple of 512 because th
 
 The following figure shows SHA256 input formatting.
 
-*Figure 22: SHA256 input formatting*
+*Figure 21: SHA256 input formatting*
 
 ![](./images/SHA256_input.png)
 
@@ -862,7 +829,7 @@ The SHA256 core performs 64 iterative operations to process the hash value of th
 
 The SHA256 architecture has the finite-state machine as shown in the following figure.
 
-*Figure 23: SHA256 FSM*
+*Figure 22: SHA256 FSM*
 
 ![](./images/SHA256_fsm.png)
 
@@ -891,7 +858,7 @@ The SHA256 address map is shown here: [sha256\_reg — clp Reference (chipsallia
 
 The following pseudocode demonstrates how the SHA256 interface can be implemented.
 
-*Figure 24: SHA256 pseudocode*
+*Figure 23: SHA256 pseudocode*
 
 ![](./images/SHA256_pseudo.png)
 
@@ -955,25 +922,25 @@ The message should be padded before feeding to the HMAC core. Internally, the i\
 
 The total size should be equal to 128 bits, short of a multiple of 1024 because the goal is to have the formatted message size as a multiple of 1024 bits (N x 1024).
 
-*Figure 25: HMAC input formatting*
+*Figure 24: HMAC input formatting*
 
 ![](./images/HMAC_input.png)
 
 The following figures show examples of input formatting for different message lengths.
 
-*Figure 26: Message length of 1023 bits*
+*Figure 25: Message length of 1023 bits*
 
 ![](./images/msg_1023.png)
 
 When the message is 1023 bits long, padding is given in the next block along with message size.
 
-*Figure 27: 1 bit padding*
+*Figure 26: 1 bit padding*
 
 ![](./images/1_bit.png)
 
 When the message size is 895 bits, a padding of ‘1’ is also considered valid, followed by the message size.
 
-*Figure 28: Multi block message*
+*Figure 27: Multi block message*
 
 ![](./images/msg_multi_block.png)
 
@@ -984,7 +951,7 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 
 The HMAC core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-*Figure 29: HMAC-SHA-384-192 data flow*
+*Figure 28: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
 
@@ -992,7 +959,7 @@ The HMAC core performs the sha2-384 function to process the hash value of the gi
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
-*Figure 30: HMAC FSM*
+*Figure 29: HMAC FSM*
 
 ![](./images/HMAC_FSM.png)
 
@@ -1022,7 +989,7 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
-*Figure 31: HMAC pseudocode*
+*Figure 30: HMAC pseudocode*
 
 ![](./images/HMAC_pseudo.png)
 
@@ -1142,7 +1109,7 @@ The hardware implementation supports deterministic ECDSA, 384 Bits (Prime Field)
 
 Secp384r1 parameters are shown in the following figure.
 
-*Figure 32: Secp384r1 parameters*
+*Figure 31: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
 
@@ -1150,7 +1117,7 @@ Secp384r1 parameters are shown in the following figure.
 
 The ECDSA consists of three operations, shown in the following figure.
 
-*Figure 33: ECDSA operations*
+*Figure 32: ECDSA operations*
 
 ![](./images/ECDSA_ops.png)
 
@@ -1185,7 +1152,7 @@ The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the 
 
 The ECC top-level architecture is shown in the following figure.
 
-*Figure 34: ECDSA architecture*
+*Figure 33: ECDSA architecture*
 
 ![](./images/ECDSA_arch.png)
 
@@ -1223,19 +1190,19 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 #### KeyGen
 
-*Figure 35: KeyGen pseudocode*
+*Figure 34: KeyGen pseudocode*
 
 ![](./images/keygen_pseudo.png)
 
 #### Signing
 
-*Figure 36: Signing pseudocode*
+*Figure 35: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
 
 #### Verifying
 
-*Figure 37: Verifying pseudocode*
+*Figure 36: Verifying pseudocode*
 
 ![](./images/verify_pseudo.png)
 
@@ -1301,7 +1268,7 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 2. KEYGEN PRIVKEY: Running HMAC\_DRBG with seed and nonce to generate the privkey in KEYGEN operation.
 3. SIGNING NONCE: Running HMAC\_DRBG based on RFC6979 in SIGNING operation with privkey and hashed\_msg.
 
-*Figure 38: HMAC\_DRBG utilization*
+*Figure 37: HMAC\_DRBG utilization*
 
 ![](./images/HMAC_DRBG_util.png)
 
@@ -1317,7 +1284,7 @@ In SCA random generator state:
 
 The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in the following figure.
 
-*Figure 39: HMAC\_DRBG data flow*
+*Figure 38: HMAC\_DRBG data flow*
 
 ![](./images/HMAC_DRBG_data.png)
 
@@ -1327,14 +1294,20 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
-*Figure 40: TVLA threshold as a function of the number of samples per trace*
+*Figure 39: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
 
-##### Keygen TVLA
 
-TODO: provide content for this section
+##### KeyGen TVLA
 
+We detected a leakage using TVLA in the HMAC_DRBG algorithm during ECC key generation, based on 150,000 power traces. The leakage originated from a part of the SHA512 function (w_data) that was not fully protected by masking. The same leakage is expected for HMAC operations. 
+
+*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 150,000 traces*
+
+![](./images/tvla_keygen.png)
+
+This leakage is very unlikely to occur in practice, even though it exists in TVLA results. Therefore, we will address it in the next release.
 
 ##### Signing TVLA
 
