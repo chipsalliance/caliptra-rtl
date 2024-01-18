@@ -124,43 +124,47 @@ $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+i
 #defines += $(RV_ROOT)/design/include/el2_def.sv
 #defines += $(BUILD_DIR)/el2_pdef.vh
 includes = -I$(BUILD_DIR)
-#
-#         .--------------------------------------------------------------------------------.
-#         | Verilator does not support unpacked structs/unions - waive this warning so     |
-#         | that unpacked structs are treated as packed. This should only impact files     |
-#         | generated from RDL register files, which use unpacked structs liberally.       |
-#         '-----------------------------------------------------------------------------+--'
-#                                                                                       |
-#         .---------------------------------------------------------------------.       |
-#         | This is flagged for every generated SystemVerilog file defining a   |       |
-#         | register block. The field_storage signal is the target of the       |       |
-#         | warning, indicating multiple drivers/different clocking.            |       |
-#         '----------------------------------------------------------------+----'       |
-#                                                                          |            |
-#         .------------------------------------------------------.         |            |
-#         | PeakRDL implements the default incrsaturate behavior |         |            |
-#         | for counter registers by performing a > comparison   |         |            |
-#         | with an all-ones value (i.e. cnt > 32'hFFFFFFFF)     |         |            |
-#         | which, by definition, can never be true. Verilator   |         |            |
-#         | warns that this will compile to a constant 0.        |         |            |
-#         '------------------------------------------------+-----'         |            |
-#                                                          |               |            |
-#         .--------------------------------------------.   |               |            |
-#         | Vectors that are little bit-endian are not |   |               |            |
-#         | supported by Verilator, according to a     |   |               |            |
-#         | warning that is thrown. This is supposedly |   |               |            |
-#         | resolved as of version 3.720, according    |   |               |            |
-#         | to the release notes.                      |   |               |            |
-#         '-----------------------------------+--------'   |               |            |
-#                                             |            |               |            |
-#         .------------------------------.    |            |               |            |
-#         | Inherited from ChipsAlliance |    |            |               |            |
-#         | VeeR repository provided     |    |            |               |            |
-#         | Makefile                     |    |            |               |            |
-#         '-----+------------+-----------'    |            |               |            |
-#               |            |                |            |               |            |
-#               v            v                v            v               v            v
-suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
+#         .----------------------------------------------------------------------------------------------.
+#         | Verilator is optimized for edge-sensitive (flop-based) designs. However, it supports latches |
+#         | with most performance optimizations disabled and warns that it may be non-intentional latch. |
+#         '-------------------------------------------------------------------------------------------+--'
+#                                                                                                     |
+#         .--------------------------------------------------------------------------------.          |
+#         | Verilator does not support unpacked structs/unions - waive this warning so     |          |
+#         | that unpacked structs are treated as packed. This should only impact files     |          |
+#         | generated from RDL register files, which use unpacked structs liberally.       |          |
+#         '-----------------------------------------------------------------------------+--'          |
+#                                                                                       |             |
+#         .---------------------------------------------------------------------.       |             |
+#         | This is flagged for every generated SystemVerilog file defining a   |       |             |
+#         | register block. The field_storage signal is the target of the       |       |             |
+#         | warning, indicating multiple drivers/different clocking.            |       |             |
+#         '----------------------------------------------------------------+----'       |             |
+#                                                                          |            |             |
+#         .------------------------------------------------------.         |            |             |
+#         | PeakRDL implements the default incrsaturate behavior |         |            |             |
+#         | for counter registers by performing a > comparison   |         |            |             |
+#         | with an all-ones value (i.e. cnt > 32'hFFFFFFFF)     |         |            |             |
+#         | which, by definition, can never be true. Verilator   |         |            |             |
+#         | warns that this will compile to a constant 0.        |         |            |             |
+#         '------------------------------------------------+-----'         |            |             |
+#                                                          |               |            |             |
+#         .--------------------------------------------.   |               |            |             |
+#         | Vectors that are little bit-endian are not |   |               |            |             |
+#         | supported by Verilator, according to a     |   |               |            |             |
+#         | warning that is thrown. This is supposedly |   |               |            |             |
+#         | resolved as of version 3.720, according    |   |               |            |             |
+#         | to the release notes.                      |   |               |            |             |
+#         '-----------------------------------+--------'   |               |            |             |
+#                                             |            |               |            |             |
+#         .------------------------------.    |            |               |            |             |
+#         | Inherited from ChipsAlliance |    |            |               |            |             |
+#         | VeeR repository provided     |    |            |               |            |             |
+#         | Makefile                     |    |            |               |            |             |
+#         '-----+------------+-----------'    |            |               |            |             |
+#               |            |                |            |               |            |             |
+#               v            v                v            v               v            v             v
+suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED -Wno-LATCH
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables

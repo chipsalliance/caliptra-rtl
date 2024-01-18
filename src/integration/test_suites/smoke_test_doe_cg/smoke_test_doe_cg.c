@@ -85,8 +85,6 @@ void main() {
     volatile uint32_t mitb1 = 0x00000500;
     volatile uint32_t mie_timer0_en = 0x20000000;
 
-    rst_count++;
-
     VPRINTF(LOW,"---------------------------\n");
     VPRINTF(LOW," DOE Smoke Test With Rand UDS/FE !!\n");
     VPRINTF(LOW,"---------------------------\n");
@@ -94,7 +92,6 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    if (rst_count == 1) {
     //Enable clk gating and halt core
     SEND_STDOUT_CTRL(0xf2);
     set_mit0(mitb0, mie_timer0_en);
