@@ -1306,9 +1306,10 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 
 ##### KeyGen TVLA
 
-We detected a leakage using TVLA in the HMAC_DRBG algorithm during ECC key generation, based on 150,000 power traces. The leakage originated from a part of the SHA512 function (w_data) that was not fully protected by masking. The same leakage is expected for HMAC operations. 
+The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
-*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 150,000 traces*
+
+*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
 
@@ -1373,7 +1374,7 @@ The high-level architecture of LMS is shown in the following figure.
 
 ![](./images/LMS_high_level.png)
 
-### LM parameters
+### LMS parameters
 
 LMS parameters are shown in the following table:
 
