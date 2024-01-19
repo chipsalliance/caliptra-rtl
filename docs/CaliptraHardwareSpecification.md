@@ -1313,8 +1313,6 @@ The TVLA results for performing seed/nonce-dependent leakage detection using 200
 
 ![](./images/tvla_keygen.png)
 
-This leakage is very unlikely to occur in practice, even though it exists in TVLA results. Therefore, we will address it in the next release.
-
 ##### Signing TVLA
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
