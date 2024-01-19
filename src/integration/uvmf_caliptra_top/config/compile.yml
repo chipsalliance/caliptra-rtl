@@ -51,7 +51,7 @@ targets:
     pre_exec: |
         echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)"
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
-        $TOOLS/scripts/run_test_makefile
+        $MSFT_SCRIPTS_DIR/run_test_makefile
 global:
   tool:
     vcs:
@@ -97,7 +97,7 @@ targets:
     pre_exec: |
         echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)"
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
-        $TOOLS/scripts/run_test_makefile
+        $MSFT_SCRIPTS_DIR/run_test_makefile
 global:
   tool:
     vcs:

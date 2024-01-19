@@ -370,6 +370,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_and_force_unlock();
     // unlock causes this routine to break
     while(!inject_force_unlock) begin
         if (err_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
+            unlock_proc_active = 1'b1;
             `uvm_info("CPTRA_MBOX_HANDLER", "Received soc_ifc_err_intr, clearing and (if needed) proceeding to mbox_unlock", UVM_MEDIUM)
             // Read and clear any error interrupts
             reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -380,6 +381,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_and_force_unlock();
             err_rsp_count = 0;
             // Next, check if we need to proceed to mbox_unlock step
             if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_cmd_fail_sts.get_lsb_pos()]) begin
+                unlock_proc_active = 1'b0;
                 continue;
             end
             reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
@@ -390,6 +392,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_and_force_unlock();
                 `uvm_info("CPTRA_MBOX_HANDLER", "After servicing soc_ifc_err_intr, proceeding with mbox_unlock", UVM_MEDIUM)
                 break;
             end
+            unlock_proc_active = 1'b0;
         end
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(10/*TODO rand delays*/);
     end

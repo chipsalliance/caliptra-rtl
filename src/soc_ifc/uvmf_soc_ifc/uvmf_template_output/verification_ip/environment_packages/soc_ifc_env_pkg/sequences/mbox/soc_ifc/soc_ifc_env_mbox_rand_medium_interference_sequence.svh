@@ -94,7 +94,7 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
         end
     end
     else if (sts == CMD_FAILURE) begin
-        `uvm_error("MBOX_SEQ", $sformatf("Received unexpected mailbox status %p", sts))
+        `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since no error is anticipated for this sequence", sts))
     end
     else if (sts == CMD_COMPLETE) begin
         if (mbox_resp_expected_dlen != 0)
