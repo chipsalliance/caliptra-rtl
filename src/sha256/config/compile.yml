@@ -20,7 +20,7 @@ targets:
     directories: []
     waiver_files: 
       #- $COMPILE_ROOT/config/rtl_lint/sha256.waiver
-      - $COMPILE_ROOT/config/design_lint/sha256_ctrl/sglint_waivers
+      - $MSFT_REPO_ROOT/src/sha256/config/design_lint/sha256_ctrl/sglint_waivers
     black_box:
       - sha256_reg
 ---

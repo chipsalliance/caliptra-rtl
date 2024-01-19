@@ -45,7 +45,7 @@ targets:
     tops: [caliptra_top]
   rtl_lint:
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/sglint_waivers
+      - $MSFT_REPO_ROOT/src/integration/config/design_lint/sglint_waivers
     black_box:
       - el2_veer_wrapper
   cdc:

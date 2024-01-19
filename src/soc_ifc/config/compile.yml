@@ -74,7 +74,7 @@ targets:
       - soc_ifc_reg
       - soc_ifc_reg_pkg
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/soc_ifc/sglint_waivers
+      - $MSFT_REPO_ROOT/src/soc_ifc/config/design_lint/soc_ifc/sglint_waivers
     black_box:
       - sha512_acc_csr
       - mbox_csr

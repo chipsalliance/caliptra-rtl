@@ -38,7 +38,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/doe_ctrl/sglint_waivers
+      - $MSFT_REPO_ROOT/src/doe/config/design_lint/doe_ctrl/sglint_waivers
     black_box:
       - doe_reg
 ---
