@@ -3345,7 +3345,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
             begin: DELAY_INTERNAL_RESET_ASSERTION
             cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
             soc_ifc_sb_ap_output_transaction_t local_soc_ifc_sb_ap_txn;
-            bit send_soc_ifc_sts_txn = soc_ifc_status_txn_expected_after_noncore_reset();
+            bit send_soc_ifc_sts_txn;
 
             // Do the noncore reset
             `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in assertion of internal resets after a delay", kind), UVM_MEDIUM)
@@ -3361,6 +3361,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 end
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY);
             join
+            send_soc_ifc_sts_txn = soc_ifc_status_txn_expected_after_noncore_reset();
             // Synchronize the noncore reset with the reset of the environment and allow other
             // components to reset before proceeding with predicted activity
             reset_handled.trigger(noncore_reset_flag);

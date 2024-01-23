@@ -15,5 +15,5 @@ targets:
   rtl_lint:
     directories: []
     waiver_files: 
-    - $COMPILE_ROOT/config/design_lint/ahb_lite_bus/sglint_waivers
+    - $MSFT_REPO_ROOT/src/ahb_lite_bus/config/design_lint/ahb_lite_bus/sglint_waivers
 

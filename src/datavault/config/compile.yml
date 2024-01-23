@@ -36,7 +36,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/datavault/sglint_waivers
+      - $MSFT_REPO_ROOT/src/datavault/config/design_lint/datavault/sglint_waivers
     black_box:
       - dv_reg
 global:

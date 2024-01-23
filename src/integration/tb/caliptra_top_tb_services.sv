@@ -1059,7 +1059,7 @@ endgenerate //IV_NO
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;
         wb_data   <= `DEC.dec_i0_wdata_r;
-        if (caliptra_top_dut.trace_rv_i_valid_ip && !$test$plusargs("CLP_REGRESSION")) begin
+        if (caliptra_top_dut.trace_rv_i_valid_ip && $test$plusargs("CLP_BUS_LOGS")) begin
 
            $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", caliptra_top_dut.trace_rv_i_valid_ip, 0, caliptra_top_dut.trace_rv_i_address_ip,
                   0, caliptra_top_dut.trace_rv_i_insn_ip,caliptra_top_dut.trace_rv_i_exception_ip,caliptra_top_dut.trace_rv_i_ecause_ip,
@@ -1074,18 +1074,18 @@ endgenerate //IV_NO
                    );
         end
         if(`DEC.dec_nonblock_load_wen) begin
-            if (!$test$plusargs("CLP_REGRESSION")) $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
+            if ($test$plusargs("CLP_BUS_LOGS")) $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
             caliptra_top_tb_services.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
         end
         if(`DEC.exu_div_wren) begin
-            if (!$test$plusargs("CLP_REGRESSION")) $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
+            if ($test$plusargs("CLP_BUS_LOGS")) $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
             caliptra_top_tb_services.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
         end
     end
 
     // IFU Initiator monitor
     always @(posedge clk) begin
-        if (!$test$plusargs("CLP_REGRESSION"))
+        if (!$test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
                         caliptra_top_dut.ic_hprot, caliptra_top_dut.ic_hsize, caliptra_top_dut.ic_htrans, 
@@ -1095,7 +1095,7 @@ endgenerate //IV_NO
 
     // LSU Initiator monitor
     always @(posedge clk) begin
-        if (!$test$plusargs("CLP_REGRESSION"))
+        if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.initiator_inst.haddr, caliptra_top_dut.initiator_inst.hsize, caliptra_top_dut.initiator_inst.htrans, 
                         caliptra_top_dut.initiator_inst.hwrite, caliptra_top_dut.initiator_inst.hrdata[63:32], caliptra_top_dut.initiator_inst.hrdata[31:0], 
@@ -1108,7 +1108,7 @@ endgenerate //IV_NO
     generate
         for (sl_i = 0; sl_i < `CALIPTRA_AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
             always @(posedge clk) begin
-                if (!$test$plusargs("CLP_REGRESSION"))
+                if ($test$plusargs("CLP_BUS_LOGS"))
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
                         caliptra_top_dut.responder_inst[sl_i].haddr, caliptra_top_dut.responder_inst[sl_i].hsize, caliptra_top_dut.responder_inst[sl_i].htrans, 
                         caliptra_top_dut.responder_inst[sl_i].hwrite, caliptra_top_dut.responder_inst[sl_i].hrdata[63:32], caliptra_top_dut.responder_inst[sl_i].hrdata[31:0], 
@@ -1167,13 +1167,13 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_FFFF);
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0001_FFFF);
-        if (!$test$plusargs("CLP_REGRESSION")) begin
+        if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
             ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
             lsu_p = $fopen("lsu_master_ahb_trace.log", "w");
         end
-        if (!$test$plusargs("CLP_REGRESSION")) begin
+        if ($test$plusargs("CLP_BUS_LOGS")) begin
             $fwrite (el, "//   Cycle : #inst    0    pc    opcode    reg=value   ; mnemonic\n");
             $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmastlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
             $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");

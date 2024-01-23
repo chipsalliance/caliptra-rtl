@@ -76,7 +76,12 @@ class soc_ifc_env_cptra_rst_wait_sequence extends soc_ifc_env_sequence_base #(.C
         core_rst_asserted = cptra_status_agent_rsp_seq.rsp.uc_rst_asserted;
         sts_rsp_count--;
         if (!noncore_rst_asserted || !core_rst_asserted)
-            `uvm_error("CPTRA_RESET_WAIT", "Unexpected status transition, with noncore/core resets deasserted, while waiting for noncore reset to assert")
+            // This might be an error, but the delay from cptra_rst_b -> cptra_noncore_rst_b
+            // means that some additional activity might complete before the noncore rst asserts.
+            // That activity might be legal, so this is an INFO and not an ERROR.
+            // soc_ifc_predictor is responsible for detecting invalid activity during a
+            // reset condition.
+            `uvm_info("CPTRA_RESET_WAIT", "Unexpected status transition, with noncore/core resets deasserted, while waiting for noncore reset to assert!", UVM_LOW)
         else
             `uvm_info("CPTRA_RESET_WAIT", "Detected Caliptra noncore reset assertion", UVM_LOW)
     end
