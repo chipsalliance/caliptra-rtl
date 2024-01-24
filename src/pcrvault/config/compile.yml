@@ -52,7 +52,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/pcrvault/sglint_waivers
+      - $MSFT_REPO_ROOT/src/pcrvault/config/design_lint/pcrvault/sglint_waivers
     black_box:
       - pv_reg
 global:

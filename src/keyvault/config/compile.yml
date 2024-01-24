@@ -52,7 +52,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/keyvault/sglint_waivers
+      - $MSFT_REPO_ROOT/src/keyvault/config/design_lint/keyvault/sglint_waivers
     black_box:
       - kv_reg
 global:

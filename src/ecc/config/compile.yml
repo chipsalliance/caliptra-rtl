@@ -40,7 +40,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/ecc_top/sglint_waivers
+      - $MSFT_REPO_ROOT/src/ecc/config/design_lint/ecc_top/sglint_waivers
     black_box:
       - ecc_reg
 ---
