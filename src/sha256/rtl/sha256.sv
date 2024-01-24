@@ -2,7 +2,7 @@
 //
 // Updated by Caliptra team to modify data access width
 //
-// sha256.v
+// sha256.sv
 // --------
 // Top level wrapper for the SHA-256 hash function providing
 // a simple memory like interface with 32 bit data access.
@@ -203,9 +203,9 @@ module sha256
   assign wntz_1st_blk  = (wntz_fsm == WNTZ_1ST);
   assign wntz_blk_done = core_digest_valid & ~core_digest_valid_reg;
   assign wntz_next     = 1'b0;
-  assign wntz_w_invalid = wntz_mode & !(wntz_w inside {'h1, 'h2, 'h4, 'h8});
-  assign wntz_mode_invalid = wntz_mode & !mode_reg;
-  assign wntz_j_invalid = wntz_mode && init_reg && (block_reg[5][15:8] > wntz_iter);
+  assign wntz_w_invalid = (wntz_mode | wntz_busy) & !(wntz_w inside {'h1, 'h2, 'h4, 'h8});
+  assign wntz_mode_invalid = (wntz_mode | wntz_busy) & !mode_reg;
+  assign wntz_j_invalid = (wntz_mode | wntz_busy) && init_reg && (block_reg[5][15:8] > wntz_iter);
   // always_comb begin
   //   case (wntz_fsm)
   //         WNTZ_IDLE:  wntz_init  = init_reg;
@@ -386,6 +386,7 @@ module sha256
   );
 
     //interrupt register hw interface
+    assign hwif_in.sha256_ready = ready_reg;
     assign hwif_in.reset_b = reset_n;
     assign hwif_in.error_reset_b = cptra_pwrgood;
     assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
