@@ -1,3 +1,7 @@
+// -------------------------------------------------
+// Contact: contact@lubis-eda.com
+// Author: Tobias Ludwig, Michael Schwarz
+// -------------------------------------------------
 // SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +17,21 @@
 // limitations under the License.
 //
 
-#include "systemc.h"
-#include "../Interfaces/Interfaces.h"
-#include "../sha512.h"
-#include "tb.h"
+
+package doe_iv_process_pkg;
 
 
-int sc_main(int argc, char **argv) {
-  Blocking<SHA_Args> in_channel("in_channel");
-  MasterSlave<sc_biguint<512>> out_channel("out_channel");
+  typedef struct {
+    bit unsigned [127:0] encoded_msg;
+    bit unsigned [127:0] block_msg;
+    bit unsigned [127:0] IV;
+    bit encdec;
+    bit enc_ready;
+    bit dec_ready;
+    bit IV_Updated_d;
+    bit next_cmd;
+    bit keylen;
+  } st_InPacket;
 
-  testbench tb("tb");
-  tb.in_testdata(in_channel);
-  tb.out_testdata(out_channel);
-  
-  SHA512 dut("dut");
-  dut.SHA_Input(in_channel);
-  dut.out(out_channel);
 
-
-
-  sc_start();
-  return 0;
-}
+endpackage
