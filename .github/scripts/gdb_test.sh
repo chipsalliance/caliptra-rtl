@@ -1,10 +1,34 @@
 #!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 # This script runs Verilator RTL simulation and OpenOCD in background, invokes
 # the supplied test command and shuts everything down.
 
 SIM_LOG=`realpath sim.log`
 OPENOCD_LOG=`realpath openocd.log`
+GCC_PREFIX=riscv64-unknown-elf
+
+# Ensure that RISC-V toolchain is installed
+if ! which ${GCC_PREFIX}-gcc >/dev/null; then
+    GCC_PREFIX=riscv32-unknown-elf
+fi
+if ! which ${GCC_PREFIX}-gcc >/dev/null; then
+    echo "RISC-V toolchain not found, please refer to https://github.com/chipsalliance/caliptra-rtl?tab=readme-ov-file#riscv-toolchain-installation for more details."
+    exit 1
+fi
+export GCC_PREFIX
 
 set +e
 
