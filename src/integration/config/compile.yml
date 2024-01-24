@@ -110,7 +110,8 @@ targets:
     tops: [caliptra_top_tb]
   sim:
     pre_exec: '$MSFT_TOOLS/scripts/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
-                && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .'
+                && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
+                && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .'
 global:
   tool:
     vcs:

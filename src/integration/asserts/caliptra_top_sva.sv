@@ -24,22 +24,29 @@
 `else
 `define CPTRA_TB_TOP_NAME caliptra_top_tb
 `endif
-`define CPTRA_TOP_PATH  `CPTRA_TB_TOP_NAME.caliptra_top_dut
-`define KEYVAULT_PATH   `CPTRA_TOP_PATH.key_vault1
-`define DOE_INST_PATH   `CPTRA_TOP_PATH.doe.doe_inst
-`define DOE_PATH        `DOE_INST_PATH.doe_fsm1
-`define DOE_REG_PATH    `DOE_INST_PATH.i_doe_reg
-`define SERVICES_PATH   `CPTRA_TB_TOP_NAME.tb_services_i
-`define SHA512_PATH     `CPTRA_TOP_PATH.sha512.sha512_inst
-`define HMAC_PATH       `CPTRA_TOP_PATH.hmac.hmac_inst
-`define ECC_PATH        `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
-`define ECC_REG_PATH    `CPTRA_TOP_PATH.ecc_top1.ecc_reg1
-`define SHA256_PATH     `CPTRA_TOP_PATH.sha256.sha256_inst
-`define SHA512_MASKED_PATH `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
-`define SOC_IFC_TOP_PATH   `CPTRA_TOP_PATH.soc_ifc_top1
-`define WDT_PATH        `SOC_IFC_TOP_PATH.i_wdt
+`define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`define KEYVAULT_PATH       `CPTRA_TOP_PATH.key_vault1
+`define KEYVAULT_REG_PATH   `KEYVAULT_PATH.kv_reg1
+`define PCRVAULT_PATH       `CPTRA_TOP_PATH.pcr_vault1
+`define PCRVAULT_REG_PATH   `PCRVAULT_PATH.pv_reg1
+`define DATA_VAULT_PATH     `CPTRA_TOP_PATH.data_vault1
+`define DATA_VAULT_REG_PATH `DATA_VAULT_PATH.dv_reg1
+`define DOE_INST_PATH       `CPTRA_TOP_PATH.doe.doe_inst
+`define DOE_PATH            `DOE_INST_PATH.doe_fsm1
+`define DOE_REG_PATH        `DOE_INST_PATH.i_doe_reg
+`define SERVICES_PATH       `CPTRA_TB_TOP_NAME.tb_services_i
+`define SHA512_PATH         `CPTRA_TOP_PATH.sha512.sha512_inst
+`define HMAC_PATH           `CPTRA_TOP_PATH.hmac.hmac_inst
+`define HMAC_REG_PATH       `HMAC_PATH.i_hmac_reg
+`define ECC_PATH            `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
+`define ECC_REG_PATH        `CPTRA_TOP_PATH.ecc_top1.ecc_reg1
+`define SHA256_PATH         `CPTRA_TOP_PATH.sha256.sha256_inst
+`define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
+`define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
+`define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
+`define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
 `ifdef UVMF_CALIPTRA_TOP
   `define SVA_CLK `CPTRA_TB_TOP_NAME.clk
   `define SVA_RST `CPTRA_TB_TOP_NAME.soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b
@@ -226,6 +233,19 @@ module caliptra_top_sva
   endgenerate
 
   `ifndef VERILATOR
+  generate
+    begin: SHA256_WNTZ_data_check
+      for(genvar dword = 0; dword < 8; dword++) begin
+        SHA256_WNTZ_data_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            //disable iff (`CPTRA_TOP_PATH.)
+                                            (`SERVICES_PATH.WriteData == 'hdd && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`SHA256_PATH.digest_valid_reg) |=> (`SHA256_PATH.digest_reg[dword] == `SERVICES_PATH.sha256_wntz_test_vector.sha256_wntz_digest[dword])
+                                          )
+                                  else $display("SVA ERROR: SHA256 wntz digest %h does not match expected digest %h!", `SHA256_PATH.digest_reg[dword], `SERVICES_PATH.sha256_wntz_test_vector.sha256_wntz_digest[dword]);
+      end //for
+    end //data check
+  endgenerate
+
   generate
     begin: UDS_data_check
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
@@ -552,5 +572,32 @@ module caliptra_top_sva
                                       `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we |-> (`ECC_PATH.ecc_arith_unit_i.mult_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
                                       )
                           else $display("SVA ERROR: ECC multiplier result is not valid!"); 
-endmodule
 
+  // SVA for LMS WNTZ accelerator
+    wntz_mode:        assert property (
+                                        @(posedge `SVA_RDC_CLK)
+                                        `SHA256_PATH.wntz_mode |-> (`SHA256_PATH.init_reg) & (!`SHA256_PATH.next_reg)
+                                        )
+                            else $display("SVA ERROR: WNTZ mode is not valid without INIT!");
+
+  // Bus IDLE on Firmware Update Reset
+  fw_upd_rst_doe_idle:     assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`DOE_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: DOE bus not idle after Firmware Update Reset!");
+  fw_upd_rst_ecc_idle:     assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`ECC_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: ECC bus not idle after Firmware Update Reset!");
+  fw_upd_rst_hmac_idle:    assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`HMAC_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: HMAC bus not idle after Firmware Update Reset!");
+  fw_upd_rst_kv_idle:      assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`KEYVAULT_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: Key Vault bus not idle after Firmware Update Reset!");
+  fw_upd_rst_pv_idle:      assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`PCRVAULT_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: PCR Vault bus not idle after Firmware Update Reset!");
+  fw_upd_rst_dv_idle:      assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`DATA_VAULT_REG_PATH.s_cpuif_req)
+                           else $display("SVA ERROR: Data Vault bus not idle after Firmware Update Reset!");
+  fw_upd_rst_sha256_idle:  assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SHA256_PATH.i_sha256_reg.s_cpuif_req)
+                           else $display("SVA ERROR: SHA256 bus not idle after Firmware Update Reset!");
+  fw_upd_rst_sha512_idle:  assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SHA512_PATH.i_sha512_reg.s_cpuif_req)
+                           else $display("SVA ERROR: SHA512 bus not idle after Firmware Update Reset!");
+  fw_upd_rst_soc_ifc_idle: assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SOC_IFC_TOP_PATH.i_ahb_slv_sif_soc_ifc.dv)
+                           else $display("SVA ERROR: SOC_IFC bus not idle after Firmware Update Reset!");
+
+endmodule

@@ -214,6 +214,16 @@ module caliptra_top_tb_services
 
     doe_test_vector_t doe_test_vector;
 
+    typedef struct packed {
+        //logic [511:0] sha256_wntz_block_tb;
+        logic [15:0][31:0] sha256_wntz_block_tb;
+        logic [0:7][31:0] sha256_wntz_digest;
+        logic wntz_n;
+        logic [3:0] wntz_w;
+    } sha256_wntz_test_vector_t;
+
+    sha256_wntz_test_vector_t sha256_wntz_test_vector;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -240,6 +250,7 @@ module caliptra_top_tb_services
     //         8'h9a        - Inject invalid zero sign_s into ECC 
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'hdd        - Inject random block input to SHA256 WNTZ module
     //         8'hde        - ICCM SRAM force loop read (requires read params written to other bytes of generic wires)
     //         8'hdf        - DCCM SRAM force loop read (requires read params written to other bytes of generic wires)
     //         8'he0        - Set random ICCM SRAM single bit error injection
@@ -548,6 +559,30 @@ module caliptra_top_tb_services
         end
     end
     
+    //Randomized wntz
+    generate
+        for (genvar dword = 15; dword >= 0; dword--) begin
+            always@(negedge clk) begin
+                if ((WriteData[7:0] == 8'hdd) && mailbox_write) begin
+                    force caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value = sha256_wntz_test_vector.sha256_wntz_block_tb[15-dword];
+                    force caliptra_top_dut.sha256.sha256_inst.wntz_mode = 1'b1; //single pulse
+                    force caliptra_top_dut.sha256.sha256_inst.wntz_n_mode = sha256_wntz_test_vector.wntz_n;
+                    force caliptra_top_dut.sha256.sha256_inst.wntz_w = sha256_wntz_test_vector.wntz_w;
+                    force caliptra_top_dut.sha256.sha256_inst.init_reg = 1'b1;
+                    force caliptra_top_dut.sha256.sha256_inst.mode_reg = 1'b1;
+                end //if 'hdd
+                else if (caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_CTRL.ZEROIZE.value) begin
+                    release caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
+                end
+                else begin
+                    // release caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
+                    release caliptra_top_dut.sha256.sha256_inst.wntz_mode;
+                    release caliptra_top_dut.sha256.sha256_inst.init_reg;
+                end //else
+            end //always
+        end //for
+    endgenerate
+
     generate
         for(genvar dword = 0; dword < IV_NO; dword++) begin
     always@(negedge clk) begin
@@ -699,6 +734,34 @@ endgenerate //IV_NO
             end
         end
     endgenerate
+
+    task sha256_wntz_testvector_generator();
+        string file_name;
+        int fd_r;
+        string line_read;
+        int w_ln, w, n;
+
+        w_ln = $urandom_range(3, 0);
+        w = 2**w_ln;
+        n = $urandom_range(0, 1);
+
+        $system($sformatf("python sha256_wntz_test_gen.py %d %d", w, n));
+        file_name = "sha256_wntz_test_vector.txt";
+
+        if (!UVM_TB) begin
+            fd_r = $fopen(file_name, "r");
+            if (fd_r == 0) $error("Cannot open file %s for reading", file_name);
+           
+            //Get values from file
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", sha256_wntz_test_vector.sha256_wntz_block_tb));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", sha256_wntz_test_vector.sha256_wntz_digest));
+            sha256_wntz_test_vector.wntz_n = n;
+            sha256_wntz_test_vector.wntz_w = w;
+            $fclose(fd_r);
+        end
+    endtask
 
     task doe_testvector_generator();
         string file_name;
@@ -1059,7 +1122,7 @@ endgenerate //IV_NO
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;
         wb_data   <= `DEC.dec_i0_wdata_r;
-        if (caliptra_top_dut.trace_rv_i_valid_ip && !$test$plusargs("CLP_REGRESSION")) begin
+        if (caliptra_top_dut.trace_rv_i_valid_ip && $test$plusargs("CLP_BUS_LOGS")) begin
 
            $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", caliptra_top_dut.trace_rv_i_valid_ip, 0, caliptra_top_dut.trace_rv_i_address_ip,
                   0, caliptra_top_dut.trace_rv_i_insn_ip,caliptra_top_dut.trace_rv_i_exception_ip,caliptra_top_dut.trace_rv_i_ecause_ip,
@@ -1074,18 +1137,18 @@ endgenerate //IV_NO
                    );
         end
         if(`DEC.dec_nonblock_load_wen) begin
-            if (!$test$plusargs("CLP_REGRESSION")) $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
+            if ($test$plusargs("CLP_BUS_LOGS")) $fwrite (el, "%10d : %32s=%h ; nbL\n", cycleCnt, abi_reg[`DEC.dec_nonblock_load_waddr], `DEC.lsu_nonblock_load_data);
             caliptra_top_tb_services.gpr[0][`DEC.dec_nonblock_load_waddr] = `DEC.lsu_nonblock_load_data;
         end
         if(`DEC.exu_div_wren) begin
-            if (!$test$plusargs("CLP_REGRESSION")) $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
+            if ($test$plusargs("CLP_BUS_LOGS")) $fwrite (el, "%10d : %32s=%h ; nbD\n", cycleCnt, abi_reg[`DEC.div_waddr_wb], `DEC.exu_div_result);
             caliptra_top_tb_services.gpr[0][`DEC.div_waddr_wb] = `DEC.exu_div_result;
         end
     end
 
     // IFU Initiator monitor
     always @(posedge clk) begin
-        if (!$test$plusargs("CLP_REGRESSION"))
+        if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
                         caliptra_top_dut.ic_hprot, caliptra_top_dut.ic_hsize, caliptra_top_dut.ic_htrans, 
@@ -1095,7 +1158,7 @@ endgenerate //IV_NO
 
     // LSU Initiator monitor
     always @(posedge clk) begin
-        if (!$test$plusargs("CLP_REGRESSION"))
+        if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.initiator_inst.haddr, caliptra_top_dut.initiator_inst.hsize, caliptra_top_dut.initiator_inst.htrans, 
                         caliptra_top_dut.initiator_inst.hwrite, caliptra_top_dut.initiator_inst.hrdata[63:32], caliptra_top_dut.initiator_inst.hrdata[31:0], 
@@ -1108,7 +1171,7 @@ endgenerate //IV_NO
     generate
         for (sl_i = 0; sl_i < `CALIPTRA_AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
             always @(posedge clk) begin
-                if (!$test$plusargs("CLP_REGRESSION"))
+                if ($test$plusargs("CLP_BUS_LOGS"))
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
                         caliptra_top_dut.responder_inst[sl_i].haddr, caliptra_top_dut.responder_inst[sl_i].hsize, caliptra_top_dut.responder_inst[sl_i].htrans, 
                         caliptra_top_dut.responder_inst[sl_i].hwrite, caliptra_top_dut.responder_inst[sl_i].hrdata[63:32], caliptra_top_dut.responder_inst[sl_i].hrdata[31:0], 
@@ -1167,13 +1230,13 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_FFFF);
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0001_FFFF);
-        if (!$test$plusargs("CLP_REGRESSION")) begin
+        if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
             ifu_p = $fopen("ifu_master_ahb_trace.log", "w");
             lsu_p = $fopen("lsu_master_ahb_trace.log", "w");
         end
-        if (!$test$plusargs("CLP_REGRESSION")) begin
+        if ($test$plusargs("CLP_BUS_LOGS")) begin
             $fwrite (el, "//   Cycle : #inst    0    pc    opcode    reg=value   ; mnemonic\n");
             $fwrite(ifu_p, "//   Cycle: ic_haddr     ic_hburst     ic_hmastlock     ic_hprot     ic_hsize     ic_htrans     ic_hwrite     ic_hrdata     ic_hwdata     ic_hready     ic_hresp\n");
             $fwrite(lsu_p, "//   Cycle: lsu_haddr     lsu_hsize     lsu_htrans     lsu_hwrite     lsu_hrdata     lsu_hwdata     lsu_hready     lsu_hresp\n");
@@ -1213,6 +1276,7 @@ endgenerate //IV_NO
         if (!UVM_TB) begin
             ecc_testvector_generator();
             doe_testvector_generator();
+            sha256_wntz_testvector_generator();
             
             //Note: Both obf_key_uds and obf_key_fe are the same
             //for(int dword = 0; dword < `CLP_OBF_KEY_DWORDS; dword++) begin
