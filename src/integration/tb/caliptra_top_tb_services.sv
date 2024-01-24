@@ -1085,7 +1085,7 @@ endgenerate //IV_NO
 
     // IFU Initiator monitor
     always @(posedge clk) begin
-        if (!$test$plusargs("CLP_BUS_LOGS"))
+        if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
                         caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
                         caliptra_top_dut.ic_hprot, caliptra_top_dut.ic_hsize, caliptra_top_dut.ic_htrans, 
