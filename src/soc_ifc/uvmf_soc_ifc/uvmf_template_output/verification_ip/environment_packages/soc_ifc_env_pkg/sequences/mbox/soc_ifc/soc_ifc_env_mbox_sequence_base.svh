@@ -41,6 +41,8 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   uvm_event in_report_reg_sts;
   rand bit do_apb_lock_check;
   rand bit retry_failed_reg_axs;
+  bit mbox_sts_exp_error = 0; // Indicates this sequence will inject an error, which should manifest as a CMD_FAILURE response status
+                              // TODO make this more comprehensive/intelligent about randomized error injection
 
   typedef enum byte {
     DLY_ZERO,
@@ -563,11 +565,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
         end
     end
     else if (data == CMD_FAILURE) begin
-        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
+        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending && mbox_sts_exp_error) begin
             `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation or a mailbox SRAM double bit flip", data), UVM_HIGH)
         end
         else begin
-            `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since there is no pending non_fatal error interrupt", data))
+            `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since there is no pending non_fatal error interrupt (or error injection was unexpected)", data))
         end
     end
     else if (data == CMD_COMPLETE) begin
@@ -610,6 +612,8 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
         `uvm_error("MBOX_SEQ", "Unexpected error on read from CPTRA_HW_ERROR_NON_FATAL")
     end
     if (|err) begin
+        if (!mbox_sts_exp_error)
+            `uvm_error("MBOX_SEQ", "Observed error in CPTRA_HW_ERROR_NON_FATAL unexpectedly, since sequence was not anticipating mailbox ECC errors or protocol violations")
         `uvm_info("MBOX_SEQ", "Detected non-fatal errors at end of mailbox flow. Clearing.", UVM_LOW)
         reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.write(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
         if (reg_sts != UVM_IS_OK) begin
@@ -686,6 +690,13 @@ endfunction
 //              A legal addr_user is defined as:
 //               - A random selection from valid_users if the mbox_lock has yet to be acquired
 //               - The value in mbox_user if mbox_lock has been acquired already
+// NOTE:        In the context of this function, the term 'valid' is overloaded.
+//              mbox_valid_users contains the list of 'allowed' agent PAUSER values
+//              that have access to issue commands to the mailbox.
+//              Once the mailbox is locked, the only PAUSER value that is actually
+//              considered "valid" is the value that was locked - other entries from
+//              mbox_valid_users are not legal and will trigger protocol violations.
+//              This function uses the more restrictive definition to evaluate constraints.
 //==========================================
 function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
     apb_user_obj = new();
@@ -699,7 +710,15 @@ function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int uns
                                              else
                                                  (addr_user inside {mbox_valid_users}) dist
                                                  {1 :/ 1000,
-                                                  0 :/ invalid_prob}; })
+                                                  0 :/ invalid_prob};
+                                             // When randomizing to a non-valid USER value after
+                                             // PAUSER has been locked, make the assigned USER value
+                                             // equally likely to be from the allowed agents as it is
+                                             // to be some totally random (non-allowed) value
+                                             if (pauser_locked.locked)
+                                                 (addr_user inside {mbox_valid_users}) dist
+                                                 {1 :/ 1,
+                                                  0 :/ 1}; })
         `uvm_error("MBOX_SEQ", "Failed to randomize APB PAUSER override value")
     else
         `uvm_info("MBOX_SEQ", $sformatf("Randomized APB PAUSER override value to 0x%x", this.apb_user_obj.addr_user), UVM_HIGH)
