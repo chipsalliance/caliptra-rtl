@@ -71,7 +71,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $COMPILE_ROOT/config/design_lint/el2_veer_wrapper/sglint_waivers
+      - $MSFT_REPO_ROOT/src/riscv_core/veer_el2/config/design_lint/el2_veer_wrapper/sglint_waivers
 global:
   tool:
     vcs:
