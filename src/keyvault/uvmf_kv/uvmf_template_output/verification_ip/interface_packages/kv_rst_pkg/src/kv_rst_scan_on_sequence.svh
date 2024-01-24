@@ -57,6 +57,7 @@ class kv_rst_scan_on_sequence extends kv_rst_sequence_base;
     req.assert_core_rst = 1'b0;
     req.debug_mode = 1'b1;
     req.scan_mode = 1'b1;
+    req.wait_cycles = 'h0;
     
     finish_item(req);
     `uvm_info("KV_RST_SCAN_ON", {"Response:",req.convert2string()},UVM_MEDIUM)
