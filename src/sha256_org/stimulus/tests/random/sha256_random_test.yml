@@ -1,4 +1,0 @@
----
-# Random seed desired...
-seed: ${PLAYBOOK_RANDOM_SEED}
-testname: sha256_random_test
