@@ -210,6 +210,8 @@ class kv_predictor #(
   // int unsigned job_end_count[time];
   // bit write_entry_pending = 0;
   // bit send_hmac_write_txn = 0;
+  logic [KV_NUM_KEYS-1:0] clear_secrets_debug0 = 0; 
+  logic [KV_NUM_KEYS-1:0] clear_secrets_debug1 = 0;
   bit set_val_ctrl_derived = 0;
   logic [KV_NUM_KEYS-1:0] val_ctrl_derived_data = 0;
   logic [KV_NUM_KEYS-1:0] key_entry_ctrl_we = 0;
@@ -221,6 +223,7 @@ class kv_predictor #(
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
   extern task          poll_and_run_delay_jobs();
+  extern task          poll_and_run_clr_secrets_delay_job();
   // extern function      send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
   // extern function      send_delayed_expected_transactions_sha512_write(kv_write_transaction t);
   // extern function      send_delayed_expected_transactions_ecc_write(kv_write_transaction t);
@@ -292,6 +295,7 @@ class kv_predictor #(
   task run_phase (uvm_phase phase);
     fork
       poll_and_run_delay_jobs();
+      poll_and_run_clr_secrets_delay_job();
     join_none
     super.run_phase(phase);
   endtask
@@ -323,6 +327,8 @@ class kv_predictor #(
       p_kv_rm.reset(); //all regs cleared on hard rst
       for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
         last_dword_written[entry] = 'h0; //Clear last dword on hard rst
+        // clear_secrets_debug0[entry] = 'h0;
+        // clear_secrets_debug1[entry] = 'h0;
       end
       key_ctrl_lock_wr = 'h0;
       key_ctrl_lock_use = 'h0;
@@ -332,22 +338,18 @@ class kv_predictor #(
       p_kv_rm.val_reg.debug_mode_unlocked.set(1'b1);
       p_kv_rm.val_reg.cptra_in_debug_scan_mode.set(1'b1);
       
-      `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV", UVM_MEDIUM)
+      `uvm_info("PRED", "Debug mode switch, KV will be flushed", UVM_MEDIUM)
       if (clear_secrets_data[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()] == 'h1) begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
           //Debug mode should flush all regs inspite of locks
-          for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
-            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
-          end
+          clear_secrets_debug0[entry] = 'h0;
+          clear_secrets_debug1[entry] = 'h1;
         end
       end
       else begin
         for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-          for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
-            p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
-          end
+          clear_secrets_debug0[entry] = 'h1;
+          clear_secrets_debug1[entry] = 'h0;
         end
       end
     end
@@ -655,31 +657,27 @@ class kv_predictor #(
           //Only allow clear operation if in debug mode
           //if (data_active[1:0] == 'h1) begin
           if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && !data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
-            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV with DEBUG0 values", UVM_MEDIUM)
+            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode", UVM_MEDIUM)
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing - do not clear if locked
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
               kv_reg_data = kv_reg.get_mirrored_value();
               if(kv_reg_data[1:0] == 2'b00) begin
-                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin              
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
-                end
+                clear_secrets_debug0[entry] = 'h1;
+                clear_secrets_debug1[entry] = 'h0;
               end
             end
           end
           //else if(data_active[1:0] == 'h3) begin
           else if (data_active [p_kv_rm.kv_reg_rm.CLEAR_SECRETS.wr_debug_values.get_lsb_pos()] && data_active[p_kv_rm.kv_reg_rm.CLEAR_SECRETS.sel_debug_value.get_lsb_pos()]) begin
-            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode. Flushing KV with DEBUG1 values", UVM_MEDIUM)
+            `uvm_info("PRED", "Clear_secrets reg is set in debug/scan mode", UVM_MEDIUM)
             for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
               //Read locks before clearing
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
               kv_reg_data = kv_reg.get_mirrored_value();
               if(kv_reg_data[1:0] == 2'b00) begin
-                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
-                end
+                clear_secrets_debug0[entry] = 'h0;
+                clear_secrets_debug1[entry] = 'h1;
               end
             end
           end
@@ -964,6 +962,39 @@ endclass
           this.set_val_ctrl_derived = 'b1; //update in next clk
         end
       end
+      configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+    end
+  endtask
+
+  task kv_predictor::poll_and_run_clr_secrets_delay_job();
+    int entry, offset;
+    forever begin
+      fork
+        begin
+          //CLEAR SECRETS:
+          configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+          `uvm_info("Delay Jobs",$sformatf(" |clear_secrets_debug0 = %b, |debug1 = %b\n", |clear_secrets_debug0, |clear_secrets_debug1), UVM_DEBUG)
+          if (|clear_secrets_debug0 || |clear_secrets_debug1) begin
+            `uvm_info("Delay Jobs", "Flushing key vault", UVM_MEDIUM)
+            for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
+              if(clear_secrets_debug0[entry] == 'h1) begin
+                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
+                end
+                clear_secrets_debug0[entry] = 'h0;
+              end
+              else if (clear_secrets_debug1[entry]== 'h1) begin
+                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
+                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
+                end
+                clear_secrets_debug1[entry] = 'h0;
+              end
+            end //for loop
+          end //if block
+        end //begin
+      join_none
       configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
     end
   endtask
