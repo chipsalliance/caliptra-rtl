@@ -6,9 +6,10 @@ contents:
       tags: ["L1", "CALIPTRA_TOP_TB",  "random", "randomized_pcr_signing"]
       path: ""
       weight: 100
-      generations: 1000
+      generations: 2000
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $CALIPTRA_ROOT/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing   : { weight 100 }
+        $CALIPTRA_ROOT/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing              : { weight 100 }
+        $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand    : { weight 100 }

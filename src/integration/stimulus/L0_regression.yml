@@ -12,6 +12,8 @@ contents:
         - ../test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg.yml
         - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml
+        - ../test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz.yml
+        - ../test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand.yml
         - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
         - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ../test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
