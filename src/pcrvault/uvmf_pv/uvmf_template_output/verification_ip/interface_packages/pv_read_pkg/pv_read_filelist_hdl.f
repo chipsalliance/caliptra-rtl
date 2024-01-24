@@ -1,1 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/pv_read_pkg/pv_read_pkg_hdl.sv

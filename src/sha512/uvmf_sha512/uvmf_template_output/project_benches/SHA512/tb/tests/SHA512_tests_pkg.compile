@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ../../../../verification_ip/interface_packages/SHA512_in_pkg/SHA512_in.compile
-  - ../../../../verification_ip/interface_packages/SHA512_out_pkg/SHA512_out.compile
-  - ../../../../verification_ip/environment_packages/SHA512_env_pkg/SHA512_env_pkg.compile
-  - ../parameters/SHA512_parameters_pkg.compile
-  - ../sequences/SHA512_sequences_pkg.compile
-src:
-  - SHA512_tests_pkg.sv

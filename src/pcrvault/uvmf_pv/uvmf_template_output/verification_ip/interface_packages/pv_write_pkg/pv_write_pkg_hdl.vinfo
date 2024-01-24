@@ -1,2 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-pv_write_pkg_hdl.sv

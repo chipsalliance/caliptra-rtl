@@ -1,3 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_read_pkg/src/kv_read_if.sv
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_read_pkg/src/kv_read_monitor_bfm.sv
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_read_pkg/src/kv_read_driver_bfm.sv

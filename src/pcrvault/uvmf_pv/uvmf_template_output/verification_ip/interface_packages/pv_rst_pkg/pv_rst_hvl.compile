@@ -1,7 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ./pv_rst_common.compile
-incdir:
-  - .
-src:
-  - pv_rst_pkg.sv

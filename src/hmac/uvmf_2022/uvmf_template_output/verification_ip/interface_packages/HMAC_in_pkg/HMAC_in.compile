@@ -1,3 +1,0 @@
-needs:
-  - HMAC_in_hvl.compile
-  - HMAC_in_hdl.compile

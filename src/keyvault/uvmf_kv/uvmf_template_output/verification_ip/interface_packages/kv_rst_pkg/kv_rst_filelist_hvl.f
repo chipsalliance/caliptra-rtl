@@ -1,1 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_rst_pkg/kv_rst_pkg.sv

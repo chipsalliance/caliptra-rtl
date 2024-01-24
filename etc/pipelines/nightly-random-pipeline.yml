@@ -77,63 +77,63 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_ecc'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/ecc/uvmf_ecc/coverage/config/uvmf_ecc_cm_hier.cfg --submit-resource-args RAM/2000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/ecc/uvmf_ecc/coverage/config/uvmf_ecc_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_ecc'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/ecc/stimulus/testsuites/ecc_nightly_random_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/ecc/stimulus/testsuites/ecc_nightly_random_regression.yml'
               - timeout: 1440
         - uvmf_hmac:
           - display_name: 'UVMF_HMAC'
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_hmac'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/hmac/uvmf_2022/coverage/config/uvmf_hmac_cm_hier.cfg --submit-resource-args RAM/2000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/hmac/uvmf_2022/coverage/config/uvmf_hmac_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_hmac'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/hmac/stimulus/testsuites/hmac_nightly_random_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/hmac/stimulus/testsuites/hmac_nightly_random_regression.yml'
               - timeout: 1440
         - uvmf_sha512:
           - display_name: 'UVMF_SHA512'
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_sha512'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha512/uvmf_sha512/coverage/config/uvmf_sha512_cm_hier.cfg --submit-resource-args RAM/2000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha512/uvmf_sha512/coverage/config/uvmf_sha512_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_sha512'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/sha512/stimulus/testsuites/sha512_nightly_random_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/sha512/stimulus/testsuites/sha512_nightly_random_regression.yml'
               - timeout: 1440
         - sha256_random_test:
           - display_name: 'SHA256_RANDOM_TEST'
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'sha256_random_test'
-          #- args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/2000'
+          #- args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/2000'
           - testsuites:
             - l1_regress:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'sha256_random_test'
               #- sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/sha256/stimulus/testsuites/sha256_nightly_random_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/sha256/stimulus/testsuites/sha256_nightly_random_regression.yml'
               - timeout: 1440 
         - uvmf_soc_ifc:
             - display_name: 'UVMF_SOC_IFC'
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_soc_ifc'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/soc_ifc/uvmf_soc_ifc/coverage/config/uvmf_soc_ifc_cm_hier.cfg --submit-resource-args RAM/2000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/coverage/config/uvmf_soc_ifc_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - l1_regress:
                 - enabled: true
@@ -141,42 +141,42 @@ stages:
                 - dut: 'uvmf_soc_ifc'
                 # TODO forcibly disable uvm warnings in soc_ifc_predictor and soc_ifc_scoreboard for now. Remove this once they're stabilized.
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
-                - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_random_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_random_regression.yml'
                 - timeout: 1440
         - uvmf_kv:
             - display_name: 'UVMF_KV'
             - enabled: true 
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_kv'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/keyvault/uvmf_kv/coverage/config/uvmf_kv_cm_hier.cfg --submit-resource-args RAM/2000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/keyvault/uvmf_kv/coverage/config/uvmf_kv_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - l1_regress:
                 - enabled: true 
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_kv'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-                - path: '${WORKSPACE}/Caliptra/src/keyvault/stimulus/testsuites/kv_nightly_random_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/keyvault/stimulus/testsuites/kv_nightly_random_regression.yml'
                 - timeout: 1440
         - uvmf_pv:
             - display_name: 'UVMF_PV'
             - enabled: true 
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_pv'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/pcrvault/uvmf_pv/coverage/config/uvmf_pv_cm_hier.cfg --submit-resource-args RAM/2000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/pcrvault/uvmf_pv/coverage/config/uvmf_pv_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - l1_regress:
                 - enabled: true 
                 - configspec_name: 'integration_lib'
                 - dut: 'uvmf_pv'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-                - path: '${WORKSPACE}/Caliptra/src/pcrvault/stimulus/testsuites/pv_nightly_random_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/pcrvault/stimulus/testsuites/pv_nightly_random_regression.yml'
                 - timeout: 1440
         - uvmf_caliptra_top:
             - display_name: 'UVMF_CALIPTRA_TOP'
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/2000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - l1_regress:
                 - enabled: true
@@ -184,19 +184,19 @@ stages:
                 - dut: 'uvmf_caliptra_top'
                 # TODO forcibly disable uvm warnings in soc_ifc_predictor and soc_ifc_scoreboard for now. Remove this once they're stabilized.
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
-                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_random_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/caliptra_top_nightly_random_regression.yml'
                 - timeout: 1440
         - caliptra_top_tb:
             - display_name: 'CALIPTRA_TOP_TB'
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'caliptra_top_tb'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg --submit-resource-args RAM/2000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg --submit-resource-args RAM/2000'
             - testsuites:
               - l1_regress:
                 - enabled: true
                 - configspec_name: 'integration_lib'
                 - dut: 'caliptra_top_tb'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
-                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_tb_nightly_random_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/caliptra_top_tb_nightly_random_regression.yml'
                 - timeout: 1440                

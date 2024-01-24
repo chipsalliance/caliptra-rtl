@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
-  - ./kv_write_common.compile
-incdir:
-  - .
-src:
-  - src/kv_write_if.sv
-  - src/kv_write_monitor_bfm.sv
-  - src/kv_write_driver_bfm.sv

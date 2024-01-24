@@ -1,7 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ECC_in_pkg/ECC_in_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/interface_packages/ECC_out_pkg/ECC_out_pkg.vinfo
-@use $UVMF_VIP_LIBRARY_HOME/environment_packages/ECC_env_pkg/ECC_env_pkg.vinfo
-@use $UVMF_PROJECT_DIR/tb/parameters/ECC_parameters_pkg.vinfo
-+incdir+@vinfodir
-ECC_sequences_pkg.sv

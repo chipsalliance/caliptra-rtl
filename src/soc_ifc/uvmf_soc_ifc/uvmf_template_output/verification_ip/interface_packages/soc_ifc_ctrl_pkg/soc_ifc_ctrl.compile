@@ -1,3 +1,0 @@
-needs:
-  - soc_ifc_ctrl_hvl.compile
-  - soc_ifc_ctrl_hdl.compile

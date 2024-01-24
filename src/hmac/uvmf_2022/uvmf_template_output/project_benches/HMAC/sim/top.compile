@@ -1,3 +1,0 @@
-needs:
-  - hvl.compile
-  - hdl.compile

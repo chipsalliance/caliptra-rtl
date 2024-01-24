@@ -1,3 +1,0 @@
-needs:
-  - kv_rst_hvl.compile
-  - kv_rst_hdl.compile

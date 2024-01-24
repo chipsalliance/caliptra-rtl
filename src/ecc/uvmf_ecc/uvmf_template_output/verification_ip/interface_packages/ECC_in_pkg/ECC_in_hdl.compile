@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
-  - ./ECC_in_common.compile
-incdir:
-  - .
-src:
-  - src/ECC_in_if.sv
-  - src/ECC_in_monitor_bfm.sv
-  - src/ECC_in_driver_bfm.sv

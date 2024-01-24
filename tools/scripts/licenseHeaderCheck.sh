@@ -71,8 +71,8 @@ if [[ $(command -v pb) = "" ]]; then
     echo "Enter Caliptra workspace (to make Playbook available) and try again"
     exit 1
 fi
-if [[ $(basename ${PWD}) != "Caliptra" ]]; then
-    echo "Must run script from root of Caliptra repository (i.e. <workspace_name>/Caliptra)"
+if [[ -z ${CALIPTRA_ROOT:+"empty"} ]]; then
+    echo "Must run script from within Caliptra Playbook context"
     exit 1
 fi
 
@@ -85,11 +85,11 @@ apache_patn='Licensed under the Apache License'
 
 # Recursive find through repository with some major exclusions
 # 'eval' is used to expand exclude vars into a usable glob pattern
-files_missing_header=$(eval grep -r -L -i  --exclude-dir=${exclude_dir} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\")
+files_missing_header=$(eval grep -r -L -i  --exclude-dir=${exclude_dir} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\" ${CALIPTRA_ROOT})
 
 # After excluding some crypto directories, re-scan specific directories therein
 # (can't specificy exclude-dir using '<patn>/<patn>' to catch nested directories)
-files_missing_header="${files_missing_header:+$files_missing_header }$(eval grep -r -L -i  --exclude-dir={rtl,uvmf_*} --exclude={aes_tb.v,doe_tb.v,sha256_tb.v} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\" src/sha256 src/sha512 src/sha512_masked src/doe src/aes_secworks)"
+files_missing_header="${files_missing_header:+$files_missing_header }$(eval grep -r -L -i  --exclude-dir={rtl,uvmf_*} --exclude={aes_tb.v,doe_tb.v,sha256_tb.v} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\" ${CALIPTRA_ROOT}/src/sha256 ${CALIPTRA_ROOT}/src/sha512 ${CALIPTRA_ROOT}/src/sha512_masked ${CALIPTRA_ROOT}/src/doe ${CALIPTRA_ROOT}/src/aes_secworks)"
 
 if [[ $files_missing_header != "" ]]; then
     echo -e "\n\n\tPlease add Apache license header to the following files and try again. \n"

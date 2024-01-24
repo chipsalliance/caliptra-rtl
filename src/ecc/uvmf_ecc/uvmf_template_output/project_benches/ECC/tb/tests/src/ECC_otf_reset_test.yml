@@ -1,6 +1,0 @@
----
-# Random seed desired...
-seed: ${PLAYBOOK_RANDOM_SEED}
-plusargs:
-- '+UVM_TESTNAME=ECC_otf_reset_test'
-testname: ECC_otf_reset_test

@@ -1,7 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ./ECC_out_common.compile
-incdir:
-  - .
-src:
-  - ECC_out_pkg.sv

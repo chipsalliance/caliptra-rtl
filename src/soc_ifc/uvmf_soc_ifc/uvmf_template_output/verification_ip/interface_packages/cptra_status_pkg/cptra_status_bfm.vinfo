@@ -1,6 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-@use cptra_status_pkg_hdl.vinfo
-+incdir+@vinfodir
-src/cptra_status_if.sv
-src/cptra_status_driver_bfm.sv
-src/cptra_status_monitor_bfm.sv

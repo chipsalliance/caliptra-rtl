@@ -1,3 +1,0 @@
-needs:
-  - cptra_ctrl_hvl.compile
-  - cptra_ctrl_hdl.compile

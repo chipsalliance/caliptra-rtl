@@ -1,6 +1,0 @@
----
-# Random seed desired...
-seed: ${PLAYBOOK_RANDOM_SEED}
-plusargs:
-- '+UVM_TESTNAME=HMAC_random_test'
-testname: HMAC_random_test

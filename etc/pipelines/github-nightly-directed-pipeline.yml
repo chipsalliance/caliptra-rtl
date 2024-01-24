@@ -83,14 +83,14 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'ecc_top_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/ecc/coverage/config/ecc_cm_hier.cfg --submit-resource-args RAM/28000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/ecc/coverage/config/ecc_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - nightly_directed:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'ecc_top_tb'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/ecc/stimulus/testsuites/ecc_nightly_directed_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/ecc/stimulus/testsuites/ecc_nightly_directed_regression.yml'
               - timeout: 60
               
         - hmac_ctrl_tb:
@@ -98,14 +98,14 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'hmac_ctrl_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/hmac/coverage/config/hmac_cm_hier.cfg --submit-resource-args RAM/28000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/hmac/coverage/config/hmac_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - nightly_directed:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'hmac_ctrl_tb'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/hmac/stimulus/testsuites/hmac_nightly_directed_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/hmac/stimulus/testsuites/hmac_nightly_directed_regression.yml'
               - timeout: 60
 
         - sha512_ctrl_32bit_tb:
@@ -113,14 +113,14 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'sha512_ctrl_32bit_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha512/coverage/config/sha512_cm_hier.cfg --submit-resource-args RAM/28000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha512/coverage/config/sha512_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - nightly_directed:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'sha512_ctrl_32bit_tb'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/sha512/stimulus/testsuites/sha512_nightly_directed_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/sha512/stimulus/testsuites/sha512_nightly_directed_regression.yml'
               - timeout: 60  
 
         - sha256_ctrl_tb:
@@ -128,14 +128,14 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'sha256_ctrl_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/28000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - nightly_directed:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'sha256_ctrl_tb'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/sha256/stimulus/testsuites/sha256_nightly_directed_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/sha256/stimulus/testsuites/sha256_nightly_directed_regression.yml'
               - timeout: 60 
 
         - doe_core_cbc_tb:
@@ -143,14 +143,14 @@ stages:
           - enabled: true
           - configspec_name: 'integration_lib'
           - dut: 'doe_core_cbc_tb'
-          - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/doe/coverage/config/doe_cm_hier.cfg --submit-resource-args RAM/28000'
+          - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/doe/coverage/config/doe_cm_hier.cfg --submit-resource-args RAM/28000'
           - testsuites:
             - nightly_directed:
               - enabled: true
               - configspec_name: 'integration_lib'
               - dut: 'doe_core_cbc_tb'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-              - path: '${WORKSPACE}/Caliptra/src/doe/stimulus/testsuites/doe_nightly_directed_regression.yml'
+              - path: '${CALIPTRA_ROOT}/src/doe/stimulus/testsuites/doe_nightly_directed_regression.yml'
               - timeout: 60 
 
         - soc_ifc_tb:
@@ -158,7 +158,7 @@ stages:
             - enabled: true
             - configspec_name: 'integration_lib'
             - dut: 'soc_ifc_tb'
-            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/soc_ifc/coverage/config/soc_ifc_cm_hier.cfg --submit-resource-args RAM/28000'
+            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/soc_ifc/coverage/config/soc_ifc_cm_hier.cfg --submit-resource-args RAM/28000'
             - timeout: 10
             - testsuites:
               - nightly_directed:
@@ -166,7 +166,7 @@ stages:
                 - configspec_name: 'integration_lib'
                 - dut: 'soc_ifc_tb'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-                - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_directed_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/soc_ifc/stimulus/testsuites/soc_ifc_nightly_directed_regression.yml'
                 - timeout: 30
 
         - firmware_tb:
@@ -182,7 +182,7 @@ stages:
                 - configspec_name: 'integration_lib'
                 - dut: 'caliptra_top_tb'
                 - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
-                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
+                - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml'
                 - timeout: 30
 
 # This runs for a veeeery long time and throws UVM failures on some mismatched transactions... need to fix before adding to pipeline
@@ -191,12 +191,12 @@ stages:
 #            - enabled: true
 #            - configspec_name: 'integration_lib'
 #            - dut: 'uvmf_caliptra_top'
-#            - args: '+COVERAGE +CM_HIER=${WORKSPACE}/Caliptra/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/28000'
+#            - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/28000'
 #            - testsuites:
 #              - l1_regress:
 #                - enabled: true
 #                - configspec_name: 'integration_lib'
 #                - dut: 'uvmf_caliptra_top'
 #                - sim_args: '+COVERAGE ${{ variables.coverage_root_args }} +CLP_REGRESSION'
-#                - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_nightly_directed_regression.yml'
+#                - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/uvmf_caliptra_top_nightly_directed_regression.yml'
 #                - timeout: 1440

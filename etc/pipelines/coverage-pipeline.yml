@@ -66,7 +66,7 @@ stages:
         - enabled: true
         - display_name: Coverage merge for ${{ cov_dut }}
         - commands:
-          - $(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/${{ cov_dut }}.yml $(skip_db_upload_arg)
+          - $(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${MSFT_REPO_ROOT}/coverage/config/${{ cov_dut }}.yml $(skip_db_upload_arg)
         - timeout: 30
         - run_in_workspace: true
 
@@ -78,7 +78,7 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
-          enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${CALIPTRA_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
+          enter-workspace tmp_ws "$(SUBMIT_SMALL_NC_JOBS) python3w -r requirements.txt \${VERIF_TOOLS}/coverage_merge/coverage_merge.py -f \${MSFT_REPO_ROOT}/coverage/config/caliptra_merge_bench_cov_cfg.yml $(skip_db_upload_arg)"
           cd /home/pure_scratch/caliptra/coverage/integration_lib/3949/caliptra_merge_bench_cov_cfg/
           ln -sfT `ls -rt | tail -n1` latest
 

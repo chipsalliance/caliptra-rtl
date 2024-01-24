@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ../../../../verification_ip/interface_packages/ECC_in_pkg/ECC_in.compile
-  - ../../../../verification_ip/interface_packages/ECC_out_pkg/ECC_out.compile
-  - ../../../../verification_ip/environment_packages/ECC_env_pkg/ECC_env_pkg.compile
-  - ../parameters/ECC_parameters_pkg.compile
-  - ../sequences/ECC_sequences_pkg.compile
-src:
-  - ECC_tests_pkg.sv

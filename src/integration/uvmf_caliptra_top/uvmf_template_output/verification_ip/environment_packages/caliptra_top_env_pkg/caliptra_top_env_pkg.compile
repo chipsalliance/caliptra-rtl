@@ -1,7 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ../soc_ifc_env_pkg/soc_ifc_env_pkg.compile
-
-src:
-  - caliptra_top_env_pkg.sv
-

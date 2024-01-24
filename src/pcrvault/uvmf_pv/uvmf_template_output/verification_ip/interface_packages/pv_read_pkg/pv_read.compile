@@ -1,3 +1,0 @@
-needs:
-  - pv_read_hvl.compile
-  - pv_read_hdl.compile

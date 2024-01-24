@@ -1,7 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ./soc_ifc_ctrl_common.compile
-incdir:
-  - .
-src:
-  - soc_ifc_ctrl_pkg.sv

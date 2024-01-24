@@ -1,2 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-caliptra_top_parameters_pkg.sv

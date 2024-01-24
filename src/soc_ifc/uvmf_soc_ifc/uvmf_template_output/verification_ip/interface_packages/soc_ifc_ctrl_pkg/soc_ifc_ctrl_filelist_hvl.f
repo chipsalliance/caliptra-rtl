@@ -1,1 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.sv

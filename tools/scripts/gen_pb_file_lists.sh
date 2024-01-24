@@ -21,14 +21,16 @@ function gen_pb_file_list {
 
     cpt_dir=$1;
     cpt_lib=$2;
-    cpt_vf_file=src/${cpt_dir}/config/${cpt_lib}.vf
+    cpt_vf_file=${cpt_dir}/${cpt_lib}.vf
 
     # Skip UVM file lists, which reference installed libraries external to Caliptra repo
+    # UPDATE: UVM file lists are now generated, but skip coverage files since these file
+    # lists aren't useful to external integrators
     if [[ $cpt_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${cpt_lib}] in [${cpt_vf_file}]";
     pb fe file_list --tb integration_lib::${cpt_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cpt_vf_file};
     # Replace leading portion of Caliptra source paths with ${CALIPTRA_ROOT}
-    sed 's,/home.*Caliptra/src,\${CALIPTRA_ROOT}/src,' -i ${cpt_vf_file}
+    sed 's,/home.*caliptra-rtl/src,\${CALIPTRA_ROOT}/src,' -i ${cpt_vf_file}
     # Replace leading portion of UVM/installed library paths with appropriate ENV VAR
     sed 's,/home/cad/tools/mentor/questa/[0-9\._]*/questasim/verilog_src/uvm-[^/]\+,\${UVM_HOME},' -i ${cpt_vf_file}
     sed 's,/home/cad/tools/mentor/uvmf/UVMF_[0-9\.]*,\${UVMF_HOME},' -i ${cpt_vf_file}
@@ -41,14 +43,14 @@ if [[ $(command -v pb) = "" ]]; then
     echo "Enter Caliptra workspace (to make Playbook available) and try again"
     exit 1
 fi
-if [[ ${PWD} != ${CALIPTRA_ROOT} ]]; then
-    echo "Must run script from root of Caliptra repository (i.e. ${CALIPTRA_ROOT})"
+if [[ -z ${CALIPTRA_ROOT:+"empty"} ]]; then
+    echo "Must run script from within Caliptra Playbook context"
     exit 1
 fi
-cpt_ymls=$(grep '^\s*\- src' ./config/compilespecs.yml | sed 's/^\s*- \(src.*\)/\1/')
+cpt_ymls=$(grep '^\s*\- ../chipsalliance/caliptra-rtl/src' ${MSFT_REPO_ROOT}/config/compilespecs.yml | sed 's/^\s*- \(..\/chipsalliance\/caliptra-rtl\/src.*\)/\1/')
 declare -A procs;
 for i in ${cpt_ymls}; do
-    cpt_dir=$(sed 's,src/\(.\+\)/config/.*,\1,' <<< ${i})
+    cpt_dir=$(realpath $(sed 's,\(..\/chipsalliance\/caliptra-rtl\/src/.\+/config\)/.*,\1,' <<< ${i}))
     cpt_libs=$(grep '^\s*provides' ${i} | sed 's/.*\[\(\w\+\)\].*/\1/')
     for j in ${cpt_libs}; do
         gen_pb_file_list ${cpt_dir} ${j} &

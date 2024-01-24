@@ -1,7 +1,0 @@
-incdir:
-  - ${uvm_path}/src
-  - .
-needs:
-  - ../tests/SHA512_tests_pkg.compile
-src:
-  - hvl_top.sv

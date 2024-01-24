@@ -1,3 +1,0 @@
-needs:
-  - mbox_sram_hvl.compile
-  - mbox_sram_hdl.compile

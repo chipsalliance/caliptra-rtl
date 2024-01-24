@@ -1,6 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-@use kv_write_pkg_hdl.vinfo
-+incdir+@vinfodir
-src/kv_write_if.sv
-src/kv_write_driver_bfm.sv
-src/kv_write_monitor_bfm.sv

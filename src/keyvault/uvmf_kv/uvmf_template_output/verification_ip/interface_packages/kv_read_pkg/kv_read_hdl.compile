@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
-  - ./kv_read_common.compile
-incdir:
-  - .
-src:
-  - src/kv_read_if.sv
-  - src/kv_read_monitor_bfm.sv
-  - src/kv_read_driver_bfm.sv

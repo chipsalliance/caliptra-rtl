@@ -1,6 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
-@use SHA512_in_pkg_hdl.vinfo
-+incdir+@vinfodir
-src/SHA512_in_if.sv
-src/SHA512_in_driver_bfm.sv
-src/SHA512_in_monitor_bfm.sv

@@ -1,9 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
-  - ./soc_ifc_ctrl_common.compile
-incdir:
-  - .
-src:
-  - src/soc_ifc_ctrl_if.sv
-  - src/soc_ifc_ctrl_monitor_bfm.sv
-  - src/soc_ifc_ctrl_driver_bfm.sv

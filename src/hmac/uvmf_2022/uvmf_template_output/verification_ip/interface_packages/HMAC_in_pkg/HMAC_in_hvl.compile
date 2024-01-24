@@ -1,7 +1,0 @@
-needs:
-  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ./HMAC_in_common.compile
-incdir:
-  - .
-src:
-  - HMAC_in_pkg.sv

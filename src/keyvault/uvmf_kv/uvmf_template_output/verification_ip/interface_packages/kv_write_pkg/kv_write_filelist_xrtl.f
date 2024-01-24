@@ -1,3 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_write_pkg/src/kv_write_if.sv
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_write_pkg/src/kv_write_monitor_bfm.sv
-$UVMF_VIP_LIBRARY_HOME/interface_packages/kv_write_pkg/src/kv_write_driver_bfm.sv

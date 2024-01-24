@@ -1,3 +1,0 @@
-needs:
-  - kv_write_hvl.compile
-  - kv_write_hdl.compile

@@ -1,6 +1,0 @@
----
-# Random seed desired...
-seed: ${PLAYBOOK_RANDOM_SEED}
-plusargs:
-- '+UVM_TESTNAME=soc_ifc_cmdline_test'
-testname: soc_ifc_cmdline_test

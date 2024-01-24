@@ -31,7 +31,7 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           # Run the license checker script
-          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh" && cd $AHA_POC_REPO && bash $AHA_POC_REPO/tools/scripts/licenseHeaderCheck.sh'
+          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh" && cd $MSFT_REPO_ROOT && bash $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh'
 
         displayName: 'LICENSE_HEADER_CHECK'
         enabled: true 
@@ -46,7 +46,7 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
-          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_rdl_check.sh "master"'
+          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh "master"'
 
         displayName: 'RDL GEN CHECK'
         enabled: true
@@ -61,7 +61,7 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           # Run the Filelist generator script
-          enter-workspace tmp_ws 'echo "running $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh" && bash $AHA_POC_REPO/tools/scripts/promote_file_list_check.sh "master"'
+          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh "master"'
 
         displayName: 'FILE LIST CHECK'
         enabled: true
@@ -81,7 +81,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
           - timeout: 75
-          - path: 'Caliptra/src/integration/stimulus/L0_regression.yml'
+          - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_trng_vcs:
       - display_name: 'Build integration_lib with VCS and enable TRNG'
@@ -96,7 +96,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_trng_tb'
           - timeout: 45
-          - path: 'Caliptra/src/integration/stimulus/L0_trng_regression.yml'
+          - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
 
     - uvmf_soc_ifc:
         - display_name: 'UVMF_SOC_IFC'
@@ -110,7 +110,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_soc_ifc'
             - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_top_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=soc_ifc_env_cptra_init_interrupts_sequence +CLP_SEQ=soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence'
-            - path: '${WORKSPACE}/Caliptra/src/soc_ifc/stimulus/testsuites/uvmf_soc_ifc_promote_regression.yml'
+            - path: '${CALIPTRA_ROOT}/src/soc_ifc/stimulus/testsuites/uvmf_soc_ifc_promote_regression.yml'
             - timeout: 1440
 
     - uvmf_caliptra_top:
@@ -125,7 +125,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top'
             - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=CLP_RERUN_FW_INIT +CLP_SEQ=soc_ifc_env_mbox_rand_medium_interference_sequence +CLP_SEQ=soc_ifc_env_mbox_fw_upd_sequence'
-            - path: '${WORKSPACE}/Caliptra/src/integration/stimulus/testsuites/uvmf_caliptra_top_promote_regression.yml'
+            - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/uvmf_caliptra_top_promote_regression.yml'
             - timeout: 1440
 
     - integration_top_ius:
@@ -165,7 +165,7 @@ stages:
             - 'module load tools/python/python3/3.9.2'
 
             # Run the Verilator test regression and dump logfiles to scratch
-            - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/run_verilator_l0_regression.py'
+            - 'submit -i python3 \$SCRIPTS_DIR/run_verilator_l0_regression.py'
 
       - synthesis_elab_check:
         - display_name: 'Synthesis Elab Check'
@@ -179,4 +179,4 @@ stages:
           - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
 
 #          # Run synthesis on top level and exit after elaborate stage
-          - 'submit -i python3 \$AHA_POC_REPO/tools/scripts/syn/run_syn.py caliptra_top 1'
+          - 'submit -i python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
