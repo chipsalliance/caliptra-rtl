@@ -35,6 +35,7 @@ def scrub_line_by_line(fname):
         has_reg_strb = re.search(r'\bdecoded_reg_strb\b', line)
         has_unpacked = re.search(r'\[\d+\]', line)
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
+        is_endmodule = re.search(r'\bendmodule\b', line)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
@@ -55,6 +56,11 @@ def scrub_line_by_line(fname):
                 has_unpacked = re.search(r'\[\d+\]', line)
             mod_lines+=line
             mod_cnt+=1
+        elif (is_endmodule is not None):
+            mod_lines+="\n"
+            mod_lines+="`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, '1)\n"
+            mod_lines+="\n"
+            mod_lines+=line
         else:
             mod_lines+=line
     #print(f"modified {mod_cnt} lines with unpacked arrays in {fname}")
