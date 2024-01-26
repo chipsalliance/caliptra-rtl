@@ -263,7 +263,7 @@ module mbox_csr (
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.mbox_lock.lock.value <= 'h0;
+            field_storage.mbox_lock.lock.value <= 'h1;
         end else if(field_combo.mbox_lock.lock.load_next) begin
             field_storage.mbox_lock.lock.value <= field_combo.mbox_lock.lock.next;
         end

@@ -36,7 +36,7 @@ addrmap mbox_csr {
         desc="Mailbox lock register for mailbox access, reading 0 will set the lock
         [br]Caliptra Access: RO
         [br]SOC Access:      RO";
-        field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=0;
+        field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=1;
     } mbox_lock;
 
     // user register
