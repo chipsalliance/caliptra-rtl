@@ -105,6 +105,11 @@ module sha256
   wire              core_digest_valid;
   logic             core_digest_valid_reg;
 
+  logic             ready_flag;
+  logic             ready_flag_reg;
+  logic             valid_flag;
+  logic             valid_flag_reg;
+
   logic [7:0]       loop_j_reg;
   logic             wntz_busy;         // to regiser
   logic             wntz_mode;         // from registers
@@ -302,26 +307,29 @@ module sha256
       endcase
     end
   end
+
+  assign ready_flag = core_ready & !wntz_busy;
+  assign ready_reg = ready_flag & ready_flag_reg;
+  assign valid_flag = core_digest_valid & !wntz_busy;
+  assign digest_valid_reg = valid_flag & valid_flag_reg;
+
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
       if (!reset_n) begin
-        ready_reg        <= '0;
+        ready_flag_reg   <= '0;
         digest_reg       <= '0;
-        digest_valid_reg <= '0;
+        valid_flag_reg   <= '0;
       end
       else if (zeroize_reg) begin
-        ready_reg        <= '0;
+        ready_flag_reg   <= '0;
         digest_reg       <= '0;
-        digest_valid_reg <= '0;
+        valid_flag_reg   <= '0;
       end
       else begin
-        ready_reg        <= core_ready & !wntz_busy;
-        digest_valid_reg <= core_digest_valid & !wntz_busy;
+        ready_flag_reg   <= ready_flag;
+        valid_flag_reg   <= valid_flag;
         core_digest_valid_reg <= core_digest_valid;
 
-        // if (core_digest_valid & ~digest_valid_reg)
-        //   digest_reg <= wntz_mode ? core_digest & get_mask 
-        //                           : core_digest;
         if (core_digest_valid & ~digest_valid_reg) begin
           digest_reg <= core_digest & get_mask;
         end
