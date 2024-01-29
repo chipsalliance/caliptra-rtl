@@ -39,6 +39,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_dela
             if (rm.mbox_lock.is_busy()) begin
                 rm.mbox_lock.Xset_busyX(0);
                 rm.mbox_lock.lock.predict(0);
+                rm.mbox_locked_from_reset = 0;
                 rm.mbox_lock.Xset_busyX(1);
             end
             else begin
@@ -59,6 +60,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_dela
         end
         else begin
             rm.mbox_lock.lock.predict(0);
+            rm.mbox_locked_from_reset = 0;
         end
     endtask
 endclass

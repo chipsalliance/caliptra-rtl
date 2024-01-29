@@ -97,7 +97,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     if (value & previous) begin
                         // Check why lock is set and report
                         if (rm.mbox_fn_state_sigs.mbox_idle && rm.mbox_locked_from_reset) begin
-                            rm.mbox_locked_from_reset = 0;
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] is expected in state [%p] due to lock being reset to 1", map.get_name(), value, previous, rm.mbox_fn_state_sigs), UVM_LOW)
                         end
                         else if (rm.mbox_fn_state_sigs.mbox_idle) begin
@@ -143,7 +142,6 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                     if (value & previous) begin
                         // Check why lock is set and report
                         if (rm.mbox_fn_state_sigs.mbox_idle && rm.mbox_locked_from_reset) begin
-                            rm.mbox_locked_from_reset = 0;
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] and previous [%x] is expected in state [%p] due to lock being reset to 1", map.get_name(), value, previous, rm.mbox_fn_state_sigs), UVM_LOW)
                         end
                         else if (rm.mbox_fn_state_sigs.mbox_idle) begin
