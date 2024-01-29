@@ -250,8 +250,7 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_wait_for_command(output op_st
             report_reg_sts(reg_sts, "notif_internal_intr_r");
             op_active = 0;
             if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()] && 
-                (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()] ||
-                 data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_soc_req_lock_sts.get_lsb_pos()] ||
+                (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_soc_req_lock_sts.get_lsb_pos()] ||
                  data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_gen_in_toggle_sts.get_lsb_pos()])) begin
                 `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("After receiving notification interrupt, ignoring set bits 0x%x as notif_cmd_avail_sts is not set!", data), UVM_LOW)
                 ntf_rsp_count = 0;
