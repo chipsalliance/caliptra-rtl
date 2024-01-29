@@ -57,6 +57,11 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
+    // Unlock the mailbox (force)
+    li t0, CLP_MBOX_CSR_MBOX_UNLOCK
+    li t1, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK
+    sw t1, 0(t0)
+
     // Copy .data from ROM (imem) to DCCM
     la t0, _data_lma_start
     la t1, _data_lma_end

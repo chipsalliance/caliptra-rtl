@@ -39,6 +39,11 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
+    // Unlock the mailbox (force)
+    li t0, CLP_MBOX_CSR_MBOX_UNLOCK
+    li t1, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK
+    sw t1, 0(t0)
+
     // Init. the stack
     la sp, STACK
 
