@@ -230,6 +230,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_cptra_rst_wait_sequence soc_ifc_env_cptra_rst_wait_sequence_t;
   `include "sequences/bringup/cptra/soc_ifc_env_cptra_init_interrupts_sequence.svh"
   typedef soc_ifc_env_cptra_init_interrupts_sequence soc_ifc_env_cptra_init_interrupts_sequence_t;
+  `include "sequences/bringup/cptra/soc_ifc_env_cptra_mbox_unlock_sequence.svh"
+  typedef soc_ifc_env_cptra_mbox_unlock_sequence soc_ifc_env_cptra_mbox_unlock_sequence_t;
   `include "sequences/bringup/soc_ifc_env_top_reset_warm_sequence.svh"
   typedef soc_ifc_env_top_reset_warm_sequence soc_ifc_env_top_reset_warm_sequence_t;
   `include "sequences/bringup/soc_ifc_env_top_reset_cold_sequence.svh"

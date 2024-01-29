@@ -37,6 +37,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq;
   rand soc_ifc_env_cptra_init_interrupts_sequence_t soc_ifc_env_cptra_init_interrupts_seq;
+  rand soc_ifc_env_cptra_mbox_unlock_sequence_t soc_ifc_env_cptra_mbox_unlock_seq;
 
   function new(string name = "" );
     super.new(name);
@@ -55,6 +56,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
     soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create("soc_ifc_env_cptra_init_interrupts_seq");
+    soc_ifc_env_cptra_mbox_unlock_seq     = soc_ifc_env_cptra_mbox_unlock_sequence_t::type_id::create("soc_ifc_env_cptra_mbox_unlock_seq");
 
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
     cptra_ctrl_agent_random_seq        = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
@@ -66,6 +68,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
     soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
     soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_cptra_mbox_unlock_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
 
     reg_model.reset();
     // Start RESPONDER sequences here
@@ -93,8 +96,29 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     // Always initialize interrupts
     // TODO - if we make this random, we can test both interrupt-driven and
     // polling behavior
+    soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_uc_seq");
+    soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_assert   = 1'b0;
+    soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_assert      = 1'b0;
+    soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_deassert = 1'b0;
+    soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_deassert    = 1'b1;
+    // Wait for Caliptra uC (Core) reset to be deasserted by SOC_IFC
+    soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
+    `uvm_info("SOC_IFC_CMDLINE_TEST", "SOC_IFC observed uC reset deassertion", UVM_LOW)
     soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
     `uvm_info("SOC_IFC_CMDLINE_TEST", "Completed interrupt init", UVM_MEDIUM)
+
+    // Delaying before unlocking mailbox roughly simulates the delay before
+    // the ROM can get around to doing the unlock
+    fork
+        begin: DELAY_THEN_MBOX_UNLOCK
+            int unsigned dly;
+            std::randomize(dly) with {dly > 0 ; dly < 256;};
+            soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly);
+            soc_ifc_env_cptra_mbox_unlock_seq.start(top_configuration.vsqr);
+            `uvm_info("SOC_IFC_CMDLINE_TEST", "Completed mailbox unlock", UVM_MEDIUM)
+        end
+    join_none
 
     // Run cmdline provided env sequences
     clp = uvm_cmdline_processor::get_inst();

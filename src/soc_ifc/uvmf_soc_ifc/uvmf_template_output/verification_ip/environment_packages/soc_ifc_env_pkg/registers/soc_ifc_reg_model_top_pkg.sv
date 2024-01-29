@@ -416,6 +416,8 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_data_t mbox_data_q [$];
         uvm_reg_data_t mbox_resp_q [$];
 
+        bit mbox_locked_from_reset;
+
         extern virtual function void reset(string kind = "HARD");
         function new(string name = "mbox_csr_ext");
             super.new(name);
@@ -423,6 +425,7 @@ package soc_ifc_reg_model_top_pkg;
             mbox_lock_clr_miss = new("mbox_lock_clr_miss");
             mbox_datain_to_dataout_predict = new("mbox_datain_to_dataout_predict");
             mbox_datain_sem = new(1);
+            mbox_locked_from_reset = 1;
         endfunction : new
 
         // FIXME Manually maintaining a list here of registers that are configured
@@ -486,6 +489,8 @@ package soc_ifc_reg_model_top_pkg;
             // Mailbox State Changes
             // TODO what to do for FW update?
             mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
+
+            mbox_locked_from_reset = 1;
         end
 
     endfunction

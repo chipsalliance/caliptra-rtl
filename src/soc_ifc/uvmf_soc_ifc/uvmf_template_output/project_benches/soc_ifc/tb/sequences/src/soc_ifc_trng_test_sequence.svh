@@ -34,6 +34,7 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
 
     rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
     rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq; 
+    rand soc_ifc_env_cptra_mbox_unlock_sequence_t soc_ifc_env_cptra_mbox_unlock_seq;
     rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
     rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
 
@@ -81,6 +82,7 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_bringup_seq        = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
+    soc_ifc_env_cptra_mbox_unlock_seq     = soc_ifc_env_cptra_mbox_unlock_sequence_t::type_id::create("soc_ifc_env_cptra_mbox_unlock_seq");
     soc_ifc_env_pauser_init_seq        = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
 
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
@@ -92,6 +94,7 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
     soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_cptra_mbox_unlock_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
     soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
 
     reg_model.reset();
@@ -112,8 +115,12 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     end
     begin
         // Wait for Caliptra system reset to be deasserted by SOC_IFC
+        soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_assert   = 1'b0;
+        soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_assert      = 1'b0;
+        soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_deassert = 1'b0;
+        soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_deassert    = 1'b1;
         soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
-        `uvm_info("SOC_IFC_TRNG_TEST", "Mailbox completed poweron and observed reset deassertion to system", UVM_LOW)
+        `uvm_info("SOC_IFC_TRNG_TEST", "SOC_IFC completed poweron and observed reset deassertion to system", UVM_LOW)
     end
     join
 
@@ -121,6 +128,19 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
     if(!soc_ifc_env_pauser_init_seq.randomize())
         `uvm_fatal("SOC_IFC_TRNG_TEST", "soc_ifc_trng_test_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed");
     soc_ifc_env_pauser_init_seq.start(top_configuration.vsqr);
+
+    // Delaying before unlocking mailbox roughly simulates the delay before
+    // the ROM can get around to doing the unlock
+    fork
+        begin: DELAY_THEN_MBOX_UNLOCK
+            int unsigned dly;
+            // Delay then unlock mailbox
+            std::randomize(dly) with {dly > 0 ; dly < 256;};
+            soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly);
+            soc_ifc_env_cptra_mbox_unlock_seq.start(top_configuration.vsqr);
+            `uvm_info("SOC_IFC_RAND_TEST", "Completed mailbox unlock", UVM_MEDIUM)
+        end
+    join_none
 
     // Start random TRNG test sequence
     for (ii = 0; ii < iteration_count; ii++) begin: RAND_LOOP
@@ -151,11 +171,6 @@ class soc_ifc_trng_test_sequence extends soc_ifc_bench_sequence_base;
         mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 
-    if (1) // TODO -- how to properly choose which to print?
-        $display("* TESTCASE PASSED");
-    else 
-        $display("* TESTCASE FAILED");
-  
   endtask
 
 endclass

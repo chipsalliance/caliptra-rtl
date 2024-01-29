@@ -35,6 +35,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_cptra_rst_wait_sequence_t soc_ifc_env_cptra_rst_wait_seq;
   rand soc_ifc_env_cptra_init_interrupts_sequence_t soc_ifc_env_cptra_init_interrupts_seq;
+  rand soc_ifc_env_cptra_mbox_unlock_sequence_t soc_ifc_env_cptra_mbox_unlock_seq;
   rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
   // TODO: To add new sequences to the randomized portion of this test:
@@ -171,6 +172,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_seq");
 
     soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create("soc_ifc_env_cptra_init_interrupts_seq");
+    soc_ifc_env_cptra_mbox_unlock_seq     = soc_ifc_env_cptra_mbox_unlock_sequence_t::type_id::create("soc_ifc_env_cptra_mbox_unlock_seq");
     soc_ifc_env_pauser_init_seq           = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
 
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
@@ -183,6 +185,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
     soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
     soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+    soc_ifc_env_cptra_mbox_unlock_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
     soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
 
 //    fork
@@ -225,7 +228,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
     begin
         // Wait for Caliptra system reset to be deasserted by SOC_IFC
         soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
-        `uvm_info("SOC_IFC_RAND_TEST", "Mailbox completed poweron and observed reset deassertion to system", UVM_LOW)
+        `uvm_info("SOC_IFC_RAND_TEST", "SOC_IFC completed poweron and observed reset deassertion to system", UVM_LOW)
     end
     join
 
@@ -245,102 +248,129 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         // TODO - if we make this random, we can test both interrupt-driven and
         // polling behavior
         begin
+            soc_ifc_env_cptra_rst_wait_seq = soc_ifc_env_cptra_rst_wait_sequence_t::type_id::create("soc_ifc_env_cptra_rst_wait_uc_seq");
+            soc_ifc_env_cptra_rst_wait_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+            soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_assert   = 1'b0;
+            soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_assert      = 1'b0;
+            soc_ifc_env_cptra_rst_wait_seq.wait_for_noncore_rst_deassert = 1'b0;
+            soc_ifc_env_cptra_rst_wait_seq.wait_for_core_rst_deassert    = 1'b1;
+            // Wait for Caliptra uC (Core) reset to be deasserted by SOC_IFC
+            soc_ifc_env_cptra_rst_wait_seq.start(top_configuration.vsqr);
+            `uvm_info("SOC_IFC_RAND_TEST", "SOC_IFC observed uC reset deassertion", UVM_LOW)
             soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
             `uvm_info("SOC_IFC_RAND_TEST", "Completed interrupt init", UVM_MEDIUM)
         end
     join
 
-    for (ii = 0; ii < iteration_count; ii++) begin: RAND_LOOP
-        if(!this.randomize(rand_seq_idx)) `uvm_fatal("SOC_IFC_RAND_TEST", "Failed to randomize rand_seq_idx");
+//    fork
+        // Delaying before unlocking mailbox roughly simulates the delay before
+        // the ROM can get around to doing the unlock
+        begin: DELAY_THEN_MBOX_UNLOCK
+            int unsigned dly;
+            // Delay then unlock mailbox
+            std::randomize(dly) with {dly > 0 ; dly < 256;};
+            soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly);
+            soc_ifc_env_cptra_mbox_unlock_seq.start(top_configuration.vsqr);
+            `uvm_info("SOC_IFC_RAND_TEST", "Completed mailbox unlock", UVM_MEDIUM)
+        end
+        for (ii = 0; ii < iteration_count; ii++) begin: RAND_LOOP
+            if(!this.randomize(rand_seq_idx)) `uvm_fatal("SOC_IFC_RAND_TEST", "Failed to randomize rand_seq_idx");
 
-        // Create a new sequence instance of the randomized type
-        case (rand_seq_idx) inside
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL:
-                obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM:
-                obj = soc_ifc_env_top_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE:
-                obj = soc_ifc_env_top_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_MIN:
-                obj = soc_ifc_env_top_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_MAX:
-                obj = soc_ifc_env_top_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION:
-                obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL:
-                obj = soc_ifc_env_top_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM:
-                obj = soc_ifc_env_top_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE:
-                obj = soc_ifc_env_top_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_pauser_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK:
-                obj = soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL:
-                obj = soc_ifc_env_top_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM:
-                obj = soc_ifc_env_top_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE:
-                obj = soc_ifc_env_top_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL:
-                obj = soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM:
-                obj = soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE:
-                obj = soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION:
-                obj = soc_ifc_env_top_mbox_dlen_violation_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT:
-                obj = soc_ifc_env_top_mbox_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL:
-                obj = soc_ifc_env_top_cptra_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL:
-                obj = soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_RST_WARM:
-                obj = soc_ifc_env_top_reset_warm_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_RST_COLD:
-                obj = soc_ifc_env_top_reset_cold_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM:
-                obj = soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM:
-                obj = soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            default:
-                `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
-        endcase
+            // Create a new sequence instance of the randomized type
+            case (rand_seq_idx) inside
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL:
+                    obj = soc_ifc_env_top_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE:
+                    obj = soc_ifc_env_top_mbox_rand_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_MIN:
+                    obj = soc_ifc_env_top_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_MAX:
+                    obj = soc_ifc_env_top_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION:
+                    obj = soc_ifc_env_top_mbox_contention_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_small_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_medium_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK:
+                    obj = soc_ifc_env_top_mbox_rand_pauser_large_unlock_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL:
+                    obj = soc_ifc_env_top_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE:
+                    obj = soc_ifc_env_top_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL:
+                    obj = soc_ifc_env_top_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE:
+                    obj = soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION:
+                    obj = soc_ifc_env_top_mbox_dlen_violation_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT:
+                    obj = soc_ifc_env_top_mbox_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL:
+                    obj = soc_ifc_env_top_cptra_mbox_rand_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL:
+                    obj = soc_ifc_env_top_cptra_mbox_reg_axs_invalid_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_RST_WARM:
+                    obj = soc_ifc_env_top_reset_warm_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_RST_COLD:
+                    obj = soc_ifc_env_top_reset_cold_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM:
+                    obj = soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                default:
+                    `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
+            endcase
 
-        // Randomize and run the sequence
-        if(!$cast(soc_ifc_env_seq_ii[ii],obj))
-            `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - <seq_type>.create_object() failed")
-        `uvm_info("SOC_IFC_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq_ii[ii].get_type_name()), UVM_MEDIUM)
-        if(!soc_ifc_env_seq_ii[ii].randomize())
-            `uvm_fatal("SOC_IFC_RAND_TEST", $sformatf("soc_ifc_rand_test_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
-        soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
-        soc_ifc_env_seq_ii[ii].cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
-        soc_ifc_env_seq_ii[ii].start(top_configuration.vsqr);
+            // Randomize and run the sequence
+            if(!$cast(soc_ifc_env_seq_ii[ii],obj))
+                `uvm_fatal("SOC_IFC_RAND_TEST", "soc_ifc_rand_test_sequence::body() - <seq_type>.create_object() failed")
+            `uvm_info("SOC_IFC_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq_ii[ii].get_type_name()), UVM_MEDIUM)
+            if(!soc_ifc_env_seq_ii[ii].randomize())
+                `uvm_fatal("SOC_IFC_RAND_TEST", $sformatf("soc_ifc_rand_test_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
+            soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
+            soc_ifc_env_seq_ii[ii].cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
+            soc_ifc_env_seq_ii[ii].start(top_configuration.vsqr);
 
-        // If the last run sequence triggered a reset, rerun interrupt initialization
-        case (rand_seq_idx) inside
-            IDX_SOC_IFC_ENV_RST_WARM,
-            IDX_SOC_IFC_ENV_RST_COLD,
-            IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
-            IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM: begin
-                `uvm_info("SOC_IFC_RAND_TEST", "Rerunning interrupt init after reset", UVM_MEDIUM)
-                soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create($sformatf("soc_ifc_env_cptra_init_interrupts_seq[%0d]",ii));
-                soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
-                soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
-                `uvm_info("SOC_IFC_RAND_TEST", "Completed interrupt init", UVM_MEDIUM)
-            end
-        endcase
-    end
+            // If the last run sequence triggered a reset, rerun initialization
+            case (rand_seq_idx) inside
+                IDX_SOC_IFC_ENV_RST_WARM,
+                IDX_SOC_IFC_ENV_RST_COLD,
+                IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
+                IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM: begin
+                    int unsigned dly;
+                    `uvm_info("SOC_IFC_RAND_TEST", "Rerunning interrupt init after reset", UVM_MEDIUM)
+                    soc_ifc_env_cptra_init_interrupts_seq = soc_ifc_env_cptra_init_interrupts_sequence_t::type_id::create($sformatf("soc_ifc_env_cptra_init_interrupts_seq[%0d]",ii));
+                    soc_ifc_env_cptra_init_interrupts_seq.cptra_status_agent_rsp_seq = cptra_status_agent_responder_seq;
+                    soc_ifc_env_cptra_init_interrupts_seq.start(top_configuration.vsqr);
+                    `uvm_info("SOC_IFC_RAND_TEST", "Completed interrupt init", UVM_MEDIUM)
+                    `uvm_info("SOC_IFC_RAND_TEST", "Rerunning mailbox unlock after reset", UVM_MEDIUM)
+                    std::randomize(dly) with {dly > 0 ; dly < 256;};
+                    soc_ifc_ctrl_agent_config.wait_for_num_clocks(dly);
+                    soc_ifc_env_cptra_mbox_unlock_seq.start(top_configuration.vsqr);
+                    `uvm_info("SOC_IFC_RAND_TEST", "Completed mailbox unlock", UVM_MEDIUM)
+                end
+            endcase
+        end
+//    join
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 

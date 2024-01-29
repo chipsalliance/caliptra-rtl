@@ -46,7 +46,7 @@ class soc_ifc_env_cptra_init_interrupts_sequence extends soc_ifc_env_sequence_ba
     reg_model = configuration.soc_ifc_rm;
 
     if (cptra_status_agent_rsp_seq == null)
-        `uvm_fatal("CPTRA_INIT_INTR", "SOC_IFC ENV caliptra reset wait sequence expected a handle to the cptra status agent responder sequence (from bench-level sequence) but got null!")
+        `uvm_fatal("CPTRA_INIT_INTR", "SOC_IFC ENV caliptra interrupt init sequence expected a handle to the cptra status agent responder sequence (from bench-level sequence) but got null!")
     fork
         forever begin
             @(cptra_status_agent_rsp_seq.new_rsp) sts_rsp_count++;
@@ -56,6 +56,8 @@ class soc_ifc_env_cptra_init_interrupts_sequence extends soc_ifc_env_sequence_ba
     // Clear debug locked interrupt 
     data = (uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_debug_locked_sts.get_lsb_pos());
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    if (reg_sts != UVM_IS_OK)
+        `uvm_error("CPTRA_INIT_INTR", $sformatf("Register access failed (%s)", "notif_internal_intr_r"))
 
     // Interrupt Enable (Global)
     data = (uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_lsb_pos()) |
