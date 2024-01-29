@@ -262,7 +262,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
         end
     join
 
-//    fork
+    fork
         // Delaying before unlocking mailbox roughly simulates the delay before
         // the ROM can get around to doing the unlock
         begin: DELAY_THEN_MBOX_UNLOCK
@@ -370,7 +370,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 end
             endcase
         end
-//    join
+    join
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 
