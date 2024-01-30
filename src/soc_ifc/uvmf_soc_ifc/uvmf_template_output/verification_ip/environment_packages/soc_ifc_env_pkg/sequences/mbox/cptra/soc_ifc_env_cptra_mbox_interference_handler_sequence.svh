@@ -52,12 +52,13 @@ endclass
 //==========================================
 task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command(output op_sts_e op_sts);
     byte ii;
+    bit ntf_is_cmd_avail = 0;
 
     uvm_reg_data_t data;
     op_sts = CPTRA_TIMEOUT;
     op_active = 1;
     // Wait for notification interrupt indicating command is available
-    while (ntf_rsp_count == 0) begin
+    while (!ntf_is_cmd_avail) begin
         uvm_reg_data_t dlen;
         byte unsigned  mem_n_bytes;
 
@@ -97,21 +98,23 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
         else if (ntf_rsp_count != 0) begin
             reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
             report_reg_sts(reg_sts, "notif_internal_intr_r");
-            if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()] && 
-                (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_soc_req_lock_sts.get_lsb_pos()] ||
-                 data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_gen_in_toggle_sts.get_lsb_pos()])) begin
+            if (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
+                ntf_is_cmd_avail = 1;
+                ntf_rsp_count = 0;
+            end
+            else if (data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_soc_req_lock_sts.get_lsb_pos()] ||
+                     data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_gen_in_toggle_sts.get_lsb_pos()]) begin
                 `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("After receiving notification interrupt, ignoring set bits 0x%x as notif_cmd_avail_sts is not set!", data), UVM_LOW)
                 ntf_rsp_count = 0;
             end
+            else begin
+                `uvm_error("CPTRA_MBOX_HANDLER", "After receiving notification interrupt, notif_cmd_avail_sts is not set!")
+            end
         end
     end
-    ntf_rsp_count = 0;
     // Clear interrupt
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "notif_internal_intr_r");
-    if (!data[reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos()]) begin
-        `uvm_error("CPTRA_MBOX_HANDLER", "After receiving notification interrupt, notif_cmd_avail_sts is not set!")
-    end
     data &= uvm_reg_data_t'(1) << reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.notif_cmd_avail_sts.get_lsb_pos();
     reg_model.soc_ifc_reg_rm.intr_block_rf_ext.notif_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "notif_internal_intr_r");
