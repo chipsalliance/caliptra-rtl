@@ -33,7 +33,11 @@ addrmap mbox_csr {
     // clear comes from mailbox control
     reg {
         name="Mailbox Lock";
-        desc="Mailbox lock register for mailbox access, reading 0 will set the lock
+        desc="Mailbox lock register for mailbox access, reading 0 will set the lock.
+        [br]Lock has a reset value of 1 (soc_has_lock resets to 0) indicating
+            Caliptra initially owns the lock. Caliptra microcontroller may perform
+            direct-mode accesses to the mailbox memory, but must unlock and
+            reacquire the lock before it is able to send any mailbox commands.
         [br]Caliptra Access: RO
         [br]SOC Access:      RO";
         field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=1;
