@@ -14,11 +14,24 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/01/18*_
+_*Last Update: 2024/01/30*_
 
-## Rev 1p0 ##
+## Rev 1p0 Patch (v1.0.1) ##
 
-### Rev 1p0 release date: 2024/01/18 ###
+### v1.0.1 release date: 2024/01/30 ###
+- Verification
+  - Updated validation firmware images to unlock the mailbox at startup
+  - Fixes for UVM SOC_IFC test sequences to unlock the mailbox and correctly
+    perform transaction checking and scoreboarding
+
+### Bug Fixes ###
+[MBOX] Fix mailbox lock to initialize to 1 out of reset
+
+## Previous Releases ##
+
+### Rev 1p0 ###
+
+#### Rev 1p0 release date: 2024/01/18 ####
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
@@ -33,10 +46,8 @@ _*Last Update: 2024/01/18*_
   - Remove TODO comments on caliptra_top ports
   - Remove JTAG IDCODE command from RISC-V processor
 
-### Bug Fixes ###
+#### Bug Fixes ####
 [MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
-
-## Previous Releases ##
 
 ### Rev 1p0-rc1 ###
 
