@@ -25,6 +25,8 @@ def scrub_line_by_line(fname):
     mod_cnt = 0
     mod_lines = ""
 
+    found_hard_reset = None
+
     # Line by line manipulation
     # Look for unpacked arrays (could be struct arrays or signal arrays)
     # Look for unpacked struct types
@@ -37,9 +39,10 @@ def scrub_line_by_line(fname):
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
         is_endmodule = re.search(r'\bendmodule\b', line)
         has_reset = re.search(r'\bnegedge.+\_b\b', line)
-        if (has_reset is not None):
+        if (has_reset is not None and found_hard_reset is None):
             substring = re.search(r"negedge (\w+.\w+)", line)
             reset_name = substring.group(1)
+            found_hard_reset = re.search(r'hard|power',reset_name)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
