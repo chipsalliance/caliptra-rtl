@@ -38,11 +38,11 @@ def scrub_line_by_line(fname):
         has_unpacked = re.search(r'\[\d+\]', line)
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
         is_endmodule = re.search(r'\bendmodule\b', line)
-        has_reset = re.search(r'\bnegedge.+\_b\b', line)
+        has_reset = re.search(r'\bnegedge\b', line)
         if (has_reset is not None and found_hard_reset is None):
             substring = re.search(r"negedge (\w+.\w+)", line)
             reset_name = substring.group(1)
-            found_hard_reset = re.search(r'hard|power',reset_name)
+            found_hard_reset = re.search(r'hard|pwrgood',reset_name)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
