@@ -42,7 +42,9 @@ def scrub_line_by_line(fname):
         if (has_reset is not None and found_hard_reset is None):
             substring = re.search(r"negedge (\w+.\w+)", line)
             reset_name = substring.group(1)
-            found_hard_reset = re.search(r'hard|pwrgood',reset_name)
+            # Find the hard reset if it exists
+            # hard_reset_b, error_reset_b and cptra_pwrgood are used interchangeably
+            found_hard_reset = re.search(r'hard_reset|pwrgood|error_reset',reset_name)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
