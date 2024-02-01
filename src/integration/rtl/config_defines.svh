@@ -15,6 +15,14 @@
 `ifndef CALIPTRA_CFG_SV
 `define CALIPTRA_CFG_SV
 
+// Determine build configuration for Caliptra operational mode
+// Options:
+//   "SEED"     : Basic Caliptra instance with no additional firmware load capabilities.
+//                Includes single-context DPE handling and ECDH.
+//   "CORE"     : Traditional Caliptra operating mode providing all cryptography services
+//                firmware load capabilities and multi-context DPE sessions.
+`define CALIPTRA_MODE "CORE"
+
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 
