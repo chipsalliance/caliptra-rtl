@@ -492,7 +492,7 @@ SRAMs are instantiated at the SoC level. Caliptra provides the interface to expo
 
 SRAM repair logic (for example, BIST) and its associated fuses, which are proprietary to companies and their methodologies, is implemented external to the Caliptra boundary.
 
-SRAMs must NOT go through BIST or repair flows across a “warm reset”. SoC shall perform SRAM repair during a powergood cycling event ("cold reset") and only prior to deasserting cptra\_rst\_b. During powergood cycling events, SoC is also responsible for clearing all entries in the SRAM to a 0 value. SoC shall also ensure that SRAMs are initialized with all 0 data on powergood events, prior to caliptra\_rst\_b deassertion.
+SRAMs must NOT go through BIST or repair flows across a “warm reset”. SoC shall perform SRAM repair during a powergood cycling event ("cold reset") and only prior to deasserting cptra\_rst\_b. During powergood cycling events, SoC shall also initialize all entries in the SRAM to a 0 value, prior to deasserting caliptra\_rst\_b.
 
 Mailbox SRAM is implemented with ECC protection. Data width for the mailbox is 32-bits, with 7 parity bits for a Hamming-based SECDED (single-bit error correction and double-bit error detection).
 
