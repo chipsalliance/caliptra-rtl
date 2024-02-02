@@ -240,13 +240,13 @@ SoC must ensure that there are no SCAN cells on the flops that latch this key in
 
 The interface signals GENERIC\_INPUT\_WIRES and GENERIC\_OUTPUT\_WIRES are placeholders on the SoC interface reserved for late binding features. This may include any feature that is required for correct operation of the design in the final integrated SoC and that may not be accommodated through existing interface signaling (such as the mailbox).
 
-While these late binding interface pins are generic in nature until assigned a function, integrators must not define non-standard use cases for these pins. Defining standard use cases ensures that the security posture of Caliptra in the final implementation is not degraded relative to the consortium design intent.
+While these late binding interface pins are generic in nature until assigned a function, integrators must not define non-standard use cases for these pins. Defining standard use cases ensures that the security posture of Caliptra in the final implementation is not degraded relative to the consortium design intent. Any bits in GENERIC\_INPUT\_WIRES for which a function has not defined (in the Caliptra version that is being integrated) must be tied to a 0-value. These undefined input bits shall not be connected to any flip flops that may allow run time variation on the value.
 
 Each wire connects to a register in the SoC Interface register bank through which communication to the internal microprocessor may be facilitated. Each signal is 64 bits in size.
 
 Activity on any bit of the GENERIC\_INPUT\_WIRES triggers a notification interrupt to the microcontroller indicating a bit toggle.
 
-The following table describes the allocation of functionality on GENERIC\_INPUT\_WIRES.
+The following table describes the allocation of functionality on GENERIC\_INPUT\_WIRES. All bits not listed in this table must be tied to 0.
 
 *Table 12: GENERIC\_INPUT\_WIRES function binding*
 
