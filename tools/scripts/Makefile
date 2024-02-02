@@ -195,6 +195,13 @@ ifdef FORCE_CPU_RESET
     TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
 endif
 
+# SEED is one of two possible configurations for Caliptra mode
+ifdef CALIPTRA_MODE_SEED
+    TB_DEFS += +define+CALIPTRA_MODE_SEED
+else
+    TB_DEFS += +define+CALIPTRA_MODE_CORE
+endif
+
 # Run time arguments from command line
 VERILATOR_RUN_ARGS ?= ""
 
