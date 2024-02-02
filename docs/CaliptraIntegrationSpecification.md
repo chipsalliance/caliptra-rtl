@@ -410,7 +410,7 @@ The following table describes APB transactions that cause the Mailbox FSM to ent
 
 *Table 15: Mailbox protocol error trigger conditions*
 
-| FSM state         | SOC HAS LOCK | APB PAUSER eq mbox_user | Error state trigger condition                                                        |
+| FSM state         | SoC HAS LOCK | APB PAUSER eq mbox_user | Error state trigger condition                                                        |
 | :--------- | :--------- | :--------- | :--------- |
 | MBOX_RDY_FOR_CMD  | 1            | true                    | Read from mbox_dataout. Write to any register other than mbox_cmd.                    |
 | MBOX_RDY_FOR_CMD  | 1            | false                   | \-                                                                                   |
@@ -492,7 +492,7 @@ SRAMs are instantiated at the SoC level. Caliptra provides the interface to expo
 
 SRAM repair logic (for example, BIST) and its associated fuses, which are proprietary to companies and their methodologies, is implemented external to the Caliptra boundary.
 
-SRAMs must NOT go through BIST or repair flows across a “warm reset”.
+SRAMs must NOT go through BIST or repair flows across a “warm reset”. Instead, SRAM repair should be performed during a powergood cycling event ("cold reset") and should be performed prior to deasserting cptra\_rst\_b. During powergood cycling events, SoC is also responsible for clearing all entries in the SRAM to a 0 value. SoC shall also ensure that SRAMs are initialized with all 0 data on powergood events, prior to caliptra\_rst\_b deassertion.
 
 Mailbox SRAM is implemented with ECC protection. Data width for the mailbox is 32-bits, with 7 parity bits for a Hamming-based SECDED (single-bit error correction and double-bit error detection).
 
@@ -592,7 +592,7 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
     2. SoC can look at the Caliptra fatal error register for error source.
     3. Assume Caliptra can report a fatal error at any time.
     4. Fatal errors are generally hardware in nature. SoC may attempt to recover by full reset of the entire SoC, or can move on and know that Caliptra will be unavailable for the remainder of the current boot.
-    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SOC MCRIP.
+    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SoC MCRIP.
 
 # SoC integration requirements
 
@@ -633,7 +633,7 @@ The following table describes SoC integration requirements.
 | SRAMs                            | SoC shall size SRAMs to account for SECDED.                                                                                                                                                                                               | Statement of conformance | Functional                                        |
 | SRAMs                            | SoC shall write-protect fuses that characterize the SRAM.                                                                                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | SRAMs                            | SoC shall ensure SRAM content is only destroyed on powergood cycling.                                                                                                                                                                     | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
-| SRAMs                            | SoC shall only perform SRAM repair on powergood events and prior to caliptra_rst_b deassertion.                                                                                                                                           | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
+| SRAMs                            | SoC shall only perform SRAM repair on powergood events and prior to caliptra_rst_b deassertion. SoC shall also ensure that SRAMs are initialized with all 0 data during powergood events, and prior to caliptra_rst_b deassertion.        | Statement of conformance | Functional (Warm Reset, Hitless Update)           |
 | Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                          |                          | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                    |                          | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
