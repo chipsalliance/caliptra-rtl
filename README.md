@@ -141,6 +141,28 @@ Verilog file lists are generated via VCS and included in the config directory fo
 `veer_build_command.sh`: Shell script used to generate the VeeR-EL2 repository present in `src/riscv_core/veer_el2`<BR>
 `openocd`: Open-Source FW debug utility used for JTAG testing in automated workflows
 
+### **Makefile** ###
+Targets:
+    - verilator-build
+    - verilator
+    - vcs-build
+    - vcs
+    - program.hex
+    - caliptra\_fmc.hex
+    - caliptra\_rt.hex
+    - all (runs: clean verilator)
+    - clean
+    - clean\_fw (removes only compiled object files and C header files)
+    - help
+Overrides:
+    - TESTNAME=<string>
+    - debug=1 (enables VCD wave dump)
+    - VERILATOR\_TRACE={vcd,fst} (defines output file format of debug trace. Only "vcd" or "fst")
+    - CALIPTRA\_MODE\_SEED=1 (if set to 1, Caliptra is compiled in the Seed configuration)
+    - FORCE\_CPU\_RESET=1 (holds RISC-V core in reset during simulation)
+    - DEBUG\_UNLOCKED=1 (overrides default locked state of JTAG debug to unlocked in simulation)
+    - VERILATOR\_RUN\_ARGS (may be overridden to add custom arguments to the verilator run call)
+
 ## **Simulation Flow** ##
 
 ### Caliptra Top VCS Steps: ###
