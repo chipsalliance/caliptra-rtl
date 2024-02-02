@@ -86,6 +86,7 @@
 `endif
 `define RV_TIMER_LEGAL_EN 1
 `ifdef CALIPTRA_MODE_SEED
+// DCCM = 16KiB
 `define RV_DCCM_BANK_BITS 2
 `define RV_DCCM_BITS 14
 `define RV_DCCM_BYTE_WIDTH 4
@@ -108,6 +109,7 @@
 `define RV_DCCM_WIDTH_BITS 2
 `define RV_LSU_SB_BITS 14
 `else
+// DCCM = 128KiB
 `define RV_DCCM_BANK_BITS 2
 `define RV_DCCM_BITS 17
 `define RV_DCCM_BYTE_WIDTH 4
@@ -171,6 +173,7 @@
 `define RV_ICCM_BITS 17
 `define RV_ICCM_DATA_CELL ram_8192x39
 `define RV_ICCM_EADR 32'h4001ffff
+// No ICCM in SEED configuration
 `ifndef CALIPTRA_MODE_SEED
 `define RV_ICCM_ENABLE 1
 `endif
