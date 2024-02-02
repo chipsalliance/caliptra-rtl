@@ -21,7 +21,11 @@
 //                Includes single-context DPE handling and ECDH.
 //   "CORE"     : Traditional Caliptra operating mode providing all cryptography services
 //                firmware load capabilities and multi-context DPE sessions.
-`define CALIPTRA_MODE "CORE"
+// The hardware impact of these macros is to override RISC-V build parameters in
+// common_defines (under the RISC-V core source)
+// Override these from the Makefile or build system
+//`define CALIPTRA_MODE_CORE
+//`define CALIPTRA_MODE_SEED
 
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
@@ -91,7 +95,7 @@
   //`define CALIPTRA_KV_NUM_READ 6
   //`define CALIPTRA_KV_NUM_WRITE 4
 
-  `define CALIPTRA_IMEM_BYTE_SIZE   49152
+  `define CALIPTRA_IMEM_BYTE_SIZE   65536
   `define CALIPTRA_IMEM_DATA_WIDTH  64
   `define CALIPTRA_IMEM_DEPTH       `CALIPTRA_IMEM_BYTE_SIZE / (`CALIPTRA_IMEM_DATA_WIDTH/8)
   `define CALIPTRA_IMEM_BYTE_ADDR_W $clog2(`CALIPTRA_IMEM_BYTE_SIZE)

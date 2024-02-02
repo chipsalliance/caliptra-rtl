@@ -74,11 +74,40 @@
 `define RV_DIV_NEW 1
 `define RV_DMA_BUF_DEPTH 5
 `define RV_FAST_INTERRUPT_REDIRECT 1
+`ifndef CALIPTRA_MODE_SEED
+`define RV_ICCM_ONLY 1
+`endif
 `define RV_LSU2DMA 0
 `define RV_LSU_NUM_NBLOAD 4
 `define RV_LSU_NUM_NBLOAD_WIDTH 2
 `define RV_LSU_STBUF_DEPTH 4
+`ifdef CALIPTRA_MODE_SEED
+`define RV_NO_ICCM_NO_ICACHE 1
+`endif
 `define RV_TIMER_LEGAL_EN 1
+`ifdef CALIPTRA_MODE_SEED
+`define RV_DCCM_BANK_BITS 2
+`define RV_DCCM_BITS 14
+`define RV_DCCM_BYTE_WIDTH 4
+`define RV_DCCM_DATA_CELL ram_1024x39
+`define RV_DCCM_DATA_WIDTH 32
+`define RV_DCCM_EADR 32'h50003fff
+`define RV_DCCM_ECC_WIDTH 7
+`define RV_DCCM_ENABLE 1
+`define RV_DCCM_FDATA_WIDTH 39
+`define RV_DCCM_INDEX_BITS 10
+`define RV_DCCM_NUM_BANKS 4
+`define RV_DCCM_NUM_BANKS_4 
+`define RV_DCCM_OFFSET 28'h00000
+`define RV_DCCM_REGION 4'h5
+`define RV_DCCM_RESERVED 'h1400
+`define RV_DCCM_ROWS 1024
+`define RV_DCCM_SADR 32'h50000000
+`define RV_DCCM_SIZE 16
+`define RV_DCCM_SIZE_16 
+`define RV_DCCM_WIDTH_BITS 2
+`define RV_LSU_SB_BITS 14
+`else
 `define RV_DCCM_BANK_BITS 2
 `define RV_DCCM_BITS 17
 `define RV_DCCM_BYTE_WIDTH 4
@@ -100,6 +129,7 @@
 `define RV_DCCM_SIZE_128 
 `define RV_DCCM_WIDTH_BITS 2
 `define RV_LSU_SB_BITS 17
+`endif
 `define RV_ICACHE_2BANKS 1
 `define RV_ICACHE_BANK_BITS 1
 `define RV_ICACHE_BANK_HI 3
@@ -135,14 +165,15 @@
 `define RV_ICACHE_TAG_NUM_BYPASS 2
 `define RV_ICACHE_TAG_NUM_BYPASS_WIDTH 2
 `define RV_ICACHE_WAYPACK 1
-`define RV_ICCM_ENABLE 1
-`define RV_ICCM_ONLY 1
 `define RV_ICCM_BANK_BITS 2
 `define RV_ICCM_BANK_HI 3
 `define RV_ICCM_BANK_INDEX_LO 4
 `define RV_ICCM_BITS 17
 `define RV_ICCM_DATA_CELL ram_8192x39
 `define RV_ICCM_EADR 32'h4001ffff
+`ifndef CALIPTRA_MODE_SEED
+`define RV_ICCM_ENABLE 1
+`endif
 `define RV_ICCM_INDEX_BITS 13
 `define RV_ICCM_NUM_BANKS 4
 `define RV_ICCM_NUM_BANKS_4 
@@ -260,10 +291,5 @@
 `define RV_LDERR_ROLLBACK 1
 `define RV_STERR_ROLLBACK 0
 `define RV_XLEN 32
-`ifndef SYNTHESIS
-`ifndef VERILATOR
-    `define RV_ASSERT_ON 
-`endif
-`endif
 
 `endif
