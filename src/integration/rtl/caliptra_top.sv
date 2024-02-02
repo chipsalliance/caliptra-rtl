@@ -1323,4 +1323,19 @@ endgenerate
 
 `CALIPTRA_ASSERT_NEVER(APB_MASTER_PPROT_ACTIVE,   PPROT !== 3'b000, clk, cptra_rst_b)
 
+// Check that the mode has been properly defined at compile time by attempting
+// an illegal construct if no mode is detected
+`ifndef CALIPTRA_MODE_CORE
+ `ifndef CALIPTRA_MODE_SEED
+  ERROR_NO_CALIPTRA_MODE_DEFINED_AT_COMPILE TIME();
+  `CALIPTRA_ASSERT_I(NO_CALIPTRA_MODE_DEF, 0)
+ `endif
+`endif
+`ifdef CALIPTRA_MODE_CORE
+ `ifdef CALIPTRA_MODE_SEED
+  ERROR_MULTIPLE_CALIPTRA_MODES_DEFINED_AT_COMPILE TIME();
+  `CALIPTRA_ASSERT_I(MULTI_CALIPTRA_MODE_DEF, 0)
+ `endif
+`endif
+
 endmodule

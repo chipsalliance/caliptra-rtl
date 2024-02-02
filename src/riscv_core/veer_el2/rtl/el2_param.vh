@@ -74,19 +74,23 @@ parameter el2_param_t pt = '{
 	DATA_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
 	DATA_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
 	DATA_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
-	DCCM_BANK_BITS         : 7'h02         ,
-	DCCM_BITS              : 9'h011        ,
-	DCCM_BYTE_WIDTH        : 7'h04         ,
-	DCCM_DATA_WIDTH        : 10'h020        ,
-	DCCM_ECC_WIDTH         : 7'h07         ,
+	DCCM_BANK_BITS         : 7'(`RV_DCCM_BANK_BITS)  ,
+	DCCM_BITS              : 9'(`RV_DCCM_BITS)       ,
+	DCCM_BYTE_WIDTH        : 7'(`RV_DCCM_BYTE_WIDTH) ,
+	DCCM_DATA_WIDTH        : 10'(`RV_DCCM_DATA_WIDTH) ,
+	DCCM_ECC_WIDTH         : 7'(`RV_DCCM_ECC_WIDTH)         ,
+`ifdef RV_DCCM_ENABLE
 	DCCM_ENABLE            : 5'h01         ,
-	DCCM_FDATA_WIDTH       : 10'h027        ,
-	DCCM_INDEX_BITS        : 8'h0D         ,
-	DCCM_NUM_BANKS         : 9'h004        ,
-	DCCM_REGION            : 8'h05         ,
-	DCCM_SADR              : 36'h050000000  ,
-	DCCM_SIZE              : 14'h0080       ,
-	DCCM_WIDTH_BITS        : 6'h02         ,
+`else
+	DCCM_ENABLE            : 5'h00         ,
+`endif
+	DCCM_FDATA_WIDTH       : 10'(`RV_DCCM_FDATA_WIDTH)        ,
+	DCCM_INDEX_BITS        : 8'(`RV_DCCM_INDEX_BITS) ,
+	DCCM_NUM_BANKS         : 9'(`RV_DCCM_NUM_BANKS)        ,
+	DCCM_REGION            : 8'(`RV_DCCM_REGION)         ,
+	DCCM_SADR              : 36'(`RV_DCCM_SADR)  ,
+	DCCM_SIZE              : 14'(`RV_DCCM_SIZE)  ,
+	DCCM_WIDTH_BITS        : 6'(`RV_DCCM_WIDTH_BITS)         ,
 	DIV_BIT                : 7'h04         ,
 	DIV_NEW                : 5'h01         ,
 	DMA_BUF_DEPTH          : 7'h05         ,
@@ -126,18 +130,30 @@ parameter el2_param_t pt = '{
 	ICACHE_TAG_NUM_BYPASS  : 8'h02         ,
 	ICACHE_TAG_NUM_BYPASS_WIDTH : 8'h02         ,
 	ICACHE_WAYPACK         : 5'h01         ,
-	ICCM_BANK_BITS         : 7'h02         ,
-	ICCM_BANK_HI           : 9'h003        ,
-	ICCM_BANK_INDEX_LO     : 9'h004        ,
-	ICCM_BITS              : 9'h011        ,
+	ICCM_BANK_BITS         : 7'(`RV_ICCM_BANK_BITS)         ,
+	ICCM_BANK_HI           : 9'(`RV_ICCM_BANK_HI)        ,
+	ICCM_BANK_INDEX_LO     : 9'(`RV_ICCM_BANK_INDEX_LO)        ,
+	ICCM_BITS              : 9'(`RV_ICCM_BITS)        ,
+`ifdef RV_ICCM_ENABLE
 	ICCM_ENABLE            : 5'h01         ,
+`else
+	ICCM_ENABLE            : 5'h00         ,
+`endif
+`ifdef RV_ICCM_ICACHE
+	ICCM_ICACHE            : 5'h01         ,
+`else
 	ICCM_ICACHE            : 5'h00         ,
-	ICCM_INDEX_BITS        : 8'h0D         ,
-	ICCM_NUM_BANKS         : 9'h004        ,
+`endif
+	ICCM_INDEX_BITS        : 8'(`RV_ICCM_INDEX_BITS)         ,
+	ICCM_NUM_BANKS         : 9'(`RV_ICCM_NUM_BANKS)        ,
+`ifdef RV_ICCM_ONLY
 	ICCM_ONLY              : 5'h01         ,
-	ICCM_REGION            : 8'h04         ,
-	ICCM_SADR              : 36'h040000000  ,
-	ICCM_SIZE              : 14'h0080       ,
+`else
+	ICCM_ONLY              : 5'h00         ,
+`endif
+	ICCM_REGION            : 8'(`RV_ICCM_REGION)         ,
+	ICCM_SADR              : 36'(`RV_ICCM_SADR)  ,
+	ICCM_SIZE              : 14'(`RV_ICCM_SIZE) ,
 	IFU_BUS_ID             : 5'h01         ,
 	IFU_BUS_PRTY           : 6'h02         ,
 	IFU_BUS_TAG            : 8'h03         ,
@@ -172,9 +188,13 @@ parameter el2_param_t pt = '{
 	LSU_BUS_TAG            : 8'h03         ,
 	LSU_NUM_NBLOAD         : 9'h004        ,
 	LSU_NUM_NBLOAD_WIDTH   : 7'h02         ,
-	LSU_SB_BITS            : 9'h011        ,
+	LSU_SB_BITS            : 9'(`RV_LSU_SB_BITS) ,
 	LSU_STBUF_DEPTH        : 8'h04         ,
+`ifdef NO_ICCM_NO_ICACHE
+	NO_ICCM_NO_ICACHE      : 5'h01         ,
+`else
 	NO_ICCM_NO_ICACHE      : 5'h00         ,
+`endif
 	PIC_2CYCLE             : 5'h00         ,
 	PIC_BASE_ADDR          : 36'h060000000  ,
 	PIC_BITS               : 9'h00F        ,
@@ -189,4 +209,3 @@ parameter el2_param_t pt = '{
 	SB_BUS_TAG             : 8'h01         ,
 	TIMER_LEGAL_EN         : 5'h01         
 }
-// parameter el2_param_t pt = 2271'h04840400010040010840000020908200002840004808220A0C848200060410C00000000000000000000000000000000000000000000000000000000000000000000000000000000003FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC104420401C21386810141400000000800820428042010840830C2010281840200081002008E0C0801004040800C01002100400606810104100C0811080340810404000000002002101800000000000000000000000000000000000000000000000000000000000000000000000000000000007FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF8001080C080822080003000000003C041804003E02008084021
