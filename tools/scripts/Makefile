@@ -78,7 +78,11 @@ TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecdsa_secp384r1.exe \
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
 ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
+    ifdef CALIPTRA_MODE_SEED
+	OFILE_CRT := crt0_seed.o
+    else
 	OFILE_CRT := crt0.o
+    endif
 endif
 OFILES += $(TESTNAME).o
 ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
@@ -110,7 +114,11 @@ endif
 # RK
 # provide specific link file
 ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
+    ifdef CALIPTRA_MODE_SEED
+	LINK = $(RISCV_HW_IF_DIR)/link_seed.ld
+    else
 	LINK = $(RISCV_HW_IF_DIR)/link.ld
+    endif
 else
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
 endif
@@ -202,6 +210,18 @@ else
     TB_DEFS += +define+CALIPTRA_MODE_CORE
 endif
 
+ifdef CALIPTRA_MODE_SEED
+    ROM_SIZE=0x10000
+    MBOX_SIZE=0x1000
+    ICCM_SIZE=0x0
+    DCCM_SIZE=0x4000
+else
+    ROM_SIZE=0xC000
+    MBOX_SIZE=0x20000
+    ICCM_SIZE=0x20000
+    DCCM_SIZE=0x20000
+endif
+
 # Run time arguments from command line
 VERILATOR_RUN_ARGS ?= ""
 
@@ -266,18 +286,18 @@ else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
 # Build program.hex from RUST executable
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to $(ROM_SIZE) --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma     .rodata-0x50000000 \
 			      --change-section-lma        .bss-0x50000000 \
 			      --change-section-lma       .sbss-0x50000000 \
 			      --change-section-lma       .dccm-0x50000000 \
-			      --pad-to 0x20000 \
+			      --pad-to $(DCCM_SIZE) \
 			      --no-change-warnings \
 			      $(TEST_DIR)/$(TESTNAME) dccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) iccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) mailbox.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to $(ICCM_SIZE) --no-change-warnings $(TEST_DIR)/$(TESTNAME) iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to $(MBOX_SIZE) --no-change-warnings $(TEST_DIR)/$(TESTNAME) mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TEST_DIR)/$(TESTNAME) > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TEST_DIR)/$(TESTNAME) | tee $(TESTNAME).size
 
@@ -286,17 +306,17 @@ else
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to $(ROM_SIZE) --no-change-warnings $(TESTNAME).exe program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
 			      --change-section-lma .data_iccm2-0x50000000 \
 			      --change-section-lma       .dccm-0x50000000 \
-			      --pad-to 0x20000 \
+			      --pad-to $(DCCM_SIZE) \
 			      --no-change-warnings \
 			      $(TESTNAME).exe dccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe iccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe mailbox.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to $(ICCM_SIZE) --no-change-warnings $(TESTNAME).exe iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to $(MBOX_SIZE) --no-change-warnings $(TESTNAME).exe mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
@@ -306,7 +326,7 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 %.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe $@
+	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to $(MBOX_SIZE) --no-change-warnings $(TESTNAME).exe $@
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)

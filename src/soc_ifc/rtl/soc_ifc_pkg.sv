@@ -23,7 +23,11 @@ package soc_ifc_pkg;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
     
+    `ifdef CALIPTRA_MODE_SEED
+    parameter MBOX_SIZE_KB = 4;
+    `else
     parameter MBOX_SIZE_KB = 128;
+    `endif
     parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
     parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
     parameter MBOX_DATA_W = 32;
@@ -39,7 +43,7 @@ package soc_ifc_pkg;
 
     //memory map
     parameter MBOX_DIR_START_ADDR     = 32'h0000_0000;
-    parameter MBOX_DIR_END_ADDR       = 32'h0001_FFFF;
+    parameter MBOX_DIR_END_ADDR       = MBOX_DIR_START_ADDR + 32'(MBOX_SIZE_BYTES);
     parameter MBOX_REG_START_ADDR     = `CALIPTRA_TOP_REG_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_REG_END_ADDR       = MBOX_REG_START_ADDR + 32'h0000_0FFF;
     parameter SHA_REG_START_ADDR      = `CALIPTRA_TOP_REG_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
