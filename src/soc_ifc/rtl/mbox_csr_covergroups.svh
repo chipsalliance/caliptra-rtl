@@ -221,7 +221,8 @@
     input bit [1-1:0] ecc_single_error,
     input bit [1-1:0] ecc_double_error,
     input bit [3-1:0] mbox_fsm_ps,
-    input bit [1-1:0] soc_has_lock
+    input bit [1-1:0] soc_has_lock,
+    input bit [15-1:0] mbox_rdptr
     );
         option.per_instance = 1;
         status_cp : coverpoint status;
@@ -235,6 +236,26 @@
             bins MBOX_EXECUTE_UC                              = {mbox_fsm_state_e'(MBOX_EXECUTE_UC  )};
             bins MBOX_EXECUTE_SOC                             = {mbox_fsm_state_e'(MBOX_EXECUTE_SOC )};
             bins MBOX_ERROR                                   = {mbox_fsm_state_e'(MBOX_ERROR       )};
+        }
+        soc_has_lock_cp : coverpoint soc_has_lock;
+        mbox_rdptr_cp : coverpoint mbox_rdptr {
+            bins zero_val = {15'h0};
+            bins rand_val[32] = {[1:15'h7FFE]};
+            bins ones_val = {{15{1'b1}}};
+            wildcard bins set = (0 => 15'h????_????);
+            wildcard bins clr = (15'h????_???? => 0);
+        }
+        status_edge_cp : coverpoint status {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        ecc_single_error_edge_cp : coverpoint ecc_single_error {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        ecc_double_error_edge_cp : coverpoint ecc_double_error {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
         }
         mbox_fsm_ps_edge_cp : coverpoint mbox_fsm_ps {
             bins TRANSITION_IDLE_RDY_FOR_CMD                  = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));
@@ -276,19 +297,6 @@
 //            illegal_bins TRANSITION_ERROR_RDY_FOR_DATA        = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_RDY_FOR_DATA));
 //            illegal_bins TRANSITION_ERROR_EXECUTE_UC          = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_EXECUTE_UC));
 //            illegal_bins TRANSITION_ERROR_EXECUTE_SOC         = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
-        }
-        soc_has_lock_cp : coverpoint soc_has_lock;
-        status_edge_cp : coverpoint status {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-        ecc_single_error_edge_cp : coverpoint ecc_single_error {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-        ecc_double_error_edge_cp : coverpoint ecc_double_error {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
         }
         soc_has_lock_edge_cp : coverpoint soc_has_lock {
             bins rise = (0 => 1);
