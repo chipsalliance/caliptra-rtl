@@ -22,7 +22,7 @@
 //   "CORE"     : Traditional Caliptra operating mode providing all cryptography services
 //                firmware load capabilities and multi-context DPE sessions.
 // The hardware impact of these macros is to override RISC-V build parameters in
-// common_defines (under the RISC-V core source)
+// common_defines (under the RISC-V core source) and mailbox size parameters in soc_ifc_pkg
 // Override these from the Makefile or build system
 //`define CALIPTRA_MODE_CORE
 //`define CALIPTRA_MODE_SEED

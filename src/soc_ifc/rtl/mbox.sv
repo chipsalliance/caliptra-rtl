@@ -546,7 +546,8 @@ always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
-always_comb hwif_in.mbox_status.mbox_rdptr.next = mbox_rdptr;
+// Cast to a 15-bit value since the register field is hardcoded as 15-bits
+always_comb hwif_in.mbox_status.mbox_rdptr.next = 15'(mbox_rdptr);
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;

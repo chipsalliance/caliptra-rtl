@@ -22,10 +22,10 @@ SECTIONS {
 
   .eh_frame : { *(.eh_frame) }
   /* DCCM as VMA */
-  /* Data is bundled with ROM image in iMem */
+  /* Data is bundled with val ROM image in iMem */
   /* Align data to 4-bytes to allow LSU access to work
    * when copying to DCCM */
-  /* Only upper half of DCCM is used for ROM image */
+  /* Only upper half of DCCM is used for val ROM image */
   _data_lma_start = ALIGN(4);
   _data_vma_start = 0x50010000;
   .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
