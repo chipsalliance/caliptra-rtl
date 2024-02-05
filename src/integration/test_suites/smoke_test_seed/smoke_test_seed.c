@@ -70,7 +70,7 @@ void main(void) {
         uint32_t * DCCM = (uint32_t *) RV_DCCM_SADR;
 
         uint32_t * data_word = 0;
-        uint32_t * dccm_dest = ICCM;
+        uint32_t * dccm_dest = DCCM;
 
         VPRINTF(LOW, "---\nCaliptra Seed Smoke Test!!\n---\n");
 
@@ -79,7 +79,7 @@ void main(void) {
 
         // Initialize the globals
         intr_count = 0;
-        persistent_nmi_expected = 0;
+        persistent_exec_cnt++;
 
         // Check ICCM_LOCK is not currently set
         if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK) & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK == SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
