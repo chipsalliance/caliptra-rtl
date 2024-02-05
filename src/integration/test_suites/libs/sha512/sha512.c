@@ -31,7 +31,7 @@ void wait_for_sha512_intr(){
         }
     };
     //printf("Received SHA512 error intr with status = %d\n", cptra_intr_rcv.sha512_error);
-    printf("Received SHA512 notif intr with status = %d\n", cptra_intr_rcv.sha512_notif);
+    printf("SHA512 notif intr: %d\n", cptra_intr_rcv.sha512_notif);
 }
 
 void sha_init(enum sha512_mode_e mode) {

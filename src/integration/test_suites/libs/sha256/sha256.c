@@ -30,7 +30,7 @@ void wait_for_sha256_intr(){
         }
     };
     //printf("Received SHA256 error intr with status = %d\n", cptra_intr_rcv.sha256_error);
-    printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    printf("SHA256 notif intr: %d\n", cptra_intr_rcv.sha256_notif);
 }
 
 void sha256_zeroize(){
