@@ -44,13 +44,14 @@ SECTIONS {
   . = 0x50000000;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_start : AT(_dccm_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
   _dccm_end = _dccm_vma_start + SIZEOF(.dccm);
 
   /* NO ICCM */
 
   /* Stack is at the end of DCCM */
   . = ALIGN(_dccm_end,16);
-  STACK = ALIGN(16) + 0x4000;
+  stack_start = .;
+  STACK = ALIGN(16) + 0x2000;
   ASSERT( (STACK < 0x50004000), "ERROR: Stack overflows the DCCM")
 }
