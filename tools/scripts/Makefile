@@ -16,6 +16,10 @@
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
+# Define SEED macro for firmware compilation
+ifdef CALIPTRA_MODE_SEED
+    TEST_CFLAGS += -DCALIPTRA_MODE_SEED
+endif
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
@@ -325,6 +329,9 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 # Entire image will be loaded into the mailbox, so it must fit the 128KiB memory
 %.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
+ifdef CALIPTRA_MODE_SEED
+	$(error 'Cannot build $@ for the SEED configuration of Caliptra!')
+endif
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
 	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to $(MBOX_SIZE) --no-change-warnings $(TESTNAME).exe $@
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
