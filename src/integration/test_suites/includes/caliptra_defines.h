@@ -69,7 +69,11 @@
 
 /* ---- Mailbox ---- */
 #define MBOX_DIR_BASE_ADDR        0x30000000
+#ifdef CALIPTRA_MODE_SEED
+#define MBOX_DIR_SPAN             0x00001000 /* 4 KiB */
+#else
 #define MBOX_DIR_SPAN             0x00020000 /* 128 KiB */
+#endif
 #define STDOUT                    CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0
 
 /* ---- ECC ----*/
