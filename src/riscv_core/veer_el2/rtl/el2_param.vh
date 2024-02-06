@@ -190,7 +190,7 @@ parameter el2_param_t pt = '{
 	LSU_NUM_NBLOAD_WIDTH   : 7'h02         ,
 	LSU_SB_BITS            : 9'(`RV_LSU_SB_BITS) ,
 	LSU_STBUF_DEPTH        : 8'h04         ,
-`ifdef NO_ICCM_NO_ICACHE
+`ifdef RV_NO_ICCM_NO_ICACHE
 	NO_ICCM_NO_ICACHE      : 5'h01         ,
 `else
 	NO_ICCM_NO_ICACHE      : 5'h00         ,
