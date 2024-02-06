@@ -230,15 +230,20 @@ module sha256
               wntz_j_inc = 1'b1;
             end else if (wntz_blk_done)
               wntz_fsm_next   = WNTZ_IDLE;
+            else
+              wntz_fsm_next   = WNTZ_1ST;
           end
           
         WNTZ_OTHERS: 
           begin
             if (wntz_blk_done && (wntz_j_reg < wntz_iter_reg)) begin
+              wntz_fsm_next  = WNTZ_OTHERS;
               wntz_init  = 1'b1;
               wntz_j_inc = 1'b1;
             end else if (wntz_blk_done)
               wntz_fsm_next   = WNTZ_IDLE;
+            else
+              wntz_fsm_next  = WNTZ_OTHERS;
           end
 
         default: 
