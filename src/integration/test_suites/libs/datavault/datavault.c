@@ -18,7 +18,7 @@
 
 #ifdef DV_SMALLSET    // Smaller test set for DEBUG
 
-widereg_t dv_regs [DV_PFX_COUNT] = {
+widereg_t dv_regs [DV_PFX_COUNT] __attribute__((section(".data.datavault"))) = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             2,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       3,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       3,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
@@ -33,7 +33,7 @@ widereg_t dv_regs [DV_PFX_COUNT] = {
 
 enum ctrl_index {CTRL1 = 0, CTRL2 = 3, CTRL3 = 6, CTRL4 = 8, IXNA = -1};
 
-ctrl_reg_t dv_ctrl_regids [] = {
+ctrl_reg_t dv_ctrl_regids [] __attribute__((section(".data.datavault"))) = {
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
     // dv_regs[j][1] locks: dv_regs[j+2][1], dv_regs[j+2][2], dv_regs[j+2][2]
     // dv_regs[j][3] locks: dv_regs[j+3][1], dv_regs[j+3][2], dv_regs[j+3][2]
@@ -46,7 +46,7 @@ ctrl_reg_t dv_ctrl_regids [] = {
     {CTRL4, STICKY_1D,      1, {CTRL4+1, CTRL4+1, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA, IXNA}}       // 2 x 1 set x 1 slot 
 };
 
-int lock_status_bitmap [DV_PFX_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  // each entry corresponds to a row in dv_regs
+int lock_status_bitmap [DV_PFX_COUNT] __attribute__((section(".rodata.datavault"))) = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  // each entry corresponds to a row in dv_regs
 
 
 // Interpreting the tables above 
@@ -87,7 +87,7 @@ int lock_status_bitmap [DV_PFX_COUNT] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  // ea
 
 #else               // Default larger set 
 
-widereg_t dv_regs [DV_PFX_COUNT] = {
+widereg_t dv_regs [DV_PFX_COUNT] __attribute__((section(".data.datavault"))) = {
     { "STICKYDATAVAULTCTRL",                 (uint32_t *) CLP_DV_REG_STICKYDATAVAULTCTRL_0,             10,  0x1,     0x0 }, //  0. (0x1001c000) 
     { "STICKY_DATA_VAULT_ENTRY_0",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_0_0,       12,  DV_ONES, 0x0 }, //  1. (0x1001c028) 
     { "STICKY_DATA_VAULT_ENTRY_1",           (uint32_t *) CLP_DV_REG_STICKY_DATA_VAULT_ENTRY_1_0,       12,  DV_ONES, 0x0 }, //  2. (0x1001c058) 
@@ -121,7 +121,7 @@ widereg_t dv_regs [DV_PFX_COUNT] = {
 enum ctrl_index {CTRL1 = 0, CTRL2 = 11, CTRL3 = 22, CTRL4 = 25, IXNA = -1};
 
 
-ctrl_reg_t dv_ctrl_regids [] = {
+ctrl_reg_t dv_ctrl_regids [] __attribute__((section(".data.datavault"))) = {
     // dv_regs[j][0] locks: dv_regs[j+1][0], dv_regs[j+1][1], dv_regs[j+1][2]
     // dv_regs[j][1] locks: dv_regs[j+2][1], dv_regs[j+2][2], dv_regs[j+2][2]
     // dv_regs[j][3] locks: dv_regs[j+3][1], dv_regs[j+3][2], dv_regs[j+3][2]
@@ -134,7 +134,8 @@ ctrl_reg_t dv_ctrl_regids [] = {
     {CTRL4,  STICKY_1D,     1,    {CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, CTRL4+1, IXNA,    IXNA}}   // 1 set x 1 slot x 8 time
 };
 
-int lock_status_bitmap [DV_PFX_COUNT] =    { 0, 0, 0, 0, 0, 0, 0, 0,
+int lock_status_bitmap [DV_PFX_COUNT] __attribute__((section(".rodata.datavault"))) =
+                                           { 0, 0, 0, 0, 0, 0, 0, 0,
                                              0, 0, 0, 0, 0, 0, 0, 0,
                                              0, 0, 0, 0, 0, 0, 0, 0, 
                                              0, 0, 0 
