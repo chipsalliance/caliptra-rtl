@@ -1428,7 +1428,7 @@ task static preload_iccm;
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     `ifndef RV_ICCM_ENABLE
         $display("********************************************************");
-        $display("ICCM preload: there is no ICCM in VeeR, exiting preload !!!");
+        $display("ICCM preload: there is no ICCM in VeeR, skipping preload !!!");
         $display("********************************************************");
         return;
     `endif
