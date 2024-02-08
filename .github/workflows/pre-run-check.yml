@@ -15,20 +15,13 @@ on:
 #    branches: ["main"]
 
 jobs:
-  # Setup environment for the pipeline
-  checkout:
-    name: Checkout
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout RTL repo
-        uses: actions/checkout@v4
-
   # Build the comparison hash file
   hash_check:
     name: Test
     runs-on: ubuntu-22.04
-    needs: checkout
     steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
       - name: Gen File List
         run: |
             find "$GITHUB_WORKSPACE" -type f -name "*.sv" \
@@ -77,8 +70,9 @@ jobs:
   hdr_check:
     name: License Header Check
     runs-on: ubuntu-22.04
-    needs: checkout
     steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
       - name: Run Script
         run: |
             $GITHUB_WORKSPACE/.github/scripts/licenseHeaderCheck.sh
