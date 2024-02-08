@@ -35,6 +35,6 @@ jobs:
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
-    needs: [verilator interactive_dbg doc_gen]
+    needs: [verilator, interactive_dbg, doc_gen]
     steps:
       - run: echo "Finalize"
