@@ -13,7 +13,6 @@ jobs:
   pre_run:
     name: Call Pre Run Check
     runs-on: ubuntu-22.04
-    needs: checkout
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
