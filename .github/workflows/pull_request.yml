@@ -12,22 +12,22 @@ jobs:
   pre_run:
     name: Call Pre Run Check
     steps:
-      - uses: chipsalliance/caliptra-rtl/.github/workflows/pre-run-check.yml
+      - uses: ./.github/workflows/pre-run-check.yml
   verilator:
     name: Call Verilator
     needs: pre_run
     steps:
-      - uses: chipsalliance/caliptra-rtl/.github/workflows/build-test-verilator.yml
+      - uses: ./.github/workflows/build-test-verilator.yml
   interactive_dbg:
     name: Call Interactive Debug
     needs: pre_run
     steps:
-      - uses: chipsalliance/caliptra-rtl/.github/workflows/interactive-debugging.yml
+      - uses: ./.github/workflows/interactive-debugging.yml
   doc_gen:
     name: Call Doc Gen
     needs: pre_run
     steps:
-      - uses: chipsalliance/caliptra-rtl/.github/workflows/doc-gen.yml
+      - uses: ./.github/workflows/doc-gen.yml
   post_run:
     name: Call Post Run Final
     needs: [verilator interactive_dbg doc_gen]
