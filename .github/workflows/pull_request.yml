@@ -11,25 +11,30 @@ on:
 jobs:
   pre_run:
     name: Call Pre Run Check
+    runs-on: ubuntu-22.04
     steps:
       - uses: ./.github/workflows/pre-run-check.yml
   verilator:
     name: Call Verilator
+    runs-on: ubuntu-22.04
     needs: pre_run
     steps:
       - uses: ./.github/workflows/build-test-verilator.yml
   interactive_dbg:
     name: Call Interactive Debug
+    runs-on: ubuntu-22.04
     needs: pre_run
     steps:
       - uses: ./.github/workflows/interactive-debugging.yml
   doc_gen:
     name: Call Doc Gen
+    runs-on: ubuntu-22.04
     needs: pre_run
     steps:
       - uses: ./.github/workflows/doc-gen.yml
   post_run:
     name: Call Post Run Final
+    runs-on: ubuntu-22.04
     needs: [verilator interactive_dbg doc_gen]
     steps:
       - run: echo "Finalize"
