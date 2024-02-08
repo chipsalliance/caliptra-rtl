@@ -9,9 +9,19 @@ on:
   pull_request:
 
 jobs:
+  # Setup environment for the pipeline
+  checkout:
+    name: Checkout
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v3
+
+  # Call auxiliary workflows
   pre_run:
     name: Call Pre Run Check
     runs-on: ubuntu-22.04
+    needs: checkout
     steps:
       - uses: ./.github/workflows/pre-run-check.yml
   verilator:
