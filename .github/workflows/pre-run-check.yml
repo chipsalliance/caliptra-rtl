@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 #  pull_request:
   workflow_call:
-#  push:
-#    branches: ["main"]
+  push:
+    branches: ["cwhitehead-msft-pipeline-hash-check"]
 
 jobs:
   # Build the comparison hash file
