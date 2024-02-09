@@ -99,4 +99,4 @@ jobs:
       - name: Run Script
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
-            $GITHUB_WORKSPACE/.github/scripts/licenseHeaderCheck.sh
+            $GITHUB_WORKSPACE/.github/scripts/license_header_check.sh
