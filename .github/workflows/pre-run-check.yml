@@ -9,6 +9,12 @@ name: Pre Run Check
 
 on:
   workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Manual override for target branch to perform merge comparisons"
+        required: true
+        type: string
+        default: 'main'
   workflow_call:
 
 jobs:
@@ -44,6 +50,7 @@ jobs:
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
+
       - name: Gen File List
         run: |
             find "$GITHUB_WORKSPACE" -type f -name "*.sv" \
@@ -59,6 +66,7 @@ jobs:
             echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
             head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
       - name: Check Timestamp
         run: |
             timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct')-3600")
@@ -73,6 +81,7 @@ jobs:
                 exit 1
             fi
             echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
+
       - name: Check Hash
         run: |
             hash=$($GITHUB_WORKSPACE/.github/scripts/rtl_hash.sh $GITHUB_WORKSPACE $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt)
@@ -101,6 +110,7 @@ jobs:
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
+
       - name: Run Script
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
@@ -110,13 +120,22 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') }}
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == "workflow_dispatch") }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
-      # Avoid passing ${{ github.base_ref }} directly to pr_rdl_check.sh in order
-      # to mitigate possible script injection attacks against repository
+
+      - name: Install peakrd-uvm
+        run: |
+          python3 -m pip install \
+              peakrdl-uvm==2.2.0 \
+              peakrdl-regblock==0.10.0 \
+              peakrdl-html==2.9.0 \
+              peakrdl-ipxact==3.3.0
+
       - name: Run Script
+        env:
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == "workflow_dispatch" && inputs.base_ref) }}
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
-            $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh 'main'
+            $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"
