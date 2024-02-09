@@ -69,6 +69,7 @@ jobs:
             timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
             if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
                 echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest commit to branch by more than an hour [${timestamp_exp}]"
+                echo "Please rerun any internal/company proprietary testcases, then invoke .github/scripts/stamp_repo.sh to attest to successful completion"
                 exit 1
             fi
             echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
