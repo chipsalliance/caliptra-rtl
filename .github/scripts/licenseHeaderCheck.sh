@@ -76,7 +76,7 @@ exclude_dir='{uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sh
 exclude_suffix='*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cfg,hex,rc,exe,pdf,png,hvp,svg,log}'
 exclude_regs='*_reg*.{sv,rdl}'
 exclude_csr='*_csr*.*'
-exclude_file='{sglint_waivers,.git-comodules,.gitignore,spyglass_lint.policy,ascent.ctl,clp_mapfile,readme.md,README.md,SECURITY.md,c_sample.c}'
+exclude_file='{sglint_waivers,pr_hash,pr_timestamp,.git-comodules,.gitignore,spyglass_lint.policy,ascent.ctl,clp_mapfile,readme.md,README.md,SECURITY.md,c_sample.c}'
 apache_patn='Licensed under the Apache License'
 
 # Recursive find through repository with some major exclusions
