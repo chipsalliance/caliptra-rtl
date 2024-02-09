@@ -108,7 +108,7 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main') }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'main') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
