@@ -10,9 +10,6 @@ name: Pre Run Check
 on:
   workflow_dispatch:
   workflow_call:
-  # TODO TMP remove this vv
-  push:
-    branches: ["cwhitehead-msft-pipeline-hash-check"]
 
 jobs:
   # Fail if any compile.yml has been modified
@@ -32,7 +29,6 @@ jobs:
             SOURCE_BR: ${{ github.head_ref }}
             TARGET_BR: ${{ github.base_ref }}
         run: |
-            echo "${{ github.base_ref }}"
             compiles=$(git diff --name-only origin/$TARGET_BR...origin/$SOURCE_BR)
             if [[ $(echo "$compiles" | grep -c compile.yml) -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
@@ -108,7 +104,7 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.base_ref == 'main') }}
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
