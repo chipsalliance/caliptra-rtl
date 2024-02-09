@@ -21,13 +21,13 @@ jobs:
   compile_yml_check:
     name: compile.yml Check
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name }} == "pull_request"
+    if: ${{ github.event_name == "pull_request" }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
       - name: Compare against target
         env:
-            SOURCE_BR: ${{ github.ref }}
+            SOURCE_BR: ${{ github.head_ref }}
             TARGET_BR: ${{ github.base_ref }}
         run: |
             compiles=$(git diff --name-only $TARGET_BR...$SOURCE_BR)
@@ -100,3 +100,18 @@ jobs:
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
             $GITHUB_WORKSPACE/.github/scripts/license_header_check.sh
+
+  # Check RDL files for modifications
+  rdl_check:
+    name: RDL File Check
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name == "push" || (github.event_name == "pull_request" && github.base_ref == "main") }}
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+      # Avoid passing ${{ github.base_ref }} directly to pr_rdl_check.sh in order
+      # to mitigate possible script injection attacks against repository
+      - name: Run Script
+        run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh 'main'
