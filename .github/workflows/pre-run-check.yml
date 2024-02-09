@@ -120,7 +120,7 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == "workflow_dispatch") }}
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
@@ -135,7 +135,7 @@ jobs:
 
       - name: Run Script
         env:
-            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == "workflow_dispatch" && inputs.base_ref) }}
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
             $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"
