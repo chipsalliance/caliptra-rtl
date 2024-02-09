@@ -16,30 +16,22 @@
 #
 # DESCRIPTION:
 # ====================================
-# This tool is used to generate a hash over the Caliptra RTL files
-# This can be used to verify the integrity of the RTL after it has been integrated
-# The hash for the release is included in the release_notes.txt
+# This tool is used to generate a hash over the Caliptra source code files
+# This can be used to verify the hash of the code for which internal workflows were
+# run prior to submission to the caliptra-rtl repo.
 # 
-# Usage: rtl_hash.sh <path_to_rtl_src_dir> <rtl_file_list>
-#   path_to_rtl_src_dir     Path to the Caliptra RTL files. This is the src/ directory within 
-#                           the caliptra RTL repo. This may differ once integrated
-#   rtl_file_list           This list of all the files that should be included in the hash
-#                           is generated and packaged with the release (rtl_hash_file_list.txt)
+# Usage: file_hash.sh <path_to_rtl_src_dir> <file_list>
+#   path_to_rtl_src_dir     Path to the root directory of the caliptra RTL repo.
+#   file_list               This list of all the files that should be included in the hash
+#                           is generated
 #
-# Certain files are expected to be modified during integration. These are mentioned in
-# the CaliptraIntegrationSpecification.md in the RTL repo and are excluded from the rtl hash
-# file list used to generate the RTL hash
-#
-# If any files in the list are not found, an error will be output and mention all missing files
-# The hash will not be computed since it will not match the release hash with any files missing
-
 # Exit and report failure if anything fails
 set -euo pipefail
 
 # Check arg count
 if [ $# -ne 2 ]
   then
-    echo "Usage: $(basename $0) <path_to_rtl_src_dir> <rtl_file_list>"
+    echo "Usage: $(basename $0) <path_to_caliptra_root> <file_list>"
 	exit -1
 fi
 
@@ -69,7 +61,7 @@ if [ "$missing_files" -eq 0 ]; then
 	hash=$(cat "${expected_file_list[@]}" | sha384sum | tr -d "\n *-")
 	echo "$hash"
 else
-	echo "Failed to generate RTL hash"
+	echo "Failed to generate code hash"
 	exit -1
 fi
 

@@ -40,7 +40,7 @@ echo "Submitting timestamp [${timestamp}]"
 echo -n ${timestamp} > $CALIPTRA_ROOT/.github/workflow_metadata/pr_timestamp
 
 # Create hash
-hash=$($CALIPTRA_ROOT/.github/scripts/rtl_hash.sh $CALIPTRA_ROOT $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt)
+hash=$($CALIPTRA_ROOT/.github/scripts/file_hash.sh $CALIPTRA_ROOT $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt)
 if [[ -z ${hash:+"empty"} ]]; then
     echo "Failed to run hash script"
     echo $hash
