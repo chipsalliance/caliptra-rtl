@@ -24,7 +24,7 @@ else
 fi
 
 if ! git show-ref --quiet "${merge_dest}"; then
-    echo "Could not find rev named [${merge_dest}]"
+    echo "Could not find ref named [${merge_dest}]"
     exit 1
 fi
 
@@ -34,7 +34,7 @@ if [[ -z "${CALIPTRA_ROOT:+"empty"}" ]]; then
 fi
 cd "${CALIPTRA_ROOT}"
 
-rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-status | grep -c '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py')
+rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-only | grep -c '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' || exit 0)
 if [[ "${rdl_mod_count}" -gt 0 ]]; then
     # Run the HTML Doc generator script (to update the REG macro header files)
     # and the individual reg generator script but then remove the docs directories
