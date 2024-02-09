@@ -9,12 +9,34 @@ name: Pre Run Check
 
 on:
   workflow_dispatch:
-#  pull_request:
   workflow_call:
+  # TODO TMP remove this vv
   push:
     branches: ["cwhitehead-msft-pipeline-hash-check"]
 
 jobs:
+  # Fail if any compile.yml has been modified
+  # (Microsoft employees use these to run an internal tool)
+  # Don't run this job for manual runs
+  compile_yml_check:
+    name: compile.yml Check
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name }} == "pull_request"
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+      - name: Compare against target
+        env:
+            SOURCE_BR: ${{ github.ref }}
+            TARGET_BR: ${{ github.base_ref }}
+        run: |
+            compiles=$(git diff --name-only $TARGET_BR...$SOURCE_BR)
+            if [[ $(echo "$compiles" | grep -c compile.yml) -gt 0 ]]; then
+                echo "compile.yml should not be modified for pull requests! Found:"
+                echo "$compiles"
+                exit 1
+            fi
+
   # Build the comparison hash file
   hash_check:
     name: Hash Check
