@@ -67,7 +67,7 @@ jobs:
             head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
             echo -e "Diff with orig:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-            diff $GITHUB_WORKSPACE/.github/workflow_metadata/file_list_orig.txt $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            diff $GITHUB_WORKSPACE/.github/workflow_metadata/file_list_stamped.txt $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
 
       - name: Check Timestamp
         run: |
