@@ -72,7 +72,7 @@ if [[ -z ${CALIPTRA_ROOT:+"empty"} ]]; then
     exit 1
 fi
 
-exclude_dir='{uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,aes_secworks,fw_test_*,__pycache__,templates,docs}'
+exclude_dir='{uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,fw_test_*,__pycache__,templates,docs}'
 exclude_suffix='*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cfg,hex,rc,exe,pdf,png,hvp,svg,log}'
 exclude_regs='*_reg*.{sv,rdl}'
 exclude_csr='*_csr*.*'
@@ -85,7 +85,7 @@ files_missing_header=$(eval grep -r -L -i  --exclude-dir=${exclude_dir} --exclud
 
 # After excluding some crypto directories, re-scan specific directories therein
 # (can't specificy exclude-dir using '<patn>/<patn>' to catch nested directories)
-files_missing_header="${files_missing_header:+$files_missing_header }$(eval grep -r -L -i  --exclude-dir={rtl,uvmf_*} --exclude={aes_tb.v,doe_tb.v,sha256_tb.v} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\" \"${CALIPTRA_ROOT}/src/sha256\" \"${CALIPTRA_ROOT}/src/sha512\" \"${CALIPTRA_ROOT}/src/sha512_masked\" \"${CALIPTRA_ROOT}/src/doe\" \"${CALIPTRA_ROOT}/src/aes_secworks\")"
+files_missing_header="${files_missing_header:+$files_missing_header }$(eval grep -r -L -i  --exclude-dir={rtl,uvmf_*} --exclude={aes_tb.v,doe_tb.v,sha256_tb.v} --exclude=${exclude_suffix} --exclude=${exclude_regs} --exclude=${exclude_csr} --exclude=${exclude_file} \"${apache_patn}\" \"${CALIPTRA_ROOT}/src/sha256\" \"${CALIPTRA_ROOT}/src/sha512\" \"${CALIPTRA_ROOT}/src/sha512_masked\" \"${CALIPTRA_ROOT}/src/doe\")"
 
 if [[ $files_missing_header != "" ]]; then
     echo -e "\n\n\tPlease add Apache license header to the following files and try again. \n"
