@@ -60,7 +60,7 @@ jobs:
                                           -o -name "*.vh" \
                                           -o -name "*.c" \
                                           -o -name "*.h" \
-                                          -o -name "pr_timestamp" | sort > $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+                                          -o -name "pr_timestamp" | sort -n -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
             echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
