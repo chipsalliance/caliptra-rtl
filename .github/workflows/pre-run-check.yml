@@ -17,7 +17,7 @@ on:
 jobs:
   # Build the comparison hash file
   hash_check:
-    name: Test
+    name: Hash Check
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout RTL repo
@@ -75,4 +75,5 @@ jobs:
         uses: actions/checkout@v4
       - name: Run Script
         run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
             $GITHUB_WORKSPACE/.github/scripts/licenseHeaderCheck.sh

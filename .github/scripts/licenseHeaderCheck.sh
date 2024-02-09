@@ -67,12 +67,8 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-if [[ $(command -v pb) = "" ]]; then
-    echo "Enter Caliptra workspace (to make Playbook available) and try again"
-    exit 1
-fi
 if [[ -z ${CALIPTRA_ROOT:+"empty"} ]]; then
-    echo "Must run script from within Caliptra Playbook context"
+    echo "Must set CALIPTRA_ROOT prior to running script"
     exit 1
 fi
 
