@@ -59,7 +59,7 @@ apacheLicenseHeader_v_c="//*****************************************************
 // limitations under the License.
 //********************************************************************************"
 
-while [ ! -z "$1" ]; do
+while [[ ! -z "${1:+empty}" ]]; do
     if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
         show_usage 
     #elif [[ "$1" == "-i" ]] || [[ "$1" == "--insertHeader"]]; then
