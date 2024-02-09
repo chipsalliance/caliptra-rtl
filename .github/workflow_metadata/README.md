@@ -9,7 +9,7 @@ pr\_\* objects are used to validate a Pull Request run. This is in support of an
   1. The hash is written to the pr\_hash file
   1. Entity creates a Pull Request to submit the feature branch to the GitHub `main` branch
   1. Pull Request triggers GitHub Actions to run
-    a. Verilator, etc
-    a. Check on the timestamp. If the timestamp is sufficiently outdated (more than 1 day old) the feature branch is considered to have failed the internal workflow
-    a. Pull Request runs a hash on the branch fileset (including the timestamp), compares with the contents of pr\_hash. If the hash mismatches, the feature branch is considered to have failed the internal workflow
+    - Verilator, etc
+    - Check on the timestamp. If the timestamp is sufficiently outdated (more than 1 day old) the feature branch is considered to have failed the internal workflow
+    - Pull Request runs a hash on the branch fileset (including the timestamp), compares with the contents of pr\_hash. If the hash mismatches, the feature branch is considered to have failed the internal workflow
   1. Pull Request is allowed to be merged only once all Actions complete successfully
