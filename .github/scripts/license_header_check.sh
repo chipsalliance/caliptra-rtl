@@ -25,6 +25,8 @@ function show_usage() {
     return 0
 }
 
+set -euo pipefail
+
 apacheLicenseHeader="# SPDX-License-Identifier: Apache-2.0
 # 
 #

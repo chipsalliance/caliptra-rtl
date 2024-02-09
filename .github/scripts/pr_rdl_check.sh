@@ -14,11 +14,18 @@
 # limitations under the License.
 #
 
+set -euo pipefail
+
 if [[ $# -ne 1 ]]; then
     echo "Error, requires branch name argument"
     exit 1
 else
     merge_dest=$1
+fi
+
+if ! git show-ref --quiet "${merge_dest}"; then
+    echo "Could not find rev named [${merge_dest}]"
+    exit 1
 fi
 
 if [[ -z "${CALIPTRA_ROOT:+"empty"}" ]]; then
