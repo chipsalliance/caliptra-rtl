@@ -34,7 +34,8 @@ find "$CALIPTRA_ROOT" -type f -name "*.sv" \
                            -o -name "*.sh" \
                            -o -name "*.py" \
                            -o -name "*.md" \
-                           -o -name "pr_timestamp" | LC_COLLATE=C sort -o $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
+                           -o -name "pr_timestamp" \
+                           ! -path "*.git/*" | LC_COLLATE=C sort -o $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
 sed -i "s,^$CALIPTRA_ROOT/,," $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
 echo "Found $(wc -l $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt) source code files to hash"
 echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
