@@ -96,5 +96,4 @@ if [[ $files_missing_header != "" ]]; then
     done
     exit 1
 fi
-
-
+echo "Apache license header check completed successfully"
