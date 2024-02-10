@@ -5,7 +5,6 @@ name: Verilator
 on:
   push:
     branches: ["main", "dev-goog", "dev-msft"]
-#  pull_request:
   workflow_call:
   workflow_dispatch:
 
