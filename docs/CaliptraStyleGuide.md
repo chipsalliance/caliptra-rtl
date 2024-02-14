@@ -8,6 +8,7 @@ _*Last Update: 2024/01/31*_
   arc\_stuff
   fsm_*_ps
 * top module vs lower level naming convention
+* Parameters preferred over defines for top-level module config
 * Interrupt registers
 * interfaces, structs, ports
 * suffixes
