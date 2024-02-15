@@ -1,0 +1,17 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0_trng", "Lop_trng_regression", "top_trng_regression"]
+      paths:
+        - ../test_suites/smoke_test_veer/smoke_test_veer.yml
+        - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
+        - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
+        - ../test_suites/c_intr_handler/c_intr_handler.yml
+        - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
+        - ../test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
+        - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
+        - ../test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml

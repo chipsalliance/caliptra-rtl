@@ -121,6 +121,7 @@ enum test_list {
     MBOX_SRAM_ECC_DOUBLE_UNMASKED     ,
     MBOX_SRAM_ECC_SINGLE_MASKED       ,
     MBOX_SRAM_ECC_DOUBLE_MASKED       ,
+#ifndef CALIPTRA_MODE_SEED
     ICCM_SRAM_ECC_SINGLE_IFU_UNMASKED ,
     ICCM_SRAM_ECC_DOUBLE_IFU_UNMASKED ,
     ICCM_SRAM_ECC_SINGLE_IFU_MASKED   ,
@@ -129,6 +130,7 @@ enum test_list {
     ICCM_SRAM_ECC_DOUBLE_LSU_UNMASKED ,
     ICCM_SRAM_ECC_SINGLE_LSU_MASKED   ,
     ICCM_SRAM_ECC_DOUBLE_LSU_MASKED   ,
+#endif
     DCCM_SRAM_ECC_SINGLE_LOAD_UNMASKED,
     DCCM_SRAM_ECC_DOUBLE_LOAD_UNMASKED,
     DCCM_SRAM_ECC_SINGLE_LOAD_MASKED  ,
@@ -170,7 +172,9 @@ enum boot_count_list {
 ////////////////////////////////////////////////////////////////////
 // Globals
 //
+#ifndef CALIPTRA_MODE_SEED
 extern uintptr_t iccm_code0_start, iccm_code0_end;
+#endif
 volatile char* stdout = (char *)STDOUT;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -213,6 +217,7 @@ enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.per
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
+#ifndef CALIPTRA_MODE_SEED
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
@@ -221,6 +226,7 @@ enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.per
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
+#endif
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
@@ -246,9 +252,11 @@ void     run_mbox_sram_ecc  (enum ecc_error_mode_type type, enum mask_config tes
 uint32_t check_mbox_sram_ecc(enum ecc_error_mode_type type, enum mask_config test_mask);
 uint32_t test_mbox_sram_ecc       (enum mask_config test_mask);
 
+#ifndef CALIPTRA_MODE_SEED
 /* ICCM ECC */
 uint32_t run_iccm_sram_ecc        (enum mask_config test_mask, enum read_config read_mask);
 uint32_t check_iccm_sram_ecc      (enum mask_config test_mask, enum read_config read_mask);
+#endif
 
 /* DCCM ECC */
 uint32_t run_dccm_sram_ecc        (enum mask_config test_mask, enum dccm_read_config read_path);
@@ -266,7 +274,9 @@ uint32_t check_nmi_test           (enum mask_config test_mask);
 
 /* Supporting code */
 void nmi_handler       (void);
+#ifndef CALIPTRA_MODE_SEED
 void execute_from_iccm (void) __attribute__ ((aligned(4),section (".data_iccm0")));
+#endif
 
 
 ////////////////////////////////////////////////////////////////////
@@ -419,6 +429,7 @@ uint32_t test_mbox_sram_ecc (enum mask_config test_mask) {
     check_mbox_sram_ecc(MBOX_DOUBLE, test_mask);
 }
 
+#ifndef CALIPTRA_MODE_SEED
 uint32_t run_iccm_sram_ecc (enum mask_config test_mask, enum read_config read_mask) {
     enum test_list cur_test;
 
@@ -610,6 +621,7 @@ uint32_t check_iccm_sram_ecc (enum mask_config test_mask, enum read_config read_
 
     return sts;
 }
+#endif
 
 // TODO should test both DMA slave and internal DCCM accesses?
 uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config read_path) {
@@ -1079,6 +1091,7 @@ uint32_t check_mbox_ooo_error(enum mask_config test_mask) {
     return sts;
 }
 
+#ifndef CALIPTRA_MODE_SEED
 void execute_from_iccm (void) {
     // Do a bunch of nonsense tasks just to populate the code space.
     // When running this routine, we expect to encounter ICCM ECC Errors and
@@ -1124,6 +1137,7 @@ void execute_from_iccm (void) {
         return;
     }
 }
+#endif
 
 // In the ROM .text section
 void nmi_handler (void) {
@@ -1187,12 +1201,17 @@ void main(void) {
         // No reset expected following MBOX SRAM ECC Error injection
 
         // Test ICCM SRAM ECC
+        // (Skip this test for SEED config)
+        #ifdef CALIPTRA_MODE_SEED
+        if      (boot_count == BEFORE_FIRST_ICCM_FAILURE)  { boot_count = BEFORE_FIRST_DCCM_FAILURE;   }
+        #else
         if      (boot_count == BEFORE_FIRST_ICCM_FAILURE)  {   run_iccm_sram_ecc(NO_MASK,   FROM_IFU); }
         else if (boot_count == BEFORE_SECOND_ICCM_FAILURE) { check_iccm_sram_ecc(NO_MASK,   FROM_IFU);
                                                                run_iccm_sram_ecc(WITH_MASK, FROM_IFU); }
         else if (boot_count == BEFORE_THIRD_ICCM_FAILURE)  { check_iccm_sram_ecc(WITH_MASK, FROM_IFU);
                                                                run_iccm_sram_ecc(NO_MASK,   FROM_LSU); }
         else if (boot_count == BEFORE_FIRST_DCCM_FAILURE)  { check_iccm_sram_ecc(NO_MASK,   FROM_LSU); }
+        #endif
 
         // Test DCCM SRAM ECC
         if      (boot_count == BEFORE_FIRST_DCCM_FAILURE) {   run_dccm_sram_ecc(NO_MASK  , DATA_LOAD); }
@@ -1209,9 +1228,13 @@ void main(void) {
         else if (boot_count == BEFORE_SECOND_NMI_FAILURE){               check_nmi_test(NO_MASK  );
                                                                            run_nmi_test(WITH_MASK); }
         else if (boot_count == BEFORE_THIRD_NMI_FAILURE) {               check_nmi_test(WITH_MASK);
+        #ifdef CALIPTRA_MODE_SEED
+                                                           boot_count = AFTER_THIRD_NMI_FAILURE;    }
+        #else
         // Test NMI from Masked ICCM ECC through LSU
                                                             run_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
         else if (boot_count == AFTER_THIRD_NMI_FAILURE) { check_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
+        #endif
 
         // Test Mailbox Protocol Violations (no reset expected)
         if      (boot_count == AFTER_THIRD_NMI_FAILURE) {    run_mbox_no_lock_error  (  NO_MASK);
