@@ -117,14 +117,18 @@ endif
 
 # RK
 # provide specific link file
-ifeq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
-    ifdef CALIPTRA_MODE_SEED
-	LINK = $(RISCV_HW_IF_DIR)/link_seed.ld
-    else
-	LINK = $(RISCV_HW_IF_DIR)/link.ld
-    endif
+ifdef CALIPTRA_MODE_SEED
+ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)_seed.ld))
+	LINK = $(TEST_DIR)/$(TESTNAME)_seed.ld
 else
+	LINK = $(RISCV_HW_IF_DIR)/link_seed.ld
+endif
+else
+ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME).ld))
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
+else
+	LINK = $(RISCV_HW_IF_DIR)/link.ld
+endif
 endif
 
 VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR) $(COMP_LIBS)
