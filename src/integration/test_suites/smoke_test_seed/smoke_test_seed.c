@@ -61,7 +61,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 
 extern uintptr_t stack_start;
 extern uintptr_t STACK;
-static uint32_t persistent_exec_cnt __attribute__ ((section(".dccm.persistent"))) = 0; // Allocate in .dccm
 
 void main(void) {
         int argc=0;
@@ -79,7 +78,6 @@ void main(void) {
 
         // Initialize the globals
         intr_count = 0;
-        persistent_exec_cnt++;
 
         // Check ICCM_LOCK is not currently set
         if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK) & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK == SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
