@@ -41,7 +41,7 @@ SECTIONS {
   ASSERT( _end < 0x00010000, "ERROR: ROM size exceeds 64KiB")
 
   /* DCCM as VMA and LMA */
-  . = 0x50000000;
+  . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
   .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
