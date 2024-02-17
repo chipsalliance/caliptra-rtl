@@ -27,7 +27,7 @@ SECTIONS {
    * when copying to DCCM */
   _data_lma_start = ALIGN(4);
   _data_vma_start = 0x50000000;
-  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
+  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
   _data_lma_end = _data_lma_start + SIZEOF(.data);
   _data_vma_end = _data_vma_start + SIZEOF(.data);
 
