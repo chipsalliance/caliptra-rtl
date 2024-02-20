@@ -148,21 +148,31 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
     for (ii=0; ii<agents; ii++) begin
         void'(std::randomize(seq_type) with { seq_type dist { SMALL                 := 100,
                                                               MEDIUM                := 50,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                               LARGE                 := 1,
+                                                             `endif
                                                               OVERFLOW_SMALL        := 50,
                                                               OVERFLOW_MEDIUM       := 30,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                               OVERFLOW_LARGE        := 1,
+                                                             `endif
                                                               UNDERFLOW_SMALL       := 50,
                                                               UNDERFLOW_MEDIUM      := 30,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                               UNDERFLOW_LARGE       := 1,
+                                                             `endif
                                                               MIN                   := 50,
                                                               MAX                   := 50,
                                                               DELAY_SMALL           := 100,
                                                               DELAY_MEDIUM          := 50,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                               DELAY_LARGE           := 1,
+                                                             `endif
                                                               PAUSER_SMALL          := 50,
                                                               PAUSER_MEDIUM         := 20,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                               PAUSER_LARGE          := 1,
+                                                             `endif
                                                               INTERFERENCE_MEDIUM   := 10   }; });
         case (seq_type) inside
             SMALL:

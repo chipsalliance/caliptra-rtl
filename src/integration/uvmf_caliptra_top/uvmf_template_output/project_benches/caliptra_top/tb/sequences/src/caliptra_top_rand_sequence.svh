@@ -92,29 +92,43 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           //IDX_SOC_IFC_ENV_MBOX_RAND_FW                := 0,
           IDX_SOC_IFC_ENV_MBOX_RAND_SMALL               := 20,
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM              := 20,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE               := 2,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_MIN                      := 100,
           IDX_SOC_IFC_ENV_MBOX_MAX                      := 10,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL        := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM       := 100,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE        := 10,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL         := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM        := 100,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE         := 5,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID             := 10,
           IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_SMALL      := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_MEDIUM     := 100,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_LARGE      := 10,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_SMALL     := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_MEDIUM    := 100,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE     := 10,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL        := 200,
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM       := 200,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE        := 20,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL          := 200,
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM         := 200,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE          := 10,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT              := 200,
           IDX_SOC_IFC_ENV_RST_WARM                      := 100,
           IDX_SOC_IFC_ENV_RST_COLD                      := 100,
