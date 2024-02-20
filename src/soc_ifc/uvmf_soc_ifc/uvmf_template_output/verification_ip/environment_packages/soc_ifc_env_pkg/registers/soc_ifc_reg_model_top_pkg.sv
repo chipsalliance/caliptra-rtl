@@ -884,7 +884,7 @@ package soc_ifc_reg_model_top_pkg;
 
         // inst all soc_ifc register blocks and memory model as single reg block
         /*mbox_mem_ahb_apb*/
-        this.mbox_mem_rm = new("mbox_mem_rm", 18'h8000, 32, "RW", UVM_NO_COVERAGE);
+        this.mbox_mem_rm = new("mbox_mem_rm", 18'(MBOX_DEPTH), 32, "RW", UVM_NO_COVERAGE);
         this.mbox_mem_rm.configure(this);
 
         /*mbox_csr_ahb_apb*/

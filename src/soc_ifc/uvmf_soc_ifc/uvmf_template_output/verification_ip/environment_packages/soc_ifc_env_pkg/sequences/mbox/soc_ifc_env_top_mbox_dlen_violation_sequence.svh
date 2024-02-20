@@ -59,10 +59,14 @@ function soc_ifc_env_top_mbox_dlen_violation_sequence::create_seqs();
                                                                  MBOX_MAX              :/ 100,
                                                                  MBOX_UNDERFLOW_SMALL  :/ 100,
                                                                  MBOX_UNDERFLOW_MEDIUM :/ 100,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                                  MBOX_UNDERFLOW_LARGE  :/ 10,
+                                                             `endif
                                                                  MBOX_OVERFLOW_SMALL   :/ 100,
                                                                  MBOX_OVERFLOW_MEDIUM  :/ 100,
+                                                             `ifndef CALIPTRA_MODE_SEED
                                                                  MBOX_OVERFLOW_LARGE   :/ 10,
+                                                             `endif
                                                                  MBOX_INVALID          :/ 10};})
         `uvm_fatal("SOC_IFC_MBOX_TOP", "Failed to randomize sub-sequence types")
 

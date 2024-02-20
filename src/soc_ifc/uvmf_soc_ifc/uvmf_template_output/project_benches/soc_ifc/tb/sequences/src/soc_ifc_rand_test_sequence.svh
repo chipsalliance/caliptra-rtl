@@ -80,25 +80,37 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
       rand_seq_idx dist {
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL                := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM               := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE                := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_MIN                       := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MAX                       := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK        := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK         := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION                := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM        := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE         := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_SMALL_UNLOCK  := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_MEDIUM_UNLOCK := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_PAUSER_LARGE_UNLOCK  := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL          := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM         := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE          := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM        := 25,
+         `ifndef CALIPTRA_MODE_SEED
           IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE         := 1,
+         `endif
           IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION            := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT               := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL          := 25,
