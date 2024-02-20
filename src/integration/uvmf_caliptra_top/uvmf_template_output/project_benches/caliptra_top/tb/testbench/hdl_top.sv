@@ -113,7 +113,7 @@ import uvmf_base_pkg_hdl::*;
     mbox_sram_resp_t mbox_sram_resp;
     logic mbox_sram_cs_stub_inactive;
     logic mbox_sram_we_stub_inactive;
-    logic [14:0] mbox_sram_addr_stub_inactive;
+    logic [MBOX_ADDR_W-1:0] mbox_sram_addr_stub_inactive;
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_stub_inactive;
     logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata_stub_inactive;
 
