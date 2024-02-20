@@ -111,6 +111,7 @@ module caliptra_top_tb (
     logic                       jtag_tdi;    // JTAG tdi
     logic                       jtag_trst_n; // JTAG Reset
     logic                       jtag_tdo;    // JTAG TDO
+    logic                       jtag_tdoEn;  // JTAG TDO enable
     //APB Interface
     logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR;
     logic [2:0]                          PPROT;
@@ -1079,6 +1080,7 @@ caliptra_top caliptra_top_dut (
     .jtag_tms(jtag_tms),
     .jtag_trst_n(jtag_trst_n),
     .jtag_tdo(jtag_tdo),
+    .jtag_tdoEn(jtag_tdoEn),
     
     .PADDR(PADDR),
     .PPROT(PPROT),
