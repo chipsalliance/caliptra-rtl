@@ -108,6 +108,7 @@ import uvmf_base_pkg_hdl::*;
     logic                       jtag_tdi    = '0; // JTAG tdi
     logic                       jtag_trst_n = '0; // JTAG Reset
     logic                       jtag_tdo;    // JTAG TDO
+    logic                       jtag_tdoEn;  // JTAG TDO enable
 
     mbox_sram_req_t mbox_sram_req;
     mbox_sram_resp_t mbox_sram_resp;
@@ -196,6 +197,7 @@ import uvmf_base_pkg_hdl::*;
         .jtag_tms   (jtag_tms   ),
         .jtag_trst_n(jtag_trst_n),
         .jtag_tdo   (jtag_tdo   ),
+        .jtag_tdoEn (jtag_tdoEn ),
         
         .PADDR  (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR      ),
         .PPROT  (3'b000/*FIXME*/                                                                                  ),
