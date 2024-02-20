@@ -242,8 +242,8 @@
             bins zero_val = {15'h0};
             bins rand_val[32] = {[1:15'h7FFE]};
             bins ones_val = {{15{1'b1}}};
-            wildcard bins set = (0 => 15'h????_????);
-            wildcard bins clr = (15'h????_???? => 0);
+            wildcard bins set = (0 => 15'h????);
+            wildcard bins clr = (15'h???? => 0);
         }
         status_edge_cp : coverpoint status {
             bins rise = (0 => 1);
