@@ -207,6 +207,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   virtual task run_firmware_init(soc_ifc_env_mbox_real_fw_sequence_t fmc_seq, soc_ifc_env_mbox_real_fw_sequence_t rt_seq);
     bit ready_for_fw = 0;
     bit ready_for_rt = 0;
+   `ifndef CALIPTRA_MODE_SEED
     while (!ready_for_fw) begin
         while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
         `uvm_info("CALIPTRA_TOP_RAND_TEST", "Observed status response, checking contents", UVM_DEBUG)
@@ -219,6 +220,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     if (!rt_seq.randomize() with { rt_seq.mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_RT_UPDATE); })
         `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - rt_seq randomization failed")
     rt_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+   `endif
 
     // Wait for RT image to set the ready_for_rt bit
     while (!ready_for_rt) begin
