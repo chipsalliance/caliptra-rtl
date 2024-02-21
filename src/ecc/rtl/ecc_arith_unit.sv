@@ -45,7 +45,7 @@ module ecc_arith_unit
     input wire           zeroize,
 
     // DATA PORT
-    input  wire [2 : 0]                     ecc_cmd_i,
+    input  wire [3 : 0]                     ecc_cmd_i,
     input  wire                             sca_en_i,
     input  wire [ADDR_WIDTH-1 : 0]          addr_i,
     input  wire                             wr_op_sel_i,

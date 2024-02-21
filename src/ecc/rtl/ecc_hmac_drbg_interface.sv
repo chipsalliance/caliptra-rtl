@@ -46,7 +46,7 @@ module ecc_hmac_drbg_interface#(
     input wire                      clk,
     input wire                      reset_n,
     input wire                      zeroize,
-    input wire                      keygen_sign,
+    input wire  [1 : 0]             hmac_mode,
     input wire                      en,
     output wire                     ready,
 
@@ -69,7 +69,6 @@ module ecc_hmac_drbg_interface#(
     logic [REG_SIZE-1 : 0]  lfsr_seed_reg;
     logic [REG_SIZE-1 : 0]  hmac_lfsr_seed;
 
-    logic                   hmac_mode;
     logic                   hmac_drbg_init;
     logic                   hmac_drbg_next;
     logic                   hmac_drbg_ready;
@@ -89,6 +88,10 @@ module ecc_hmac_drbg_interface#(
     logic [63 : 0]          counter_reg;
     logic [REG_SIZE-1 : 0]  counter_nonce;
     logic [REG_SIZE-1 : 0]  counter_nonce_reg;
+
+    localparam [1 : 0] KEYGEN_CMD       = 2'b00;
+    localparam [1 : 0] SIGN_CMD         = 2'b01;
+    localparam [1 : 0] DH_SHARED_CMD    = 2'b10;
 
     /*State register*/
     reg [3 : 0]  state_reg;
@@ -167,7 +170,6 @@ module ecc_hmac_drbg_interface#(
 
     always_comb
     begin :hmac_trigger
-        hmac_mode = (state_reg == SIGN_ST);
         hmac_drbg_init = 0;
         hmac_drbg_next = 0;
         if (first_round) begin
@@ -295,7 +297,7 @@ module ecc_hmac_drbg_interface#(
             LFSR_ST:        state_next = (hmac_done_edge)? LAMBDA_ST : LFSR_ST;
             LAMBDA_ST:      state_next = (hmac_done_edge)? SCALAR_RND_ST : LAMBDA_ST;
             SCALAR_RND_ST:  state_next = (hmac_done_edge)? RND_DONE_ST : SCALAR_RND_ST;
-            RND_DONE_ST:    state_next = (keygen_sign)? MASKING_RND_ST : KEYGEN_ST;
+            RND_DONE_ST:    state_next = (hmac_mode == SIGN_CMD)? MASKING_RND_ST : (hmac_mode == KEYGEN_CMD)? KEYGEN_ST : DONE_ST;
             MASKING_RND_ST: state_next = (hmac_done_edge)? SIGN_ST : MASKING_RND_ST;
             KEYGEN_ST:      state_next = (hmac_done_edge)? DONE_ST : KEYGEN_ST;
             SIGN_ST:        state_next = (hmac_done_edge)? DONE_ST: SIGN_ST;

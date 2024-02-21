@@ -67,12 +67,13 @@ addrmap ecc_reg {
     /* ---- ECC Component Control ---- */
     reg {
         name = "ECC component control register type definition";
-        desc = "One 4-bit register to set the type of ECC operations.
-                [br] bit #[1:0]: This can be: 
-                [br]             00 for NONE
-                [br]             01 for KEYGEN
-                [br]             10 for SIGNING
-                [br]             11 for VERIFYING
+        desc = "Control register to set the type of ECC operations.
+                [br] bit #[2:0]: This can be: 
+                [br]             000 for NONE
+                [br]             001 for KEYGEN
+                [br]             010 for ECDSA SIGNING
+                [br]             011 for ECDSA VERIFYING
+                [br]             100 for ECDH SHARED KEY
                 [br] bit #2: Zeroize all internal registers after ECC process, to avoid SCA leakage.
                 [br] bit #3: Run ECC Signing flow to sign PCRs.
                 [br] This register is located at ECC_base_address + 0x0000_0010.";
@@ -80,7 +81,7 @@ addrmap ecc_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control command field"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
+        field {desc = "Control command field"; swwe = ecc_ready; hwclr;} CTRL[3] = 3'b0;
         field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Run PCR Signing flow"; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
     
@@ -322,7 +323,26 @@ addrmap ecc_reg {
     
     } ECC_IV[12] @0x00000480;
 
-    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000600;
+
+    /* ---- ECC Component Output DH Shared Key ---- */
+    reg {
+        name = "ECC component DH shared key register type definition";
+        desc = "12 32-bit registers storing the 384-bit Diffie-Hellman shared key. 
+                These registers is read by ECC user after ECDH operation.
+                The shared key should be in [1 : p-1] while p is the prime
+                number of the Secp384r1 curve.
+                These registers are located at ECC_base_address + 
+                0x0000_0600 to 0x0000_062C in big-endian representation.";
+
+        default sw = r;
+        default hw = w;
+        default we = true;
+        default resetsignal = reset_b;
+        field {desc = "DH Shared Key field"; hwclr;} DH_SHARED_KEY[32] = 32'b0;
+    
+    } ECC_DH_SHARED_KEY[12] @0x00000600;
+
+    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000700;
     kv_status_reg ecc_kv_rd_pkey_status;
     kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
     kv_status_reg ecc_kv_rd_seed_status;
