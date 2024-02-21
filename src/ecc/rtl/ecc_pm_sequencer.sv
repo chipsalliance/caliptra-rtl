@@ -2548,6 +2548,18 @@ module ecc_pm_sequencer
                     VER2_PA_S+ 80  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ZERO}; // Zinv_IN = P1_Z
                     VER2_PA_S+ 81  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_IN,     UOP_OPR_DONTCARE};
 
+                    //DH SHARED KEY R1 INIT with PK
+                    PM_INIT_DH_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_LAMBDA,            UOP_OPR_CONST_R2_p};   // R1_Z = mm(Lambda, R2)
+                    PM_INIT_DH_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Z};
+                    PM_INIT_DH_S+ 2  : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qx_AFFN,           UOP_OPR_CONST_R2_p};   // R1_X = mm(PK_X, R2)
+                    PM_INIT_DH_S+ 3  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_X};
+                    PM_INIT_DH_S+ 4  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R1_X,              UOP_OPR_R1_Z};         // R1_X = mm(PKX_MONT, R0_Z)
+                    PM_INIT_DH_S+ 5  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_X};
+                    PM_INIT_DH_S+ 6  : douta <= {UOP_DO_MUL_p,   UOP_OPR_Qy_AFFN,           UOP_OPR_CONST_R2_p};   // R1_Y = mm(PK_Y, R2)
+                    PM_INIT_DH_S+ 7  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Y};
+                    PM_INIT_DH_S+ 8  : douta <= {UOP_DO_MUL_p,   UOP_OPR_R1_Y,              UOP_OPR_R1_Z};         // R1_Y = mm(PKY_MONT, R0_Z)
+                    PM_INIT_DH_S+ 9  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Y};
+
                     default : douta <= {UOP_NOP,     UOP_OPR_DONTCARE,  UOP_OPR_DONTCARE};
                 endcase 
             end

@@ -35,6 +35,7 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ecdsa.h"
+#include "mbedtls/ecdh.h"
 #include "mbedtls/sha512.h"
 #include "mbedtls/hmac_drbg.h"
 
@@ -186,7 +187,7 @@ int main( int argc, char *argv[] )
     //mbedtls_printf("Caliptra testvector generator for ECDSA secp384r1");
     int ret = 1;
     int exit_code = MBEDTLS_EXIT_FAILURE;
-    mbedtls_ecdsa_context ctx_sign, ctx_verify;
+    mbedtls_ecdsa_context ctx_sign, ctx_verify, ctx_sign_B;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
     unsigned char message[48];
@@ -205,15 +206,30 @@ int main( int argc, char *argv[] )
     
     mbedtls_mpi random_seed;
     mbedtls_mpi random_nonce;
+    mbedtls_mpi z;
+    mbedtls_mpi temp_pubkeyX;
     const mbedtls_md_info_t *md_info;
     unsigned char seed_buf[48];
     size_t seed_buf_len  = sizeof(seed_buf);
     unsigned char nonce_buf[48];
     size_t nonce_buf_len  = sizeof(nonce_buf);
+    unsigned char z_buf[48];
+    size_t z_buf_len  = sizeof(z_buf);
     mbedtls_hmac_drbg_context rng_ctx;
     mbedtls_hmac_drbg_context *p_rng = &rng_ctx;
 
+    uint8_t privkey_buf[48];
+    size_t privkey_buf_len = sizeof(privkey_buf);
+    unsigned char pubkeyX_buf[97];
+    size_t pubkeyX_buf_len = sizeof(pubkeyX_buf);
+    uint8_t pubkeyY_buf[48];
+    size_t pubkeyY_buf_len = sizeof(pubkeyY_buf);
+
+    unsigned char pubkey_test[144];
+    size_t pubkey_test_len = sizeof(pubkey_test);
+
     mbedtls_ecdsa_init( &ctx_sign );
+    mbedtls_ecdsa_init( &ctx_sign_B );
     mbedtls_ecdsa_init( &ctx_verify );
     mbedtls_ctr_drbg_init( &ctr_drbg );
     
@@ -313,6 +329,12 @@ int main( int argc, char *argv[] )
         goto exit;
     }
 
+
+    // mbedtls_mpi_read_binary(&ctx_sign.MBEDTLS_PRIVATE(d), privkey_buf, privkey_buf_len);
+    // Note - for below function to work (to read from buffer into ecp_point struct), format for data input is {0x04, pubkey.X, pubkey.Y}
+    // mbedtls_ecp_point_read_binary(&ctx_sign.MBEDTLS_PRIVATE(grp), &ctx_sign.MBEDTLS_PRIVATE(Q), pubkeyX_buf, pubkeyX_buf_len);
+
+
     //mbedtls_printf( " ok (key size: %d bits)\n", (int) ctx_sign.MBEDTLS_PRIVATE(grp).pbits );
     
 
@@ -337,7 +359,6 @@ int main( int argc, char *argv[] )
     //mbedtls_printf( " ok\n" );
     //dump_buf( "  + message: ", message, sizeof( message ) );
     //dump_buf( "  + Hash: ", hash, sizeof( hash ) );
-
 
 
     /*
@@ -439,8 +460,59 @@ int main( int argc, char *argv[] )
     print_1_array(fptr, IV, IV_len);
     print_1_array(fptr_all, IV, IV_len);
 
-    print_1_uchar(fptr_all,'\n'); 
+    // print_1_uchar(fptr_all,'\n'); 
 
+    /*
+     * Generate ECDH shared key
+     * Method 1: Reuse pubkey, generate other party's privkey, compute ECDH shared key
+     * Method 2: Reuse privkey, generate other party's pubkey by calling keygen again, compute ECDH shared key
+     */
+    
+    /*
+     * Generate keypair for B
+     */
+    if( ( ret = mbedtls_ecdsa_genkey( &ctx_sign_B, ECPARAMS,
+                              mbedtls_hmac_drbg_random, p_rng ) ) != 0 )
+    {
+        mbedtls_printf( " failed\n  ! mbedtls_ecdsa_genkey returned %d\n", ret );
+        goto exit;
+    }
+
+    //Print only privkeyB to file since A's pubkey is used to compute shared key
+    //"private key "
+    dump_privkey(fptr, "  + Private key B:  ", &ctx_sign_B );
+    dump_privkey(fptr_all, "  + Private key B:  ", &ctx_sign_B );
+    // //"public key "
+    // dump_pubkey(fptr, "  + Public key B:  ", &ctx_sign_B );
+    // dump_pubkey(fptr_all, "  + Public key B:  ", &ctx_sign_B );
+
+    /*
+     * Compute ECDH shared key (Method 1 - reuse pubkey)
+     */
+    mbedtls_mpi_init( &z);
+    if ( ( ret = mbedtls_ecdh_compute_shared(&ctx_sign.MBEDTLS_PRIVATE(grp), &z, &ctx_sign.MBEDTLS_PRIVATE(Q), &ctx_sign_B.MBEDTLS_PRIVATE(d),mbedtls_hmac_drbg_random, p_rng) ) != 0 )
+    {
+        mbedtls_printf( "failed\n ! mbedtls_ecdh_compute_shared returned %d\n", ret );
+        // goto exit;
+    }
+    mbedtls_mpi_write_binary( &z, z_buf , z_buf_len );
+
+    // /*
+    //  * Compute ECDH shared key (Method 2 - reuse privkey)
+    //  */
+    // mbedtls_mpi_init( &z);
+    // if ( ( ret = mbedtls_ecdh_compute_shared(&ctx_sign.MBEDTLS_PRIVATE(grp), &z, &ctx_sign_B.MBEDTLS_PRIVATE(Q), &ctx_sign.MBEDTLS_PRIVATE(d),mbedtls_hmac_drbg_random, p_rng) ) != 0 )
+    // {
+    //     mbedtls_printf( "failed\n ! mbedtls_ecdh_compute_shared returned %d\n", ret );
+    //     goto exit;
+    // }
+    // mbedtls_mpi_write_binary( &z, z_buf , z_buf_len );
+
+    //"shared key "
+    print_1_array(fptr, z_buf, z_buf_len);
+    print_1_array(fptr_all, z_buf, z_buf_len);
+
+    print_1_uchar(fptr_all,'\n'); 
 
     exit_code = MBEDTLS_EXIT_SUCCESS;
 
@@ -448,6 +520,7 @@ exit:
 
     mbedtls_ecdsa_free( &ctx_verify );
     mbedtls_ecdsa_free( &ctx_sign );
+    mbedtls_ecdsa_free( &ctx_sign_B );
     mbedtls_ctr_drbg_free( &ctr_drbg );
     mbedtls_entropy_free( &entropy );
 
