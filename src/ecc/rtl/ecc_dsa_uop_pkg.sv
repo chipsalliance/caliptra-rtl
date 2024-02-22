@@ -27,21 +27,22 @@
 package ecc_dsa_uop_pkg;
 
 
-localparam integer DSA_UOP_ADDR_WIDTH       = 8;
+localparam integer DSA_UOP_ADDR_WIDTH       = 9;
 localparam integer DSA_OPR_ADDR_WIDTH       = 6;
 
 localparam DSA_PROG_ADDR_W                  = 7; //$clog2(DSA_VER_E+2);
 localparam DSA_INSTRUCTION_LENGTH           = DSA_UOP_ADDR_WIDTH + (2*DSA_OPR_ADDR_WIDTH);    // opcode + 2 * operand
 
-typedef enum logic[2 : 0]
+typedef enum logic[3 : 0]
 {
-    no_cmd      = 3'b000,
-    keygen_cmd  = 3'b001,
-    sign_cmd    = 3'b010,
-    verify0_cmd = 3'b100,
-    verify1_cmd = 3'b101,
-    verify2_cmd = 3'b110,
-    pk_chk_cmd  = 3'b111
+    no_cmd          = 4'b0000,
+    keygen_cmd      = 4'b0001,
+    sign_cmd        = 4'b0010,
+    verify0_cmd     = 4'b0100,
+    verify1_cmd     = 4'b0101,
+    verify2_cmd     = 4'b0110,
+    pk_chk_cmd      = 4'b0111,
+    shared_key_cmd  = 4'b1000
 } cmd_t;
 
 typedef struct packed
@@ -74,6 +75,7 @@ localparam opcode_t DSA_UOP_VERIFY2       = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1
 localparam opcode_t DSA_UOP_PK_CHK        = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:pk_chk_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0011_1000;
 localparam opcode_t DSA_UOP_HMAC_DRBG     = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b1, sca_en:1'b0}; // = 8'b0100_0000;
 localparam opcode_t DSA_UOP_SCALAR_SCA    = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:no_cmd,      hmac_drbg_en:1'b0, sca_en:1'b1}; // = 8'b1000_0000;
+localparam opcode_t DH_UOP_SHAREDKEY      = '{op_sel:1'b0,   wr_en:1'b0, rd_en:1'b0, pm_cmd:shared_key_cmd,  hmac_drbg_en:1'b0, sca_en:1'b0}; // = 8'b0000_1000;
 
 // DSA REGISTERS ID listing
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] NOP_ID                   = 6'd0;
@@ -103,16 +105,20 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] VERIFY_R_ID              = 6'd26;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] LAMBDA_ID                = 6'd27;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MASKING_ID               = 6'd28;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] PK_VALID_ID              = 6'd29;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] DH_SHAREDKEY_ID          = 6'd30;
+
 
 // DSA Subroutine listing
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_RESET                    = 6'd0;
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_NOP                      = 6'd12;  
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_S                     = DSA_NOP + 2; 
+localparam [DSA_PROG_ADDR_W-1 : 0] ECC_RESET                    = 6'd0;
+localparam [DSA_PROG_ADDR_W-1 : 0] ECC_NOP                      = 6'd12;  
+localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_S                     = ECC_NOP + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_E                     = DSA_KG_S + 12; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_S                    = DSA_KG_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_E                    = DSA_SGN_S + 14; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_S                    = DSA_SGN_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 23;
+localparam [DSA_PROG_ADDR_W-1 : 0] DH_SHARED_S                  = DSA_VER_E + 2; 
+localparam [DSA_PROG_ADDR_W-1 : 0] DH_SHARED_E                  = DH_SHARED_S + 17; 
 
 
 endpackage

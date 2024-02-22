@@ -133,12 +133,13 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_b         = 6'd56;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PK_VALID          = 6'd57;
 
 //PM command listing
-localparam [2 : 0] KEYGEN_CMD           = 3'b001;
-localparam [2 : 0] SIGN_CMD             = 3'b010;
-localparam [2 : 0] VER_PART0_CMD        = 3'b100;    
-localparam [2 : 0] VER_PART1_CMD        = 3'b101;    
-localparam [2 : 0] VER_PART2_CMD        = 3'b110;
-localparam [2 : 0] CHK_PK_CMD           = 3'b111;
+localparam [3 : 0] KEYGEN_CMD           = 4'b0001;
+localparam [3 : 0] SIGN_CMD             = 4'b0010;
+localparam [3 : 0] VER_PART0_CMD        = 4'b0100;    
+localparam [3 : 0] VER_PART1_CMD        = 4'b0101;    
+localparam [3 : 0] VER_PART2_CMD        = 4'b0110;
+localparam [3 : 0] CHK_PK_CMD           = 4'b0111;
+localparam [3 : 0] DH_SHARED_CMD        = 4'b1000;
 
 //PM Subroutine listing
 localparam [PROG_ADDR_W-1 : 0] NOP                  = 12'd0;
@@ -174,6 +175,9 @@ localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_S         = VER1_ST_E + 2;  // verifyi
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_E         = PM_INIT_PK_S + 5;
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_E            = VER2_PA_S + 81;
+
+localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER2_PA_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
+localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_E         = PM_INIT_DH_S + 9;
 
 endpackage
 

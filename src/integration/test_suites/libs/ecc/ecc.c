@@ -157,6 +157,104 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
 }
 
 
+void ecc_sharedkey_flow(ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey){
+    uint8_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t ecc_privkey   [12];
+    uint32_t ecc_sharedkey [12];
+    
+    // wait for ECC to be ready
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+    if(privkey.kv_intf){
+        // Program PRIVKEY Read with 12 dwords from pkey_kv_id
+        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                    ((privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+        // Check that ECC PKEY is loaded
+        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK) == 0);
+    }
+    else{
+        // Program ECC PRIVKEY
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+            *reg_ptr++ = privkey.data[offset++];
+        }
+    }
+    
+    // Write PUBKEY_X
+    printf("Store PUBKEY_X data in ECC\n");
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+        *reg_ptr++ = pubkey_x.data[offset++];
+    }
+
+    // Write PUBKEY_Y
+    printf("Store PUBKEY_Y data in ECC\n");
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+        *reg_ptr++ = pubkey_y.data[offset++];
+    }
+
+    // Write ECC nonce
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_NONCE_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_NONCE_11) {
+        *reg_ptr++ = nonce.data[offset++];
+    }
+
+    // Write ECC IV
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+        *reg_ptr++ = iv.data[offset++];
+    }
+
+    if (sharedkey.kv_intf){
+        // set privkey DEST to write
+        lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, (ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
+                                                    ((sharedkey.kv_id << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
+    }
+
+    printf("\nECC SHAREDKEY\n");
+    // Enable ECC SHAREDKEY core
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
+
+    // wait for ECC KEYGEN process to be done
+    wait_for_ecc_intr();
+    
+    if (sharedkey.kv_intf){
+        printf("Wait for KV write\n");
+        // check dest done
+        while((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) & ECC_REG_ECC_KV_WR_PKEY_STATUS_VALID_MASK) == 0);
+    }
+    else{
+        // Read the data back from ECC register
+        printf("Load SHAREDKEY data from ECC\n");
+        reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_DH_SHARED_KEY_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_DH_SHARED_KEY_11) {
+            ecc_sharedkey[offset] = *reg_ptr;
+            if (ecc_sharedkey[offset] != sharedkey.data[offset]) {
+                printf("At offset [%d], ecc_sharedkey data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", ecc_sharedkey[offset]);
+                printf("Expected data: 0x%x\n", sharedkey.data[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
+    }
+    
+}
+
 void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
