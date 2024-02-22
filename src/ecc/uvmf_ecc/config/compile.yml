@@ -42,7 +42,7 @@ targets:
       - hdl_top
       - hvl_top
   sim:
-    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generator to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc.exe .'
+    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generator to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc_secp384r1.exe .'
 global:
   tool:
     vcs:

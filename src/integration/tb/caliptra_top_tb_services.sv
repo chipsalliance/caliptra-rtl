@@ -804,7 +804,7 @@ endgenerate //IV_NO
         string    file_name;
         begin
 
-        $system("./ecc.exe");
+        $system("./ecc_secp384r1.exe");
 
         file_name = "secp384_testvector.hex";
         if (!UVM_TB) ecc_read_test_vectors(file_name);
