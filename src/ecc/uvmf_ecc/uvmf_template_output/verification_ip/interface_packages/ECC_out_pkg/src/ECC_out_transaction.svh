@@ -34,6 +34,7 @@ class ECC_out_transaction #(
   bit [OUTPUT_TEXT_WIDTH-1:0] result_R ;
   bit [OUTPUT_TEXT_WIDTH-1:0] result_S ;
   bit [OUTPUT_TEXT_WIDTH-1:0] result_verify_R ;
+  bit [OUTPUT_TEXT_WIDTH-1:0] result_sharedkey ;
 
   //Constraints for the transaction variables:
 
@@ -116,7 +117,7 @@ class ECC_out_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("result_privkey:0x%x result_pubkey_x:0x%x result_pubkey_y:0x%x result_R:0x%x result_S:0x%x result_verify_R:0x%x ",result_privkey,result_pubkey_x,result_pubkey_y,result_R,result_S,result_verify_R);
+    return $sformatf("result_privkey:0x%x result_pubkey_x:0x%x result_pubkey_y:0x%x result_R:0x%x result_S:0x%x result_verify_R:0x%x result_sharedkey:0x%x",result_privkey,result_pubkey_x,result_pubkey_y,result_R,result_S,result_verify_R, result_sharedkey);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -155,6 +156,7 @@ class ECC_out_transaction #(
             &&(this.result_R == RHS.result_R)
             &&(this.result_S == RHS.result_S)
             &&(this.result_verify_R == RHS.result_verify_R)
+            &&(this.result_sharedkey == RHS.result_sharedkey)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -180,6 +182,7 @@ class ECC_out_transaction #(
     this.result_R = RHS.result_R;
     this.result_S = RHS.result_S;
     this.result_verify_R = RHS.result_verify_R;
+    this.result_sharedkey = RHS.result_sharedkey;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -209,6 +212,7 @@ class ECC_out_transaction #(
     $add_attribute(transaction_view_h,result_R,"result_R");
     $add_attribute(transaction_view_h,result_S,"result_S");
     $add_attribute(transaction_view_h,result_verify_R,"result_verify_R");
+    $add_attribute(transaction_view_h,result_sharedkey,"result_sharedkey");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

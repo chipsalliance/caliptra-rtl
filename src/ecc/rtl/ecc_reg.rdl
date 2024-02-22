@@ -71,11 +71,12 @@ addrmap ecc_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control command field: This can be: 
-                [br]             00 for NONE
-                [br]             01 for KEYGEN
-                [br]             10 for SIGNING
-                [br]             11 for VERIFYING
-                [br] After each software write, hardware will erase the register"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
+                [br]             000 for NONE
+                [br]             001 for KEYGEN
+                [br]             010 for SIGNING
+                [br]             011 for VERIFYING
+                [br]             100 for ECDH SHARED KEY
+                [br] After each software write, hardware will erase the register"; swwe = ecc_ready; hwclr;} CTRL[3] = 3'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after ECC process, to avoid SCA leakage.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
@@ -305,7 +306,26 @@ addrmap ecc_reg {
     
     } ECC_IV[12] @0x00000480;
 
-    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000600;
+
+    /* ---- ECC Component Output DH Shared Key ---- */
+    reg {
+        name = "ECC component DH shared key register type definition";
+        desc = "12 32-bit registers storing the 384-bit Diffie-Hellman shared key. 
+                These registers is read by ECC user after ECDH operation.
+                The shared key should be in [1 : p-1] while p is the prime
+                number of the Secp384r1 curve.
+                These registers are located at ECC_base_address + 
+                0x0000_0600 to 0x0000_062C in big-endian representation.";
+
+        default sw = r;
+        default hw = w;
+        default we = true;
+        default resetsignal = reset_b;
+        field {desc = "DH Shared Key field"; hwclr;} DH_SHARED_KEY[32] = 32'b0;
+    
+    } ECC_DH_SHARED_KEY[12] @0x00000600;
+
+    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000700;
     kv_status_reg ecc_kv_rd_pkey_status;
     kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
     kv_status_reg ecc_kv_rd_seed_status;
