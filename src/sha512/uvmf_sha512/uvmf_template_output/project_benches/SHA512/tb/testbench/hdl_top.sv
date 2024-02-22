@@ -25,6 +25,8 @@ module hdl_top;
 
 import SHA512_parameters_pkg::*;
 import uvmf_base_pkg_hdl::*;
+import kv_defines_pkg::*;
+import pv_defines_pkg::*;
 
   // pragma attribute hdl_top partition_module_xrtl                                            
 // pragma uvmf custom clock_generator begin
@@ -43,10 +45,15 @@ import uvmf_base_pkg_hdl::*;
 
 // pragma uvmf custom reset_generator begin
   bit rst;
+  bit cptra_pwrgood;
   // Instantiate a rst driver
   // tbx clkgen
   initial begin
     rst = 0; 
+    cptra_pwrgood = 0;
+    @(negedge clk)
+    @(posedge clk)
+    cptra_pwrgood = 1;
     #200ns;
     rst =  1; 
   end
@@ -78,6 +85,18 @@ import uvmf_base_pkg_hdl::*;
   // UVMF_CHANGE_ME : Add DUT and connect to signals in _bus interfaces listed above
   // Instantiate your DUT here
   // These DUT's instantiated to show verilog and vhdl instantiation
+
+var kv_rd_resp_t kv_rd_resp;
+var kv_wr_resp_t kv_wr_resp;
+var pv_rd_resp_t pv_rd_resp;
+var pv_wr_resp_t pv_wr_resp;
+initial begin
+    kv_rd_resp = '{default:0};
+    kv_wr_resp = '{default:0};
+    pv_rd_resp = '{default:0};
+    pv_wr_resp = '{default:0};
+end
+
   sha512_ctrl #(
              .AHB_DATA_WIDTH(32),
              .AHB_ADDR_WIDTH(32)
@@ -85,6 +104,7 @@ import uvmf_base_pkg_hdl::*;
             dut (
              .clk(SHA512_in_agent_bus.clk),
              .reset_n(SHA512_in_agent_bus.rst),
+             .cptra_pwrgood(cptra_pwrgood),
 
              .haddr_i(SHA512_in_agent_bus.hadrr),
              .hwdata_i(SHA512_in_agent_bus.hwdata),
@@ -99,12 +119,12 @@ import uvmf_base_pkg_hdl::*;
              .hrdata_o(SHA512_out_agent_bus.hrdata),
              .kv_read   (),
              .kv_write  (),
-             .kv_rd_resp(),
-             .kv_wr_resp(),
+             .kv_rd_resp(kv_rd_resp),
+             .kv_wr_resp(kv_wr_resp),
              .pv_read   (),
              .pv_write  (),
-             .pv_rd_resp(),
-             .pv_wr_resp(),
+             .pv_rd_resp(pv_rd_resp),
+             .pv_wr_resp(pv_wr_resp),
              .pcr_signing_hash(),
              .error_intr(),
              .notif_intr(),
