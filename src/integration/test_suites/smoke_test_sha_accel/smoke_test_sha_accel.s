@@ -19,7 +19,11 @@
 
 
 #include "../includes/caliptra_defines.h"
+#ifdef CALIPTRA_MODE_SEED
+#include "./smoke_test_sha_accel_seed_vectors.s"
+#else
 #include "./smoke_test_sha_accel_vectors.s"
+#endif
 
 // Code to execute
 .section .text

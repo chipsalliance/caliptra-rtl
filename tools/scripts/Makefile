@@ -344,7 +344,7 @@ endif
 
 %.o : %.s $(HEADER_FILES)
 	cp $(HEADER_FILES) $(BUILD_DIR)
-	$(GCC_PREFIX)-cpp $(includes) -I$(TEST_DIR)  $<  > $*.cpp.s
+	$(GCC_PREFIX)-cpp $(includes) -I$(TEST_DIR) $(TEST_CFLAGS) $<  > $*.cpp.s
 	$(GCC_PREFIX)-as $(ABI) $*.cpp.s -o $@
 
 %.o : %.c $(HEADER_FILES)
