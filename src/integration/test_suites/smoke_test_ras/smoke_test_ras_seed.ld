@@ -44,7 +44,7 @@ SECTIONS {
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.*data) *(.rodata*) *(.dccm*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.dccm*) . = ALIGN(4); } =0x0000,
   _dccm_end = _dccm_vma_start + SIZEOF(.dccm);
 
   /* NO ICCM */
