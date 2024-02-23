@@ -53,13 +53,13 @@ SECTIONS {
   /* The code in these sections will be loaded to DCCM alongside .data and later
    * copied into ICCM for execution.
    * NOTE: none of these sections will be used by the val image/FMC/RT flows */
-  .data_iccm0 0x40000000 : AT(iccm_code0_start) {*(.data_iccm0) ; . = ALIGN(4); } =0x0000, /* iccm_code0_start, after .data, as LMA */
+  .data_iccm0 0x40000000 : AT(iccm_code0_start) {KEEP(*(.data_iccm0)) ; . = ALIGN(4); } =0x0000, /* iccm_code0_start, after .data, as LMA */
   iccm_code0_end = iccm_code0_start + SIZEOF(.data_iccm0);
   iccm_code1_start = ALIGN(iccm_code0_end,4);
-  .data_iccm1 0x40000000 : AT(iccm_code1_start) {*(.data_iccm1) ; . = ALIGN(4); } =0x0000, /* iccm_code1_start, after .data, as LMA */
+  .data_iccm1 0x40000000 : AT(iccm_code1_start) {KEEP(*(.data_iccm1)) ; . = ALIGN(4); } =0x0000, /* iccm_code1_start, after .data, as LMA */
   iccm_code1_end = iccm_code1_start + SIZEOF(.data_iccm1);
   iccm_code2_start = ALIGN(iccm_code1_end,4);
-  .data_iccm2 0x40000000 : AT(iccm_code2_start) {*(.data_iccm2) ; . = ALIGN(4); } =0x0000, /* iccm_code2_start, after .data, as LMA */
+  .data_iccm2 0x40000000 : AT(iccm_code2_start) {KEEP(*(.data_iccm2)) ; . = ALIGN(4); } =0x0000, /* iccm_code2_start, after .data, as LMA */
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
 
   /* Stack is at the end of DCCM after .data_iccm2 */
