@@ -45,7 +45,7 @@ SECTIONS {
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { KEEP(*(.dccm*)) . = ALIGN(4); } =0x0000,
   iccm_code0_start = .;
 
   /* ICCM as VMA */
