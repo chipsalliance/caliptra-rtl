@@ -15,6 +15,7 @@ targets:
       - $COMPILE_ROOT/rtl/hmac.sv
       - $COMPILE_ROOT/rtl/hmac_core.v
       - $COMPILE_ROOT/rtl/hmac_reg.sv
+      - $COMPILE_ROOT/rtl/hmac_lfsr.sv
     tops: [hmac_ctrl]
   rtl_lint:
     directories: []

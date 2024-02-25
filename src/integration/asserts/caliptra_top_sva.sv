@@ -234,6 +234,19 @@ module caliptra_top_sva
 
   `ifndef VERILATOR
   generate
+    begin: SHA256_WNTZ_data_check
+      for(genvar dword = 0; dword < 8; dword++) begin
+        SHA256_WNTZ_data_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            //disable iff (`CPTRA_TOP_PATH.)
+                                            (`SERVICES_PATH.WriteData == 'hdd && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`SHA256_PATH.digest_valid_reg) |=> (`SHA256_PATH.digest_reg[dword] == `SERVICES_PATH.sha256_wntz_test_vector.sha256_wntz_digest[dword])
+                                          )
+                                  else $display("SVA ERROR: SHA256 wntz digest %h does not match expected digest %h!", `SHA256_PATH.digest_reg[dword], `SERVICES_PATH.sha256_wntz_test_vector.sha256_wntz_digest[dword]);
+      end //for
+    end //data check
+  endgenerate
+
+  generate
     begin: UDS_data_check
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
       DOE_UDS_data_check:  assert property (
@@ -559,6 +572,13 @@ module caliptra_top_sva
                                       `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we |-> (`ECC_PATH.ecc_arith_unit_i.mult_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
                                       )
                           else $display("SVA ERROR: ECC multiplier result is not valid!"); 
+
+  // SVA for LMS WNTZ accelerator
+    wntz_mode:        assert property (
+                                        @(posedge `SVA_RDC_CLK)
+                                        `SHA256_PATH.wntz_mode |-> (`SHA256_PATH.init_reg) & (!`SHA256_PATH.next_reg)
+                                        )
+                            else $display("SVA ERROR: WNTZ mode is not valid without INIT!");
 
   // Bus IDLE on Firmware Update Reset
   fw_upd_rst_doe_idle:     assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`DOE_REG_PATH.s_cpuif_req)

@@ -134,7 +134,15 @@ inline void service_sha512_notif_intr() {
     }
 }
 
-inline void service_sha256_error_intr() {return;}
+inline void service_sha256_error_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK) {
+        *reg = SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+        cptra_intr_rcv.sha256_error |= SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+    }
+}
 inline void service_sha256_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;

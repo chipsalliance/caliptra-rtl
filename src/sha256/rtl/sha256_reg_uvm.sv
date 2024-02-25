@@ -74,11 +74,17 @@ package sha256_reg_uvm;
         sha256_reg__SHA256_CTRL_bit_cg NEXT_bit_cg[1];
         sha256_reg__SHA256_CTRL_bit_cg MODE_bit_cg[1];
         sha256_reg__SHA256_CTRL_bit_cg ZEROIZE_bit_cg[1];
+        sha256_reg__SHA256_CTRL_bit_cg WNTZ_MODE_bit_cg[1];
+        sha256_reg__SHA256_CTRL_bit_cg WNTZ_W_bit_cg[4];
+        sha256_reg__SHA256_CTRL_bit_cg WNTZ_N_MODE_bit_cg[1];
         sha256_reg__SHA256_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
         rand uvm_reg_field ZEROIZE;
+        rand uvm_reg_field WNTZ_MODE;
+        rand uvm_reg_field WNTZ_W;
+        rand uvm_reg_field WNTZ_N_MODE;
 
         function new(string name = "sha256_reg__SHA256_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -98,11 +104,20 @@ package sha256_reg_uvm;
             this.MODE.configure(this, 1, 2, "WO", 0, 'h1, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 3, "WO", 0, 'h0, 1, 1, 0);
+            this.WNTZ_MODE = new("WNTZ_MODE");
+            this.WNTZ_MODE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
+            this.WNTZ_W = new("WNTZ_W");
+            this.WNTZ_W.configure(this, 4, 5, "WO", 0, 'h4, 1, 1, 0);
+            this.WNTZ_N_MODE = new("WNTZ_N_MODE");
+            this.WNTZ_N_MODE.configure(this, 1, 9, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
+                foreach(WNTZ_MODE_bit_cg[bt]) WNTZ_MODE_bit_cg[bt] = new();
+                foreach(WNTZ_W_bit_cg[bt]) WNTZ_W_bit_cg[bt] = new();
+                foreach(WNTZ_N_MODE_bit_cg[bt]) WNTZ_N_MODE_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -117,9 +132,11 @@ package sha256_reg_uvm;
 
         sha256_reg__SHA256_STATUS_bit_cg READY_bit_cg[1];
         sha256_reg__SHA256_STATUS_bit_cg VALID_bit_cg[1];
+        sha256_reg__SHA256_STATUS_bit_cg WNTZ_BUSY_bit_cg[1];
         sha256_reg__SHA256_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
+        rand uvm_reg_field WNTZ_BUSY;
 
         function new(string name = "sha256_reg__SHA256_STATUS");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -135,9 +152,12 @@ package sha256_reg_uvm;
             this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
             this.VALID = new("VALID");
             this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.WNTZ_BUSY = new("WNTZ_BUSY");
+            this.WNTZ_BUSY.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(READY_bit_cg[bt]) READY_bit_cg[bt] = new();
                 foreach(VALID_bit_cg[bt]) VALID_bit_cg[bt] = new();
+                foreach(WNTZ_BUSY_bit_cg[bt]) WNTZ_BUSY_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

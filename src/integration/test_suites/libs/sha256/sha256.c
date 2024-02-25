@@ -38,7 +38,7 @@ void sha256_zeroize(){
     lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, (1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK);
 }
 
-void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest){
+void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_w, uint8_t wntz_n, sha256_io digest){
     volatile uint32_t * reg_ptr;
     uint8_t offset;
     uint8_t fail_cmd = 0x1;
@@ -57,7 +57,10 @@ void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest){
     // Enable SHA256 core 
     VPRINTF(LOW, "Enable SHA256\n");
     lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, SHA256_REG_SHA256_CTRL_INIT_MASK | 
-                                            (mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK);
+                                            ((mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK) |
+                                            ((wntz_mode << SHA256_REG_SHA256_CTRL_WNTZ_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_MODE_MASK) |
+                                            ((wntz_w << SHA256_REG_SHA256_CTRL_WNTZ_W_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_W_MASK) |
+                                            ((wntz_n << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK));
     
     // wait for SHA to be valid
     wait_for_sha256_intr();
@@ -78,4 +81,20 @@ void sha256_flow(sha256_io block, uint8_t mode, sha256_io digest){
         offset++;
     }
 
+}
+
+void sha256_flow_wntz_rand(uint8_t mode) {
+    // wait for SHA to be ready
+    while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0);
+
+    // Enable SHA256 core 
+    VPRINTF(LOW, "Enable SHA256\n");
+    // lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, SHA256_REG_SHA256_CTRL_INIT_MASK | 
+    //                                         ((mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK));
+                                            // SHA256_REG_SHA256_CTRL_WNTZ_MODE_MASK |
+                                            // ((wntz_w << SHA256_REG_SHA256_CTRL_WNTZ_W_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_W_MASK) |
+                                            // ((wntz_n << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK));
+    
+    // wait for SHA to be valid
+    wait_for_sha256_intr();
 }

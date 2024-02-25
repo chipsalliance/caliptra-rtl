@@ -69,6 +69,11 @@ module sha256
              );
 
   //----------------------------------------------------------------
+  // Internal constant and parameter definitions.
+  //----------------------------------------------------------------
+  // `include "sha256_param.sv"
+
+  //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg init_reg;
@@ -76,11 +81,13 @@ module sha256
   reg mode_reg;
   reg ready_reg;
   reg zeroize_reg;
+  logic mode;
 
   localparam BLOCK_NO = 512 / DATA_WIDTH;
   reg [DATA_WIDTH-1 : 0] block_reg [BLOCK_NO-1 : 0];
 
-  reg [7 : 0][31 : 0] digest_reg;
+  reg [0 : 7][31 : 0] digest_reg;
+  reg [0 : 7][31 : 0] get_mask;
   reg                 digest_valid_reg;
 
   // Interrupts
@@ -92,17 +99,73 @@ module sha256
   // Wires.
   //----------------------------------------------------------------
   wire              core_ready;
-  wire [511 : 0]    core_block;
-  wire [7:0][31:0]  core_digest;
+  logic [511 : 0]   core_block;
+  wire [0:7][31:0]  core_digest;
   wire              core_digest_valid;
+  logic             core_digest_valid_reg;
+
+  logic             ready_flag;
+  logic             ready_flag_reg;
+  logic             valid_flag;
+  logic             valid_flag_reg;
+
+
+  logic             wntz_enable;
+  logic             wntz_j_inc;
+  logic [7:0]       wntz_j_init, wntz_j_reg;
+  logic             wntz_busy;         // to regiser
+  logic             wntz_mode;         // from registers
+  logic             wntz_n_mode, wntz_n_mode_reg;
+  logic [3:0]       wntz_w, wntz_w_reg;
+  logic             wntz_w_invalid, wntz_mode_invalid, wntz_j_invalid;
+  logic             invalid_sha_op;
+  logic             core_init, core_next, core_mode;
+  logic             wntz_init;
+  logic             wntz_init_reg;
+  logic             wntz_1st_blk, wntz_blk_done;
+  logic [7:0]       wntz_iter, wntz_iter_reg;
+  logic [175: 0]    wntz_prefix;
+
+  typedef enum logic [2:0] {WNTZ_IDLE, WNTZ_1ST, WNTZ_OTHERS} wntz_fsm_t;
+  wntz_fsm_t        wntz_fsm, wntz_fsm_next;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
-                       block_reg[04], block_reg[05], block_reg[06], block_reg[07],
-                       block_reg[08], block_reg[09], block_reg[10], block_reg[11],
-                       block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
+
+  always_comb begin
+    if (wntz_busy) begin
+      core_block =  wntz_n_mode_reg ? 
+                    //SHA256
+                    {wntz_prefix, wntz_j_reg, 
+                     digest_reg[0], digest_reg[1],
+                     digest_reg[2], digest_reg[3],
+                     digest_reg[4], digest_reg[5],
+                     digest_reg[6], digest_reg[7],
+                     8'h80,                                     // Padding
+                     64'h01b8}                                  // L = 440bits per SHA256 padding
+                    : //SHA192
+                    {wntz_prefix, wntz_j_reg, 
+                     digest_reg[0], digest_reg[1],
+                     digest_reg[2], digest_reg[3],
+                     digest_reg[4], digest_reg[5],
+                     8'h80, 64'h0,                             // Padding
+                     64'h0178};                                // L = 376bits per SHA256 padding
+                   
+      core_init = wntz_init_reg;
+      core_next = 1'b0;
+      core_mode = 1'b1; //always SHA256 for Winternitz. mode_reg set to 0 will trig error. Digest is truncated based on wntz_n_mode
+    end else begin
+      core_block = {block_reg[00], block_reg[01], block_reg[02], block_reg[03],
+                    block_reg[04], block_reg[05], block_reg[06], block_reg[07],
+                    block_reg[08], block_reg[09], block_reg[10], block_reg[11],
+                    block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
+      core_init = init_reg;
+      core_next = next_reg;
+      core_mode = mode;
+    end
+  end   // always_comb
 
   assign err = read_error | write_error;
 
@@ -114,18 +177,132 @@ module sha256
                    .reset_n(reset_n),
                    .zeroize(zeroize_reg),
 
-                   .init_cmd(init_reg),
-                   .next_cmd(next_reg),
-                   .mode(mode_reg),
+                   .init_cmd(core_init),
+                   .next_cmd(core_next),
+                   .mode(core_mode),
 
                    .block_msg(core_block),
 
                    .ready(core_ready),
 
-                   .digest(core_digest),
+                   .digest(core_digest),    
                    .digest_valid(core_digest_valid)
                   );
 
+  //----------------------------------------------------------------
+  assign wntz_busy          = (wntz_fsm != WNTZ_IDLE);
+  assign wntz_1st_blk       = (wntz_fsm == WNTZ_1ST);
+  assign wntz_blk_done      = core_digest_valid & ~core_digest_valid_reg;
+  assign wntz_w_invalid     = wntz_busy & !(wntz_w_reg inside {'h1, 'h2, 'h4, 'h8});
+  assign wntz_mode_invalid  = wntz_busy & !mode_reg;
+  assign wntz_j_invalid     = wntz_mode && (wntz_j_init > wntz_iter);
+  assign invalid_sha_op     = init_reg && next_reg; //Trigger an error when init and next are high in the same cycle
+
+  always_comb begin
+    unique casez(wntz_w)
+      8'h1:     wntz_iter = 'd0; //2**w - 1 (-1) (1st iteration is considered separately)
+      8'h2:     wntz_iter = 'd2;
+      8'h4:     wntz_iter = 'd14;
+      8'h8:     wntz_iter = 'd254;
+      default:  wntz_iter = 'd0;
+    endcase
+  end
+
+  assign wntz_j_init = block_reg[5][15:8];
+
+  always_comb begin
+    wntz_init = 1'b0;
+    wntz_enable = 1'b0;
+    wntz_j_inc = 1'b0;
+    case (wntz_fsm)
+      WNTZ_IDLE: 
+        begin 
+          if (wntz_mode && init_reg && ready_reg && (wntz_j_init <= wntz_iter)) begin
+            wntz_fsm_next = WNTZ_1ST;
+            wntz_enable = 1'b1;
+          end else
+            wntz_fsm_next = WNTZ_IDLE;
+        end 
+
+        WNTZ_1ST:  
+          begin
+            if (wntz_blk_done && (wntz_j_reg < wntz_iter_reg)) begin
+              wntz_fsm_next   = WNTZ_OTHERS;
+              wntz_init  = 1'b1;
+              wntz_j_inc = 1'b1;
+            end else if (wntz_blk_done)
+              wntz_fsm_next   = WNTZ_IDLE;
+            else
+              wntz_fsm_next   = WNTZ_1ST;
+          end
+          
+        WNTZ_OTHERS: 
+          begin
+            if (wntz_blk_done && (wntz_j_reg < wntz_iter_reg)) begin
+              wntz_fsm_next  = WNTZ_OTHERS;
+              wntz_init  = 1'b1;
+              wntz_j_inc = 1'b1;
+            end else if (wntz_blk_done)
+              wntz_fsm_next   = WNTZ_IDLE;
+            else
+              wntz_fsm_next  = WNTZ_OTHERS;
+          end
+
+        default: 
+          wntz_fsm_next = WNTZ_IDLE;
+
+        endcase
+        
+    end
+
+
+  always @ (posedge clk or negedge reset_n) begin
+      if (!reset_n)
+        wntz_fsm <= WNTZ_IDLE;
+      else
+        wntz_fsm <= wntz_fsm_next;
+  end
+
+  always @ (posedge clk or negedge reset_n) begin
+      if (!reset_n) begin
+        wntz_j_reg      <= '0;
+        wntz_prefix     <= '0;
+        wntz_n_mode_reg <= '0;
+        wntz_w_reg      <= '0;
+        wntz_iter_reg   <= '0;
+      end else begin
+        if (wntz_enable) begin
+          wntz_j_reg <= wntz_j_init;
+          wntz_prefix <= {block_reg[00], block_reg[01], block_reg[02], block_reg[03],     // I: 16byte, q: 4bytes, i: 2bytes
+                          block_reg[04], block_reg[05][31:16]};
+          wntz_n_mode_reg <= wntz_n_mode;
+          wntz_w_reg <= wntz_w;
+          wntz_iter_reg <= wntz_iter;
+        end else if (wntz_j_inc)
+          wntz_j_reg <= wntz_j_reg + 1;
+      end
+  end
+
+    always @ (posedge clk or negedge reset_n) begin
+      if (!reset_n)
+        wntz_init_reg <= 1'b0;
+      else begin
+        if (wntz_init)
+          wntz_init_reg <= 1'b1;
+        else
+          wntz_init_reg <= 1'b0;
+      end
+    end
+  
+
+    always @ (posedge clk or negedge reset_n) begin
+      if (!reset_n)
+        mode_reg <= '0;
+      else begin
+        if (ready_reg)
+          mode_reg <= mode;
+      end
+    end
 
   //----------------------------------------------------------------
   // reg_update
@@ -134,24 +311,51 @@ module sha256
   // All registers are positive edge triggered with asynchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
+  always @ (posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+      get_mask <= {8{32'hffff_ffff}};
+    end
+    else if (wntz_busy) begin
+      unique casez (wntz_n_mode_reg)
+        0: get_mask <= {{6{32'hffff_ffff}}, {2{32'h0000_0000}}};
+        1: get_mask <= {8{32'hffff_ffff}};
+        default: get_mask <= {8{32'hffff_ffff}};
+      endcase
+    end
+    else begin
+      unique casez (mode_reg)
+        0: get_mask <= {{7{32'hffff_ffff}}, {1{32'h0000_0000}}};
+        1: get_mask <= {8{32'hffff_ffff}};
+        default: get_mask <= {8{32'hffff_ffff}};
+      endcase
+    end
+  end
+
+  assign ready_flag = core_ready & !wntz_busy;
+  assign ready_reg = ready_flag & ready_flag_reg;
+  assign valid_flag = core_digest_valid & !wntz_busy;
+  assign digest_valid_reg = valid_flag & valid_flag_reg;
+
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
       if (!reset_n) begin
-        ready_reg        <= '0;
+        ready_flag_reg   <= '0;
         digest_reg       <= '0;
-        digest_valid_reg <= '0;
+        valid_flag_reg   <= '0;
       end
       else if (zeroize_reg) begin
-        ready_reg        <= '0;
+        ready_flag_reg   <= '0;
         digest_reg       <= '0;
-        digest_valid_reg <= '0;
+        valid_flag_reg   <= '0;
       end
       else begin
-        ready_reg        <= core_ready;
-        digest_valid_reg <= core_digest_valid;
+        ready_flag_reg   <= ready_flag;
+        valid_flag_reg   <= valid_flag;
+        core_digest_valid_reg <= core_digest_valid;
 
-        if (core_digest_valid & ~digest_valid_reg)
-          digest_reg <= core_digest;
+        if (core_digest_valid & ~digest_valid_reg) begin
+          digest_reg <= core_digest & get_mask;
+        end
       end
     end // reg_update
 
@@ -167,14 +371,19 @@ module sha256
 
     init_reg = hwif_out.SHA256_CTRL.INIT.value;
     next_reg = hwif_out.SHA256_CTRL.NEXT.value;
-    mode_reg = hwif_out.SHA256_CTRL.MODE.value;
+    mode = hwif_out.SHA256_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA256_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
+    wntz_mode = hwif_out.SHA256_CTRL.WNTZ_MODE.value;
+    wntz_n_mode = hwif_out.SHA256_CTRL.WNTZ_N_MODE.value;
+    wntz_w = hwif_out.SHA256_CTRL.WNTZ_W.value;
 
     hwif_in.SHA256_STATUS.READY.next = ready_reg;
     hwif_in.SHA256_STATUS.VALID.next = digest_valid_reg;
+    hwif_in.SHA256_STATUS.WNTZ_BUSY.next = wntz_busy;
 
     for (int dword =0; dword < 8; dword++) begin
-      hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[7-dword];
+//      hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[7-dword];
+      hwif_in.SHA256_DIGEST[dword].DIGEST.next = digest_reg[dword];
       hwif_in.SHA256_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 
@@ -208,11 +417,12 @@ module sha256
   );
 
     //interrupt register hw interface
+    assign hwif_in.sha256_ready = ready_reg;
     assign hwif_in.reset_b = reset_n;
     assign hwif_in.error_reset_b = cptra_pwrgood;
     assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
-    assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
-    assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = wntz_w_invalid | wntz_mode_invalid | wntz_j_invalid;
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = invalid_sha_op;
     assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
     assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 

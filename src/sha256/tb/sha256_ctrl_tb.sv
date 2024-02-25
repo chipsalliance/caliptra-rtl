@@ -913,6 +913,51 @@ module sha256_ctrl_tb();
   endtask // issue_test
 
 
+
+  task lms_test();
+
+    reg [511 : 0] block0;
+    reg [255 : 0] expected0;
+
+    begin
+      $display("*** TC%01d - lms test started.", tc_ctr);
+
+
+      block0 = 512'h61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018;
+
+      expected0 = 256'hBA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD;
+
+      write_block(block0);
+
+      write_single_word(ADDR_CTRL, {SHA256_MODE, CTRL_INIT_VALUE});
+      write_single_word(ADDR_CTRL, {1'b1, 4'b0});
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+      read_digest();
+
+      write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
+
+
+      if (digest_data == expected0)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR.", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      $display("*** TC%01d - Single block test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // single_block_test
+
+
   //----------------------------------------------------------------
   // The main test functionality.
   //----------------------------------------------------------------
@@ -927,6 +972,8 @@ module sha256_ctrl_tb();
       sha224_tests();
       sha256_tests();
       issue_test();
+
+      lms_test();
 
       display_test_result();
 

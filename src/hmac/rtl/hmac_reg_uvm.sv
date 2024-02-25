@@ -1164,7 +1164,7 @@ package hmac_reg_uvm;
         rand hmac_reg__HMAC384_KEY HMAC384_KEY[12];
         rand hmac_reg__HMAC384_BLOCK HMAC384_BLOCK[32];
         rand hmac_reg__HMAC384_TAG HMAC384_TAG[12];
-        rand hmac_reg__HMAC384_LFSR_SEED HMAC384_LFSR_SEED[5];
+        rand hmac_reg__HMAC384_LFSR_SEED HMAC384_LFSR_SEED[12];
         rand kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL;
         rand kv_status_reg HMAC384_KV_RD_KEY_STATUS;
         rand kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
