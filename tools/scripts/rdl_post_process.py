@@ -67,7 +67,7 @@ def scrub_line_by_line(fname):
             mod_cnt+=1
         elif (is_endmodule is not None):
             mod_lines+="\n"
-            mod_lines+="`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, " + reset_name + ")\n"
+            mod_lines+="`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !" + reset_name + ")\n"
             mod_lines+="\n"
             mod_lines+=line
         else:

@@ -263,13 +263,13 @@ end
 caliptra_2ff_sync #(.WIDTH(1), .RST_VAL('d1)) i_rst_window_sync (.clk(clk), .rst_b(cptra_pwrgood), .din(cptra_rst_window), .dout(cptra_rst_window_sync));
 
 //Check for x prop
-`CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, !cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, !cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, !cptra_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, !cptra_rst_b)
 
 //Reset got asserted, but cptra rst window wasn't asserted to protect RDC
-`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, (cptra_pwrgood && ~scan_mode))
-`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, (cptra_pwrgood && ~scan_mode))
+`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, !(cptra_pwrgood && ~scan_mode))
+`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, !(cptra_pwrgood && ~scan_mode))
 
 endmodule

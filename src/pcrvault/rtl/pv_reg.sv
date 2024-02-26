@@ -294,6 +294,6 @@ module pv_reg (
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
 
-`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, hwif_in.hard_reset_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !hwif_in.hard_reset_b)
 
 endmodule

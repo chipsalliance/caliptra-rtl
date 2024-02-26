@@ -172,7 +172,7 @@ generate
 
         //optimized path doesn't look at stall
         //only time this stalls is on error condition
-        `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_STALL, ~hreadyout_i & (hresp_i == 1'b0), hclk, hreset_n)
+        `CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_STALL, ~hreadyout_i & (hresp_i == 1'b0), hclk, !hreset_n)
     end
 endgenerate
 
@@ -199,8 +199,8 @@ always_comb hrdata_o_1 = initiator1_data_ph ? hrdata_i: '0;
 always_comb hready_o_1 = initiator1_data_ph ? hreadyout_i :
                          initiator1_pend_addr_ph ? '0 :  '1;
 
-`CALIPTRA_ASSERT_MUTEX(ERR_2TO1MUX_MUTEX_DATA_PH, {initiator0_data_ph,initiator1_data_ph}, hclk, hreset_n)
-`CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_BAD_HTRANS, (htrans_o == 2'b01), hclk, hreset_n)
+`CALIPTRA_ASSERT_MUTEX(ERR_2TO1MUX_MUTEX_DATA_PH, {initiator0_data_ph,initiator1_data_ph}, hclk, !hreset_n)
+`CALIPTRA_ASSERT_NEVER(ERR_2TO1MUX_BAD_HTRANS, (htrans_o == 2'b01), hclk, !hreset_n)
 
 //Coverage
 `ifndef VERILATOR
