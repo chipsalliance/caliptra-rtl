@@ -56,6 +56,9 @@
 
 module sha512_masked_core
                   import sha512_masked_defines_pkg::*;
+                  #(
+                   parameter [73 : 0]    LFSR_INIT_SEED = 74'h23A_A79D_0EC1_1E38_9277 // a random value
+                  )
                   (
                    // Clock and reset.
                    input wire            clk,
@@ -67,7 +70,7 @@ module sha512_masked_core
                    input wire [1 : 0]    mode,
                    
                    // Data port.
-                   input wire [191 : 0]  entropy,
+                   input wire [73 : 0]   lfsr_seed,
                    
 
                    input wire [1023 : 0] block_msg,
@@ -93,11 +96,11 @@ module sha512_masked_core
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  logic [73:0]        lfsr_rnd;
   logic               masking_init;
   logic               masking_update;
-  logic [23:0][63:0]  masking_rnd;
   logic [7:0][63:0]   rh_masking_rnd;
-  logic [1023:0]      rw_masking_rnd;
+  logic [63:0]        rw_masking_rnd;
   logic [9:0]         q_masking_rnd;
 
   logic init_reg_set;
@@ -179,6 +182,7 @@ module sha512_masked_core
   masked_reg_t a_new_a2b;
   masked_reg_t e_new_a2b;
 
+  wire [63 : 0] w_val;
   wire [63 : 0] k_data;
 
   reg           w_init;
@@ -198,6 +202,20 @@ module sha512_masked_core
   //----------------------------------------------------------------
   // Module instantiantions.
   //----------------------------------------------------------------
+  sha512_masked_lfsr #(
+      .REG_SIZE(74),
+      .INIT_SEED(LFSR_INIT_SEED)
+      )
+      lfsr_inst
+      (
+      .clk(clk),
+      .reset_n(reset_n),
+      .zeroize(zeroize),
+      .en(init_cmd),
+      .seed(lfsr_seed),
+      .rnd(lfsr_rnd)
+      );
+
   sha512_k_constants k_constants_inst(
       .addr(round_ctr_reg),
       .K_val(k_data)
@@ -218,19 +236,86 @@ module sha512_masked_core
       );
 
 
-  sha512_masked_w_mem w_mem_inst(
+  sha512_w_mem w_mem_inst(
       .clk(clk),
       .reset_n(reset_n),
       .zeroize(zeroize),
 
       .block_msg(block_msg),
-      .rw_masking_rnd(rw_masking_rnd),
-      .entropy(entropy[4 : 0]),      
 
       .init_cmd(w_init),
       .next_cmd(w_next),
-      .w_val(w_data)
+      .w_val(w_val)
       );
+
+  //----------------------------------------------------------------
+  // Function definition.
+  //----------------------------------------------------------------
+  function masked_reg_t masked_not (input masked_reg_t x);
+    return {~x.masked, x.random};
+  endfunction
+
+  function reg [63:0] masked_and (input masked_reg_t x, y);
+    return ~y.masked & (~y.random & x.random | y.random & x.masked) | y.masked & (y.random & x.random | ~y.random & x.masked); //x & y;
+  endfunction
+
+  function masked_reg_t masked_maj (input masked_reg_t a, b, c);
+    return {masked_and(a, b) ^ masked_and(a, c) ^ masked_and(b, c), b.random};
+  endfunction
+
+  function masked_reg_t masked_ch (input masked_reg_t e, f, g);
+    return {masked_and(e, f) ^ masked_and(g, masked_not(e)), e.random ^ g.random};
+  endfunction
+
+  function reg [63:0] sigma0 (input reg [63:0] x);
+    return {x[27 : 0], x[63 : 28]} ^
+           {x[33 : 0], x[63 : 34]} ^
+           {x[38 : 0], x[63 : 39]};
+  endfunction
+
+  function reg [63:0] sigma1 (input reg [63:0] x);
+    return {x[13 : 0], x[63 : 14]} ^
+           {x[17 : 0], x[63 : 18]} ^
+           {x[40 : 0], x[63 : 41]};
+  endfunction
+
+  function masked_reg_t masked_sum (input masked_reg_t x, y);
+    return {(x.masked + y.masked), (x.random + y.random)};
+  endfunction
+
+  function masked_reg_t B2A_conv (input masked_reg_t x, logic q); // convert x_masked = x ^ rnd to x_prime = x + rand
+    reg [63 : 0] masked_carry;  // masked_carry[j] = c[j] ^ q
+    reg [63 : 0] x_prime;
+    for (int j = 0; j < 64 ; j++) begin
+        if (j == 0) begin
+          masked_carry[j] = ~x.masked[j] & (x.random[j] ^ q) | (x.masked[j] & q);
+          x_prime[j] = x.masked[j];
+        end
+        else begin
+          masked_carry[j] = ~x.masked[j] & (x.random[j] ^ q) | x.masked[j] & masked_carry[j-1];
+          x_prime[j] = (x.masked[j] ^ masked_carry[j-1]) ^ q;
+        end
+    end
+    return {x_prime, x.random};
+  endfunction
+
+  function masked_reg_t A2B_conv (input masked_reg_t x, logic q); // convert x_prime = x + rand to x_masked = x ^ rnd
+    reg [63 : 0] masked_carry;  // masked_carry[j] = c[j] ^ q
+    reg [63 : 0] x_masked;
+ 
+    for (int j = 0; j < 64 ; j++) begin
+      if (j == 0) begin
+        masked_carry[j] = (~x.masked[0] & x.random[0]) ^ q;
+        x_masked[j] = x.masked[j];
+      end
+      else begin
+        masked_carry[j] = (x.masked[j] ^ x.random[j]) & (x.random[j] ^ q) | (~x.masked[j] ^ x.random[j]) & masked_carry[j-1];
+        x_masked[j] = (x.masked[j] ^ masked_carry[j-1]) ^ q;
+      end
+    end
+    return {x_masked, x.random};
+  endfunction
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -242,17 +327,7 @@ module sha512_masked_core
 
   assign digest_valid = digest_valid_reg;
 
-  genvar i;
-  generate 
-      for (i=0; i < 8; i++) begin : rh_masking_assign
-          assign rh_masking_rnd[i] = masking_rnd[i];
-      end
-  endgenerate                           
 
-  assign rw_masking_rnd = {masking_rnd[08], masking_rnd[09], masking_rnd[10], masking_rnd[11],
-                           masking_rnd[12], masking_rnd[13], masking_rnd[14], masking_rnd[15],
-                           masking_rnd[16], masking_rnd[17], masking_rnd[18], masking_rnd[19],
-                           masking_rnd[20], masking_rnd[21], masking_rnd[22], masking_rnd[23]};
   //----------------------------------------------------------------
   // reg_update
   // Update functionality for all registers in the core.
@@ -284,7 +359,7 @@ module sha512_masked_core
           round_ctr_reg       <= 7'h0;
           rnd_ctr_reg         <= 7'h0;
           sha512_ctrl_reg     <= CTRL_IDLE;
-          masking_rnd         <= '0;
+          rh_masking_rnd      <= '0;
         end
 
       else if (zeroize) 
@@ -310,7 +385,7 @@ module sha512_masked_core
           round_ctr_reg       <= 7'h0;
           rnd_ctr_reg         <= 7'h0;
           sha512_ctrl_reg     <= CTRL_IDLE;
-          masking_rnd         <= '0;
+          rh_masking_rnd      <= '0;
         end
 
       else
@@ -354,11 +429,8 @@ module sha512_masked_core
           if (sha512_ctrl_we)
             sha512_ctrl_reg <= sha512_ctrl_new;
           
-          if (masking_init) begin
-            masking_rnd[3*rnd_ctr_reg[2 : 0]]   <= entropy[63  :   0];
-            masking_rnd[3*rnd_ctr_reg[2 : 0]+1] <= entropy[127 :  64];
-            masking_rnd[3*rnd_ctr_reg[2 : 0]+2] <= entropy[191 : 128];
-          end
+          if (masking_init)
+            rh_masking_rnd[rnd_ctr_reg[2 : 0]] <= lfsr_rnd[63 : 0];
         end
     end // reg_update
 
@@ -417,6 +489,16 @@ module sha512_masked_core
           H_we = 1;
         end
     end // digest_logic
+
+
+  //----------------------------------------------------------------
+  // Mask the w_data
+  //
+  // 
+  //----------------------------------------------------------------
+  always @* begin : w_data_logic
+     w_data = {w_val ^ rw_masking_rnd, rw_masking_rnd};
+  end
 
   //----------------------------------------------------------------
   // t1_logic
@@ -605,13 +687,15 @@ module sha512_masked_core
   // Update logic for the rw_masking_rnd and q_masking_rnd
   //----------------------------------------------------------------
   always @*
-    begin : masking_random
+    begin : masking_rnd
       masking_init        = rnd_ctr_inc;
       masking_update      = round_ctr_inc;
+      rw_masking_rnd      = '0;
       q_masking_rnd       = '0;
 
       if (masking_update) begin
-        q_masking_rnd  = entropy[14 : 5];
+        rw_masking_rnd = lfsr_rnd[63 : 0];
+        q_masking_rnd  = lfsr_rnd[73 : 64];
       end
     end // masking_rnd
 
@@ -642,7 +726,7 @@ module sha512_masked_core
       init_reg_set        = 1'b0;
       init_reg_reset      = 1'b0;
 
-      unique casez (sha512_ctrl_reg)
+      unique case (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init_cmd | next_cmd)

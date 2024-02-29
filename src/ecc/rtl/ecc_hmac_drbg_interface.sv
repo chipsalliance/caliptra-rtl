@@ -39,7 +39,7 @@
 module ecc_hmac_drbg_interface#(
     parameter                  REG_SIZE       = 384,
     parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter [REG_SIZE-1 : 0] LFSR_INIT_SEED = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c   // a random value
+    parameter [147 : 0]        LFSR_INIT_SEED = 148'h6_04E7_A407_54F1_4487_A021_11AC_D0DF_8C55_57A0   // a random value
     )
     (
     // Clock and reset.
@@ -66,8 +66,8 @@ module ecc_hmac_drbg_interface#(
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
-    logic [REG_SIZE-1 : 0]  lfsr_seed_reg;
-    logic [REG_SIZE-1 : 0]  hmac_lfsr_seed;
+    logic [147 : 0]         lfsr_seed_reg;
+    logic [147 : 0]         hmac_lfsr_seed;
 
     logic                   hmac_mode;
     logic                   hmac_drbg_init;
@@ -140,7 +140,7 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : hmac_drbg_entropy_input
-        unique casez (state_reg)
+        unique case (state_reg)
             LFSR_ST:        hmac_drbg_entropy = IV;
             LAMBDA_ST:      hmac_drbg_entropy = IV;
             SCALAR_RND_ST:  hmac_drbg_entropy = IV;
@@ -153,7 +153,7 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : hmac_drbg_nonce_input
-        unique casez (state_reg)
+        unique case (state_reg)
             LFSR_ST:        hmac_drbg_nonce = counter_nonce_reg;
             LAMBDA_ST:      hmac_drbg_nonce = counter_nonce_reg;
             SCALAR_RND_ST:  hmac_drbg_nonce = counter_nonce_reg;
@@ -171,7 +171,7 @@ module ecc_hmac_drbg_interface#(
         hmac_drbg_init = 0;
         hmac_drbg_next = 0;
         if (first_round) begin
-            unique casez (state_reg)
+            unique case (state_reg)
                 LFSR_ST:        hmac_drbg_init = 1;
                 LAMBDA_ST:      hmac_drbg_next = 1;
                 SCALAR_RND_ST:  hmac_drbg_next = 1;
@@ -210,7 +210,7 @@ module ecc_hmac_drbg_interface#(
         else
             if (hmac_done_edge) begin
                 unique case (state_reg) inside
-                    LFSR_ST:        lfsr_seed_reg   <= hmac_drbg_result;
+                    LFSR_ST:        lfsr_seed_reg   <= hmac_drbg_result[147 : 0];
                     LAMBDA_ST:      lambda_reg      <= hmac_drbg_result;
                     SCALAR_RND_ST:  scalar_rnd_reg  <= hmac_drbg_result;
                     MASKING_RND_ST: masking_rnd_reg <= hmac_drbg_result;
@@ -278,8 +278,9 @@ module ecc_hmac_drbg_interface#(
         end
     end // counter_nonce_update
 
-    always_comb counter_nonce = {counter_reg, counter_reg, counter_reg, counter_reg, counter_reg, counter_reg};
-    always_comb hmac_lfsr_seed = lfsr_seed_reg ^ counter_nonce;
+    always_comb counter_nonce[REG_SIZE-1 : 64] = '0;
+    always_comb counter_nonce[63 : 0] = counter_reg;
+    always_comb hmac_lfsr_seed = lfsr_seed_reg ^ counter_nonce[147 : 0];
 
     //----------------------------------------------------------------
     // FSM_flow
@@ -290,7 +291,7 @@ module ecc_hmac_drbg_interface#(
     always_comb 
     begin : interface_fsm
         state_next = IDLE_ST;
-        unique casez(state_reg)
+        unique case(state_reg)
             IDLE_ST:        state_next = (en & hmac_drbg_ready)? LFSR_ST : IDLE_ST;
             LFSR_ST:        state_next = (hmac_done_edge)? LAMBDA_ST : LFSR_ST;
             LAMBDA_ST:      state_next = (hmac_done_edge)? SCALAR_RND_ST : LAMBDA_ST;

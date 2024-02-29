@@ -23,7 +23,7 @@
 
 module hmac_core
 #(
-      parameter [383 : 0]   LFSR_INIT_SEED  = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c // a random value
+      parameter [147 : 0]   LFSR_INIT_SEED  = 148'h5_60DE_54E3_6AC0_807B_2396_8E54_5475_3CAB_FFB0 // a random value
 )
 (
       // Clock and reset.
@@ -38,7 +38,7 @@ module hmac_core
       output wire           tag_valid,
 
       // Data ports.
-      input wire [383 : 0]  lfsr_seed,
+      input wire [147 : 0]  lfsr_seed,
 
       input wire [383 : 0]  key,
       input wire [1023 : 0] block_msg,
@@ -59,6 +59,8 @@ module hmac_core
   localparam [2 : 0] CTRL_HMAC   = 3'd3;
   localparam [2 : 0] CTRL_DONE   = 3'd4;
 
+  localparam [73 : 0] LFSR_INIT_SEED0 = LFSR_INIT_SEED[73  :  0];
+  localparam [73 : 0] LFSR_INIT_SEED1 = LFSR_INIT_SEED[147 : 74];
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
@@ -99,8 +101,6 @@ module hmac_core
   wire            H2_digest_valid;
   wire [127:0]    garbage_bit_vector1,garbage_bit_vector2;
 
-  wire [383 : 0]  entropy;
-
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -110,7 +110,10 @@ module hmac_core
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_masked_core u_sha512_core_h1 
+  sha512_masked_core #(
+                     .LFSR_INIT_SEED(LFSR_INIT_SEED0)
+                     )
+                     u_sha512_core_h1 
                      (
                      .clk(clk),
                      .reset_n(reset_n),
@@ -120,7 +123,7 @@ module hmac_core
                      .next_cmd(H1_next),
                      .mode(2'h2),
 
-                     .entropy(entropy[191 : 0]),
+                     .lfsr_seed(lfsr_seed[73 : 0]),
 
                      .block_msg(H1_block),
 
@@ -129,7 +132,10 @@ module hmac_core
                      .digest_valid(H1_digest_valid)
                     );
 
-  sha512_masked_core u_sha512_core_h2 
+  sha512_masked_core #(
+                     .LFSR_INIT_SEED(LFSR_INIT_SEED1)
+                     )
+                     u_sha512_core_h2 
                      (
                      .clk(clk),
                      .reset_n(reset_n),
@@ -139,7 +145,7 @@ module hmac_core
                      .next_cmd(H2_next),
                      .mode(2'h2),
 
-                     .entropy(entropy[383 : 192]),
+                     .lfsr_seed(lfsr_seed[147 : 74]),
 
                      .block_msg(H2_block),
 
@@ -148,24 +154,6 @@ module hmac_core
                      .digest_valid(H2_digest_valid)
                     );
 
-  genvar i;
-  generate 
-      for (i=0; i < 12; i++) begin : gen_lfsr
-          hmac_lfsr #(
-              .REG_SIZE(32),
-              .INIT_SEED(LFSR_INIT_SEED[i*32 +: 32])
-              )
-              lfsr_inst_i
-              (
-              .clk(clk),
-              .reset_n(reset_n),
-              .zeroize(zeroize),
-              .en(init_cmd),
-              .seed(lfsr_seed[i*32 +: 32]),
-              .rnd(entropy[i*32 +: 32])
-              );
-      end
-  endgenerate
   //----------------------------------------------------------------
   // reg_update
   //
@@ -228,7 +216,7 @@ module hmac_core
 
       first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 1'b0 : 1'b1;
 
-      unique casez (hmac_ctrl_reg)
+      unique case (hmac_ctrl_reg)
         CTRL_IPAD:
           begin
             if (first_round)
@@ -288,7 +276,7 @@ module hmac_core
       hmac_ctrl_new    = CTRL_IDLE;
       hmac_ctrl_we     = 0;
 
-      unique casez (hmac_ctrl_reg)
+      unique case (hmac_ctrl_reg)
         CTRL_IDLE:
           begin
             ready_flag = 1;

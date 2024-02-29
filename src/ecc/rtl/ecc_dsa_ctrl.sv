@@ -90,15 +90,15 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
 
     localparam [RND_SIZE-1 : 0]  zero_pad               = '0;
-    localparam REG_NUM_DWORDS = REG_SIZE / DATA_WIDTH;
+    localparam REG_NUM_DWORDS = REG_SIZE / RADIX;
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
-    logic [DSA_PROG_ADDR_W-1 : 0]                prog_cntr;
+    logic [DSA_PROG_ADDR_W-1 : 0]           prog_cntr;
     
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0] read_reg;
-    logic [(REG_SIZE+RND_SIZE)-1 : 0]            write_reg;
-    logic [1 : 0]                                cycle_cnt;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0] read_reg;
+    logic [(REG_SIZE+RND_SIZE)-1 : 0]       write_reg;
+    logic [1 : 0]                           cycle_cnt;
 
     logic zeroize_reg;
 
@@ -128,17 +128,17 @@ module ecc_dsa_ctrl
 
     logic [1  : 0]          cmd_reg;
     logic [2  : 0]          pm_cmd_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reduced_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  privkey_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  kv_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  pubkeyx_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  pubkeyy_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  seed_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  nonce_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  r_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  s_reg;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  IV_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reduced_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  privkey_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  kv_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyy_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  seed_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  nonce_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  r_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  s_reg;
+    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  IV_reg;
     logic [REG_SIZE-1 : 0]  lambda;
     logic [REG_SIZE-1 : 0]  lambda_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd;
@@ -228,7 +228,7 @@ module ecc_dsa_ctrl
     ecc_arith_unit #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(MULT_RADIX),
+        .RADIX(RADIX),
         .ADDR_WIDTH(DSA_OPR_ADDR_WIDTH),
         .p_prime(PRIME),
         .p_mu(PRIME_mu),
@@ -276,7 +276,7 @@ module ecc_dsa_ctrl
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(SCALAR_BLIND_RADIX),
+        .RADIX(RADIX),
         .GROUP_ORDER(GROUP_ORDER)
         )
         ecc_scalar_blinding_i(
@@ -536,7 +536,7 @@ module ecc_dsa_ctrl
         hw_verify_r_we = 0;
         hw_pk_chk_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -569,7 +569,7 @@ module ecc_dsa_ctrl
     begin : write_to_pm_core
         write_reg = '0;
         if (prog_instr.opcode == DSA_UOP_WR_CORE) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
@@ -594,7 +594,7 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
                 SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
                 SCALAR_ID             : write_reg = scalar_out_reg; // SCA
@@ -727,13 +727,13 @@ module ecc_dsa_ctrl
             end
             else begin
                 cycle_cnt <= '0;
-                unique casez (prog_cntr)
+                unique case (prog_cntr)
                     DSA_NOP : begin 
                         keygen_process      <= 0;
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         // Waiting for new valid command 
-                        unique casez (cmd_reg)
+                        unique case (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
                                 dsa_valid_reg <= 0;

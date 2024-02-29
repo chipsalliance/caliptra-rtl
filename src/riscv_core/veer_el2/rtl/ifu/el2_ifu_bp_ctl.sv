@@ -890,8 +890,8 @@ function [1:0] countones;
 
       begin
 
-countones[1:0] = {2'b0, valid[1]} +
-                 {2'b0, valid[0]};
+countones[1:0] = {1'b0, valid[1]} +
+                 {1'b0, valid[0]};
       end
    endfunction
 endmodule // el2_ifu_bp_ctl

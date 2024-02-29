@@ -247,7 +247,7 @@ always_comb begin : mbox_fsm_combo
     mbox_protocol_error_nxt = '{default: 0};
     mbox_fsm_ns = mbox_fsm_ps;
 
-    unique casez (mbox_fsm_ps)
+    unique case (mbox_fsm_ps)
         MBOX_IDLE: begin
             if (arc_MBOX_IDLE_MBOX_RDY_FOR_CMD) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_CMD;
@@ -586,8 +586,8 @@ mbox_csr1(
     .hwif_out(hwif_out)
 );
 
-`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, !rst_b)
-//`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, !rst_b)
-`CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data.soc_req), clk, !rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, rst_b)
+//`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data.soc_req), clk, rst_b)
 
 endmodule
