@@ -150,7 +150,7 @@ module ecc_pm_ctrl
                 stall_cntr <= stall_cntr - 1;
             end
             else if (stall_flag & (!stalled) & (!stalled_pipe1)) begin
-                unique casez (prog_instr.opcode)
+                unique case (prog_instr.opcode)
                     UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_p :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
@@ -162,10 +162,10 @@ module ecc_pm_ctrl
             end
             else if ((!stalled) | (stalled & (stall_cntr == 0))) begin
                 stalled <= 0;
-                unique casez (prog_cntr)
+                unique case (prog_cntr)
                     NOP : begin     // Waiting for new valid command
                         ecc_cmd_reg <= ecc_cmd_i;
-                        unique casez (ecc_cmd_i)
+                        unique case (ecc_cmd_i)
                             KEYGEN_CMD : begin  // keygen
                                 mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
@@ -231,7 +231,7 @@ module ecc_pm_ctrl
                     
                     PD_E : begin //End of point doubling
                         if (mont_cntr == 0) begin // Montgomery ladder is done
-                            unique casez (ecc_cmd_reg)
+                            unique case (ecc_cmd_reg)
                                 VER_PART1_CMD : prog_cntr <= NOP;
                                 VER_PART2_CMD : prog_cntr <= VER2_PA_S;
                                 default       : prog_cntr <= INV_S;
@@ -251,7 +251,7 @@ module ecc_pm_ctrl
                     end
                     
                     CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
-                        unique casez (ecc_cmd_reg)
+                        unique case (ecc_cmd_reg)
                             SIGN_CMD : prog_cntr <= SIGN0_S;
                             default  : prog_cntr <= NOP;
                         endcase
@@ -262,7 +262,7 @@ module ecc_pm_ctrl
                     end
 
                     INVq_E : begin // End of inversion mod q
-                        unique casez (ecc_cmd_reg)
+                        unique case (ecc_cmd_reg)
                             SIGN_CMD      : prog_cntr <= SIGN1_S;
                             VER_PART0_CMD : prog_cntr <= VER0_P1_S;
                             default       : prog_cntr <= NOP;
@@ -344,7 +344,7 @@ module ecc_pm_ctrl
     /*
     always_comb 
     begin : delay_flag
-        unique casez (prog_instr.opcode)
+        unique case (prog_instr.opcode)
             UOP_DO_ADD_p :  stall_flag = 1;
             UOP_DO_SUB_p :  stall_flag = 1;
             UOP_DO_MUL_p :  stall_flag = 1;
