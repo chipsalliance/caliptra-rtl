@@ -58,7 +58,7 @@ module sha512_k_constants(
   //----------------------------------------------------------------
   always @*
     begin : addr_mux
-      unique casez(addr)
+      unique case(addr)
         0:  tmp_K = 64'h428a2f98d728ae22;
         1:  tmp_K = 64'h7137449123ef65cd;
         2:  tmp_K = 64'hb5c0fbcfec4d3b2f;
