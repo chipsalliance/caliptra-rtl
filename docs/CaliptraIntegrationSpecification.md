@@ -271,7 +271,8 @@ The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of thi
 
 ![](./images/Caliptra_mbox_boot_FSM.png)
 
-The boot FSM first waits for the SoC to assert cptra\_pwrgood and deassert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
+The boot FSM first waits for the SoC to assert cptra\_pwrgood and deassert cptra\_rst\_b. The SoC should wait a minimum of 10 clocks after asserting cptra\_pwrgood before deasserting cptra\_rst\_b.
+In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
 BOOT\_DONE enables Caliptra reset deassertion through a two flip-flop synchronizer.
 
