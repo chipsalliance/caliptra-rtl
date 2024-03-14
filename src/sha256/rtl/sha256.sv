@@ -198,7 +198,7 @@ module sha256
   assign invalid_sha_op     = init_reg && next_reg; //Trigger an error when init and next are high in the same cycle
 
   always_comb begin
-    unique casez(wntz_w)
+    unique case(wntz_w)
       8'h1:     wntz_iter = 'd0; //2**w - 1 (-1) (1st iteration is considered separately)
       8'h2:     wntz_iter = 'd2;
       8'h4:     wntz_iter = 'd14;
@@ -315,13 +315,13 @@ module sha256
       get_mask <= {8{32'hffff_ffff}};
     end
     else if (wntz_busy) begin
-      unique casez (wntz_n_mode_reg)
+      unique case (wntz_n_mode_reg)
         0: get_mask <= {{6{32'hffff_ffff}}, {2{32'h0000_0000}}};
         default: get_mask <= {8{32'hffff_ffff}};
       endcase
     end
     else begin
-      unique casez (mode_reg)
+      unique case (mode_reg)
         0: get_mask <= {{7{32'hffff_ffff}}, {1{32'h0000_0000}}};
         default: get_mask <= {8{32'hffff_ffff}};
       endcase
