@@ -122,11 +122,11 @@ module sha256
   logic             core_init, core_next, core_mode;
   logic             wntz_init;
   logic             wntz_init_reg;
-  logic             wntz_1st_blk, wntz_blk_done;
+  logic             wntz_blk_done;
   logic [7:0]       wntz_iter, wntz_iter_reg;
   logic [175: 0]    wntz_prefix;
 
-  typedef enum logic [2:0] {WNTZ_IDLE, WNTZ_1ST, WNTZ_OTHERS} wntz_fsm_t;
+  typedef enum logic [1:0] {WNTZ_IDLE, WNTZ_1ST, WNTZ_OTHERS} wntz_fsm_t;
   wntz_fsm_t        wntz_fsm, wntz_fsm_next;
 
 
@@ -191,7 +191,6 @@ module sha256
 
   //----------------------------------------------------------------
   assign wntz_busy          = (wntz_fsm != WNTZ_IDLE);
-  assign wntz_1st_blk       = (wntz_fsm == WNTZ_1ST);
   assign wntz_blk_done      = core_digest_valid & ~core_digest_valid_reg;
   assign wntz_w_invalid     = wntz_busy & !(wntz_w_reg inside {'h1, 'h2, 'h4, 'h8});
   assign wntz_mode_invalid  = wntz_busy & !mode_reg;
@@ -420,7 +419,7 @@ module sha256
     assign hwif_in.sha256_ready = ready_reg;
     assign hwif_in.reset_b = reset_n;
     assign hwif_in.error_reset_b = cptra_pwrgood;
-    assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_digest_valid & ~digest_valid_reg;
+    assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = (!wntz_busy & core_digest_valid & ~digest_valid_reg);
     assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = wntz_w_invalid | wntz_mode_invalid | wntz_j_invalid;
     assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = invalid_sha_op;
     assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
