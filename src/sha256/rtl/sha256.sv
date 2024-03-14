@@ -317,14 +317,12 @@ module sha256
     else if (wntz_busy) begin
       unique casez (wntz_n_mode_reg)
         0: get_mask <= {{6{32'hffff_ffff}}, {2{32'h0000_0000}}};
-        1: get_mask <= {8{32'hffff_ffff}};
         default: get_mask <= {8{32'hffff_ffff}};
       endcase
     end
     else begin
       unique casez (mode_reg)
         0: get_mask <= {{7{32'hffff_ffff}}, {1{32'h0000_0000}}};
-        1: get_mask <= {8{32'hffff_ffff}};
         default: get_mask <= {8{32'hffff_ffff}};
       endcase
     end
