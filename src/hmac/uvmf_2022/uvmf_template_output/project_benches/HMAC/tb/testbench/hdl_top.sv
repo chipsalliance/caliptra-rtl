@@ -25,6 +25,7 @@ module hdl_top;
 
 import HMAC_parameters_pkg::*;
 import uvmf_base_pkg_hdl::*;
+import kv_defines_pkg::*;
 
   // pragma attribute hdl_top partition_module_xrtl                                            
 // pragma uvmf custom clock_generator begin
@@ -43,10 +44,15 @@ import uvmf_base_pkg_hdl::*;
 
 // pragma uvmf custom reset_generator begin
   bit rst;
+  bit cptra_pwrgood;
   // Instantiate a rst driver
   // tbx clkgen
   initial begin
     rst = 0; 
+    cptra_pwrgood = 0;
+    @(negedge clk)
+    @(posedge clk)
+    cptra_pwrgood = 1;
     #200ns;
     rst =  1; 
   end
@@ -83,12 +89,21 @@ import uvmf_base_pkg_hdl::*;
   //verilog_dut         dut_verilog(   .clk(clk), .rst(rst), .in_signal(vhdl_to_verilog_signal), .out_signal(verilog_to_vhdl_signal));
   //vhdl_dut            dut_vhdl   (   .clk(clk), .rst(rst), .in_signal(verilog_to_vhdl_signal), .out_signal(vhdl_to_verilog_signal));
  
+var kv_rd_resp_t [1:0] kv_rd_resp;
+var kv_wr_resp_t       kv_wr_resp;
+initial begin
+    kv_rd_resp[0] = '{default:0};
+    kv_rd_resp[1] = '{default:0};
+    kv_wr_resp    = '{default:0};
+end
+
 hmac_ctrl #(
      .AHB_DATA_WIDTH(32),
      .AHB_ADDR_WIDTH(32)
 ) dut (
-     .clk	          (HMAC_in_agent_bus.clk),
+     .clk           (HMAC_in_agent_bus.clk),
      .reset_n       (HMAC_in_agent_bus.hmac_rst),
+     .cptra_pwrgood (cptra_pwrgood),
      .haddr_i       (HMAC_in_agent_bus.haddr),
      .hwdata_i      (HMAC_in_agent_bus.hwdata),
      .hsel_i        (HMAC_in_agent_bus.hsel),
@@ -101,8 +116,8 @@ hmac_ctrl #(
      .hrdata_o      (HMAC_out_agent_bus.hrdata),
      .kv_read    (),
      .kv_write   (),
-     .kv_rd_resp (),
-     .kv_wr_resp (),
+     .kv_rd_resp (kv_rd_resp),
+     .kv_wr_resp (kv_wr_resp),
      .error_intr (),
      .notif_intr (),
      .debugUnlock_or_scan_mode_switch('0)
