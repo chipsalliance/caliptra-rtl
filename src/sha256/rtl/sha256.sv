@@ -100,7 +100,7 @@ module sha256
   //----------------------------------------------------------------
   wire              core_ready;
   logic [511 : 0]   core_block;
-  wire [0:7][31:0]  core_digest;
+  wire [0:7][31:0]  core_digest; //Intentionally reverse ordered to prepare block input in wntz mode
   wire              core_digest_valid;
   logic             core_digest_valid_reg;
 
