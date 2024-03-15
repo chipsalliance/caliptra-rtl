@@ -31,6 +31,7 @@ void wait_for_sha256_intr(){
     };
     //printf("Received SHA256 error intr with status = %d\n", cptra_intr_rcv.sha256_error);
     printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    cptra_intr_rcv.sha256_notif &= ~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
 }
 
 void sha256_zeroize(){
@@ -64,7 +65,6 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
     
     // wait for SHA to be valid
     wait_for_sha256_intr();
-    cptra_intr_rcv.sha256_notif &= ~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
     reg_ptr = (uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
     printf("Load DIGEST data from SHA256\n");
     offset = 0;
