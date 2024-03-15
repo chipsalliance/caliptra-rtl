@@ -101,7 +101,7 @@ void main() {
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_digest[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 0, 0, 0, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 0, 0, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.
