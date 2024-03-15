@@ -201,28 +201,28 @@ void main() {
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w1_256[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 1, 1, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 1, 1, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w2_256[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 2, 1, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 2, 1, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w4_256[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 4, 1, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 4, 1, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w8_256[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 1, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 1, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     //--------------------------------------------------------------------
@@ -231,28 +231,28 @@ void main() {
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w1_192[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 1, 0, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 1, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     // sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w2_192[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 2, 0, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 2, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w4_192[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 4, 0, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 4, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     sha256_digest.data_size = 8;
     for (int i = 0; i < sha256_digest.data_size; i++)
         sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
 
-    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 0, sha256_digest);
+    sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.

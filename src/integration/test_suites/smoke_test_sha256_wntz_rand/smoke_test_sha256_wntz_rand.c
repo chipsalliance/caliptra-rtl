@@ -67,7 +67,7 @@ void main() {
     // sha256_io sha256_digest;
 
     SEND_STDOUT_CTRL(0xdd); //Forces random block, w and n
-    sha256_flow_wntz_rand(SHA256_MODE_SHA_256);
+    sha256_flow_wntz_rand(SHA256_MODE_SHA_256, SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     sha256_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.
