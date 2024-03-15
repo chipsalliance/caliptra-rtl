@@ -40,7 +40,6 @@ class soc_ifc_env_mbox_dlen_overflow_sequence extends soc_ifc_env_mbox_sequence_
 endclass
 
 task soc_ifc_env_mbox_dlen_overflow_sequence::mbox_push_datain();
-    int ii;
     uvm_reg_data_t data;
     int unsigned overflow_bytes;
 
@@ -52,17 +51,17 @@ task soc_ifc_env_mbox_dlen_overflow_sequence::mbox_push_datain();
     else
         `uvm_info("MBOX_OVERFLOW_SEQ", $sformatf("Randomized overflow bytes to %0d", overflow_bytes), UVM_MEDIUM)
 
-    for (ii=0; ii < this.mbox_op_rand.dlen+overflow_bytes; ii+=4) begin
-        if (ii == 0) begin
+    for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen+overflow_bytes; datain_ii+=4) begin
+        if (datain_ii == 0) begin
             data = uvm_reg_data_t'(mbox_op_rand.dlen - 8);
         end
-        else if (ii == 4) begin
+        else if (datain_ii == 4) begin
             data = uvm_reg_data_t'(mbox_resp_expected_dlen);
         end
         else begin
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain_sem.get();
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
         reg_model.mbox_csr_rm.mbox_datain_sem.put();

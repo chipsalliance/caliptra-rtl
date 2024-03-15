@@ -45,13 +45,12 @@ endclass
 // NOTE:        This should be overridden with real data to write
 //==========================================
 task soc_ifc_env_mbox_max_sequence::mbox_push_datain();
-  int ii;
   uvm_reg_data_t data;
-  for (ii=0; ii < this.mbox_op_rand.dlen; ii+=4) begin
+  for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
 
     if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
 
-    `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+    `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
     reg_model.mbox_csr_rm.mbox_datain_sem.get();
     reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
     reg_model.mbox_csr_rm.mbox_datain_sem.put();

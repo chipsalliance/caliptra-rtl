@@ -38,6 +38,7 @@ class soc_ifc_env_mbox_reg_axs_invalid_sequence extends soc_ifc_env_mbox_sequenc
   function new(string name = "" );
     super.new(name);
     this.mbox_sts_exp_error = 1;
+    this.mbox_sts_exp_error_type = EXP_ERR_PROT;
   endfunction
 
   //==========================================
@@ -144,6 +145,10 @@ task soc_ifc_env_mbox_reg_axs_invalid_sequence::mbox_do_random_reg_write(process
         `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
         mbox_regs[rand_idx].write(local_reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
         report_reg_sts(local_reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
+        // mainline flow was doing datain writes and was about to write the expected_resp_dlen value
+        if (datain_ii == 0) begin
+            this.mbox_sts_exp_error_type = EXP_ERR_RSP_DLEN;
+        end
     end
     else begin
         `uvm_info("MBOX_SEQ", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
