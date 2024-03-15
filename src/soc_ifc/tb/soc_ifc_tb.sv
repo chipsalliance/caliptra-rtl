@@ -292,6 +292,10 @@ module soc_ifc_tb
 
 
   //SRAM for mbox
+  initial begin
+    mbox_ram1.ram = '{default:8'h0};
+  end
+
   caliptra_sram 
   #(
     .DATA_WIDTH(32),
