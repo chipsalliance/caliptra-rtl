@@ -303,11 +303,16 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_push_datain();
     if (mbox_resp_expected_dlen == 0) begin
         `uvm_error("CPTRA_MBOX_HANDLER", "Command received with response data requested, but size of expected response data is 0!")
     end
-    // Write random datain
-    for (ii=0; ii < mbox_resp_expected_dlen; ii+=4) begin
-        if (!std::randomize(data)) `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize data")
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
-        report_reg_sts(reg_sts, "mbox_datain");
+    else if (mbox_resp_expected_dlen > MBOX_SIZE_BYTES) begin
+        `uvm_info("CPTRA_MBOX_HANDLER", $sformatf("Command received with response data requested, size of expected response data [0x%x] is larger than Mailbox [0x%x]! Command will complete with failure status", mbox_resp_expected_dlen, MBOX_SIZE_BYTES), UVM_LOW)
+    end
+    else begin
+        // Write random datain
+        for (ii=0; ii < mbox_resp_expected_dlen; ii+=4) begin
+            if (!std::randomize(data)) `uvm_error("CPTRA_MBOX_HANDLER", "Failed to randomize data")
+            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+            report_reg_sts(reg_sts, "mbox_datain");
+        end
     end
 endtask
 
@@ -323,7 +328,9 @@ task soc_ifc_env_cptra_mbox_handler_sequence::mbox_set_status();
     reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, mbox_resp_expected_dlen, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "mbox_dlen");
     // Determine which status to set and perform the write
-    status = op.cmd.cmd_s.resp_reqd ? DATA_READY : CMD_COMPLETE;
+    status = (op.cmd.cmd_s.resp_reqd && (mbox_resp_expected_dlen inside {[1:MBOX_SIZE_BYTES]})) ? DATA_READY :
+             (op.cmd.cmd_s.resp_reqd)                                                           ? CMD_FAILURE :
+                                                                                                  CMD_COMPLETE;
     data = uvm_reg_data_t'(status) << reg_model.mbox_csr_rm.mbox_status.status.get_lsb_pos();
     reg_model.mbox_csr_rm.mbox_status.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     report_reg_sts(reg_sts, "mbox_status");

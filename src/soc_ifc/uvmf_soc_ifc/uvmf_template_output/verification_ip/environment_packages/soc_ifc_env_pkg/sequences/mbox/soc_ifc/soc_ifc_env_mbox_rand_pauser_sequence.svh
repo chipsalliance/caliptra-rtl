@@ -39,6 +39,7 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
   function new(string name = "" );
     super.new(name);
     this.mbox_sts_exp_error = 1;
+    this.mbox_sts_exp_error_type = EXP_ERR_PROT;
   endfunction
 
 endclass

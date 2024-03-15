@@ -43,6 +43,15 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   rand bit retry_failed_reg_axs;
   bit mbox_sts_exp_error = 0; // Indicates this sequence will inject an error, which should manifest as a CMD_FAILURE response status
                               // TODO make this more comprehensive/intelligent about randomized error injection
+  enum bit [4:0] {
+      EXP_ERR_PROT,
+      EXP_ERR_ECC_UNC,
+      EXP_ERR_RSP_DLEN,
+      EXP_ERR_NONE
+  } mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
+  int datain_ii = MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
+                                     // evaluated against specific offsets for some error checking cases. So give it an
+                                     // unambiguously invalid init value prior to use.
 
   typedef enum byte {
     DLY_ZERO,
@@ -428,19 +437,18 @@ endtask
 // NOTE:        This should be overridden with real data to write
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
-    int ii;
     uvm_reg_data_t data;
-    for (ii=0; ii < this.mbox_op_rand.dlen; ii+=4) begin
-        if (ii == 0) begin
+    for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
+        if (datain_ii == 0) begin
             data = uvm_reg_data_t'(mbox_op_rand.dlen - 8);
         end
-        else if (ii == 4) begin
+        else if (datain_ii == 4) begin
             data = uvm_reg_data_t'(mbox_resp_expected_dlen);
         end
         else begin
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain_sem.get();
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
         reg_model.mbox_csr_rm.mbox_datain_sem.put();
@@ -565,8 +573,11 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
         end
     end
     else if (data == CMD_FAILURE) begin
-        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending && mbox_sts_exp_error) begin
-            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation or a mailbox SRAM double bit flip", data), UVM_HIGH)
+        if (sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending && mbox_sts_exp_error && mbox_sts_exp_error_type inside {EXP_ERR_PROT, EXP_ERR_ECC_UNC}) begin
+            `uvm_info("MBOX_SEQ", $sformatf("Unexpected mailbox status [%p] likely is the result of a spurious reg access injection specifically intended to cause a protocol violation or a mailbox SRAM double bit flip. Expected err type: %p", data, mbox_sts_exp_error_type), UVM_HIGH)
+        end
+        else if (mbox_sts_exp_error && (mbox_sts_exp_error_type == EXP_ERR_RSP_DLEN)) begin
+            `uvm_info("MBOX_SEQ", $sformatf("Mailbox status [%p] is expected due to spurious reg access injection against mbox_datain specifically intended to cause a protocol violation. Expected err type: %p", data, mbox_sts_exp_error_type), UVM_HIGH)
         end
         else begin
             `uvm_error("MBOX_SEQ", $sformatf("Received mailbox status %p unexpectedly, since there is no pending non_fatal error interrupt (or error injection was unexpected)", data))

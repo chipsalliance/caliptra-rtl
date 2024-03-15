@@ -1135,7 +1135,7 @@ class soc_ifc_predictor #(
                 "CPTRA_FW_ERROR_ENC",
                 ["CPTRA_FW_EXTENDED_ERROR_INFO[0]":"CPTRA_FW_EXTENDED_ERROR_INFO[7]"]: begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
+                        `uvm_info("PRED_AHB", {"Write to ",axs_reg.get_name()," register on AHB interface. Nothing to do."}, UVM_DEBUG)
                     end
                 end
                 "CPTRA_BOOT_STATUS": begin
