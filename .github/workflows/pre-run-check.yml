@@ -89,7 +89,8 @@ jobs:
             timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
             if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
                 echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest commit to branch by more than an hour [${timestamp_exp}]"
-                echo "Please rerun any internal/company proprietary testcases, then invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+                echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+                echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
                 exit 1
             fi
             echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
@@ -110,6 +111,7 @@ jobs:
             hash_orig=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash)
             if [[ ${hash_orig} != ${hash} ]]; then
                 echo "Error, submitted hash [${hash_orig}] does not match calculated hash [${hash}]"
+                echo "If your internal testcase completed successfully and invoked .github/scripts/stamp_repo.sh to generate this hash, please open a support issue on the caliptra-rtl repository"
                 exit 1
             fi
             echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
