@@ -576,9 +576,9 @@ module caliptra_top_sva
   // SVA for LMS WNTZ accelerator
     wntz_mode:        assert property (
                                         @(posedge `SVA_RDC_CLK)
-                                        `SHA256_PATH.wntz_mode |-> (`SHA256_PATH.init_reg) & (!`SHA256_PATH.next_reg)
+                                        `SHA256_PATH.init_reg |-> !`SHA256_PATH.next_reg
                                         )
-                            else $display("SVA ERROR: WNTZ mode is not valid without INIT!");
+                            else $display("SVA ERROR: SHA256 operation is not valid with INIT and NEXT asserted in the same cycle!");
 
   // Bus IDLE on Firmware Update Reset
   fw_upd_rst_doe_idle:     assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`DOE_REG_PATH.s_cpuif_req)
