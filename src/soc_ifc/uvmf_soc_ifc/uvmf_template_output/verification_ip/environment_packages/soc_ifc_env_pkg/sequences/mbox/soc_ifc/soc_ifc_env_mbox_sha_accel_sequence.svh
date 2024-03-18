@@ -66,10 +66,15 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
                                  sha_accel_op_rand.sha512_mode == 1'b1 -> mbox_resp_expected_dlen == 32'd64; 
                                  solve sha_accel_op_rand before mbox_resp_expected_dlen; }
     //don't run the "empty" test case
+    `ifdef CALIPTRA_MODE_SEED
+    constraint test_case_c {test_case inside { [1:146] }; }
+    `else
     constraint test_case_c {test_case inside { [1:255] }; }
+    `endif
     //Start address can be anywhere from entry 0 to the final mailbox address
     //Must be aligned to dword
-    constraint start_addr_c {start_addr inside { [4:131068] }; 
+    //Calculate address with params - Last entry is Total size - 1 Entry in bytes
+    constraint start_addr_c {start_addr inside { [4:soc_ifc_pkg::MBOX_SIZE_BYTES-(soc_ifc_pkg::MBOX_DATA_W/8)] }; 
                              start_addr[1:0] == '0; }
 
     //==========================================
