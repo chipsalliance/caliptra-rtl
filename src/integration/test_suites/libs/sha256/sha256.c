@@ -20,17 +20,21 @@
 
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
-void wait_for_sha256_intr(){
+void wait_for_sha256_intr(uint32_t notif, uint32_t error){
     printf("SHA256 flow in progress...\n");
-    while((cptra_intr_rcv.sha256_error == 0) & (cptra_intr_rcv.sha256_notif == 0)){
+    while(((cptra_intr_rcv.sha256_error & error) != error) || ((cptra_intr_rcv.sha256_notif & notif) != notif)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during SHA256 operation to allow ISR to execute and show idle time in sims
         for (uint16_t slp = 0; slp < 100; slp++) {
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //printf("Received SHA256 error intr with status = %d\n", cptra_intr_rcv.sha256_error);
-    printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    if (error)
+        printf("Received SHA256 err intr with status = %d\n", cptra_intr_rcv.sha256_error);
+    else
+        printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    cptra_intr_rcv.sha256_notif &= ~notif;
+    cptra_intr_rcv.sha256_error &= ~error;
 }
 
 void sha256_zeroize(){
@@ -63,8 +67,7 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
                                             ((wntz_n << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK));
     
     // wait for SHA to be valid
-    wait_for_sha256_intr();
-
+    wait_for_sha256_intr(SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     reg_ptr = (uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
     printf("Load DIGEST data from SHA256\n");
     offset = 0;
@@ -83,6 +86,46 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
 
 }
 
+void sha256_error_flow(sha256_io block, uint8_t mode, uint8_t next, uint8_t wntz_mode, uint8_t wntz_w, uint8_t wntz_n, sha256_io digest, uint32_t error) {
+    volatile uint32_t * reg_ptr;
+    uint8_t offset;
+    uint8_t fail_cmd = 0x1;
+    uint32_t sha256_digest [8];
+
+    // wait for SHA to be ready
+    while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0);
+
+    // Write SHA256 block
+    reg_ptr = (uint32_t*) CLP_SHA256_REG_SHA256_BLOCK_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA256_REG_SHA256_BLOCK_15) {
+        *reg_ptr++ = block.data[offset++];
+    }
+
+    // init and next triggers error1 bit. Check to make sure correct error arg is given
+    if (next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK)) {
+        printf("Error1 is expected when init and next are asserted at the same time. Check args given to sha256_error_flow()\n");
+        printf("%c", fail_cmd);
+    }
+    else if (~next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK)) {
+        printf("Error0 is expected for invalid wntz_mode or w. Check args given to sha256_error_flow()\n");
+        printf("%c", fail_cmd);
+    }
+
+    // Enable SHA256 core 
+    VPRINTF(LOW, "Enable SHA256\n");
+    lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, SHA256_REG_SHA256_CTRL_INIT_MASK | 
+                                            ((next << SHA256_REG_SHA256_CTRL_NEXT_LOW) & SHA256_REG_SHA256_CTRL_NEXT_MASK) |
+                                            ((mode << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK) |
+                                            ((wntz_mode << SHA256_REG_SHA256_CTRL_WNTZ_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_MODE_MASK) |
+                                            ((wntz_w << SHA256_REG_SHA256_CTRL_WNTZ_W_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_W_MASK) |
+                                            ((wntz_n << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK));
+    
+    // wait for SHA to trig error
+    wait_for_sha256_intr(0, error);
+
+}
+
 void sha256_flow_wntz_rand(uint8_t mode) {
     // wait for SHA to be ready
     while((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0);
@@ -96,5 +139,5 @@ void sha256_flow_wntz_rand(uint8_t mode) {
                                             // ((wntz_n << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK));
     
     // wait for SHA to be valid
-    wait_for_sha256_intr();
+    wait_for_sha256_intr(SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
 }

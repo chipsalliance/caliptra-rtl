@@ -255,6 +255,41 @@ void main() {
     sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 0, sha256_digest);
     sha256_zeroize();
 
+    //WNTZ errors
+
+    //Invalid w
+    sha256_digest.data_size = 8;
+    for (int i = 0; i < sha256_digest.data_size; i++)
+        sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
+    // sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 3, 0, sha256_digest);
+    sha256_error_flow(sha256_block, SHA256_MODE_SHA_256, 0, 1, 3, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
+    sha256_zeroize();
+
+    //Invalid mode
+    sha256_digest.data_size = 8;
+    for (int i = 0; i < sha256_digest.data_size; i++)
+        sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
+    // sha256_flow(sha256_block, SHA256_MODE_SHA_224, 1, 8, 0, sha256_digest);
+    sha256_error_flow(sha256_block, SHA256_MODE_SHA_224, 0, 1, 8, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
+    sha256_zeroize();
+
+    //SVA in place to check init and next in same cycle
+    // //Invalid wntz op (init and next in same cycle)
+    // sha256_digest.data_size = 8;
+    // for (int i = 0; i < sha256_digest.data_size; i++)
+    //     sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
+    // // sha256_flow(sha256_block, SHA256_MODE_SHA_256, 1, 8, 0, sha256_digest);
+    // sha256_error_flow(sha256_block, SHA256_MODE_SHA_256, 1, 1, 4, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK);
+    // sha256_zeroize();
+
+    // //Invalid regular sha op (init and next in same cycle)
+    // sha256_digest.data_size = 8;
+    // for (int i = 0; i < sha256_digest.data_size; i++)
+    //     sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
+    // // sha256_flow(sha256_block, SHA256_MODE_SHA_256, 0, 8, 0, sha256_digest);
+    // sha256_error_flow(sha256_block, SHA256_MODE_SHA_256, 1, 0, 0, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK);
+    // sha256_zeroize();
+
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);
     while(1);
