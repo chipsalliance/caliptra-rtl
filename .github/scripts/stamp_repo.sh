@@ -15,6 +15,12 @@
 # limitations under the License.
 #
 
+# ENV Check
+if [[ -z "${CALIPTRA_ROOT:+"empty"}" ]]; then
+    echo "Error, must set CALIPTRA_ROOT"
+    exit 1
+fi
+
 # Create file list
 find "$CALIPTRA_ROOT" -type f -name "*.sv" \
                            -o -name "*.svh" \
