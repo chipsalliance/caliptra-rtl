@@ -115,6 +115,7 @@ jobs:
                 exit 1
             fi
             echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
+            rm $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
 
   # Check License Headers
   # Check for microsoft employee or that all compile.yml/.vf are untouched
