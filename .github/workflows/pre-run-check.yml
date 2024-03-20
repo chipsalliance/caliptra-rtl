@@ -75,8 +75,9 @@ jobs:
                                           ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
-            echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-            head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            #echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            echo -e "File list contents:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            cat $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
       - name: Check Timestamp
