@@ -18,7 +18,7 @@
         "url": "origin://Base_Verification/5ac83406-f158-474c-81a6-6cf6e5f07514",
         "dest": "common/verif/src",
         "name": "tools",
-        "version": "promote_verif_tools_269",
+        "version": "promote_verif_tools_301",
         "has_submodules": "True"
     },
     {
@@ -41,7 +41,7 @@
         "url": "origin://AHA_POC/c1d93415-7025-4099-98d0-31b78ff267b0",
         "dest": "common",
         "name": "caliptra_config",
-        "version": "promote_caliptra_config_8",
+        "version": "promote_caliptra_config_10",
         "populate": "when_top"
     },
     {
