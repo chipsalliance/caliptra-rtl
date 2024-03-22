@@ -10,6 +10,23 @@ resources:
     name: Ether/pipelines
 variables:
 - group: AHA_POC_Pipelines
+# Provides caliptra-rtl-write-token
+- group: Caliptra_Promote_Pipeline_Secrets
+- name: derivedTargetBranchName
+  value: $[ coalesce(variables['System.PullRequest.targetBranchName'], 'master') ]
+# If populated, this indicates that the user wishes to validate a Pull Request
+# on the caliptra-rtl repository for the specified branch, with the specified target.
+# If empty, indicates a Pull Request is initiated on the internal ADO repository
+# and this pipeline is used to verify it.
+parameters:
+- name: github_branch_name
+  displayName: GitHub Merge Branch Name
+  type: string
+  default: ''
+- name: github_dest_name
+  displayName: GitHub Merge Destination Name
+  type: string
+  default: 'main'
 
 stages:
 - template: etc/pipelines/templates/promote-pipeline-template.yml@templates  # Template reference
@@ -24,36 +41,73 @@ stages:
     # detection of basic issues
     pre_test_timeout: 120
     pre_test_steps:
+      # Fail if running a GitHub validation pipeline on any branch other than master
       - script: |
-          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
-          module load settings/tsd/pipelines/frontend
-          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
-          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+          echo "Used invalid ADO branch [${BUILD_SOURCEBRANCHNAME}] to run promote pipeline when attempting to validate a GitHub Pull Request. Use 'master'"
+          exit 1
+        displayName: 'Evaluate build branch validity'
+        enabled: ${{ gt(length(parameters.github_branch_name), 0) }}
+        condition: and(eq(variables['Build.Reason'], 'Manual'), ne(variables['Build.SourceBranchName'], 'master'))
 
-          # Run the license checker script
-          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh" && cd $MSFT_REPO_ROOT && bash $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh'
-
-        displayName: 'LICENSE_HEADER_CHECK'
-        enabled: true 
-        timeoutInMinutes: 5
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
+      # Create a merged branch in caliptra-rtl representing the result of the Pull Request
+      # when running validation for GitHub PR
       - script: |
           source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
           module load settings/tsd/pipelines/frontend
           module load tools/python/python3/3.9.2
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_ROOT\""
+        displayName: 'CREATE MERGED TEST BRANCH'
+        enabled: ${{ gt(length(parameters.github_branch_name), 0) }}
+        condition: eq(variables['Build.Reason'], 'Manual')
+        timeoutInMinutes: 10
 
-          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh "master"'
-
+      # License Header check and RDL check are run natively on GitHub Actions for caliptra-rtl
+      # Pull Requests. Only run them here for internal ADO PRs.
+      # These steps are also run if user failed to provided github_branch_name when
+      # manually invoking the pipeline.
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          # Run the license checker script
+          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh" && cd $MSFT_REPO_ROOT && bash $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh'
+  
+        displayName: 'LICENSE_HEADER_CHECK'
+        enabled: true
+        ${{ if eq(length(parameters.github_branch_name), 0) }}:
+          condition: true
+        ${{ else }}:
+          condition: eq(variables['Build.Reason'], 'PullRequest')
+        timeoutInMinutes: 5
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh $(derivedTargetBranchName)'
+  
         displayName: 'RDL GEN CHECK'
         enabled: true
+        ${{ if eq(length(parameters.github_branch_name), 0) }}:
+          condition: true
+        ${{ else }}:
+          condition: eq(variables['Build.Reason'], 'PullRequest')
         timeoutInMinutes: 30
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+      # Run file list check with no GH ref name argument for ADO Pull Requests (GitHub ref will be derived in script)
+      # Run file list check with GitHub ref override in caliptra-rtl when validating GitHub Pull Requests
       - script: |
           source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
           module load settings/tsd/pipelines/frontend
@@ -61,12 +115,16 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           # Run the Filelist generator script
-          enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh "master"'
+          if [[ (${BUILD_REASON} == 'PullRequest') || (-z "${{ parameters.github_dest_name }}") ]]; then
+              enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName)'
+          else
+              enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName) "chips/${{ parameters.github_dest_name }}"'
+          fi
 
         displayName: 'FILE LIST CHECK'
         enabled: true
         timeoutInMinutes: 90
-
+  
     build_and_sim_map:
     - integration_top_vcs:
       - display_name: 'Build integration_lib with VCS'
@@ -155,9 +213,15 @@ stages:
     top_repo: ''
 
     additional_test_steps:
+      # This step is run natively on GitHub Actions for caliptra-rtl
+      # Pull Requests. Only run here for internal ADO PRs.
       - verilator_smoke_test:
         - display_name: 'Verilator Smoke Test'
         - enabled: true
+        - ${{ if eq(length(parameters.github_branch_name), 0) }}:
+          - step_condition: true
+        - ${{ else }}:
+          - step_condition: eq(variables['Build.Reason'], 'PullRequest')
         - run_in_workspace: True
         - timeout: 120
         - commands:
@@ -178,5 +242,22 @@ stages:
           #- 'module load tools/synopsys/dc/2020.09-SP1'
           - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
 
-#          # Run synthesis on top level and exit after elaborate stage
+          # Run synthesis on top level and exit after elaborate stage
           - 'submit -i python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
+
+    post_test_steps:
+      # If this pipeline was run to validate a GitHub Pull Request, finalize by
+      # updating the timestamp and file list hash on the target branch and pushing
+      # to GitHub. This allows the GitHub Action to succeed for that PR
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_branch.sh with ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_branch.sh ${{ parameters.github_branch_name }} $(caliptra-rtl-write-token)"
+        displayName: 'STAMP MERGE BRANCH'
+        enabled: ${{ gt(length(parameters.github_branch_name), 0) }}
+        condition: eq(variables['Build.Reason'], 'Manual')
+        timeoutInMinutes: 10
