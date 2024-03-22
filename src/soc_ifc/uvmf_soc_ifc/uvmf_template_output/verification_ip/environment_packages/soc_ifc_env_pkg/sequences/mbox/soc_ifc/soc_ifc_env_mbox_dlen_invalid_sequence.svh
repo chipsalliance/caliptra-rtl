@@ -45,6 +45,8 @@ class soc_ifc_env_mbox_dlen_invalid_sequence extends soc_ifc_env_mbox_sequence_b
 
   function new(string name = "" );
     super.new(name);
+    this.mbox_sts_exp_error = 1;
+    this.mbox_sts_exp_error_type = EXP_ERR_RSP_DLEN;
   endfunction
 
 endclass
