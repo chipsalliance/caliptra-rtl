@@ -65,11 +65,11 @@ module hmac_ctrl
     //----------------------------------------------------------------
     // hmac
     //----------------------------------------------------------------
-    reg           hmac_cs;
-    reg           hmac_we;
-    reg  [AHB_ADDR_WIDTH-1 : 0] hmac_address;
-    reg  [31 : 0] hmac_write_data;
-    reg  [31 : 0] hmac_read_data;
+    logic           hmac_cs;
+    logic           hmac_we;
+    logic  [AHB_ADDR_WIDTH-1 : 0] hmac_address;
+    logic  [31 : 0] hmac_write_data;
+    logic  [31 : 0] hmac_read_data;
 
     hmac #(
         .ADDR_WIDTH (AHB_ADDR_WIDTH),
