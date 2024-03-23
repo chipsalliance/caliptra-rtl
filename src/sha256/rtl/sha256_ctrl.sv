@@ -53,12 +53,12 @@ module sha256_ctrl #(
     //----------------------------------------------------------------
     // sha256
     //----------------------------------------------------------------
-    reg           sha256_cs;
-    reg           sha256_we;
-    reg  [AHB_ADDR_WIDTH-1 : 0] sha256_address;
-    reg  [31 : 0] sha256_write_data;
-    reg  [31 : 0] sha256_read_data;
-    reg           sha256_err;
+    logic           sha256_cs;
+    logic           sha256_we;
+    logic  [AHB_ADDR_WIDTH-1 : 0] sha256_address;
+    logic  [31 : 0] sha256_write_data;
+    logic  [31 : 0] sha256_read_data;
+    logic           sha256_err;
 
     sha256 #(
         .ADDR_WIDTH(AHB_ADDR_WIDTH),
