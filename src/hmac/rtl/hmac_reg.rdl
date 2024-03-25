@@ -36,8 +36,7 @@ addrmap hmac_reg {
     reg {
         name = "HMAC384 component name register type definition";
         desc = "Two 32-bit read-only registers repereseting of the name
-                of HMAC384 component. These registers are located at
-                HMAC384_base_address + 0x0000_0000 and 0x0000_0004 addresses.";
+                of HMAC384 component.";
 
         default sw = r;
         default hw = w;
@@ -51,8 +50,7 @@ addrmap hmac_reg {
     reg {
         name = "HMAC384 component version register type definition";
         desc = "Two 32-bit read-only registers repereseting of the version
-                of HMAC384 component. These registers are located at
-                HMAC384_base_address + 0x0000_0008 and 0x0000_000C addresses.";
+                of HMAC384 component.";
 
         default sw = r;
         default hw = w;
@@ -64,23 +62,18 @@ addrmap hmac_reg {
 
     /* ---- HMAC384 Component Control ---- */
     reg {
-        name = "HMAC384 component control register type definition";
-        desc = "One 3-bit register including the following flags: 
-                bit #0: INIT : Trigs the HMAC384 core to start the 
-                                processing for the key and the first padded 
-                                message block.
-                bit #1: NEXT: ​Trigs the HMAC384 core to start the 
-                                processing for the remining padded message block. 
-                bit #3: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
-                This register is located at HMAC384_base_address + 0x0000_0010
-                After each software write, hardware will erase the register.";
+        name = "HMAC384 CTRL";
+        desc = "HMAC384 component control register type definition";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control init command bit"; singlepulse;} INIT = 1'b0;
-        field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
-        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control init command bit: Trigs the HMAC384 core to start the 
+                                processing for the key and the first padded 
+                                message block."; singlepulse;} INIT = 1'b0;
+        field {desc = "Control next command bit: ​Trigs the HMAC384 core to start the 
+                                processing for the remining padded message block. "; singlepulse;} NEXT = 1'b0;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage."; singlepulse;} ZEROIZE = 1'b0;
     
     } HMAC384_CTRL @0x00000010;
 
@@ -88,19 +81,16 @@ addrmap hmac_reg {
 
     /* ---- HMAC384 Component Status ---- */
     reg {
-        name = "HMAC384 component status register type definition";
-        desc = "One 2-bit register including the following flags: 
-                bit #0: READY : ​Indicates if the core is ready to take
-                                a control command and process the block.  
-                bit #1: Valid: ​Indicates if the process is done and the
-                                results stored in TAG registers are valid. 
-                This register is located at HMAC384_base_address + 0x0000_0018.";
+        name = "HMAC384 STATUS";
+        desc = "HMAC384 component status register type definition";
 
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
-        field {desc = "Status ready bit";} READY = 1'b0;
-        field {desc = "Status valid bit";} VALID = 1'b0;
+        field {desc = "Status ready bit: ​Indicates if the core is ready to take
+                                a control command and process the block.";} READY = 1'b0;
+        field {desc = "Status valid bit: ​Indicates if the process is done and the
+                                results stored in TAG registers are valid.";} VALID = 1'b0;
     
     } HMAC384_STATUS @0x00000018;
 
@@ -108,10 +98,9 @@ addrmap hmac_reg {
     
     /* ---- HMAC384 Component Input Key ---- */
     reg {
-        name = "HMAC384 component key register type definition";
-        desc = "12 32-bit registers storing the 384-bit key.
-                These registers are located at HMAC384_base_address + 
-                0x0000_0040 to 0x0000_006C in big-endian representation.";
+        name = "HMAC384 KEY";
+        desc = "HMAC384 component key register type definition
+                12 32-bit registers storing the 384-bit key.";
 
         default sw = w;
         default hw = rw;
@@ -125,10 +114,9 @@ addrmap hmac_reg {
 
     /* ---- HMAC384 Component Input Message Block ---- */
     reg {
-        name = "HMAC384 component block register type definition";
-        desc = "32 32-bit registers storing the 1024-bit padded input.
-                These registers are located at HMAC384_base_address + 
-                0x0000_0080 to 0x0000_00FC in big-endian representation.";
+        name = "HMAC384 BLOCK";
+        desc = "HMAC384 component block register type definition
+                32 32-bit registers storing the 1024-bit padded input.";
 
         default sw = w;
         default hw = rw;
@@ -142,10 +130,9 @@ addrmap hmac_reg {
 
     /* ---- HMAC384 Component Output Tag ---- */
     reg {
-        name = "HMAC384 component tag register type definition";
-        desc = "12 32-bit registers storing the 384-bit digest output.
-                These registers are located at HMAC384_base_address + 
-                0x0000_0100 to 0x0000_012C in big-endian representation.";
+        name = "HMAC384 TAG";
+        desc = "HMAC384 component tag register type definition
+                12 32-bit registers storing the 384-bit digest output.";
 
         default sw = r;
         default hw = w;
@@ -157,10 +144,9 @@ addrmap hmac_reg {
 
     /* ---- HMAC384 Component Input LFSR Seed ---- */
     reg {
-        name = "HMAC384 component lfsr seed register type definition";
-        desc = "12 32-bit registers storing the 384-bit lfsr seed input.
-                These registers are located at HMAC384_base_address + 
-                0x0000_0130 to 0x0000_015C in big-endian representation.";
+        name = "HMAC384 LFSR SEED";
+        desc = "HMAC384 component lfsr seed register type definition
+                12 32-bit registers storing the 384-bit lfsr seed input.";
 
         default sw = w;
         default hw = r;
