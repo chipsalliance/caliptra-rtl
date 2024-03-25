@@ -269,7 +269,8 @@ reg {
             [br] [lb]0[rb]     MFG_FLAG_GEN_IDEV_CSR: Enable bit for Caliptra to generate an IDEV CSR
             [br] [lb]1[rb]     MFG_FLAG_RNG_UNAVAIL: Random Number Generator Unavailable
             [br] [lb]15:2[rb]  MFG_FLAG_RSVD
-            [br] [lb]30:16[rb] FAKE_ROM_RSVD
+            [br] [lb]29:16[rb] FAKE_ROM_RSVD
+            [br] [lb]30[rb]    FAKE_ROM_PROD_MODE_EN: Enable bit to allow the fake-rom to run in the production lifecycle mode
             [br] [lb]31[rb]    FAKE_ROM_IMAGE_VERIFY_EN: Enable bit to perform image verification within the fake-rom feature
             [br]
             [br]Caliptra Access: RW
