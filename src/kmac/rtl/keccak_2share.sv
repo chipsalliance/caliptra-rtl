@@ -490,7 +490,7 @@ module keccak_2share
     end
     for (int x = 0 ; x < 5 ; x++) begin
       for (int z = 0 ; z < W ; z++) begin
-        int index_z;
+        logic [31:0] index_z;
         index_z = (z == 0) ? W-1 : z-1; // (z+1)%W
         d[x][z] = c[ThetaIndexX1[x]][z] ^ c[ThetaIndexX2[x]][index_z];
       end

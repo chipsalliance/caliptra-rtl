@@ -199,10 +199,10 @@ module sha256
 
   always_comb begin
     unique case(wntz_w)
-      8'h1:     wntz_iter = 'd0; //2**w - 1 (-1) (1st iteration is considered separately)
-      8'h2:     wntz_iter = 'd2;
-      8'h4:     wntz_iter = 'd14;
-      8'h8:     wntz_iter = 'd254;
+      4'h1:     wntz_iter = 'd0; //2**w - 1 (-1) (1st iteration is considered separately)
+      4'h2:     wntz_iter = 'd2;
+      4'h4:     wntz_iter = 'd14;
+      4'h8:     wntz_iter = 'd254;
       default:  wntz_iter = 'd0;
     endcase
   end
