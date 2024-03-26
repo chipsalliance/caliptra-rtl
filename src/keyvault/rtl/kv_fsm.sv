@@ -155,21 +155,36 @@ always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
-        num_dwords_data <= '0;
     end
     else if (zeroize) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
-        num_dwords_data <= '0;
     end
     else begin
         kv_fsm_ps <= kv_fsm_ns;
         offset <= offset_rst ? '0 :
                   offset_en ? offset_nxt : offset;
-        //store the offset_nxt on the last cycle of valid data, this is the number of dwords of valid data
-        num_dwords_data <= arc_KV_RW_KV_PAD ? offset_nxt : num_dwords_data;
     end
 end
+
+generate
+    if (PAD==1) begin
+        always_ff @(posedge clk or negedge rst_b) begin
+            if (!rst_b) begin
+                num_dwords_data <= '0;
+            end
+            else if (zeroize) begin
+                num_dwords_data <= '0;
+            end
+            else begin
+                //store the offset_nxt on the last cycle of valid data, this is the number of dwords of valid data
+                num_dwords_data <= arc_KV_RW_KV_PAD ? offset_nxt : num_dwords_data;
+            end
+        end
+    end else begin
+        always_comb num_dwords_data = '0;
+    end
+endgenerate
 
 always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[OFFSET_W-1:0] : '0;
 always_comb write_offset = offset[OFFSET_W-1:0];
