@@ -34,7 +34,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     soc_ifc_ctrl_sequence_t soc_ifc_ctrl_seq;
 
   localparam        CPTRA_CLK_PERIOD_PS = 10000; // 100MHz clk = 10ns. FIXME derive from system?
-  localparam [63:0] CPTRA_WDT_TIMEOUT_IN_PS = 150_000_000_000; // 150ms
+  localparam [63:0] CPTRA_WDT_TIMEOUT_IN_PS = 64'd150_000_000_000; // 150ms
   localparam [63:0] CPTRA_WDT_CFG_VALUE = CPTRA_WDT_TIMEOUT_IN_PS / CPTRA_CLK_PERIOD_PS; // clock cycles
 
   caliptra_apb_user apb_user_obj;
