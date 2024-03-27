@@ -72,15 +72,23 @@ addrmap sha256_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control init command bit: Trigs the SHA256 core to start the 
-                                processing for the first padded message block."; singlepulse;} INIT = 1'b0;
+                                processing for the first padded message block.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the SHA256 core to start the 
-                                processing for the remining padded message block."; singlepulse;} NEXT = 1'b0;
+                                processing for the remining padded message block.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits: Indicates the SHA256 core to set dynamically
                                  the type of hashing algorithm. This can be:
                                  0 for SHA256/224
                                  1 for SHA256"; swwe = sha256_ready;} MODE = 1'b1;
-        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage."; singlepulse;} ZEROIZE = 1'b0;
-        field {desc = "Control Winternitz verification mode command bits"; singlepulse; swwe = sha256_ready;} WNTZ_MODE = 1'b0;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control Winternitz verification mode command bits
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse; swwe = sha256_ready;} WNTZ_MODE = 1'b0;
         field {desc = "Control Winternitz W value"; swwe = sha256_ready;} WNTZ_W[4] = 4'h4;
         field {desc = "Control Winternitz n value(SHA192/SHA256 --> n = 24/32)"; swwe = sha256_ready;} WNTZ_N_MODE = 1'b0;
     
@@ -106,7 +114,7 @@ addrmap sha256_reg {
     reg {
         name = "SHA256 BLOCK";
         desc = "SHA256 component block register type definition.
-                16 32-bit registers storing the 512-bit padded input.";
+                16 32-bit registers storing the 512-bit padded input in big-endian representation.";
 
         default sw = w;
         default hw = r;
@@ -119,7 +127,7 @@ addrmap sha256_reg {
     reg {
         name = "SHA256 DIGEST";
         desc = "SHA256 component digest register type definition
-                8 32-bit registers storing the 256-bit digest output.";
+                8 32-bit registers storing the 256-bit digest output in big-endian representation.";
 
         default sw = r;
         default hw = w;

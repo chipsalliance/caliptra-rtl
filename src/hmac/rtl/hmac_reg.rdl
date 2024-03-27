@@ -63,17 +63,23 @@ addrmap hmac_reg {
     /* ---- HMAC384 Component Control ---- */
     reg {
         name = "HMAC384 CTRL";
-        desc = "HMAC384 component control register type definition";
+        desc = "HMAC384 component control register type definition.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control init command bit: Trigs the HMAC384 core to start the 
                                 processing for the key and the first padded 
-                                message block."; singlepulse;} INIT = 1'b0;
+                                message block.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the HMAC384 core to start the 
-                                processing for the remining padded message block. "; singlepulse;} NEXT = 1'b0;
-        field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage."; singlepulse;} ZEROIZE = 1'b0;
+                                processing for the remining padded message block.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
     
     } HMAC384_CTRL @0x00000010;
 
@@ -100,7 +106,7 @@ addrmap hmac_reg {
     reg {
         name = "HMAC384 KEY";
         desc = "HMAC384 component key register type definition
-                12 32-bit registers storing the 384-bit key.";
+                12 32-bit registers storing the 384-bit key in big-endian representation.";
 
         default sw = w;
         default hw = rw;
@@ -116,7 +122,7 @@ addrmap hmac_reg {
     reg {
         name = "HMAC384 BLOCK";
         desc = "HMAC384 component block register type definition
-                32 32-bit registers storing the 1024-bit padded input.";
+                32 32-bit registers storing the 1024-bit padded input in big-endian representation.";
 
         default sw = w;
         default hw = rw;
@@ -132,7 +138,7 @@ addrmap hmac_reg {
     reg {
         name = "HMAC384 TAG";
         desc = "HMAC384 component tag register type definition
-                12 32-bit registers storing the 384-bit digest output.";
+                12 32-bit registers storing the 384-bit digest output in big-endian representation.";
 
         default sw = r;
         default hw = w;

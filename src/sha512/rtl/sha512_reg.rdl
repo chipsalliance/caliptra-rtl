@@ -66,16 +66,22 @@ addrmap sha512_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control init command bit: Trigs the SHA512 core to start the 
-                                processing for the first padded message block."; singlepulse;} INIT = 1'b0;
+                                processing for the first padded message block. 
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit: Trigs the SHA512 core to start the 
-                                processing for the remining padded message block."; singlepulse;} NEXT = 1'b0;
+                                processing for the remining padded message block. 
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
         field {desc = "Control mode command bits: Indicates the SHA512 core to set dynamically
                                  the type of hashing algorithm. This can be:
                                  00 for SHA512/224
                                  01 for SHA512/256
                                  10 for SHA384
                                  11 for SHA512";} MODE[2] = 2'b10;
-        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage."; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Indicates last iteration for keyvault or hash extend function. 
                        Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
     
@@ -100,7 +106,7 @@ addrmap sha512_reg {
     reg {
         name = "SHA512 BLOCK";
         desc = "SHA512 component block register type definition
-                32 32-bit registers storing the 1024-bit padded input.";
+                32 32-bit registers storing the 1024-bit padded input in big-endian representation.";
 
         default sw = w;
         default hw = rw;
@@ -114,7 +120,7 @@ addrmap sha512_reg {
     reg {
         name = "SHA512 DIGEST";
         desc = "SHA512 component digest register type definition
-                16 32-bit registers storing the 512-bit digest output.";
+                16 32-bit registers storing the 512-bit digest output in big-endian representation.";
 
         default sw = r;
         default hw = w;
