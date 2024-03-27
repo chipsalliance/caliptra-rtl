@@ -322,6 +322,7 @@ void caliptra_rt() {
         if (cptra_intr_rcv.soc_ifc_notif   ) {
             uint8_t fsm_chk;
             uint8_t fail = 0;
+            uint32_t dlen_received;
             VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
@@ -379,6 +380,7 @@ void caliptra_rt() {
                 }
                 //read the mbox command
                 op = soc_ifc_read_mbox_cmd();
+                dlen_received = op.dlen;
                 if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
                     VPRINTF(MEDIUM, "Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
                     if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
@@ -517,6 +519,10 @@ void caliptra_rt() {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
                         VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                        if (soc_ifc_sanitize_mbox_n_bytes(dlen_received >= (MBOX_DIR_SPAN) ? MBOX_DIR_SPAN : dlen_received, 0xfff) != 0) {
+                            SEND_STDOUT_CTRL(0x1);
+                            while(1);
+                        }
                     } else if (fail) {
                         VPRINTF(LOW, "Cmd failed\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
@@ -564,6 +570,10 @@ void caliptra_rt() {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
                         VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                        if (soc_ifc_sanitize_mbox_n_bytes(dlen_received >= (MBOX_DIR_SPAN) ? MBOX_DIR_SPAN : dlen_received, 0xfff) != 0) {
+                            SEND_STDOUT_CTRL(0x1);
+                            while(1);
+                        }
                     } else {
                         soc_ifc_set_mbox_status_field(CMD_COMPLETE);
                     }

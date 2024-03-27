@@ -108,6 +108,15 @@ void soc_ifc_clr_flow_status_field(uint32_t field) {
     lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS,reg);
 }
 
+uint8_t soc_ifc_mbox_acquire_lock(uint32_t attempt_count) {
+    for(uint32_t ii=0; ii<attempt_count; ii++) {
+        if((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 mbox_op_s soc_ifc_read_mbox_cmd() {
     mbox_op_s op;
 
@@ -224,6 +233,22 @@ void soc_ifc_fw_update(mbox_op_s op) {
             *iccm_dest++ = soc_ifc_mbox_read_dataout_single();
             data_length += 4; //dlen is in bytes
         }
+}
+
+uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_count) {
+    if (byte_count > MBOX_DIR_SPAN) {
+        VPRINTF(FATAL, "SOC_IFC: Illegal byte_count 0x%x\n", byte_count);
+        SEND_STDOUT_CTRL(0x1);
+    }
+    if (soc_ifc_mbox_acquire_lock(attempt_count) != 0) {
+        VPRINTF(ERROR, "ERROR: Failed to acquire lock for mbox sanitize operation\n");
+        return 1;
+    }
+    for (uint32_t ii=0; ii < byte_count; ii+=4) {
+        lsu_write_32(MBOX_DIR_BASE_ADDR+ii, 0x0);
+    }
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    return 0;
 }
 
 void soc_ifc_set_fw_update_reset(uint8_t wait_cycles) {
