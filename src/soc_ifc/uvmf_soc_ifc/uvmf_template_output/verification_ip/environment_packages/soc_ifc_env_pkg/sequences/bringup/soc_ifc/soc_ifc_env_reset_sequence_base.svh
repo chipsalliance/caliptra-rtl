@@ -180,8 +180,11 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     end
 
     // Not a 'FUSE', but WDT timeout is configured by SoC... do it here anyway.
+    `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_CLK_PERIOD_PS [%d] to CPTRA_TIMER_CONFIG", CPTRA_CLK_PERIOD_PS), UVM_LOW)
     reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG.write(sts, uvm_reg_data_t'(CPTRA_CLK_PERIOD_PS), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_TIMER_CONFIG")
+
+    `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_WDT_CFG_VALUE [0x%x_%x] to CPTRA_WDT_CFG", CPTRA_WDT_CFG_VALUE[63:32], CPTRA_WDT_CFG_VALUE[31:0]), UVM_LOW)
     reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[31:0]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
     if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_WDT_CFG[0]")
     reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[63:32]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
