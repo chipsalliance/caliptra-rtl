@@ -110,7 +110,7 @@ endclass
 
 //==========================================
 // Task:        mbox_teardown
-// Description: At end-of-sequence, injuect some stalls to allow
+// Description: At end-of-sequence, inject some stalls to allow
 //              uC to acquire lock and sanitize the mailbox
 //==========================================
 task soc_ifc_env_mbox_sram_double_bit_flip_sequence::mbox_teardown();
