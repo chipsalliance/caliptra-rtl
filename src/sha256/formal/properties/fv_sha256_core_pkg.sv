@@ -16,7 +16,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-package fv_sha256_pkg;
+
+package fv_sha256_core_pkg;
 
 typedef bit unsigned [31:0] a_unsigned_32_64 [63:0];
 

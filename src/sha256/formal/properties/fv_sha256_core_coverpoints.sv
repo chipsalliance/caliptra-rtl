@@ -17,7 +17,7 @@
 // limitations under the License.
 //
 
-module fv_coverpoints_m(
+module fv_sha256_core_coverpoints_m(
     input logic clk,
     input logic reset_n
 );
@@ -42,7 +42,7 @@ module fv_coverpoints_m(
 
 
 endmodule 
-bind sha256_core fv_coverpoints_m fv_coverpoints(
+bind sha256_core fv_sha256_core_coverpoints_m fv_sha256_core_coverpoints(
   .clk(clk),
   .reset_n(reset_n)
 );
