@@ -519,6 +519,10 @@ void caliptra_rt() {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
                         VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                        // TODO Remove the mailbox sanitization op in Gen2 validation framework.
+                        //      In Gen2, Caliptra Mailbox code should be modified to avoid spurious
+                        //      SRAM prefetches that make this sanitization necessary after a double-bit
+                        //      ECC error
                         if (soc_ifc_sanitize_mbox_n_bytes(dlen_received >= (MBOX_DIR_SPAN) ? MBOX_DIR_SPAN : dlen_received, 0xfff) != 0) {
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
@@ -570,6 +574,10 @@ void caliptra_rt() {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
                         VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
+                        // TODO Remove the mailbox sanitization op in Gen2 validation framework.
+                        //      In Gen2, Caliptra Mailbox code should be modified to avoid spurious
+                        //      SRAM prefetches that make this sanitization necessary after a double-bit
+                        //      ECC error
                         if (soc_ifc_sanitize_mbox_n_bytes(dlen_received >= (MBOX_DIR_SPAN) ? MBOX_DIR_SPAN : dlen_received, 0xfff) != 0) {
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
