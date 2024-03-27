@@ -43,22 +43,21 @@ endclass
 
 // This should be overridden with real data to write
 task soc_ifc_env_mbox_rand_fw_sequence::mbox_push_datain();
-    int ii;
     uvm_reg_data_t data;
     uvm_reg_data_t first_size;
     first_size = uvm_reg_data_t'((mbox_op_rand.dlen - 32 - (mbox_op_rand.dlen%8))/2);
     `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain, will inject dlen at ii= [0] and at [%0d]", 16 + first_size), UVM_LOW)
-    for (ii=0; ii < this.mbox_op_rand.dlen; ii+=4) begin
-        if (ii == 0) begin
+    for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
+        if (datain_ii == 0) begin
             data = first_size;
         end
-        else if (ii == (16 + first_size)) begin
+        else if (datain_ii == (16 + first_size)) begin
             data = uvm_reg_data_t'(mbox_op_rand.dlen - first_size);
         end
         else begin
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii/4, data), UVM_DEBUG)
+        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
         if (reg_sts != UVM_IS_OK)
             `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")

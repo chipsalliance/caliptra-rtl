@@ -109,12 +109,19 @@ void main() {
                             0x00000000,
                             0x00000440};
 
-    //this is a random lfsr_seed 160-bit
-    uint32_t lfsr_seed_data[5] = {0xC8F518D4,
-                                 0xF3AA1BD4,
-                                 0x6ED56C1C,
-                                 0x3C9E16FB,
-                                 0x800AF504}; 
+    //this is a random lfsr_seed
+    uint32_t lfsr_seed_data[12] =  {0xC8F518D4,
+                                    0xF3AA1BD4,
+                                    0x6ED56C1C,
+                                    0x3C9E16FB,
+                                    0x800AF504,
+                                    0xC8F518D4,
+                                    0xF3AA1BD4,
+                                    0x6ED56C1C,
+                                    0x3C9E16FB,
+                                    0x800AF504,
+                                    0xC8F518D4,
+                                    0xF3AA1BD4}; 
 
     uint32_t expected_tag[12] =   {0xb6a8d563,
                                     0x6f5c6a72,
@@ -164,7 +171,7 @@ void main() {
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_4) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_11) {
         *reg_ptr++ = lfsr_seed_data[offset++];
     }
 

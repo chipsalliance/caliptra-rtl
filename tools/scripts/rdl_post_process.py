@@ -25,6 +25,8 @@ def scrub_line_by_line(fname):
     mod_cnt = 0
     mod_lines = ""
 
+    found_hard_reset = None
+
     # Line by line manipulation
     # Look for unpacked arrays (could be struct arrays or signal arrays)
     # Look for unpacked struct types
@@ -35,6 +37,14 @@ def scrub_line_by_line(fname):
         has_reg_strb = re.search(r'\bdecoded_reg_strb\b', line)
         has_unpacked = re.search(r'\[\d+\]', line)
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
+        is_endmodule = re.search(r'\bendmodule\b', line)
+        has_reset = re.search(r'\bnegedge\b', line)
+        if (has_reset is not None and found_hard_reset is None):
+            substring = re.search(r"negedge (\w+.\w+)", line)
+            reset_name = substring.group(1)
+            # Find the hard reset if it exists
+            # hard_reset_b, error_reset_b and cptra_pwrgood are used interchangeably
+            found_hard_reset = re.search(r'hard_reset|pwrgood|error_reset',reset_name)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
@@ -55,6 +65,11 @@ def scrub_line_by_line(fname):
                 has_unpacked = re.search(r'\[\d+\]', line)
             mod_lines+=line
             mod_cnt+=1
+        elif (is_endmodule is not None):
+            mod_lines+="\n"
+            mod_lines+="`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !" + reset_name + ")\n"
+            mod_lines+="\n"
+            mod_lines+=line
         else:
             mod_lines+=line
     #print(f"modified {mod_cnt} lines with unpacked arrays in {fname}")

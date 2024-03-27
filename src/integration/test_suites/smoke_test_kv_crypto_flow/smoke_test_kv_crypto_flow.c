@@ -123,7 +123,7 @@ void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     uint32_t block[]        = {0xcfc155a3,0x967de347,0xf58fa2e8,0xbbeb4183,0xd6d32f74,0x27155e6a,0xb39cddf2,0xe627c572,0x80000000,0x00000000,0x00000000,0x00000000,
                                0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,
                                0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000500};    
-    uint32_t lfsr_seed_data[]={0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,0x3C9E16FB,0x800AF504}; //this is a random lfsr_seed 160-bit
+    uint32_t lfsr_seed_data[]={0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,0x3C9E16FB,0x800AF504,0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,0x3C9E16FB,0x800AF504,0xC8F518D4,0xF3AA1BD4}; //this is a random lfsr_seed
     uint32_t expected_tag[] = {0xaf2799d0,0x1f135a1e,0xf963dfd0,0x59f99604,0xb0e33be1,0xca38e70c,0x9b2c1073,0x1f17173a,0xd8f2681c,0xa64aeac5,0xf5a4b368,0x457460dc};
 
     hmac_key.kv_intf = TRUE;
@@ -135,7 +135,7 @@ void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     VPRINTF(LOW,"hmac block kv id = %x\n", hmac_block.kv_id);
 
     hmac_lfsr_seed.kv_intf = FALSE;
-    hmac_lfsr_seed.data_size = 5;
+    hmac_lfsr_seed.data_size = 12;
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = rand() % 0xffffffff;
 

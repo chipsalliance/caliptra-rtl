@@ -284,7 +284,7 @@ package hmac_reg_pkg;
         hmac_reg__HMAC384_CTRL__out_t HMAC384_CTRL;
         hmac_reg__HMAC384_KEY__out_t HMAC384_KEY[12];
         hmac_reg__HMAC384_BLOCK__out_t HMAC384_BLOCK[32];
-        hmac_reg__HMAC384_LFSR_SEED__out_t HMAC384_LFSR_SEED[5];
+        hmac_reg__HMAC384_LFSR_SEED__out_t HMAC384_LFSR_SEED[12];
         __kv_read_ctrl_reg__out_t HMAC384_KV_RD_KEY_CTRL;
         __kv_read_ctrl_reg__out_t HMAC384_KV_RD_BLOCK_CTRL;
         __kv_write_ctrl_reg__out_t HMAC384_KV_WR_CTRL;

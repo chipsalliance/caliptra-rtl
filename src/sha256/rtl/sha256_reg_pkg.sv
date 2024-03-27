@@ -27,8 +27,13 @@ package sha256_reg_pkg;
     } sha256_reg__SHA256_STATUS__VALID__in_t;
 
     typedef struct {
+        logic next;
+    } sha256_reg__SHA256_STATUS__WNTZ_BUSY__in_t;
+
+    typedef struct {
         sha256_reg__SHA256_STATUS__READY__in_t READY;
         sha256_reg__SHA256_STATUS__VALID__in_t VALID;
+        sha256_reg__SHA256_STATUS__WNTZ_BUSY__in_t WNTZ_BUSY;
     } sha256_reg__SHA256_STATUS__in_t;
 
     typedef struct {
@@ -87,6 +92,7 @@ package sha256_reg_pkg;
     typedef struct {
         logic reset_b;
         logic error_reset_b;
+        logic sha256_ready;
         sha256_reg__SHA256_NAME__in_t SHA256_NAME[2];
         sha256_reg__SHA256_VERSION__in_t SHA256_VERSION[2];
         sha256_reg__SHA256_STATUS__in_t SHA256_STATUS;
@@ -112,10 +118,25 @@ package sha256_reg_pkg;
     } sha256_reg__SHA256_CTRL__ZEROIZE__out_t;
 
     typedef struct {
+        logic value;
+    } sha256_reg__SHA256_CTRL__WNTZ_MODE__out_t;
+
+    typedef struct {
+        logic [3:0] value;
+    } sha256_reg__SHA256_CTRL__WNTZ_W__out_t;
+
+    typedef struct {
+        logic value;
+    } sha256_reg__SHA256_CTRL__WNTZ_N_MODE__out_t;
+
+    typedef struct {
         sha256_reg__SHA256_CTRL__INIT__out_t INIT;
         sha256_reg__SHA256_CTRL__NEXT__out_t NEXT;
         sha256_reg__SHA256_CTRL__MODE__out_t MODE;
         sha256_reg__SHA256_CTRL__ZEROIZE__out_t ZEROIZE;
+        sha256_reg__SHA256_CTRL__WNTZ_MODE__out_t WNTZ_MODE;
+        sha256_reg__SHA256_CTRL__WNTZ_W__out_t WNTZ_W;
+        sha256_reg__SHA256_CTRL__WNTZ_N_MODE__out_t WNTZ_N_MODE;
     } sha256_reg__SHA256_CTRL__out_t;
 
     typedef struct {

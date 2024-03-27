@@ -33,6 +33,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
   rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
+  rand soc_ifc_env_mbox_rand_small_sequence_t soc_ifc_env_early_mbox_seq;
   rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_fmc_seq;
   rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_rt_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
@@ -84,6 +85,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   } rand_seq_idx;
 
   rand int iteration_count;
+  rand bit do_early_mbox_seq;
   int sts_rsp_count = 0;
 
   // Choose rand weights for each sequence to determine run frequency
@@ -172,6 +174,18 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
         else
             `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Did not receive Command Line Iteration Count Argument with +CALIPTRA_TOP_RAND_ITER, defaulting to %0d", iteration_count), UVM_LOW);
     end
+    // Users can manually override whether or not the early mailbox sequence is run prior to firmware load
+    if ($test$plusargs("CALIPTRA_TOP_EARLY_MB_SEQ")) begin
+        `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Received command line argument specifying to run the early mailbox sequence before firmware initialization"), UVM_LOW);
+        do_early_mbox_seq = 1;
+        do_early_mbox_seq.rand_mode(0);
+    end
+    else begin
+        if (!this.randomize(do_early_mbox_seq))
+            `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "Failed to randomize do_early_mbox_seq after receiving no command line override")
+        else
+            `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("Did not receive Command Line Argument for early mailbox sequence with +CALIPTRA_TOP_EARLY_MB_SEQ, defaulting to %0d", do_early_mbox_seq), UVM_LOW);
+    end
     soc_ifc_env_seq_ii = new[iteration_count];
   endfunction
 
@@ -214,6 +228,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_pauser_init_seq = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
+    soc_ifc_env_early_mbox_seq = soc_ifc_env_mbox_rand_small_sequence_t::type_id::create("soc_ifc_env_early_mbox_seq");
     soc_ifc_env_mbox_fmc_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_fmc_seq");
     soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
 
@@ -224,6 +239,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_early_mbox_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_fmc_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_rt_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
 
@@ -267,6 +283,13 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_bringup_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
     `uvm_info("CALIPTRA_TOP_BRINGUP", "SoC completed poweron and observed reset deassertion to system", UVM_LOW)
+
+    if (do_early_mbox_seq) begin
+        if (!soc_ifc_env_early_mbox_seq.randomize() with { mbox_op_rand.dlen <= 32'h0000_0020; !mbox_op_rand.cmd.cmd_s.resp_reqd; })
+            `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_early_mbox_seq randomization failed")
+        `uvm_info("CALIPTRA_TOP_RAND_TEST", "Running early mailbox sequence", UVM_MEDIUM)
+        soc_ifc_env_early_mbox_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+    end
 
     run_firmware_init(soc_ifc_env_mbox_fmc_seq,soc_ifc_env_mbox_rt_seq);
 

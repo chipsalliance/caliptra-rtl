@@ -28,6 +28,7 @@ addrmap sha256_reg {
 
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+    signal {} sha256_ready;
 
     /* -----------------------
     * Register definitive definitions
@@ -84,8 +85,11 @@ addrmap sha256_reg {
         default resetsignal = reset_b;
         field {desc = "Control init command bit"; singlepulse;} INIT = 1'b0;
         field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
-        field {desc = "Control mode command bits";} MODE = 1'b1;
+        field {desc = "Control mode command bits"; swwe = sha256_ready;} MODE = 1'b1;
         field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control Winternitz verification mode command bits"; singlepulse; swwe = sha256_ready;} WNTZ_MODE = 1'b0;
+        field {desc = "Control Winternitz W value"; swwe = sha256_ready;} WNTZ_W[4] = 4'h4;
+        field {desc = "Control Winternitz n value(SHA192/SHA256 --> n = 24/32)"; swwe = sha256_ready;} WNTZ_N_MODE = 1'b0;
     
     } SHA256_CTRL @0x00000010;
 
@@ -104,6 +108,7 @@ addrmap sha256_reg {
         default resetsignal = reset_b;
         field {desc = "Status ready bit";} READY = 1'b0;
         field {desc = "Status valid bit";} VALID = 1'b0;
+        field {desc = "Winternitz busy status bit";} WNTZ_BUSY = 1'b0;
     
     } SHA256_STATUS @0x00000018;
 

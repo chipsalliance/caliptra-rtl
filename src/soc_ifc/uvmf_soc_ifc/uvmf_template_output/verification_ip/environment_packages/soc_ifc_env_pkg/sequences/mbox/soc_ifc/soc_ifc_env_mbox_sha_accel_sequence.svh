@@ -163,7 +163,6 @@ endtask
 
 // This should be overridden with real data to write
 task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
-    int ii;
     reg [31:0] data;
     int most_sig_dword;
     //int sha_block_start_dw;
@@ -178,7 +177,7 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
     report_reg_sts(reg_sts, "mbox_datain");
 
     //pad the data until start address
-    //for (ii=1; ii < sha_block_start_dw; ii++) begin
+    //for (datain_ii=1; datain_ii < sha_block_start_dw; datain_ii++) begin
     //    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
     //    report_reg_sts(reg_sts, "mbox_datain");
     //end
@@ -187,9 +186,9 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
     most_sig_dword = (this.dlen[1:0] == 2'b00) ? (this.dlen >> 2) - 1 : (this.dlen >> 2);
 
     if (this.dlen != 0) begin
-        for (ii=most_sig_dword; ii >= 0 ; ii--) begin
-            data = sha_block_data[ii];
-            `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
+        for (datain_ii=most_sig_dword; datain_ii >= 0 ; datain_ii--) begin
+            data = sha_block_data[datain_ii];
+            `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii, data), UVM_DEBUG)
             reg_model.mbox_csr_rm.mbox_datain_sem.get();
             reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
             reg_model.mbox_csr_rm.mbox_datain_sem.put();

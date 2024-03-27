@@ -36,7 +36,7 @@ class soc_ifc_env_mbox_rom_fw_sequence extends soc_ifc_env_mbox_sequence_base;
 
   // This shouldn't be randomized, specify it
   constraint mbox_cmd_c { mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_ROM_FW_UPD); }
-  constraint mbox_dlen_c { mbox_op_rand.dlen == 13708; }
+  constraint mbox_dlen_c { mbox_op_rand.dlen == 17772; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
   // Firmware team encodes commands differently from this environment; response
@@ -54,19 +54,18 @@ endtask
 
 // This should be overridden with real data to write
 task soc_ifc_env_mbox_rom_fw_sequence::mbox_push_datain();
-    int ii;
     int firmware_end_dw;
     uvm_reg_data_t data;
 
     firmware_end_dw = this.mbox_op_rand.dlen / 4 + (this.mbox_op_rand.dlen%4 ? 1 : 0);
 
     `uvm_info("MBOX_SEQ", $sformatf("Starting FW push_datain. Size: [0x%x] dwords", firmware_end_dw), UVM_LOW)
-    for (ii=0; ii < firmware_end_dw; ii++) begin
-        data = uvm_reg_data_t'({fw_img[ii][3],fw_img[ii][2],fw_img[ii][1],fw_img[ii][0]});
-        if (ii < 10)
-            `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_LOW)
+    for (datain_ii=0; datain_ii < firmware_end_dw; datain_ii++) begin
+        data = uvm_reg_data_t'({fw_img[datain_ii][3],fw_img[datain_ii][2],fw_img[datain_ii][1],fw_img[datain_ii][0]});
+        if (datain_ii < 10)
+            `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii, data), UVM_LOW)
         else
-            `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
+            `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain_sem.get();
         reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
         reg_model.mbox_csr_rm.mbox_datain_sem.put();

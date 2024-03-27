@@ -5,16 +5,18 @@ contents:
   - tests:
       tags: ["directed", "nightly", "firmware"]
       paths:
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_doe/fw_test_doe.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_ecc384/fw_test_ecc384.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_hmac384/fw_test_hmac384.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha256/fw_test_sha256.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_sha384/fw_test_sha384.yml
+        #- ${MSFT_REPO_ROOT}/src/integration/test_suites/fw_test_doe/fw_test_doe.yml
+        #- ${MSFT_REPO_ROOT}/src/integration/test_suites/fw_test_ecc384/fw_test_ecc384.yml
+        #- ${MSFT_REPO_ROOT}/src/integration/test_suites/fw_test_hmac384/fw_test_hmac384.yml
+        #- ${MSFT_REPO_ROOT}/src/integration/test_suites/fw_test_sha256/fw_test_sha256.yml
+        #- ${MSFT_REPO_ROOT}/src/integration/test_suites/fw_test_sha384/fw_test_sha384.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_mini/smoke_test_datavault_mini.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256/smoke_test_sha256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
@@ -52,3 +54,37 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h10/fw_test_lms_n24_w1_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h15/fw_test_lms_n24_w1_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h20/fw_test_lms_n24_w1_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h5/fw_test_lms_n24_w2_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h10/fw_test_lms_n24_w2_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h15/fw_test_lms_n24_w2_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h20/fw_test_lms_n24_w2_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h5/fw_test_lms_n24_w4_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h10/fw_test_lms_n24_w4_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h15/fw_test_lms_n24_w4_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h20/fw_test_lms_n24_w4_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h5/fw_test_lms_n24_w8_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h10/fw_test_lms_n24_w8_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h15/fw_test_lms_n24_w8_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h20/fw_test_lms_n24_w8_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h5/fw_test_lms_n32_w1_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h10/fw_test_lms_n32_w1_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h15/fw_test_lms_n32_w1_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h20/fw_test_lms_n32_w1_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h5/fw_test_lms_n32_w2_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h10/fw_test_lms_n32_w2_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h15/fw_test_lms_n32_w2_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h20/fw_test_lms_n32_w2_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h5/fw_test_lms_n32_w4_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h10/fw_test_lms_n32_w4_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h15/fw_test_lms_n32_w4_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h20/fw_test_lms_n32_w4_h20.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h5/fw_test_lms_n32_w8_h5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h10/fw_test_lms_n32_w8_h10.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h15/fw_test_lms_n32_w8_h15.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h20/fw_test_lms_n32_w8_h20.yml

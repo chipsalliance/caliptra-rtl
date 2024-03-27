@@ -87,8 +87,8 @@ void main() {
         // Clear SHA accelerator lock (FIPS requirement)
         soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
 
-        VPRINTF(LOW, "Waiting for FMC FW to be loaded\n");
-        // Wait for FW available (FMC)
+        VPRINTF(LOW, "Waiting for first mailbox command\n");
+        // Wait for mailbox command available (FMC, or an early stash-measurement-like command)
         do {
             intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
             intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
@@ -98,10 +98,37 @@ void main() {
 
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_FMC_UPDATE) {
-            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_FMC_UPDATE, op.cmd);
-            SEND_STDOUT_CTRL(0x1);
-            while(1);
+            // Handling for early mailbox command
+            uint32_t read_data;
+            if ((op.cmd & MBOX_CMD_FIELD_RESP_MASK) || (op.cmd & MBOX_CMD_FIELD_FW_MASK)) {
+                VPRINTF(FATAL, "Got inv mailbox command from SOC! RESP_REQ: %d FIELD_FW: %d\n", op.cmd & MBOX_CMD_FIELD_RESP_MASK, op.cmd & MBOX_CMD_FIELD_FW_MASK);
+                SEND_STDOUT_CTRL(0x1);
+                while(1);
+            }
+            VPRINTF(MEDIUM, "Got cmd (0x%x) with DLEN 0x%x\n", op.cmd, op.dlen);
+
+            // Read provided data
+            for (uint32_t loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
+                read_data = soc_ifc_mbox_read_dataout_single();
+            }
+
+            // Set final status
+            soc_ifc_set_mbox_status_field(CMD_COMPLETE);
+
+            // Now we wait for FW
+            VPRINTF(LOW, "Waiting for firmware mailbox command\n");
+
+            // Wait for mailbox command available (FMC)
+            do {
+                intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+                intr_sts &= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
+            } while (!intr_sts);
+            //clear the interrupt
+            lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R, SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK);
+
+            op = soc_ifc_read_mbox_cmd();
         }
+
         //TODO: Enhancement - Check the integrity of the firmware
 
         // Load FMC from mailbox

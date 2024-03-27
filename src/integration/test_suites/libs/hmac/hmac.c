@@ -88,7 +88,7 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_4) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_11) {
         *reg_ptr++ = lfsr_seed.data[offset++];
     }
 

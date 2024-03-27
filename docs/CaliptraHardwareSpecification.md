@@ -845,10 +845,15 @@ The SHA256 architecture inputs and outputs are described as follows.
 | next            | input           | The core processes the rest of the message blocks using the result from the previous blocks. |
 | mode            | input           | Indicates the hash type of the function. This can be: <br> - SHA256/224 <br> - SHA256        |
 | zeroize         | input           | The core clears all internal registers to avoid any SCA information leakage.                 |
+| WNTZ_MODE*      | input           | SHA256 core is configured in Winternitz verification mode.                                   |
+| WNTZ_W\[3:0\]*  | input           | Winternitz W value.                                                                          |
+| WNTZ_N_MODE*    | input           | Winternitz n value(SHA192/SHA256 --> n = 24/32)                                              |
 | block\[511:0\]  | input           | The input padded block of message.                                                           |
 | ready           | output          | When HIGH, the signal indicates the core is ready.                                           |
 | digest\[255:0\] | output          | The hashed value of the given block.                                                         |
 | digest_valid    | output          | When HIGH, the signal indicates the result is ready.                                         |
+
+\* For more imformation about these inputs, please refer to LMS accelerator section.
 
 ### Address map
 
@@ -1301,13 +1306,12 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 
 ##### KeyGen TVLA
 
-We detected a leakage using TVLA in the HMAC_DRBG algorithm during ECC key generation, based on 150,000 power traces. The leakage originated from a part of the SHA512 function (w_data) that was not fully protected by masking. The same leakage is expected for HMAC operations. 
+The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
-*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 150,000 traces*
+
+*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
-
-This leakage is very unlikely to occur in practice, even though it exists in TVLA results. Therefore, we will address it in the next release.
 
 ##### Signing TVLA
 
@@ -1350,6 +1354,73 @@ In this architecture, the ECC interface and controller are implemented in hardwa
 | Keygen    | 909,648             | 2.274                 | 439                 |
 | Signing   | 932,990             | 2.332                 | 428                 |
 | Verifying | 1,223,938           | 3.060                 | 326                 |
+
+
+## LMS Accelerator
+
+LMS cryptography is a type of hash-based digital signature scheme that was standardized by NIST in 2020. It is based on the Leighton-Micali Signature (LMS) system, which uses a Merkle tree structure to combine many one-time signature (OTS) keys into a single public key. LMS cryptography is resistant to quantum attacks and can achieve a high level of security without relying on large integer mathematics. 
+
+Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
+
+*Figure 43: LMS-OTS Verification algorithm*
+
+![](./images/LMS_verifying_alg.png)
+
+The high-level architecture of LMS is shown in the following figure.
+
+*Figure 44: LMS high-level architecture*
+
+![](./images/LMS_high_level.png)
+
+### LMS parameters
+
+LMS parameters are shown in the following table:
+
+| Parameter | Description                                                            | Value               |
+| :-------- | :--------------------------------------------------------------------- | :------------------ |
+| n         | The number of bytes of the output of the hash function.                | {24, 32}            |
+| w         | The width (in bits) of the Winternitz coefficients.                    | {1, 2, 4, 8}        |
+| p         | The number of n-byte string elements that make up the LM-OTS signature.| {265, 133, 67, 34}  |
+| H         | A cryptographic hash function.                                         | SHA256              |
+| h         | The height of the tree.	                                        	| {5, 10, 15, 20, 25} |
+
+- SHA256 is used for n=32 and SHA256/192 is used for n=24.
+- SHAKE256 is not supported in this architecture.
+- Value of p is determined based on w. If w=1, p is equal to 265, and so on.
+
+### Winternitz Chain Accelerator
+
+The Winternitz hash chain can be accelerated in hardware to enhance the performance of the design. For that, a configurable architecture is proposed that can reuse SHA256 engine. The LMS accelerator architecture is shown in the following figure, while H is SHA256 engine.
+
+*Figure 45: Winternitz chain architecture*
+
+![](./images/LMS_wntz_arch.png)
+
+
+### Signal descriptions
+
+The LMS accelerator integrated into SHA256 architecture inputs and outputs are described as follows.
+
+| Name            | Input or output | Description                                                                                  |
+| :-------------- | :-------------- | :------------------------------------------------------------------------------------------- |
+| clk             | input           | All signal timings are related to the rising edge of clk.                                    |
+| reset_n         | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.      |
+| init            | input           | The core is initialized and processes the first block of message.                            |
+| next            | input           | The core processes the rest of the message blocks using the result from the previous blocks. |
+| mode            | input           | Indicates the hash type of the function. This can be: <br> - SHA256/224 <br> - SHA256        |
+| zeroize         | input           | The core clears all internal registers to avoid any SCA information leakage.                 |
+| WNTZ_MODE       | input           | SHA256 core is configured in Winternitz verification mode.                                   |
+| WNTZ_W\[3:0\]   | input           | Winternitz W value.                                                                          |
+| WNTZ_N_MODE     | input           | Winternitz n value(SHA192/SHA256 --> n = 24/32)                                              |
+| block\[511:0\]  | input           | The input padded block of message.                                                           |
+| ready           | output          | When HIGH, the signal indicates the core is ready.                                           |
+| digest\[255:0\] | output          | The hashed value of the given block.                                                         |
+| digest_valid    | output          | When HIGH, the signal indicates the result is ready.                                         |
+
+### Address map
+
+The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
+
 ## PCR vault
 
 * Platform Configuration Register (PCR) vault is a register file that stores measurements to be used by the microcontroller.

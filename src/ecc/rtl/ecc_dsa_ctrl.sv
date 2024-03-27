@@ -90,15 +90,15 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
 
     localparam [RND_SIZE-1 : 0]  zero_pad               = '0;
-    localparam REG_NUM_DWORDS = REG_SIZE / RADIX;
+    localparam REG_NUM_DWORDS = REG_SIZE / DATA_WIDTH;
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
-    logic [DSA_PROG_ADDR_W-1 : 0]           prog_cntr;
+    logic [DSA_PROG_ADDR_W-1 : 0]                prog_cntr;
     
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0] read_reg;
-    logic [(REG_SIZE+RND_SIZE)-1 : 0]       write_reg;
-    logic [1 : 0]                           cycle_cnt;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0] read_reg;
+    logic [(REG_SIZE+RND_SIZE)-1 : 0]            write_reg;
+    logic [1 : 0]                                cycle_cnt;
 
     logic zeroize_reg;
 
@@ -128,17 +128,17 @@ module ecc_dsa_ctrl
 
     logic [1  : 0]          cmd_reg;
     logic [2  : 0]          pm_cmd_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  msg_reduced_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  privkey_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  kv_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyx_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  pubkeyy_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  seed_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  nonce_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  r_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  s_reg;
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0]  IV_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reduced_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  privkey_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  kv_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  pubkeyx_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  pubkeyy_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  seed_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  nonce_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  r_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  s_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  IV_reg;
     logic [REG_SIZE-1 : 0]  lambda;
     logic [REG_SIZE-1 : 0]  lambda_reg;
     logic [REG_SIZE-1 : 0]  masking_rnd;
@@ -228,7 +228,7 @@ module ecc_dsa_ctrl
     ecc_arith_unit #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(RADIX),
+        .RADIX(MULT_RADIX),
         .ADDR_WIDTH(DSA_OPR_ADDR_WIDTH),
         .p_prime(PRIME),
         .p_mu(PRIME_mu),
@@ -276,7 +276,7 @@ module ecc_dsa_ctrl
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(RADIX),
+        .RADIX(SCALAR_BLIND_RADIX),
         .GROUP_ORDER(GROUP_ORDER)
         )
         ecc_scalar_blinding_i(
