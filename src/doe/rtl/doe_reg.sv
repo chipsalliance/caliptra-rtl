@@ -63,11 +63,11 @@ module doe_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct packed{
-        logic [4-1:0]DOE_IV;
+    typedef struct {
+        logic DOE_IV[4];
         logic DOE_CTRL;
         logic DOE_STATUS;
-        struct packed{
+        struct {
             logic global_intr_en_r;
             logic error_intr_en_r;
             logic notif_intr_en_r;
@@ -135,206 +135,206 @@ module doe_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } IV;
-        } [4-1:0]DOE_IV;
-        struct packed{
-            struct packed{
+        } DOE_IV[4];
+        struct {
+            struct {
                 logic [1:0] next;
                 logic load_next;
             } CMD;
-            struct packed{
+            struct {
                 logic [4:0] next;
                 logic load_next;
             } DEST;
         } DOE_CTRL;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } READY;
-            struct packed{
+            struct {
                 logic next;
                 logic load_next;
             } VALID;
-            struct packed{
+            struct {
                 logic next;
                 logic load_next;
             } DEOBF_SECRETS_CLEARED;
         } DOE_STATUS;
-        struct packed{
-            struct packed{
-                struct packed{
+        struct {
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } error_en;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } notif_en;
             } global_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } error0_en;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error1_en;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error2_en;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error3_en;
             } error_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } agg_sts;
             } error_global_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } agg_sts;
             } notif_global_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } error0_sts;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error1_sts;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error2_sts;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error3_sts;
             } error_internal_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } error0_trig;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error1_trig;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error2_trig;
-                struct packed{
+                struct {
                     logic next;
                     logic load_next;
                 } error3_trig;
             } error_intr_trig_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error0_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error1_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error2_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } error3_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] next;
                     logic load_next;
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error0_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error1_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error2_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
             } error3_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic next;
                     logic load_next;
                     logic decrthreshold;
@@ -345,154 +345,154 @@ module doe_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic [31:0] value;
             } IV;
-        } [4-1:0]DOE_IV;
-        struct packed{
-            struct packed{
+        } DOE_IV[4];
+        struct {
+            struct {
                 logic [1:0] value;
             } CMD;
-            struct packed{
+            struct {
                 logic [4:0] value;
             } DEST;
         } DOE_CTRL;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic value;
             } READY;
-            struct packed{
+            struct {
                 logic value;
             } VALID;
-            struct packed{
+            struct {
                 logic value;
             } DEOBF_SECRETS_CLEARED;
         } DOE_STATUS;
-        struct packed{
-            struct packed{
-                struct packed{
+        struct {
+            struct {
+                struct {
                     logic value;
                 } error_en;
-                struct packed{
+                struct {
                     logic value;
                 } notif_en;
             } global_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } error0_en;
-                struct packed{
+                struct {
                     logic value;
                 } error1_en;
-                struct packed{
+                struct {
                     logic value;
                 } error2_en;
-                struct packed{
+                struct {
                     logic value;
                 } error3_en;
             } error_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } notif_cmd_done_en;
             } notif_intr_en_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } agg_sts;
             } error_global_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } agg_sts;
             } notif_global_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } error0_sts;
-                struct packed{
+                struct {
                     logic value;
                 } error1_sts;
-                struct packed{
+                struct {
                     logic value;
                 } error2_sts;
-                struct packed{
+                struct {
                     logic value;
                 } error3_sts;
             } error_internal_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } notif_cmd_done_sts;
             } notif_internal_intr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } error0_trig;
-                struct packed{
+                struct {
                     logic value;
                 } error1_trig;
-                struct packed{
+                struct {
                     logic value;
                 } error2_trig;
-                struct packed{
+                struct {
                     logic value;
                 } error3_trig;
             } error_intr_trig_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } notif_cmd_done_trig;
             } notif_intr_trig_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] value;
                 } cnt;
             } error0_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] value;
                 } cnt;
             } error1_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] value;
                 } cnt;
             } error2_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] value;
                 } cnt;
             } error3_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic [31:0] value;
                 } cnt;
             } notif_cmd_done_intr_count_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } pulse;
             } error0_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } pulse;
             } error1_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } pulse;
             } error2_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } pulse;
             } error3_intr_count_incr_r;
-            struct packed{
-                struct packed{
+            struct {
+                struct {
                     logic value;
                 } pulse;
             } notif_cmd_done_intr_count_incr_r;
@@ -1338,7 +1338,7 @@ module doe_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [25-1:0][31:0] readback_array;
+    logic [31:0] readback_array[25];
     for(genvar i0=0; i0<4; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.DOE_IV[i0] && !decoded_req_is_wr) ? field_storage.DOE_IV[i0].IV.value : '0;
     end
