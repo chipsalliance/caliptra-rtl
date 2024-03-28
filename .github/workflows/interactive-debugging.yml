@@ -5,8 +5,7 @@ name: Interactive debugging
 on:
   push:
     branches: ["main", "dev-goog", "dev-msft", "dev-public"]
-  pull_request:
-
+  workflow_call:
   workflow_dispatch:
 
 jobs:
