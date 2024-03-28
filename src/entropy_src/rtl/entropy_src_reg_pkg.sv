@@ -893,7 +893,7 @@ package entropy_src_reg_pkg;
   parameter logic [0:0] ENTROPY_SRC_DEBUG_STATUS_MAIN_SM_IDLE_RESVAL = 1'h 1;
 
   // Register index
-  typedef enum int {
+  typedef enum logic [31:0] {
     ENTROPY_SRC_INTR_STATE,
     ENTROPY_SRC_INTR_ENABLE,
     ENTROPY_SRC_INTR_TEST,

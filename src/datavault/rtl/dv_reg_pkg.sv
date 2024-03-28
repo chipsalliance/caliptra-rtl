@@ -2,121 +2,121 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package dv_reg_pkg;
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__StickyDataVaultCtrl__lock_entry__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyDataVaultCtrl__lock_entry__in_t lock_entry;
     } dv_reg__StickyDataVaultCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__StickyDataVaultEntry_w32__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyDataVaultEntry_w32__in_t data;
     } dv_reg__StickyDataVaultReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__DataVaultCtrl__lock_entry__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__DataVaultCtrl__lock_entry__in_t lock_entry;
     } dv_reg__DataVaultCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__DataVaultEntry_w32__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__DataVaultEntry_w32__in_t data;
     } dv_reg__DataVaultReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__LockableScratchRegCtrl__lock_entry__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__LockableScratchRegCtrl__lock_entry__in_t lock_entry;
     } dv_reg__LockableScratchRegCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__LockableScratchReg__data__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__LockableScratchReg__data__in_t data;
     } dv_reg__LockableScratchReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__StickyLockableScratchRegCtrl__lock_entry__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyLockableScratchRegCtrl__lock_entry__in_t lock_entry;
     } dv_reg__StickyLockableScratchRegCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } dv_reg__StickyLockableScratchReg__data__in_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyLockableScratchReg__data__in_t data;
     } dv_reg__StickyLockableScratchReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic reset_b;
         logic core_only_rst_b;
         logic hard_reset_b;
-        dv_reg__StickyDataVaultCtrl__in_t StickyDataVaultCtrl[10];
-        dv_reg__StickyDataVaultReg__in_t STICKY_DATA_VAULT_ENTRY[10][12];
-        dv_reg__DataVaultCtrl__in_t DataVaultCtrl[10];
-        dv_reg__DataVaultReg__in_t DATA_VAULT_ENTRY[10][12];
-        dv_reg__LockableScratchRegCtrl__in_t LockableScratchRegCtrl[10];
-        dv_reg__LockableScratchReg__in_t LockableScratchReg[10];
-        dv_reg__StickyLockableScratchRegCtrl__in_t StickyLockableScratchRegCtrl[8];
-        dv_reg__StickyLockableScratchReg__in_t StickyLockableScratchReg[8];
+        dv_reg__StickyDataVaultCtrl__in_t [10-1:0]StickyDataVaultCtrl;
+        dv_reg__StickyDataVaultReg__in_t [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;
+        dv_reg__DataVaultCtrl__in_t [10-1:0]DataVaultCtrl;
+        dv_reg__DataVaultReg__in_t [10-1:0][12-1:0]DATA_VAULT_ENTRY;
+        dv_reg__LockableScratchRegCtrl__in_t [10-1:0]LockableScratchRegCtrl;
+        dv_reg__LockableScratchReg__in_t [10-1:0]LockableScratchReg;
+        dv_reg__StickyLockableScratchRegCtrl__in_t [8-1:0]StickyLockableScratchRegCtrl;
+        dv_reg__StickyLockableScratchReg__in_t [8-1:0]StickyLockableScratchReg;
     } dv_reg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } dv_reg__StickyDataVaultCtrl__lock_entry__out_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyDataVaultCtrl__lock_entry__out_t lock_entry;
     } dv_reg__StickyDataVaultCtrl__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } dv_reg__DataVaultCtrl__lock_entry__out_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__DataVaultCtrl__lock_entry__out_t lock_entry;
     } dv_reg__DataVaultCtrl__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } dv_reg__LockableScratchRegCtrl__lock_entry__out_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__LockableScratchRegCtrl__lock_entry__out_t lock_entry;
     } dv_reg__LockableScratchRegCtrl__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } dv_reg__StickyLockableScratchRegCtrl__lock_entry__out_t;
 
-    typedef struct {
+    typedef struct packed{
         dv_reg__StickyLockableScratchRegCtrl__lock_entry__out_t lock_entry;
     } dv_reg__StickyLockableScratchRegCtrl__out_t;
 
-    typedef struct {
-        dv_reg__StickyDataVaultCtrl__out_t StickyDataVaultCtrl[10];
-        dv_reg__DataVaultCtrl__out_t DataVaultCtrl[10];
-        dv_reg__LockableScratchRegCtrl__out_t LockableScratchRegCtrl[10];
-        dv_reg__StickyLockableScratchRegCtrl__out_t StickyLockableScratchRegCtrl[8];
+    typedef struct packed{
+        dv_reg__StickyDataVaultCtrl__out_t [10-1:0]StickyDataVaultCtrl;
+        dv_reg__DataVaultCtrl__out_t [10-1:0]DataVaultCtrl;
+        dv_reg__LockableScratchRegCtrl__out_t [10-1:0]LockableScratchRegCtrl;
+        dv_reg__StickyLockableScratchRegCtrl__out_t [8-1:0]StickyLockableScratchRegCtrl;
     } dv_reg__out_t;
 
     localparam DV_REG_ADDR_WIDTH = 32'd11;
