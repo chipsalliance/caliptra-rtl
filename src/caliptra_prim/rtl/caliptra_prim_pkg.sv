@@ -9,7 +9,7 @@
 package caliptra_prim_pkg;
 
   // Implementation target specialization
-  typedef enum integer {
+  typedef enum logic [31:0] {
     ImplGeneric,
     ImplXilinx,
     ImplBadbit

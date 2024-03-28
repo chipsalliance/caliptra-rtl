@@ -923,9 +923,6 @@ logic                                         perr_sel_invalidate;
 logic                                         perr_sb_write_status   ;
 
 
-
-   rvdffe #(.WIDTH(pt.ICACHE_INDEX_HI-pt.ICACHE_TAG_INDEX_LO+1),.OVERRIDE(1)) perr_dat_ff    (.din(ifu_ic_rw_int_addr_ff[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]), .dout(perr_ic_index_ff[pt.ICACHE_INDEX_HI : pt.ICACHE_TAG_INDEX_LO]), .en(perr_sb_write_status),  .*);
-
    assign perr_err_inv_way[pt.ICACHE_NUM_WAYS-1:0]   =  {pt.ICACHE_NUM_WAYS{perr_sel_invalidate}} ;
    assign iccm_correct_ecc     = (perr_state == ECC_CORR);
    assign dma_sb_err_state     = (perr_state == DMA_SB_ERR);
@@ -1407,6 +1404,8 @@ if (pt.ICACHE_ENABLE == 1 ) begin: icache_enabled
          assign way_status_new_w_debug[pt.ICACHE_STATUS_BITS-1:0]  = (ic_debug_wr_en  & ic_debug_tag_array) ? (pt.ICACHE_STATUS_BITS == 1) ? ic_debug_wr_data[4] : ic_debug_wr_data[6:4] :
                                                 way_status_new[pt.ICACHE_STATUS_BITS-1:0] ;
 
+   rvdffe #(.WIDTH(pt.ICACHE_INDEX_HI-pt.ICACHE_TAG_INDEX_LO+1),.OVERRIDE(1)) perr_dat_ff    (.din(ifu_ic_rw_int_addr_ff[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]), .dout(perr_ic_index_ff[pt.ICACHE_INDEX_HI : pt.ICACHE_TAG_INDEX_LO]), .en(perr_sb_write_status),  .*);
+                                          
    rvdffie #(.WIDTH(pt.ICACHE_TAG_LO-pt.ICACHE_TAG_INDEX_LO+1+pt.ICACHE_STATUS_BITS),.OVERRIDE(1))  status_misc_ff
      (.*,
       .clk(free_l2clk),
@@ -1629,10 +1628,8 @@ assign ic_debug_rd_en           = dec_tlu_ic_diag_pkt.icache_rd_valid ;
 assign ic_debug_wr_en           = dec_tlu_ic_diag_pkt.icache_wr_valid ;
 
 
-assign ic_debug_way[pt.ICACHE_NUM_WAYS-1:0]        = {(ic_debug_way_enc[1:0] == 2'b11),
-                                                      (ic_debug_way_enc[1:0] == 2'b10),
-                                                      (ic_debug_way_enc[1:0] == 2'b01),
-                                                      (ic_debug_way_enc[1:0] == 2'b00) };
+assign ic_debug_way[pt.ICACHE_NUM_WAYS-1:0]        = {(ic_debug_way_enc[0] == 1'b1),
+                                                      (ic_debug_way_enc[0] == 1'b0) };
 
 assign ic_debug_tag_wr_en[pt.ICACHE_NUM_WAYS-1:0] = {pt.ICACHE_NUM_WAYS{ic_debug_wr_en & ic_debug_tag_array}} & ic_debug_way[pt.ICACHE_NUM_WAYS-1:0] ;
 
@@ -1673,7 +1670,7 @@ assign ACCESS7_okay = pt.INST_ACCESS_ENABLE7 & ((({ifc_fetch_addr_bf[31:1],1'b0}
 
 
 // memory protection  - equation to look identical to the LSU equation
-   assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7})) |
+   assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7}))
                                  | ACCESS0_okay
                                  | ACCESS1_okay
                                  | ACCESS2_okay

@@ -297,7 +297,7 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : SCA_config
-        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (scalar_in_reg << RND_SIZE);
+        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (REG_SIZE+RND_SIZE)'(scalar_in_reg << RND_SIZE);
         lambda_reg = (sca_point_rnd_en)? lambda : ONE_CONST;
         masking_rnd_reg = (sca_mask_sign_en)? masking_rnd : ZERO_CONST;
     end // SCA_config
@@ -595,8 +595,8 @@ module ecc_dsa_ctrl
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
             unique case (prog_instr.reg_id)
-                SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
-                SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
+                SCALAR_PK_ID          : write_reg = (REG_SIZE+RND_SIZE)'(scalar_PK_reg << RND_SIZE);
+                SCALAR_G_ID           : write_reg = (REG_SIZE+RND_SIZE)'(scalar_G_reg << RND_SIZE);
                 SCALAR_ID             : write_reg = scalar_out_reg; // SCA
                 default               : write_reg = '0;
             endcase
