@@ -35,7 +35,7 @@ addrmap hmac_reg {
     /* ---- HMAC384 Component Name ---- */
     reg {
         name = "HMAC384 component name register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the name
+        desc = "Two 32-bit read-only registers representing of the name
                 of HMAC384 component.";
 
         default sw = r;
@@ -49,7 +49,7 @@ addrmap hmac_reg {
     /* ---- HMAC384 Component Version ---- */
     reg {
         name = "HMAC384 component version register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the version
+        desc = "Two 32-bit read-only registers representing of the version
                 of HMAC384 component.";
 
         default sw = r;

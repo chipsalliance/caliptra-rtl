@@ -37,7 +37,7 @@ addrmap sha256_reg {
     /* ---- SHA256 Component Name ---- */
     reg {
         name = "SHA256 component name register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the name
+        desc = "Two 32-bit read-only registers representing of the name
                 of SHA256 component.";
 
         default sw = r;
@@ -51,7 +51,7 @@ addrmap sha256_reg {
     /* ---- SHA256 Component Version ---- */
     reg {
         name = "SHA256 component version register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the version
+        desc = "Two 32-bit read-only registers representing of the version
                 of SHA256 component.";
 
         default sw = r;

@@ -34,7 +34,7 @@ addrmap sha512_reg {
     /* ---- SHA512 Component Name ---- */
     reg {
         name = "SHA512 component name register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the name
+        desc = "Two 32-bit read-only registers representing of the name
                 of SHA512 component.";
 
         default sw = r;
@@ -48,7 +48,7 @@ addrmap sha512_reg {
     /* ---- SHA512 Component Version ---- */
     reg {
         name = "SHA512 component version register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the version
+        desc = "Two 32-bit read-only registers representing of the version
                 of SHA512 component.";
 
         default sw = r;
