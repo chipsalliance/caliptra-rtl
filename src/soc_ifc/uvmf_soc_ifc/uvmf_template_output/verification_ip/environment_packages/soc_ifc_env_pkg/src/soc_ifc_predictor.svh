@@ -1228,28 +1228,28 @@ class soc_ifc_predictor #(
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        case (data_active) inside
-                            32'h0,[32'h2:32'h5],32'h7F,[32'h80:32'hf7]:
+                        case (data_active[7:0]) inside
+                            8'h0,[8'h2:8'h5],8'h7F,[8'h80:8'hf7]:
                                 `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
-                            32'h1:
+                            8'h1:
                                 `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
-                            [32'h6:32'h7E]:
+                            [8'h6:8'h7E]:
                                 `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
-                            32'hf8:
+                            8'hf8:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
-                            32'hf9:
+                            8'hf9:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Lock debug in security state]", UVM_MEDIUM)
-                            32'hfa:
+                            8'hfa:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Unlock debug in security state]", UVM_MEDIUM)
-                            32'hfb:
+                            8'hfb:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Set the isr_active bit]", UVM_MEDIUM)
-                            32'hfc:
+                            8'hfc:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
-                            32'hfd:
+                            8'hfd:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit flip injection]", UVM_MEDIUM)
-                            32'hfe:
+                            8'hfe:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit flip injection]", UVM_MEDIUM)
-                            32'hff:
+                            8'hff:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
                         endcase
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[31:0];
