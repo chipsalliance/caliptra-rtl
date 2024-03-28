@@ -13,18 +13,15 @@ jobs:
   pre_run:
     uses: ./.github/workflows/pre-run-check.yml
   verilator:
-    needs: pre_run
     uses: ./.github/workflows/build-test-verilator.yml
   interactive_dbg:
-    needs: pre_run
     uses: ./.github/workflows/interactive-debugging.yml
   doc_gen:
-    needs: pre_run
     uses: ./.github/workflows/doc-gen.yml
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
-    needs: [verilator, interactive_dbg, doc_gen]
+    needs: [pre_run, verilator, interactive_dbg, doc_gen]
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
