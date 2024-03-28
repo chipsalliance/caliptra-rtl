@@ -54,7 +54,7 @@ The following table describes integration parameters.
 | :--------- | :--------- | :--------- | :--------- |
 | CPTRA_SET_MBOX_PAUSER_INTEG | 5               | soc_ifc_pkg.sv | Each bit hardcodes the valid PAUSER for mailbox at integration time. |
 | CPTRA_MBOX_VALID_PAUSER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid PAUSER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_PAUSER_INTEG parameter for this valid pauser override to be used. |
-| CPTRA_DEF_MBOX_VALID_PAUSER | 32              | soc_ifc_pkg.sv | Sets the default valid PAUSER for mailbox accesses. This PAUSER is valid when any VALID_PAUSER is unlocked or not set by INTEG parameter. |
+| CPTRA_DEF_MBOX_VALID_PAUSER | 32              | soc_ifc_pkg.sv | Sets the default valid PAUSER for mailbox accesses. This PAUSER is valid at all times. |
 | CPTRA_SET_FUSE_PAUSER_INTEG | 1               | soc_ifc_pkg.sv | Sets the valid PAUSER for fuse accesses at integration time. |
 | CPTRA_FUSE_VALID_PAUSER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid PAUSER for fuse accesses when CPTRA_SET_FUSE_PAUSER_INTEG is set to 1. |
 
@@ -358,7 +358,7 @@ It is strongly recommended that these PAUSER registers are either set at integra
 
 ### Programmable registers
 
-Caliptra provides 5 programmable registers that SoC can set at boot time to limit access to the mailbox peripheral. The default PAUSER set by the integration parameter CPTRA\_DEF\_MBOX\_VALID\_PAUSER is valid until all programmable registers are consumed. CPTRA\_MBOX\_VALID\_PAUSER registers become valid once the corresponding lock bit CPTRA\_MBOX\_PAUSER\_LOCK is set.
+Caliptra provides 5 programmable registers that SoC can set at boot time to limit access to the mailbox peripheral. The default PAUSER set by the integration parameter CPTRA\_DEF\_MBOX\_VALID\_PAUSER is valid at all times. CPTRA\_MBOX\_VALID\_PAUSER registers become valid once the corresponding lock bit CPTRA\_MBOX\_PAUSER\_LOCK is set.
 
 *Table 13: PAUSER register definition*
 
