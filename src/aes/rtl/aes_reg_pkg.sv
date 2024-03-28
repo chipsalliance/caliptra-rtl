@@ -336,7 +336,7 @@ package aes_reg_pkg;
   parameter logic [0:0] AES_CTRL_SHADOWED_MANUAL_OPERATION_RESVAL = 1'h 0;
 
   // Register index
-  typedef enum int {
+  typedef enum logic [31:0] {
     AES_ALERT_TEST,
     AES_KEY_SHARE0_0,
     AES_KEY_SHARE0_1,

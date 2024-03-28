@@ -46,8 +46,8 @@ targets:
   rtl_lint:
     waiver_files:
       - $MSFT_REPO_ROOT/src/integration/config/design_lint/sglint_waivers
-    black_box:
-      - el2_veer_wrapper
+    options:
+      - '+define+CALIPTRA_INTERNAL_TRNG'
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl

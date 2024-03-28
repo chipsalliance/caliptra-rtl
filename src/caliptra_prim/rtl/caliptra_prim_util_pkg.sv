@@ -25,17 +25,19 @@ package caliptra_prim_util_pkg;
    *   vector value. The argument shall be treated as an unsigned
    *   value, and an argument value of 0 shall produce a result of 0.
    */
-  function automatic integer _clog2(integer value);
-    integer result;
-    // Use an intermediate value to avoid assigning to an input port, which produces a warning in
-    // Synopsys DC.
-    integer v = value;
-    v = v - 1;
-    for (result = 0; v > 0; result++) begin
-      v = v >> 1;
-    end
-    return result;
-  endfunction
+
+  //Function causing LINT errors. Not used in current codebase
+  //deprecated and replaced by $clog2() //function automatic integer _clog2(integer value);
+  //deprecated and replaced by $clog2() //  integer result;
+  //deprecated and replaced by $clog2() // Use an intermediate value to avoid assigning to an input port, which produces a warning in
+  //deprecated and replaced by $clog2() // Synopsys DC.
+  //deprecated and replaced by $clog2() //  integer v = value;
+  //deprecated and replaced by $clog2() //  v = v - 1;
+  //deprecated and replaced by $clog2() //  for (result = 0; v > 0; result++) begin
+  //deprecated and replaced by $clog2() //    v = v >> 1;
+  //deprecated and replaced by $clog2() //  end
+  //deprecated and replaced by $clog2() //  return result;
+  //deprecated and replaced by $clog2() //endfunction
 
 
   /**

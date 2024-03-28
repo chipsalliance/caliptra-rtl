@@ -53,8 +53,6 @@ targets:
     directories: []
     waiver_files:
       - $MSFT_REPO_ROOT/src/keyvault/config/design_lint/keyvault/sglint_waivers
-    black_box:
-      - kv_reg
 global:
   tool:
     vcs:

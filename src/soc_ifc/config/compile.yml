@@ -68,17 +68,8 @@ targets:
     tops: [soc_ifc_top]
   rtl_lint:
     directories: [$COMPILE_ROOT/config/design_lint]
-    black_box:
-      - mbox_csr
-      - mbox_csr_pkg
-      - soc_ifc_reg
-      - soc_ifc_reg_pkg
     waiver_files:
       - $MSFT_REPO_ROOT/src/soc_ifc/config/design_lint/soc_ifc/sglint_waivers
-    black_box:
-      - sha512_acc_csr
-      - mbox_csr
-      - soc_ifc_reg
     tops: [soc_ifc_top]
 ---
 provides: [soc_ifc_tb]

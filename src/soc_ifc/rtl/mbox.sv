@@ -64,6 +64,7 @@ module mbox
 localparam MBOX_SIZE_IN_BYTES = SIZE_KB*1024;
 localparam MBOX_SIZE_IN_DW = (MBOX_SIZE_IN_BYTES)/4;
 localparam DEPTH = (MBOX_SIZE_IN_DW * 32) / DATA_W;
+localparam DEPTH_LOG2 = $clog2(DEPTH);
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -97,12 +98,12 @@ logic arc_MBOX_EXECUTE_SOC_MBOX_ERROR;
 //sram
 logic [DATA_W-1:0] sram_wdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_wdata_ecc;
-logic [$clog2(DEPTH)-1:0] sram_waddr;
-logic [$clog2(DEPTH)-1:0] mbox_wrptr, mbox_wrptr_nxt;
+logic [DEPTH_LOG2-1:0] sram_waddr;
+logic [DEPTH_LOG2-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic mbox_wr_full, mbox_wr_full_nxt;
 logic inc_wrptr;
-logic [$clog2(DEPTH)-1:0] sram_rdaddr;
-logic [$clog2(DEPTH)-1:0] mbox_rdptr, mbox_rdptr_nxt;
+logic [DEPTH_LOG2-1:0] sram_rdaddr;
+logic [DEPTH_LOG2-1:0] mbox_rdptr, mbox_rdptr_nxt;
 logic mbox_rd_full, mbox_rd_full_nxt;
 logic inc_rdptr;
 logic rst_mbox_rdptr;
@@ -118,15 +119,15 @@ logic mbox_protocol_sram_rd, mbox_protocol_sram_rd_f;
 logic dir_req_dv_q, dir_req_rd_phase;
 logic dir_req_wr_ph;
 logic mask_rdata;
-logic [$clog2(DEPTH)-1:0] dir_req_addr;
+logic [DEPTH_LOG2-1:0] dir_req_addr;
 
 logic soc_has_lock, soc_has_lock_nxt;
 logic valid_requester;
 logic valid_receiver;
 
-logic [$clog2(DEPTH):0] mbox_dlen_in_dws;
+logic [DEPTH_LOG2:0] mbox_dlen_in_dws;
 logic latch_dlen_in_dws;
-logic [$clog2(DEPTH):0] dlen_in_dws, dlen_in_dws_nxt;
+logic [DEPTH_LOG2:0] dlen_in_dws, dlen_in_dws_nxt;
 logic rdptr_inc_valid;
 logic mbox_rd_valid, mbox_rd_valid_f;
 logic wrptr_inc_valid;
@@ -219,8 +220,8 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = (mbox_fsm_ps == MBOX_EXECUTE_SOC)
 //by the client filling the mailbox is used for masking the data
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
-always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW :
-                               (hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
+always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW[DEPTH_LOG2:0] :
+                               DEPTH_LOG2'(hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
 //this avoids a case where a sender writes less than programmed and the receiver can read beyond that
 //if the mailbox is full (flag set when writing last entry), always take the programmed dlen
@@ -247,7 +248,7 @@ always_comb begin : mbox_fsm_combo
     mbox_protocol_error_nxt = '{default: 0};
     mbox_fsm_ns = mbox_fsm_ps;
 
-    unique casez (mbox_fsm_ps)
+    unique case (mbox_fsm_ps)
         MBOX_IDLE: begin
             if (arc_MBOX_IDLE_MBOX_RDY_FOR_CMD) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_CMD;
@@ -435,7 +436,7 @@ end
 always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.lock.value & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) | 
                             sha_sram_req_dv;
 always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & req_data.write;
-always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[$clog2(DEPTH)+1:2];
+always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[DEPTH_LOG2+1:2];
 
                        //Direct read from uC, stall 1 clock dv_q will be de-asserted second clock
 always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) |
@@ -478,8 +479,10 @@ rvecc_encode mbox_ecc_encode (
     .ecc_out(sram_wdata_ecc)
 );
 // synthesis translate_off
+`ifdef CLP_ASSERT_ON 
 initial assert(DATA_W == 32) else
     $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
+`endif
 // synthesis translate_on
 rvecc_decode ecc_decode (
     .en              (sram_rd_ecc_en       ),

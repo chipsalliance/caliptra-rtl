@@ -305,8 +305,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W+1:2];
   always_comb mbox_ptr_round_up = (|hwif_out.DLEN.LENGTH.value[1:0]);
   //detect overflow of end address to indicate we want to read to the end of the mailbox
-  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
-                                                                      mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2);
+  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + MBOX_ADDR_W'(hwif_out.DLEN.LENGTH.value>>2) + 1'b1 : 
+                                                                      mbox_start_addr + MBOX_ADDR_W'(hwif_out.DLEN.LENGTH.value>>2);
   always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | 
                                //If the DLEN overflowed our end address, just read to the end of the mailbox and stop
                                //Otherwise read until read pointer == end address

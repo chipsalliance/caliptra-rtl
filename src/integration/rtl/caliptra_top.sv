@@ -269,6 +269,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
+
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;
@@ -325,8 +326,8 @@ end
         .hclk                          ( clk_cg                      ),
         .hreset_n                      ( cptra_noncore_rst_b         ),
         .force_bus_idle                ( fw_update_rst_window        ),
-        .ahb_lite_responders           ( responder_inst              ),
-        .ahb_lite_initiator            ( initiator_inst              ),
+        .ahb_lite_responders           ( responder_inst.Responder_Interface_Ports),
+        .ahb_lite_initiator            ( initiator_inst.Initiator_Interface_Ports),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
         .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked),
         .ahb_lite_start_addr_i         ( `CALIPTRA_SLAVE_BASE_ADDR   ),

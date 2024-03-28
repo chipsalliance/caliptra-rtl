@@ -16,8 +16,6 @@ targets:
     #waiver_files: 
       #- $COMPILE_ROOT/config/rtl_lint/sha512.waiver
       #- $COMPILE_ROOT/config/design_lint/sha512_ctrl/sglint_waivers
-    #black_box:
-      #- sha512_reg
 ---
 provides: [sha512_masked_core_tb]  
 schema_version: 2.4.0

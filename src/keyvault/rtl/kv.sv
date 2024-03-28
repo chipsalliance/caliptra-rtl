@@ -171,7 +171,7 @@ always_comb begin : keyvault_ctrl
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = key_entry_clear[entry];
 
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.we = key_entry_ctrl_we[entry] & ~key_entry_clear[entry];
-        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = key_entry_dest_valid_next[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.next = {3'd0,key_entry_dest_valid_next[entry]};
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.we = key_entry_ctrl_we[entry] & ~key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.next = key_entry_last_dword_next[entry];
     end
@@ -215,7 +215,7 @@ always_comb begin : keyvault_readmux
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
         //signal last when reading the last dword
-        kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword);
+        kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword.value);
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
                                     (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end

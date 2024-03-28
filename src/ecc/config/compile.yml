@@ -41,8 +41,6 @@ targets:
     directories: []
     waiver_files:
       - $MSFT_REPO_ROOT/src/ecc/config/design_lint/ecc_top/sglint_waivers
-    black_box:
-      - ecc_reg
 ---
 provides: [ecc_top_tb]  
 schema_version: 2.4.0
