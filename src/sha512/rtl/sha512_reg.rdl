@@ -34,9 +34,8 @@ addrmap sha512_reg {
     /* ---- SHA512 Component Name ---- */
     reg {
         name = "SHA512 component name register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the name
-                of SHA512 component. These registers are located at
-                SHA512_base_address + 0x0000_0000 and 0x0000_0004 addresses.";
+        desc = "Two 32-bit read-only registers representing of the name
+                of SHA512 component.";
 
         default sw = r;
         default hw = w;
@@ -49,9 +48,8 @@ addrmap sha512_reg {
     /* ---- SHA512 Component Version ---- */
     reg {
         name = "SHA512 component version register type definition";
-        desc = "Two 32-bit read-only registers repereseting of the version
-                of SHA512 component. These registers are located at
-                SHA512_base_address + 0x0000_0008 and 0x0000_000C addresses.";
+        desc = "Two 32-bit read-only registers representing of the version
+                of SHA512 component.";
 
         default sw = r;
         default hw = w;
@@ -61,29 +59,29 @@ addrmap sha512_reg {
 
     /* ---- SHA512 Component Control ---- */
     reg {
-        name = "SHA512 component control register type definition";
-        desc = "One 5-bit register including the following flags: 
-                bit #0: INIT : Trigs the SHA512 core to start the 
-                                processing for the first padded message block.
-                bit #1: NEXT: ​Trigs the SHA512 core to start the 
-                                processing for the remining padded message block. 
-                bit #3-2: MODE : Indicates the SHA512 core to set dynamically
-                                 the type of hashing algorithm. This can be:
-                                 00 for SHA512/224
-                                 01 for SHA512/256
-                                 10 for SHA384
-                                 11 for SHA512
-                bit #4: Zeroize all internal registers after SHA process, to avoid SCA leakage.
-                This register is located at SHA512_base_address + 0x0000_0010
-                After each software write, hardware will erase the register.";
+        name = "SHA512 CTRL";
+        desc = "SHA512 component control register type definition";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control init command bit"; singlepulse;} INIT = 1'b0;
-        field {desc = "Control next command bit"; singlepulse;} NEXT = 1'b0;
-        field {desc = "Control mode command bits";} MODE[2] = 2'b10;
-        field {desc = "Zeroize all internal registers"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control init command bit: Trigs the SHA512 core to start the 
+                                processing for the first padded message block. 
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
+        field {desc = "Control next command bit: Trigs the SHA512 core to start the 
+                                processing for the remining padded message block. 
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
+        field {desc = "Control mode command bits: Indicates the SHA512 core to set dynamically
+                                 the type of hashing algorithm. This can be:
+                                 00 for SHA512/224
+                                 01 for SHA512/256
+                                 10 for SHA384
+                                 11 for SHA512";} MODE[2] = 2'b10;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage.
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Indicates last iteration for keyvault or hash extend function. 
                        Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
     
@@ -91,28 +89,24 @@ addrmap sha512_reg {
 
     /* ---- SHA512 Component Status ---- */
     reg {
-        name = "SHA512 component status register type definition";
-        desc = "One 2-bit register including the following flags: 
-                bit #0: READY : ​Indicates if the core is ready to take
-                                a control command and process the block.  
-                bit #1: Valid: ​Indicates if the process is done and the
-                                hash value stored in DIGEST registers is valid. 
-                This register is located at SHA512_base_address + 0x0000_0018.";
+        name = "SHA512 STATUS";
+        desc = "SHA512 component status register type definition";
 
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
-        field {desc = "Status ready bit";} READY = 1'b0;
-        field {desc = "Status valid bit";} VALID = 1'b0;
+        field {desc = "Status ready bit: ​Indicates if the core is ready to take
+                                a control command and process the block.";} READY = 1'b0;
+        field {desc = "Status valid bit: Indicates if the process is done and the
+                                hash value stored in DIGEST registers is valid.";} VALID = 1'b0;
     
     } SHA512_STATUS @0x00000018;
 
     /* ---- SHA512 Component Input Message Block ---- */
     reg {
-        name = "SHA512 component block register type definition";
-        desc = "32 32-bit registers storing the 1024-bit padded input.
-                These registers are located at SHA512_base_address + 
-                0x0000_0080 to 0x0000_00FC in big-endian representation.";
+        name = "SHA512 BLOCK";
+        desc = "SHA512 component block register type definition
+                32 32-bit registers storing the 1024-bit padded input in big-endian representation.";
 
         default sw = w;
         default hw = rw;
@@ -124,10 +118,9 @@ addrmap sha512_reg {
 
     /* ---- SHA512 Component Output Digest ---- */
     reg {
-        name = "SHA512 component digest register type definition";
-        desc = "16 32-bit registers storing the 512-bit digest output.
-                These registers are located at SHA512_base_address + 
-                0x0000_0100 to 0x0000_013C in big-endian representation.";
+        name = "SHA512 DIGEST";
+        desc = "SHA512 component digest register type definition
+                16 32-bit registers storing the 512-bit digest output in big-endian representation.";
 
         default sw = r;
         default hw = w;
