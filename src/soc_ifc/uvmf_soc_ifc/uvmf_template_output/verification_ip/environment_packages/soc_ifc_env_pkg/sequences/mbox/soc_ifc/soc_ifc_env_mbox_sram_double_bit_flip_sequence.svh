@@ -40,6 +40,8 @@ class soc_ifc_env_mbox_sram_double_bit_flip_sequence extends soc_ifc_env_mbox_se
 
   `uvm_object_utils( soc_ifc_env_mbox_sram_double_bit_flip_sequence )
 
+  extern virtual task mbox_teardown();
+
   // Constrain command to undefined opcode
   constraint mbox_cmd_undef_c { !(mbox_op_rand.cmd.cmd_s inside {defined_cmds}); }
 
@@ -105,3 +107,13 @@ class soc_ifc_env_mbox_sram_double_bit_flip_sequence extends soc_ifc_env_mbox_se
   endtask
 
 endclass
+
+//==========================================
+// Task:        mbox_teardown
+// Description: At end-of-sequence, inject some stalls to allow
+//              uC to acquire lock and sanitize the mailbox
+//==========================================
+task soc_ifc_env_mbox_sram_double_bit_flip_sequence::mbox_teardown();
+    do_rand_delay(1, DLY_MEDIUM);
+    super.mbox_teardown();
+endtask

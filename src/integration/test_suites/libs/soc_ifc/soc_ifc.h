@@ -112,9 +112,11 @@ inline void soc_ifc_set_iccm_lock() {
     lsu_write_32((CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
 }
 // Mailbox command flows
+uint8_t soc_ifc_mbox_acquire_lock(uint32_t attempt_count);
 mbox_op_s soc_ifc_read_mbox_cmd();
 void soc_ifc_mbox_fw_flow(mbox_op_s op);
 void soc_ifc_fw_update(mbox_op_s op);
+uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_count);
 
 // SHA Accelerator Functions
 void soc_ifc_sha_accel_acquire_lock();
