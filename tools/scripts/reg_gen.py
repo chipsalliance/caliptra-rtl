@@ -116,8 +116,8 @@ try:
     # Scrub the output SystemVerilog files to modify the coding style
     #  - Change unpacked arrays to packed, unpacked structs to packed
     # TODO just make a new exporter template instead of scrubbing?
-    rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + ".sv"))
-    rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + "_pkg.sv"))
+    #rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + ".sv"))
+    #rdl_post_process.scrub_line_by_line(str(pkglistener.get_regfile_name() + "_pkg.sv"))
 
 except RDLCompileError:
     # A compilation error occurred. Exit with error code
