@@ -24,8 +24,6 @@ targets:
     waiver_files: 
       #- $COMPILE_ROOT/config/rtl_lint/sha512.waiver
       - $MSFT_REPO_ROOT/src/sha512/config/design_lint/sha512_ctrl/sglint_waivers
-    black_box:
-      - sha512_reg
 ---
 provides: [sha512_ctrl_32bit_tb]  
 schema_version: 2.4.0

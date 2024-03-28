@@ -63,7 +63,7 @@ module mbox_csr (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct packed{
+    typedef struct {
         logic mbox_lock;
         logic mbox_user;
         logic mbox_cmd;
@@ -105,77 +105,77 @@ module mbox_csr (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } lock;
         } mbox_lock;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } user;
         } mbox_user;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } command;
         } mbox_cmd;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } length;
         } mbox_dlen;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } datain;
         } mbox_datain;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } dataout;
         } mbox_dataout;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } execute;
         } mbox_execute;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [3:0] next;
                 logic load_next;
             } status;
-            struct packed{
+            struct {
                 logic next;
                 logic load_next;
             } ecc_single_error;
-            struct packed{
+            struct {
                 logic next;
                 logic load_next;
             } ecc_double_error;
-            struct packed{
+            struct {
                 logic [2:0] next;
                 logic load_next;
             } mbox_fsm_ps;
-            struct packed{
+            struct {
                 logic next;
                 logic load_next;
             } soc_has_lock;
-            struct packed{
+            struct {
                 logic [14:0] next;
                 logic load_next;
             } mbox_rdptr;
         } mbox_status;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } unlock;
@@ -183,64 +183,64 @@ module mbox_csr (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic value;
             } lock;
         } mbox_lock;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] value;
             } user;
         } mbox_user;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] value;
             } command;
         } mbox_cmd;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] value;
             } length;
         } mbox_dlen;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] value;
             } datain;
         } mbox_datain;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [31:0] value;
             } dataout;
         } mbox_dataout;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic value;
             } execute;
         } mbox_execute;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic [3:0] value;
             } status;
-            struct packed{
+            struct {
                 logic value;
             } ecc_single_error;
-            struct packed{
+            struct {
                 logic value;
             } ecc_double_error;
-            struct packed{
+            struct {
                 logic [2:0] value;
             } mbox_fsm_ps;
-            struct packed{
+            struct {
                 logic value;
             } soc_has_lock;
-            struct packed{
+            struct {
                 logic [14:0] value;
             } mbox_rdptr;
         } mbox_status;
-        struct packed{
-            struct packed{
+        struct {
+            struct {
                 logic value;
             } unlock;
         } mbox_unlock;
@@ -547,7 +547,7 @@ module mbox_csr (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [9-1:0][31:0] readback_array;
+    logic [31:0] readback_array[9];
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
@@ -580,7 +580,4 @@ module mbox_csr (
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-
-`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !hwif_in.cptra_rst_b)
-
 endmodule

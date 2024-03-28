@@ -215,7 +215,7 @@ always_comb begin : keyvault_readmux
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
         //signal last when reading the last dword
-        kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword);
+        kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword.value);
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
                                     (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end

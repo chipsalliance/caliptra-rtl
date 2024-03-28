@@ -63,16 +63,16 @@ module dv_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct packed{
-        logic [10-1:0]StickyDataVaultCtrl;
-        logic [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;
-        logic [10-1:0]DataVaultCtrl;
-        logic [10-1:0][12-1:0]DATA_VAULT_ENTRY;
-        logic [10-1:0]LockableScratchRegCtrl;
-        logic [10-1:0]LockableScratchReg;
-        logic [8-1:0]NonStickyGenericScratchReg;
-        logic [8-1:0]StickyLockableScratchRegCtrl;
-        logic [8-1:0]StickyLockableScratchReg;
+    typedef struct {
+        logic StickyDataVaultCtrl[10];
+        logic STICKY_DATA_VAULT_ENTRY[10][12];
+        logic DataVaultCtrl[10];
+        logic DATA_VAULT_ENTRY[10][12];
+        logic LockableScratchRegCtrl[10];
+        logic LockableScratchReg[10];
+        logic NonStickyGenericScratchReg[8];
+        logic StickyLockableScratchRegCtrl[8];
+        logic StickyLockableScratchReg[8];
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -127,110 +127,110 @@ module dv_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } lock_entry;
-        } [10-1:0]StickyDataVaultCtrl;
-        struct packed{
-            struct packed{
+        } StickyDataVaultCtrl[10];
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;
-        struct packed{
-            struct packed{
+        } STICKY_DATA_VAULT_ENTRY[10][12];
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } lock_entry;
-        } [10-1:0]DataVaultCtrl;
-        struct packed{
-            struct packed{
+        } DataVaultCtrl[10];
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [10-1:0][12-1:0]DATA_VAULT_ENTRY;
-        struct packed{
-            struct packed{
+        } DATA_VAULT_ENTRY[10][12];
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } lock_entry;
-        } [10-1:0]LockableScratchRegCtrl;
-        struct packed{
-            struct packed{
+        } LockableScratchRegCtrl[10];
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [10-1:0]LockableScratchReg;
-        struct packed{
-            struct packed{
+        } LockableScratchReg[10];
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [8-1:0]NonStickyGenericScratchReg;
-        struct packed{
-            struct packed{
+        } NonStickyGenericScratchReg[8];
+        struct {
+            struct {
                 logic next;
                 logic load_next;
             } lock_entry;
-        } [8-1:0]StickyLockableScratchRegCtrl;
-        struct packed{
-            struct packed{
+        } StickyLockableScratchRegCtrl[8];
+        struct {
+            struct {
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [8-1:0]StickyLockableScratchReg;
+        } StickyLockableScratchReg[8];
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct packed{
-        struct packed{
-            struct packed{
+    typedef struct {
+        struct {
+            struct {
                 logic value;
             } lock_entry;
-        } [10-1:0]StickyDataVaultCtrl;
-        struct packed{
-            struct packed{
+        } StickyDataVaultCtrl[10];
+        struct {
+            struct {
                 logic [31:0] value;
             } data;
-        } [10-1:0][12-1:0]STICKY_DATA_VAULT_ENTRY;
-        struct packed{
-            struct packed{
+        } STICKY_DATA_VAULT_ENTRY[10][12];
+        struct {
+            struct {
                 logic value;
             } lock_entry;
-        } [10-1:0]DataVaultCtrl;
-        struct packed{
-            struct packed{
+        } DataVaultCtrl[10];
+        struct {
+            struct {
                 logic [31:0] value;
             } data;
-        } [10-1:0][12-1:0]DATA_VAULT_ENTRY;
-        struct packed{
-            struct packed{
+        } DATA_VAULT_ENTRY[10][12];
+        struct {
+            struct {
                 logic value;
             } lock_entry;
-        } [10-1:0]LockableScratchRegCtrl;
-        struct packed{
-            struct packed{
+        } LockableScratchRegCtrl[10];
+        struct {
+            struct {
                 logic [31:0] value;
             } data;
-        } [10-1:0]LockableScratchReg;
-        struct packed{
-            struct packed{
+        } LockableScratchReg[10];
+        struct {
+            struct {
                 logic [31:0] value;
             } data;
-        } [8-1:0]NonStickyGenericScratchReg;
-        struct packed{
-            struct packed{
+        } NonStickyGenericScratchReg[8];
+        struct {
+            struct {
                 logic value;
             } lock_entry;
-        } [8-1:0]StickyLockableScratchRegCtrl;
-        struct packed{
-            struct packed{
+        } StickyLockableScratchRegCtrl[8];
+        struct {
+            struct {
                 logic [31:0] value;
             } data;
-        } [8-1:0]StickyLockableScratchReg;
+        } StickyLockableScratchReg[8];
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -430,7 +430,7 @@ module dv_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [304-1:0][31:0] readback_array;
+    logic [31:0] readback_array[304];
     for(genvar i0=0; i0<10; i0++) begin
         assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.StickyDataVaultCtrl[i0] && !decoded_req_is_wr) ? field_storage.StickyDataVaultCtrl[i0].lock_entry.value : '0;
         assign readback_array[i0*1 + 0][31:1] = '0;
@@ -480,7 +480,4 @@ module dv_reg (
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
-
-`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !hwif_in.hard_reset_b)
-
 endmodule

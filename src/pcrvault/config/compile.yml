@@ -53,8 +53,6 @@ targets:
     directories: []
     waiver_files:
       - $MSFT_REPO_ROOT/src/pcrvault/config/design_lint/pcrvault/sglint_waivers
-    black_box:
-      - pv_reg
 global:
   tool:
     vcs:

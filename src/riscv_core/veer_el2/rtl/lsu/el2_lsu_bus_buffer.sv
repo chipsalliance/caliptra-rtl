@@ -758,9 +758,9 @@ import el2_pkg::*;
 
    // buffer full logic
    always_comb begin
-      buf_numvld_any[3:0] =  ({1'b0,lsu_busreq_m} << ldst_dual_m) +
-                             ({1'b0,lsu_busreq_r} << ldst_dual_r) +
-                             ibuf_valid;
+      buf_numvld_any[3:0] =  4'(({1'b0,lsu_busreq_m} << ldst_dual_m) +
+                                ({1'b0,lsu_busreq_r} << ldst_dual_r) +
+                                ibuf_valid);
       buf_numvld_wrcmd_any[3:0] = 4'b0;
       buf_numvld_cmd_any[3:0] = 4'b0;
       buf_numvld_pend_any[3:0] = 4'b0;
@@ -885,7 +885,7 @@ import el2_pkg::*;
       end
    end
    assign lsu_imprecise_error_load_any       = lsu_nonblock_load_data_error & ~lsu_imprecise_error_store_any;   // This is to make sure we send only one imprecise error for load/store
-   assign lsu_imprecise_error_addr_any[31:0] = lsu_imprecise_error_store_any ? buf_addr[lsu_imprecise_error_store_tag] : buf_addr[lsu_nonblock_load_data_tag];
+   assign lsu_imprecise_error_addr_any[31:0] = lsu_imprecise_error_store_any ? buf_addr[lsu_imprecise_error_store_tag[DEPTH_LOG2-1:0]] : buf_addr[lsu_nonblock_load_data_tag[DEPTH_LOG2-1:0]];
 
    // PMU signals
    assign lsu_pmu_bus_trxn  = (lsu_axi_awvalid & lsu_axi_awready) | (lsu_axi_wvalid & lsu_axi_wready) | (lsu_axi_arvalid & lsu_axi_arready);

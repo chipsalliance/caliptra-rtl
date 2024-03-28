@@ -1628,10 +1628,8 @@ assign ic_debug_rd_en           = dec_tlu_ic_diag_pkt.icache_rd_valid ;
 assign ic_debug_wr_en           = dec_tlu_ic_diag_pkt.icache_wr_valid ;
 
 
-assign ic_debug_way[pt.ICACHE_NUM_WAYS-1:0]        = {(ic_debug_way_enc[1:0] == 2'b11),
-                                                      (ic_debug_way_enc[1:0] == 2'b10),
-                                                      (ic_debug_way_enc[1:0] == 2'b01),
-                                                      (ic_debug_way_enc[1:0] == 2'b00) };
+assign ic_debug_way[pt.ICACHE_NUM_WAYS-1:0]        = {(ic_debug_way_enc[0] == 1'b1),
+                                                      (ic_debug_way_enc[0] == 1'b0) };
 
 assign ic_debug_tag_wr_en[pt.ICACHE_NUM_WAYS-1:0] = {pt.ICACHE_NUM_WAYS{ic_debug_wr_en & ic_debug_tag_array}} & ic_debug_way[pt.ICACHE_NUM_WAYS-1:0] ;
 
@@ -1672,7 +1670,7 @@ assign ACCESS7_okay = pt.INST_ACCESS_ENABLE7 & ((({ifc_fetch_addr_bf[31:1],1'b0}
 
 
 // memory protection  - equation to look identical to the LSU equation
-   assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7})) |
+   assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7}))
                                  | ACCESS0_okay
                                  | ACCESS1_okay
                                  | ACCESS2_okay
