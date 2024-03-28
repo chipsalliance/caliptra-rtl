@@ -1,4 +1,3 @@
-
 // -------------------------------------------------
 // Contact: contact@lubis-eda.com
 // Author: Tobias Ludwig, Michael Schwarz
@@ -18,7 +17,7 @@
 // limitations under the License.
 //
 
-module fv_constraints( init, next, reset_n, clk, mode);
+module fv_sha256_core_constraints(init, next, reset_n, clk, mode);
     input bit  init, next, reset_n, clk, mode;
     reg init_reg;
 
@@ -45,7 +44,7 @@ module fv_constraints( init, next, reset_n, clk, mode);
 
 endmodule
 
-bind sha256_core fv_constraints inst2(
+bind sha256_core fv_sha256_core_constraints fv_sha256_core_constraints_i(
   .init(init_cmd),
   .next(next_cmd),
   .reset_n(reset_n),

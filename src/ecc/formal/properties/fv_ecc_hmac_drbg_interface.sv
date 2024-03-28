@@ -23,7 +23,7 @@
 module fv_ecc_hmac_drbg_interface_m#(
     parameter                  REG_SIZE       = 384,
     parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter [147 : 0]        LFSR_INIT_SEED = 148'h6_04E7_A407_54F1_4487_A021_11AC_D0DF_8C55_57A0   // a random value
+    parameter [REG_SIZE-1 : 0]        LFSR_INIT_SEED = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c   // a random value
     )
     (
     // Clock and reset.
@@ -73,17 +73,18 @@ module fv_ecc_hmac_drbg_interface_m#(
  // Helper logic for lfsr_seed
  ///////////////////////////////////////////
 
-            logic [147 : 0]         fv_lfsr_seed_reg; 
+            logic [383 : 0]         fv_lfsr_seed_reg; 
             logic [383:0]           fv_hmac_drbg_result_reg;
             logic                   fv_hmac_drbg_valid_reg;
         always_ff @(posedge clk, negedge rst_n) begin
-            if(!rst_n)
+            if(!rst_n )
                 fv_lfsr_seed_reg <= LFSR_INIT_SEED;
             else begin
+
                 fv_hmac_drbg_valid_reg <= `hiearchy.hmac_drbg_valid;
                 fv_hmac_drbg_result_reg <= `hiearchy.hmac_drbg_result;
-                if(`hiearchy.state_reg == LFSR_ST && `hiearchy.hmac_drbg_valid && !fv_hmac_drbg_valid_reg) begin
-                    fv_lfsr_seed_reg <= `hiearchy.hmac_drbg_result[147 : 0];
+                 if(`hiearchy.state_reg == LFSR_ST && `hiearchy.hmac_drbg_valid && !fv_hmac_drbg_valid_reg) begin
+                    fv_lfsr_seed_reg <= `hiearchy.hmac_drbg_result;
                 end
             end
         end
@@ -117,14 +118,14 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_init == 1 &&
             `hiearchy.hmac_drbg_next == 0 &&
             `hiearchy.hmac_drbg_entropy == IV &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             `hiearchy.hmac_drbg_nonce == $past(`hiearchy.counter_nonce) &&
              ready == 0 &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
-            drbg == $past(drbg)
-            ;
+            drbg == $past(drbg);
+            
 
         endproperty
 
@@ -141,7 +142,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_init == 0 &&
             `hiearchy.hmac_drbg_next == 0 &&
             `hiearchy.hmac_drbg_entropy == '0 &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             `hiearchy.hmac_drbg_nonce == (`hiearchy.counter_nonce_reg) &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
@@ -163,7 +164,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == $past(`hiearchy.hmac_drbg_result[147 : 0]) ^ `hiearchy.counter_nonce[147 : 0] &&
+            `hiearchy.hmac_lfsr_seed == $past(`hiearchy.hmac_drbg_result) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -184,7 +185,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -205,7 +206,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce[147 : 0] &&
+            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce &&
             lambda == $past(`hiearchy.hmac_drbg_result) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -226,7 +227,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -246,7 +247,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == '0 &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(`hiearchy.hmac_drbg_result) &&
             masking_rnd == $past(masking_rnd) &&
@@ -267,7 +268,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -286,7 +287,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_next == 1 &&
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
-            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce[147 : 0] &&
+            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
              lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
@@ -306,7 +307,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_next == 0 &&
             ready == 0 &&
             `hiearchy.hmac_drbg_entropy == keygen_seed &&
-            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce[147 : 0] &&
+            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce &&
             `hiearchy.hmac_drbg_nonce == keygen_nonce &&
              lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
@@ -327,7 +328,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == privKey  &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == hashed_msg &&
-            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce[147 : 0] &&
+            `hiearchy.hmac_lfsr_seed == fv_lfsr_seed_reg ^ `hiearchy.counter_nonce &&
             masking_rnd == $past(`hiearchy.hmac_drbg_result) &&
              lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
@@ -347,7 +348,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == IV &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -367,7 +368,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == '0 &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -386,7 +387,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy ==  keygen_seed &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == keygen_nonce &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -408,7 +409,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == '0 &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
              lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -428,7 +429,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == privKey &&
             ready == 0 &&
             `hiearchy.hmac_drbg_nonce == hashed_msg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -447,7 +448,7 @@ module fv_ecc_hmac_drbg_interface_m#(
             `hiearchy.hmac_drbg_entropy == '0 &&
             ready == 1 &&
             `hiearchy.hmac_drbg_nonce == `hiearchy.counter_nonce_reg &&
-            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce[147:0] &&
+            `hiearchy.hmac_lfsr_seed == (fv_lfsr_seed_reg) ^ `hiearchy.counter_nonce &&
             lambda == $past(lambda) &&
             scalar_rnd == $past(scalar_rnd) &&
             masking_rnd == $past(masking_rnd) &&
@@ -518,7 +519,8 @@ endmodule
 
 bind ecc_hmac_drbg_interface fv_ecc_hmac_drbg_interface_m#(
         .REG_SIZE(REG_SIZE),
-        .GROUP_ORDER(GROUP_ORDER)
+        .GROUP_ORDER(GROUP_ORDER),
+        .LFSR_INIT_SEED(LFSR_INIT_SEED)
         )    
         fv_ecc_hmac_drbg_interface (
         .clk(clk),
