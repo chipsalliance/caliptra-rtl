@@ -39,3 +39,7 @@ targets:
       - $COMPILE_ROOT/rtl/aes_prng_masking.sv
       - $COMPILE_ROOT/rtl/aes_key_expand.sv
     tops: [aes_cipher_core]
+  rtl_lint:
+    directories: []
+    waiver_files: []
+    tops: [aes_cipher_core]

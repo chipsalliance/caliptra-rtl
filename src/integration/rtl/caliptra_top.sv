@@ -269,6 +269,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
+
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
     mbox_sram_we = mbox_sram_req.we;

@@ -63,9 +63,9 @@ module kv_reg (
     //--------------------------------------------------------------------------
     // Address Decode
     //--------------------------------------------------------------------------
-    typedef struct {
-        logic KEY_CTRL[32];
-        logic KEY_ENTRY[32][12];
+    typedef struct packed{
+        logic [32-1:0]KEY_CTRL;
+        logic [32-1:0][12-1:0]KEY_ENTRY;
         logic CLEAR_SECRETS;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
@@ -99,49 +99,49 @@ module kv_reg (
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_wr;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } lock_use;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } clear;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } rsvd0;
-            struct {
+            struct packed{
                 logic [4:0] next;
                 logic load_next;
             } rsvd1;
-            struct {
+            struct packed{
                 logic [7:0] next;
                 logic load_next;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [3:0] next;
                 logic load_next;
             } last_dword;
-        } KEY_CTRL[32];
-        struct {
-            struct {
+        } [32-1:0]KEY_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } KEY_ENTRY[32][12];
-        struct {
-            struct {
+        } [32-1:0][12-1:0]KEY_ENTRY;
+        struct packed{
+            struct packed{
                 logic next;
                 logic load_next;
             } wr_debug_values;
-            struct {
+            struct packed{
                 logic next;
                 logic load_next;
             } sel_debug_value;
@@ -149,40 +149,40 @@ module kv_reg (
     } field_combo_t;
     field_combo_t field_combo;
 
-    typedef struct {
-        struct {
-            struct {
+    typedef struct packed{
+        struct packed{
+            struct packed{
                 logic value;
             } lock_wr;
-            struct {
+            struct packed{
                 logic value;
             } lock_use;
-            struct {
+            struct packed{
                 logic value;
             } clear;
-            struct {
+            struct packed{
                 logic value;
             } rsvd0;
-            struct {
+            struct packed{
                 logic [4:0] value;
             } rsvd1;
-            struct {
+            struct packed{
                 logic [7:0] value;
             } dest_valid;
-            struct {
+            struct packed{
                 logic [3:0] value;
             } last_dword;
-        } KEY_CTRL[32];
-        struct {
-            struct {
+        } [32-1:0]KEY_CTRL;
+        struct packed{
+            struct packed{
                 logic [31:0] value;
             } data;
-        } KEY_ENTRY[32][12];
-        struct {
-            struct {
+        } [32-1:0][12-1:0]KEY_ENTRY;
+        struct packed{
+            struct packed{
                 logic value;
             } wr_debug_values;
-            struct {
+            struct packed{
                 logic value;
             } sel_debug_value;
         } CLEAR_SECRETS;
@@ -414,7 +414,7 @@ module kv_reg (
     logic [31:0] readback_data;
     
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[33];
+    logic [33-1:0][31:0] readback_array;
     for(genvar i0=0; i0<32; i0++) begin
         assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_wr.value : '0;
         assign readback_array[i0*1 + 0][1:1] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_use.value : '0;
@@ -442,4 +442,7 @@ module kv_reg (
     assign cpuif_rd_ack = readback_done;
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
+
+`CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !hwif_in.hard_reset_b)
+
 endmodule

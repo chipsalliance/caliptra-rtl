@@ -2,31 +2,31 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package kv_reg_pkg;
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_wr__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_use__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic hwclr;
     } kv_reg__kvCtrl__rsvd0__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [7:0] next;
         logic we;
         logic hwclr;
     } kv_reg__kvCtrl__dest_valid__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [3:0] next;
         logic we;
         logic hwclr;
     } kv_reg__kvCtrl__last_dword__in_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__kvCtrl__lock_wr__in_t lock_wr;
         kv_reg__kvCtrl__lock_use__in_t lock_use;
         kv_reg__kvCtrl__rsvd0__in_t rsvd0;
@@ -34,54 +34,54 @@ package kv_reg_pkg;
         kv_reg__kvCtrl__last_dword__in_t last_dword;
     } kv_reg__kvCtrl__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
         logic hwclr;
     } kv_reg__key_w32__in_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__key_w32__in_t data;
     } kv_reg__keyReg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic reset_b;
         logic core_only_rst_b;
         logic hard_reset_b;
-        kv_reg__kvCtrl__in_t KEY_CTRL[32];
-        kv_reg__keyReg__in_t KEY_ENTRY[32][12];
+        kv_reg__kvCtrl__in_t [32-1:0]KEY_CTRL;
+        kv_reg__keyReg__in_t [32-1:0][12-1:0]KEY_ENTRY;
     } kv_reg__in_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__lock_wr__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__lock_use__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__clear__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__kvCtrl__rsvd0__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [4:0] value;
     } kv_reg__kvCtrl__rsvd1__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [7:0] value;
     } kv_reg__kvCtrl__dest_valid__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [3:0] value;
     } kv_reg__kvCtrl__last_dword__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__kvCtrl__lock_wr__out_t lock_wr;
         kv_reg__kvCtrl__lock_use__out_t lock_use;
         kv_reg__kvCtrl__clear__out_t clear;
@@ -91,30 +91,30 @@ package kv_reg_pkg;
         kv_reg__kvCtrl__last_dword__out_t last_dword;
     } kv_reg__kvCtrl__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic [31:0] value;
     } kv_reg__key_w32__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__key_w32__out_t data;
     } kv_reg__keyReg__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__CLEAR_SECRETS__wr_debug_values__out_t;
 
-    typedef struct {
+    typedef struct packed{
         logic value;
     } kv_reg__CLEAR_SECRETS__sel_debug_value__out_t;
 
-    typedef struct {
+    typedef struct packed{
         kv_reg__CLEAR_SECRETS__wr_debug_values__out_t wr_debug_values;
         kv_reg__CLEAR_SECRETS__sel_debug_value__out_t sel_debug_value;
     } kv_reg__CLEAR_SECRETS__out_t;
 
-    typedef struct {
-        kv_reg__kvCtrl__out_t KEY_CTRL[32];
-        kv_reg__keyReg__out_t KEY_ENTRY[32][12];
+    typedef struct packed{
+        kv_reg__kvCtrl__out_t [32-1:0]KEY_CTRL;
+        kv_reg__keyReg__out_t [32-1:0][12-1:0]KEY_ENTRY;
         kv_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
     } kv_reg__out_t;
 
