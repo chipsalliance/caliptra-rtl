@@ -228,7 +228,7 @@ module hmac_core
 
       first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 1'b0 : 1'b1;
 
-      unique casez (hmac_ctrl_reg)
+      unique case (hmac_ctrl_reg)
         CTRL_IPAD:
           begin
             if (first_round)
@@ -288,7 +288,7 @@ module hmac_core
       hmac_ctrl_new    = CTRL_IDLE;
       hmac_ctrl_we     = 0;
 
-      unique casez (hmac_ctrl_reg)
+      unique case (hmac_ctrl_reg)
         CTRL_IDLE:
           begin
             ready_flag = 1;

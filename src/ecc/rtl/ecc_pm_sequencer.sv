@@ -60,7 +60,7 @@ module ecc_pm_sequencer
         end
         else begin
             if (ena) begin
-                unique casez(addra)
+                unique case(addra)
                     NOP : douta <= '0;
                     1   : douta <= '0;
                     

@@ -247,7 +247,7 @@ always_comb begin : mbox_fsm_combo
     mbox_protocol_error_nxt = '{default: 0};
     mbox_fsm_ns = mbox_fsm_ps;
 
-    unique casez (mbox_fsm_ps)
+    unique case (mbox_fsm_ps)
         MBOX_IDLE: begin
             if (arc_MBOX_IDLE_MBOX_RDY_FOR_CMD) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_CMD;

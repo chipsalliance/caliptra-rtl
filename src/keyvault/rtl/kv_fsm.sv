@@ -86,7 +86,7 @@ always_comb ready = (kv_fsm_ps == KV_IDLE);
 // Padding starts with a leading 1 after the valid data followed by 0's until 
 // the length of the valid data is stored in the last 4 dwords.
 // HMAC adds 1024 bits to the length to account for the key
-always_comb length_for_pad = (HMAC == 1) ? (num_dwords_data << 5) + 'd1024 : (num_dwords_data << 5);
+always_comb length_for_pad = (HMAC == 1) ? (32'b0 | ((num_dwords_data << 5) + 'd1024)) : (32'b0 | (num_dwords_data << 5));
 
 always_comb arc_KV_IDLE_KV_RW = start;
 always_comb arc_KV_RW_KV_DONE = ((PAD == 0) | pcr_hash_extend) & (offset_nxt == num_dwords_total); //jump to done when we've written all dwords
@@ -107,7 +107,7 @@ always_comb begin : kv_fsm_comb
     offset_nxt = '0;
     pad_data = '0;
     done = '0;
-    unique casez (kv_fsm_ps)
+    unique case (kv_fsm_ps)
         KV_IDLE: begin
             if (arc_KV_IDLE_KV_RW) kv_fsm_ns = KV_RW;
         end

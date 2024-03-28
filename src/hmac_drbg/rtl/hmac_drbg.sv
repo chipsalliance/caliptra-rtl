@@ -180,7 +180,7 @@ module hmac_drbg
     end
     else
     begin
-      unique casez (drbg_st_reg)
+      unique case (drbg_st_reg)
         IDLE_ST: begin
           if (init_cmd | next_cmd)
             valid_reg    <= 0;
@@ -213,7 +213,7 @@ module hmac_drbg
       HMAC_init <= 0;
       HMAC_next <= 0;
       if (first_round) begin
-        unique casez(drbg_st_reg)
+        unique case(drbg_st_reg)
           K10_ST:       HMAC_init <= 1;
           K11_ST:       HMAC_next <= 1;
           V1_ST:        HMAC_init <= 1;
@@ -244,7 +244,7 @@ module hmac_drbg
     end
     else begin
       if (first_round) begin
-        unique casez(drbg_st_reg)
+        unique case(drbg_st_reg)
           INIT_ST: begin
             K_reg   <= K_init;
             V_reg   <= V_init;
@@ -267,7 +267,7 @@ module hmac_drbg
   always_comb
   begin : hmac_block_update
     HMAC_key = K_reg;
-    unique casez(drbg_st_reg)
+    unique case(drbg_st_reg)
       K10_ST:         HMAC_block  = {V_reg, cnt_reg, entropy, nonce[383:136]};
       K11_ST:         HMAC_block  = {nonce[135:0], 1'h1, 875'b0, 12'h888};
       V1_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
@@ -288,7 +288,7 @@ module hmac_drbg
     else if (zeroize)
       cnt_reg    <= '0;
     else begin
-      unique casez (drbg_st_reg)
+      unique case (drbg_st_reg)
         INIT_ST:      cnt_reg    <= '0;
         NEXT_ST:      cnt_reg    <= cnt_reg + 1;
         K2_INIT_ST:   cnt_reg    <= cnt_reg + 1;
@@ -326,11 +326,11 @@ module hmac_drbg
 
   always_comb
   begin: state_logic
-    unique casez (drbg_st_reg)
+    unique case (drbg_st_reg)
       IDLE_ST: // IDLE WAIT
       begin
         if (HMAC_ready) begin
-          unique casez ({init_cmd, next_cmd})
+          unique case ({init_cmd, next_cmd})
             2'b10 :    drbg_next_st    = INIT_ST;
             2'b01 :    drbg_next_st    = NEXT_ST;
             default:   drbg_next_st    = IDLE_ST;

@@ -140,7 +140,7 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : hmac_drbg_entropy_input
-        unique casez (state_reg)
+        unique case (state_reg)
             LFSR_ST:        hmac_drbg_entropy = IV;
             LAMBDA_ST:      hmac_drbg_entropy = IV;
             SCALAR_RND_ST:  hmac_drbg_entropy = IV;
@@ -153,7 +153,7 @@ module ecc_hmac_drbg_interface#(
 
     always_comb 
     begin : hmac_drbg_nonce_input
-        unique casez (state_reg)
+        unique case (state_reg)
             LFSR_ST:        hmac_drbg_nonce = counter_nonce_reg;
             LAMBDA_ST:      hmac_drbg_nonce = counter_nonce_reg;
             SCALAR_RND_ST:  hmac_drbg_nonce = counter_nonce_reg;
@@ -171,7 +171,7 @@ module ecc_hmac_drbg_interface#(
         hmac_drbg_init = 0;
         hmac_drbg_next = 0;
         if (first_round) begin
-            unique casez (state_reg)
+            unique case (state_reg)
                 LFSR_ST:        hmac_drbg_init = 1;
                 LAMBDA_ST:      hmac_drbg_next = 1;
                 SCALAR_RND_ST:  hmac_drbg_next = 1;
@@ -290,7 +290,7 @@ module ecc_hmac_drbg_interface#(
     always_comb 
     begin : interface_fsm
         state_next = IDLE_ST;
-        unique casez(state_reg)
+        unique case(state_reg)
             IDLE_ST:        state_next = (en & hmac_drbg_ready)? LFSR_ST : IDLE_ST;
             LFSR_ST:        state_next = (hmac_done_edge)? LAMBDA_ST : LFSR_ST;
             LAMBDA_ST:      state_next = (hmac_done_edge)? SCALAR_RND_ST : LAMBDA_ST;

@@ -642,7 +642,7 @@ module sha512_masked_core
       init_reg_set        = 1'b0;
       init_reg_reset      = 1'b0;
 
-      unique casez (sha512_ctrl_reg)
+      unique case (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
             if (init_cmd | next_cmd)
