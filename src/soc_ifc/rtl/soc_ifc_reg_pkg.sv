@@ -1031,7 +1031,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_MANUFACTURING = 'h1,
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_PRODUCTION = 'h3
     } soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e_e;
-endpackage
 
     localparam SOC_IFC_REG_ADDR_WIDTH = 32'd12;
 

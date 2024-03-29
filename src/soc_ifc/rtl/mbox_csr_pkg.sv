@@ -216,7 +216,6 @@ package mbox_csr_pkg;
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_EXECUTE_SOC = 'h4,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_ERROR = 'h7
     } mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e_e;
-endpackage
 
     localparam MBOX_CSR_ADDR_WIDTH = 32'd6;
 

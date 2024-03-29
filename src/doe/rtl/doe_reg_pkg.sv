@@ -155,7 +155,6 @@ package doe_reg_pkg;
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_FE = 'h2,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_CLEAR_OBF_SECRETS = 'h3
     } doe_reg__DOE_CTRL__CMD__doe_cmd_e_e;
-endpackage
 
     localparam DOE_REG_ADDR_WIDTH = 32'd12;
 

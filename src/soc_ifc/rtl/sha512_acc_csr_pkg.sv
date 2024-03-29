@@ -219,7 +219,6 @@ package sha512_acc_csr_pkg;
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_384 = 'h2,
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_512 = 'h3
     } sha512_acc_csr__MODE__MODE__sha_cmd_e_e;
-endpackage
 
     localparam SHA512_ACC_CSR_ADDR_WIDTH = 32'd12;
 
