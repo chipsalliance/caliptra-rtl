@@ -18,14 +18,14 @@ on:
   workflow_call:
 
 jobs:
-  env:
-    MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" )
   # Fail if any compile.yml has been modified
   # (Microsoft employees use these to run an internal tool)
   # Don't run this job for manual runs
   compile_yml_check:
     name: compile.yml Check
     runs-on: ubuntu-22.04
+    env:
+      MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" )
     if: ${{ (github.event_name == 'pull_request') && ! contains(env.MSFT_ACTORS, github.actor) }}
     steps:
       - name: Checkout RTL repo
