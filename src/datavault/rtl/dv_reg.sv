@@ -58,7 +58,9 @@ module dv_reg (
     // Read & write latencies are balanced. Stalls not required
     assign cpuif_req_stall_rd = '0;
     assign cpuif_req_stall_wr = '0;
-    assign cpuif_req_masked = cpuif_req;
+    assign cpuif_req_masked = cpuif_req
+                            & !(!cpuif_req_is_wr & cpuif_req_stall_rd)
+                            & !(cpuif_req_is_wr & cpuif_req_stall_wr);
 
     //--------------------------------------------------------------------------
     // Address Decode
@@ -82,35 +84,35 @@ module dv_reg (
 
     always_comb begin
         for(int i0=0; i0<10; i0++) begin
-            decoded_reg_strb.StickyDataVaultCtrl[i0] = cpuif_req_masked & (cpuif_addr == 'h0 + i0*'h4);
+            decoded_reg_strb.StickyDataVaultCtrl[i0] = cpuif_req_masked & (cpuif_addr == 11'h0 + i0*11'h4);
         end
         for(int i0=0; i0<10; i0++) begin
             for(int i1=0; i1<12; i1++) begin
-                decoded_reg_strb.STICKY_DATA_VAULT_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 'h28 + i0*'h30 + i1*'h4);
+                decoded_reg_strb.STICKY_DATA_VAULT_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 11'h28 + i0*11'h30 + i1*11'h4);
             end
         end
         for(int i0=0; i0<10; i0++) begin
-            decoded_reg_strb.DataVaultCtrl[i0] = cpuif_req_masked & (cpuif_addr == 'h208 + i0*'h4);
+            decoded_reg_strb.DataVaultCtrl[i0] = cpuif_req_masked & (cpuif_addr == 11'h208 + i0*11'h4);
         end
         for(int i0=0; i0<10; i0++) begin
             for(int i1=0; i1<12; i1++) begin
-                decoded_reg_strb.DATA_VAULT_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 'h230 + i0*'h30 + i1*'h4);
+                decoded_reg_strb.DATA_VAULT_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 11'h230 + i0*11'h30 + i1*11'h4);
             end
         end
         for(int i0=0; i0<10; i0++) begin
-            decoded_reg_strb.LockableScratchRegCtrl[i0] = cpuif_req_masked & (cpuif_addr == 'h410 + i0*'h4);
+            decoded_reg_strb.LockableScratchRegCtrl[i0] = cpuif_req_masked & (cpuif_addr == 11'h410 + i0*11'h4);
         end
         for(int i0=0; i0<10; i0++) begin
-            decoded_reg_strb.LockableScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 'h438 + i0*'h4);
+            decoded_reg_strb.LockableScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 11'h438 + i0*11'h4);
         end
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.NonStickyGenericScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 'h460 + i0*'h4);
+            decoded_reg_strb.NonStickyGenericScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 11'h460 + i0*11'h4);
         end
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.StickyLockableScratchRegCtrl[i0] = cpuif_req_masked & (cpuif_addr == 'h480 + i0*'h4);
+            decoded_reg_strb.StickyLockableScratchRegCtrl[i0] = cpuif_req_masked & (cpuif_addr == 11'h480 + i0*11'h4);
         end
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.StickyLockableScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 'h4a0 + i0*'h4);
+            decoded_reg_strb.StickyLockableScratchReg[i0] = cpuif_req_masked & (cpuif_addr == 11'h4a0 + i0*11'h4);
         end
     end
 
@@ -120,10 +122,6 @@ module dv_reg (
     assign decoded_wr_data = cpuif_wr_data;
     assign decoded_wr_biten = cpuif_wr_biten;
 
-
-    // Writes are always granted with no error response
-    assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
-    assign cpuif_wr_err = '0;
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -237,8 +235,10 @@ module dv_reg (
     for(genvar i0=0; i0<10; i0++) begin
         // Field: dv_reg.StickyDataVaultCtrl[].lock_entry
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.StickyDataVaultCtrl[i0].lock_entry.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.StickyDataVaultCtrl[i0].lock_entry.value;
+            load_next_c = '0;
             if(decoded_reg_strb.StickyDataVaultCtrl[i0] && decoded_req_is_wr && !(hwif_in.StickyDataVaultCtrl[i0].lock_entry.swwel)) begin // SW write
                 next_c = (field_storage.StickyDataVaultCtrl[i0].lock_entry.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -248,7 +248,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
             if(~hwif_in.hard_reset_b) begin
-                field_storage.StickyDataVaultCtrl[i0].lock_entry.value <= 'h0;
+                field_storage.StickyDataVaultCtrl[i0].lock_entry.value <= 1'h0;
             end else if(field_combo.StickyDataVaultCtrl[i0].lock_entry.load_next) begin
                 field_storage.StickyDataVaultCtrl[i0].lock_entry.value <= field_combo.StickyDataVaultCtrl[i0].lock_entry.next;
             end
@@ -259,8 +259,10 @@ module dv_reg (
         for(genvar i1=0; i1<12; i1++) begin
             // Field: dv_reg.STICKY_DATA_VAULT_ENTRY[][].data
             always_comb begin
-                automatic logic [31:0] next_c = field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value;
-                automatic logic load_next_c = '0;
+                automatic logic [31:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value;
+                load_next_c = '0;
                 if(decoded_reg_strb.STICKY_DATA_VAULT_ENTRY[i0][i1] && decoded_req_is_wr && !(hwif_in.STICKY_DATA_VAULT_ENTRY[i0][i1].data.swwel)) begin // SW write
                     next_c = (field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                     load_next_c = '1;
@@ -270,7 +272,7 @@ module dv_reg (
             end
             always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
                 if(~hwif_in.hard_reset_b) begin
-                    field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value <= 'h0;
+                    field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value <= 32'h0;
                 end else if(field_combo.STICKY_DATA_VAULT_ENTRY[i0][i1].data.load_next) begin
                     field_storage.STICKY_DATA_VAULT_ENTRY[i0][i1].data.value <= field_combo.STICKY_DATA_VAULT_ENTRY[i0][i1].data.next;
                 end
@@ -280,8 +282,10 @@ module dv_reg (
     for(genvar i0=0; i0<10; i0++) begin
         // Field: dv_reg.DataVaultCtrl[].lock_entry
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.DataVaultCtrl[i0].lock_entry.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.DataVaultCtrl[i0].lock_entry.value;
+            load_next_c = '0;
             if(decoded_reg_strb.DataVaultCtrl[i0] && decoded_req_is_wr && !(hwif_in.DataVaultCtrl[i0].lock_entry.swwel)) begin // SW write
                 next_c = (field_storage.DataVaultCtrl[i0].lock_entry.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -291,7 +295,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
             if(~hwif_in.core_only_rst_b) begin
-                field_storage.DataVaultCtrl[i0].lock_entry.value <= 'h0;
+                field_storage.DataVaultCtrl[i0].lock_entry.value <= 1'h0;
             end else if(field_combo.DataVaultCtrl[i0].lock_entry.load_next) begin
                 field_storage.DataVaultCtrl[i0].lock_entry.value <= field_combo.DataVaultCtrl[i0].lock_entry.next;
             end
@@ -302,8 +306,10 @@ module dv_reg (
         for(genvar i1=0; i1<12; i1++) begin
             // Field: dv_reg.DATA_VAULT_ENTRY[][].data
             always_comb begin
-                automatic logic [31:0] next_c = field_storage.DATA_VAULT_ENTRY[i0][i1].data.value;
-                automatic logic load_next_c = '0;
+                automatic logic [31:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.DATA_VAULT_ENTRY[i0][i1].data.value;
+                load_next_c = '0;
                 if(decoded_reg_strb.DATA_VAULT_ENTRY[i0][i1] && decoded_req_is_wr && !(hwif_in.DATA_VAULT_ENTRY[i0][i1].data.swwel)) begin // SW write
                     next_c = (field_storage.DATA_VAULT_ENTRY[i0][i1].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                     load_next_c = '1;
@@ -313,7 +319,7 @@ module dv_reg (
             end
             always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
                 if(~hwif_in.hard_reset_b) begin
-                    field_storage.DATA_VAULT_ENTRY[i0][i1].data.value <= 'h0;
+                    field_storage.DATA_VAULT_ENTRY[i0][i1].data.value <= 32'h0;
                 end else if(field_combo.DATA_VAULT_ENTRY[i0][i1].data.load_next) begin
                     field_storage.DATA_VAULT_ENTRY[i0][i1].data.value <= field_combo.DATA_VAULT_ENTRY[i0][i1].data.next;
                 end
@@ -323,8 +329,10 @@ module dv_reg (
     for(genvar i0=0; i0<10; i0++) begin
         // Field: dv_reg.LockableScratchRegCtrl[].lock_entry
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.LockableScratchRegCtrl[i0].lock_entry.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.LockableScratchRegCtrl[i0].lock_entry.value;
+            load_next_c = '0;
             if(decoded_reg_strb.LockableScratchRegCtrl[i0] && decoded_req_is_wr && !(hwif_in.LockableScratchRegCtrl[i0].lock_entry.swwel)) begin // SW write
                 next_c = (field_storage.LockableScratchRegCtrl[i0].lock_entry.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -334,7 +342,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
             if(~hwif_in.core_only_rst_b) begin
-                field_storage.LockableScratchRegCtrl[i0].lock_entry.value <= 'h0;
+                field_storage.LockableScratchRegCtrl[i0].lock_entry.value <= 1'h0;
             end else if(field_combo.LockableScratchRegCtrl[i0].lock_entry.load_next) begin
                 field_storage.LockableScratchRegCtrl[i0].lock_entry.value <= field_combo.LockableScratchRegCtrl[i0].lock_entry.next;
             end
@@ -344,8 +352,10 @@ module dv_reg (
     for(genvar i0=0; i0<10; i0++) begin
         // Field: dv_reg.LockableScratchReg[].data
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.LockableScratchReg[i0].data.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.LockableScratchReg[i0].data.value;
+            load_next_c = '0;
             if(decoded_reg_strb.LockableScratchReg[i0] && decoded_req_is_wr && !(hwif_in.LockableScratchReg[i0].data.swwel)) begin // SW write
                 next_c = (field_storage.LockableScratchReg[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -355,7 +365,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
             if(~hwif_in.hard_reset_b) begin
-                field_storage.LockableScratchReg[i0].data.value <= 'h0;
+                field_storage.LockableScratchReg[i0].data.value <= 32'h0;
             end else if(field_combo.LockableScratchReg[i0].data.load_next) begin
                 field_storage.LockableScratchReg[i0].data.value <= field_combo.LockableScratchReg[i0].data.next;
             end
@@ -364,8 +374,10 @@ module dv_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: dv_reg.NonStickyGenericScratchReg[].data
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.NonStickyGenericScratchReg[i0].data.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.NonStickyGenericScratchReg[i0].data.value;
+            load_next_c = '0;
             if(decoded_reg_strb.NonStickyGenericScratchReg[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.NonStickyGenericScratchReg[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -375,7 +387,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.NonStickyGenericScratchReg[i0].data.value <= 'h0;
+                field_storage.NonStickyGenericScratchReg[i0].data.value <= 32'h0;
             end else if(field_combo.NonStickyGenericScratchReg[i0].data.load_next) begin
                 field_storage.NonStickyGenericScratchReg[i0].data.value <= field_combo.NonStickyGenericScratchReg[i0].data.next;
             end
@@ -384,8 +396,10 @@ module dv_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: dv_reg.StickyLockableScratchRegCtrl[].lock_entry
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value;
+            load_next_c = '0;
             if(decoded_reg_strb.StickyLockableScratchRegCtrl[i0] && decoded_req_is_wr && !(hwif_in.StickyLockableScratchRegCtrl[i0].lock_entry.swwel)) begin // SW write
                 next_c = (field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -395,7 +409,7 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
             if(~hwif_in.hard_reset_b) begin
-                field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value <= 'h0;
+                field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value <= 1'h0;
             end else if(field_combo.StickyLockableScratchRegCtrl[i0].lock_entry.load_next) begin
                 field_storage.StickyLockableScratchRegCtrl[i0].lock_entry.value <= field_combo.StickyLockableScratchRegCtrl[i0].lock_entry.next;
             end
@@ -405,8 +419,10 @@ module dv_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: dv_reg.StickyLockableScratchReg[].data
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.StickyLockableScratchReg[i0].data.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.StickyLockableScratchReg[i0].data.value;
+            load_next_c = '0;
             if(decoded_reg_strb.StickyLockableScratchReg[i0] && decoded_req_is_wr && !(hwif_in.StickyLockableScratchReg[i0].data.swwel)) begin // SW write
                 next_c = (field_storage.StickyLockableScratchReg[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -416,19 +432,28 @@ module dv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
             if(~hwif_in.hard_reset_b) begin
-                field_storage.StickyLockableScratchReg[i0].data.value <= 'h0;
+                field_storage.StickyLockableScratchReg[i0].data.value <= 32'h0;
             end else if(field_combo.StickyLockableScratchReg[i0].data.load_next) begin
                 field_storage.StickyLockableScratchReg[i0].data.value <= field_combo.StickyLockableScratchReg[i0].data.next;
             end
         end
     end
+
+    //--------------------------------------------------------------------------
+    // Write response
+    //--------------------------------------------------------------------------
+    assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
+    // Writes are always granted with no error response
+    assign cpuif_wr_err = '0;
+
     //--------------------------------------------------------------------------
     // Readback
     //--------------------------------------------------------------------------
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-    
+
     // Assign readback values to a flattened array
     logic [304-1:0][31:0] readback_array;
     for(genvar i0=0; i0<10; i0++) begin
