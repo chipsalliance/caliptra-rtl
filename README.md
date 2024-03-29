@@ -51,6 +51,16 @@ GCC:
  - G++ Used to compile Verilator objects and test firmware
    - `g++ (GCC) 11.2.0`
 
+RDL Compiler:
+ - systemrdl-compiler==1.27.3
+ - peakrdl-systemrdl==0.3.0
+ - peakrdl-regblock==0.21.0
+ - peakrdl-uvm==2.3.0
+ - peakrdl-ipxact==3.4.3
+ - peakrdl-html==2.10.1
+ - peakrdl-cheader==1.0.0
+ - peakrdl==1.1.0
+
 Other:
  - Playbook (Microsoft Internal workflow management tool)
 
