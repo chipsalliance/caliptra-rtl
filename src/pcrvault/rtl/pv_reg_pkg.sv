@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package pv_reg_pkg;
+
+    localparam PV_REG_DATA_WIDTH = 32;
+    localparam PV_REG_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic swwel;
     } pv_reg__pvCtrl__lock__in_t;
@@ -73,6 +77,7 @@ package pv_reg_pkg;
         pv_reg__pvCtrl__out_t [32-1:0]PCR_CTRL;
         pv_reg__pcrReg__out_t [32-1:0][12-1:0]PCR_ENTRY;
     } pv_reg__out_t;
+endpackage
 
     localparam PV_REG_ADDR_WIDTH = 32'd12;
 
