@@ -122,7 +122,6 @@ package dv_reg_pkg;
         dv_reg__LockableScratchRegCtrl__out_t [10-1:0]LockableScratchRegCtrl;
         dv_reg__StickyLockableScratchRegCtrl__out_t [8-1:0]StickyLockableScratchRegCtrl;
     } dv_reg__out_t;
-endpackage
 
     localparam DV_REG_ADDR_WIDTH = 32'd11;
 

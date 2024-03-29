@@ -448,7 +448,6 @@ package ecc_reg_pkg;
         kv_status_reg__ERROR__kv_error_e__KV_READ_FAIL = 'h1,
         kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2
     } kv_status_reg__ERROR__kv_error_e_e;
-endpackage
 
     localparam ECC_REG_ADDR_WIDTH = 32'd12;
 
