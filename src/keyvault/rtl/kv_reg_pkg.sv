@@ -121,7 +121,6 @@ package kv_reg_pkg;
         kv_reg__keyReg__out_t [32-1:0][12-1:0]KEY_ENTRY;
         kv_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
     } kv_reg__out_t;
-endpackage
 
     localparam KV_REG_ADDR_WIDTH = 32'd12;
 
