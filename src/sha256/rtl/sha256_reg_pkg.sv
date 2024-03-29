@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package sha256_reg_pkg;
+
+    localparam SHA256_REG_DATA_WIDTH = 32;
+    localparam SHA256_REG_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic [31:0] next;
     } sha256_reg__SHA256_NAME__NAME__in_t;
@@ -55,33 +59,33 @@ package sha256_reg_pkg;
 
     typedef struct packed{
         logic hwset;
-    } sha256_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
+    } sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha256_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
+    } sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha256_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
+    } sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha256_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
+    } sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
-        sha256_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
-        sha256_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
-        sha256_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
-        sha256_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
+        sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
     } sha256_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha256_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+    } sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
 
     typedef struct packed{
-        sha256_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+        sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
     } sha256_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
@@ -175,6 +179,7 @@ package sha256_reg_pkg;
         sha256_reg__SHA256_BLOCK__out_t [16-1:0]SHA256_BLOCK;
         sha256_reg__intr_block_t__out_t intr_block_rf;
     } sha256_reg__out_t;
+endpackage
 
     localparam SHA256_REG_ADDR_WIDTH = 32'd12;
 

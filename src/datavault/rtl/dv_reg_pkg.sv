@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package dv_reg_pkg;
+
+    localparam DV_REG_DATA_WIDTH = 32;
+    localparam DV_REG_MIN_ADDR_WIDTH = 11;
+
     typedef struct packed{
         logic swwel;
     } dv_reg__StickyDataVaultCtrl__lock_entry__in_t;
@@ -118,6 +122,7 @@ package dv_reg_pkg;
         dv_reg__LockableScratchRegCtrl__out_t [10-1:0]LockableScratchRegCtrl;
         dv_reg__StickyLockableScratchRegCtrl__out_t [8-1:0]StickyLockableScratchRegCtrl;
     } dv_reg__out_t;
+endpackage
 
     localparam DV_REG_ADDR_WIDTH = 32'd11;
 
