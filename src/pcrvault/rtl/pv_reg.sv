@@ -58,7 +58,9 @@ module pv_reg (
     // Read & write latencies are balanced. Stalls not required
     assign cpuif_req_stall_rd = '0;
     assign cpuif_req_stall_wr = '0;
-    assign cpuif_req_masked = cpuif_req;
+    assign cpuif_req_masked = cpuif_req
+                            & !(!cpuif_req_is_wr & cpuif_req_stall_rd)
+                            & !(cpuif_req_is_wr & cpuif_req_stall_wr);
 
     //--------------------------------------------------------------------------
     // Address Decode
@@ -75,11 +77,11 @@ module pv_reg (
 
     always_comb begin
         for(int i0=0; i0<32; i0++) begin
-            decoded_reg_strb.PCR_CTRL[i0] = cpuif_req_masked & (cpuif_addr == 'h0 + i0*'h4);
+            decoded_reg_strb.PCR_CTRL[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + i0*12'h4);
         end
         for(int i0=0; i0<32; i0++) begin
             for(int i1=0; i1<12; i1++) begin
-                decoded_reg_strb.PCR_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 'h600 + i0*'h30 + i1*'h4);
+                decoded_reg_strb.PCR_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h30 + i1*12'h4);
             end
         end
     end
@@ -90,10 +92,6 @@ module pv_reg (
     assign decoded_wr_data = cpuif_wr_data;
     assign decoded_wr_biten = cpuif_wr_biten;
 
-
-    // Writes are always granted with no error response
-    assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
-    assign cpuif_wr_err = '0;
     //--------------------------------------------------------------------------
     // Field logic
     //--------------------------------------------------------------------------
@@ -151,8 +149,10 @@ module pv_reg (
     for(genvar i0=0; i0<32; i0++) begin
         // Field: pv_reg.PCR_CTRL[].lock
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].lock.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.PCR_CTRL[i0].lock.value;
+            load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].lock.swwel)) begin // SW write
                 next_c = (field_storage.PCR_CTRL[i0].lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -162,7 +162,7 @@ module pv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
             if(~hwif_in.core_only_rst_b) begin
-                field_storage.PCR_CTRL[i0].lock.value <= 'h0;
+                field_storage.PCR_CTRL[i0].lock.value <= 1'h0;
             end else if(field_combo.PCR_CTRL[i0].lock.load_next) begin
                 field_storage.PCR_CTRL[i0].lock.value <= field_combo.PCR_CTRL[i0].lock.next;
             end
@@ -170,12 +170,14 @@ module pv_reg (
         assign hwif_out.PCR_CTRL[i0].lock.value = field_storage.PCR_CTRL[i0].lock.value;
         // Field: pv_reg.PCR_CTRL[].clear
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].clear.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.PCR_CTRL[i0].clear.value;
+            load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr && !(hwif_in.PCR_CTRL[i0].clear.swwel)) begin // SW write
                 next_c = (field_storage.PCR_CTRL[i0].clear.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
                 load_next_c = '1;
-            end else if(1) begin // singlepulse clears back to 0
+            end else begin // singlepulse clears back to 0
                 next_c = '0;
                 load_next_c = '1;
             end
@@ -184,7 +186,7 @@ module pv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.PCR_CTRL[i0].clear.value <= 'h0;
+                field_storage.PCR_CTRL[i0].clear.value <= 1'h0;
             end else if(field_combo.PCR_CTRL[i0].clear.load_next) begin
                 field_storage.PCR_CTRL[i0].clear.value <= field_combo.PCR_CTRL[i0].clear.next;
             end
@@ -192,8 +194,10 @@ module pv_reg (
         assign hwif_out.PCR_CTRL[i0].clear.value = field_storage.PCR_CTRL[i0].clear.value;
         // Field: pv_reg.PCR_CTRL[].rsvd0
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.PCR_CTRL[i0].rsvd0.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.PCR_CTRL[i0].rsvd0.value;
+            load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.PCR_CTRL[i0].rsvd0.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
                 load_next_c = '1;
@@ -206,7 +210,7 @@ module pv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.PCR_CTRL[i0].rsvd0.value <= 'h0;
+                field_storage.PCR_CTRL[i0].rsvd0.value <= 1'h0;
             end else if(field_combo.PCR_CTRL[i0].rsvd0.load_next) begin
                 field_storage.PCR_CTRL[i0].rsvd0.value <= field_combo.PCR_CTRL[i0].rsvd0.next;
             end
@@ -214,8 +218,10 @@ module pv_reg (
         assign hwif_out.PCR_CTRL[i0].rsvd0.value = field_storage.PCR_CTRL[i0].rsvd0.value;
         // Field: pv_reg.PCR_CTRL[].rsvd1
         always_comb begin
-            automatic logic [4:0] next_c = field_storage.PCR_CTRL[i0].rsvd1.value;
-            automatic logic load_next_c = '0;
+            automatic logic [4:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.PCR_CTRL[i0].rsvd1.value;
+            load_next_c = '0;
             if(decoded_reg_strb.PCR_CTRL[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.PCR_CTRL[i0].rsvd1.value & ~decoded_wr_biten[7:3]) | (decoded_wr_data[7:3] & decoded_wr_biten[7:3]);
                 load_next_c = '1;
@@ -225,7 +231,7 @@ module pv_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.PCR_CTRL[i0].rsvd1.value <= 'h0;
+                field_storage.PCR_CTRL[i0].rsvd1.value <= 5'h0;
             end else if(field_combo.PCR_CTRL[i0].rsvd1.load_next) begin
                 field_storage.PCR_CTRL[i0].rsvd1.value <= field_combo.PCR_CTRL[i0].rsvd1.next;
             end
@@ -236,8 +242,10 @@ module pv_reg (
         for(genvar i1=0; i1<12; i1++) begin
             // Field: pv_reg.PCR_ENTRY[][].data
             always_comb begin
-                automatic logic [31:0] next_c = field_storage.PCR_ENTRY[i0][i1].data.value;
-                automatic logic load_next_c = '0;
+                automatic logic [31:0] next_c;
+                automatic logic load_next_c;
+                next_c = field_storage.PCR_ENTRY[i0][i1].data.value;
+                load_next_c = '0;
                 if(hwif_in.PCR_ENTRY[i0][i1].data.we) begin // HW Write - we
                     next_c = hwif_in.PCR_ENTRY[i0][i1].data.next;
                     load_next_c = '1;
@@ -250,7 +258,7 @@ module pv_reg (
             end
             always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
                 if(~hwif_in.hard_reset_b) begin
-                    field_storage.PCR_ENTRY[i0][i1].data.value <= 'h0;
+                    field_storage.PCR_ENTRY[i0][i1].data.value <= 32'h0;
                 end else if(field_combo.PCR_ENTRY[i0][i1].data.load_next) begin
                     field_storage.PCR_ENTRY[i0][i1].data.value <= field_combo.PCR_ENTRY[i0][i1].data.next;
                 end
@@ -258,13 +266,22 @@ module pv_reg (
             assign hwif_out.PCR_ENTRY[i0][i1].data.value = field_storage.PCR_ENTRY[i0][i1].data.value;
         end
     end
+
+    //--------------------------------------------------------------------------
+    // Write response
+    //--------------------------------------------------------------------------
+    assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
+    // Writes are always granted with no error response
+    assign cpuif_wr_err = '0;
+
     //--------------------------------------------------------------------------
     // Readback
     //--------------------------------------------------------------------------
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-    
+
     // Assign readback values to a flattened array
     logic [416-1:0][31:0] readback_array;
     for(genvar i0=0; i0<32; i0++) begin
