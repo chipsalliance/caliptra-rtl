@@ -2295,6 +2295,9 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, apb_txn.read_or_write), UVM_FULL)
                 end
             end
+            "CPTRA_TIMER_CONFIG": begin
+                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
                 //When uc reset is still asserted and we're writing to bootfsm go, expect uc to be brough out of reset
