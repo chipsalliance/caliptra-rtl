@@ -200,14 +200,14 @@ package mbox_csr_pkg;
         mbox_csr__mbox_unlock__out_t mbox_unlock;
     } mbox_csr__out_t;
 
-    typedef enum {
+    typedef enum logic [31:0] {
         mbox_csr__mbox_status__status__mbox_status_e__CMD_BUSY = 'h0,
         mbox_csr__mbox_status__status__mbox_status_e__DATA_READY = 'h1,
         mbox_csr__mbox_status__status__mbox_status_e__CMD_COMPLETE = 'h2,
         mbox_csr__mbox_status__status__mbox_status_e__CMD_FAILURE = 'h3
     } mbox_csr__mbox_status__status__mbox_status_e_e;
 
-    typedef enum {
+    typedef enum logic [31:0] {
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_IDLE = 'h0,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_RDY_FOR_CMD = 'h1,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_RDY_FOR_DLEN = 'h3,
