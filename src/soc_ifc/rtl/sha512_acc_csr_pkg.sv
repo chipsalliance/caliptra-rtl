@@ -213,7 +213,7 @@ package sha512_acc_csr_pkg;
         sha512_acc_csr__intr_block_t__out_t intr_block_rf;
     } sha512_acc_csr__out_t;
 
-    typedef enum {
+    typedef enum logic [31:0] {
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_384 = 'h0,
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_512 = 'h1,
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_384 = 'h2,
