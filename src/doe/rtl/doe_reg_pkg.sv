@@ -149,7 +149,7 @@ package doe_reg_pkg;
         doe_reg__intr_block_t__out_t intr_block_rf;
     } doe_reg__out_t;
 
-    typedef enum {
+    typedef enum logic [31:0] {
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_IDLE = 'h0,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_UDS = 'h1,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_FE = 'h2,

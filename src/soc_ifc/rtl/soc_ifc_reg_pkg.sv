@@ -1026,7 +1026,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 
-    typedef enum {
+    typedef enum logic [31:0] {
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_UNPROVISIONED = 'h0,
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_MANUFACTURING = 'h1,
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_PRODUCTION = 'h3
