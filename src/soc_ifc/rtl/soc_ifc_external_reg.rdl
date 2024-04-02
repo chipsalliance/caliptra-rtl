@@ -307,7 +307,11 @@ reg {
             SoC stepping ID is repopulated with the value in the fuse register on every warm reset
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {desc = "Caliptra official release version. Bit field encoding is:
+                   [br][lb]15:8[rb] Patch version
+                   [br][lb] 7:4[rb] Minor version
+                   [br][lb] 3:0[rb] Major version";
+           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0011;
     field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
