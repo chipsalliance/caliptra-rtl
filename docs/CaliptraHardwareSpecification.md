@@ -34,7 +34,7 @@ BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchroni
 
 ## FW update reset (Impactless FW update)
 
-Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB slaves are still active. All registers within the slaves and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
+Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
 
 *Figure 2: Mailbox Boot FSM state diagram for FW update reset*
 
@@ -87,47 +87,47 @@ The 32-bit address region is subdivided into 16 fixed-sized, contiguous 256 MB r
 
 The following table shows the memory map address ranges for each of the IP blocks in the cryptographic subsystem.
 
-| IP/Peripheral                       | Slave \# | Address size | Start address | End address |
-| :---------------------------------- | :------- | :----------- | :------------ | :---------- |
-| Cryptographic Initialization Engine | 0        | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
-| ECC Secp384                         | 1        | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
-| HMAC384                             | 2        | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
-| Key Vault                           | 3        | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
-| PCR Vault                           | 4        | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
-| Data Vault                          | 5        | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
-| SHA512                              | 6        | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
-| SHA256                              | 13       | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
+| IP/Peripheral                       | Target \# | Address size | Start address | End address |
+| :---------------------------------- | :-------- | :----------- | :------------ | :---------- |
+| Cryptographic Initialization Engine | 0         | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
+| ECC Secp384                         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
+| HMAC384                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
+| Key Vault                           | 3         | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
+| PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
+| Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
+| SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
+| SHA256                              | 13        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 
 #### Peripherals subsystem
 
 The following table shows the memory map address ranges for each of the IP blocks in the peripherals’ subsystem.
 
-| IP/Peripheral | Slave \# | Address size | Start address | End address |
-| :------------ | :------- | :----------- | :------------ | :---------- |
-| QSPI          | 7        | 4 KiB        | 0x2000_0000   | 0x2000_0FFF |
-| UART          | 8        | 4 KiB        | 0x2000_1000   | 0x2000_1FFF |
-| CSRNG         | 15       | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
-| ENTROPY SRC   | 16       | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
+| IP/Peripheral | Target \# | Address size | Start address | End address |
+| :------------ | :-------- | :----------- | :------------ | :---------- |
+| QSPI          | 7         | 4 KiB        | 0x2000_0000   | 0x2000_0FFF |
+| UART          | 8         | 4 KiB        | 0x2000_1000   | 0x2000_1FFF |
+| CSRNG         | 15        | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
+| ENTROPY SRC   | 16        | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
 
 #### SoC interface subsystem
 
 The following table shows the memory map address ranges for each of the IP blocks in the SoC interface subsystem.
 
-| IP/Peripheral              | Slave \# | Address size | Start address | End address |
-| :------------------------- | :------- | :----------- | :------------ | :---------- |
-| Mailbox SRAM Direct Access | 10       | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
-| Mailbox CSR                | 10       | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| SHA512 Accelerator CSR     | 10       | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
-| Mailbox                    | 10       | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| IP/Peripheral              | Target \# | Address size | Start address | End address |
+| :------------------------- | :-------- | :----------- | :------------ | :---------- |
+| Mailbox SRAM Direct Access | 10        | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
+| Mailbox CSR                | 10        | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
+| SHA512 Accelerator CSR     | 10        | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
+| Mailbox                    | 10        | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 
 #### RISC-V core local memory blocks
 
 The following table shows the memory map address ranges for each of the local memory blocks that interface with RISC-V core.
 
-| IP/Peripheral   | Slave \# | Address size | Start address | End address |
-| :-------------- | :------- | :----------- | :------------ | :---------- |
-| ICCM0 (via DMA) | 12       | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| DCCM            | 11       | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| IP/Peripheral   | Target \# | Address size | Start address | End address |
+| :-------------- | :-------- | :----------- | :------------ | :---------- |
+| ICCM0 (via DMA) | 12        | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
+| DCCM            | 11        | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
 
 ### Interrupts
 
@@ -207,9 +207,9 @@ The Caliptra microcontroller communicates with the mailbox through its internal 
 
 ### AHB-lite interface
 
-AHB-lite is a subset of the full AHB specification. It is primarily used in single master systems. This interface connects VeeR EL2 Core (LSU master) to the slave devices. See [Caliptra Core](#caliptra-core) for information.
+AHB-lite is a subset of the full AHB specification. It is primarily used in single initiator systems. This interface connects VeeR EL2 Core (LSU initiator) to the target devices. See [Caliptra Core](#caliptra-core) for information.
 
-The interface can be customized to support variable address and data widths, and a variable number of slave devices. Each slave device is assigned an address range within the 32-bit address memory map region. The interface includes address decoding logic to route data to the appropriate AHB slave device based on the address specified.
+The interface can be customized to support variable address and data widths, and a variable number of target devices. Each target device is assigned an address range within the 32-bit address memory map region. The interface includes address decoding logic to route data to the appropriate AHB target device based on the address specified.
 
 The integration parameters for Caliptra’s AHB-lite interface are shown in the following table.
 
