@@ -16,8 +16,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
- 
-module fv_coverpoints_m(
+
+module fv_coverpoints_sha_m(
     input logic clk,
     input logic reset_n,
     input logic zeroize
@@ -43,7 +43,7 @@ module fv_coverpoints_m(
 
 
 endmodule 
-bind sha512_masked_core fv_coverpoints_m fv_coverpoints(
+bind sha512_masked_core fv_coverpoints_sha_m fv_coverpoints(
   .clk(clk),
   .reset_n(reset_n),
   .zeroize(zeroize)
