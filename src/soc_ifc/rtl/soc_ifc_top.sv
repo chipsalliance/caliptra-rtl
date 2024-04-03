@@ -884,7 +884,7 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
         wdt_error_t1_intr_serviced <= 1'b0;
         wdt_error_t2_intr_serviced <= 1'b0;
     end
-    else if (soc_ifc_reg_req_dv && soc_ifc_reg_req_data.write && (soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0] == `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R)) begin
+    else if (soc_ifc_reg_req_dv && soc_ifc_reg_req_data.write && (soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0] == SOC_IFC_REG_ADDR_WIDTH'(`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R))) begin
         wdt_error_t1_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW] && t1_timeout;
         wdt_error_t2_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW] && t2_timeout && timer2_en;
     end
