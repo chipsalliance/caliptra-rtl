@@ -33,9 +33,9 @@ module csrng_block_encrypt import csrng_pkg::*; #(
   output logic [2:0]         block_encrypt_sfifo_blkenc_err_o
 );
 
-  localparam int BlkEncFifoDepth = 1;
-  localparam int BlkEncFifoWidth = StateId+Cmd;
-  localparam int NumShares = 1;
+  localparam logic[31:0] BlkEncFifoDepth = 1;
+  localparam logic[31:0] BlkEncFifoWidth = StateId+Cmd;
+  localparam logic[31:0] NumShares = 1;
 
   // signals
   // blk_encrypt_in fifo
