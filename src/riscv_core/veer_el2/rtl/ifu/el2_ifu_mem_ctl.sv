@@ -1126,7 +1126,7 @@ logic                                         perr_sb_write_status   ;
    assign bus_reset_data_beat_cnt    =  ic_act_miss_f | (bus_ifu_wr_en_ff &  bus_last_data_beat) | dec_tlu_force_halt;
    assign bus_hold_data_beat_cnt     = ~bus_inc_data_beat_cnt & ~bus_reset_data_beat_cnt ;
 
-   assign bus_new_data_beat_count[pt.ICACHE_BEAT_BITS-1:0] = ({pt.ICACHE_BEAT_BITS{bus_reset_data_beat_cnt}} & (pt.ICACHE_BEAT_BITS)'(0)) |
+   assign bus_new_data_beat_count[pt.ICACHE_BEAT_BITS-1:0] = ({pt.ICACHE_BEAT_BITS{bus_reset_data_beat_cnt}} & (pt.ICACHE_BEAT_BITS)'(unsigned'(0))) |
                                                           ({pt.ICACHE_BEAT_BITS{bus_inc_data_beat_cnt}}   & (bus_data_beat_count[pt.ICACHE_BEAT_BITS-1:0] + {{pt.ICACHE_BEAT_BITS-1{1'b0}},1'b1})) |
                                                           ({pt.ICACHE_BEAT_BITS{bus_hold_data_beat_cnt}}  &  bus_data_beat_count[pt.ICACHE_BEAT_BITS-1:0]);
 
@@ -1152,7 +1152,7 @@ logic                                         perr_sb_write_status   ;
    assign bus_hold_cmd_beat_cnt             = ~bus_inc_cmd_beat_cnt & ~(ic_act_miss_f | scnd_miss_req | dec_tlu_force_halt) ;
    assign bus_cmd_beat_en                   =  bus_inc_cmd_beat_cnt | ic_act_miss_f | dec_tlu_force_halt;
 
-   assign bus_new_cmd_beat_count[pt.ICACHE_BEAT_BITS-1:0] =  ({pt.ICACHE_BEAT_BITS{bus_reset_cmd_beat_cnt_0}}       & (pt.ICACHE_BEAT_BITS)'(0) ) |
+   assign bus_new_cmd_beat_count[pt.ICACHE_BEAT_BITS-1:0] =  ({pt.ICACHE_BEAT_BITS{bus_reset_cmd_beat_cnt_0}}       & (pt.ICACHE_BEAT_BITS)'(unsigned'(0)) ) |
                                                           ({pt.ICACHE_BEAT_BITS{bus_reset_cmd_beat_cnt_secondlast}} & (pt.ICACHE_BEAT_BITS)'(pt.ICACHE_SCND_LAST)) |
                                                           ({pt.ICACHE_BEAT_BITS{bus_inc_cmd_beat_cnt}}              & (bus_cmd_beat_count[pt.ICACHE_BEAT_BITS-1:0] + {{pt.ICACHE_BEAT_BITS-1{1'b0}}, 1'b1})) |
                                                           ({pt.ICACHE_BEAT_BITS{bus_hold_cmd_beat_cnt}}             &  bus_cmd_beat_count[pt.ICACHE_BEAT_BITS-1:0]) ;
