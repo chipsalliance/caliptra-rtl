@@ -48,9 +48,9 @@ module csrng_cmd_stage import csrng_pkg::*; #(
 );
 
   // Genbits parameters.
-  localparam int GenBitsFifoWidth = 1+128;
-  localparam int GenBitsFifoDepth = 1;
-  localparam int GenBitsCntrWidth = 13;
+  localparam logic[31:0] GenBitsFifoWidth = 1+128;
+  localparam logic[31:0] GenBitsFifoDepth = 1;
+  localparam logic[31:0] GenBitsCntrWidth = 13;
 
   // Command FIFO.
   logic [CmdFifoWidth-1:0] sfifo_cmd_rdata;
@@ -224,7 +224,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   // Minimum Hamming weight: 1
   // Maximum Hamming weight: 7
   //
-  localparam int StateWidth = 8;
+  localparam logic[31:0] StateWidth = 8;
   typedef    enum logic [StateWidth-1:0] {
     Idle      = 8'b00011011, // idle
     ArbGnt    = 8'b11110101, // general arbiter request
