@@ -65,12 +65,12 @@ module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
   output logic [2:0]         ctr_drbg_cmd_sfifo_keyvrc_err_o
 );
 
-  localparam int CmdreqFifoDepth = 1;
-  localparam int CmdreqFifoWidth = KeyLen+BlkLen+CtrLen+1+2*SeedLen+1+StateId+Cmd;
-  localparam int RCStageFifoDepth = 1;
-  localparam int RCStageFifoWidth = KeyLen+BlkLen+StateId+CtrLen+1+SeedLen+1+Cmd;
-  localparam int KeyVRCFifoDepth = 1;
-  localparam int KeyVRCFifoWidth = KeyLen+BlkLen+CtrLen+1+SeedLen+1+StateId+Cmd;
+  localparam logic[31:0] CmdreqFifoDepth = 1;
+  localparam logic[31:0] CmdreqFifoWidth = KeyLen+BlkLen+CtrLen+1+2*SeedLen+1+StateId+Cmd;
+  localparam logic[31:0] RCStageFifoDepth = 1;
+  localparam logic[31:0] RCStageFifoWidth = KeyLen+BlkLen+StateId+CtrLen+1+SeedLen+1+Cmd;
+  localparam logic[31:0] KeyVRCFifoDepth = 1;
+  localparam logic[31:0] KeyVRCFifoWidth = KeyLen+BlkLen+CtrLen+1+SeedLen+1+StateId+Cmd;
 
 
   // signals
@@ -319,7 +319,7 @@ module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
   assign ctr_drbg_cmd_ack_o = sfifo_keyvrc_pop;
 
   assign ctr_drbg_cmd_sts_o = sfifo_keyvrc_pop && (ctr_drbg_cmd_ccmd_o == UNI) &&
-         ((KeyLen == '0) && (BlkLen == '0) && (CtrLen == '0));
+         ((KeyLen == unsigned'(0)) && (BlkLen == unsigned'(0)) && (CtrLen == unsigned'(0)));
 
 
 endmodule
