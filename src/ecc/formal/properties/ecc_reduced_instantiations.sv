@@ -51,8 +51,8 @@ module ecc_reduced_instantiations #(
 );
 
 ecc_montgomerymultiplier #(
-        .REG_SIZE(48),
-        .RADIX(4)
+        .REG_SIZE(16),
+        .RADIX(2)
         )
         ecc_montmult_reduced (
         // Clock and reset.

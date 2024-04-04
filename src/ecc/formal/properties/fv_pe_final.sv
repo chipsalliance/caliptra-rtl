@@ -58,7 +58,7 @@ property s_out_odd_p;
     odd &&
     !start_in
     |=>
-    s_out == $past(32'(64'(a_in * b_in) + 64'(p_in * m_in)+ c_out + s_in));
+    s_out == $past(48'(96'(a_in * b_in) + 96'(p_in * m_in)+ c_out + s_in));
 endproperty
 
 s_out_odd_a : assert property (disable iff(!rst_n) s_out_odd_p);
@@ -71,7 +71,7 @@ property s_out_noodd_p;
     !odd &&
     !start_in
     |=>
-    s_out == $past(32'(64'(a_in * b_in) + 64'(p_in * m_in)+ c_in + s_out));
+    s_out == $past(48'(96'(a_in * b_in) + 96'(p_in * m_in)+ c_in + s_out));
 endproperty
 
 s_out_noodd_a : assert property (disable iff(!rst_n) s_out_noodd_p);
@@ -83,7 +83,7 @@ property c_out_odd_p;
 logic [2*RADIX : 0] temp;
     odd &&
     !start_in 
-   ##0 (1'b1, temp = (64'(a_in * b_in) + 64'(p_in * m_in)+ c_out + s_in))
+   ##0 (1'b1, temp = (96'(a_in * b_in) + 96'(p_in * m_in)+ c_out + s_in))
     |=>
     //c_out == $past(33'((64'(a_in * b_in) + 64'(p_in * m_in)+ c_out + s_in)>>32));
     c_out == temp[2*RADIX:RADIX];
@@ -98,7 +98,7 @@ property c_out_noodd_p;
 logic [2*RADIX : 0] temp;
     !odd &&
     !start_in
-     ##0 (1'b1, temp = (64'(a_in * b_in) + 64'(p_in * m_in)+ c_in + s_out))
+     ##0 (1'b1, temp = (96'(a_in * b_in) + 96'(p_in * m_in)+ c_in + s_out))
     |=>
     //c_out == $past(33'((64'(a_in * b_in) + 64'(p_in * m_in)+ c_in + s_out)>>32));
     c_out == temp[2*RADIX:RADIX];

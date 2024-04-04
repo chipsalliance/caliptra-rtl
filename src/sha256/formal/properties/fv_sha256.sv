@@ -16,585 +16,1037 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+import sha256_package::*;
 
-import fv_sha256_pkg::*;
 
-module fv_sha_256_m(
-  input bit rst,
-  input bit clk,
-  input bit unsigned [31:0] digest_out_0,
-  input bit unsigned [31:0] digest_out_1,
-  input bit unsigned [31:0] digest_out_2,
-  input bit unsigned [31:0] digest_out_3,
-  input bit unsigned [31:0] digest_out_4,
-  input bit unsigned [31:0] digest_out_5,
-  input bit unsigned [31:0] digest_out_6,
-  input bit unsigned [31:0] digest_out_7,
-  input bit block_init,
-  input bit block_mode,
-  input bit block_next,
-  input bit unsigned [31:0] block_in_0,
-  input bit unsigned [31:0] block_in_1,
-  input bit unsigned [31:0] block_in_2,
-  input bit unsigned [31:0] block_in_3,
-  input bit unsigned [31:0] block_in_4,
-  input bit unsigned [31:0] block_in_5,
-  input bit unsigned [31:0] block_in_6,
-  input bit unsigned [31:0] block_in_7,
-  input bit unsigned [31:0] block_in_8,
-  input bit unsigned [31:0] block_in_9,
-  input bit unsigned [31:0] block_in_10,
-  input bit unsigned [31:0] block_in_11,
-  input bit unsigned [31:0] block_in_12,
-  input bit unsigned [31:0] block_in_13,
-  input bit unsigned [31:0] block_in_14,
-  input bit unsigned [31:0] block_in_15,
-  input bit block_zeroize,
-  input bit block_in_valid,
-  input bit digest_valid,
-  input bit block_in_ready,
-  input bit unsigned [5:0] i,
-  input bit unsigned [31:0] W_0,
-  input bit unsigned [31:0] W_1,
-  input bit unsigned [31:0] W_2,
-  input bit unsigned [31:0] W_3,
-  input bit unsigned [31:0] W_4,
-  input bit unsigned [31:0] W_5,
-  input bit unsigned [31:0] W_6,
-  input bit unsigned [31:0] W_7,
-  input bit unsigned [31:0] W_8,
-  input bit unsigned [31:0] W_9,
-  input bit unsigned [31:0] W_10,
-  input bit unsigned [31:0] W_11,
-  input bit unsigned [31:0] W_12,
-  input bit unsigned [31:0] W_13,
-  input bit unsigned [31:0] W_14,
-  input bit unsigned [31:0] W_15,
-  input bit unsigned [31:0] H_0,
-  input bit unsigned [31:0] H_1,
-  input bit unsigned [31:0] H_2,
-  input bit unsigned [31:0] H_3,
-  input bit unsigned [31:0] H_4,
-  input bit unsigned [31:0] H_5,
-  input bit unsigned [31:0] H_6,
-  input bit unsigned [31:0] H_7,
-  input bit unsigned [31:0] a,
-  input bit unsigned [31:0] b,
-  input bit unsigned [31:0] c,
-  input bit unsigned [31:0] d,
-  input bit unsigned [31:0] e,
-  input bit unsigned [31:0] f,
-  input bit unsigned [31:0] g,
-  input bit unsigned [31:0] h,
-  input bit idle,
-  input bit ctrl_rotationss,
-  input bit ctrl_done
+// Functions
+
+function logic unsigned [7:0] compute_winternitz_iterations(logic unsigned [7:0] winternitz_w);
+  if ((winternitz_w == 8'd0))
+    return 8'd0;
+  else if ((winternitz_w == 8'd2))
+    return 8'd2;
+  else if ((winternitz_w == 8'd4))
+    return 8'd14;
+  else if ((winternitz_w == 8'd8))
+    return 8'd254;
+  else
+    return 8'd0;
+endfunction
+
+function logic invalid_winternitz_j(logic unsigned [7:0] winternitz_loop_init, logic unsigned [7:0] loop_iterations);
+  return (winternitz_loop_init > loop_iterations);
+endfunction
+
+function logic invalid_winternitz_mode(logic is_sha256_mode);
+  return !is_sha256_mode;
+endfunction
+
+function logic invalid_winternitz_w(logic unsigned [7:0] winternitz_w);
+  return ((((winternitz_w != 8'd1) && (winternitz_w != 8'd2)) && (winternitz_w != 8'd4)) && (winternitz_w != 8'd8));
+endfunction
+
+
+module fv_sha256 (
+  input logic reset_n,
+  input logic top_reset_n,
+  input logic clk,
+
+  // Ports
+  input logic sha_core_response_port_vld,
+  input logic sha_core_response_port_rdy,
+  input st_Sha256CoreResponse sha_core_response_port,
+
+  input logic sha_core_winternitz192_response_port_vld,
+  input logic sha_core_winternitz192_response_port_rdy,
+  input st_Sha256CoreWinternitz192Response sha_core_winternitz192_response_port,
+
+  input logic sha_core_winternitz256_response_port_vld,
+  input logic sha_core_winternitz256_response_port_rdy,
+  input st_Sha256CoreWinternitz256Response sha_core_winternitz256_response_port,
+
+  input logic sha_request_port_vld,
+  input logic sha_request_port_rdy,
+  input st_Sha256Request sha_request_port,
+
+  input st_Sha256Request sha_shared_request_port,
+
+  input logic sha_core_request_port_vld,
+  input st_Sha256CoreRequest sha_core_request_port,
+
+  input logic sha_core_winternitz192_request_port_vld,
+  input st_Sha256CoreWinternitz192Request sha_core_winternitz192_request_port,
+
+  input logic sha_core_winternitz256_request_port_vld,
+  input st_Sha256CoreWinternitz256Request sha_core_winternitz256_request_port,
+
+  input logic sha_response_port_vld,
+  input st_Sha256Response sha_response_port,
+
+  // Registers
+  input logic unsigned [7:0] loop_boundary,
+  input logic unsigned [7:0] loop_counter,
+  input st_Sha256Request sha_request,
+  input logic unsigned [127:0] winternitz_I,
+  input logic unsigned [15:0] winternitz_i,
+  input logic unsigned [31:0] winternitz_q,
+
+  // States
+  input logic idle,
+  input logic lms_1st_256,
+  input logic lms_others_256,
+  input logic lms_1st_192,
+  input logic lms_others_192,
+  input logic sha,
+
+  // Manual
+  input logic hwif_in_register_error_reset,
+  input logic hwif_in_winternitz_error,
+  input logic hwif_in_sha_operation_error,
+  input logic hwif_in_error2,
+  input logic hwif_in_error3,
+  input logic hwif_in_command_done,
+  input logic [31:0] hwif_in_name0,
+  input logic [31:0] hwif_in_name1,
+  input logic [31:0] hwif_in_version0,
+  input logic [31:0] hwif_in_version1,
+  input logic hwif_in_valid,
+  input logic hwif_in_ready,
+  input logic hwif_in_wntz_busy,
+  input logic hwif_in_digest_clear,
+  input logic hwif_in_block_clear,
+  input logic hwif_in_control_zeroize,
+  input logic hwif_in_register_error_interrupt,
+  input logic hwif_in_register_notification_interrupt,
+  input logic error_interrupt,
+  input logic notification_interrupt,
+  input logic error,
+  input logic powergood,
+  input logic register_read_error,
+  input logic register_write_error,
+  input logic valid_register,
+  input logic ready_register,
+  input logic [2:0] wntz_fsm_next,
+  input logic [2:0] wntz_fsm,
+  input logic wntz_busy_register,
+  input logic core_init,
+  input logic core_next,
+  input logic core_digest_valid,
+  input logic debug_scan_switch,
+  input logic ready_flag_register,
+  input logic [0 : 7][31 : 0] digest_register,
+  input logic valid_flag_register,
+  input logic zeroize_register
 );
 
 
 default clocking default_clk @(posedge clk); endclocking
-logic [15:0][31:0] w;
-logic [3:0] j;
-
-assign j = i[3:0];
-assign w = {W_15,W_14,W_13,W_12,W_11,W_10,W_9,W_8,W_7,W_6,W_5,W_4,W_3,W_2,W_1,W_0};
-
-sequence reset_sequence;
-  !rst ##1 rst;
-endsequence
 
 
-reset_a: assert property (reset_p);
-property reset_p;
-  reset_sequence |->
+// Define a SHA state for the DUV
+logic sha_next;
+logic sha_state;
+
+assign sha_next =
+    ((core_init || core_next) && wntz_fsm_next == WNTZ_IDLE) ||
+    (!core_digest_valid && sha_state);
+
+always @(posedge clk or negedge reset_n) begin
+  if(!reset_n)
+    sha_state <= 1'b0;
+  else
+    sha_state <= sha_next;
+end
+
+
+// Define instances of data we receive from the ports
+st_Sha256CoreResponse sha_core_response_0_i;
+assign sha_core_response_0_i = '{
+  digest_block: '{ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 }
+};
+
+st_Sha256Request sha_request_0_i;
+assign sha_request_0_i = '{
+  is_init: 0,
+  is_next: 0,
+  is_sha256_mode: 0,
+  is_winternitz: 0,
+  winternitz_n_mode: 0,
+  winternitz_w: 8'd0,
+  winternitz_loop_init: 8'd0,
+  zeroize: 0,
+  message_block: '{
+      0: 0,
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+      6: 0,
+      7: 0,
+      8: 0,
+      9: 0,
+      10: 0,
+      11: 0,
+      12: 0,
+      13: 0,
+      14: 0,
+      15: 0
+  }
+};
+
+st_Sha256CoreRequest sha_core_request_1_i;
+assign sha_core_request_1_i = '{
+  init_command: 1,
+  next_command: 0,
+  is_sha256_mode: sha_request_port.is_sha256_mode,
+  zeroize: sha_request_port.zeroize,
+  message_block: sha_request_port.message_block
+};
+
+st_Sha256CoreRequest sha_core_request_2_i;
+assign sha_core_request_2_i = '{
+  init_command: sha_request_port.is_init,
+  next_command: sha_request_port.is_next,
+  is_sha256_mode: sha_request_port.is_sha256_mode,
+  zeroize: sha_request_port.zeroize,
+  message_block: sha_request_port.message_block
+};
+
+st_Sha256CoreWinternitz256Request sha_core_winternitz256_request_1_i;
+assign sha_core_winternitz256_request_1_i = '{
+  init_command: 1,
+  next_command: 0,
+  is_sha256_mode: 1,
+  zeroize: sha_request.zeroize,
+  message_block: '{
+    I: winternitz_I,
+    q: winternitz_q,
+    i: winternitz_i,
+    j: 8'((loop_counter + 8'd1)),
+    tmp: sha_core_winternitz256_response_port.tmp,
+    padding: ((SHA256_ENDING << 72'd64) + 72'h1B8)
+  }
+};
+
+st_Sha256Response sha_response_1_i;
+assign sha_response_1_i = '{
+  digest_block: sha_core_winternitz256_response_port.tmp
+};
+
+st_Sha256CoreWinternitz192Request sha_core_winternitz192_request_1_i;
+assign sha_core_winternitz192_request_1_i = '{
+  init_command: 1,
+  next_command: 0,
+  is_sha256_mode: 1,
+  zeroize: sha_request.zeroize,
+  message_block: '{
+    I: winternitz_I,
+    q: winternitz_q,
+    i: winternitz_i,
+    j: 8'((loop_counter + 8'd1)),
+    tmp: sha_core_winternitz192_response_port.tmp,
+    padding: ((SHA256_ENDING << 136'd128) + 136'h178)
+  }
+};
+
+st_Sha256Response sha_response_2_i;
+assign sha_response_2_i = '{
+  digest_block: '{
+    0: sha_core_winternitz192_response_port.tmp[64'd0],
+    1: sha_core_winternitz192_response_port.tmp[64'd1],
+    2: sha_core_winternitz192_response_port.tmp[64'd2],
+    3: sha_core_winternitz192_response_port.tmp[64'd3],
+    4: sha_core_winternitz192_response_port.tmp[64'd4],
+    5: sha_core_winternitz192_response_port.tmp[64'd5],
+    6: 0,
+    7: 0
+  }
+};
+
+st_Sha256CoreRequest sha_core_request_3_i;
+assign sha_core_request_3_i = '{
+  init_command: sha_shared_request_port.is_init,
+  next_command: sha_shared_request_port.is_next,
+  is_sha256_mode: sha_shared_request_port.is_sha256_mode,
+  zeroize: sha_shared_request_port.zeroize,
+  message_block: sha_shared_request_port.message_block
+};
+
+st_Sha256Response sha_response_3_i;
+assign sha_response_3_i = '{
+  digest_block: '{
+    0: sha_core_response_port.digest_block['sd0],
+    1: sha_core_response_port.digest_block['sd1],
+    2: sha_core_response_port.digest_block['sd2],
+    3: sha_core_response_port.digest_block['sd3],
+    4: sha_core_response_port.digest_block['sd4],
+    5: sha_core_response_port.digest_block['sd5],
+    6: sha_core_response_port.digest_block['sd6],
+    7: (sha_request.is_sha256_mode ? sha_core_response_port.digest_block[64'd7] : 0)
+  }
+};
+
+
+assert_reset_zeroize: assert property(
+    ##0 (hwif_in_control_zeroize || debug_scan_switch)
+|->
+    ##1 ready_register      == 1'b0
+     && digest_register     == 1'b0
+     && valid_flag_register == 1'b0
+);
+
+assert_reset_n: assert property (property_reset_n);
+property property_reset_n;
+  !top_reset_n
+|->
+  ##1 idle &&
+  loop_boundary == 8'd0   &&
+  loop_counter  == 8'd0   &&
+  winternitz_I  == 128'd0 &&
+  winternitz_i  == 16'd0  &&
+  winternitz_q  == 0;
+endproperty
+
+
+assert_winternitz_error: assert property(
+    disable iff(!reset_n)
+
+    hwif_in_winternitz_error == (
+        (
+            (lms_1st_256 || lms_others_256 || lms_1st_192 || lms_others_192) &&
+                (invalid_winternitz_mode(sha_request.is_sha256_mode) ||
+                invalid_winternitz_w(sha_request.winternitz_w))
+        ) || (
+            sha_request_port.is_winternitz &&
+                invalid_winternitz_j(
+                    sha_request_port.winternitz_loop_init,
+                    compute_winternitz_iterations(sha_request_port.winternitz_w)
+                )
+        )
+    )
+);
+
+assert_sha_operation_error: assert property(
+    disable iff(!reset_n)
+
+    hwif_in_sha_operation_error == (
+        sha_request.is_init &&
+        sha_request.is_next
+    )
+);
+
+assert_error2: assert property(
+    disable iff(!reset_n)
+    hwif_in_error2 == 1'b0
+);
+
+assert_error3: assert property(
+    disable iff(!reset_n)
+    hwif_in_error3 == 1'b0
+);
+
+assert_connectivity_interrupts: assert property(
+    (error_interrupt        == hwif_in_register_error_interrupt)        &&
+    (notification_interrupt == hwif_in_register_notification_interrupt) &&
+    (error                  == register_read_error | register_write_error)
+);
+
+assert_connectivity_name_version: assert property(
+    (hwif_in_name0    == sha256_params_pkg::SHA256_CORE_NAME0)    &&
+    (hwif_in_name1    == sha256_params_pkg::SHA256_CORE_NAME1)    &&
+    (hwif_in_version0 == sha256_params_pkg::SHA256_CORE_VERSION0) &&
+    (hwif_in_version1 == sha256_params_pkg::SHA256_CORE_VERSION1)
+);
+
+assert_connectivity_status: assert property(
+    hwif_in_ready     == ready_register &&
+    hwif_in_valid     == valid_register &&
+    hwif_in_wntz_busy == wntz_busy_register
+);
+
+assert_connectivity_powergood: assert property(
+    powergood == hwif_in_register_error_reset
+);
+
+assert_connectivity_zeroize: assert property(
+    (hwif_in_digest_clear == zeroize_register) &&
+    (hwif_in_block_clear  == zeroize_register)
+);
+
+assert_command_done: assert property(
+    hwif_in_command_done == (
+        (wntz_fsm == WNTZ_IDLE) & core_digest_valid & ($past(!core_digest_valid) | $past(wntz_fsm != WNTZ_IDLE))
+    )
+);
+
+
+assert_idle_to_lms_1st_192: assert property (disable iff(!reset_n) property_idle_to_lms_1st_192);
+property property_idle_to_lms_1st_192;
   idle &&
-  i == 'sd0 &&
-  W_0 == 0 &&
-  W_10 == 0 &&
-  W_11 == 0 &&
-  W_12 == 0 &&
-  W_13 == 0 &&
-  W_14 == 0 &&
-  W_15 == 0 &&
-  W_1 == 0 &&
-  W_2 == 0 &&
-  W_3 == 0 &&
-  W_4 == 0 &&
-  W_5 == 0 &&
-  W_6 == 0 &&
-  W_7 == 0 &&
-  W_8 == 0 &&
-  W_9 == 0 &&
-  H_0 == 0 &&
-  H_1 == 0 &&
-  H_2 == 0 &&
-  H_3 == 0 &&
-  H_4 == 0 &&
-  H_5 == 0 &&
-  H_6 == 0 &&
-  H_7 == 0 &&
-  a == 0 &&
-  b == 0 &&
-  c == 0 &&
-  d == 0 &&
-  e == 0 &&
-  f == 0 &&
-  g == 0 &&
-  h == 0 &&
-  digest_valid == 0 &&
-  block_in_ready == 1;
+  sha_request_port_vld &&
+  sha_request_port.is_winternitz &&
+  sha_request_port.is_init &&
+  (sha_request_port.winternitz_loop_init <= compute_winternitz_iterations(sha_request_port.winternitz_w)) &&
+  !sha_request_port.winternitz_n_mode
+|->
+  sha_core_request_port == sha_core_request_1_i
+  ##1
+  lms_1st_192 &&
+  loop_boundary == compute_winternitz_iterations($past(sha_request_port.winternitz_w, 1)) &&
+  loop_counter == $past(sha_request_port.winternitz_loop_init, 1) &&
+  winternitz_I == 128'(
+    (((($past(sha_request_port.message_block[64'd0], 1) << 128'd96) +
+       ($past(sha_request_port.message_block[64'd1], 1) << 128'd64)) +
+       ($past(sha_request_port.message_block[64'd2], 1) << 128'd32)) +
+       $past(sha_request_port.message_block[64'd3], 1))
+  ) &&
+  winternitz_i == 16'(($past(sha_request_port.message_block[64'd5], 1) >> 16)) &&
+  winternitz_q == $past(sha_request_port.message_block[64'd4], 1);
 endproperty
 
 
-DONE_to_IDLE_a: assert property (disable iff(!rst) DONE_to_IDLE_p);
-property DONE_to_IDLE_p;
-  ctrl_done
-|->
-  ##1
+assert_idle_to_lms_1st_256: assert property (disable iff(!reset_n) property_idle_to_lms_1st_256);
+property property_idle_to_lms_1st_256;
   idle &&
-  digest_out_0 == ($past(a, 1) + $past(H_0, 1)) &&
-  digest_out_1 == ($past(b, 1) + $past(H_1, 1)) &&
-  digest_out_2 == ($past(c, 1) + $past(H_2, 1)) &&
-  digest_out_3 == ($past(d, 1) + $past(H_3, 1)) &&
-  digest_out_4 == ($past(e, 1) + $past(H_4, 1)) &&
-  digest_out_5 == ($past(f, 1) + $past(H_5, 1)) &&
-  digest_out_6 == ($past(g, 1) + $past(H_6, 1)) &&
-  digest_out_7 == ($past(h, 1) + $past(H_7, 1)) &&
-  i == $past(i, 1) &&
-  W_0 == $past(W_0, 1) &&
-  W_10 == $past(W_10, 1) &&
-  W_11 == $past(W_11, 1) &&
-  W_12 == $past(W_12, 1) &&
-  W_13 == $past(W_13, 1) &&
-  W_14 == $past(W_14, 1) &&
-  W_15 == $past(W_15, 1) &&
-  W_1 == $past(W_1, 1) &&
-  W_2 == $past(W_2, 1) &&
-  W_3 == $past(W_3, 1) &&
-  W_4 == $past(W_4, 1) &&
-  W_5 == $past(W_5, 1) &&
-  W_6 == $past(W_6, 1) &&
-  W_7 == $past(W_7, 1) &&
-  W_8 == $past(W_8, 1) &&
-  W_9 == $past(W_9, 1) &&
-  H_0 == ($past(a, 1) + $past(H_0, 1)) &&
-  H_1 == ($past(b, 1) + $past(H_1, 1)) &&
-  H_2 == ($past(c, 1) + $past(H_2, 1)) &&
-  H_3 == ($past(d, 1) + $past(H_3, 1)) &&
-  H_4 == ($past(e, 1) + $past(H_4, 1)) &&
-  H_5 == ($past(f, 1) + $past(H_5, 1)) &&
-  H_6 == ($past(g, 1) + $past(H_6, 1)) &&
-  H_7 == ($past(h, 1) + $past(H_7, 1)) &&
-  a == $past(a, 1) &&
-  b == $past(b, 1) &&
-  c == $past(c, 1) &&
-  d == $past(d, 1) &&
-  e == $past(e, 1) &&
-  f == $past(f, 1) &&
-  g == $past(g, 1) &&
-  h == $past(h, 1) &&
-  digest_valid == 1 &&
-  block_in_ready == 1;
-endproperty
-
-
-SHA_Rounds_to_DONE_a: assert property (disable iff(!rst) SHA_Rounds_to_DONE_p);
-property SHA_Rounds_to_DONE_p;
-  ctrl_rotationss &&
-  (i >= 'sd16) &&
-  (('sd1 + i) >= 'sd64)
+  sha_request_port_vld &&
+  sha_request_port.is_winternitz &&
+  sha_request_port.is_init &&
+  (sha_request_port.winternitz_loop_init <= compute_winternitz_iterations(sha_request_port.winternitz_w)) &&
+  sha_request_port.winternitz_n_mode
 |->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
+  sha_core_request_port == sha_core_request_1_i
   ##1
-  ctrl_done &&
-  i == 'sd0 &&
-  W_0 == $past(W_1, 1) &&
-  W_10 == $past(W_11, 1) &&
-  W_11 == $past(W_12, 1) &&
-  W_12 == $past(W_13, 1) &&
-  W_13 == $past(W_14, 1) &&
-  W_14 == $past(W_15, 1) &&
-  W_15 == $past(compute_w(W_14,W_9,W_1,W_0)) &&
-  W_1 == $past(W_2, 1) &&
-  W_2 == $past(W_3, 1) &&
-  W_3 == $past(W_4, 1) &&
-  W_4 == $past(W_5, 1) &&
-  W_5 == $past(W_6, 1) &&
-  W_6 == $past(W_7, 1) &&
-  W_7 == $past(W_8, 1) &&
-  W_8 == $past(W_9, 1) &&
-  W_9 == $past(W_10, 1) &&
-  H_0 == $past(H_0, 1) &&
-  H_1 == $past(H_1, 1) &&
-  H_2 == $past(H_2, 1) &&
-  H_3 == $past(H_3, 1) &&
-  H_4 == $past(H_4, 1) &&
-  H_5 == $past(H_5, 1) &&
-  H_6 == $past(H_6, 1) &&
-  H_7 == $past(H_7, 1) &&
-  a == $past(newa(mult_xor(a, 2, 13, 22),majority(a,b,c),Summ(compute_w(W_14,W_9,W_1,W_0),K[i],h,choose(e,f,g),mult_xor(e, 6, 11, 25)))) &&
-  b == $past(a, 1) &&
-  c == $past(b, 1) &&
-  d == $past(c, 1) &&
-  e == $past(newe(d,Summ(compute_w(W_14,W_9,W_1,W_0),K[i],h,choose(e,f,g),mult_xor(e,6,11,25)))) &&
-  f == $past(e, 1) &&
-  g == $past(f, 1) &&
-  h == $past(g, 1);
+  lms_1st_256 &&
+  loop_boundary == compute_winternitz_iterations($past(sha_request_port.winternitz_w, 1)) &&
+  loop_counter == $past(sha_request_port.winternitz_loop_init, 1) &&
+  winternitz_I == 128'(
+    (((($past(sha_request_port.message_block[64'd0], 1) << 128'd96) +
+       ($past(sha_request_port.message_block[64'd1], 1) << 128'd64)) +
+       ($past(sha_request_port.message_block[64'd2], 1) << 128'd32)) +
+       $past(sha_request_port.message_block[64'd3], 1))
+  ) &&
+  winternitz_i == 16'(($past(sha_request_port.message_block[64'd5], 1) >> 16)) &&
+  winternitz_q == $past(sha_request_port.message_block[64'd4], 1);
 endproperty
 
 
-SHA_Rounds_to_SHA_Rounds_before_16_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_before_16_p);
-property SHA_Rounds_to_SHA_Rounds_before_16_p;
-  ctrl_rotationss &&
-  (i < 'sd16)
-|->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
-  ##1
-  ctrl_rotationss &&
-  i == ('sd1 + $past(i, 1)) &&
-  W_0 == $past(W_0, 1) &&
-  W_10 == $past(W_10, 1) &&
-  W_11 == $past(W_11, 1) &&
-  W_12 == $past(W_12, 1) &&
-  W_13 == $past(W_13, 1) &&
-  W_14 == $past(W_14, 1) &&
-  W_15 == $past(W_15, 1) &&
-  W_1 == $past(W_1, 1) &&
-  W_2 == $past(W_2, 1) &&
-  W_3 == $past(W_3, 1) &&
-  W_4 == $past(W_4, 1) &&
-  W_5 == $past(W_5, 1) &&
-  W_6 == $past(W_6, 1) &&
-  W_7 == $past(W_7, 1) &&
-  W_8 == $past(W_8, 1) &&
-  W_9 == $past(W_9, 1) &&
-  H_0 == $past(H_0, 1) &&
-  H_1 == $past(H_1, 1) &&
-  H_2 == $past(H_2, 1) &&
-  H_3 == $past(H_3, 1) &&
-  H_4 == $past(H_4, 1) &&
-  H_5 == $past(H_5, 1) &&
-  H_6 == $past(H_6, 1) &&
-  H_7 == $past(H_7, 1) &&
-  a == $past(newa(mult_xor(a, 2, 13, 22),majority(a,b,c),Summ(w[j],K[i],h,choose(e,f,g),mult_xor(e, 6, 11, 25)))) &&
-  b == $past(a, 1) &&
-  c == $past(b, 1) &&
-  d == $past(c, 1) &&
-  e == $past(newe(d,Summ(w[j],K[i],h,choose(e,f,g),mult_xor(e,6,11,25)))) &&
-  f == $past(e, 1) &&
-  g == $past(f, 1) &&
-  h == $past(g, 1);
-endproperty
-
-
-SHA_Rounds_to_SHA_Rounds_after_16_a: assert property (disable iff(!rst) SHA_Rounds_to_SHA_Rounds_after_16_p);
-property SHA_Rounds_to_SHA_Rounds_after_16_p;
-  ctrl_rotationss &&
-  (i >= 'sd16) &&
-  (('sd1 + i) < 'sd64)
-|->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
-  ##1
-  ctrl_rotationss &&
-  i == ('sd1 + $past(i, 1)) &&
-  W_0 == $past(W_1, 1) &&
-  W_10 == $past(W_11, 1) &&
-  W_11 == $past(W_12, 1) &&
-  W_12 == $past(W_13, 1) &&
-  W_13 == $past(W_14, 1) &&
-  W_14 == $past(W_15, 1) &&
-  W_15 == $past(compute_w(W_14,W_9,W_1,W_0)) &&
-  W_1 == $past(W_2, 1) &&
-  W_2 == $past(W_3, 1) &&
-  W_3 == $past(W_4, 1) &&
-  W_4 == $past(W_5, 1) &&
-  W_5 == $past(W_6, 1) &&
-  W_6 == $past(W_7, 1) &&
-  W_7 == $past(W_8, 1) &&
-  W_8 == $past(W_9, 1) &&
-  W_9 == $past(W_10, 1) &&
-  H_0 == $past(H_0, 1) &&
-  H_1 == $past(H_1, 1) &&
-  H_2 == $past(H_2, 1) &&
-  H_3 == $past(H_3, 1) &&
-  H_4 == $past(H_4, 1) &&
-  H_5 == $past(H_5, 1) &&
-  H_6 == $past(H_6, 1) &&
-  H_7 == $past(H_7, 1) &&
-  a == $past(newa(mult_xor(a, 2, 13, 22),majority(a,b,c),Summ(compute_w(W_14,W_9,W_1,W_0),K[i],h,choose(e,f,g),mult_xor(e, 6, 11, 25)))) &&
-  b == $past(a, 1) &&
-  c == $past(b, 1) &&
-  d == $past(c, 1) &&
-  e == $past(newe(d,Summ(compute_w(W_14,W_9,W_1,W_0),K[i],h,choose(e,f,g),mult_xor(e,6,11,25)))) &&
-  f == $past(e, 1) &&
-  g == $past(f, 1) &&
-  h == $past(g, 1);
-endproperty
-
-
-IDLE_to_SHA_Rounds_224_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_224_p);
-property IDLE_to_SHA_Rounds_224_p;
+assert_idle_to_sha: assert property (disable iff(!reset_n) property_idle_to_sha);
+property property_idle_to_sha;
   idle &&
-  block_in_valid &&
-  block_init &&
-  !block_mode
+  sha_request_port_vld &&
+  !((sha_request_port.is_winternitz && sha_request_port.is_init) && (sha_request_port.winternitz_loop_init <= compute_winternitz_iterations(sha_request_port.winternitz_w))) &&
+  (sha_request_port.is_init || sha_request_port.is_next)
 |->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
+  sha_core_request_port == sha_core_request_2_i
   ##1
-  ctrl_rotationss &&
-  i == 'sd0 &&
-  W_0 == $past(block_in_15, 1) &&
-  W_10 == $past(block_in_5, 1) &&
-  W_11 == $past(block_in_4, 1) &&
-  W_12 == $past(block_in_3, 1) &&
-  W_13 == $past(block_in_2, 1) &&
-  W_14 == $past(block_in_1, 1) &&
-  W_15 == $past(block_in_0, 1) &&
-  W_1 == $past(block_in_14, 1) &&
-  W_2 == $past(block_in_13, 1) &&
-  W_3 == $past(block_in_12, 1) &&
-  W_4 == $past(block_in_11, 1) &&
-  W_5 == $past(block_in_10, 1) &&
-  W_6 == $past(block_in_9, 1) &&
-  W_7 == $past(block_in_8, 1) &&
-  W_8 == $past(block_in_7, 1) &&
-  W_9 == $past(block_in_6, 1) &&
-  H_0 == 32'd3238371032 &&
-  H_1 == 32'd914150663 &&
-  H_2 == 32'd812702999 &&
-  H_3 == 32'd4144912697 &&
-  H_4 == 32'd4290775857 &&
-  H_5 == 32'd1750603025 &&
-  H_6 == 32'd1694076839 &&
-  H_7 == 32'd3204075428 &&
-  a == 32'd3238371032 &&
-  b == 32'd914150663 &&
-  c == 32'd812702999 &&
-  d == 32'd4144912697 &&
-  e == 32'd4290775857 &&
-  f == 32'd1750603025 &&
-  g == 32'd1694076839 &&
-  h == 32'd3204075428;
+  sha_state &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
 endproperty
 
-
-IDLE_to_SHA_Rounds_256_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_256_p);
-property IDLE_to_SHA_Rounds_256_p;
-  idle &&
-  block_in_valid &&
-  block_init &&
-  block_mode
-|->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
-  ##1
-  ctrl_rotationss &&
-  i == 'sd0 &&
-  W_0 == $past(block_in_15, 1) &&
-  W_10 == $past(block_in_5, 1) &&
-  W_11 == $past(block_in_4, 1) &&
-  W_12 == $past(block_in_3, 1) &&
-  W_13 == $past(block_in_2, 1) &&
-  W_14 == $past(block_in_1, 1) &&
-  W_15 == $past(block_in_0, 1) &&
-  W_1 == $past(block_in_14, 1) &&
-  W_2 == $past(block_in_13, 1) &&
-  W_3 == $past(block_in_12, 1) &&
-  W_4 == $past(block_in_11, 1) &&
-  W_5 == $past(block_in_10, 1) &&
-  W_6 == $past(block_in_9, 1) &&
-  W_7 == $past(block_in_8, 1) &&
-  W_8 == $past(block_in_7, 1) &&
-  W_9 == $past(block_in_6, 1) &&
-  H_0 == 32'd1779033703 &&
-  H_1 == 32'd3144134277 &&
-  H_2 == 32'd1013904242 &&
-  H_3 == 32'd2773480762 &&
-  H_4 == 32'd1359893119 &&
-  H_5 == 32'd2600822924 &&
-  H_6 == 32'd528734635 &&
-  H_7 == 32'd1541459225 &&
-  a == 32'd1779033703 &&
-  b == 32'd3144134277 &&
-  c == 32'd1013904242 &&
-  d == 32'd2773480762 &&
-  e == 32'd1359893119 &&
-  f == 32'd2600822924 &&
-  g == 32'd528734635 &&
-  h == 32'd1541459225;
-endproperty
-
-
-IDLE_to_SHA_Rounds_next_a: assert property (disable iff(!rst) IDLE_to_SHA_Rounds_next_p);
-property IDLE_to_SHA_Rounds_next_p;
-  idle &&
-  block_in_valid &&
-  !block_init
-|->
-  ##1 (digest_valid == 0) and
-  ##1 (block_in_ready == 0) and
-  ##1
-  ctrl_rotationss &&
-  i == 'sd0 &&
-  W_0 == $past(block_in_15, 1) &&
-  W_10 == $past(block_in_5, 1) &&
-  W_11 == $past(block_in_4, 1) &&
-  W_12 == $past(block_in_3, 1) &&
-  W_13 == $past(block_in_2, 1) &&
-  W_14 == $past(block_in_1, 1) &&
-  W_15 == $past(block_in_0, 1) &&
-  W_1 == $past(block_in_14, 1) &&
-  W_2 == $past(block_in_13, 1) &&
-  W_3 == $past(block_in_12, 1) &&
-  W_4 == $past(block_in_11, 1) &&
-  W_5 == $past(block_in_10, 1) &&
-  W_6 == $past(block_in_9, 1) &&
-  W_7 == $past(block_in_8, 1) &&
-  W_8 == $past(block_in_7, 1) &&
-  W_9 == $past(block_in_6, 1) &&
-  H_0 == $past(H_0, 1) &&
-  H_1 == $past(H_1, 1) &&
-  H_2 == $past(H_2, 1) &&
-  H_3 == $past(H_3, 1) &&
-  H_4 == $past(H_4, 1) &&
-  H_5 == $past(H_5, 1) &&
-  H_6 == $past(H_6, 1) &&
-  H_7 == $past(H_7, 1) &&
-  a == $past(H_0, 1) &&
-  b == $past(H_1, 1) &&
-  c == $past(H_2, 1) &&
-  d == $past(H_3, 1) &&
-  e == $past(H_4, 1) &&
-  f == $past(H_5, 1) &&
-  g == $past(H_6, 1) &&
-  h == $past(H_7, 1);
-endproperty
-
-
-idle_wait_a: assert property (disable iff(!rst) idle_wait_p);
-property idle_wait_p;
-  idle &&
-  !block_in_valid
+assert_lms_1st_192_to_idle: assert property (disable iff(!reset_n) property_lms_1st_192_to_idle);
+property property_lms_1st_192_to_idle;
+  lms_1st_192 &&
+  sha_core_winternitz192_response_port_vld &&
+  (loop_boundary <= loop_counter)
 |->
   ##1
   idle &&
-  i == $past(i, 1) &&
-  W_0 == $past(W_0, 1) &&
-  W_10 == $past(W_10, 1) &&
-  W_11 == $past(W_11, 1) &&
-  W_12 == $past(W_12, 1) &&
-  W_13 == $past(W_13, 1) &&
-  W_14 == $past(W_14, 1) &&
-  W_15 == $past(W_15, 1) &&
-  W_1 == $past(W_1, 1) &&
-  W_2 == $past(W_2, 1) &&
-  W_3 == $past(W_3, 1) &&
-  W_4 == $past(W_4, 1) &&
-  W_5 == $past(W_5, 1) &&
-  W_6 == $past(W_6, 1) &&
-  W_7 == $past(W_7, 1) &&
-  W_8 == $past(W_8, 1) &&
-  W_9 == $past(W_9, 1) &&
-  H_0 == $past(H_0, 1) &&
-  H_1 == $past(H_1, 1) &&
-  H_2 == $past(H_2, 1) &&
-  H_3 == $past(H_3, 1) &&
-  H_4 == $past(H_4, 1) &&
-  H_5 == $past(H_5, 1) &&
-  H_6 == $past(H_6, 1) &&
-  H_7 == $past(H_7, 1) &&
-  a == $past(a, 1) &&
-  b == $past(b, 1) &&
-  c == $past(c, 1) &&
-  d == $past(d, 1) &&
-  e == $past(e, 1) &&
-  f == $past(f, 1) &&
-  g == $past(g, 1) &&
-  h == $past(h, 1) &&
-  digest_valid == $past(digest_valid) &&
-  block_in_ready == 1;
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_2_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+
+assert_lms_1st_192_to_lms_others_192: assert property (disable iff(!reset_n) property_lms_1st_192_to_lms_others_192);
+property property_lms_1st_192_to_lms_others_192;
+  lms_1st_192 &&
+  sha_core_winternitz192_response_port_vld &&
+  (loop_boundary > loop_counter)
+|->
+  ##1
+  lms_others_192 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == 8'((1 + $past(loop_counter, 1))) &&
+  sha_core_winternitz192_request_port.init_command   == $past(sha_core_winternitz192_request_1_i.init_command, 1) &&
+  sha_core_winternitz192_request_port.next_command   == $past(sha_core_winternitz192_request_1_i.next_command, 1) &&
+  sha_core_winternitz192_request_port.is_sha256_mode == $past(sha_core_winternitz192_request_1_i.is_sha256_mode, 1) &&
+  sha_core_winternitz192_request_port.zeroize        == sha_core_winternitz192_request_1_i.zeroize &&
+  sha_core_winternitz192_request_port.message_block  == $past(sha_core_winternitz192_request_1_i.message_block, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_1st_256_to_idle: assert property (disable iff(!reset_n) property_lms_1st_256_to_idle);
+property property_lms_1st_256_to_idle;
+  lms_1st_256 &&
+  sha_core_winternitz256_response_port_vld &&
+  (loop_boundary <= loop_counter)
+|->
+  ##1
+  idle &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_1_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_1st_256_to_lms_others_256: assert property (disable iff(!reset_n) property_lms_1st_256_to_lms_others_256);
+property property_lms_1st_256_to_lms_others_256;
+  lms_1st_256 &&
+  sha_core_winternitz256_response_port_vld &&
+  (loop_boundary > loop_counter)
+|->
+  ##1
+  lms_others_256 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == 8'((1 + $past(loop_counter, 1))) &&
+  sha_core_winternitz256_request_port.init_command   == $past(sha_core_winternitz256_request_1_i.init_command, 1) &&
+  sha_core_winternitz256_request_port.next_command   == $past(sha_core_winternitz256_request_1_i.next_command, 1) &&
+  sha_core_winternitz256_request_port.is_sha256_mode == $past(sha_core_winternitz256_request_1_i.is_sha256_mode, 1) &&
+  sha_core_winternitz256_request_port.zeroize        == sha_core_winternitz256_request_1_i.zeroize &&
+  sha_core_winternitz256_request_port.message_block  == $past(sha_core_winternitz256_request_1_i.message_block, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_192_to_idle: assert property (disable iff(!reset_n) property_lms_others_192_to_idle);
+property property_lms_others_192_to_idle;
+  lms_others_192 &&
+  sha_core_winternitz192_response_port_vld &&
+  (loop_boundary <= loop_counter)
+|->
+  ##1
+  idle &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_2_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_192_to_lms_others_192: assert property (disable iff(!reset_n) property_lms_others_192_to_lms_others_192);
+property property_lms_others_192_to_lms_others_192;
+  lms_others_192 &&
+  sha_core_winternitz192_response_port_vld &&
+  (loop_boundary > loop_counter)
+|->
+  ##1
+  lms_others_192 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == 8'((1 + $past(loop_counter, 1))) &&
+  sha_core_winternitz192_request_port.init_command   == $past(sha_core_winternitz192_request_1_i.init_command, 1) &&
+  sha_core_winternitz192_request_port.next_command   == $past(sha_core_winternitz192_request_1_i.next_command, 1) &&
+  sha_core_winternitz192_request_port.is_sha256_mode == $past(sha_core_winternitz192_request_1_i.is_sha256_mode, 1) &&
+  sha_core_winternitz192_request_port.zeroize        == sha_core_winternitz192_request_1_i.zeroize &&
+  sha_core_winternitz192_request_port.message_block  == $past(sha_core_winternitz192_request_1_i.message_block, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_256_to_idle: assert property (disable iff(!reset_n) property_lms_others_256_to_idle);
+property property_lms_others_256_to_idle;
+  lms_others_256 &&
+  sha_core_winternitz256_response_port_vld &&
+  (loop_boundary <= loop_counter)
+|->
+  ##1
+  idle &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_1_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_256_to_lms_others_256: assert property (disable iff(!reset_n) property_lms_others_256_to_lms_others_256);
+property property_lms_others_256_to_lms_others_256;
+  lms_others_256 &&
+  sha_core_winternitz256_response_port_vld &&
+  (loop_boundary > loop_counter)
+|->
+  ##1
+  lms_others_256 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == 8'((1 + $past(loop_counter, 1))) &&
+  sha_core_winternitz256_request_port.init_command   == $past(sha_core_winternitz256_request_1_i.init_command, 1) &&
+  sha_core_winternitz256_request_port.next_command   == $past(sha_core_winternitz256_request_1_i.next_command, 1) &&
+  sha_core_winternitz256_request_port.is_sha256_mode == $past(sha_core_winternitz256_request_1_i.is_sha256_mode, 1) &&
+  sha_core_winternitz256_request_port.zeroize        == sha_core_winternitz256_request_1_i.zeroize &&
+  sha_core_winternitz256_request_port.message_block  == $past(sha_core_winternitz256_request_1_i.message_block, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_sha_to_idle: assert property (disable iff(!reset_n) property_sha_to_idle);
+property property_sha_to_idle;
+  sha_state &&
+  sha_core_response_port_vld &&
+  !sha_shared_request_port.is_init &&
+  !sha_shared_request_port.is_next
+|->
+  ##1
+  idle &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_3_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_sha_to_sha: assert property (disable iff(!reset_n) property_sha_to_sha);
+property property_sha_to_sha;
+  sha_state &&
+  sha_core_response_port_vld &&
+  (sha_shared_request_port.is_init || sha_shared_request_port.is_next)
+|->
+  sha_core_request_port == sha_core_request_3_i
+  ##1
+  sha_state &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  sha_response_port == $past(sha_response_3_i, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_idle_wait: assert property (disable iff(!reset_n) property_idle_wait);
+property property_idle_wait;
+  idle &&
+  !sha_request_port_vld
+|->
+  ##1
+  idle &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_1st_192_wait: assert property (disable iff(!reset_n) property_lms_1st_192_wait);
+property property_lms_1st_192_wait;
+  lms_1st_192 &&
+  !sha_core_winternitz192_response_port_vld
+|->
+  ##1
+  lms_1st_192 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_1st_256_wait: assert property (disable iff(!reset_n) property_lms_1st_256_wait);
+property property_lms_1st_256_wait;
+  lms_1st_256 &&
+  !sha_core_winternitz256_response_port_vld
+|->
+  ##1
+  lms_1st_256 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_192_wait: assert property (disable iff(!reset_n) property_lms_others_192_wait);
+property property_lms_others_192_wait;
+  lms_others_192 &&
+  !sha_core_winternitz192_response_port_vld
+|->
+  ##1
+  lms_others_192 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_lms_others_256_wait: assert property (disable iff(!reset_n) property_lms_others_256_wait);
+property property_lms_others_256_wait;
+  lms_others_256 &&
+  !sha_core_winternitz256_response_port_vld
+|->
+  ##1
+  lms_others_256 &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
+endproperty
+
+
+assert_sha_wait: assert property (disable iff(!reset_n) property_sha_wait);
+property property_sha_wait;
+  sha_state &&
+  !sha_core_response_port_vld
+|->
+  ##1
+  sha_state &&
+  loop_boundary == $past(loop_boundary, 1) &&
+  loop_counter == $past(loop_counter, 1) &&
+  winternitz_I == $past(winternitz_I, 1) &&
+  winternitz_i == $past(winternitz_i, 1) &&
+  winternitz_q == $past(winternitz_q, 1);
 endproperty
 
 
 endmodule
 
 
+module fv_sha256_ref_wrapper;
 
-bind sha256_core fv_sha_256_m fv_sha256(
-  .rst(sha256_core.reset_n && !sha256_core.zeroize),
-  .clk(sha256_core.clk),
-  .digest_out_0(sha256_core.digest [255:224]),
-  .digest_out_1(sha256_core.digest [223:192]),
-  .digest_out_2(sha256_core.digest [191:160]),
-  .digest_out_3(sha256_core.digest [159:128]),
-  .digest_out_4(sha256_core.digest [127:96]),
-  .digest_out_5(sha256_core.digest [95:64]),
-  .digest_out_6(sha256_core.digest [63:32]),
-  .digest_out_7(sha256_core.digest [31:0]),
-  .block_init(sha256_core.init_cmd),
-  .block_mode(sha256_core.mode),
-  .block_next(sha256_core.next_cmd),
-  .block_in_0(sha256_core.block_msg[31:0]),
-  .block_in_1(sha256_core.block_msg[63:32]),
-  .block_in_2(sha256_core.block_msg[95:64]),
-  .block_in_3(sha256_core.block_msg[127:96]),
-  .block_in_4(sha256_core.block_msg[159:128]),
-  .block_in_5(sha256_core.block_msg[191:160]),
-  .block_in_6(sha256_core.block_msg[223:192]),
-  .block_in_7(sha256_core.block_msg[255:224]),
-  .block_in_8(sha256_core.block_msg[287:256]),
-  .block_in_9(sha256_core.block_msg[319:288]),
-  .block_in_10(sha256_core.block_msg[351:320]),
-  .block_in_11(sha256_core.block_msg[383:352]),
-  .block_in_12(sha256_core.block_msg[415:384]),
-  .block_in_13(sha256_core.block_msg[447:416]),
-  .block_in_14(sha256_core.block_msg[479:448]),
-  .block_in_15(sha256_core.block_msg[511:480]),
-  .block_zeroize(sha256_core.zeroize),
-  .block_in_valid((sha256_core.init_cmd) || (sha256_core.next_cmd)),
-  .digest_valid(sha256_core.digest_valid),
-  .block_in_ready(sha256_core.ready),
-  .i(sha256_core.t_ctr_reg),
-  .W_0(sha256_core.w_mem_inst.w_mem[00]),
-  .W_1(sha256_core.w_mem_inst.w_mem[01]),
-  .W_2(sha256_core.w_mem_inst.w_mem[02]),
-  .W_3(sha256_core.w_mem_inst.w_mem[03]),
-  .W_4(sha256_core.w_mem_inst.w_mem[04]),
-  .W_5(sha256_core.w_mem_inst.w_mem[05]),
-  .W_6(sha256_core.w_mem_inst.w_mem[06]),
-  .W_7(sha256_core.w_mem_inst.w_mem[07]),
-  .W_8(sha256_core.w_mem_inst.w_mem[08]),
-  .W_9(sha256_core.w_mem_inst.w_mem[09]),
-  .W_10(sha256_core.w_mem_inst.w_mem[10]),
-  .W_11(sha256_core.w_mem_inst.w_mem[11]),
-  .W_12(sha256_core.w_mem_inst.w_mem[12]),
-  .W_13(sha256_core.w_mem_inst.w_mem[13]),
-  .W_14(sha256_core.w_mem_inst.w_mem[14]),
-  .W_15(sha256_core.w_mem_inst.w_mem[15]),
-  .H_0(sha256_core.H0_reg),
-  .H_1(sha256_core.H1_reg),
-  .H_2(sha256_core.H2_reg),
-  .H_3(sha256_core.H3_reg),
-  .H_4(sha256_core.H4_reg),
-  .H_5(sha256_core.H5_reg),
-  .H_6(sha256_core.H6_reg),
-  .H_7(sha256_core.H7_reg),
-  .a(sha256_core.a_reg),
-  .b(sha256_core.b_reg),
-  .c(sha256_core.c_reg),
-  .d(sha256_core.d_reg),
-  .e(sha256_core.e_reg),
-  .f(sha256_core.f_reg),
-  .g(sha256_core.g_reg),
-  .h(sha256_core.h_reg),
-  .idle(sha256_core.sha256_ctrl_reg==2'h0),
-  .ctrl_rotationss(sha256_core.sha256_ctrl_reg==2'h1),
-  .ctrl_done(sha256_core.sha256_ctrl_reg==2'h2)
+
+default clocking default_clk @(posedge (sha256.clk)); endclocking
+
+
+st_Sha256CoreRequest sha_core_request_port;
+assign sha_core_request_port = '{
+  init_command: (sha256.core_init),
+  next_command: (sha256.core_next),
+  is_sha256_mode: (sha256.core_mode),
+  zeroize: (sha256.zeroize_reg),
+  message_block: '{
+    0: (sha256.core_block[511:480]),
+    1: (sha256.core_block[479:448]),
+    2: (sha256.core_block[447:416]),
+    3: (sha256.core_block[415:384]),
+    4: (sha256.core_block[383:352]),
+    5: (sha256.core_block[351:320]),
+    6: (sha256.core_block[319:288]),
+    7: (sha256.core_block[287:256]),
+    8: (sha256.core_block[255:224]),
+    9: (sha256.core_block[223:192]),
+    10: (sha256.core_block[191:160]),
+    11: (sha256.core_block[159:128]),
+    12: (sha256.core_block[127:96]),
+    13: (sha256.core_block[95:64]),
+    14: (sha256.core_block[63:32]),
+    15: (sha256.core_block[31:0])
+  }
+};
+st_Sha256CoreResponse sha_core_response_port;
+assign sha_core_response_port = '{
+  digest_block: '{
+    0: (sha256.core_digest[0]),
+    1: (sha256.core_digest[1]),
+    2: (sha256.core_digest[2]),
+    3: (sha256.core_digest[3]),
+    4: (sha256.core_digest[4]),
+    5: (sha256.core_digest[5]),
+    6: (sha256.core_digest[6]),
+    7: (sha256.core_digest[7])
+  }
+};
+st_Sha256CoreWinternitz192Request sha_core_winternitz192_request_port;
+assign sha_core_winternitz192_request_port = '{
+  init_command: (sha256.core_init),
+  next_command: (sha256.core_next),
+  is_sha256_mode: (sha256.core_mode),
+  zeroize: (sha256.zeroize_reg),
+  message_block: '{
+    I: (sha256.core_block[511:384]),
+    q: (sha256.core_block[383:352]),
+    i: (sha256.core_block[351:336]),
+    j: (sha256.core_block[335:328]),
+    tmp: '{
+      0: (sha256.core_block[327:296]),
+      1: (sha256.core_block[295:264]),
+      2: (sha256.core_block[263:232]),
+      3: (sha256.core_block[231:200]),
+      4: (sha256.core_block[199:168]),
+      5: (sha256.core_block[167:136])
+    },
+    padding: (sha256.core_block[135:0])
+  }
+};
+st_Sha256CoreWinternitz192Response sha_core_winternitz192_response_port;
+assign sha_core_winternitz192_response_port = '{
+  tmp: '{
+    0: (sha256.core_digest[0]),
+    1: (sha256.core_digest[1]),
+    2: (sha256.core_digest[2]),
+    3: (sha256.core_digest[3]),
+    4: (sha256.core_digest[4]),
+    5: (sha256.core_digest[5])
+  }
+};
+st_Sha256CoreWinternitz256Request sha_core_winternitz256_request_port;
+assign sha_core_winternitz256_request_port = '{
+  init_command: (sha256.core_init),
+  next_command: (sha256.core_next),
+  is_sha256_mode: (sha256.core_mode),
+  zeroize: (sha256.zeroize_reg),
+  message_block: '{
+    I: (sha256.core_block[511:384]),
+    q: (sha256.core_block[383:352]),
+    i: (sha256.core_block[351:336]),
+    j: (sha256.core_block[335:328]),
+    tmp: '{
+      0: (sha256.core_block[327:296]),
+      1: (sha256.core_block[295:264]),
+      2: (sha256.core_block[263:232]),
+      3: (sha256.core_block[231:200]),
+      4: (sha256.core_block[199:168]),
+      5: (sha256.core_block[167:136]),
+      6: (sha256.core_block[135:104]),
+      7: (sha256.core_block[103:72])
+    },
+    padding: (sha256.core_block[71:0])
+  }
+};
+st_Sha256CoreWinternitz256Response sha_core_winternitz256_response_port;
+assign sha_core_winternitz256_response_port = '{
+  tmp: '{
+    0: (sha256.core_digest[0]),
+    1: (sha256.core_digest[1]),
+    2: (sha256.core_digest[2]),
+    3: (sha256.core_digest[3]),
+    4: (sha256.core_digest[4]),
+    5: (sha256.core_digest[5]),
+    6: (sha256.core_digest[6]),
+    7: (sha256.core_digest[7])
+  }
+};
+st_Sha256Request sha_request_port;
+assign sha_request_port = '{
+  is_init: (sha256.hwif_out.SHA256_CTRL.INIT.value),
+  is_next: (sha256.hwif_out.SHA256_CTRL.NEXT.value),
+  is_sha256_mode: (sha256.hwif_out.SHA256_CTRL.MODE.value),
+  is_winternitz: (sha256.hwif_out.SHA256_CTRL.WNTZ_MODE.value),
+  winternitz_n_mode: (sha256.hwif_out.SHA256_CTRL.WNTZ_N_MODE.value),
+  winternitz_w: (sha256.hwif_out.SHA256_CTRL.WNTZ_W.value),
+  winternitz_loop_init: (sha256.hwif_out.SHA256_BLOCK[5].BLOCK.value[15:8]),
+  zeroize: (sha256.hwif_out.SHA256_CTRL.ZEROIZE.value || sha256.debugUnlock_or_scan_mode_switch),
+  message_block: '{
+    0: (sha256.hwif_out.SHA256_BLOCK[0].BLOCK.value),
+    1: (sha256.hwif_out.SHA256_BLOCK[1].BLOCK.value),
+    2: (sha256.hwif_out.SHA256_BLOCK[2].BLOCK.value),
+    3: (sha256.hwif_out.SHA256_BLOCK[3].BLOCK.value),
+    4: (sha256.hwif_out.SHA256_BLOCK[4].BLOCK.value),
+    5: (sha256.hwif_out.SHA256_BLOCK[5].BLOCK.value),
+    6: (sha256.hwif_out.SHA256_BLOCK[6].BLOCK.value),
+    7: (sha256.hwif_out.SHA256_BLOCK[7].BLOCK.value),
+    8: (sha256.hwif_out.SHA256_BLOCK[8].BLOCK.value),
+    9: (sha256.hwif_out.SHA256_BLOCK[9].BLOCK.value),
+    10: (sha256.hwif_out.SHA256_BLOCK[10].BLOCK.value),
+    11: (sha256.hwif_out.SHA256_BLOCK[11].BLOCK.value),
+    12: (sha256.hwif_out.SHA256_BLOCK[12].BLOCK.value),
+    13: (sha256.hwif_out.SHA256_BLOCK[13].BLOCK.value),
+    14: (sha256.hwif_out.SHA256_BLOCK[14].BLOCK.value),
+    15: (sha256.hwif_out.SHA256_BLOCK[15].BLOCK.value)
+  }
+};
+st_Sha256Response sha_response_port;
+assign sha_response_port = '{
+  digest_block: '{
+    0: (sha256.hwif_in.SHA256_DIGEST[0].DIGEST.next),
+    1: (sha256.hwif_in.SHA256_DIGEST[1].DIGEST.next),
+    2: (sha256.hwif_in.SHA256_DIGEST[2].DIGEST.next),
+    3: (sha256.hwif_in.SHA256_DIGEST[3].DIGEST.next),
+    4: (sha256.hwif_in.SHA256_DIGEST[4].DIGEST.next),
+    5: (sha256.hwif_in.SHA256_DIGEST[5].DIGEST.next),
+    6: (sha256.hwif_in.SHA256_DIGEST[6].DIGEST.next),
+    7: (sha256.hwif_in.SHA256_DIGEST[7].DIGEST.next)
+  }
+};
+st_Sha256Request sha_shared_request_port;
+assign sha_shared_request_port = '{
+  is_init: (sha256.hwif_out.SHA256_CTRL.INIT.value),
+  is_next: (sha256.hwif_out.SHA256_CTRL.NEXT.value),
+  is_sha256_mode: (sha256.hwif_out.SHA256_CTRL.MODE.value),
+  is_winternitz: (sha256.hwif_out.SHA256_CTRL.WNTZ_MODE.value),
+  winternitz_n_mode: (sha256.hwif_out.SHA256_CTRL.WNTZ_N_MODE.value),
+  winternitz_w: (sha256.hwif_out.SHA256_CTRL.WNTZ_W.value),
+  winternitz_loop_init: (sha256.hwif_out.SHA256_BLOCK[5].BLOCK.value[15:8]),
+  zeroize: (sha256.hwif_out.SHA256_CTRL.ZEROIZE.value || sha256.debugUnlock_or_scan_mode_switch),
+  message_block: '{
+    0: (sha256.hwif_out.SHA256_BLOCK[0].BLOCK.value),
+    1: (sha256.hwif_out.SHA256_BLOCK[1].BLOCK.value),
+    2: (sha256.hwif_out.SHA256_BLOCK[2].BLOCK.value),
+    3: (sha256.hwif_out.SHA256_BLOCK[3].BLOCK.value),
+    4: (sha256.hwif_out.SHA256_BLOCK[4].BLOCK.value),
+    5: (sha256.hwif_out.SHA256_BLOCK[5].BLOCK.value),
+    6: (sha256.hwif_out.SHA256_BLOCK[6].BLOCK.value),
+    7: (sha256.hwif_out.SHA256_BLOCK[7].BLOCK.value),
+    8: (sha256.hwif_out.SHA256_BLOCK[8].BLOCK.value),
+    9: (sha256.hwif_out.SHA256_BLOCK[9].BLOCK.value),
+    10: (sha256.hwif_out.SHA256_BLOCK[10].BLOCK.value),
+    11: (sha256.hwif_out.SHA256_BLOCK[11].BLOCK.value),
+    12: (sha256.hwif_out.SHA256_BLOCK[12].BLOCK.value),
+    13: (sha256.hwif_out.SHA256_BLOCK[13].BLOCK.value),
+    14: (sha256.hwif_out.SHA256_BLOCK[14].BLOCK.value),
+    15: (sha256.hwif_out.SHA256_BLOCK[15].BLOCK.value)
+  }
+};
+st_Sha256Request sha_request;
+assign sha_request = '{
+  is_init: (sha256.init_reg),
+  is_next: (sha256.next_reg),
+  is_sha256_mode: (sha256.mode_reg),
+  is_winternitz: (sha256.wntz_mode),
+  winternitz_n_mode: (sha256.wntz_n_mode),
+  winternitz_w: (sha256.wntz_w_reg),
+  winternitz_loop_init: (sha256.wntz_iter),
+  zeroize: (sha256.zeroize_reg),
+  message_block: '{
+    0: (sha256.block_reg[0]),
+    1: (sha256.block_reg[1]),
+    2: (sha256.block_reg[2]),
+    3: (sha256.block_reg[3]),
+    4: (sha256.block_reg[4]),
+    5: (sha256.block_reg[5]),
+    6: (sha256.block_reg[6]),
+    7: (sha256.block_reg[7]),
+    8: (sha256.block_reg[8]),
+    9: (sha256.block_reg[9]),
+    10: (sha256.block_reg[10]),
+    11: (sha256.block_reg[11]),
+    12: (sha256.block_reg[12]),
+    13: (sha256.block_reg[13]),
+    14: (sha256.block_reg[14]),
+    15: (sha256.block_reg[15])
+  }
+};
+
+// Symbolic digest element
+logic [$clog2(8)-1               : 0] digest_position;
+assume_stable_digest_position: assume property(##1 $stable(digest_position));
+
+// Symbolic block element
+logic [$clog2(sha256.BLOCK_NO)-1 : 0] block_position;
+assume_stable_block_position: assume property(##1 $stable(block_position));
+
+fv_sha256 fv_sha256_i (
+  .reset_n(sha256.reset_n && sha256.cptra_pwrgood && !$past(sha256.zeroize_reg)),
+  .top_reset_n(sha256.reset_n),
+  .clk(sha256.clk),
+
+  // Ports
+  .sha_core_response_port_vld(sha256.core_digest_valid),
+  .sha_core_response_port_rdy(1'b1),
+  .sha_core_response_port(sha_core_response_port),
+
+  .sha_core_winternitz192_response_port_vld(sha256.core_digest_valid && !sha256.core_init && !sha256.core_next),
+  .sha_core_winternitz192_response_port_rdy(1'b1),
+  .sha_core_winternitz192_response_port(sha_core_winternitz192_response_port),
+
+  .sha_core_winternitz256_response_port_vld(sha256.core_digest_valid && !sha256.core_init && !sha256.core_next),
+  .sha_core_winternitz256_response_port_rdy(1'b1),
+  .sha_core_winternitz256_response_port(sha_core_winternitz256_response_port),
+
+  .sha_request_port_vld(sha256.hwif_out.SHA256_CTRL.INIT.value || sha256.hwif_out.SHA256_CTRL.NEXT.value),
+  .sha_request_port_rdy($past(!sha256.reset_n) ? !sha256.hwif_in.SHA256_STATUS.READY.next : sha256.hwif_in.SHA256_STATUS.READY.next),
+  .sha_request_port(sha_request_port),
+
+  .sha_shared_request_port(sha_shared_request_port),
+
+  .sha_core_request_port_vld(sha256.core_init),
+  .sha_core_request_port(sha_core_request_port),
+
+  .sha_core_winternitz192_request_port_vld(sha256.core_init),
+  .sha_core_winternitz192_request_port(sha_core_winternitz192_request_port),
+
+  .sha_core_winternitz256_request_port_vld(sha256.core_init),
+  .sha_core_winternitz256_request_port(sha_core_winternitz256_request_port),
+
+  .sha_response_port_vld(sha256.hwif_in.SHA256_STATUS.VALID.next),
+  .sha_response_port(sha_response_port),
+
+  // Registers
+  .loop_boundary(sha256.wntz_iter_reg),
+  .loop_counter(sha256.wntz_j_reg),
+  .sha_request(sha_request),
+  .winternitz_I(sha256.wntz_prefix[175:48]),
+  .winternitz_i(sha256.wntz_prefix[15:0]),
+  .winternitz_q(sha256.wntz_prefix[47:16]),
+
+  // States
+  .idle($past(sha256.core_ready) && sha256.core_ready && sha256.wntz_fsm == WNTZ_IDLE),
+  .lms_1st_256(sha256.wntz_fsm == WNTZ_1ST && sha256.wntz_n_mode_reg),
+  .lms_others_256(sha256.wntz_fsm == WNTZ_OTHERS && sha256.wntz_n_mode_reg),
+  .lms_1st_192(sha256.wntz_fsm == WNTZ_1ST && !sha256.wntz_n_mode_reg),
+  .lms_others_192(sha256.wntz_fsm == WNTZ_OTHERS && !sha256.wntz_n_mode_reg),
+  .sha(((sha256.core_init || sha256.core_next) && sha256.wntz_fsm_next == WNTZ_IDLE)),
+
+  // Manually added signals for manually added assertions
+  .hwif_in_register_error_reset            (sha256.hwif_in.error_reset_b),
+  .hwif_in_winternitz_error                (sha256.hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset),
+  .hwif_in_sha_operation_error             (sha256.hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset),
+  .hwif_in_error2                          (sha256.hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset),
+  .hwif_in_error3                          (sha256.hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset),
+  .hwif_in_command_done                    (sha256.hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset),
+  .hwif_in_name0                           (sha256.hwif_in.SHA256_NAME[0].NAME.next),
+  .hwif_in_name1                           (sha256.hwif_in.SHA256_NAME[1].NAME.next),
+  .hwif_in_version0                        (sha256.hwif_in.SHA256_VERSION[0].VERSION.next),
+  .hwif_in_version1                        (sha256.hwif_in.SHA256_VERSION[1].VERSION.next),
+  .hwif_in_valid                           (sha256.hwif_in.SHA256_STATUS.READY.next),
+  .hwif_in_ready                           (sha256.hwif_in.SHA256_STATUS.VALID.next),
+  .hwif_in_wntz_busy                       (sha256.hwif_in.SHA256_STATUS.WNTZ_BUSY.next),
+  .hwif_in_digest_clear                    (sha256.hwif_in.SHA256_DIGEST[digest_position].DIGEST.hwclr),
+  .hwif_in_block_clear                     (sha256.hwif_in.SHA256_BLOCK[block_position].BLOCK.hwclr),
+  .hwif_in_control_zeroize                 (sha256.hwif_out.SHA256_CTRL.ZEROIZE.value),
+  .hwif_in_register_error_interrupt        (sha256.hwif_out.intr_block_rf.error_global_intr_r.intr),
+  .hwif_in_register_notification_interrupt (sha256.hwif_out.intr_block_rf.notif_global_intr_r.intr),
+  .error_interrupt                         (sha256.error_intr),
+  .notification_interrupt                  (sha256.notif_intr),
+  .error                                   (sha256.err),
+  .powergood                               (sha256.cptra_pwrgood),
+  .register_read_error                     (sha256.read_error),
+  .register_write_error                    (sha256.write_error),
+  .valid_register                          (sha256.ready_reg),
+  .ready_register                          (sha256.digest_valid_reg),
+  .wntz_fsm_next                           (sha256.wntz_fsm_next),
+  .wntz_fsm                                (sha256.wntz_fsm),
+  .wntz_busy_register                      (sha256.wntz_busy),
+  .core_init                               (sha256.core_init),
+  .core_next                               (sha256.core_next),
+  .core_digest_valid                       (sha256.core_digest_valid),
+  .debug_scan_switch                       (sha256.debugUnlock_or_scan_mode_switch),
+  .ready_flag_register                     (sha256.ready_flag_reg),
+  .digest_register                         (sha256.digest_reg),
+  .valid_flag_register                     (sha256.valid_flag_reg),
+  .zeroize_register                        (sha256.zeroize_reg)
 );
 
 
+endmodule
 
+
+bind sha256 fv_sha256_ref_wrapper fv_sha256_ref_wrapper_i();

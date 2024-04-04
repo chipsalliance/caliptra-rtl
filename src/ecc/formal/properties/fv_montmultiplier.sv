@@ -46,7 +46,7 @@ default clocking default_clk @(posedge clk); endclocking
 //-------------------------------------------------------//
 
 
-localparam MULT_DLY = 40; // Defines after start how many cycles ready would stay deasserted.
+localparam MULT_DLY = 28; // Defines after start how many cycles ready would stay deasserted.
 
 
 localparam  int unsigned S_NUM =  ((REG_SIZE + RADIX - 1) / RADIX) + 1; 
@@ -113,11 +113,12 @@ property multi_0_p(prime_i, mu_i,r_inv);
     opb_i <= 4'hf &&
     start_i
     ##0 (1'b1, temp = (48'(32'(opa_i*opb_i)*r_inv)%n_i)) 
+    ##1 ready_o[->1]  
     |->
-    ##16 
-    (p_o == temp) &&
-    ready_o;
-    endproperty
+    
+    p_o == temp; 
+endproperty
+   
 
 
 /********For inp value less than 8 bits ******/
@@ -131,12 +132,12 @@ property multi_1_p(prime_i, mu_i,r_inv);
     opb_i > 4'hf &&
      start_i
     ##0 (1'b1, temp = (48'(32'(opa_i*opb_i)*r_inv)%n_i))  
-    
+     ##1 ready_o[->1]  
     |->
-    ##16 
-    (p_o == temp) &&
-    ready_o;
-    endproperty
+    
+    p_o == temp; 
+endproperty
+    
 
 
 /********For inp value less than 12 bits ******/
@@ -150,12 +151,11 @@ property multi_2_p(prime_i, mu_i,r_inv);
     opb_i > 8'hff &&
      start_i
     ##0 (1'b1, temp = (48'(32'(opa_i*opb_i)*r_inv)%n_i))  
+    ##1 ready_o[->1]  
     |->
-    ##16 //for 16 bit just gave a slack
-    (p_o[0] == temp[0]) &&
-    ready_o;
-    endproperty
-
+    
+    p_o == temp; 
+endproperty
 /********For inp value all bits ******/
 property multi_p(prime_i, mu_i,r_inv);
     logic [REG_SIZE-1:0] temp; 
@@ -163,18 +163,19 @@ property multi_p(prime_i, mu_i,r_inv);
     n_prime_i == mu_i &&
     start_i
     ##0 (1'b1, temp = (48'(32'(opa_i*opb_i)*r_inv)%n_i))  
+    
+    ##1 ready_o[->1]  
     |->
-    ##16 //for 16 bit just gave a slack
-    p_o == temp &&
-    ready_o;
-    endproperty
+    
+    p_o == temp; 
+endproperty
 
 logic [4:0][REG_SIZE-1:0] prime;
 logic [4:0][RADIX-1:0] mu_word;
 logic [4:0][REG_SIZE-1:0] rinv;
 assign prime ={16'hfceb,16'hfcfb,16'hfd0d,16'hfd0f,16'hfd19};
-assign mu_word = {4'hd,4'hd,4'hb,4'h1,4'h7};
-assign rinv ={16'hc0ea,16'he269,16'hcc03,16'h1a92,16'h4e28};
+assign mu_word = {2'd1,2'd1,2'd3,2'd1,2'd3};
+assign rinv ={16'hce7,16'h92b3,16'h38e5,16'h6a48,16'h3b87};
 
 genvar i;
 for(i=0;i<5;i++) begin
@@ -192,7 +193,7 @@ end
 property no_ready_p;
     start_i
     |=>
-    !ready_o[*15];
+    !ready_o[*MULT_DLY-1];
 endproperty
 
 no_ready_a: assert property(disable iff(!rst_n)no_ready_p);
