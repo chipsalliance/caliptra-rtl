@@ -14,11 +14,45 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/01/18*_
+_*Last Update: 2024/04/08*_
 
-## Rev 1p0 ##
+## Rev 1p1 ##
 
-### Rev 1p0 release date: 2024/01/18 ###
+#### Rev 1p1 release date: 2024/04/10 ####
+- Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes
+- Caliptra Integration specification updates to add clarity
+- Caliptra README updates to tool versions, simulation instructions
+- Update RDL register descriptions for clarity, accuracy in generated reg document
+- Verification
+  - Update zeroize assertions
+  - Add X check assertions to all register files
+  - New assertions and firmware tests for LMS accelerator
+  - Formal: ???
+  - Fixes for UVM caliptra_top test scenarios
+  - Fixes for UVM KeyVault test scenarios
+- RTL
+  - ECC radix48 feature
+  - LMS accelerator
+  - SHA512 masking
+  - Modifications for clean Lint
+    * Replace casez with case
+    * Replace 2-state with 4-state typedefs, parameters, enums
+    * Replace 'reg' with 'logic' type
+    * Radix fixes for many signals
+    * Logical/boolean operator fixes
+    * Logic reorganization to resolve undriven ICache signals in RV core
+    * Fixes for redundant logic in RV core
+    * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
+  - Update PeakRDL tool version and regenerate reg files to resolve lint issues
+
+#### Bug Fixes ####
+[RTL] Add connection for JTAG TDO_en signal
+
+## Previous Releases ##
+
+### Rev 1p0 ###
+
+#### Rev 1p0 release date: 2024/01/18 ####
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
@@ -33,10 +67,8 @@ _*Last Update: 2024/01/18*_
   - Remove TODO comments on caliptra_top ports
   - Remove JTAG IDCODE command from RISC-V processor
 
-### Bug Fixes ###
+#### Bug Fixes ####
 [MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
-
-## Previous Releases ##
 
 ### Rev 1p0-rc1 ###
 
