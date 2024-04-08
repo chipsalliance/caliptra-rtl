@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-SHELL = /usr/bin/bash
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 today=$(shell date +%Y%m%d)
@@ -37,7 +36,7 @@ clean:
 ############ TEST build ###############################
 
 # Build program.hex from RUST executable
-program.hex: fw_update.hex $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME)
+program.hex: fw_update.hex $(TEST_DIR)/$(TESTNAME)
 	@-echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
 	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0x8000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	#$(GCC_PREFIX)-objdump -S  $(TEST_DIR)/$(TESTNAME) > $(TESTNAME).dis
@@ -51,12 +50,12 @@ fw_update.hex: $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME_fw)
 
 # Extract compiled FW from latest retrieved release
 $(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0.zip
-	@unzip $< -d $(TEST_DIR) caliptra-rom-with-log.bin
-	unzip $< -d $(TEST_DIR) image-bundle.bin
-	rm $<
-	mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
-	mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
-	touch $(TEST_DIR)/$(TESTNAME).extracted
+	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
+	 7z x -o"$(TEST_DIR)" $< image-bundle.bin
+	 rm $<
+	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
+	 mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
+	 touch $(TEST_DIR)/$(TESTNAME).extracted
 
 # Retrieve latest build from caliptra-sw repo
 # Fail if a build from within the last 30 days is not found
@@ -77,7 +76,7 @@ caliptra_release_v$(today)_0.zip: $(TEST_DIR)/$(TESTNAME)
 	  fi
 	done
 	if [[ $${found} -eq 1 ]]; then
-	  wget $${full_path}
+	  wget --no-use-server-timestamps $${full_path}
 	else
 	  exit 1
 	fi
