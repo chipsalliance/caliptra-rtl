@@ -7,12 +7,12 @@
 // Accepts all csrng commands
 
 module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
-  parameter int Cmd = 3,
-  parameter int StateId = 4,
-  parameter int BlkLen = 128,
-  parameter int KeyLen = 256,
-  parameter int SeedLen = 384,
-  parameter int CtrLen  = 32
+  parameter logic [31:0] Cmd = 3,
+  parameter logic [31:0] StateId = 4,
+  parameter logic [31:0] BlkLen = 128,
+  parameter logic [31:0] KeyLen = 256,
+  parameter logic [31:0] SeedLen = 384,
+  parameter logic [31:0] CtrLen  = 32
 ) (
   input logic                clk_i,
   input logic                rst_ni,
