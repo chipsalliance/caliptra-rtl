@@ -35,8 +35,8 @@ volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
-#ifdef RNG_SEED
-    unsigned time = (unsigned) RNG_SEED;
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
 #else
     unsigned time = 0;
 #endif
