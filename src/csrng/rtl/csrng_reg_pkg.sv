@@ -7,10 +7,10 @@
 package csrng_reg_pkg;
 
   // Param list
-  parameter int NumAlerts = 2;
+  parameter logic [31:0] NumAlerts = 2;
 
   // Address widths within the block
-  parameter int BlockAw = 7;
+  parameter logic [31:0] BlockAw = 7;
 
   ////////////////////////////
   // Typedefs for registers //
