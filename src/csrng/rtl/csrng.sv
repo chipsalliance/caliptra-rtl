@@ -15,7 +15,7 @@ module csrng
 #(
   parameter aes_pkg::sbox_impl_e SBoxImpl = aes_pkg::SBoxImplCanright,
   parameter logic [csrng_reg_pkg::NumAlerts-1:0] AlertAsyncOn = {csrng_reg_pkg::NumAlerts{1'b1}},
-  parameter int NHwApps = 2,
+  parameter logic [31:0] NHwApps = 2,
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivNonProduction = CsKeymgrDivWidth'(0),
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivProduction = CsKeymgrDivWidth'(0),
   parameter AHBDataWidth = 64,

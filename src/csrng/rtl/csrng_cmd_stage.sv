@@ -6,9 +6,9 @@
 //
 
 module csrng_cmd_stage import csrng_pkg::*; #(
-  parameter int CmdFifoWidth = 32,
-  parameter int CmdFifoDepth = 16,
-  parameter int StateId = 4
+  parameter logic [31:0] CmdFifoWidth = 32,
+  parameter logic [31:0] CmdFifoDepth = 16,
+  parameter logic [31:0] StateId = 4
 ) (
   input logic                        clk_i,
   input logic                        rst_ni,
