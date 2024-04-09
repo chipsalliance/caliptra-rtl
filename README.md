@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/01/17*_
+_*Last Update: 2024/04/01*_
 
 
 ## **Tools Used** ##
@@ -50,6 +50,16 @@ GCC:
    - `riscv64-unknown-elf-gcc (g) 12.2.0`
  - G++ Used to compile Verilator objects and test firmware
    - `g++ (GCC) 11.2.0`
+
+RDL Compiler:
+ - systemrdl-compiler==1.27.3
+ - peakrdl-systemrdl==0.3.0
+ - peakrdl-regblock==0.21.0
+ - peakrdl-uvm==2.3.0
+ - peakrdl-ipxact==3.4.3
+ - peakrdl-html==2.10.1
+ - peakrdl-cheader==1.0.0
+ - peakrdl==1.1.0
 
 Other:
  - Playbook (Microsoft Internal workflow management tool)
