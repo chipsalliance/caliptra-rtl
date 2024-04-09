@@ -33,6 +33,7 @@ contents:
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
         - ../test_suites/smoke_test_qspi/smoke_test_qspi.yml
         - ../test_suites/smoke_test_uart/smoke_test_uart.yml
+        - ../test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
         - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
