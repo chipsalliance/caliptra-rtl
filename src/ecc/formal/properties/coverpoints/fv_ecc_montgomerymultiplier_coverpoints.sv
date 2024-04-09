@@ -28,8 +28,8 @@ module fv_ecc_montgomerymultiplier_coverpoints_m(
     cover_zeroize: cover property(disable iff(!reset_n) ecc_montgomerymultiplier.zeroize );
     cover_prime_p: cover property(disable iff(!reset_n || zeroize) (ecc_montgomerymultiplier.n_i==384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff));
     cover_group_order: cover property(disable iff(!reset_n || zeroize)(ecc_montgomerymultiplier.n_i==384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973));
-    cover_n_prime_i_prime_mu : cover property(disable iff(!reset_n|| zeroize) ecc_montgomerymultiplier.n_prime_i == 32'h00000001);
-    cover_n_prime_i_group_order_mu : cover property(disable iff(!reset_n|| zeroize) ecc_montgomerymultiplier.n_prime_i == 32'he88fdc45);
+    cover_n_prime_i_prime_mu : cover property(disable iff(!reset_n|| zeroize) ecc_montgomerymultiplier.n_prime_i == 48'h100000001);
+    cover_n_prime_i_group_order_mu : cover property(disable iff(!reset_n|| zeroize) ecc_montgomerymultiplier.n_prime_i == 48'h6089e88fdc45);
     cover_opa_i_0 : cover property(disable iff(!reset_n|| zeroize) (ecc_montgomerymultiplier.opa_i == '0)&&(ecc_montgomerymultiplier.opb_i == '0 || ecc_montgomerymultiplier.opb_i == (ecc_montgomerymultiplier.n_i-1)) );
     cover_opa_i_prime_minus_1 : cover property(disable iff(!reset_n|| zeroize) (ecc_montgomerymultiplier.opa_i == (ecc_montgomerymultiplier.n_i-1))&&(ecc_montgomerymultiplier.opb_i == '0 || ecc_montgomerymultiplier.opb_i == (ecc_montgomerymultiplier.n_i-1)) );
     cover_opb_i_0 : cover property(disable iff(!reset_n|| zeroize) (ecc_montgomerymultiplier.opb_i == '0)&&(ecc_montgomerymultiplier.opa_i == '0 || ecc_montgomerymultiplier.opa_i == (ecc_montgomerymultiplier.n_i-1)) );

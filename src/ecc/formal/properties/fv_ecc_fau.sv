@@ -75,7 +75,7 @@ module fv_ecc_fau_m #(
 
         mult_pulse_a: assert property(disable iff(!rst_n) mult_pulse_p);
 
-
+     `ifdef TOP
     //Once edge triggered from next cycle on it stays out until there is an another mult cmd    
          property no_mult_edge_p;
             ecc_fau.mult_start_edge
@@ -83,7 +83,7 @@ module fv_ecc_fau_m #(
             !ecc_fau.mult_start_edge s_until_with mult_en_i;
         endproperty
         no_mult_edge_a: assert property(disable iff(!rst_n)no_mult_edge_p);
-
+     `endif 
 
     //When ever add_en_i is triggered, it would just generate one pulse
          property add_pulse_p;
@@ -97,6 +97,7 @@ module fv_ecc_fau_m #(
         add_pulse_a: assert property(disable iff(!rst_n) add_pulse_p);
 
 
+    `ifdef TOP
     //Once edge triggered from next cycle on it stays out until there is an another add cmd
         property no_add_edge_p;
             ecc_fau.add_start_edge
@@ -104,7 +105,7 @@ module fv_ecc_fau_m #(
             !ecc_fau.add_start_edge s_until_with add_en_i;
         endproperty
         no_add_edge_a: assert property(disable iff(!rst_n)no_add_edge_p);
-
+    `endif
      
      //Primary outputs connected to primary outputs of submodules
         property outputs_p;

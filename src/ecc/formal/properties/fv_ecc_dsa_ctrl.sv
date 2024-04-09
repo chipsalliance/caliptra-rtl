@@ -916,7 +916,7 @@ module fv_ecc_dsa_ctrl_m
     //-------------------------------------------------------//
 
 
-    logic [REG_NUM_DWORDS-1 : 0][RADIX-1:0] privkey_reg;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0] privkey_reg;
     for(genvar i=0;i< REG_NUM_DWORDS;i++) begin
         assign privkey_reg[i] = hwif_out.ECC_PRIVKEY_IN[(REG_NUM_DWORDS-1)-i].PRIVKEY_IN.value;
     end
