@@ -735,9 +735,10 @@
             foreach(QSPI_en_bit_cg[bt]) this.QSPI_en_bit_cg[bt].sample(data[1 + bt]);
             foreach(I3C_en_bit_cg[bt]) this.I3C_en_bit_cg[bt].sample(data[2 + bt]);
             foreach(UART_en_bit_cg[bt]) this.UART_en_bit_cg[bt].sample(data[3 + bt]);
+            foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(data[4 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[1:1]/*QSPI_en*/  ,  data[2:2]/*I3C_en*/  ,  data[3:3]/*UART_en*/   );
+            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[1:1]/*QSPI_en*/  ,  data[2:2]/*I3C_en*/  ,  data[3:3]/*UART_en*/  ,  data[4:4]/*LMS_acc_en*/   );
         end
     endfunction
 
@@ -747,9 +748,10 @@
             foreach(QSPI_en_bit_cg[bt]) this.QSPI_en_bit_cg[bt].sample(QSPI_en.get_mirrored_value() >> bt);
             foreach(I3C_en_bit_cg[bt]) this.I3C_en_bit_cg[bt].sample(I3C_en.get_mirrored_value() >> bt);
             foreach(UART_en_bit_cg[bt]) this.UART_en_bit_cg[bt].sample(UART_en.get_mirrored_value() >> bt);
+            foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(LMS_acc_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  QSPI_en.get_mirrored_value()  ,  I3C_en.get_mirrored_value()  ,  UART_en.get_mirrored_value()   );
+            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  QSPI_en.get_mirrored_value()  ,  I3C_en.get_mirrored_value()  ,  UART_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()   );
         end
     endfunction
 

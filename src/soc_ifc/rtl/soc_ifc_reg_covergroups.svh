@@ -633,13 +633,15 @@
     input bit [1-1:0] iTRNG_en,
     input bit [1-1:0] QSPI_en,
     input bit [1-1:0] I3C_en,
-    input bit [1-1:0] UART_en
+    input bit [1-1:0] UART_en,
+    input bit [1-1:0] LMS_acc_en
     );
         option.per_instance = 1;
         iTRNG_en_cp : coverpoint iTRNG_en;
         QSPI_en_cp : coverpoint QSPI_en;
         I3C_en_cp : coverpoint I3C_en;
         UART_en_cp : coverpoint UART_en;
+        LMS_acc_en_cp : coverpoint LMS_acc_en;
 
     endgroup
 

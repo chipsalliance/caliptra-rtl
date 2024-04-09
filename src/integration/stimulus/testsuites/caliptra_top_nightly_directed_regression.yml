@@ -31,6 +31,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_trng/smoke_test_trng.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_qspi/smoke_test_qspi.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_uart/smoke_test_uart.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
