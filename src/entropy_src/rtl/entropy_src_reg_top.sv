@@ -3892,6 +3892,10 @@ module entropy_src_reg_top #(
       57'h100000000000000: begin
         reg_rdata_next[8:0] = main_sm_state_qs;
       end
+
+      default: begin
+        reg_rdata_next = '0;
+      end
     endcase
   end
 
