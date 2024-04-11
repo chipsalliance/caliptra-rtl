@@ -276,7 +276,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_PAUSER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h1,
+    "CPTRA_HW_REV_ID"                      : 32'h11,
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_FUSE_VALID_PAUSER"              : 32'hffff_ffff
@@ -327,7 +327,9 @@ package soc_ifc_tb_pkg;
   dword_t _soc_register_mask_dict [string] = {
     "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK |
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK  |                                                  
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK),
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK   |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK  |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
                                                           //`SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
