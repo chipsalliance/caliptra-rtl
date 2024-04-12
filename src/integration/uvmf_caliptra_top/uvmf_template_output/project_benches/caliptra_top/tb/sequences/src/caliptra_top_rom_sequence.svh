@@ -112,10 +112,11 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
 
     run_firmware_init(soc_ifc_env_mbox_rom_seq);
 
-    // After firmware init, wait for generic_output_wires write to 0xFF
-    while(soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.generic_output_val[31:0] != 32'hff) begin
-        sts_rsp_count = 0;
-        while(!sts_rsp_count) soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
+    // After firmware init, wait for CPTRA_BOOT_STATUS value to be decimal '320'
+    forever begin
+        if (reg_model.soc_ifc_reg_rm.CPTRA_BOOT_STATUS.status.get_mirrored_value() == 32'd320)
+            break;
+        soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(10);
     end
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
