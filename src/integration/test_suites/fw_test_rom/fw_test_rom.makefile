@@ -40,9 +40,9 @@ KEY_MANIFEST_PK_LENGTH         = $(shell bc <<< "$(KEY_MANIFEST_LMS_PK_LENGTH) +
 OWNER_ECC_PK_SIZE              = 96
 OWNER_ECC_PK_ROM_OFFSET        = 3652
 OWNER_LMS_PK_SIZE              = 48
-OWNER_LMS_PK_ROM_OFFSET        = $(shell bc <<< "$(OWNER_ECC_PK_ROM_OFFSET) + $(KEY_MANIFEST_ECC_PK_SIZE)")
+OWNER_LMS_PK_ROM_OFFSET        = $(shell bc <<< "$(OWNER_ECC_PK_ROM_OFFSET) + $(OWNER_ECC_PK_SIZE)")
 
-OWNER_PK_LENGTH                = $(shell bc <<< "$(OWNER_ECC_PK_SIZE) + $(KEY_MANIFEST_ECC_PK_SIZE)")
+OWNER_PK_LENGTH                = $(shell bc <<< "$(OWNER_LMS_PK_SIZE) + $(OWNER_ECC_PK_SIZE)")
 
 # Targets
 all: program.hex
