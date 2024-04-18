@@ -76,14 +76,14 @@ key_manifest_pk_hash_val.hex: key_manifest_pk_val.bin
 #sha384sum <<< "$(shell cat key_manifest_ecc_pk_val.hex | tr -d '\n')   $(shell cat key_manifest_lms_pk_val.hex | tr -d '\n')" | sed 's,\s\+-$$,,' > key_manifest_pk_hash_val.hex
 
 key_manifest_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
-	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME) of=key_manifest_pk_val.bin skip=$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) count=$(KEY_MANIFEST_PK_LENGTH)
+	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=key_manifest_pk_val.bin skip=$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) count=$(KEY_MANIFEST_PK_LENGTH)
 
 owner_pk_hash_val.hex: owner_pk_val.bin
 	sha384sum owner_pk_val.bin | sed 's,\s\+\S\+$$,,' > owner_pk_hash_val.hex
 #sha384sum <<< "$(shell cat owner_ecc_pk_val.hex | tr -d '\n')          $(shell cat owner_lms_pk_val.hex | tr -d '\n')"        | sed 's,\s\+-$$,,' > owner_pk_hash_val.hex
 
 owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
-	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME) of=owner_pk_val.bin skip=$(OWNER_ECC_PK_ROM_OFFSET) count=$(OWNER_PK_LENGTH)
+	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=owner_pk_val.bin skip=$(OWNER_ECC_PK_ROM_OFFSET) count=$(OWNER_PK_LENGTH)
 
 #owner_ecc_pk_val.hex: $(TEST_DIR)/$(TESTNAME).extracted
 #	xxd -p -s+$(OWNER_ECC_PK_ROM_OFFSET)        -l $(OWNER_ECC_PK_SIZE)          $(TEST_DIR)/$(TESTNAME) owner_ecc_pk_val.hex
