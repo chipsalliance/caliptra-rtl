@@ -49,6 +49,6 @@
         "url": "origin://AHA_POC/58dea2a3-6b98-4cac-9b7d-c500aa351324",
         "dest": "chipsalliance",
         "name": "caliptra-rtl",
-        "version": "promote_caliptra-rtl-mirror_42"
+        "version": "promote_caliptra-rtl-mirror_43"
     }
 ]
