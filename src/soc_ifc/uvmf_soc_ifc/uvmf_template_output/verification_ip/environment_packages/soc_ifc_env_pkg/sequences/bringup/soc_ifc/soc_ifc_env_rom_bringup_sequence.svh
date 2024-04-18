@@ -51,32 +51,34 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                     this.fuses_to_set.idevid_cert_attr[6] == 1'b1;
                                     this.fuses_to_set.idevid_cert_attr[7] == 1'b1; }
   // Configure the values to set to initialized fuses
-  constraint key_manifest_pk_hash_values_c { key_manifest_pk_hash_rand[0]  == this.key_manifest_pk_hash_val[0] ; //32'h6DC8DE16;
-                                             key_manifest_pk_hash_rand[1]  == this.key_manifest_pk_hash_val[1] ; //32'hD559D129;
-                                             key_manifest_pk_hash_rand[2]  == this.key_manifest_pk_hash_val[2] ; //32'h7BAB1E43;
-                                             key_manifest_pk_hash_rand[3]  == this.key_manifest_pk_hash_val[3] ; //32'hEBD7C533;
-                                             key_manifest_pk_hash_rand[4]  == this.key_manifest_pk_hash_val[4] ; //32'hDFE57001;
-                                             key_manifest_pk_hash_rand[5]  == this.key_manifest_pk_hash_val[5] ; //32'h1AA56220;
-                                             key_manifest_pk_hash_rand[6]  == this.key_manifest_pk_hash_val[6] ; //32'h0F66AD6D;
-                                             key_manifest_pk_hash_rand[7]  == this.key_manifest_pk_hash_val[7] ; //32'h87051086;
-                                             key_manifest_pk_hash_rand[8]  == this.key_manifest_pk_hash_val[8] ; //32'hC785E930;
-                                             key_manifest_pk_hash_rand[9]  == this.key_manifest_pk_hash_val[9] ; //32'hD3D947B4;
-                                             key_manifest_pk_hash_rand[10] == this.key_manifest_pk_hash_val[10]; //32'h7495822E;
-                                             key_manifest_pk_hash_rand[11] == this.key_manifest_pk_hash_val[11]; //32'hCB643FF1;
+  `define PK_HASH_BYTE_SWAP(val) {val[7:0],val[15:8],val[23:16],val[31:24]}
+  constraint key_manifest_pk_hash_values_c { key_manifest_pk_hash_rand[0]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[0] ); //32'h6DC8DE16;
+                                             key_manifest_pk_hash_rand[1]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[1] ); //32'hD559D129;
+                                             key_manifest_pk_hash_rand[2]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[2] ); //32'h7BAB1E43;
+                                             key_manifest_pk_hash_rand[3]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[3] ); //32'hEBD7C533;
+                                             key_manifest_pk_hash_rand[4]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[4] ); //32'hDFE57001;
+                                             key_manifest_pk_hash_rand[5]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[5] ); //32'h1AA56220;
+                                             key_manifest_pk_hash_rand[6]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[6] ); //32'h0F66AD6D;
+                                             key_manifest_pk_hash_rand[7]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[7] ); //32'h87051086;
+                                             key_manifest_pk_hash_rand[8]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[8] ); //32'hC785E930;
+                                             key_manifest_pk_hash_rand[9]  == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[9] ); //32'hD3D947B4;
+                                             key_manifest_pk_hash_rand[10] == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[10]); //32'h7495822E;
+                                             key_manifest_pk_hash_rand[11] == `PK_HASH_BYTE_SWAP(this.key_manifest_pk_hash_val[11]); //32'hCB643FF1;
                                              solve this.fuses_to_set before this.key_manifest_pk_hash_rand; }
-  constraint owner_pk_hash_values_c { owner_pk_hash_rand[0]  == owner_pk_hash_val[0] ;//32'hF58D4920;
-                                      owner_pk_hash_rand[1]  == owner_pk_hash_val[1] ;//32'hBA65DA44;
-                                      owner_pk_hash_rand[2]  == owner_pk_hash_val[2] ;//32'hB0F728BC;
-                                      owner_pk_hash_rand[3]  == owner_pk_hash_val[3] ;//32'hFB893202;
-                                      owner_pk_hash_rand[4]  == owner_pk_hash_val[4] ;//32'hCFAAA942;
-                                      owner_pk_hash_rand[5]  == owner_pk_hash_val[5] ;//32'hBC66A0C0;
-                                      owner_pk_hash_rand[6]  == owner_pk_hash_val[6] ;//32'h007A2CE2;
-                                      owner_pk_hash_rand[7]  == owner_pk_hash_val[7] ;//32'h29A8E08F;
-                                      owner_pk_hash_rand[8]  == owner_pk_hash_val[8] ;//32'h9E8EEBAE;
-                                      owner_pk_hash_rand[9]  == owner_pk_hash_val[9] ;//32'hB36E9CC0;
-                                      owner_pk_hash_rand[10] == owner_pk_hash_val[10];//32'h962E4B7A;
-                                      owner_pk_hash_rand[11] == owner_pk_hash_val[11];//32'h50214999;
+  constraint owner_pk_hash_values_c { owner_pk_hash_rand[0]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[0] );//32'hF58D4920;
+                                      owner_pk_hash_rand[1]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[1] );//32'hBA65DA44;
+                                      owner_pk_hash_rand[2]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[2] );//32'hB0F728BC;
+                                      owner_pk_hash_rand[3]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[3] );//32'hFB893202;
+                                      owner_pk_hash_rand[4]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[4] );//32'hCFAAA942;
+                                      owner_pk_hash_rand[5]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[5] );//32'hBC66A0C0;
+                                      owner_pk_hash_rand[6]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[6] );//32'h007A2CE2;
+                                      owner_pk_hash_rand[7]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[7] );//32'h29A8E08F;
+                                      owner_pk_hash_rand[8]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[8] );//32'h9E8EEBAE;
+                                      owner_pk_hash_rand[9]  == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[9] );//32'hB36E9CC0;
+                                      owner_pk_hash_rand[10] == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[10]);//32'h962E4B7A;
+                                      owner_pk_hash_rand[11] == `PK_HASH_BYTE_SWAP(owner_pk_hash_val[11]);//32'h50214999;
                                       solve this.fuses_to_set before this.owner_pk_hash_rand; }
+  `undef PK_HASH_BYTE_SWAP
   constraint idevid_values_c { idevid_cert_attr_rand[0] == '0; /* SHA1 */
                                idevid_cert_attr_rand[6] == 32'hFFFF_FFFF; /* UEID LSWord */
                                idevid_cert_attr_rand[7] == 32'hFFFF_FFFF; /* MSWord */}
