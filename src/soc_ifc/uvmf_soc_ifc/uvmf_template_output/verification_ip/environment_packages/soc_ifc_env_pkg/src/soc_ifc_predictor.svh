@@ -1140,8 +1140,12 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_BOOT_STATUS": begin
-                    // Handled in callbacks via reg predictor
-                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s with value %d (0x%x) has no effect on system prediction.", axs_reg.get_name(), data_active, data_active), UVM_LOW)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
