@@ -26,6 +26,8 @@ fi
 if ! git show-ref --quiet "${merge_dest}"; then
     echo "Could not find ref named [${merge_dest}]"
     exit 1
+else
+    echo "Evaluating RDL modifications for merge into [${merge_dest}] with ref [$(git show-ref "${merge_dest}")]"
 fi
 
 if [[ -z "${CALIPTRA_ROOT:+"empty"}" ]]; then
@@ -44,10 +46,10 @@ for rdl_file in $(find "${CALIPTRA_ROOT}/src" -name "*.rdl"); do
         echo "Did not find any file named [$rtl_file] that would be generated from [$rdl_file]";
     fi;
 done
-args=$(for fname in "${gen_rtl_list[@]}"; do echo -n " -e '$fname'"; done)
+patn=$(echo "${gen_rtl_list[@]}" | sed 's, ,\\\|,g')
 
 # Find file modifications
-rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-only | eval grep -c -e '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' $args || exit 0)
+rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-only | grep -c -e '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' -e "${patn}" || exit 0)
 if [[ "${rdl_mod_count}" -gt 0 ]]; then
     # Run the HTML Doc generator script (to update the REG macro header files)
     # and the individual reg generator script but then remove the docs directories
