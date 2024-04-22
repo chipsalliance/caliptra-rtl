@@ -112,22 +112,19 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
 
     run_firmware_init(soc_ifc_env_mbox_rom_seq);
 
-    // After firmware init, wait for CPTRA_BOOT_STATUS value to be decimal '320'
-    forever begin
-        if (reg_model.soc_ifc_reg_rm.CPTRA_BOOT_STATUS.status.get_mirrored_value() == 32'd320)
-            break;
+    // After firmware init, wait for ICCM_LOCK to be set, indicating transition from ROM to FMC
+    while (reg_model.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value() != 1)
         soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(10);
-    end
 
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 
     // through the design.
     fork
-      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
-      soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(4000);
     join
 
     // pragma uvmf custom body end
