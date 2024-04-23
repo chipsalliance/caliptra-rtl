@@ -1386,7 +1386,7 @@ class soc_ifc_predictor #(
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
                         iccm_locked = 1'b1;
-                        `uvm_info("FW_RST_DEBUG", $sformatf("Write to set iccm lock, value is 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
+                        `uvm_info("PRED_AHB", $sformatf("Write to set iccm lock, value is 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
                         send_cptra_sts_txn = 1;
                     end
                     else if (ahb_txn.RnW == AHB_WRITE) begin
