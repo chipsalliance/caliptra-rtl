@@ -50,25 +50,21 @@ jobs:
                 exit 0
               fi
             done
-            echo "fork: ${SOURCE_FORK}"
             if [[ "${SOURCE_FORK}" == "true" ]]; then
-              echo "owner is ${SOURCE_OWN}"
+              echo "pull request is from a fork: ${SOURCE_FORK}"
+              echo "origin repository owner is ${SOURCE_OWN}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
             fi
-            echo "target is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
-            echo "source is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-            echo "log source is"
-            git log --oneline -n 15 ${SOURCE_OWN}/${SOURCE_BR}
-            echo "=== branches ==="
-            git branch -a
-            echo "=== remotes ==="
-            git remote
+            echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
+            echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
             compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
                 exit 1
+            else
+                echo "Found no modifications to compile.yml"
             fi
 
   # Build the comparison hash file
