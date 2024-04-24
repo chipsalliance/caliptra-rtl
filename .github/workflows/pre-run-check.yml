@@ -47,6 +47,8 @@ jobs:
               fi
             echo "target is $(git show-ref ${TARGET_BR} 2> /dev/null)";
             echo "source is $(git show-ref ${SOURCE_BR} 2> /dev/null)";
+            echo "log source is";
+            git log --oneline -n 15 ${SOURCE_BR}
             echo "=== branches ==="
             git branch -a
             echo "=== remotes ==="
