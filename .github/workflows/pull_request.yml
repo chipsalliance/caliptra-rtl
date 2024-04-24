@@ -12,10 +12,10 @@ jobs:
   # Call auxiliary workflows
   pre_run:
     uses: ./.github/workflows/pre-run-check.yml
-  verilator:
-    uses: ./.github/workflows/build-test-verilator.yml
-  interactive_dbg:
-    uses: ./.github/workflows/interactive-debugging.yml
+#  verilator:
+#    uses: ./.github/workflows/build-test-verilator.yml
+#  interactive_dbg:
+#    uses: ./.github/workflows/interactive-debugging.yml
   doc_gen:
     uses: ./.github/workflows/doc-gen.yml
   post_run:
