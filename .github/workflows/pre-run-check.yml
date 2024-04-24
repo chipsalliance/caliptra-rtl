@@ -35,7 +35,8 @@ jobs:
             fetch-depth: 0
       - name: Compare against target
         env:
-            SOURCE_BR: ${{ github.ref }}
+            SOURCE_BR: ${{ github.head_ref }}
+            SOURCE_OWN: ${{ github.repository_owner }}
             TARGET_BR: ${{ github.base_ref }}
         run: |
             echo "Comparing $SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
@@ -45,16 +46,19 @@ jobs:
                 echo "Skipping check on compile.yml modifications for detected Microsoft contributor: ${msft_actor}"
                 exit 0
               fi
+            git remote add ${SOURCE_OWN} https://github.com/${SOURCE_OWN}/caliptra-rtl.git
+            git fetch --prune ${SOURCE_OWN}
+            echo "owner is ${SOURCE_OWN}"
             echo "target is $(git show-ref ${TARGET_BR} 2> /dev/null)";
-            echo "source is $(git show-ref ${SOURCE_BR} 2> /dev/null)";
+            echo "source is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)";
             echo "log source is";
-            git log --oneline -n 15 ${SOURCE_BR}
+            git log --oneline -n 15 ${SOURCE_OWN}/${SOURCE_BR}
             echo "=== branches ==="
             git branch -a
             echo "=== remotes ==="
             git remote
             done
-            compiles=$(git diff --name-only $TARGET_BR...$SOURCE_BR)
+            compiles=$(git diff --name-only "$TARGET_BR"..."${SOURCE_OWN}/${SOURCE_BR}")
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
