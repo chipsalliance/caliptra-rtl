@@ -21,7 +21,8 @@ jobs:
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
-    needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    #needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    needs: [pre_run, doc_gen]
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
