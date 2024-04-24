@@ -39,6 +39,7 @@ jobs:
             SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
             SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.name }}
             SOURCE_OWNID:  ${{ github.event.pull_request.head.repo.owner.id }}
+            SOURCE_OWNLOG:  ${{ github.event.pull_request.head.repo.owner.login }}
             SOURCE_NAME: ${{ github.event.pull_request.head.repo.name }}
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.base_ref }}
@@ -54,6 +55,7 @@ jobs:
             echo "fork: ${SOURCE_FORK}"
             if [[ "${SOURCE_FORK}" == "true" ]]; then
               echo "owner is ${SOURCE_OWN}"
+              echo "owner is ${SOURCE_OWNLOG}"
               echo "owner id ${SOURCE_OWNID}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
