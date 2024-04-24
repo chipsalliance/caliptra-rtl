@@ -37,7 +37,8 @@ jobs:
         env:
             SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
             SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
-            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner }}
+            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.name }}
+            SOURCE_OWNID:  ${{ github.event.pull_request.head.repo.owner.id }}
             SOURCE_NAME: ${{ github.event.pull_request.head.repo.name }}
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.base_ref }}
@@ -55,6 +56,7 @@ jobs:
               git remote add ${SOURCE_OWN} ${SOURCE_URL}
               git fetch ${SOURCE_OWN}
               echo "owner is ${SOURCE_OWN}"
+              echo "owner id ${SOURCE_OWNID}"
             fi
             echo "target is $(git show-ref ${TARGET_BR} 2> /dev/null)"
             echo "source is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
