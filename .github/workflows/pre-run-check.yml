@@ -40,7 +40,7 @@ jobs:
             SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
             SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
-            TARGET_BR:   ${{ github.event.pull_request.base_ref }}
+            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
             echo "Comparing $SOURCE_OWN/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
             local_msft_actors=${{ env.MSFT_ACTORS }}
