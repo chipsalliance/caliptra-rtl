@@ -18,7 +18,7 @@ on:
   workflow_call:
 
 env:
-  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" )
+  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" )
 
 jobs:
   # Fail if any compile.yml has been modified
@@ -35,22 +35,36 @@ jobs:
             fetch-depth: 0
       - name: Compare against target
         env:
-            SOURCE_BR: ${{ github.head_ref }}
-            TARGET_BR: ${{ github.base_ref }}
+            PR_OPENER:   ${{ github.event.pull_request.user.login }}
+            SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
+            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
+            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
+            SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
+            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
-            echo "Comparing $SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
+            echo "Comparing $SOURCE_OWN/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
             local_msft_actors=${{ env.MSFT_ACTORS }}
             for msft_actor in "${local_msft_actors[@]}"; do
-              if [[ "${{ github.actor }}" == "${msft_actor}" ]]; then
+              if [[ "${PR_OPENER}" == "${msft_actor}" ]]; then
                 echo "Skipping check on compile.yml modifications for detected Microsoft contributor: ${msft_actor}"
                 exit 0
               fi
             done
-            compiles=$(git diff --name-only origin/$TARGET_BR...origin/$SOURCE_BR)
+            if [[ "${SOURCE_FORK}" == "true" ]]; then
+              echo "pull request is from a fork: ${SOURCE_FORK}"
+              echo "fork repository owner is ${SOURCE_OWN}"
+              echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
+              git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+            fi
+            echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
+            echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
+            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
                 exit 1
+            else
+                echo "Found no modifications to compile.yml"
             fi
 
   # Build the comparison hash file
