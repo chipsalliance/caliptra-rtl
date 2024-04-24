@@ -35,7 +35,7 @@ jobs:
             fetch-depth: 0
       - name: Compare against target
         env:
-            SOURCE_BR: ${{ github.head_ref }}
+            SOURCE_BR: ${{ github.ref }}
             TARGET_BR: ${{ github.base_ref }}
         run: |
             echo "Comparing $SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
