@@ -50,5 +50,13 @@
         "dest": "chipsalliance",
         "name": "caliptra-rtl",
         "version": "promote_caliptra-rtl-mirror_43"
+    },
+    {
+        "description": "Adams Bridge RTL From GitHub",
+        "url": "origin://AHA_POC/f625222b-93a4-4f1a-a0d9-716cb938cda9",
+        "dest": "chipsalliance",
+        "name": "adams-bridge",
+        "version": "promote_adams-bridge_1"
     }
+
 ]
