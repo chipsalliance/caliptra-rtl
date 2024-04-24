@@ -39,11 +39,10 @@ jobs:
             SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
             SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
             SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
-            SOURCE_NAME: ${{ github.event.pull_request.head.repo.name }}
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.event.pull_request.base_ref }}
         run: |
-            echo "Comparing $SOURCE_NAME/$SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
+            echo "Comparing $SOURCE_OWN/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
             local_msft_actors=${{ env.MSFT_ACTORS }}
             for msft_actor in "${local_msft_actors[@]}"; do
               if [[ "${PR_OPENER}" == "${msft_actor}" ]]; then
@@ -57,7 +56,7 @@ jobs:
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
             fi
-            echo "target is $(git show-ref ${TARGET_BR} 2> /dev/null)"
+            echo "target is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
             echo "source is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
             echo "log source is"
             git log --oneline -n 15 ${SOURCE_OWN}/${SOURCE_BR}
@@ -65,7 +64,7 @@ jobs:
             git branch -a
             echo "=== remotes ==="
             git remote
-            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --abbrev "${SOURCE_OWN}/${SOURCE_BR}"))
+            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
