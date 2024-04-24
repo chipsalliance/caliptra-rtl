@@ -45,6 +45,10 @@ jobs:
                 echo "Skipping check on compile.yml modifications for detected Microsoft contributor: ${msft_actor}"
                 exit 0
               fi
+            git show-ref "${TARGET_BR}";
+            git show-ref "${SOURCE_BR}";
+            git branch -a
+            git remote
             done
             compiles=$(git diff --name-only $TARGET_BR...$SOURCE_BR)
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
