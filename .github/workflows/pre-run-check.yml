@@ -52,7 +52,7 @@ jobs:
             done
             if [[ "${SOURCE_FORK}" == "true" ]]; then
               echo "pull request is from a fork: ${SOURCE_FORK}"
-              echo "origin repository owner is ${SOURCE_OWN}"
+              echo "fork repository owner is ${SOURCE_OWN}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
             fi
