@@ -53,8 +53,8 @@ jobs:
             done
             echo "fork: ${SOURCE_FORK}"
             if [[ "${SOURCE_FORK}" == "true" ]]; then
-              git remote add ${SOURCE_OWN} ${SOURCE_URL}
-              git fetch ${SOURCE_OWN}
+              echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
+              git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
               echo "owner is ${SOURCE_OWN}"
               echo "owner id ${SOURCE_OWNID}"
             fi
