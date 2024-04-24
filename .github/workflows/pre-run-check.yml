@@ -18,7 +18,7 @@ on:
   workflow_call:
 
 env:
-  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" )
+  MSFT_ACTORS: ( "Nitsirks" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" )
 
 jobs:
   # Fail if any compile.yml has been modified
@@ -46,7 +46,7 @@ jobs:
                 exit 0
               fi
             done
-            compiles=$(git diff --name-only origin/$TARGET_BR...origin/$SOURCE_BR)
+            compiles=$(git diff --name-only $TARGET_BR...$SOURCE_BR)
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
