@@ -35,20 +35,27 @@ jobs:
             fetch-depth: 0
       - name: Compare against target
         env:
-            SOURCE_BR: ${{ github.head_ref }}
-            SOURCE_OWN: ${{ github.repository_owner }}
+            SOURCE_BR: ${{ github.event.pull_request.head.ref }}
+            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
+            SOURCE_OWN: ${{ github.event.pull_request.head.repo.owner }}
+            SOURCE_NAME: ${{ github.event.pull_request.head.repo.name }}
+            SOURCE_URL: ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR: ${{ github.base_ref }}
         run: |
-            echo "Comparing $SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
+            echo "Comparing $SOURCE_NAME/$SOURCE_BR against merge target $TARGET_BR to look for compile.yml"
             local_msft_actors=${{ env.MSFT_ACTORS }}
             for msft_actor in "${local_msft_actors[@]}"; do
               if [[ "${{ github.actor }}" == "${msft_actor}" ]]; then
                 echo "Skipping check on compile.yml modifications for detected Microsoft contributor: ${msft_actor}"
                 exit 0
               fi
-            git remote add ${SOURCE_OWN} https://github.com/${SOURCE_OWN}/caliptra-rtl.git
-            git fetch --prune ${SOURCE_OWN}
-            echo "owner is ${SOURCE_OWN}"
+            done
+            echo "fork: ${SOURCE_FORK}"
+            if [[ "${SOURCE_FORK}" == "true" ]]; then
+              git remote add ${SOURCE_OWN} ${SOURCE_URL}
+              git fetch ${SOURCE_OWN}
+              echo "owner is ${SOURCE_OWN}"
+            fi
             echo "target is $(git show-ref ${TARGET_BR} 2> /dev/null)";
             echo "source is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)";
             echo "log source is";
@@ -57,7 +64,6 @@ jobs:
             git branch -a
             echo "=== remotes ==="
             git remote
-            done
             compiles=$(git diff --name-only "$TARGET_BR"..."${SOURCE_OWN}/${SOURCE_BR}")
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
