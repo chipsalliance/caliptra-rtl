@@ -965,7 +965,7 @@ always_comb cptra_uncore_dmi_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == D
                                             ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
                                             ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
                                             ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value) |
+                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                             ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) ;
 
 //Increment the read pointer when we had a dmi read to data out and no access this clock
