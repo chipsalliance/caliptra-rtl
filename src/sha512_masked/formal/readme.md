@@ -1,11 +1,12 @@
 # SHA512_MASKED
-Date: 28-06-2023
+
 Author: LUBIS EDA
 
 ## Folder Structure
 The following subdirectories are part of the main directory **formal**
 
-- properties: Contains the assertion IP(AIP) named as **fv_sha512_masked.sv** and the constraints in place for the respective AIP **fv_constraints.sv**
+- model: Contains the high level abstracted model 
+- properties: Contains the assertion IP(AIP) named as **fv_sha512_masked.sv**,**fv_sha512_masked_pkg.sv**, **fv_coverpoints.sv** and the constraints in place for the respective AIP **fv_constraints.sv**
 
 
 ## DUT Overview
@@ -21,7 +22,7 @@ The DUT sha512_core has the primary inputs and primary outputs as shown below.
 | 5    | next_cmd           | input     | The core processes the message block with the previously computed results         |
 | 6    | mode[1:0]          | input     | Define which hash function: SHA512,SHA384,SHA224,SHA256                           |
 | 7    | block_msg[1023:0]  | input     | The padded block message                                                          |
-| 8    | lfsr_seed[73:0]    | input     | random bit vectors that are left shifted and rotated                              |
+| 8    | entropy[191:0]    | input     | random bit vectors      |
 | 9    | ready              | output    | When triggered indicates that the core is ready                                   |
 | 10   | digest[511:0]      | output    | The hashed value of the given message block                                       |
 | 11   | digest_valid       | output    | When triggered indicates that the computed digest is ready                        |
@@ -39,26 +40,26 @@ The Assertion IP signals are bound with the respective signals in the dut, where
 
 - CTRL_RND_TO_CTRL_RND: State transition remains CTRL_RND as long as the round_counter values is less than 9 and checks the necessary registers, masking register holds corrcet value.
 
-- CTRL_RND_to_SHA_Rounds_224_a: Checks if the state is in ctrl_rnd ,the mode choosen as 224,the init is triggered then the registers should be initialised with the respective constants of 224.
+- CTRL_RND_to_SHA_Rounds_a: Checks if the state is in ctrl_rnd ,the mode choosen as 224,the init is triggered then the registers should be initialised with the respective constants of 224.
 
-- CTRL_RND_to_SHA_Rounds_256_a: Checks if the state is in ctrl_rnd ,the mode choosen as 256,the init is triggered then the registers should be initialised with the respective constants of 256.
+- CTRL_RND_to_SHA_Rounds_1_a: Checks if the state is in ctrl_rnd ,the mode choosen as 256,the init is triggered then the registers should be initialised with the respective constants of 256.
 
-- CTRL_RND_to_SHA_Rounds_512_a: Checks if the state is in ctrl_rnd ,the mode choosen as 512,the init is triggered then the registers should be initialised with the respective constants of 512.
+- CTRL_RND_to_SHA_Rounds_2_a: Checks if the state is in ctrl_rnd ,the mode choosen as 512,the init is triggered then the registers should be initialised with the respective constants of 512.
 
-- CTRL_RND_to_SHA_Rounds_384_a: Checks if the state is in ctrl_rnd ,the mode choosen is neither 512,256 nor 224,the init is triggered then the registers should be initialised with the respective constants of default, which covers 384 mode also.
+- CTRL_RND_to_SHA_Rounds_3_a: Checks if the state is in ctrl_rnd ,the mode choosen is neither 512,256 nor 224,the init is triggered then the registers should be initialised with the respective constants of default, which covers 384 mode also.
 
-- CTRL_RND_to_SHA_Rounds_next_a: Checks if the state is in ctrl_rnd and there is no init signal and the next signal asserts then the register holds the past values.
+- CTRL_RND_to_SHA_Rounds_4_a: Checks if the state is in ctrl_rnd and there is no init signal and the next signal asserts then the register holds the past values.
 
 - SHA_Rounds_to_DONE_a: Checks if the rounds are done then the registers are updated correctly.
 
-- SHA_Rounds_to_SHA_Rounds_before_16_a: Checks if the the rounds less than 16 then the necessary registers are updated correctly and the round increments.
+- SHA_Rounds_to_SHA_Rounds_a: Checks if the the rounds less than 16 then the necessary registers are updated correctly and the round increments.
 
-- SHA_Rounds_to_SHA_Rounds_after_16_a: Checks if the rounds are greater than 16 and less than 80 then the respective registers are updated correctly and the round increments.
+- SHA_Rounds_to_SHA_Rounds_1_a: Checks if the rounds are greater than 16 and less than 80 then the respective registers are updated correctly and the round increments.
 
 - IDLE_wait_a: Checks if there isn't either init or next signal triggered in idle state then the state stays in idle and holds the past values and the core is ready.
 
 
 ## Reproduce results
-For reproducing the results: Load the AIP, sha512_masked_core and fv_constraints together in your formal tool.
+For reproducing the results: Load the AIP, sha512_masked_core and fv_constraints together in your formal tool. 
 
 Feel free to reach out to contact@lubis-eda.com to request the loadscripts.

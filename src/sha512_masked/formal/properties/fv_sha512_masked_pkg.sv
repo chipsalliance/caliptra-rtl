@@ -16,30 +16,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
- 
-package sha512_masked_pkg;
+
+package SHA512_masked_pkg;
 
 
 typedef struct {
-  bit unsigned [1023:0] in;
-  bit signed [31:0] SHA_Mode;
-  bit init_cmd;
-  bit next_cmd;
-  bit zeroize;
+  logic unsigned [1023:0] in;
+  logic unsigned [191:0] entropy;
+  logic signed [31:0] SHA_Mode;
+  logic init_cmd;
+  logic next_cmd;
+  logic zeroize;
 } st_SHA_Args;
 
 typedef struct {
-  bit unsigned [63:0] masked;
-  bit unsigned [63:0] random;
+  logic unsigned [63:0] masked;
+  logic unsigned [63:0] random;
 } st_masked_reg_t;
 
-typedef bit a_bool_10 [9:0];
+typedef logic a_bool_10 [9:0];
 
-typedef bit unsigned [63:0] a_sc_big_unsigned_64_16 [15:0];
+typedef logic unsigned [63:0] a_sc_big_unsigned_64_16 [15:0];
 
-typedef bit unsigned [63:0] a_sc_big_unsigned_64_8 [7:0];
+typedef logic unsigned [63:0] a_sc_big_unsigned_64_23 [22:0];
+typedef logic unsigned [63:0] a_sc_big_unsigned_64_24 [23:0];
 
-typedef bit unsigned [63:0] a_sc_big_unsigned_64_80 [79:0];
+typedef logic unsigned [63:0] a_sc_big_unsigned_64_8 [7:0];
+
+typedef logic unsigned [63:0] a_sc_big_unsigned_64_80 [79:0];
+
+typedef st_masked_reg_t a_st_masked_reg_t_16 [15:0];
 
 
 // Constants
@@ -48,6 +54,15 @@ parameter a_sc_big_unsigned_64_80 K = '{ 0: 64'h428A2F98D728AE22, 1: 64'h7137449
 
 
 // Functions
+
+/* function logic unsigned [63:0] A2B_conv(logic unsigned [63:0] x_masked, logic unsigned [63:0] x_random, logic q, logic masked_carry, logic unsigned [127:0] x_m, logic unsigned [63:0] mask, logic signed [31:0] j);
+  return 64'((((x_masked & 64'h1) << 128'd64) >> 128'd1));
+endfunction
+
+function logic unsigned [63:0] B2A_conv(logic unsigned [63:0] x_masked, logic unsigned [63:0] x_random, logic q, logic masked_carry, logic unsigned [127:0] x_prime, logic unsigned [63:0] mask, logic signed [31:0] j);
+  return 64'd0;
+endfunction */
+
 
 function bit unsigned [63:0] A2B_conv(bit unsigned [63:0] x_masked, bit unsigned [63:0] x_random, bit q, bit masked_carr, bit unsigned [127:0] x_m, bit unsigned [63:0] mask, bit signed [31:0] j);
 
@@ -81,117 +96,315 @@ reg [63 : 0] masked_carry;
     return x_prime;
 endfunction
 
-function bit unsigned [63:0] T1_m(bit unsigned [63:0] e_masked, bit unsigned [63:0] e_random, bit unsigned [63:0] f_masked, bit unsigned [63:0] f_random, bit unsigned [63:0] g_masked, bit unsigned [63:0] g_random, bit unsigned [63:0] h_masked, bit unsigned [63:0] h_random, bit unsigned [63:0] k, bit unsigned [63:0] w_masked, bit unsigned [63:0] w_random, bit masked_carry, bit unsigned [127:0] x_prime, bit unsigned [63:0] mask, bit q_masking_rnd_0, bit q_masking_rnd_1, bit q_masking_rnd_2, bit q_masking_rnd_3, bit q_masking_rnd_4, bit signed [31:0] j);
-  return 64'(((((B2A_conv(h_masked, h_random, q_masking_rnd_0, masked_carry, x_prime, mask, j) + B2A_conv(sigma1(e_masked), sigma1(e_random), q_masking_rnd_1, masked_carry, x_prime, mask, j)) + B2A_conv(masked_Ch_m(e_masked, e_random, f_masked, f_random, g_masked, g_random), (e_random ^ g_random), q_masking_rnd_2, masked_carry, x_prime, mask, j)) + B2A_conv(k, 64'h0, q_masking_rnd_3, masked_carry, x_prime, mask, j)) + B2A_conv(w_masked, w_random, q_masking_rnd_4, masked_carry, x_prime, mask, j)));
+
+function logic unsigned [63:0] T1_m(logic unsigned [63:0] e_masked, logic unsigned [63:0] e_random, logic unsigned [63:0] f_masked, logic unsigned [63:0] f_random, logic unsigned [63:0] g_masked, logic unsigned [63:0] g_random, logic unsigned [63:0] h_masked, logic unsigned [63:0] h_random, logic unsigned [63:0] k, logic unsigned [63:0] w_masked, logic unsigned [63:0] w_random, logic masked_carry, logic unsigned [127:0] x_prime, logic unsigned [63:0] mask, logic q_masking_rnd_0, logic q_masking_rnd_1, logic q_masking_rnd_2, logic q_masking_rnd_3, logic q_masking_rnd_4, logic signed [31:0] j);
+  logic unsigned [63:0] B2A_conv_0_i;
+  logic unsigned [63:0] sigma1_0_i;
+  logic unsigned [63:0] sigma1_1_i;
+  logic unsigned [63:0] B2A_conv_1_i;
+  logic unsigned [63:0] masked_Ch_m_0_i;
+  logic unsigned [63:0] B2A_conv_2_i;
+  logic unsigned [63:0] B2A_conv_3_i;
+  logic unsigned [63:0] B2A_conv_4_i;
+  B2A_conv_0_i = B2A_conv(h_masked, h_random, q_masking_rnd_0, masked_carry, x_prime, mask, j);
+  
+  sigma1_0_i = sigma1(e_masked);
+  
+  sigma1_1_i = sigma1(e_random);
+ 
+  B2A_conv_1_i = B2A_conv(sigma1_0_i, sigma1_1_i, q_masking_rnd_1, masked_carry, x_prime, mask, j);
+  
+  masked_Ch_m_0_i = masked_Ch_m(e_masked, e_random, f_masked, f_random, g_masked, g_random);
+  
+  B2A_conv_2_i = B2A_conv(masked_Ch_m_0_i, (e_random ^ g_random), q_masking_rnd_2, masked_carry, x_prime, mask, j);
+  
+  B2A_conv_3_i = B2A_conv(k, 64'h0, q_masking_rnd_3, masked_carry, x_prime, mask, j);
+  
+  B2A_conv_4_i = B2A_conv(w_masked, w_random, q_masking_rnd_4, masked_carry, x_prime, mask, j);
+
+  return 64'(((((B2A_conv_0_i + B2A_conv_1_i) + B2A_conv_2_i) + B2A_conv_3_i) + B2A_conv_4_i));
 endfunction
 
-function bit unsigned [63:0] T1_r(bit unsigned [63:0] e_random, bit unsigned [63:0] g_random, bit unsigned [63:0] h_random, bit unsigned [63:0] w_random);
-  return 64'((((h_random + sigma1(e_random)) + (e_random ^ g_random)) + w_random));
+function logic unsigned [63:0] T1_r(logic unsigned [63:0] e_random, logic unsigned [63:0] g_random, logic unsigned [63:0] h_random, logic unsigned [63:0] w_random);
+  logic unsigned [63:0] sigma1_0_i;
+  sigma1_0_i = sigma1(e_random);
+
+  return 64'((((h_random + sigma1_0_i) + (e_random ^ g_random)) + w_random));
 endfunction
 
-function bit unsigned [63:0] T2_m(bit unsigned [63:0] a_masked, bit unsigned [63:0] a_random, bit unsigned [63:0] b_masked, bit unsigned [63:0] b_random, bit unsigned [63:0] c_masked, bit unsigned [63:0] c_random, bit masked_carry, bit unsigned [127:0] x_prime, bit unsigned [63:0] mask, bit q_masking_rnd_5, bit q_masking_rnd_6, bit signed [31:0] j);
-  return 64'((B2A_conv(sigma0(a_masked), sigma0(a_random), q_masking_rnd_5, masked_carry, x_prime, mask, j) + B2A_conv(masked_Maj(a_masked, a_random, b_masked, b_random, c_masked, c_random), b_random, q_masking_rnd_6, masked_carry, x_prime, mask, j)));
+function logic unsigned [63:0] T2_m(logic unsigned [63:0] a_masked, logic unsigned [63:0] a_random, logic unsigned [63:0] b_masked, logic unsigned [63:0] b_random, logic unsigned [63:0] c_masked, logic unsigned [63:0] c_random, logic masked_carry, logic unsigned [127:0] x_prime, logic unsigned [63:0] mask, logic q_masking_rnd_5, logic q_masking_rnd_6, logic signed [31:0] j);
+  logic unsigned [63:0] sigma0_0_i;
+  logic unsigned [63:0] sigma0_1_i;
+  logic unsigned [63:0] B2A_conv_0_i;
+  logic unsigned [63:0] masked_Maj_0_i;
+  logic unsigned [63:0] B2A_conv_1_i;
+  sigma0_0_i = sigma0(a_masked);
+  
+  sigma0_1_i = sigma0(a_random);
+  
+  B2A_conv_0_i = B2A_conv(sigma0_0_i, sigma0_1_i, q_masking_rnd_5, masked_carry, x_prime, mask, j);
+  
+  masked_Maj_0_i = masked_Maj(a_masked, a_random, b_masked, b_random, c_masked, c_random);
+  
+  B2A_conv_1_i = B2A_conv(masked_Maj_0_i, b_random, q_masking_rnd_6, masked_carry, x_prime, mask, j);
+
+  return 64'((B2A_conv_0_i + B2A_conv_1_i));
 endfunction
 
-function bit unsigned [63:0] T2_r(bit unsigned [63:0] a_random, bit unsigned [63:0] b_random);
-  return 64'((sigma0(a_random) + b_random));
+function logic unsigned [63:0] T2_r(logic unsigned [63:0] a_random, logic unsigned [63:0] b_random);
+  logic unsigned [63:0] sigma0_0_i;
+  sigma0_0_i = sigma0(a_random);
+
+  return 64'((sigma0_0_i + b_random));
 endfunction
 
-function bit unsigned [63:0] compute_w(bit unsigned [63:0] w14, bit unsigned [63:0] w9, bit unsigned [63:0] w1, bit unsigned [63:0] w0);
-  return 64'((((delta1(w14) + w9) + delta0(w1)) + w0));
+function logic unsigned [63:0] compute_w_masked(st_masked_reg_t w14, st_masked_reg_t w9, st_masked_reg_t w1, st_masked_reg_t w0, logic unsigned [191:0] ent, logic masked_carry, logic unsigned [127:0] x_prime, logic unsigned [63:0] mask, logic signed [31:0] j, logic unsigned [63:0] m_rand);
+  logic ent_shift_0_i;
+  logic unsigned [63:0] B2A_conv_0_i;
+  logic unsigned [63:0] delta0_0_i;
+  logic unsigned [63:0] delta0_1_i;
+  logic ent_shift_1_i;
+  logic unsigned [63:0] B2A_conv_1_i;
+  logic ent_shift_2_i;
+  logic unsigned [63:0] B2A_conv_2_i;
+  logic unsigned [63:0] delta1_0_i;
+  logic unsigned [63:0] delta1_1_i;
+  logic ent_shift_3_i;
+  logic unsigned [63:0] B2A_conv_3_i;
+  logic unsigned [63:0] masked_sum_0_i;
+  logic unsigned [63:0] masked_sum_1_i;
+  logic unsigned [63:0] masked_sum_2_i;
+  logic ent_shift_4_i;
+  logic unsigned [63:0] A2B_conv_0_i;
+
+  ent_shift_0_i = ent_shift(ent, 192'd1);
+  
+  B2A_conv_0_i = B2A_conv(w0.masked, w0.random, ent_shift_0_i, masked_carry, x_prime, mask, j);
+  
+  delta0_0_i = delta0(w1.masked);
+  
+  delta0_1_i = delta0(w1.random);
+  
+  ent_shift_1_i = ent_shift(ent, 192'd2);
+  
+  B2A_conv_1_i = B2A_conv(delta0_0_i, delta0_1_i, ent_shift_1_i, masked_carry, x_prime, mask, j);
+  
+  ent_shift_2_i = ent_shift(ent, 192'd4);
+  
+  B2A_conv_2_i = B2A_conv(w9.masked, w9.random, ent_shift_2_i, masked_carry, x_prime, mask, j);
+  
+  delta1_0_i = delta1(w14.masked);
+  
+  delta1_1_i = delta1(w14.random);
+  
+  ent_shift_3_i = ent_shift(ent, 192'd8);
+  
+  B2A_conv_3_i = B2A_conv(delta1_0_i, delta1_1_i, ent_shift_3_i, masked_carry, x_prime, mask, j);
+  
+  masked_sum_0_i = masked_sum(B2A_conv_2_i, B2A_conv_3_i);
+  
+  masked_sum_1_i = masked_sum(B2A_conv_1_i, masked_sum_0_i);
+  
+  masked_sum_2_i = masked_sum(B2A_conv_0_i, masked_sum_1_i);
+  
+  ent_shift_4_i = ent_shift(ent, 192'd16);
+  
+  A2B_conv_0_i = A2B_conv(masked_sum_2_i, m_rand, ent_shift_4_i, masked_carry, x_prime, mask, j);
+
+  return A2B_conv_0_i;
 endfunction
 
-function bit unsigned [63:0] delta0(bit unsigned [63:0] x);
-  return ((rotr1(x) ^ rotr8(x)) ^ shr7(x));
+function logic unsigned [63:0] compute_w_random(logic unsigned [63:0] w14, logic unsigned [63:0] w9, logic unsigned [63:0] w1, logic unsigned [63:0] w0);
+  logic unsigned [63:0] delta0_0_i;
+  logic unsigned [63:0] delta1_0_i;
+  logic unsigned [63:0] masked_sum_0_i;
+  logic unsigned [63:0] masked_sum_1_i;
+  logic unsigned [63:0] masked_sum_2_i;
+
+  delta0_0_i = delta0(w1);
+  
+  delta1_0_i = delta1(w14);
+  
+  masked_sum_0_i = masked_sum(w9, delta1_0_i);
+  
+  masked_sum_1_i = masked_sum(delta0_0_i, masked_sum_0_i);
+  
+  masked_sum_2_i = masked_sum(w0, masked_sum_1_i);
+
+  return masked_sum_2_i;
 endfunction
 
-function bit unsigned [63:0] delta1(bit unsigned [63:0] x);
-  return ((rotr19(x) ^ rotr61(x)) ^ shr6(x));
+function logic unsigned [63:0] delta0(logic unsigned [63:0] x);
+  logic unsigned [63:0] rotr1_0_i;
+  logic unsigned [63:0] rotr8_0_i;
+  logic unsigned [63:0] shr7_0_i;
+  rotr1_0_i = rotr1(x);
+  
+  rotr8_0_i = rotr8(x);
+  
+  shr7_0_i = shr7(x);
+
+  return ((rotr1_0_i ^ rotr8_0_i) ^ shr7_0_i);
 endfunction
 
-function bit unsigned [63:0] masked_Ch_m(bit unsigned [63:0] e_masked, bit unsigned [63:0] e_random, bit unsigned [63:0] f_masked, bit unsigned [63:0] f_random, bit unsigned [63:0] g_masked, bit unsigned [63:0] g_random);
-  return (masked_and(e_masked, e_random, f_masked, f_random) ^ masked_and(g_masked, g_random, ~e_masked, e_random));
+function logic unsigned [63:0] delta1(logic unsigned [63:0] x);
+  logic unsigned [63:0] rotr19_0_i;
+  logic unsigned [63:0] rotr61_0_i;
+  logic unsigned [63:0] shr6_0_i;
+  rotr19_0_i = rotr19(x);
+  
+  rotr61_0_i = rotr61(x);
+  
+  shr6_0_i = shr6(x);
+
+  return ((rotr19_0_i ^ rotr61_0_i) ^ shr6_0_i);
 endfunction
 
-function bit unsigned [63:0] masked_Maj(bit unsigned [63:0] a_masked, bit unsigned [63:0] a_random, bit unsigned [63:0] b_masked, bit unsigned [63:0] b_random, bit unsigned [63:0] c_masked, bit unsigned [63:0] c_random);
-  return ((masked_and(a_masked, a_random, b_masked, b_random) ^ masked_and(a_masked, a_random, c_masked, c_random)) ^ masked_and(b_masked, b_random, c_masked, c_random));
+function logic ent_shift(logic unsigned [191:0] ent, logic unsigned [191:0] i);
+  return ((ent & i) == i);
 endfunction
 
-function bit unsigned [63:0] masked_and(bit unsigned [63:0] x_masked, bit unsigned [63:0] x_random, bit unsigned [63:0] y_masked, bit unsigned [63:0] y_random);
+function logic unsigned [63:0] masked_Ch_m(logic unsigned [63:0] e_masked, logic unsigned [63:0] e_random, logic unsigned [63:0] f_masked, logic unsigned [63:0] f_random, logic unsigned [63:0] g_masked, logic unsigned [63:0] g_random);
+  logic unsigned [63:0] masked_and_0_i;
+  logic unsigned [63:0] masked_and_1_i;
+  masked_and_0_i = masked_and(e_masked, e_random, f_masked, f_random);
+  
+  masked_and_1_i = masked_and(g_masked, g_random, ~e_masked, e_random);
+
+  return (masked_and_0_i ^ masked_and_1_i);
+endfunction
+
+function logic unsigned [63:0] masked_Maj(logic unsigned [63:0] a_masked, logic unsigned [63:0] a_random, logic unsigned [63:0] b_masked, logic unsigned [63:0] b_random, logic unsigned [63:0] c_masked, logic unsigned [63:0] c_random);
+  logic unsigned [63:0] masked_and_0_i;
+  logic unsigned [63:0] masked_and_1_i;
+  logic unsigned [63:0] masked_and_2_i;
+  masked_and_0_i = masked_and(a_masked, a_random, b_masked, b_random);
+  
+  masked_and_1_i = masked_and(a_masked, a_random, c_masked, c_random);
+  
+  masked_and_2_i = masked_and(b_masked, b_random, c_masked, c_random);
+
+  return ((masked_and_0_i ^ masked_and_1_i) ^ masked_and_2_i);
+endfunction
+
+function logic unsigned [63:0] masked_and(logic unsigned [63:0] x_masked, logic unsigned [63:0] x_random, logic unsigned [63:0] y_masked, logic unsigned [63:0] y_random);
   return ((~y_masked & ((~y_random & x_random) | (y_random & x_masked))) | (y_masked & ((y_random & x_random) | (~y_random & x_masked))));
 endfunction
 
-function bit unsigned [63:0] rotr1(bit unsigned [63:0] n);
+function logic unsigned [63:0] masked_sum(logic unsigned [63:0] x, logic unsigned [63:0] y);
+  return 64'((x + y));
+endfunction
+
+function logic unsigned [63:0] rotr1(logic unsigned [63:0] n);
   return 64'(((n >> 64'd1) | (n << 64'd63)));
 endfunction
 
-function bit unsigned [63:0] rotr14(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr14(logic unsigned [63:0] n);
   return 64'(((n >> 64'd14) | (n << 64'd50)));
 endfunction
 
-function bit unsigned [63:0] rotr18(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr18(logic unsigned [63:0] n);
   return 64'(((n >> 64'd18) | (n << 64'd46)));
 endfunction
 
-function bit unsigned [63:0] rotr19(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr19(logic unsigned [63:0] n);
   return 64'(((n >> 64'd19) | (n << 64'd45)));
 endfunction
 
-function bit unsigned [63:0] rotr28(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr28(logic unsigned [63:0] n);
   return 64'(((n >> 64'd28) | (n << 64'd36)));
 endfunction
 
-function bit unsigned [63:0] rotr34(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr34(logic unsigned [63:0] n);
   return 64'(((n >> 64'd34) | (n << 64'd30)));
 endfunction
 
-function bit unsigned [63:0] rotr39(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr39(logic unsigned [63:0] n);
   return 64'(((n >> 64'd39) | (n << 64'd25)));
 endfunction
 
-function bit unsigned [63:0] rotr41(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr41(logic unsigned [63:0] n);
   return 64'(((n >> 64'd41) | (n << 64'd23)));
 endfunction
 
-function bit unsigned [63:0] rotr61(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr61(logic unsigned [63:0] n);
   return 64'(((n >> 64'd61) | (n << 64'd3)));
 endfunction
 
-function bit unsigned [63:0] rotr8(bit unsigned [63:0] n);
+function logic unsigned [63:0] rotr8(logic unsigned [63:0] n);
   return 64'(((n >> 64'd8) | (n << 64'd56)));
 endfunction
 
-function bit unsigned [63:0] shr6(bit unsigned [63:0] n);
+function logic unsigned [63:0] shr6(logic unsigned [63:0] n);
   return (n >> 64'd6);
 endfunction
 
-function bit unsigned [63:0] shr7(bit unsigned [63:0] n);
+function logic unsigned [63:0] shr7(logic unsigned [63:0] n);
   return (n >> 64'd7);
 endfunction
 
-function bit unsigned [63:0] sigma0(bit unsigned [63:0] x);
-  return ((rotr28(x) ^ rotr34(x)) ^ rotr39(x));
+function logic unsigned [63:0] sigma0(logic unsigned [63:0] x);
+  logic unsigned [63:0] rotr28_0_i;
+   logic unsigned [63:0] rotr34_0_i;
+   logic unsigned [63:0] rotr39_0_i;
+  rotr28_0_i = rotr28(x);
+ 
+  rotr34_0_i = rotr34(x);
+  
+  rotr39_0_i = rotr39(x);
+
+  return ((rotr28_0_i ^ rotr34_0_i) ^ rotr39_0_i);
 endfunction
 
-function bit unsigned [63:0] sigma1(bit unsigned [63:0] x);
-  return ((rotr14(x) ^ rotr18(x)) ^ rotr41(x));
+function logic unsigned [63:0] sigma1(logic unsigned [63:0] x);
+  logic unsigned [63:0] rotr14_0_i;
+  logic unsigned [63:0] rotr18_0_i;
+  logic unsigned [63:0] rotr41_0_i;
+  rotr14_0_i = rotr14(x);
+  
+  rotr18_0_i = rotr18(x);
+  
+  rotr41_0_i = rotr41(x);
+
+  return ((rotr14_0_i ^ rotr18_0_i) ^ rotr41_0_i);
 endfunction
 
-function bit unsigned [63:0] slicer(bit unsigned [1023:0] block, bit signed [31:0] index);
- return(block[(64*index)+:64]);
+function logic unsigned [63:0] slicer(logic unsigned [1023:0] block, logic signed [31:0] index);
+  if ((index == 'sd0))
+    return 64'((block >> 1024'd0));
+  else if ((index == 'sd1))
+    return 64'((block >> 1024'd64));
+  else if ((index == 'sd2))
+    return 64'((block >> 1024'd128));
+  else if ((index == 'sd3))
+    return 64'((block >> 1024'd192));
+  else if ((index == 'sd4))
+    return 64'((block >> 1024'd256));
+  else if ((index == 'sd5))
+    return 64'((block >> 1024'd320));
+  else if ((index == 'sd6))
+    return 64'((block >> 1024'd384));
+  else if ((index == 'sd7))
+    return 64'((block >> 1024'd448));
+  else if ((index == 'sd8))
+    return 64'((block >> 1024'd512));
+  else if ((index == 'sd9))
+    return 64'((block >> 1024'd576));
+  else if ((index == 'sd10))
+    return 64'((block >> 1024'd640));
+  else if ((index == 'sd11))
+    return 64'((block >> 1024'd704));
+  else if ((index == 'sd12))
+    return 64'((block >> 1024'd768));
+  else if ((index == 'sd13))
+    return 64'((block >> 1024'd832));
+  else if ((index == 'sd14))
+    return 64'((block >> 1024'd896));
+  else if ((index == 'sd15))
+    return 64'((block >> 1024'd960));
+  else
+    return 64'((block >> 1024'd960));
 endfunction
 
-function bit unsigned [511:0] compute_digest(bit unsigned [63:0] H_7, bit unsigned [63:0] h_random , bit unsigned [63:0] h_masked, bit unsigned [63:0] H_6, bit unsigned [63:0] g_random , bit unsigned [63:0] g_masked, bit unsigned [63:0] H_5,  bit unsigned [63:0] f_random , bit unsigned [63:0] f_masked, bit unsigned [63:0] H_4, bit unsigned [63:0] e_random , bit unsigned [63:0] e_masked, bit unsigned [63:0] H_3, bit unsigned [63:0] d_random , bit unsigned [63:0] d_masked, bit unsigned [63:0] H_2, bit unsigned [63:0] c_random , bit unsigned [63:0] c_masked, bit unsigned [63:0] H_1, bit unsigned [63:0] b_random , bit unsigned [63:0] b_masked, bit unsigned [63:0] H_0, bit unsigned [63:0] a_random , bit unsigned [63:0] a_masked);
-  bit unsigned [511:0] temp;
-    temp[63:0]    = 64'(H_7 + (h_masked ^ h_random));
-    temp[127:64]  = 64'(H_6 + (g_masked ^ g_random));
-    temp[191:128] = 64'(H_5 + (f_masked ^ f_random));
-    temp[255:192] = 64'(H_4 + (e_masked ^ e_random));
-    temp[319:256] = 64'(H_3 + (d_masked ^ d_random));
-    temp[383:320] = 64'(H_2 + (c_masked ^ c_random));
-    temp[447:384] = 64'(H_1 + (b_masked ^ b_random));
-    temp[511:448] = 64'(H_0 + (a_masked ^ a_random));
-  return temp;
- endfunction
 
 endpackage

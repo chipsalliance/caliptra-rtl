@@ -297,7 +297,7 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : SCA_config
-        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (scalar_in_reg << RND_SIZE);
+        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (REG_SIZE+RND_SIZE)'(scalar_in_reg << RND_SIZE);
         lambda_reg = (sca_point_rnd_en)? lambda : ONE_CONST;
         masking_rnd_reg = (sca_mask_sign_en)? masking_rnd : ZERO_CONST;
     end // SCA_config
@@ -536,7 +536,7 @@ module ecc_dsa_ctrl
         hw_verify_r_we = 0;
         hw_pk_chk_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -569,7 +569,7 @@ module ecc_dsa_ctrl
     begin : write_to_pm_core
         write_reg = '0;
         if (prog_instr.opcode == DSA_UOP_WR_CORE) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
@@ -594,9 +594,9 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
-            unique casez (prog_instr.reg_id)
-                SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
-                SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
+            unique case (prog_instr.reg_id)
+                SCALAR_PK_ID          : write_reg = (REG_SIZE+RND_SIZE)'(scalar_PK_reg << RND_SIZE);
+                SCALAR_G_ID           : write_reg = (REG_SIZE+RND_SIZE)'(scalar_G_reg << RND_SIZE);
                 SCALAR_ID             : write_reg = scalar_out_reg; // SCA
                 default               : write_reg = '0;
             endcase
@@ -727,13 +727,13 @@ module ecc_dsa_ctrl
             end
             else begin
                 cycle_cnt <= '0;
-                unique casez (prog_cntr)
+                unique case (prog_cntr)
                     DSA_NOP : begin 
                         keygen_process      <= 0;
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         // Waiting for new valid command 
-                        unique casez (cmd_reg)
+                        unique case (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
                                 dsa_valid_reg <= 0;

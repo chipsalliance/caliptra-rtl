@@ -5,8 +5,7 @@ name: Verilator
 on:
   push:
     branches: ["main", "dev-goog", "dev-msft"]
-  pull_request:
-
+  workflow_call:
   workflow_dispatch:
 
 env:
@@ -196,3 +195,16 @@ jobs:
           # A non-zero value will cause the github action to fail.
           exit $?
 
+  verify_test_results:
+    name: Verify Verilator Test Results
+    runs-on: ubuntu-22.04
+    needs: build_and_test
+    # Force to run even if the build_and_test job is skipped for some reason
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Print Verilator Aggregated Result
+        run: |
+          echo "build_and_test has a result of [${{ needs.build_and_test.result }}]"
+          if [[ "${{ needs.build_and_test.result }}" != "success" ]]; then
+            exit 1
+          fi

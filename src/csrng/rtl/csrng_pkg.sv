@@ -9,11 +9,11 @@ package csrng_pkg;
   // Application Interfaces
   //-------------------------
 
-  parameter int unsigned GENBITS_BUS_WIDTH = 128;
-  parameter int unsigned CSRNG_CMD_WIDTH = 32;
-  parameter int unsigned FIPS_GENBITS_BUS_WIDTH = entropy_src_pkg::FIPS_BUS_WIDTH +
+  parameter logic [31:0] GENBITS_BUS_WIDTH = 128;
+  parameter logic [31:0] CSRNG_CMD_WIDTH = 32;
+  parameter logic [31:0] FIPS_GENBITS_BUS_WIDTH = entropy_src_pkg::FIPS_BUS_WIDTH +
                          GENBITS_BUS_WIDTH;
-  parameter int unsigned MainSmStateWidth = 8;
+  parameter logic [31:0] MainSmStateWidth = 8;
 
   // instantiation interface
   typedef struct packed {
@@ -85,7 +85,7 @@ package csrng_pkg;
     MainSmError         = 8'b01111000  // error state, results in fatal alert
   } main_sm_state_e;
 
-  parameter int CsKeymgrDivWidth = 384;
+  parameter logic [31:0] CsKeymgrDivWidth = 384;
   typedef logic [CsKeymgrDivWidth-1:0] cs_keymgr_div_t;
 
 endpackage : csrng_pkg

@@ -1,0 +1,28 @@
+# docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+
+# This is the top-level workflow to run on all pull-requests, and invokes
+# several other workflow dependencies
+name: Pull Request
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  # Call auxiliary workflows
+  pre_run:
+    uses: ./.github/workflows/pre-run-check.yml
+  verilator:
+    uses: ./.github/workflows/build-test-verilator.yml
+  interactive_dbg:
+    uses: ./.github/workflows/interactive-debugging.yml
+  doc_gen:
+    uses: ./.github/workflows/doc-gen.yml
+  post_run:
+    name: Call Post Run Final
+    runs-on: ubuntu-22.04
+    needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+      - run: echo "Finalize"

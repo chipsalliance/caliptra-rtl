@@ -17,7 +17,7 @@
 // limitations under the License.
 //
 
-module fv_constraints_m(
+module fv_constraints_sha_m(
     input logic            init_cmd, 
     input logic            next_cmd, 
     input logic            reset_n, 
@@ -26,7 +26,7 @@ module fv_constraints_m(
     input logic            ready, 
     input logic            digest_valid,
     input logic [1023 : 0] block_msg,
-    input logic [73   : 0] lfsr_seed,
+    input logic [191   : 0] entropy,
     input logic [511  : 0] digest,
     input logic [1    : 0] mode
     );
@@ -53,7 +53,7 @@ module fv_constraints_m(
     assume_mode_values: assume property (disable iff(!reset_n || zeroize) mode_values);
 
     property inputs_stay_stable;
-        !(sha512_masked_core.ready) |-> $stable(block_msg) && $stable(sha512_masked_core.mode);
+        !(sha512_masked_core.ready) |-> $stable(entropy) && $stable(block_msg) && $stable(sha512_masked_core.mode);
     endproperty
     assume_inputs_stay_stable: assume property (disable iff(!reset_n || zeroize) inputs_stay_stable);
     
@@ -67,10 +67,10 @@ module fv_constraints_m(
     endproperty
     assume_init_next_order: assume property (disable iff(!reset_n || zeroize) init_next_order);
 
-
+     
 endmodule
 
-bind sha512_masked_core fv_constraints_m fv_constraints(
+bind sha512_masked_core fv_constraints_sha_m fv_constraints(
   .init_cmd(init_cmd),
   .next_cmd(next_cmd),
   .reset_n(reset_n),
@@ -80,6 +80,6 @@ bind sha512_masked_core fv_constraints_m fv_constraints(
   .mode(mode),
   .block_msg(block_msg),
   .zeroize(zeroize),
-  .lfsr_seed(lfsr_seed),
+  .entropy(entropy),
   .digest(digest)
 );

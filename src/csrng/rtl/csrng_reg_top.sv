@@ -38,9 +38,9 @@ module csrng_reg_top #(
 
   import csrng_reg_pkg::*;
 
-  localparam int AW = 7;
-  localparam int DW = 32;
-  localparam int DBW = DW/8;                    // Byte Width
+  localparam logic[31:0] AW = 7;
+  localparam logic[31:0] DW = 32;
+  localparam logic[31:0] DBW = DW/8;                    // Byte Width
 
   // ahb interface register signals
   logic           ahb_reg_dv;

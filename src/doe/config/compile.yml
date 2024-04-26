@@ -39,8 +39,6 @@ targets:
     directories: []
     waiver_files:
       - $MSFT_REPO_ROOT/src/doe/config/design_lint/doe_ctrl/sglint_waivers
-    black_box:
-      - doe_reg
 ---
 provides: [doe_cbc_tb]  
 schema_version: 2.4.0
