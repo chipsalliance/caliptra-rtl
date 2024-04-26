@@ -22,15 +22,13 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock extends soc_ifc_reg_delay_jo
     uvm_reg_map map;
     virtual task do_job();
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr.mbox_lock.lock", UVM_HIGH)
-        if (rm.mbox_lock.lock.get_mirrored_value() && rm.mbox_fn_state_sigs.mbox_idle) begin
+        if (rm.mbox_lock.lock.get_mirrored_value() && (rm.mbox_fn_state_sigs.uc_cmd_stage || rm.mbox_fn_state_sigs.soc_cmd_stage)) begin
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             if (map.get_name() == "soc_ifc_AHB_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(0), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                rm.mbox_fn_state_sigs = '{uc_cmd_stage: 1'b1, default: 1'b0};
             end
             else if (map.get_name() == "soc_ifc_APB_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
-                rm.mbox_fn_state_sigs = '{soc_cmd_stage: 1'b1, default: 1'b0};
             end
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
         end
@@ -85,6 +83,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
             previous = 0;
             if (kind == UVM_PREDICT_WRITE)
                 value = previous;
+            rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
             `uvm_info("SOC_IFC_REG_CBS", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) prior to performing mbox_lock reg prediction due to bus access", UVM_MEDIUM)
             rm.mbox_lock_clr_miss.reset(0);
         end
@@ -99,6 +98,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
                             delay_job.state_nxt = MBOX_RDY_FOR_CMD;
                             delay_jobs.push_back(delay_job);
+                            rm.mbox_fn_state_sigs = '{uc_cmd_stage: 1'b1, default: 1'b0};
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         end
                         else begin
@@ -147,6 +147,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                         if (rm.mbox_fn_state_sigs.mbox_idle) begin
                             delay_job.state_nxt = MBOX_RDY_FOR_CMD;
                             delay_jobs.push_back(delay_job);
+                            rm.mbox_fn_state_sigs = '{soc_cmd_stage: 1'b1, default: 1'b0};
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Read from mbox_lock on map [%s] with value [%x] predicts a state change. Delay job is queued to update DUT model.", map.get_name(), value), UVM_HIGH)
                         end
                         else begin

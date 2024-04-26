@@ -17,34 +17,32 @@
 // limitations under the License.
 //
 
-module fv_coverpoints_sha_m(
+module fv_sha256_core_coverpoints_m(
     input logic clk,
-    input logic reset_n,
-    input logic zeroize
+    input logic reset_n
 );
     
     default clocking default_clk @(posedge clk); endclocking
 
     //Cover zeroize: 
     //Assert zeroize input and check the status of all registers. All registers/internal memories should be cleared.
-    cover_zeroize: cover property(disable iff(!reset_n) sha512_masked_core.zeroize );
-    cover_zeroize_after_next: cover property(disable iff(!reset_n) sha512_masked_core.zeroize && sha512_masked_core.next_cmd );
-
-    cover_multiple_next: cover property(disable iff(!reset_n || zeroize) 
-        sha512_masked_core.next_cmd && sha512_masked_core.ready ##1 (sha512_masked_core.next_cmd && sha512_masked_core.ready)[->1] 
-    );
+    cover_zeroize: cover property(disable iff(!reset_n) sha256_core.zeroize );
+    cover_zeroize_after_next: cover property(disable iff(!reset_n) sha256_core.zeroize && sha256_core.next_cmd );
 
     //Cover modes:
     //Cover all 4 different modes for SHA512
-    cover_mode_224: cover property(disable iff(!reset_n)  sha512_masked_core.mode == 0 && sha512_masked_core.init_cmd  );
-    cover_mode_256: cover property(disable iff(!reset_n)  sha512_masked_core.mode == 1 && sha512_masked_core.init_cmd  );
-    cover_mode_384: cover property(disable iff(!reset_n)  sha512_masked_core.mode == 2 && sha512_masked_core.init_cmd  );
-    cover_mode_512: cover property(disable iff(!reset_n)  sha512_masked_core.mode == 3 && sha512_masked_core.init_cmd  );
+    cover_mode_224: cover property(disable iff(!reset_n)  sha256_core.mode == 0 && sha256_core.init_cmd  );
+    cover_mode_256: cover property(disable iff(!reset_n)  sha256_core.mode == 1 && sha256_core.init_cmd  );
+
+
+    //Cover:  i>16 
+    cover_rnd_cnt_bigger_16: cover property(disable iff(!reset_n) sha256_core.t_ctr_reg == 17 ##1 sha256_core.t_ctr_reg == 17[->1] );
+
+  
 
 
 endmodule 
-bind sha512_masked_core fv_coverpoints_sha_m fv_coverpoints(
+bind sha256_core fv_sha256_core_coverpoints_m fv_sha256_core_coverpoints(
   .clk(clk),
-  .reset_n(reset_n),
-  .zeroize(zeroize)
+  .reset_n(reset_n)
 );

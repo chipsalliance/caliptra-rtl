@@ -45,10 +45,10 @@ localparam [(FULL_REG_SIZE-REG_SIZE)-1 : 0]       fv_zero_pad        = '0;
 
 localparam prime_p = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
 localparam prime_q = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973;
-localparam p_mu = 32'h00000001;
-localparam q_mu = 32'he88fdc45;
-localparam MULT_DLY = 40;
-localparam DLY_CONCAT = MULT_DLY - (2*(PE_UNITS+1))-1; //27
+localparam p_mu = 48'h100000001;
+localparam q_mu = 48'h6089e88fdc45;
+localparam MULT_DLY = 28;
+localparam DLY_CONCAT = MULT_DLY - (2*(PE_UNITS+1))-1; //17
 
 
 /////////////////////////////////////////////////
@@ -116,13 +116,9 @@ logic [FULL_REG_SIZE-1:0] fv_reg;
     ##1 (1'b1, fv_reg[4*RADIX-1:3*RADIX]  = (ecc_montgomerymultiplier.gen_PE[1].box_i.s_out))
     ##1 (1'b1, fv_reg[5*RADIX-1:4*RADIX] = (ecc_montgomerymultiplier.gen_PE[2].box_i.s_out))
     ##1 (1'b1, fv_reg[6*RADIX-1:5*RADIX] = (ecc_montgomerymultiplier.gen_PE[2].box_i.s_out))
-    ##1 (1'b1, fv_reg[7*RADIX-1:6*RADIX] = (ecc_montgomerymultiplier.gen_PE[3].box_i.s_out))
-    ##1 (1'b1, fv_reg[8*RADIX-1:7*RADIX] = (ecc_montgomerymultiplier.gen_PE[3].box_i.s_out))
-    ##1 (1'b1, fv_reg[9*RADIX-1:8*RADIX] = (ecc_montgomerymultiplier.gen_PE[4].box_i.s_out))
-    ##1 (1'b1, fv_reg[10*RADIX-1:9*RADIX] = (ecc_montgomerymultiplier.gen_PE[4].box_i.s_out))
-    ##1 (1'b1, fv_reg[11*RADIX-1:10*RADIX] = (ecc_montgomerymultiplier.final_box.s_out))
-    ##1 (1'b1, fv_reg[12*RADIX-1:11*RADIX] = (ecc_montgomerymultiplier.final_box.s_out))
-    ##0 (1'b1, fv_reg[13*RADIX-1:12*RADIX] = (ecc_montgomerymultiplier.final_box.c_out[RADIX-1:0]))
+    ##1 (1'b1, fv_reg[7*RADIX-1:6*RADIX]= (ecc_montgomerymultiplier.final_box.s_out))
+    ##1 (1'b1, fv_reg[8*RADIX-1:7*RADIX] = (ecc_montgomerymultiplier.final_box.s_out))
+    ##0 (1'b1, fv_reg[9*RADIX-1:8*RADIX] = (ecc_montgomerymultiplier.final_box.c_out[RADIX-1:0]))
     ##0 (1'b1, fv_result = reduction_prime(fv_reg, prime))
     |=>
     ##1

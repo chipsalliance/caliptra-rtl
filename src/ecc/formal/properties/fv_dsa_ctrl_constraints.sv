@@ -101,12 +101,12 @@ end
 
 
     property no_cmd_when_not_ready_p;
-        !fv_new_inp 
+        (ecc_dsa_ctrl.prog_cntr < DSA_NOP)
         |->
         hwif_out.ECC_CTRL.CTRL.value == '0;
     endproperty
 
-    no_cmd: assume property(no_cmd_when_not_ready_p);
+    no_cmd_a: assume property(no_cmd_when_not_ready_p);
 
 `ifndef TOP
 

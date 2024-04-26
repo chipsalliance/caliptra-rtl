@@ -1,0 +1,186 @@
+# docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+
+# This workflow implements a check that allows integrators to enforce
+# successful completion of testcases that should have been performed
+# on internal environments against the code base in the submitted branch.
+# For example, this allows internal pipelines to run proprietary toolchains
+# to sign-off on the code before allowing GitHub workflows to start.
+name: Pre Run Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Manual override for target branch to perform merge comparisons"
+        required: true
+        type: string
+        default: 'main'
+  workflow_call:
+
+env:
+  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" )
+
+jobs:
+  # Fail if any compile.yml has been modified
+  # (Microsoft employees use these to run an internal tool)
+  # Don't run this job for manual runs
+  compile_yml_check:
+    name: compile.yml Check
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+      - name: Compare against target
+        env:
+            PR_OPENER:   ${{ github.event.pull_request.user.login }}
+            SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
+            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
+            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
+            SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
+            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
+        run: |
+            echo "Comparing $SOURCE_OWN/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
+            local_msft_actors=${{ env.MSFT_ACTORS }}
+            for msft_actor in "${local_msft_actors[@]}"; do
+              if [[ "${PR_OPENER}" == "${msft_actor}" ]]; then
+                echo "Skipping check on compile.yml modifications for detected Microsoft contributor: ${msft_actor}"
+                exit 0
+              fi
+            done
+            if [[ "${SOURCE_FORK}" == "true" ]]; then
+              echo "pull request is from a fork: ${SOURCE_FORK}"
+              echo "fork repository owner is ${SOURCE_OWN}"
+              echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
+              git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+            fi
+            echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
+            echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
+            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
+            if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
+                echo "compile.yml should not be modified for pull requests! Found:"
+                echo "$compiles"
+                exit 1
+            else
+                echo "Found no modifications to compile.yml"
+            fi
+
+  # Build the comparison hash file
+  hash_check:
+    name: Hash Check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+
+      - name: Gen File List
+        run: |
+            find "$GITHUB_WORKSPACE" -type f -name "*.sv" \
+                                          -o -name "*.svh" \
+                                          -o -name "*.rdl" \
+                                          -o -name "*.json" \
+                                          -o -name "*.v" \
+                                          -o -name "*.vh" \
+                                          -o -name "*.rsp" \
+                                          -o -name "*.s" \
+                                          -o -name "*.c" \
+                                          -o -name "*.cpp" \
+                                          -o -name "*.h" \
+                                          -o -name "*.hex" \
+                                          -o -name "*.ld" \
+                                          -o -name "*.gdb" \
+                                          -o -name "*.yml" \
+                                          -o -name "*.sh" \
+                                          -o -name "*.py" \
+                                          -o -name "*.md" \
+                                          -o -name "pr_timestamp" \
+                                          ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
+            echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
+      - name: Check Timestamp
+        run: |
+            timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct')-3600")
+            if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
+                echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
+                exit 1
+            fi
+            timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
+            if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
+                echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest commit to branch by more than an hour [${timestamp_exp}]"
+                echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+                echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
+                exit 1
+            fi
+            echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
+
+      - name: Check Hash
+        run: |
+            hash=$($GITHUB_WORKSPACE/.github/scripts/file_hash.sh $GITHUB_WORKSPACE $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt)
+            if [[ -z ${hash:+"empty"} ]]; then
+                echo "Failed to run hash script"
+                echo $hash
+                exit 1;
+            fi
+            echo "RTL hash is $hash"
+            if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash ]]; then
+                echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash"
+                exit 1
+            fi
+            hash_orig=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash)
+            if [[ ${hash_orig} != ${hash} ]]; then
+                echo "Error, submitted hash [${hash_orig}] does not match calculated hash [${hash}]"
+                echo "If your internal testcase completed successfully and invoked .github/scripts/stamp_repo.sh to generate this hash, please open a support issue on the caliptra-rtl repository"
+                exit 1
+            fi
+            echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
+            rm $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+
+  # Check License Headers
+  # Check for microsoft employee or that all compile.yml/.vf are untouched
+  hdr_check:
+    name: License Header Check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+
+      - name: Run Script
+        run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            $GITHUB_WORKSPACE/.github/scripts/license_header_check.sh
+
+  # Check RDL files for modifications
+  rdl_check:
+    name: RDL File Check
+    runs-on: ubuntu-22.04
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+
+      - name: Install peakrdl
+        run: |
+          python3 -m pip install \
+              systemrdl-compiler==1.27.3 \
+              peakrdl-systemrdl==0.3.0 \
+              peakrdl-regblock==0.21.0 \
+              peakrdl-uvm==2.3.0 \
+              peakrdl-ipxact==3.4.3 \
+              peakrdl-html==2.10.1 \
+              peakrdl-cheader==1.0.0 \
+              peakrdl==1.1.0
+
+      - name: Run Script
+        env:
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
+        run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"

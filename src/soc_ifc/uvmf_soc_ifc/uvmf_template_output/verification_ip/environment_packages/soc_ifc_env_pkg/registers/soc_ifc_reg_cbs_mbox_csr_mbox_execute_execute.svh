@@ -40,7 +40,6 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
             rm.mbox_status.mbox_fsm_ps.predict(state_nxt, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             case (state_nxt) inside
                 MBOX_IDLE: begin
-                    rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                     rm.mbox_status.status.predict(CMD_BUSY, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                     rm.mbox_status.soc_has_lock.predict(1'b0, .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
                     `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_execute results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
@@ -56,6 +55,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                         if (rm.mbox_lock.is_busy()) begin
                             rm.mbox_lock.Xset_busyX(0);
                             rm.mbox_lock.lock.predict(0);
+                            rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                             rm.mbox_lock.Xset_busyX(1);
                         end
                         else begin
@@ -76,6 +76,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_execute_execute extends soc_ifc_reg_de
                     end
                     else begin
                         rm.mbox_lock.lock.predict(0);
+                        rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                     end
                 end
                 MBOX_EXECUTE_SOC: begin

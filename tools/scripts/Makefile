@@ -73,7 +73,8 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
 
 TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecdsa_secp384r1.exe \
-	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py
+	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py \
+	          $(CALIPTRA_ROOT)/src/sha256/tb/sha256_wntz_test_gen.py
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)

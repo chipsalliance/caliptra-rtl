@@ -737,6 +737,7 @@ class soc_ifc_predictor #(
                     // Complete any scheduled predictions to 0 (due to other delay jobs)
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
+                        p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs = '{mbox_idle: 1'b1, default: 1'b0};
                         `uvm_info("PRED_AHB", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) since mbox_lock reg prediction is disabled, due to failed AHB transfer", UVM_MEDIUM)
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.reset(0);
                     end
