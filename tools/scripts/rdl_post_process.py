@@ -39,6 +39,7 @@ def scrub_line_by_line(fname):
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
         is_endmodule = re.search(r'\bendmodule\b', line)
         has_reset = re.search(r'\bnegedge\b', line)
+        has_enum = re.search(r'\btypedef enum\b', line)
         if (has_reset is not None and found_hard_reset is None):
             substring = re.search(r"negedge (\w+.\w+)", line)
             reset_name = substring.group(1)
@@ -49,6 +50,10 @@ def scrub_line_by_line(fname):
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
             mod_lines+=line
+        elif (has_enum is not None):
+            line = re.sub('enum', 'enum logic [31:0]', line)
+            mod_lines+=line
+            mod_cnt+=1
         elif (has_struct is not None):
             line = re.sub(r'(\bstruct\b)\s*(?:unpacked)?', r'\1 packed', line)
             mod_lines+=line

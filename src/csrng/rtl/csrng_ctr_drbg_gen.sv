@@ -9,13 +9,13 @@
 // ctr_drbg cmd module.
 
 module csrng_ctr_drbg_gen import csrng_pkg::*; #(
-  parameter int NApps = 4,
-  parameter int Cmd = 3,
-  parameter int StateId = 4,
-  parameter int BlkLen = 128,
-  parameter int KeyLen = 256,
-  parameter int SeedLen = 384,
-  parameter int CtrLen  = 32
+  parameter logic [31:0] NApps = 4,
+  parameter logic [31:0] Cmd = 3,
+  parameter logic [31:0] StateId = 4,
+  parameter logic [31:0] BlkLen = 128,
+  parameter logic [31:0] KeyLen = 256,
+  parameter logic [31:0] SeedLen = 384,
+  parameter logic [31:0] CtrLen  = 32
 ) (
   input logic                clk_i,
   input logic                rst_ni,
@@ -85,16 +85,16 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   output logic               ctr_drbg_gen_sm_err_o
 );
 
-  localparam int GenreqFifoDepth = 1;
-  localparam int GenreqFifoWidth = KeyLen+BlkLen+CtrLen+1+SeedLen+1+StateId+Cmd;
-  localparam int BlkEncAckFifoDepth = 1;
-  localparam int BlkEncAckFifoWidth = BlkLen+StateId+Cmd;
-  localparam int AdstageFifoDepth = 1;
-  localparam int AdstageFifoWidth = KeyLen+BlkLen+CtrLen+1+1;
-  localparam int RCStageFifoDepth = 1;
-  localparam int RCStageFifoWidth = KeyLen+BlkLen+BlkLen+CtrLen+1+1+StateId+Cmd;
-  localparam int GenbitsFifoDepth = 1;
-  localparam int GenbitsFifoWidth = 1+BlkLen+KeyLen+BlkLen+CtrLen+StateId+Cmd;
+  localparam logic[31:0] GenreqFifoDepth = 1;
+  localparam logic[31:0] GenreqFifoWidth = KeyLen+BlkLen+CtrLen+1+SeedLen+1+StateId+Cmd;
+  localparam logic[31:0] BlkEncAckFifoDepth = 1;
+  localparam logic[31:0] BlkEncAckFifoWidth = BlkLen+StateId+Cmd;
+  localparam logic[31:0] AdstageFifoDepth = 1;
+  localparam logic[31:0] AdstageFifoWidth = KeyLen+BlkLen+CtrLen+1+1;
+  localparam logic[31:0] RCStageFifoDepth = 1;
+  localparam logic[31:0] RCStageFifoWidth = KeyLen+BlkLen+BlkLen+CtrLen+1+1+StateId+Cmd;
+  localparam logic[31:0] GenbitsFifoDepth = 1;
+  localparam logic[31:0] GenbitsFifoWidth = 1+BlkLen+KeyLen+BlkLen+CtrLen+StateId+Cmd;
 
   // signals
   logic [Cmd-1:0]     genreq_ccmd;
@@ -205,7 +205,7 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
 // Maximum Hamming weight: 3
 //
 
-  localparam int StateWidth = 5;
+  localparam logic[31:0] StateWidth = 5;
   typedef enum logic [StateWidth-1:0] {
     ReqIdle  = 5'b01101,
     ReqSend  = 5'b00011,

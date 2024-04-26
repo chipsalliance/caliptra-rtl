@@ -105,7 +105,7 @@ module ecc_add_sub_mod_alter #(
         else if (add_en_i)
             push_result_reg <= 2'b10;
         else // one shift to right
-            push_result_reg <= (push_result_reg >> 1);
+            push_result_reg <= 2'(push_result_reg >> 1);
     end
 
     assign ready_o = push_result_reg[0];

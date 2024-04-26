@@ -252,7 +252,7 @@ module sha512
   end // reg_update
 
   always_comb begin
-    unique casez (mode_reg)
+    unique case (mode_reg)
       2'b00 :    get_mask = {{7{32'hffffffff}}, {9{32'h00000000}}};   //SHA512/224
       2'b01 :    get_mask = {{8{32'hffffffff}}, {8{32'h00000000}}};   //SHA512/256
       2'b10 :    get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384

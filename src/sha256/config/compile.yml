@@ -21,8 +21,6 @@ targets:
     waiver_files: 
       #- $COMPILE_ROOT/config/rtl_lint/sha256.waiver
       - $MSFT_REPO_ROOT/src/sha256/config/design_lint/sha256_ctrl/sglint_waivers
-    black_box:
-      - sha256_reg
 ---
 provides: [sha256_ctrl_tb]  
 schema_version: 2.4.0

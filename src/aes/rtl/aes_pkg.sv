@@ -68,7 +68,7 @@ parameter masking_lfsr_perm_t RndCnstMaskingLfsrPermDefault = {
   256'h808d419d63982a16995e0e3b57826a36718a9329452492533d83115a75316e15
 };
 
-typedef enum integer {
+typedef enum logic [31:0] {
   SBoxImplLut,                   // Unmasked LUT-based S-Box
   SBoxImplCanright,              // Unmasked Canright S-Box, see aes_sbox_canright.sv
   SBoxImplCanrightMasked,        // First-order masked Canright S-Box

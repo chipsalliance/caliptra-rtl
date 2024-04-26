@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package ecc_reg_pkg;
+
+    localparam ECC_REG_DATA_WIDTH = 32;
+    localparam ECC_REG_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic [31:0] next;
     } ecc_reg__ECC_NAME__NAME__in_t;
@@ -156,7 +160,7 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         kv_read_ctrl_reg__read_en__in_t read_en;
-    } __kv_read_ctrl_reg__in_t;
+    } kv_read_ctrl_reg__in_t;
 
     typedef struct packed{
         logic next;
@@ -175,7 +179,7 @@ package ecc_reg_pkg;
         kv_status_reg__READY__in_t READY;
         kv_status_reg__VALID__in_t VALID;
         kv_status_reg__ERROR__in_t ERROR;
-    } __kv_status_reg__in_t;
+    } kv_status_reg__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -183,22 +187,22 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         kv_write_ctrl_reg__write_en__in_t write_en;
-    } __kv_write_ctrl_reg__in_t;
+    } kv_write_ctrl_reg__in_t;
 
     typedef struct packed{
         logic hwset;
-    } ecc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
+    } ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t;
 
     typedef struct packed{
-        ecc_reg__intr_block_t__error_intr_t__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t error_internal_sts;
+        ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_0d7eaa27__in_t error_internal_sts;
     } ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02__in_t;
 
     typedef struct packed{
         logic hwset;
-    } ecc_reg__intr_block_t__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+    } ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
 
     typedef struct packed{
-        ecc_reg__intr_block_t__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+        ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
     } ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
@@ -225,12 +229,12 @@ package ecc_reg_pkg;
         ecc_reg__ECC_IV__in_t [12-1:0]ECC_IV;
         ecc_reg__ECC_NONCE__in_t [12-1:0]ECC_NONCE;
         ecc_reg__ECC_PRIVKEY_IN__in_t [12-1:0]ECC_PRIVKEY_IN;
-        __kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
-        __kv_status_reg__in_t ecc_kv_rd_pkey_status;
-        __kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
-        __kv_status_reg__in_t ecc_kv_rd_seed_status;
-        __kv_write_ctrl_reg__in_t ecc_kv_wr_pkey_ctrl;
-        __kv_status_reg__in_t ecc_kv_wr_pkey_status;
+        kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
+        kv_status_reg__in_t ecc_kv_rd_pkey_status;
+        kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
+        kv_status_reg__in_t ecc_kv_rd_seed_status;
+        kv_write_ctrl_reg__in_t ecc_kv_wr_pkey_ctrl;
+        kv_status_reg__in_t ecc_kv_wr_pkey_status;
         ecc_reg__intr_block_t__in_t intr_block_rf;
     } ecc_reg__in_t;
 
@@ -353,7 +357,7 @@ package ecc_reg_pkg;
         kv_read_ctrl_reg__read_entry__out_t read_entry;
         kv_read_ctrl_reg__pcr_hash_extend__out_t pcr_hash_extend;
         kv_read_ctrl_reg__rsvd__out_t rsvd;
-    } __kv_read_ctrl_reg__out_t;
+    } kv_read_ctrl_reg__out_t;
 
     typedef struct packed{
         logic value;
@@ -396,7 +400,7 @@ package ecc_reg_pkg;
         kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
-    } __kv_write_ctrl_reg__out_t;
+    } kv_write_ctrl_reg__out_t;
 
     typedef struct packed{
         logic intr;
@@ -433,11 +437,17 @@ package ecc_reg_pkg;
         ecc_reg__ECC_IV__out_t [12-1:0]ECC_IV;
         ecc_reg__ECC_NONCE__out_t [12-1:0]ECC_NONCE;
         ecc_reg__ECC_PRIVKEY_IN__out_t [12-1:0]ECC_PRIVKEY_IN;
-        __kv_read_ctrl_reg__out_t ecc_kv_rd_pkey_ctrl;
-        __kv_read_ctrl_reg__out_t ecc_kv_rd_seed_ctrl;
-        __kv_write_ctrl_reg__out_t ecc_kv_wr_pkey_ctrl;
+        kv_read_ctrl_reg__out_t ecc_kv_rd_pkey_ctrl;
+        kv_read_ctrl_reg__out_t ecc_kv_rd_seed_ctrl;
+        kv_write_ctrl_reg__out_t ecc_kv_wr_pkey_ctrl;
         ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;
+
+    typedef enum logic [31:0] {
+        kv_status_reg__ERROR__kv_error_e__SUCCESS = 'h0,
+        kv_status_reg__ERROR__kv_error_e__KV_READ_FAIL = 'h1,
+        kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2
+    } kv_status_reg__ERROR__kv_error_e_e;
 
     localparam ECC_REG_ADDR_WIDTH = 32'd12;
 

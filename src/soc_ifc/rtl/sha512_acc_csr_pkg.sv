@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package sha512_acc_csr_pkg;
+
+    localparam SHA512_ACC_CSR_DATA_WIDTH = 32;
+    localparam SHA512_ACC_CSR_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic [31:0] next;
     } sha512_acc_csr__USER__USER__in_t;
@@ -42,33 +46,33 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t;
+    } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
-        sha512_acc_csr__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t error0_sts;
-        sha512_acc_csr__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t error1_sts;
-        sha512_acc_csr__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t error2_sts;
-        sha512_acc_csr__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t error3_sts;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t error0_sts;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t error1_sts;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t error2_sts;
+        sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t error3_sts;
     } sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha512_acc_csr__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+    } sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
 
     typedef struct packed{
-        sha512_acc_csr__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+        sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
     } sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
@@ -208,6 +212,13 @@ package sha512_acc_csr_pkg;
         sha512_acc_csr__CONTROL__out_t CONTROL;
         sha512_acc_csr__intr_block_t__out_t intr_block_rf;
     } sha512_acc_csr__out_t;
+
+    typedef enum logic [31:0] {
+        sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_384 = 'h0,
+        sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_512 = 'h1,
+        sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_384 = 'h2,
+        sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_512 = 'h3
+    } sha512_acc_csr__MODE__MODE__sha_cmd_e_e;
 
     localparam SHA512_ACC_CSR_ADDR_WIDTH = 32'd12;
 

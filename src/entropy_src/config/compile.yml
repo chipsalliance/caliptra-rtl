@@ -43,6 +43,11 @@ targets:
       - $COMPILE_ROOT/rtl/entropy_src_ack_sm.sv
       - $COMPILE_ROOT/rtl/entropy_src.sv
     tops: [entropy_src]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $MSFT_REPO_ROOT/src/entropy_src/config/design_lint/sglint_waivers
+    tops: [entropy_src]
   tb:
     directories: [$COMPILE_ROOT/tb]
     files:
