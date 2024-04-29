@@ -338,7 +338,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < SHA256_DIG_NUM_DWORDS; dword++) begin
         sha256_digest_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.digest_reg[dword] == 0) & (`SHA256_PATH.i_sha256_reg.decoded_reg_strb.SHA256_DIGEST[dword] == 0)
+                                              `SHA256_PATH.hwif_out.SHA256_CTRL.ZEROIZE.value |=> (`SHA256_PATH.digest_reg[dword] == 0) & (`SHA256_PATH.i_sha256_reg.field_storage.SHA256_DIGEST[dword].DIGEST.value == 0)
                                               )
                                   else $display("SVA ERROR: SHA256 digest zeroize mismatch!");                                
     end
@@ -354,7 +354,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < SHA512_DIG_NUM_DWORDS; dword++) begin
         sha512_digest_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.digest_reg[dword] == 0) & (`SHA512_PATH.i_sha512_reg.decoded_reg_strb.SHA512_DIGEST[dword] == 0)
+                                              `SHA512_PATH.hwif_out.SHA512_CTRL.ZEROIZE.value |=> (`SHA512_PATH.digest_reg[dword] == 0) & (`SHA512_PATH.i_sha512_reg.field_storage.SHA512_DIGEST[dword].DIGEST.value == 0)
                                               )
                                   else $display("SVA ERROR: SHA512 digest zeroize mismatch!");                                
     end
@@ -378,7 +378,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_TAG_NUM_DWORDS; dword++) begin
         hmac_tag_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.decoded_reg_strb.HMAC384_TAG[dword] == 0)
+                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.field_storage.HMAC384_TAG[dword].TAG.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 tag zeroize mismatch!");                      
     end
@@ -390,7 +390,7 @@ module caliptra_top_sva
                                               `ECC_PATH.hwif_out.ECC_CTRL.ZEROIZE.value |=> (`ECC_PATH.hwif_out.ECC_SEED[dword].SEED.value == 0) & (`ECC_PATH.hwif_out.ECC_NONCE[dword].NONCE.value == 0) & (`ECC_PATH.hwif_out.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.value == 0) &
                                               (`ECC_PATH.hwif_out.ECC_MSG[dword].MSG.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_X[dword].PUBKEY_X.value == 0) & (`ECC_PATH.hwif_out.ECC_PUBKEY_Y[dword].PUBKEY_Y.value == 0) &
                                               (`ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value == 0) & (`ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value == 0) & (`ECC_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value == 0) & (`ECC_PATH.hwif_out.ECC_IV[dword].IV.value == 0) &
-                                              (`ECC_REG_PATH.decoded_reg_strb.ECC_PRIVKEY_OUT[dword] == 0)
+                                              (`ECC_REG_PATH.field_storage.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.value == 0)
                                               )
                                   else $display("SVA ERROR: ECC reg zeroize mismatch!"); 
     end
