@@ -112,7 +112,13 @@ elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
     $cmd
 # This is any other FW-based smoke test running on the basic caliptra top SV bench
 else
-    cmd="make -f $SCRIPTS_DIR/Makefile program.hex"
+    build_args="CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0"
+    if [[ "${CONFIG}" == "caliptra_top_trng_tb" ]]; then
+        build_args="${build_args} CALIPTRA_INTERNAL_TRNG=1"
+    else
+        build_args="${build_args} CALIPTRA_INTERNAL_TRNG=0"
+    fi
+    cmd="make -f $SCRIPTS_DIR/Makefile ${build_args} program.hex"
     echo "$cmd"
     $cmd
 fi
