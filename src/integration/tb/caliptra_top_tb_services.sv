@@ -326,19 +326,19 @@ module caliptra_top_tb_services
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
             ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
-        else if((WriteData == 8'he5) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'he5) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b1;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
             ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
-        else if((WriteData == 8'he6) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'he6) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b1;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
             ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
-        else if ((WriteData == 8'he7) && mailbox_write) begin
+        else if ((WriteData[7:0] == 8'he7) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
             ras_test_ctrl.reset_ooo_done_flag   <= 1'b1;
@@ -631,13 +631,13 @@ endgenerate //IV_NO
     
     
     always@(negedge clk) begin
-        if((WriteData == 'hf2) && mailbox_write) begin
+        if((WriteData[7:0] == 8'hf2) && mailbox_write) begin
             force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
         end
     end
 
     always@(negedge clk) begin
-        if ((WriteData == 'he9) && mailbox_write) begin
+        if ((WriteData[7:0] == 8'he9) && mailbox_write) begin
             cycleCnt_ff <= cycleCnt;
             en_jtag_access <= 'b1;
         end
@@ -659,7 +659,7 @@ endgenerate //IV_NO
             inject_zeroize_to_hmac <= 1'b0;
             inject_zeroize_to_hmac_cnt <= '0;
         end
-        else if((WriteData == 'h99) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'h99) && mailbox_write) begin
             inject_zeroize_to_hmac_cmd <= 1'b1;
         end
         else if (inject_zeroize_to_hmac_cmd) begin
@@ -687,7 +687,7 @@ endgenerate //IV_NO
     //Inject fatal error after a delay
     logic inject_fatal_error;
     always@(negedge clk) begin
-        if((WriteData == 'heb) && mailbox_write) begin
+        if((WriteData[7:0] == 8'heb) && mailbox_write) begin
             cycleCnt_ff <= cycleCnt;
             inject_fatal_error <= 'b1;
         end
@@ -878,18 +878,18 @@ endgenerate //IV_NO
 
     always@(negedge clk) begin
 
-        if((WriteData == 'hf5) && mailbox_write) begin 
+        if((WriteData[7:0] == 8'hf5) && mailbox_write) begin 
             cold_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
-        else if((WriteData == 'hf6) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'hf6) && mailbox_write) begin
             warm_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
-        else if((WriteData == 'hf7) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'hf7) && mailbox_write) begin
             timed_warm_rst <= 'b1;
         end
-        else if((WriteData == 'hee) && mailbox_write) begin
+        else if((WriteData[7:0] == 8'hee) && mailbox_write) begin
             wait_time_to_rst = $urandom_range(5,100);
             prandom_warm_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;

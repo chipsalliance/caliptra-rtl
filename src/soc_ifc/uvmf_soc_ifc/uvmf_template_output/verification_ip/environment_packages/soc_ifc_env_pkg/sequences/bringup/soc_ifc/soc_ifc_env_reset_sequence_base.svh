@@ -33,6 +33,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     typedef soc_ifc_ctrl_reset_sequence_base soc_ifc_ctrl_sequence_t;
     soc_ifc_ctrl_sequence_t soc_ifc_ctrl_seq;
 
+  localparam        CPTRA_CLK_PERIOD_PS = 10000; // 100MHz clk = 10ns. FIXME derive from system?
+  localparam [63:0] CPTRA_WDT_TIMEOUT_IN_PS = 64'd250_000_000_000; // 250ms
+  localparam [63:0] CPTRA_WDT_CFG_VALUE = CPTRA_WDT_TIMEOUT_IN_PS / CPTRA_CLK_PERIOD_PS; // clock cycles
+
   caliptra_apb_user apb_user_obj;
 
   typedef struct packed {
@@ -174,6 +178,17 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
       reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
       if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
     end
+
+    // Not a 'FUSE', but WDT timeout is configured by SoC... do it here anyway.
+    `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_CLK_PERIOD_PS [%d] to CPTRA_TIMER_CONFIG", CPTRA_CLK_PERIOD_PS), UVM_LOW)
+    reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG.write(sts, uvm_reg_data_t'(CPTRA_CLK_PERIOD_PS), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_TIMER_CONFIG")
+
+    `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_WDT_CFG_VALUE [0x%x_%x] to CPTRA_WDT_CFG", CPTRA_WDT_CFG_VALUE[63:32], CPTRA_WDT_CFG_VALUE[31:0]), UVM_LOW)
+    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[31:0]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_WDT_CFG[0]")
+    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[63:32]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_WDT_CFG[1]")
 
     // Set Fuse Done
     reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));

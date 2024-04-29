@@ -1140,8 +1140,12 @@ class soc_ifc_predictor #(
                     end
                 end
                 "CPTRA_BOOT_STATUS": begin
-                    // Handled in callbacks via reg predictor
-                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s with value %d (0x%x) has no effect on system prediction.", axs_reg.get_name(), data_active, data_active), UVM_LOW)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
@@ -1229,28 +1233,28 @@ class soc_ifc_predictor #(
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
-                        case (data_active) inside
-                            32'h0,[32'h2:32'h5],32'h7F,[32'h80:32'hf7]:
+                        case (data_active[7:0]) inside
+                            8'h0,[8'h2:8'h5],8'h7F,[8'h80:8'hf7]:
                                 `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
-                            32'h1:
+                            8'h1:
                                 `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
-                            [32'h6:32'h7E]:
+                            [8'h6:8'h7E]:
                                 `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
-                            32'hf8:
+                            8'hf8:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
-                            32'hf9:
+                            8'hf9:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Lock debug in security state]", UVM_MEDIUM)
-                            32'hfa:
+                            8'hfa:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Unlock debug in security state]", UVM_MEDIUM)
-                            32'hfb:
+                            8'hfb:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Set the isr_active bit]", UVM_MEDIUM)
-                            32'hfc:
+                            8'hfc:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Clear the isr_active bit]", UVM_MEDIUM)
-                            32'hfd:
+                            8'hfd:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM single bit flip injection]", UVM_MEDIUM)
-                            32'hfe:
+                            8'hfe:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Toggle random SRAM double bit flip injection]", UVM_MEDIUM)
-                            32'hff:
+                            8'hff:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to End the simulation with a Success status", UVM_LOW)
                         endcase
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[31:0];
@@ -1382,7 +1386,7 @@ class soc_ifc_predictor #(
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
                         iccm_locked = 1'b1;
-                        `uvm_info("FW_RST_DEBUG", $sformatf("Write to set iccm lock, value is 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
+                        `uvm_info("PRED_AHB", $sformatf("Write to set iccm lock, value is 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.get_mirrored_value()), UVM_LOW)
                         send_cptra_sts_txn = 1;
                     end
                     else if (ahb_txn.RnW == AHB_WRITE) begin
@@ -2294,6 +2298,9 @@ class soc_ifc_predictor #(
                 else begin
                     `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, apb_txn.read_or_write), UVM_FULL)
                 end
+            end
+            "CPTRA_TIMER_CONFIG": begin
+                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
