@@ -56,6 +56,12 @@ class soc_ifc_env_mbox_rom_fw_sequence extends soc_ifc_env_mbox_sequence_base;
 
     //read FW size for command constraint
     fd = $fopen("fw_update.size", "r");
+    if (!fd) begin
+        integer errno;
+        string str;
+        errno = $ferror(fd, str);
+        `uvm_fatal("SOC_IFC_BRINGUP", $sformatf("fopen failed to open fw_update.size with code [0x%x] message [%s]", errno, str))
+    end
     void'($fscanf(fd, "%d", fw_img_size));
     `uvm_info("MBOX_ROM_SEQ", $sformatf("Found firmware update image with size: [%d] bytes", fw_img_size), UVM_LOW)// UVM_HIGH)
     $fclose(fd);

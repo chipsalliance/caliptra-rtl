@@ -96,10 +96,22 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
 
     // Read the PK Hash values extracted/calculated from the ROM image
     fd = $fopen("key_manifest_pk_hash_val.hex", "r");
+    if (!fd) begin
+        integer errno;
+        string str;
+        errno = $ferror(fd, str);
+        `uvm_fatal("SOC_IFC_BRINGUP", $sformatf("fopen failed to open key_manifest_pk_hash_val.hex with code [0x%x] message [%s]", errno, str))
+    end
     void'($fscanf(fd, "%x", key_manifest_pk_hash_val));
     $fclose(fd);
 
     fd = $fopen("owner_pk_hash_val.hex", "r");
+    if (!fd) begin
+        integer errno;
+        string str;
+        errno = $ferror(fd, str);
+        `uvm_fatal("SOC_IFC_BRINGUP", $sformatf("fopen failed to open owner_pk_hash_val.hex with code [0x%x] message [%s]", errno, str))
+    end
     void'($fscanf(fd, "%x", owner_pk_hash_val       ));
     $fclose(fd);
 
