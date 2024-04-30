@@ -276,7 +276,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_PAUSER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h1,
+    "CPTRA_HW_REV_ID"                      : 32'h11,
+    "CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_FUSE_VALID_PAUSER"              : 32'hffff_ffff
@@ -306,6 +307,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_RESET_REASON"                               : 32'h2,          // field WARM_RESET 
     "CPTRA_FUSE_WR_DONE"                               : 32'h1,          // field 0 
     "CPTRA_HW_REV_ID"                                  : 32'hffff_ffff,  // field SOC_STEPPING_ID, CPTRA_GENERATION
+    "CPTRA_HW_CONFIG"                                  : 32'h0000_001F,  // All existing bits are sticky
     "CPTRA_FUSE_VALID_PAUSER"                          : 32'hffff_ffff,
     "CPTRA_FUSE_PAUSER_LOCK"                           : 32'h1,
     "CPTRA_TIMER_CONFIG"                               : 32'hffff_ffff,                           
@@ -327,7 +329,9 @@ package soc_ifc_tb_pkg;
   dword_t _soc_register_mask_dict [string] = {
     "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK |
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK  |                                                  
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK),
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK   |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK  |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
                                                           //`SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |

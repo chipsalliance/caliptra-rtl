@@ -308,6 +308,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_I3C_EN_MASK                                            (0x4)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_LOW                                            (3)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_UART_EN_MASK                                           (0x8)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_LOW                                         (4)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                        (0x10)
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                   (0x300300e4)
 #define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (0xe4)
 #define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_LOW                                      (0)

@@ -307,7 +307,11 @@ reg {
             SoC stepping ID is repopulated with the value in the fuse register on every warm reset
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {desc = "Caliptra official release version. Bit field encoding is:
+                   [br][lb]15:8[rb] Patch version
+                   [br][lb] 7:4[rb] Minor version
+                   [br][lb] 3:0[rb] Major version";
+           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0011;
     field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
@@ -327,6 +331,7 @@ reg {
     field {sw=r; hw=w;} QSPI_en;
     field {sw=r; hw=w;} I3C_en;
     field {sw=r; hw=w;} UART_en;
+    field {sw=r; hw=w;} LMS_acc_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1
@@ -413,26 +418,34 @@ reg {
 
 reg {
     name = "Caliptra WDT1 Config";
-    desc = "SOC provided count in cycles for WDT1 timeout.";
+    desc = "SOC provided count in cycles for WDT1 timeout.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
     field {sw=rw; hw=na; resetsignal = cptra_pwrgood;} TIMEOUT[32]=0;
  } CPTRA_WDT_CFG[2];
 
 reg {
     name = "Caliptra iTRNG Entropy Configuration 0";
-    desc = "Adaptive threshold values for entropy source health tests.";
+    desc = "Adaptive threshold values for entropy source health tests.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
     field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
     field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_0;
 
 reg {
     name = "Caliptra iTRNG Entropy Configuration 1";
-    desc = "Repetition count value for entropy source health tests.";
+    desc = "Repetition count value for entropy source health tests.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
     field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_1;
 
 reg {
     name = "Caliptra Reserved Registers";
-    desc = "Set of reserved registers for survivability";
+    desc = "Set of reserved registers for survivability
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW";
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
  } CPTRA_RSVD_REG[2];

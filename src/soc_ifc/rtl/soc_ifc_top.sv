@@ -412,6 +412,8 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b1;
 `else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b0;
 `endif
+// Hardcoded because all future revs will have LMS accelerator available
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 
 //SOC Stepping ID update
 always_comb begin

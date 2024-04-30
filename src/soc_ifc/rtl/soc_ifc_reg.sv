@@ -5804,7 +5804,7 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 51][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;
     end
-    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h1 : '0;
+    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h11 : '0;
     assign readback_array[53][31:16] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_REV_ID.SOC_STEPPING_ID.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.CPTRA_FW_REV_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value : '0;
@@ -5813,7 +5813,8 @@ module soc_ifc_reg (
     assign readback_array[56][1:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.QSPI_en.next : '0;
     assign readback_array[56][2:2] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.I3C_en.next : '0;
     assign readback_array[56][3:3] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.UART_en.next : '0;
-    assign readback_array[56][31:4] = '0;
+    assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
+    assign readback_array[56][31:5] = '0;
     assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
     assign readback_array[57][31:1] = '0;
     assign readback_array[58][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value : '0;

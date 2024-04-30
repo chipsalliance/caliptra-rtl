@@ -15,7 +15,17 @@
 
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
+# Cflags to give fw visibility to expected hw configuration
+# Current release version is 1.1 - smoke test uses this value to check HW_REV_ID register
+# Update the value here after 1.1
+CALIPTRA_HW_REV_ID=0x0011
+# After 1.1, LMS accelerator is always available
+HWCFG_CFLAGS ?= -DCALIPTRA_HWCONFIG_LMS_EN -DCALIPTRA_HW_REV_ID=$(CALIPTRA_HW_REV_ID)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
+CALIPTRA_INTERNAL_QSPI ?= 1
+CALIPTRA_INTERNAL_TRNG ?= 1
+CALIPTRA_INTERNAL_UART ?= 1
+CALIPTRA_INTERNAL_I3C  ?= 0
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
@@ -183,7 +193,23 @@ TB_DPI_SRCS := $(addprefix $(CALIPTRA_ROOT)/src/integration/test_suites/libs/,$(
 TB_VERILATOR_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp $(TB_DPI_SRCS)
 
 # Testbench defs
-TB_DEFS = +define+CALIPTRA_INTERNAL_QSPI+CALIPTRA_INTERNAL_TRNG+CALIPTRA_INTERNAL_UART
+TB_DEFS = 
+ifeq ($(CALIPTRA_INTERNAL_QSPI), 1)
+TB_DEFS += +define+CALIPTRA_INTERNAL_QSPI
+HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_QSPI_EN
+endif
+ifeq ($(CALIPTRA_INTERNAL_TRNG), 1)
+TB_DEFS += +define+CALIPTRA_INTERNAL_TRNG
+HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_TRNG_EN
+endif
+ifeq ($(CALIPTRA_INTERNAL_UART), 1)
+TB_DEFS += +define+CALIPTRA_INTERNAL_UART
+HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_UART_EN
+endif
+ifeq ($(CALIPTRA_INTERNAL_I3C) , 1)
+TB_DEFS += +define+CALIPTRA_INTERNAL_I3C
+HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_I3C_EN
+endif
 
 # By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to
 # enable it.
@@ -312,7 +338,7 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 
 %.o : %.c $(HEADER_FILES)
 	cp $(HEADER_FILES) $(BUILD_DIR)
-	$(GCC_PREFIX)-gcc $(includes) $(TEST_CFLAGS) -DCOMPILER_FLAGS="\"$(TEST_CFLAGS)\"" $(ABI) -nostdlib -c $< -o $@
+	$(GCC_PREFIX)-gcc $(includes) $(TEST_CFLAGS) $(HWCFG_CFLAGS) -DCOMPILER_FLAGS="\"$(TEST_CFLAGS)\"" $(ABI) -nostdlib -c $< -o $@
 
 endif
 

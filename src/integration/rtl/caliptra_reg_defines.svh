@@ -5552,6 +5552,8 @@
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK                                                     (32'h4)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_LOW                                                     (3)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK                                                    (32'h8)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_LOW                                                  (4)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                                 (32'h10)
 `define CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                         (32'h300300e4)
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                             (32'he4)
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_LOW                                               (0)
