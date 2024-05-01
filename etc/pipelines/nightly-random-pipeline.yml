@@ -78,6 +78,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_ecc'
           - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/ecc/uvmf_ecc/coverage/config/uvmf_ecc_cm_hier.cfg --submit-resource-args RAM/2000'
+          - timeout: 25
           - testsuites:
             - l1_regress:
               - enabled: true
@@ -92,6 +93,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_hmac'
           - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/hmac/uvmf_2022/coverage/config/uvmf_hmac_cm_hier.cfg --submit-resource-args RAM/2000'
+          - timeout: 25
           - testsuites:
             - l1_regress:
               - enabled: true
@@ -106,6 +108,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_sha512'
           - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha512/uvmf_sha512/coverage/config/uvmf_sha512_cm_hier.cfg --submit-resource-args RAM/2000'
+          - timeout: 25
           - testsuites:
             - l1_regress:
               - enabled: true
@@ -120,6 +123,7 @@ stages:
           - configspec_name: 'integration_lib'
           - dut: 'sha256_random_test'
           #- args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/sha256/coverage/config/sha256_cm_hier.cfg --submit-resource-args RAM/2000'
+          - timeout: 25
           - testsuites:
             - l1_regress:
               - enabled: true
@@ -134,6 +138,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_soc_ifc'
             - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/coverage/config/uvmf_soc_ifc_cm_hier.cfg --submit-resource-args RAM/2000'
+            - timeout: 25
             - testsuites:
               - l1_regress:
                 - enabled: true
@@ -149,6 +154,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_kv'
             - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/keyvault/uvmf_kv/coverage/config/uvmf_kv_cm_hier.cfg --submit-resource-args RAM/2000'
+            - timeout: 25
             - testsuites:
               - l1_regress:
                 - enabled: true 
@@ -163,6 +169,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_pv'
             - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/pcrvault/uvmf_pv/coverage/config/uvmf_pv_cm_hier.cfg --submit-resource-args RAM/2000'
+            - timeout: 25
             - testsuites:
               - l1_regress:
                 - enabled: true 
@@ -177,6 +184,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'uvmf_caliptra_top'
             - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/coverage/config/uvmf_caliptra_top_cm_hier.cfg --submit-resource-args RAM/2000'
+            - timeout: 25
             - testsuites:
               - l1_regress:
                 - enabled: true
@@ -192,6 +200,7 @@ stages:
             - configspec_name: 'integration_lib'
             - dut: 'caliptra_top_tb'
             - args: '+COVERAGE +CM_HIER=${CALIPTRA_ROOT}/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg --submit-resource-args RAM/2000'
+            - timeout: 25
             - testsuites:
               - l1_regress:
                 - enabled: true
