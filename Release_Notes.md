@@ -18,7 +18,7 @@ _*Last Update: 2024/05/02*_
 
 ## Rev 1p1 ##
 
-#### Rev 1p1 release date: 2024/04/10 ####
+#### Rev 1p1 release date: 2024/05/03 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes
 - Caliptra Integration specification updates to add clarity
 - Caliptra README updates to tool versions, simulation instructions
@@ -32,9 +32,13 @@ _*Last Update: 2024/05/02*_
     - SHA512_masked update to entropy instead of LFSR
     - SHA256 LMS extension verified
   - Fixes for UVM caliptra_top test scenarios
+    - Mailbox SRAM initialization
+    - Assorted fixes for sequence access contention, error-checking, randomization constraints
+    - Added early mailbox command flow to emulate stash measurement functionality
   - Fixes for UVM KeyVault test scenarios
+    - Update clear_secrets prediction
 - RTL
-  - ECC radix48 feature
+  - ECC radix48
   - LMS accelerator
   - SHA512 masking
   - Modifications for clean Lint
@@ -46,6 +50,7 @@ _*Last Update: 2024/05/02*_
     * Logic reorganization to resolve undriven ICache signals in RV core
     * Fixes for redundant logic in RV core
     * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
+    * Declare synthesizable package functions as automatic
   - Update PeakRDL tool version and regenerate reg files to resolve lint issues
 
 #### Bug Fixes ####
