@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/04/08*_
+_*Last Update: 2024/05/02*_
 
 ## Rev 1p1 ##
 
@@ -27,7 +27,10 @@ _*Last Update: 2024/04/08*_
   - Update zeroize assertions
   - Add X check assertions to all register files
   - New assertions and firmware tests for LMS accelerator
-  - Formal: ???
+  - Formal Verification (#493):
+    - ECC Montgomery updated to recent changes
+    - SHA512_masked update to entropy instead of LFSR
+    - SHA256 LMS extension verified
   - Fixes for UVM caliptra_top test scenarios
   - Fixes for UVM KeyVault test scenarios
 - RTL
@@ -46,7 +49,9 @@ _*Last Update: 2024/04/08*_
   - Update PeakRDL tool version and regenerate reg files to resolve lint issues
 
 #### Bug Fixes ####
-[RTL] Add connection for JTAG TDO_en signal
+[RTL] Add connection for JTAG TDO enable signal #415 #425
+[RTL] Entropy source sfifo signal unable to exit reset #503 #506
+[RTL] Async reset condition missing for `nonce_offset_i` #339 #444 #483
 
 ## Previous Releases ##
 
