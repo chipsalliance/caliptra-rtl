@@ -66,13 +66,34 @@ else
 fi
 git fetch --prune --tags origin
 
-# Look for target branch
-if ! git show-ref --quiet "${github_dest}"; then
-    echo "Could not find caliptra-rtl ref [${github_dest}]"
+# Look for comparison branch (dereference tags)
+github_dest=$(git rev-parse "${github_dest}"^{})
+if [[ $? -ne 0 ]]; then
+    echo "ERROR: Failed to dereference github_dest"
+    exit 1
+fi
+if [[ -n "${github_dest:+null}" ]]; then
+    echo "Found ${github_dest} after dereferencing original derived ref from .git-comodules"
+else
+    echo "ERROR: Got 'null' when attempting to dereference github_dest"
     exit 1
 fi
 
-rdl_mod_count=$(git diff --merge-base ${github_dest} --name-status | grep -c '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' || exit 0)
+# Find all RTL files that are generated from RDL
+declare -a gen_rtl_list
+for rdl_file in $(find "${CALIPTRA_ROOT}/src" -name "*.rdl"); do 
+    rtl_file=$(sed 's,\.rdl,.sv,' <<< $(basename $rdl_file));
+    if [[ $(find $(dirname $(dirname $rdl_file)) -name "$rtl_file" | wc -l) -eq 1 ]]; then
+        gen_rtl_list+=("${rtl_file}")
+    else
+        echo "INFO: Did not find any file named [$rtl_file] that would be generated from [$rdl_file]";
+    fi;
+done
+patn=$(echo "${gen_rtl_list[@]}" | sed 's, ,\\\|,g')
+
+# Run comparison
+rdl_mod_count=$(git diff --merge-base "${github_dest:?refs/heads/invalid/ref/name}" --name-only | grep -c -e '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' -e "${patn}" || exit 0)
+echo "rdl_mod_count is ${rdl_mod_count}"
 if [[ ${rdl_mod_count} -gt 0 ]]; then
     # Run the HTML Doc generator script (to update the REG macro header files)
     # and the individual reg generator script but then remove the docs directories
@@ -91,6 +112,8 @@ if [[ ${rdl_mod_count} -gt 0 ]]; then
       echo "(Hint: Check $CALIPTRA_ROOT for the above changes)";
       echo "*****************************************";
       exit 1;
+    else
+      echo "After regenerating RDL outputs, no file changes detected";
     fi
 else
     echo "skipping RDL check since no RDL files were modified"

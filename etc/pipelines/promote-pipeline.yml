@@ -93,6 +93,18 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
   
+          # Install (locally) necessary Python modules for RDL regeneration
+          pip install --user \
+              systemrdl-compiler==1.27.3 \
+              peakrdl-systemrdl==0.3.0 \
+              peakrdl-regblock==0.21.0 \
+              peakrdl-uvm==2.3.0 \
+              peakrdl-ipxact==3.4.3 \
+              peakrdl-html==2.10.1 \
+              peakrdl-cheader==1.0.0 \
+              peakrdl==1.1.0
+
+          # Run the RDL file checker script
           enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh $(derivedTargetBranchName)'
   
         displayName: 'RDL GEN CHECK'
