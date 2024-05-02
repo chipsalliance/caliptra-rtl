@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/04/01*_
+_*Last Update: 2024/05/02*_
 
 
 ## **Tools Used** ##
@@ -85,21 +85,24 @@ with the provided Makefile for compiling test C programs.
 ## **ENVIRONMENT VARIABLES** ##
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
-`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/Caliptra`.<BR>
+`CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/caliptra-rtl`.<BR>
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder; only used for `caliptra_top_tb` tests<BR>
 
 ## **Repository Overview** ##
 ```
-Caliptra
+caliptra-rtl
 |-- LICENSE
 |-- README.md
 |-- Release_Notes.md
+|-- SECURITY.md
 |-- docs
-|   |-- Caliptra_Integration_Specification.pdf
-|   |-- Caliptra_Hardware_Specification.pdf
-|   `-- Caliptra_TestPlan.xlsx
+|   |-- CaliptraHardwareSpecification.md
+|   |-- CaliptraIntegrationSpecification.md
+|   |-- CaliptraReleaseChecklist.md
+|   |-- Caliptra_TestPlan.xlsx
+|   `-- images
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
