@@ -41,6 +41,8 @@ _*Last Update: 2024/05/02*_
   - ECC radix48
   - LMS accelerator
   - SHA512 masking
+  - HMAC and HMAC_DRBG enhancements
+    - Masking for SHA512
   - Modifications for clean Lint
     * Replace casez with case
     * Replace 2-state with 4-state typedefs, parameters, enums
@@ -57,6 +59,7 @@ _*Last Update: 2024/05/02*_
 [RTL] Add connection for JTAG TDO enable signal #415 #425
 [RTL] Entropy source sfifo signal unable to exit reset #503 #506
 [RTL] Async reset condition missing for `nonce_offset_i` #339 #444 #483
+[RTL] Fixed leakage issue in HMAC #325 #429
 
 ## Previous Releases ##
 
