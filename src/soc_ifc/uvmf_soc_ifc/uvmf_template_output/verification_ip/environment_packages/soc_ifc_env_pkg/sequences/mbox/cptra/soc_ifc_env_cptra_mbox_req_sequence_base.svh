@@ -146,6 +146,7 @@ class soc_ifc_env_cptra_mbox_req_sequence_base extends soc_ifc_env_sequence_base
     fork
         forever begin
             @(cptra_status_agent_rsp_seq.new_rsp) sts_rsp_count++;
+            `uvm_info("CPTRA_MBOX_SEQ", $sformatf("sts_rsp_count is %d. New sts_rsp: %s", sts_rsp_count, cptra_status_agent_rsp_seq.rsp.convert2string()), UVM_HIGH)
         end
     join_none
 
@@ -428,19 +429,19 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_clr_execute();
     // later on in the sequence with uvm_error
     if (mbox_sts_exp_error && !mbox_sts_is_error) begin
         fork
-            begin: WAIT_ERR_INTR
-                wait(sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending);
-                disable WAIT_ERR_INTR_TIMEOUT;
-            end
             begin: WAIT_ERR_INTR_TIMEOUT
                 configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(131072);
                 disable WAIT_ERR_INTR;
+            end
+            begin: WAIT_ERR_INTR
+                wait((sts_rsp_count > 0) && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending);
+                disable WAIT_ERR_INTR_TIMEOUT;
             end
         join
     end
 
     // Now, do some error checking and handling
-    if (sts_rsp_count > 0 && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
+    if ((sts_rsp_count > 0) && cptra_status_agent_rsp_seq.rsp.soc_ifc_err_intr_pending) begin
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
         report_reg_sts(reg_sts, "error_internal_intr_r");
         reg_model.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
