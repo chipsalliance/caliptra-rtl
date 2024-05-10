@@ -250,6 +250,10 @@ void caliptra_rt() {
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
+                if (soc_ifc_sanitize_mbox_n_bytes(MBOX_DIR_SPAN, 0xfff) != 0) {
+                    SEND_STDOUT_CTRL(0x1);
+                    while(1);
+                }
             }
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK)
@@ -373,7 +377,9 @@ void caliptra_rt() {
                     }
                 }
                 // Any other errors that are flagged at this point are unexpected and should cause a test failure
-                if (cptra_intr_rcv.soc_ifc_error) {
+                if (cptra_intr_rcv.soc_ifc_error & ~(SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK |
+                                                     SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK |
+                                                     SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK )) {
                     VPRINTF(ERROR, "Unexpected err intr 0x%x\n", cptra_intr_rcv.soc_ifc_error);
                     SEND_STDOUT_CTRL(0x1);
                     while(1);

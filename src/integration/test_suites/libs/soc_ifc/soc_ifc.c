@@ -110,7 +110,7 @@ void soc_ifc_clr_flow_status_field(uint32_t field) {
 
 uint8_t soc_ifc_mbox_acquire_lock(uint32_t attempt_count) {
     for(uint32_t ii=0; ii<attempt_count; ii++) {
-        if((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0) {
+        if((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 0) {
             return 0;
         }
     }
