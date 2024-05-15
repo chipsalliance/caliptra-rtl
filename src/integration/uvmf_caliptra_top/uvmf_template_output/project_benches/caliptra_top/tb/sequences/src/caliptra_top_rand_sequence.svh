@@ -220,6 +220,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // pragma uvmf custom body begin
     // Construct sequences here
     bit pauser_valid_initialized = 1'b0;
+    bit override_mbox_sts_exp_error = 1'b0;
+    mbox_sts_exp_error_type_e override_mbox_sts_exp_error_type = EXP_ERR_NONE;
     uvm_object obj;
     int ii;
     int unsigned mbox_ecc_single_error_burst;
@@ -412,8 +414,37 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
         `uvm_info("CALIPTRA_TOP_RAND_TEST", $sformatf("rand_seq randomized to: %s", soc_ifc_env_seq_ii[ii].get_type_name()), UVM_LOW)
         if(!soc_ifc_env_seq_ii[ii].randomize())
             `uvm_fatal("CALIPTRA_TOP_RAND_TEST", $sformatf("caliptra_top_rand_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
+        if (override_mbox_sts_exp_error) begin
+            soc_ifc_env_mbox_sequence_base_t mbox_seq;
+            if ($cast(mbox_seq,soc_ifc_env_seq_ii[ii])) begin
+                mbox_seq.mbox_sts_exp_error      = 1'b1;
+                mbox_seq.mbox_sts_exp_error_type = override_mbox_sts_exp_error_type;
+            end
+            // Non-mbox sequences (i.e. reset) also clear the error override condition
+            else begin
+                override_mbox_sts_exp_error = 1'b0;
+            end
+        end
         soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
         soc_ifc_env_seq_ii[ii].start(top_configuration.soc_ifc_subenv_config.vsqr);
+
+        // After the sequence ends, if it injected a double-bit error and the
+        // mailbox was not sanitized, expect an error on a subsequence sequence when firmware
+        // forcibly unlocks the mailbox to sanitize it
+        // FIXME get rid of this ugly workaround after GitHub issue #340 has been fixed
+        //       and the firmware workaround to sanitize mbox is removed
+        begin
+            soc_ifc_env_mbox_sram_double_bit_flip_sequence_t mbox_2bit_seq;
+            // At the end of the sequence, Caliptra is not sanitizing the mailbox, so
+            // expect the next sequence to be interrupted with an unlock
+            if($cast(mbox_2bit_seq,obj) && mbox_2bit_seq.mbox_sts_exp_error) begin
+                override_mbox_sts_exp_error = 1'b1;
+                override_mbox_sts_exp_error_type = EXP_ERR_PROT;
+            end
+            else begin
+                override_mbox_sts_exp_error = 1'b0;
+            end
+        end
 
         // If the sequence performed a cold reset or firmware update reset
         // we need to reload the firmware before proceeding to next sequence
