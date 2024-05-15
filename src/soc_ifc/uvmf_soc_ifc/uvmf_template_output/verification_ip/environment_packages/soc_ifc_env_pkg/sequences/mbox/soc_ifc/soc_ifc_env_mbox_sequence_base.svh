@@ -43,12 +43,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   rand bit retry_failed_reg_axs;
   bit mbox_sts_exp_error = 0; // Indicates this sequence will inject an error, which should manifest as a CMD_FAILURE response status
                               // TODO make this more comprehensive/intelligent about randomized error injection
-  enum bit [4:0] {
-      EXP_ERR_PROT,
-      EXP_ERR_ECC_UNC,
-      EXP_ERR_RSP_DLEN,
-      EXP_ERR_NONE
-  } mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
+  mbox_sts_exp_error_type_e mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
   int datain_ii = MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
                                      // evaluated against specific offsets for some error checking cases. So give it an
                                      // unambiguously invalid init value prior to use.

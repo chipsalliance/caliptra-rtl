@@ -38,6 +38,13 @@
     CPTRA_FAIL    = 5'b11111
   } op_sts_e;
 
+  typedef enum bit [4:0] {
+      EXP_ERR_PROT,
+      EXP_ERR_ECC_UNC,
+      EXP_ERR_RSP_DLEN,
+      EXP_ERR_NONE
+  } mbox_sts_exp_error_type_e; // Known error types to expect/handle from test sequences
+
   /**
    * Decode:
    *   [31]: Firmware command
