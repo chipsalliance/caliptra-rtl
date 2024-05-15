@@ -51,6 +51,10 @@ GCC:
  - G++ Used to compile Verilator objects and test firmware
    - `g++ (GCC) 11.2.0`
 
+RDC:
+ - Real Intent Meridian
+   - `2019.A.P16`
+
 RDL Compiler:
  - systemrdl-compiler==1.27.3
  - peakrdl-systemrdl==0.3.0
