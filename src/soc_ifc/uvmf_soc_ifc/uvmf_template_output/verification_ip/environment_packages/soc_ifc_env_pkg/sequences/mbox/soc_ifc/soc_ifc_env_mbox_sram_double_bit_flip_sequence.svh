@@ -101,7 +101,8 @@ class soc_ifc_env_mbox_sram_double_bit_flip_sequence extends soc_ifc_env_mbox_se
             set_mbox_sram_ecc_double_error_injection();
         end
     join
-    mbox_clr_execute();         if (rand_delay_en) do_rand_delay(1, step_delay);
+    clr_mbox_sram_ecc_error_injection();
+    mbox_clr_execute();
     mbox_teardown();
 
   endtask
@@ -110,10 +111,22 @@ endclass
 
 //==========================================
 // Task:        mbox_teardown
-// Description: At end-of-sequence, inject some stalls to allow
+// Description: At end-of-sequence, wait to allow
 //              uC to acquire lock and sanitize the mailbox
 //==========================================
 task soc_ifc_env_mbox_sram_double_bit_flip_sequence::mbox_teardown();
-    do_rand_delay(1, DLY_MEDIUM);
+    fork
+        begin: RAND_DLY
+        do_rand_delay(1, DLY_MEDIUM);
+        end
+        forever begin: WATCH_FOR_SANITIZE_OP
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            if((reg_model.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() == 1) &&
+               (reg_model.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value() == 0)) begin
+                mbox_sts_exp_error = 0;
+                break;
+            end
+        end
+    join_any
     super.mbox_teardown();
 endtask

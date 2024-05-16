@@ -317,7 +317,7 @@ bit first_transfer=1;
   mbox_sram_initiator_struct.ecc_double_bit_error = mbox_sram_req_i.we && proxy.configuration.inject_ecc_error[1];
   if (mbox_sram_initiator_struct.ecc_single_bit_error || mbox_sram_initiator_struct.ecc_double_bit_error) `uvm_info("MBOX_SRAM_DRIVER_BFM", "Injecting ECC bit flip", UVM_DEBUG)
   else if (mbox_sram_req_i.we)                                                                            `uvm_info("MBOX_SRAM_DRIVER_BFM", "Receiving SRAM write without ECC bit flip", UVM_DEBUG)
-  if (proxy.configuration.auto_clear_ecc_error_injection && |proxy.configuration.inject_ecc_error) begin
+  if (proxy.configuration.auto_clear_ecc_error_injection && |proxy.configuration.inject_ecc_error && mbox_sram_req_i.we) begin
       proxy.configuration.inject_ecc_error = 2'b00;
       `uvm_info("MBOX_SRAM_DRIVER_BFM", "Resetting inject_ecc_error value to 0", UVM_DEBUG)
   end

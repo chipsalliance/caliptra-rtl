@@ -241,8 +241,12 @@ uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_coun
         SEND_STDOUT_CTRL(0x1);
     }
     if (soc_ifc_mbox_acquire_lock(attempt_count) != 0) {
-        VPRINTF(ERROR, "ERROR: Failed to acquire lock for mbox sanitize operation\n");
-        return 1;
+        VPRINTF(WARNING, "Failed to acquire lock - mbox sanitize\n");
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        if (soc_ifc_mbox_acquire_lock(1) != 0) {
+            VPRINTF(FATAL, "FATAL: Failed to acquire lock after force unlock\n");
+            return 1;
+        }
     }
     for (uint32_t ii=0; ii < byte_count; ii+=4) {
         lsu_write_32(MBOX_DIR_BASE_ADDR+ii, 0x0);
