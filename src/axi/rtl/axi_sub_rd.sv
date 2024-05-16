@@ -1,0 +1,368 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+// -------------------------------------------------------------
+// AXI Read Subordinate
+// -------------------------------------------------------------
+// Description:
+//   Subordinate to convert AXI protocol reads into internal component accesses
+//
+// Limitations:
+//   - When multiple ID tracking is enabled, read responses are returned in the
+//     same order they are received, regardless of ID.
+//
+// -------------------------------------------------------------
+
+module axi_sub_rd import axi_pkg::*; #(
+    parameter AW = 32,         // Address Width
+    parameter DW = 32,         // Data Width
+              BC = DW/8,       // Byte Count
+              BW = $clog2(BC), // Byte count Width
+    parameter UW = 32,         // User Width
+    parameter IW = 1,          // ID Width
+              ID_NUM = 1 << IW, // Don't override
+
+    parameter EX_EN = 1,   // Enable exclusive access tracking w/ AxLOCK
+    parameter C_LAT = 0    // Component latency in clock cycles from (dv&&!hld) -> rdata
+                           // Must be const per component
+                           // For registers, typically 0
+                           // For SRAM, 1 or more
+) (
+    input clk,
+    input rst_n,
+
+    // AXI INF
+    axi_if.r_sub s_axi_if,
+
+    // Exclusive Access Signals
+    input  logic                      ex_clr,
+    input  logic         [IW    -1:0] ex_clr_id,
+    output logic         [ID_NUM-1:0] ex_active,
+    output var axi_ctx_t [ID_NUM-1:0] ex_ctx,
+
+    //COMPONENT INF
+    output logic          dv,
+    output logic [AW-1:0] addr, // Byte address
+    output logic [UW-1:0] user,
+    output logic          last, // Asserted with final 'dv' of a burst
+    input  logic          hld,
+    input  logic          err,
+
+    input  logic [DW-1:0] rdata // Integ requires: Component dwidth == AXI dwidth
+);
+
+    // --------------------------------------- //
+    // Localparams/Typedefs                    //
+    // --------------------------------------- //
+
+
+    // --------------------------------------- //
+    // Signals                                 //
+    // --------------------------------------- //
+
+    genvar cp; // Context pipeline
+    genvar dp; // Data pipeline
+    genvar ex; // Exclusive contexts
+
+    // Active transaction signals
+    // track requests as they are sent to component
+    axi_ctx_t            txn_ctx;
+    logic      [AW-1:0]  txn_addr_nxt;
+    logic      [   7:0]  txn_cnt; // Internal down-counter to track txn progress
+    logic                txn_active;
+    logic      [C_LAT:0] txn_rvalid;
+    xfer_ctx_t [C_LAT:0] txn_xfer_ctx;
+    logic                txn_final_beat;
+
+    // Data pipeline signals (skid buffer)
+    // track data after it is received from component
+    logic      [C_LAT+1:0] [DW-1:0] dp_rdata;
+    xfer_ctx_t [C_LAT+1:0]          dp_xfer_ctx;
+    logic      [C_LAT+1:0]          dp_rvalid;
+    logic      [C_LAT+1:0]          dp_rready;
+
+
+    // --------------------------------------- //
+    // Address Request I/F                     //
+    // --------------------------------------- //
+
+    assign s_axi_if.arready = !txn_active || txn_final_beat;
+
+    // Indicates there are still reqs to be issued towards component.
+    // This active signal deasserts after final dv to component, meaning data is
+    // still in flight from component->AXI for C_LAT clocks after deassertion
+    always@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            txn_active <= 1'b0;
+        end
+        else if (s_axi_if.arvalid) begin
+            txn_active <= 1'b1;
+        end
+        else if (txn_final_beat) begin
+            txn_active <= 1'b0;
+        end
+        else begin
+            txn_active <= txn_active;
+        end
+    end
+
+    // TODO reset?
+    always@(posedge clk/* or negedge rst_n*/) begin
+//        if (!rst_n) begin
+//            txn_ctx <= '{default:0};
+//        end
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
+            txn_ctx.addr  <= s_axi_if.araddr;
+            txn_ctx.burst <= s_axi_if.arburst;
+            txn_ctx.size  <= s_axi_if.arsize;
+            txn_ctx.len   <= s_axi_if.arlen ;
+            txn_ctx.user  <= s_axi_if.aruser;
+            txn_ctx.id    <= s_axi_if.arid  ;
+            txn_ctx.lock  <= s_axi_if.arlock;
+            txn_cnt       <= s_axi_if.arlen ;
+        end
+        else if (txn_rvalid[0]) begin
+            txn_ctx.addr  <= txn_addr_nxt;
+            txn_ctx.burst <= s_axi_if.arburst;
+            txn_ctx.size  <= s_axi_if.arsize;
+            txn_ctx.len   <= s_axi_if.arlen ;
+            txn_ctx.user  <= s_axi_if.aruser;
+            txn_ctx.id    <= s_axi_if.arid  ;
+            txn_ctx.lock  <= s_axi_if.arlock;
+            txn_cnt       <= |txn_cnt ? txn_cnt - 1 : txn_cnt; // Prevent underflow to 255 at end to reduce switching power. Extra logic cost worth it?
+        end
+        else begin
+            txn_ctx       <= txn_ctx;
+        end
+    end
+
+    // Only make the request to component if we have space in the pipeline to
+    // store the result (under worst-case AXI backpressure)
+    // To check this, look at the 'ready' output from the FINAL stage of the
+    // skidbuffer pipeline
+    always_comb dv = txn_active && dp_rready[C_LAT];
+    always_comb txn_rvalid[0] = dv && !hld;
+
+    // Asserts on the final beat of the COMPONENT INF which means it lags the
+    // final AXI beat by at least C_LAT clocks (or more depending on backpressure)
+    always_comb txn_final_beat = txn_rvalid[0] && txn_xfer_ctx[0].last;
+
+
+    // --------------------------------------- //
+    // Address Calculations                    //
+    // --------------------------------------- //
+    // Force aligned address to component
+    always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
+
+    // Use full address to calculate next address (in case of arsize < data width)
+    axi_addr #(
+        .AW  (AW),
+        .DW  (DW),
+        .LENB(8 )
+    ) i_axi_addr (
+        .i_last_addr(txn_ctx.addr ),
+        .i_size     (txn_ctx.size ), // 1b, 2b, 4b, 8b, etc
+        .i_burst    (txn_ctx.burst), // fixed, incr, wrap, reserved
+        .i_len      (txn_ctx.len  ),
+        .o_next_addr(txn_addr_nxt )
+    );
+
+
+    // --------------------------------------- //
+    // Request Context Pipeline                //
+    // --------------------------------------- //
+    always_comb begin
+        txn_xfer_ctx[0].id   = txn_ctx.id;
+        txn_xfer_ctx[0].user = txn_ctx.user;
+        txn_xfer_ctx[0].last = txn_cnt == 0;
+        txn_xfer_ctx[0].resp = (EX_EN && txn_ctx.lock && /*FIXME*/) ? AXI_RESP_EXOKAY : AXI_RESP_OKAY;
+    end
+
+    // Shift Register to track requests made to component
+    generate
+    if (C_LAT > 0) begin: TXN_SR
+        always@(posedge clk or negedge rst_n) begin
+            if (!rst_n) begin
+                txn_rvalid[C_LAT:1] <= C_LAT'(0);
+            end
+            else begin
+                txn_rvalid[C_LAT:1] <= txn_rvalid[C_LAT-1:0];
+            end
+        end
+
+        // Context is maintained alongside request while waiting for
+        // component response to arrive
+        if (C_LAT > 1) begin
+            for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
+                // No reset needed on data path -- txn_rvalid (control path) is reset
+                always@(posedge clk) begin
+                    txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
+                end
+            end: CTX_PIPELINE
+        end
+
+    end: TXN_SR
+    endgenerate
+
+
+    // --------------------------------------- //
+    // Exclusive Access Tracking               //
+    // --------------------------------------- //
+    generate
+        if (EX_EN) begin: EX_AXS_TRACKER
+            always@(posedge clk or negedge rst_n) begin
+                if (!rst_n) begin
+                    ex_active <= '0;
+                end
+                // give 'set' precedence over 'clr' in case of same ID
+                else if ((txn_rvalid[0] && txn_ctx.lock) && ex_clr) begin
+                    ex_active <= (ex_active & ~(1 << ex_clr_id)) |  (1 << txn_ctx.id);
+                end
+                else if (txn_rvalid[0] && txn_ctx.lock) begin
+                    ex_active <= ex_active;
+                end
+                else if (ex_clr) begin
+                    ex_active <= ex_active & ~(1 << ex_clr_id);
+                end
+                else begin
+                    ex_active <= ex_active;
+                end
+            end
+
+            for (ex = 0; ex < ID_NUM; ex++) begin: EX_CTX_TRACKER
+                // TODO: reset?
+                always@(posedge clk) begin
+                    if (txn_rvalid[0] && txn_ctx.lock && (txn_ctx.id == ex)) begin
+                        ex_ctx[ex] <= txn_ctx;
+                    end
+                    // Ignore the clear case, as ex_active is ctrl path
+                    //else if (ex_clr && (ex_clr_id == ex)) begin
+                    //end
+                    else begin
+                        ex_ctx[ex] <= ex_ctx[ex];
+                    end
+                end
+            end
+        end: EX_AXS_TRACKER
+        else begin: EX_UNSUPPORTED
+            for (ex = 0; ex < ID_NUM; ex++) begin: EX_SIG_0
+                always_comb begin
+                    ex_active[ex] = 1'b0;
+                    ex_ctx[ex]    = '{default:0};
+                end
+            end: EX_SIG_0
+        end: EX_UNSUPPORTED
+    endgenerate
+
+
+    // --------------------------------------- //
+    // Data/Response                           //
+    // --------------------------------------- //
+    always_comb dp_rvalid[0]   = txn_rvalid[C_LAT];
+    always_comb dp_rdata[0]    = rdata;
+    always_comb begin
+        dp_xfer_ctx[0].id   = txn_xfer_ctx[C_LAT].id;
+        dp_xfer_ctx[0].user = txn_xfer_ctx[C_LAT].user; // NOTE: Unused after it enters data pipeline
+        dp_xfer_ctx[0].resp = err   ? AXI_RESP_SLVERR :
+                              EX_EN ? txn_xfer_ctx[C_LAT].resp :
+                                      AXI_RESP_OKAY;
+        dp_xfer_ctx[0].last = txn_xfer_ctx[C_LAT].last;
+    end
+
+    generate
+        for (dp = 0; dp <= C_LAT; dp++) begin: DATA_PIPELINE
+            // skidbuffer instance to pipeline data payload + context to AXI,
+            // after response is received from component.
+            // This is necessary when there is latency from dv->rdata,
+            // because AXI R channel can be stalled by dropping rready,
+            // and we can't drop the data (which was requested N cycles ago)
+            skidbuffer #(
+                .OPT_LOWPOWER   (0   ),
+                .OPT_OUTREG     (0   ),
+                //
+                .OPT_PASSTHROUGH(0   ),
+                .DW             (DW + $bits(xfer_ctx_t)),
+                .OPT_INITIAL    (1'b1)
+            ) i_dp_skd (
+                .i_clk  (clk                ),
+                .i_reset(!rst_n             ),
+                .i_valid(dp_rvalid[dp]      ),
+                .o_ready(dp_rready[dp]      ),
+                .i_data ({dp_rdata[dp]
+                          dp_xfer_ctx[dp]}  ),
+                .o_valid(dp_rvalid[dp+1]    ),
+                .i_ready(dp_rready[dp+1]    ),
+                .o_data ({dp_rdata[dp+1],
+                          dp_xfer_ctx[dp+1]})
+            );
+
+        end: DATA_PIPELINE
+    endgenerate
+
+    always_comb dp_rready[C_LAT+1] = s_axi_if.rready;
+    always_comb begin
+        s_axi_if.rvalid = dp_rvalid[C_LAT+1];
+        s_axi_if.rdata  = dp_rdata[C_LAT+1];
+        s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
+        s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
+    end
+
+
+    // --------------------------------------- //
+    // Formal Properties                       //
+    // --------------------------------------- //
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARADDR , s_axi_if.araddr , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARBURST, s_axi_if.arburst, clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARSIZE , s_axi_if.arsize , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLEN  , s_axi_if.arlen  , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARUSER , s_axi_if.aruser , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARID   , s_axi_if.arid   , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLOCK , s_axi_if.arlock , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARVALID, s_axi_if.arvalid, clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARREADY, s_axi_if.arready, clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RDATA  , s_axi_if.rdata  , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RRESP  , s_axi_if.rresp  , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RID    , s_axi_if.rid    , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , s_axi_if.rlast  , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RVALID , s_axi_if.rvalid , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RREADY , s_axi_if.rready , clk, !rst_n)
+
+    `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && !$isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
+    // Exclusive access rules:
+    //   - Must have an address that is aligned to burst byte count
+    //   - Byte count must be power of 2 inside 1:128
+    //   - Max burst length = 16
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_UNALGN  , (s_axi_if.arvalid && s_axi_if.arlock) -> ~|s_axi_if.araddr[$clog2((1<<s_axi_if.arsize)*(s_axi_if.arlen+1))-1:0], clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_BYTE_CNT, (s_axi_if.arvalid && s_axi_if.arlock) -> ((1<<s_axi_if.arsize)*(s_axi_if.arlen+1) inside {1,2,4,8,16,32,64,128}), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_MAX_LEN,  (s_axi_if.arvalid && s_axi_if.arlock) -> (s_axi_if.arlen < 16), clk, !rst_n)
+
+    genvar sva_ii;
+    generate
+        if (C_LAT > 0) begin
+            for (sva_ii = 0; sva_ii < C_LAT; sva_ii++) begin
+                // Last stage should be first to fill and last to go empty
+                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF, dp_rready[sva_ii+1] && !dp_rready[sva_ii], clk, !rst_n)
+            end
+        end
+    endgenerate
+
+
+    // --------------------------------------- //
+    // Coverage                                //
+    // --------------------------------------- //
+
+
+endmodule
