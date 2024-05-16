@@ -1,0 +1,22 @@
+---
+provides: [axi_sub]
+schema_version: 2.4.0
+requires:
+  - libs
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_if.sv
+      - $COMPILE_ROOT/rtl/axi_pkg.sv
+      - $COMPILE_ROOT/rtl/axi_addr.v
+      - $COMPILE_ROOT/rtl/skidbuffer.v
+      - $COMPILE_ROOT/rtl/axi_sub_rd.sv
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_if.sv
+      - $COMPILE_ROOT/rtl/axi_pkg.sv
+      - $COMPILE_ROOT/rtl/axi_addr.v
+      - $COMPILE_ROOT/rtl/skidbuffer.v
+      - $COMPILE_ROOT/rtl/axi_sub_rd.sv
