@@ -170,6 +170,12 @@ Verilog file lists are generated via VCS and included in the config directory fo
 5. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
     - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
     - NOTE: TESTNAME may also be overridden in the makefile command line invocation, e.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=iccm_lock program.hex`
+    - NOTE: The following macro values should be overridden to match the value provided during Hardware compilation. Default values in the Makefile are shown with each macro:
+      - CALIPTRA_INTERNAL_QSPI=1
+      - CALIPTRA_INTERNAL_UART=1
+      - CALIPTRA_INTERNAL_I3C=0
+      - CALIPTRA_INTERNAL_TRNG=1
+      - E.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0 CALIPTRA_INTERNAL_TRNG=1 program.hex`
 6. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
 7. Copy the test generator scripts to the run output directory:
     - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
