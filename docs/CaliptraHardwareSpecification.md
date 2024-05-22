@@ -1493,6 +1493,8 @@ After programming the key vault read control, FW needs to query the associated k
 
 Similarly, after programming the key vault write control and initiating the cryptographic function that generates the key to be written, FW needs to query the associated key vault write status to confirm that the requested key was generated and written successfully.
 
+When a key is read from the keyvault, the API register will be locked and any result generated from the cryptographic block will not be readable by firmware. The digest can only be sent to the keyvault by appropriately programming the keyvault write controls. After the cryptographic block completes its operation, the lock will be cleared and the key will be cleared from the API registers. If a key is needed for multiple iterations of the cryptographic function, it will need to be read from the keyvault for each iteration ensuring that the lock is set and the digest will not be readable.
+
 The following tables describe read, write, and status values for key vault blocks.
 
 | KV Read Ctrl Reg     | Description                                                                                                                            |
