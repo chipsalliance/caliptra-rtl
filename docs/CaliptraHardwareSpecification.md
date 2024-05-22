@@ -1456,10 +1456,10 @@ FW must set a last cycle flag before running the last iteration of the SHA engin
 
 Key Vault (KV) is a register file that stores the keys to be used by the microcontroller, but this register file is not observed by the microcontroller. Each cryptographic function has a control register and functional block designed to read from and write to the KV.  
 
-| KV register                      | Description                                              |
-| :------------------------------- | :------------------------------------------------------- |
-| Key Control\[7:0\]               | 8 Control registers, 32 bits each                        |
-| Key Entry\[7:0\]\[15:0\]\[31:0\] | 8 Key entries, 512 bits each <br>No read or write access |
+| KV register                       | Description                                               |
+| :-------------------------------- | :-------------------------------------------------------- |
+| Key Control\[31:0\]               | 31 Control registers, 32 bits each                        |
+| Key Entry\[31:0\]\[11:0\]\[31:0\] | 31 Key entries, 384 bits each <br>No read or write access |
 
 ### Key vault functional block
 
@@ -1479,7 +1479,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Copy\[3\]                 | cptra_rst_b       | ENHANCEMENT: Setting the copy bit causes KV to copy the key to the entry written to Copy Dest field.                                                                                                    |
 | Copy Dest\[8:4\]          | cptra_rst_b       | ENHANCEMENT: Destination entry for the copy function.                                                                                                                                                   |
 | Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set. <br>\[0\] - HMAC KEY <br>\[1\] - HMAC BLOCK <br>\[2\] - SHA BLOCK <br>\[2\] - ECC PRIVKEY <br>\[3\] - ECC SEED <br>\[7:5\] - RSVD |
-| last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
+| last_dword\[20:19\]       | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
 ### Key vault cryptographic functional block  
 
