@@ -55,6 +55,7 @@ interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, param
     logic [DW/8-1:0]       wstrb;
     logic                  wvalid;
     logic                  wready;
+    logic                  wlast;
 
     // AXI B
     logic [1:0]            bresp;
@@ -100,6 +101,7 @@ interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, param
         output wstrb,
         output wvalid,
         input  wready,
+        output wlast,
         // B
         input  bresp,
         input  bid,
@@ -145,6 +147,7 @@ interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, param
         input  wstrb,
         input  wvalid,
         output wready,
+        input  wlast,
         // B
         output bresp,
         output bid,
