@@ -45,8 +45,13 @@ package axi_pkg;
     typedef struct packed {
         logic [IW-1:0] id;
         logic [UW-1:0] user;
-        logic [   1:0] resp;
+        axi_resp_e     resp;
         logic          last;
     } xfer_ctx_t;
+
+    typedef struct packed {
+        logic [AW-1:0] addr;
+        logic [AW-1:0] addr_mask;
+    } axi_ex_ctx_t;
 
 endpackage
