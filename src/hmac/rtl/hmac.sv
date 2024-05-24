@@ -104,8 +104,9 @@ module hmac
   logic [4:0] kv_block_write_offset;
   logic [31:0] kv_block_write_data;
   //KV Read Data Present
-  logic kv_read_data_present;
-  logic kv_read_data_present_set, kv_read_data_present_reset;
+  logic kv_key_data_present, kv_key_data_present_set;
+  logic [BLOCK_NUM_DWORDS-1:0] block_reg_lock, block_reg_lock_nxt;
+  logic kv_data_present, kv_data_present_set, kv_data_present_reset;
 
   logic dest_keyvault;
   kv_error_code_e kv_key_error, kv_block_error, kv_write_error;
@@ -178,7 +179,9 @@ module hmac
           tag_reg         <= '0;
           tag_valid_reg   <= '0;
           ready_reg       <= '0;
-          kv_read_data_present <= '0;
+          block_reg_lock  <= '0;
+          kv_key_data_present <= '0;
+          kv_data_present <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -186,7 +189,9 @@ module hmac
           tag_reg         <= '0;
           tag_valid_reg   <= '0;
           ready_reg       <= '0;
-          kv_read_data_present <= '0;
+          block_reg_lock  <= '0;
+          kv_key_data_present <= '0;
+          kv_data_present <= '0;
         end
       else
         begin
@@ -194,13 +199,16 @@ module hmac
           ready_reg     <= core_ready; 
 
           //write to sw register
-          if (core_tag_we & ~(dest_keyvault | kv_read_data_present))
+          if (core_tag_we & ~(dest_keyvault | kv_data_present))
             tag_reg <= core_tag;
-          if (core_tag_we & (dest_keyvault | kv_read_data_present))
+          if (core_tag_we & (dest_keyvault | kv_data_present))
             kv_reg <= core_tag;
 
-          kv_read_data_present <= kv_read_data_present_set ? '1 :
-                                  kv_read_data_present_reset ? '0 : kv_read_data_present;
+          block_reg_lock <= block_reg_lock_nxt;
+          kv_key_data_present <= kv_key_data_present_set ? '1 :
+                                 kv_data_present_reset ? '0 : kv_key_data_present;
+          kv_data_present <= kv_data_present_set ? '1 :
+                             kv_data_present_reset ? '0 : kv_data_present;
         end
     end // reg_update
 
@@ -229,14 +237,16 @@ always_comb begin
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset;
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset;
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_read_data_present_reset);
+    hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
-    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_read_data_present_reset;
+    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset;
+    hwif_in.HMAC384_KEY[dword].KEY.swwel = kv_key_data_present;
   end
   //set ready when keyvault isn't busy
   hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
@@ -271,14 +281,28 @@ always_comb begin
   end
 end
 
+//set the lock for the part of the block being written by KV logic
+//release the lock once init has been seen
+always_comb begin
+  for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
+    if (init_reg | next_reg) begin
+      block_reg_lock_nxt[dword] = '0;
+    end
+    else begin
+      block_reg_lock_nxt[dword] = (kv_block_write_en & (kv_block_write_offset == dword)) ? '1 : block_reg_lock[dword];
+    end
+  end
+end
+
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
 `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
 
 //Force result into KV reg whenever source came from KV
-always_comb kv_read_data_present_set = kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en;
-always_comb kv_read_data_present_reset = kv_read_data_present & core_tag_we;
+always_comb kv_key_data_present_set = kv_key_read_ctrl_reg.read_en;
+always_comb kv_data_present_set = kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en;
+always_comb kv_data_present_reset = kv_data_present & core_tag_we;
 
 // Register block
 hmac_reg i_hmac_reg (

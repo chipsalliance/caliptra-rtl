@@ -51,6 +51,7 @@ package ecc_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic swwe;
         logic hwclr;
     } ecc_reg__ECC_SEED__SEED__in_t;
 
@@ -147,6 +148,7 @@ package ecc_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic swwe;
         logic hwclr;
     } ecc_reg__ECC_PRIVKEY_IN__PRIVKEY_IN__in_t;
 

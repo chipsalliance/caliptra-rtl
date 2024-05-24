@@ -112,7 +112,7 @@ addrmap hmac_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input HMAC384 key field"; hwclr;} KEY[32] = 32'b0;
+        field {desc = "Input HMAC384 key field"; hwclr; swwel;} KEY[32] = 32'b0;
     
     } HMAC384_KEY[12] @0x00000040;
 
@@ -128,7 +128,7 @@ addrmap hmac_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
+        field {desc = "Input message block field"; hwclr; swwel;} BLOCK[32] = 32'b0;
     
     } HMAC384_BLOCK[32] @0x00000080;
 

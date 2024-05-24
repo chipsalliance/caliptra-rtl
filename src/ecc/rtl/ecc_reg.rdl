@@ -112,7 +112,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input seed field"; swwe = ecc_ready; hwclr;} SEED[32] = 32'b0;
+        field {desc = "Input seed field"; swwe; hwclr;} SEED[32] = 32'b0;
     
     } ECC_SEED[12] @0x00000080;
 
@@ -181,7 +181,7 @@ addrmap ecc_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Private key field"; swwe = ecc_ready; hwclr;} PRIVKEY_IN[32] = 32'b0;
+        field {desc = "Private key field"; swwe; hwclr;} PRIVKEY_IN[32] = 32'b0;
     
     } ECC_PRIVKEY_IN[12] @0x00000580;
 

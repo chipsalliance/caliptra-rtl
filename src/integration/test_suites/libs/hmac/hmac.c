@@ -54,6 +54,12 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
         lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                         ((key.kv_id << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
 
+        VPRINTF(LOW, "Try to Overwrite Key data in HMAC\n");
+        reg_ptr         = (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_0;
+        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_KEY_11) {
+            *reg_ptr++ = 0;
+        }
+
         // Check that HMAC KEY is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
@@ -73,6 +79,12 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
         // Program HMAC_BLOCK
         lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_EN_MASK |
                                                             ((block.kv_id << HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
+
+        VPRINTF(LOW, "Try to Overwrite Block data in HMAC\n");
+        reg_ptr         = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
+        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_31) {
+            *reg_ptr++ = 0;
+        }
 
         // Check that HMAC BLOCK is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
