@@ -47,10 +47,9 @@ module axi_sub_rd import axi_pkg::*; #(
     axi_if.r_sub s_axi_if,
 
     // Exclusive Access Signals
-    input  logic                      ex_clr,
-    input  logic         [IW    -1:0] ex_clr_id,
-    output logic         [ID_NUM-1:0] ex_active,
-    output var axi_ctx_t [ID_NUM-1:0] ex_ctx,
+    input  logic            [ID_NUM-1:0] ex_clr,
+    output logic            [ID_NUM-1:0] ex_active,
+    output var axi_ex_ctx_t [ID_NUM-1:0] ex_ctx,
 
     //COMPONENT INF
     output logic          dv,
@@ -60,7 +59,7 @@ module axi_sub_rd import axi_pkg::*; #(
     input  logic          hld,
     input  logic          err,
 
-    input  logic [DW-1:0] rdata // Integ requires: Component dwidth == AXI dwidth
+    input  logic [DW-1:0] rdata // Requires: Component dwidth == AXI dwidth
 );
 
     // --------------------------------------- //
@@ -103,7 +102,7 @@ module axi_sub_rd import axi_pkg::*; #(
     // Indicates there are still reqs to be issued towards component.
     // This active signal deasserts after final dv to component, meaning data is
     // still in flight from component->AXI for C_LAT clocks after deassertion
-    always@(posedge clk or negedge rst_n) begin
+    always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             txn_active <= 1'b0;
         end
@@ -119,11 +118,11 @@ module axi_sub_rd import axi_pkg::*; #(
     end
 
     // TODO reset?
-    always@(posedge clk/* or negedge rst_n*/) begin
+    always_ff@(posedge clk/* or negedge rst_n*/) begin
 //        if (!rst_n) begin
 //            txn_ctx <= '{default:0};
 //        end
-        else if (s_axi_if.arvalid && s_axi_if.arready) begin
+        if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_ctx.addr  <= s_axi_if.araddr;
             txn_ctx.burst <= s_axi_if.arburst;
             txn_ctx.size  <= s_axi_if.arsize;
@@ -135,12 +134,12 @@ module axi_sub_rd import axi_pkg::*; #(
         end
         else if (txn_rvalid[0]) begin
             txn_ctx.addr  <= txn_addr_nxt;
-            txn_ctx.burst <= s_axi_if.arburst;
-            txn_ctx.size  <= s_axi_if.arsize;
-            txn_ctx.len   <= s_axi_if.arlen ;
-            txn_ctx.user  <= s_axi_if.aruser;
-            txn_ctx.id    <= s_axi_if.arid  ;
-            txn_ctx.lock  <= s_axi_if.arlock;
+            txn_ctx.burst <= txn_ctx.burst;
+            txn_ctx.size  <= txn_ctx.size;
+            txn_ctx.len   <= txn_ctx.len ;
+            txn_ctx.user  <= txn_ctx.user;
+            txn_ctx.id    <= txn_ctx.id  ;
+            txn_ctx.lock  <= txn_ctx.lock;
             txn_cnt       <= |txn_cnt ? txn_cnt - 1 : txn_cnt; // Prevent underflow to 255 at end to reduce switching power. Extra logic cost worth it?
         end
         else begin
@@ -165,6 +164,7 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Force aligned address to component
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
+    always_comb user = txn_ctx.user;
 
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(
@@ -187,13 +187,13 @@ module axi_sub_rd import axi_pkg::*; #(
         txn_xfer_ctx[0].id   = txn_ctx.id;
         txn_xfer_ctx[0].user = txn_ctx.user;
         txn_xfer_ctx[0].last = txn_cnt == 0;
-        txn_xfer_ctx[0].resp = (EX_EN && txn_ctx.lock && /*FIXME*/) ? AXI_RESP_EXOKAY : AXI_RESP_OKAY;
+        txn_xfer_ctx[0].resp = (EX_EN && txn_ctx.lock) ? AXI_RESP_EXOKAY : AXI_RESP_OKAY;
     end
 
     // Shift Register to track requests made to component
     generate
     if (C_LAT > 0) begin: TXN_SR
-        always@(posedge clk or negedge rst_n) begin
+        always_ff@(posedge clk or negedge rst_n) begin
             if (!rst_n) begin
                 txn_rvalid[C_LAT:1] <= C_LAT'(0);
             end
@@ -207,7 +207,7 @@ module axi_sub_rd import axi_pkg::*; #(
         if (C_LAT > 1) begin
             for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
                 // No reset needed on data path -- txn_rvalid (control path) is reset
-                always@(posedge clk) begin
+                always_ff@(posedge clk) begin
                     txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
                 end
             end: CTX_PIPELINE
@@ -222,19 +222,36 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     generate
         if (EX_EN) begin: EX_AXS_TRACKER
-            always@(posedge clk or negedge rst_n) begin
+            // Exclusive access requires transaction LENGTH to be a power of 2,
+            // so an address mask may be prepared by assuming the AxLEN value has
+            // all consecutive LSB set to 1, then all 0's in higher order bits. After
+            // shifting by the width of the transaction (AxSIZE), this mask can be applied
+            // to AxADDR to give the aligned address relative to an exclusive access.
+            // 
+            logic [AW-1:0] addr_ex_algn_mask;
+            always_comb begin
+                case (BC) inside
+                    1:       addr_ex_algn_mask =  ~(AW'(txn_ctx.len));
+                    2:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[0];
+                    4:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
+                    8:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
+                    default: addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size;
+                endcase
+            end
+
+            always_ff@(posedge clk or negedge rst_n) begin
                 if (!rst_n) begin
                     ex_active <= '0;
                 end
                 // give 'set' precedence over 'clr' in case of same ID
-                else if ((txn_rvalid[0] && txn_ctx.lock) && ex_clr) begin
-                    ex_active <= (ex_active & ~(1 << ex_clr_id)) |  (1 << txn_ctx.id);
+                else if ((txn_rvalid[0] && txn_ctx.lock) && |ex_clr) begin
+                    ex_active <= (ex_active & ~ex_clr) | (1 << txn_ctx.id);
                 end
                 else if (txn_rvalid[0] && txn_ctx.lock) begin
-                    ex_active <= ex_active;
+                    ex_active <= ex_active | (1 << txn_ctx.id);
                 end
-                else if (ex_clr) begin
-                    ex_active <= ex_active & ~(1 << ex_clr_id);
+                else if (|ex_clr) begin
+                    ex_active <= ex_active & ~ex_clr;
                 end
                 else begin
                     ex_active <= ex_active;
@@ -243,12 +260,13 @@ module axi_sub_rd import axi_pkg::*; #(
 
             for (ex = 0; ex < ID_NUM; ex++) begin: EX_CTX_TRACKER
                 // TODO: reset?
-                always@(posedge clk) begin
+                always_ff@(posedge clk) begin
                     if (txn_rvalid[0] && txn_ctx.lock && (txn_ctx.id == ex)) begin
-                        ex_ctx[ex] <= txn_ctx;
+                        ex_ctx[ex].addr      <= txn_ctx.addr;
+                        ex_ctx[ex].addr_mask <= addr_ex_algn_mask;
                     end
-                    // Ignore the clear case, as ex_active is ctrl path
-                    //else if (ex_clr && (ex_clr_id == ex)) begin
+                    // Ignore the clear case, as ex_active is the ctrl path
+                    //else if (ex_clr[ex]) begin
                     //end
                     else begin
                         ex_ctx[ex] <= ex_ctx[ex];
@@ -300,7 +318,7 @@ module axi_sub_rd import axi_pkg::*; #(
                 .i_reset(!rst_n             ),
                 .i_valid(dp_rvalid[dp]      ),
                 .o_ready(dp_rready[dp]      ),
-                .i_data ({dp_rdata[dp]
+                .i_data ({dp_rdata[dp],
                           dp_xfer_ctx[dp]}  ),
                 .o_valid(dp_rvalid[dp+1]    ),
                 .i_ready(dp_rready[dp+1]    ),
@@ -314,6 +332,7 @@ module axi_sub_rd import axi_pkg::*; #(
     always_comb dp_rready[C_LAT+1] = s_axi_if.rready;
     always_comb begin
         s_axi_if.rvalid = dp_rvalid[C_LAT+1];
+        s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
         s_axi_if.rdata  = dp_rdata[C_LAT+1];
         s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
         s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
@@ -340,7 +359,7 @@ module axi_sub_rd import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RREADY , s_axi_if.rready , clk, !rst_n)
 
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
-    `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && !$isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && $isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
     // Exclusive access rules:
     //   - Must have an address that is aligned to burst byte count
     //   - Byte count must be power of 2 inside 1:128
