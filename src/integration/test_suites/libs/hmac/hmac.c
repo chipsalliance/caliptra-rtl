@@ -38,7 +38,7 @@ void hmac_zeroize(){
     lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, (1 << HMAC_REG_HMAC384_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC384_CTRL_ZEROIZE_MASK);
 }
 
-void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
+void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -117,7 +117,12 @@ void hmac_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag){
     }
 
     // Enable HMAC core
-    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    if (init) {
+        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    }
+    else {
+        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_NEXT_MASK);
+    }
 
     // wait for HMAC process to be done
     wait_for_hmac_intr();
