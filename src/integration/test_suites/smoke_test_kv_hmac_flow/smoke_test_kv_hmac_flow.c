@@ -149,7 +149,7 @@ void main() {
     hmac_key.kv_intf = TRUE;
     hmac_key.kv_id = hmackey_kv_id;
 
-    hmac_block.kv_intf = FALSE;
+    hmac_block.kv_intf = TRUE;
     hmac_block.kv_id = hmacblock_kv_id;
     hmac_block.data_size = 32;
     for (int i = 0; i < hmac_block.data_size; i++)
