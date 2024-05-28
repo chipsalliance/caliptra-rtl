@@ -169,7 +169,7 @@ module axi_sub_wr import axi_pkg::*; #(
             txn_allow     <= !EX_EN || !req_ctx.lock || (ex_active[req_ctx.id] && req_matches_ex);
             txn_err       <= 1'b0;
         end
-        else if (dv_pre && !hld) begin
+        else if (dv && !hld) begin
             txn_ctx.addr  <= txn_addr_nxt;
             txn_ctx.burst <= txn_ctx.burst;
             txn_ctx.size  <= txn_ctx.size;
@@ -284,9 +284,9 @@ module axi_sub_wr import axi_pkg::*; #(
     // requests are stalled (AWREADY=0) until this buffer is ready.
     always_comb begin
         rp_valid[0] = txn_final_beat;
-        rp_resp[0]  = txn_err || err            ? AXI_RESP_SLVERR :
-                      txn_ctx.lock && txn_allow ? AXI_RESP_EXOKAY :
-                                                  AXI_RESP_OKAY;
+        rp_resp[0]  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
+                      txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
+                                                      AXI_RESP_OKAY;
         rp_id[0]    = txn_ctx.id;
     end
 
