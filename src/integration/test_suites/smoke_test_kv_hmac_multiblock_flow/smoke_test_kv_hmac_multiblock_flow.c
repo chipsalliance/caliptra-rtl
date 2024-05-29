@@ -146,18 +146,18 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4}; 
 
-    uint32_t expected_tag[12] =    {0x70e4ff9f,
-                                    0x3e44b4b1,
-                                    0x0582fa61,
-                                    0xc78f154d,
-                                    0xc074433d,
-                                    0x2a5dea61,
-                                    0xdf378c49,
-                                    0x2a4d7748,
-                                    0x0cc51078,
-                                    0x9ec11eca,
-                                    0xfc996af4,
-                                    0x1b3c6c17}; 
+    uint32_t expected_tag[12] =    {0xd0a3c3b9,
+                                    0x9971a651,
+                                    0x73b83116,
+                                    0xaf89678f,
+                                    0x3fea4219,
+                                    0x40c8728b,
+                                    0x3496a9ed,
+                                    0x08479c4a,
+                                    0xeda828b6,
+                                    0x99929015,
+                                    0x68d2a9c8,
+                                    0xcbfd31b9}; 
 
     uint32_t expected_sign_r[] =   {0xB3F46F0A,
                                     0x732812F1,
