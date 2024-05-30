@@ -52,6 +52,7 @@ module axi_sub import axi_pkg::*; #(
     //COMPONENT INF
     output logic          dv,
     output logic [AW-1:0] addr, // Byte address
+    output logic          write,
     output logic [UW-1:0] user,
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
@@ -191,6 +192,7 @@ module axi_sub import axi_pkg::*; #(
         //COMPONENT INF
         .dv     (dv     ),
         .addr   (addr   ),
+        .write  (write  ),
         .user   (user   ),
         .id     (id     ),
         .wdata  (wdata  ),
