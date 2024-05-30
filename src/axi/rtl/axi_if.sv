@@ -16,7 +16,7 @@
 //      Signals for a standard AXI4 compliant interface
 //
 
-interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, parameter UW = 32);
+interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, parameter integer IW = 3, parameter integer UW = 32);
 
     import axi_pkg::*;
 
@@ -81,7 +81,7 @@ interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, param
         input  rid,
         input  rlast,
         input  rvalid,
-        output rready,
+        output rready
     );
 
     // Modport for write manager
@@ -127,7 +127,7 @@ interface axi_if #(parameter AW = 32, parameter DW = 32, parameter IW = 3, param
         output rid,
         output rlast,
         output rvalid,
-        input  rready,
+        input  rready
     );
 
     // Modport for write subordinate
