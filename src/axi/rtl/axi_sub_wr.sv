@@ -51,6 +51,7 @@ module axi_sub_wr import axi_pkg::*; #(
     output logic          dv,
     output logic [AW-1:0] addr, // Byte address
     output logic [UW-1:0] user,
+    output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
     output logic          last, // Asserted with final 'dv' of a burst
@@ -198,6 +199,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // Force aligned address to component
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
     always_comb user = txn_ctx.user;
+    always_comb id   = txn_ctx.id;
 
     // Use full address to calculate next address (in case of AxSIZE < data width)
     axi_addr #(
