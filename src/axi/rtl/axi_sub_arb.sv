@@ -65,6 +65,7 @@ module axi_sub_arb import axi_pkg::*; #(
     //COMPONENT INF
     output logic          dv,
     output logic [AW-1:0] addr, // Byte address
+    output logic          write,
     output logic [UW-1:0] user,
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
@@ -118,6 +119,7 @@ module axi_sub_arb import axi_pkg::*; #(
     always_comb begin
         dv      = r_dv || w_dv;
         addr    = r_win ? r_addr : w_addr;
+        write   = r_win ?      0 :      1;
         user    = r_win ? r_user : w_user;
         id      = r_win ? r_id   : w_id  ;
         last    = r_win ? r_last : w_last;
