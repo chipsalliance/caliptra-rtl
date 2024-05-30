@@ -56,6 +56,74 @@ _start:
    li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
    sw x1, 0(x3)
 
+    //SHA the entire mailbox
+    //Acquire SHA lock
+    li x3, CLP_SHA512_ACC_CSR_LOCK
+    lock_poll_loop4:
+        lw x5, 0(x3)
+        andi x5, x5, SHA512_ACC_CSR_LOCK_LOCK_MASK
+        bne x5, x0, lock_poll_loop4
+
+    //Set to Mailbox SHA384 Mode
+    li x3, CLP_SHA512_ACC_CSR_MODE
+    li x1, 0x00000006
+    sw x1, 0(x3)
+
+    // Load block from hw_data and write to Mailbox
+    li x3, CLP_SHA512_ACC_CSR_START_ADDRESS
+    li x4, CLP_SHA512_ACC_CSR_DLEN
+    // set t3 to constantly tracking current ptr
+    la t3, SHA384ExpRes
+    // x7 has the length in bytes
+    li x7, 0x20000
+    sw x7, 0(x4)
+
+    // Acquire lock before direct access to mailbox
+    li x3, CLP_MBOX_CSR_MBOX_LOCK
+    li x1, MBOX_CSR_MBOX_LOCK_LOCK_MASK
+    acquire_lock_loop2:
+        lw x5, 0(x3)
+        and x5, x5, x1
+        beq x5, x1, acquire_lock_loop2
+
+    // set execute
+    li x3, CLP_SHA512_ACC_CSR_EXECUTE
+    li x1, SHA512_ACC_CSR_EXECUTE_EXECUTE_MASK
+    sw x1, 0(x3)
+
+    // wait for SHA384 process
+    la x3, sha_intr_status
+    li x1, SHA512_ACC_CSR_STATUS_VALID_MASK
+    ready_loop4:
+        lw x5, 0(x3)
+        bne x5, x1, ready_loop4
+    sw x0, 0(x3) // clear status variable
+
+    // Read the data back from SHA Accelerator Digest register
+    li x3, CLP_SHA512_ACC_CSR_DIGEST_0
+    li x1, CLP_SHA512_ACC_CSR_DIGEST_11
+    read_result_loop4:
+        lw x5, 0(x3)
+        lw x7, 0(t3)
+        beq x5, x7, equal4
+        li x6, STDOUT
+        li x7, 0x01
+        sb x7, 0(x6)
+        equal4:
+            addi x3, x3, 4
+            addi t3, t3, 4
+            blt x3, x1, read_result_loop3
+
+    //Release SHA lock
+    li x3, CLP_SHA512_ACC_CSR_LOCK
+    li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
+    sw x1, 0(x3)
+
+    //Release MBOX lock
+    li x3, CLP_MBOX_CSR_MBOX_UNLOCK
+    li x1, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK
+    sw x1, 0(x3)
+
    //Acquire SHA lock
    li x3, CLP_SHA512_ACC_CSR_LOCK
    lock_poll_loop0:
@@ -344,9 +412,6 @@ _start:
         lw x5, 0(x3)
         bne x5, x1, ready_loop3
     sw x0, 0(x3) // clear status variable
-
-//    //add this to start gets us to the result
-//    add t3, t3, x7
 
     // Read the data back from SHA Accelerator Digest register
     li x3, CLP_SHA512_ACC_CSR_DIGEST_0
