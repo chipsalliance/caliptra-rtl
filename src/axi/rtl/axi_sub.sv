@@ -53,6 +53,7 @@ module axi_sub import axi_pkg::*; #(
     output logic          dv,
     output logic [AW-1:0] addr, // Byte address
     output logic [UW-1:0] user,
+    output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
     input  logic [DW-1:0] rdata, // Requires: Component dwidth == AXI dwidth
@@ -71,6 +72,7 @@ module axi_sub import axi_pkg::*; #(
     logic          r_dv;
     logic [AW-1:0] r_addr;  // Byte address
     logic [UW-1:0] r_user;
+    logic [IW-1:0] r_id;
     logic          r_last;  // Asserted with final 'dv' of a burst
     logic          r_hld;
     logic          r_err;
@@ -81,6 +83,7 @@ module axi_sub import axi_pkg::*; #(
     logic          w_dv;
     logic [AW-1:0] w_addr;  // Byte address
     logic [UW-1:0] w_user;
+    logic [IW-1:0] w_id;
     logic [DW-1:0] w_wdata; // Requires: Component dwidth == AXI dwidth
     logic [BC-1:0] w_wstrb; // Requires: Component dwidth == AXI dwidth
     logic          w_last;  // Asserted with final 'dv' of a burst
@@ -111,6 +114,7 @@ module axi_sub import axi_pkg::*; #(
         .dv   (w_dv   ),
         .addr (w_addr ),
         .user (w_user ),
+        .id   (w_id   ),
         .wdata(w_wdata),
         .wstrb(w_wstrb),
         .last (w_last ),
@@ -143,6 +147,7 @@ module axi_sub import axi_pkg::*; #(
         .dv   (r_dv   ),
         .addr (r_addr ),
         .user (r_user ),
+        .id   (r_id   ),
         .last (r_last ),
         .hld  (r_hld  ),
         .err  (r_err  ),
@@ -166,6 +171,7 @@ module axi_sub import axi_pkg::*; #(
         .r_dv   (r_dv   ),
         .r_addr (r_addr ),
         .r_user (r_user ),
+        .r_id   (r_id   ),
         .r_last (r_last ),
         .r_hld  (r_hld  ),
         .r_err  (r_err  ),
@@ -175,6 +181,7 @@ module axi_sub import axi_pkg::*; #(
         .w_dv   (w_dv   ),
         .w_addr (w_addr ),
         .w_user (w_user ),
+        .w_id   (w_id   ),
         .w_wdata(w_wdata),
         .w_wstrb(w_wstrb),
         .w_last (w_last ),
@@ -185,6 +192,7 @@ module axi_sub import axi_pkg::*; #(
         .dv     (dv     ),
         .addr   (addr   ),
         .user   (user   ),
+        .id     (id     ),
         .wdata  (wdata  ),
         .wstrb  (wstrb  ),
         .last   (last   ),
