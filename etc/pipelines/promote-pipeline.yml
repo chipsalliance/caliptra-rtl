@@ -249,7 +249,7 @@ stages:
           - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
 
           # Run synthesis on top level and exit after elaborate stage
-          - 'submit -i python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
+          - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
 
     post_test_steps:
       # If this pipeline was run to validate a GitHub Pull Request, finalize by
