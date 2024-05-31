@@ -312,10 +312,8 @@ module ecc_dsa_ctrl
 
     // read the registers written by sw
     always_comb begin
-        //Mask the command until keyvault data is written
-        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & 
-                {2{~kv_seed_data_present | kv_seed_ready}} & 
-                {2{~kv_key_data_present | kv_privkey_ready}};
+        //Mask the command if KV clients are not idle
+        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & {2{kv_seed_ready}} & {2{kv_privkey_ready}};
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
