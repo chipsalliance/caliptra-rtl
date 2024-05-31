@@ -224,8 +224,8 @@ always_comb begin
   hwif_in.HMAC384_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
 
   //assign hardware readable registers to drive hmac core
-  init_reg = hwif_out.HMAC384_CTRL.INIT.value;
-  next_reg = hwif_out.HMAC384_CTRL.NEXT.value;
+  init_reg = hwif_out.HMAC384_CTRL.INIT.value & (~kv_data_present | (kv_key_ready & kv_block_ready));
+  next_reg = hwif_out.HMAC384_CTRL.NEXT.value & (~kv_data_present | (kv_key_ready & kv_block_ready));
   zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
 
   //drive hardware writeable registers from hmac core

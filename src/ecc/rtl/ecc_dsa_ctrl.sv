@@ -312,7 +312,10 @@ module ecc_dsa_ctrl
 
     // read the registers written by sw
     always_comb begin
-        cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
+        //Mask the command until keyvault data is written
+        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & 
+                {2{~kv_seed_data_present | kv_seed_ready}} & 
+                {2{~kv_key_data_present | kv_privkey_ready}};
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
@@ -465,7 +468,7 @@ module ecc_dsa_ctrl
     end
     
 
-    always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |hwif_out.ECC_CTRL.CTRL.value;
+    always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
