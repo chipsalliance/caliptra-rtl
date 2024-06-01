@@ -344,21 +344,25 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Formal Properties                       //
     // --------------------------------------- //
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARADDR , s_axi_if.araddr , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARBURST, s_axi_if.arburst, clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARSIZE , s_axi_if.arsize , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLEN  , s_axi_if.arlen  , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARUSER , s_axi_if.aruser , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARID   , s_axi_if.arid   , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLOCK , s_axi_if.arlock , clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARVALID, s_axi_if.arvalid, clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARREADY, s_axi_if.arready, clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RDATA  , s_axi_if.rdata  , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RRESP  , s_axi_if.rresp  , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RID    , s_axi_if.rid    , clk, !rst_n)
-    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , s_axi_if.rlast  , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARADDR , (s_axi_if.arvalid ? s_axi_if.araddr  : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARBURST, (s_axi_if.arvalid ? s_axi_if.arburst : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARSIZE , (s_axi_if.arvalid ? s_axi_if.arsize  : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLEN  , (s_axi_if.arvalid ? s_axi_if.arlen   : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARUSER , (s_axi_if.arvalid ? s_axi_if.aruser  : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARID   , (s_axi_if.arvalid ? s_axi_if.arid    : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_ARLOCK , (s_axi_if.arvalid ? s_axi_if.arlock  : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RVALID , s_axi_if.rvalid , clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RREADY , s_axi_if.rready , clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RDATA  , (s_axi_if.rvalid ? s_axi_if.rdata : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RRESP  , (s_axi_if.rvalid ? s_axi_if.rresp : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RID    , (s_axi_if.rvalid ? s_axi_if.rid   : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , (s_axi_if.rvalid ? s_axi_if.rlast : '0), clk, !rst_n)
+
+    // Handshake rules
+    `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, s_axi_if.arvalid && !s_axi_if.arready => s_axi_if.arvalid, clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  s_axi_if.rvalid  && !s_axi_if.rready  => s_axi_if.rvalid,  clk, !rst_n)
 
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && $isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
