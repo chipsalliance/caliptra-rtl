@@ -20,9 +20,10 @@ module soc_ifc_top
     import soc_ifc_pkg::*;
     import soc_ifc_reg_pkg::*;
     #(
-     parameter APB_ADDR_WIDTH = 18
-    ,parameter APB_DATA_WIDTH = 32
-    ,parameter APB_USER_WIDTH = 32
+     parameter AXI_ADDR_WIDTH = 18
+    ,parameter AXI_DATA_WIDTH = 32
+    ,parameter AXI_ID_WIDTH   = 32
+    ,parameter AXI_USER_WIDTH = 32
     ,parameter AHB_ADDR_WIDTH = 18
     ,parameter AHB_DATA_WIDTH = 32
     )
@@ -49,16 +50,20 @@ module soc_ifc_top
     input logic BootFSM_BrkPoint,
     output logic [1:0][31:0] generic_output_wires,
 
-    //SoC APB Interface
-    input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
-    input logic                          psel_i,
-    input logic                          penable_i,
-    input logic                          pwrite_i,
-    input logic [APB_DATA_WIDTH-1:0]     pwdata_i,
-    input logic [APB_USER_WIDTH-1:0]     pauser_i,
-    output logic                         pready_o,
-    output logic [APB_DATA_WIDTH-1:0]    prdata_o,
-    output logic                         pslverr_o,
+    //SoC AXI Interface
+    axi_if.w_sub s_axi_w_if,
+    axi_if.r_sub s_axi_r_if,
+
+//    //SoC APB Interface
+//    input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
+//    input logic                          psel_i,
+//    input logic                          penable_i,
+//    input logic                          pwrite_i,
+//    input logic [APB_DATA_WIDTH-1:0]     pwdata_i,
+//    input logic [APB_USER_WIDTH-1:0]     pauser_i,
+//    output logic                         pready_o,
+//    output logic [APB_DATA_WIDTH-1:0]    prdata_o,
+//    output logic                         pslverr_o,
 
     //uC AHB Lite Interface
     input logic [AHB_ADDR_WIDTH-1:0]  haddr_i,
@@ -130,7 +135,7 @@ module soc_ifc_top
 //gasket to assemble mailbox request
 logic soc_req_dv, soc_req_hold;
 logic soc_req_error;
-logic [APB_DATA_WIDTH-1:0] soc_req_rdata;
+logic [AXI_DATA_WIDTH-1:0] soc_req_rdata;
 soc_ifc_req_t soc_req;
 
 //gasket to assemble mailbox request
@@ -168,7 +173,7 @@ logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
 mbox_sram_resp_t sha_sram_resp;
 logic sha_sram_hold;
 
-logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users;
+logic [4:0][AXI_ID_WIDTH-1:0] valid_mbox_ids;
 
 // Pulse signals to trigger interrupts
 logic uc_mbox_data_avail;
@@ -183,7 +188,7 @@ logic sram_double_ecc_error;
 logic soc_req_mbox_lock;
 logic [1:0] generic_input_toggle;
 mbox_protocol_error_t mbox_protocol_error;
-logic mbox_inv_user_p;
+logic mbox_inv_id_p;
 
 logic iccm_unlock;
 logic fw_upd_rst_executed;
@@ -224,8 +229,8 @@ logic t2_timeout_p;
 logic wdt_error_t1_intr_serviced;
 logic wdt_error_t2_intr_serviced;
 
-logic valid_trng_user;
-logic valid_fuse_user;
+logic valid_trng_id;
+logic valid_fuse_id;
 
 boot_fsm_state_e boot_fsm_ps;
 
@@ -260,42 +265,41 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
 always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we = fw_upd_rst_executed;
 always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.next = 1;
 
-//APB Interface
-//This module contains the logic for interfacing with the SoC over the APB Interface
-//The SoC sends read and write requests using APB Protocol
-//This wrapper decodes that protocol and issues requests to the arbitration block
-apb_slv_sif #(
-    .ADDR_WIDTH(APB_ADDR_WIDTH),
-    .DATA_WIDTH(APB_DATA_WIDTH),
-    .USER_WIDTH(APB_USER_WIDTH)
-)
-i_apb_slv_sif_soc_ifc (
-    //AMBA APB INF
-    .PCLK(soc_ifc_clk_cg),
-    .PRESETn(cptra_noncore_rst_b),
-    .PADDR(paddr_i),
-    .PPROT('0),
-    .PSEL(psel_i),
-    .PENABLE(penable_i),
-    .PWRITE(pwrite_i),
-    .PWDATA(pwdata_i),
-    .PAUSER(pauser_i),
+//AXI Interface
+//This module contains the logic for interfacing with the SoC over the AXI Interface
+//The SoC sends read and write requests using AXI Protocol
+//This wrapper decodes that protocol, collapses the full-duplex protocol to
+// simplex, and issues requests to the soc_ifc arbitration block
+axi_sub #(
+    .AW   (AXI_ADDR_WIDTH),
+    .DW   (AXI_DATA_WIDTH),
+    .UW   (AXI_USER_WIDTH),
+    .IW   (AXI_ID_WIDTH  ),
+    .EX_EN(0             ),
+    .C_LAT(0             )
+) i_axi_sub_sif_soc_ifc (
+    .clk  (soc_ifc_clk_cg     ),
+    .rst_n(cptra_noncore_rst_b),
 
-    .PREADY(pready_o),
-    .PSLVERR(pslverr_o),
-    .PRDATA(prdata_o),
+    // AXI INF
+    .s_axi_w_if(s_axi_w_if),
+    .s_axi_r_if(s_axi_r_if),
 
     //COMPONENT INF
-    .dv(soc_req_dv),
-    .req_hold(soc_req_hold),
+    .dv   (soc_req_dv   ),
+    .addr (soc_req.addr ), // Byte address
     .write(soc_req.write),
-    .user(soc_req.user),
-    .wdata(soc_req.wdata),
-    .addr(soc_req.addr),
-    .slverr(soc_req_error),
-    .rdata(soc_req_rdata)
+    .user (/*soc_req.user*/),
+    .id   (soc_req.id   ),
+    .wdata(soc_req.wdata), // Requires: Component dwidth == AXI dwidth
+    .wstrb(soc_req.wstrb), // Requires: Component dwidth == AXI dwidth
+    .rdata(soc_req_rdata), // Requires: Component dwidth == AXI dwidth
+    .last (             ), // Asserted with final 'dv' of a burst
+    .hld  (soc_req_hold ),
+    .err  (soc_req_error)
 );
-//req from apb is for soc always
+
+//req from axi is for soc always
 always_comb soc_req.soc_req = 1'b1;
 
 //AHB-Lite Interface
@@ -335,7 +339,8 @@ i_ahb_slv_sif_soc_ifc (
     .rdata(uc_req_rdata)
 );
 
-always_comb uc_req.user = '1;
+//always_comb uc_req.user = '1;
+always_comb uc_req.id = '1;
 always_comb uc_req.soc_req = 1'b0;
 
 //mailbox_arb
@@ -343,13 +348,13 @@ always_comb uc_req.soc_req = 1'b0;
 //Requests are serviced using round robin arbitration
 
 soc_ifc_arb #(
-    .APB_USER_WIDTH(APB_USER_WIDTH)
+    .AXI_ID_WIDTH(AXI_ID_WIDTH)
     )
     i_soc_ifc_arb (
     .clk(soc_ifc_clk_cg),
     .rst_b(cptra_noncore_rst_b),
-    .valid_mbox_users(valid_mbox_users),
-    .valid_fuse_user(valid_fuse_user),
+    .valid_mbox_ids(valid_mbox_ids),
+    .valid_fuse_id(valid_fuse_id),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -546,27 +551,27 @@ end
 
 always_comb scan_mode_p = scan_mode & ~scan_mode_f;
 
-//Filtering by PAUSER
+//Filtering by ID
 always_comb begin
     for (int i=0; i<5; i++) begin
         //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
-        //lock the writes to valid user field once lock is set
-        soc_ifc_reg_hwif_in.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value;
-        //If integrator set PAUSER values at integration time, pick it up from the define
-        valid_mbox_users[i] = CPTRA_SET_MBOX_PAUSER_INTEG[i] ? CPTRA_MBOX_VALID_PAUSER[i][APB_USER_WIDTH-1:0] : 
-                              soc_ifc_reg_hwif_out.CPTRA_MBOX_PAUSER_LOCK[i].LOCK.value ? 
-                              soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_PAUSER[i].PAUSER.value[APB_USER_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_PAUSER;
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_AXI_ID_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_AXI_ID_LOCK[i].LOCK.value;
+        //lock the writes to valid id field once lock is set
+        soc_ifc_reg_hwif_in.CPTRA_MBOX_VALID_AXI_ID[i].AXI_ID.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_AXI_ID_LOCK[i].LOCK.value;
+        //If integrator set AXI_ID values at integration time, pick it up from the define
+        valid_mbox_ids[i] = CPTRA_SET_MBOX_AXI_ID_INTEG[i] ? CPTRA_MBOX_VALID_AXI_ID[i][AXI_ID_WIDTH-1:0] : 
+                            soc_ifc_reg_hwif_out.CPTRA_MBOX_AXI_ID_LOCK[i].LOCK.value ? 
+                            soc_ifc_reg_hwif_out.CPTRA_MBOX_VALID_AXI_ID[i].AXI_ID.value[AXI_ID_WIDTH-1:0] : CPTRA_DEF_MBOX_VALID_AXI_ID;
     end
 end
 
-//can't write to trng valid user after it is locked
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+//can't write to trng valid id after it is locked
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_AXI_ID_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
 
-//fuse register pauser fields
-always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_VALID_PAUSER.PAUSER.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
-always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
+//fuse register AXI ID fields
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_AXI_ID_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
@@ -622,16 +627,16 @@ always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel = soc
 always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//When TRNG_PAUSER_LOCK is one only allow valid users to write to TRNG
-//If TRNG_PAUSER_LOCK is zero allow any user to write to TRNG
-always_comb valid_trng_user = soc_ifc_reg_req_data.soc_req & (~soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value | 
-                             (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]));
+//When TRNG_AXI_ID_LOCK is one only allow valid ids to write to TRNG
+//If TRNG_AXI_ID_LOCK is zero allow any id to write to TRNG
+always_comb valid_trng_id = soc_ifc_reg_req_data.soc_req & (~soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value | 
+                           (soc_ifc_reg_req_data.id == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value[AXI_ID_WIDTH-1:0]));
 
-always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = valid_trng_user;
+always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe = valid_trng_id;
 
 always_comb begin 
     for (int i = 0; i < 12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = valid_trng_user;
+        soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.swwe = valid_trng_id;
         soc_ifc_reg_hwif_in.CPTRA_TRNG_DATA[i].DATA.hwclr = soc_ifc_reg_hwif_out.CPTRA_TRNG_CTRL.clear.value;
     end
 end
@@ -640,11 +645,11 @@ end
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.hwclr = ~soc_ifc_reg_hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value;
 
 generate
-    if (CPTRA_SET_FUSE_PAUSER_INTEG) begin
-        always_comb valid_fuse_user = soc_req_dv & (soc_req.user == CPTRA_FUSE_VALID_PAUSER);
+    if (CPTRA_SET_FUSE_AXI_ID_INTEG) begin
+        always_comb valid_fuse_id = soc_req_dv & (soc_req.id == CPTRA_FUSE_VALID_AXI_ID);
     end else begin
-        always_comb valid_fuse_user = soc_req_dv & (~soc_ifc_reg_hwif_out.CPTRA_FUSE_PAUSER_LOCK.LOCK.value | 
-                                     (soc_req.user == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]));
+        always_comb valid_fuse_id = soc_req_dv & (~soc_ifc_reg_hwif_out.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value | 
+                                   (soc_req.id == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value[AXI_ID_WIDTH-1:0]));
     end
 endgenerate
 // Generate a pulse to set the interrupt bit
@@ -660,7 +665,7 @@ end
 always_comb uc_cmd_avail_p = uc_mbox_data_avail & !uc_mbox_data_avail_d;
 // Pulse input to soc_ifc_reg to set the interrupt status bit and generate interrupt output (if enabled)
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset           = 1'b0; // TODO
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset            = mbox_inv_user_p; // All invalid users, or only 'valid user but != mbox_user.user'?
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.hwset            = mbox_inv_id_p; // All invalid ids, or only 'valid id but != mbox_id.id'?
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.hwset           = |mbox_protocol_error; // Set by any protocol error violation (mirrors the bits in CPTRA_HW_ERROR_NON_FATAL)
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.hwset           = 1'b0; // TODO
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.hwset       = iccm_axs_blocked;
@@ -705,13 +710,13 @@ soc_ifc_reg i_soc_ifc_reg (
     .hwif_out(soc_ifc_reg_hwif_out)
 );
 
-//Mask read data to TRNG DATA when TRNG PAUSER is locked and the requester isn't the correct PAUSER
+//Mask read data to TRNG DATA when TRNG AXI_ID is locked and the requester isn't the correct AXI_ID
 always_comb begin
     soc_ifc_reg_rdata_mask = 0;
     for (int i = 0; i < 12; i++) begin
         soc_ifc_reg_rdata_mask |= soc_ifc_reg_req_data.soc_req & soc_ifc_reg_hwif_out.CPTRA_TRNG_DATA[i].DATA.swacc & 
-                                  soc_ifc_reg_hwif_out.CPTRA_TRNG_PAUSER_LOCK.LOCK.value &
-                                  (soc_ifc_reg_req_data.user != soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value[APB_USER_WIDTH-1:0]);
+                                  soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value &
+                                  (soc_ifc_reg_req_data.id != soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value[AXI_ID_WIDTH-1:0]);
     end
 end
 
@@ -786,7 +791,7 @@ assign timer_intr =  {soc_ifc_reg_hwif_out.internal_rv_mtime_h.count_h.value    
 
 //SHA Accelerator
 sha512_acc_top #(
-    .DATA_WIDTH(APB_DATA_WIDTH)
+    .DATA_WIDTH(AXI_DATA_WIDTH)
 )
 i_sha512_acc_top (
     .clk(soc_ifc_clk_cg),
@@ -839,7 +844,7 @@ i_mbox (
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
     .mbox_protocol_error(mbox_protocol_error),
-    .mbox_inv_pauser_axs(mbox_inv_user_p),
+    .mbox_inv_axi_id_axs(mbox_inv_id_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_reg(mbox_dmi_reg)
 );
@@ -989,6 +994,11 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
         cptra_uncore_dmi_reg_dout_access_f <= cptra_uncore_dmi_reg_en & ~cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT);
     end
 end
+
+`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
 
 `CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs

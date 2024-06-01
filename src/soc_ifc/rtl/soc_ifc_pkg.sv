@@ -22,6 +22,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_ADDR_W = 18;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
+    parameter SOC_IFC_ID_W   = 5;
     
     parameter MBOX_SIZE_KB = 128;
     parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
@@ -49,14 +50,14 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
 
-    //Valid PAUSER
-    //Lock the PAUSER values from integration time
-    parameter [4:0] CPTRA_SET_MBOX_PAUSER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-    parameter [4:0][31:0] CPTRA_MBOX_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-    parameter [31:0] CPTRA_DEF_MBOX_VALID_PAUSER  = 32'hFFFF_FFFF;
+    //Valid AXI_ID
+    //Lock the AXI_ID values from integration time
+    parameter [4:0] CPTRA_SET_MBOX_AXI_ID_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CPTRA_MBOX_VALID_AXI_ID = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+    parameter [31:0] CPTRA_DEF_MBOX_VALID_AXI_ID  = 32'hFFFF_FFFF;
 
-    parameter CPTRA_SET_FUSE_PAUSER_INTEG = 1'b0;
-    parameter [31:0] CPTRA_FUSE_VALID_PAUSER = 32'h0000_0000;
+    parameter CPTRA_SET_FUSE_AXI_ID_INTEG = 1'b0;
+    parameter [31:0] CPTRA_FUSE_VALID_AXI_ID = 32'h0000_0000;
 
     //DMI Register encodings
     //Read only registers
@@ -120,7 +121,8 @@ package soc_ifc_pkg;
     typedef struct packed {
         logic   [SOC_IFC_ADDR_W-1:0] addr;
         logic   [SOC_IFC_DATA_W-1:0] wdata;
-        logic   [SOC_IFC_USER_W-1:0] user;
+//        logic   [SOC_IFC_USER_W-1:0] user;
+        logic   [SOC_IFC_ID_W  -1:0] id;
         logic                        write;
         logic                        soc_req;
     } soc_ifc_req_t;
