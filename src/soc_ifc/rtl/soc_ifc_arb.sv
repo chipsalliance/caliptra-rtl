@@ -15,13 +15,13 @@
 module soc_ifc_arb 
     import soc_ifc_pkg::*;
     #(
-        parameter APB_USER_WIDTH = 32
+        parameter AXI_ID_WIDTH = 32
     )(
     input  logic clk,
     input  logic rst_b,
 
-    input logic [4:0][APB_USER_WIDTH-1:0] valid_mbox_users,
-    input logic valid_fuse_user,
+    input logic [4:0][AXI_ID_WIDTH-1:0] valid_mbox_ids,
+    input logic valid_fuse_id,
     //UC inf
     input  logic uc_req_dv,
     output logic uc_req_hold,
@@ -91,7 +91,7 @@ logic uc_mbox_req_ip;
 logic uc_reg_req_ip;
 logic uc_sha_req_ip;
 
-//filter mailbox requests by pauser
+//filter mailbox requests by id
 logic valid_mbox_req;
 
 
@@ -137,24 +137,24 @@ always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_S
 //SoC requests to mailbox
 always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
-//Ensure that requests to fuse block match the appropriate user value
+//Ensure that requests to fuse block match the appropriate id value
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
 always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}) &
-                                        (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_user));
+                                        (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_id));
 
 //Requests to SHA
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 
-//Check if SoC request is coming from a valid user
-//There are 5 valid pauser registers, check if user attribute matches any of them
-//Check if user matches Default Valid User parameter - this user value is always valid
+//Check if SoC request is coming from a valid id
+//There are 5 valid id registers, check if id attribute matches any of them
+//Check if id matches Default Valid id parameter - this id value is always valid
 always_comb begin
     valid_mbox_req = '0;
     for (int i=0; i < 5; i++) begin
-        valid_mbox_req |= soc_req_dv & (soc_req_data.user == valid_mbox_users[i]);
+        valid_mbox_req |= soc_req_dv & (soc_req_data.id == valid_mbox_ids[i]);
     end
-    valid_mbox_req |= soc_req_dv & (soc_req_data.user == CPTRA_DEF_MBOX_VALID_PAUSER);
+    valid_mbox_req |= soc_req_dv & (soc_req_data.id == CPTRA_DEF_MBOX_VALID_AXI_ID);
 end
 
 //check for collisions

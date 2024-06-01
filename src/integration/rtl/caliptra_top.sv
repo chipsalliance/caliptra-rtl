@@ -44,18 +44,9 @@ module caliptra_top
     output logic                       jtag_tdo,    // JTAG TDO
     output logic                       jtag_tdoEn,  // JTAG TDO enable
 
-    //APB Interface
-    input  logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR,
-    input  logic [2:0]                          PPROT,
-    input  logic                                PSEL,
-    input  logic                                PENABLE,
-    input  logic                                PWRITE,
-    input  logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA,
-    input  logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER,
-
-    output logic                                PREADY,
-    output logic                                PSLVERR,
-    output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
+    //SoC AXI Interface
+    axi_if.w_sub s_axi_w_if,
+    axi_if.r_sub s_axi_r_if,
 
     //QSPI Interface
     output logic                                qspi_clk_o,
@@ -1171,9 +1162,10 @@ uart #(
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-    .APB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
-    .APB_DATA_WIDTH(`CALIPTRA_APB_DATA_WIDTH),
-    .APB_USER_WIDTH(`CALIPTRA_APB_USER_WIDTH)
+    .AXI_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
+    .AXI_DATA_WIDTH(`CALIPTRA_AXI_DATA_WIDTH),
+    .AXI_ID_WIDTH  (`CALIPTRA_AXI_ID_WIDTH  ),
+    .AXI_USER_WIDTH(`CALIPTRA_AXI_USER_WIDTH)
     )
 soc_ifc_top1 
     (
@@ -1203,16 +1195,10 @@ soc_ifc_top1
     // RV ECC Status Interface
     .rv_ecc_sts(rv_ecc_sts),
 
-    //APB Interface with SoC
-    .paddr_i(PADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]),
-    .psel_i(PSEL),
-    .penable_i(PENABLE),
-    .pwrite_i(PWRITE),
-    .pwdata_i(PWDATA),
-    .pauser_i(PAUSER),
-    .pready_o(PREADY),
-    .prdata_o(PRDATA),
-    .pslverr_o(PSLVERR),
+    //SoC AXI Interface
+    .s_axi_w_if(s_axi_w_if),
+    .s_axi_r_if(s_axi_r_if),
+
     //AHB Interface with uC
     .haddr_i    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]), 
     .hwdata_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwdata), 
@@ -1320,18 +1306,5 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
-
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PADDR_X,        PADDR,                clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWDATA_X,       PWDATA,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWRITE_X,       PWRITE,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PREADY_X,       PREADY,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PENABLE_X,      PENABLE,              clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSEL_X,         PSEL,                 clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PPROT_X,        PPROT,                clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PAUSER_X,       PAUSER,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSLVERR_X,      PSLVERR,              clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PRDATA_X,       PREADY ? PRDATA : '0, clk, !cptra_rst_b)
-
-`CALIPTRA_ASSERT_NEVER(APB_MASTER_PPROT_ACTIVE,   PPROT !== 3'b000, clk, !cptra_rst_b)
 
 endmodule

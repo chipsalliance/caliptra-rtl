@@ -53,7 +53,7 @@ module mbox
     output logic soc_mbox_data_avail,
     output logic soc_req_mbox_lock,
     output mbox_protocol_error_t mbox_protocol_error,
-    output logic mbox_inv_pauser_axs,
+    output logic mbox_inv_axi_id_axs,
 
     //DMI reg access
     input logic dmi_inc_rdptr,
@@ -146,10 +146,10 @@ assign mbox_error = read_error | write_error;
 
 //Determine if this is a valid request from the requester side
 //1) uC requests are valid if uc has lock
-//2) SoC requests are valid if soc has lock and it's the user that locked it 
+//2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)));
+                               ( req_data.soc_req & soc_has_lock & (req_data.id == hwif_out.mbox_id.id.value)));
 
 //Determine if this is a valid request from the receiver side
 always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
@@ -162,7 +162,7 @@ always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
                                                  (~soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC)))));
 
 //We want to mask read data when
-//Invalid user is trying to access the mailbox data
+//Invalid ID is trying to access the mailbox data
 always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
@@ -191,7 +191,7 @@ always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 // Any register write or read by an INVALID agent results in the access
 // being silently dropped.
 // Assumption: uC (ROM, FMC, RT) will never make an invalid request.
-// NOTE: Any APB agent can trigger the error at any point during a uC->SOC flow
+// NOTE: Any AXI agent can trigger the error at any point during a uC->SOC flow
 //       by writing to mbox_status (since it's a valid_receiver).
 //       FIXED! valid_receiver is restricted by FSM state now.
 always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = (mbox_fsm_ps == MBOX_RDY_FOR_CMD) &&
@@ -340,7 +340,7 @@ always_comb begin : mbox_fsm_combo
             end
         end
         //uC set execute, data is for the SoC
-        //If we're here, restrict reading to the user that requested the data
+        //If we're here, restrict reading to the AXI ID that requested the data
         //Only SoC can read from mbox
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
@@ -379,10 +379,10 @@ always_comb begin : mbox_fsm_combo
     endcase
 end
 
-// Any ol' PAUSER is fine for reg-reads (except dataout)
-// NOTE: This only captures accesses by APB agents that are valid, but do not
+// Any ol' AXI_ID is fine for reg-reads (except dataout)
+// NOTE: This only captures accesses by AXI agents that are valid, but do not
 //       have lock. Invalid agent accesses are blocked by arbiter.
-assign mbox_inv_pauser_axs = req_dv && req_data.soc_req && !req_hold &&
+assign mbox_inv_axi_id_axs = req_dv && req_data.soc_req && !req_hold &&
                              !valid_requester && !valid_receiver &&
                              (req_data.write || hwif_out.mbox_dataout.dataout.swacc);
 
@@ -519,18 +519,18 @@ always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == 
 always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
-always_comb hwif_in.mbox_user.user.next = req_data.user;
+always_comb hwif_in.mbox_id.id.next = req_data.id;
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
 
 always_comb hwif_in.soc_req = req_data.soc_req;
-//check the requesting user:
+//check the requesting ID:
 //don't update mailbox data if lock hasn't been acquired
 //if uc has the lock, check that this request is from uc
-//if soc has the lock, check that this request is from soc and user attributes match
+//if soc has the lock, check that this request is from soc and ID attributes match
 always_comb hwif_in.valid_requester = valid_requester;
 always_comb hwif_in.valid_receiver = valid_receiver;
 
-//indicate that requesting user is setting the lock
+//indicate that requesting ID is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 
 //update dataout
