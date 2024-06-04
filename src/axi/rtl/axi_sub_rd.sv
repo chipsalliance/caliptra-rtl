@@ -171,8 +171,7 @@ module axi_sub_rd import axi_pkg::*; #(
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(
         .AW  (AW),
-        .DW  (DW),
-        .LENB(8 )
+        .DW  (DW)
     ) i_axi_addr (
         .i_last_addr(txn_ctx.addr ),
         .i_size     (txn_ctx.size ), // 1b, 2b, 4b, 8b, etc
