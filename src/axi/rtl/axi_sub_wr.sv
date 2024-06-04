@@ -133,7 +133,7 @@ module axi_sub_wr import axi_pkg::*; #(
 
     // Only accept request when we have a guaranteed slot in the response buffer
     // to put the response
-    assign req_ready = (!txn_active || (txn_final_beat && !s_axi_if.bvalid)) && rp_ready[0];
+    assign req_ready = (!txn_active || (txn_final_beat && !s_axi_if.bvalid)) && rp_ready;
 
     // Indicates there are still reqs to be issued towards component.
     // This active signal deasserts after final dv to component
@@ -285,7 +285,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // There is guaranteed to be space in the skid buffer because new
     // requests are stalled (AWREADY=0) until this buffer is ready.
     always_comb begin
-        rp_valid[0] = txn_final_beat;
+        rp_valid    = txn_final_beat;
         rp_resp[0]  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
                       txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
                                                       AXI_RESP_OKAY;
@@ -302,8 +302,8 @@ module axi_sub_wr import axi_pkg::*; #(
     ) i_rsp_skd (
         .i_clk  (clk             ),
         .i_reset(!rst_n          ),
-        .i_valid(rp_valid[0]     ),
-        .o_ready(rp_ready[0]     ),
+        .i_valid(rp_valid        ),
+        .o_ready(rp_ready        ),
         .i_data ({rp_resp[0],
                   rp_id[0]}      ),
         .o_valid(s_axi_if.bvalid ),
