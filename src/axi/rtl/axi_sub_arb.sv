@@ -113,7 +113,7 @@ module axi_sub_arb import axi_pkg::*; #(
 //            3'b111: r_win = 1;
 //        endcase
         if (r_pri) r_win = r_dv || !w_dv;
-        else       r_win = w_dv || !r_dv;
+        else       r_win = r_dv && !w_dv;
     end
 
     always_comb begin
