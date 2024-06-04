@@ -107,7 +107,7 @@ caliptra_release_v$(today)_0.zip: $(TEST_DIR)/$(TESTNAME)
 	  fi
 	done
 	if [[ $${found} -eq 1 ]]; then
-	  wget --no-use-server-timestamps $${full_path}
+	  wget --no-hsts --no-use-server-timestamps $${full_path}
 	else
 	  exit 1
 	fi
