@@ -204,8 +204,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // Use full address to calculate next address (in case of AxSIZE < data width)
     axi_addr #(
         .AW  (AW),
-        .DW  (DW),
-        .LENB(8 )
+        .DW  (DW)
     ) i_axi_addr (
         .i_last_addr(txn_ctx.addr ),
         .i_size     (txn_ctx.size ), // 1b, 2b, 4b, 8b, etc
@@ -285,11 +284,11 @@ module axi_sub_wr import axi_pkg::*; #(
     // There is guaranteed to be space in the skid buffer because new
     // requests are stalled (AWREADY=0) until this buffer is ready.
     always_comb begin
-        rp_valid    = txn_final_beat;
-        rp_resp[0]  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
-                      txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
-                                                      AXI_RESP_OKAY;
-        rp_id[0]    = txn_ctx.id;
+        rp_valid = txn_final_beat;
+        rp_resp  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
+                   txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
+                                                   AXI_RESP_OKAY;
+        rp_id    = txn_ctx.id;
     end
 
     skidbuffer #(
@@ -304,8 +303,8 @@ module axi_sub_wr import axi_pkg::*; #(
         .i_reset(!rst_n          ),
         .i_valid(rp_valid        ),
         .o_ready(rp_ready        ),
-        .i_data ({rp_resp[0],
-                  rp_id[0]}      ),
+        .i_data ({rp_resp,
+                  rp_id}         ),
         .o_valid(s_axi_if.bvalid ),
         .i_ready(s_axi_if.bready ),
         .o_data ({s_axi_if.bresp,
