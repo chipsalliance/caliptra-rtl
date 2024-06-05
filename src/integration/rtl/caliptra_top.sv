@@ -269,6 +269,12 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
+    logic hmac_busy, ecc_busy, doe_busy;
+    logic crypto_error;
+
+    always_comb crypto_error = (hmac_busy & ecc_busy) |
+                               (ecc_busy & doe_busy)  |
+                               (hmac_busy & doe_busy);
 
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -824,6 +830,7 @@ doe_ctrl #(
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
     .clear_obf_secrets(clear_obf_secrets), //Output
+    .busy_o(doe_busy),
     .kv_write (kv_write[KV_NUM_WRITE-1]),
     .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
@@ -855,7 +862,7 @@ ecc_top1
     .kv_write        (kv_write[2]),
     .kv_wr_resp      (kv_wr_resp[2]),
     .pcr_signing_data(pcr_signing_data),
-
+    .busy_o          (ecc_busy),
     .error_intr      (ecc_error_intr),
     .notif_intr      (ecc_notif_intr),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
@@ -882,7 +889,7 @@ hmac_ctrl #(
      .kv_write      (kv_write[0]),
      .kv_rd_resp    (kv_rd_resp[1:0]),
      .kv_wr_resp    (kv_wr_resp[0]),
-
+     .busy_o        (hmac_busy),
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
@@ -1251,7 +1258,8 @@ soc_ifc_top1
     .clk_gating_en(clk_gating_en),
     .rdc_clk_dis(rdc_clk_dis),
     .fw_update_rst_window(fw_update_rst_window),
-
+    //multiple cryptos operating at once, assert fatal error
+    .crypto_error(crypto_error),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en   ( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

@@ -117,6 +117,8 @@ module soc_ifc_top
     output logic rdc_clk_dis,
     output logic fw_update_rst_window,
 
+    input logic crypto_error,
+
     //caliptra uncore jtag ports
     input  logic                            cptra_uncore_dmi_reg_en,
     input  logic                            cptra_uncore_dmi_reg_wr_en,
@@ -915,16 +917,19 @@ wdt i_wdt (
 // Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
 // Also calculate whether or not an unmasked event is being set, so we can
 // trigger the SOC interrupt signal
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we = crypto_error;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
 // Using we+next instead of hwset allows us to encode the reserved fields in some fashion
 // other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next = 1'b1;
 // Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
-always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next) ||
+always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next) ||
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin     .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next);
 

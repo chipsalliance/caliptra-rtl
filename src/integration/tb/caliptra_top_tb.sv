@@ -256,6 +256,9 @@ module caliptra_top_tb (
             else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_LOW]) begin
                 generic_input_wires <= {32'h0, NMI_FATAL_OBSERVED};
             end
+            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW]) begin
+                generic_input_wires <= {32'h0, CRYPTO_ERROR_OBSERVED};
+            end
             else begin
                 generic_input_wires <= {32'h0, ERROR_NONE_SET};
             end

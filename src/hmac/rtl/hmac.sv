@@ -49,6 +49,8 @@ module hmac
         input kv_rd_resp_t [1:0] kv_rd_resp,
         input kv_wr_resp_t kv_wr_resp,
 
+        output logic busy_o,
+
         output wire error_intr,
         output wire notif_intr,
         input logic debugUnlock_or_scan_mode_switch
@@ -240,13 +242,13 @@ always_comb begin
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset;
+    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
     hwif_in.HMAC384_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
     hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
-    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset;
+    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
     hwif_in.HMAC384_KEY[dword].KEY.swwel = kv_key_data_present;
   end
   //set ready when keyvault isn't busy
@@ -420,6 +422,8 @@ hmac_result_kv_write
   .kv_ready(kv_write_ready),
   .dest_done(kv_write_done)
 );
+
+always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready;
 
 endmodule // hmac
 

@@ -79,6 +79,8 @@ module ecc_dsa_ctrl
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
 
+    output logic busy_o,
+
     // Interrupts (from ecc_reg)
     output logic error_intr,
     output logic notif_intr,
@@ -379,7 +381,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = dsa_ready_reg & ~kv_key_data_present;
         end 
 
@@ -394,7 +396,7 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset;
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
             hwif_in.ECC_SEED[dword].SEED.swwe  = dsa_ready_reg & ~kv_seed_data_present;
         end
 
@@ -914,5 +916,7 @@ module ecc_dsa_ctrl
         .kv_ready(kv_write_ready),
         .dest_done(kv_write_done)
     );
+
+always_comb busy_o = ~dsa_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
 
 endmodule

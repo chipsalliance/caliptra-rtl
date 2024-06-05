@@ -56,6 +56,8 @@ module hmac_ctrl
     input kv_rd_resp_t [1:0] kv_rd_resp,
     input kv_wr_resp_t kv_wr_resp,
 
+    output logic busy_o,
+
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
@@ -90,6 +92,7 @@ module hmac_ctrl
         .kv_wr_resp(kv_wr_resp),
         .error_intr(error_intr),
         .notif_intr(notif_intr),
+        .busy_o(busy_o),
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 

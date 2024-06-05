@@ -23,10 +23,11 @@ reg {
             the bit in this register will not cause the interrupt to deassert.
             Only a Caliptra reset will clear the fatal error interrupt.
             [br]Caliptra Access: RW1C
-            [br]SOC Access:      RW1C";
+            [br]SOC Access:      RW1C";  
     rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
     rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
+    rw_rw_sticky_hw crypto_err=0;       /* Crypto parallell operation error No Mask */ 
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";

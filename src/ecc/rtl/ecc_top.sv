@@ -56,6 +56,8 @@ module ecc_top
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
 
+    output logic busy_o,
+
     output logic error_intr,
     output logic notif_intr,
     input  logic debugUnlock_or_scan_mode_switch
@@ -148,6 +150,8 @@ module ecc_top
         .kv_wr_resp(kv_wr_resp),
         .pcr_signing_data(pcr_signing_data),
         
+        .busy_o(busy_o),
+
         .error_intr(error_intr),
         .notif_intr(notif_intr),
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
