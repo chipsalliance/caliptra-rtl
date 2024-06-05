@@ -209,6 +209,7 @@ import uvmf_base_pkg_hdl::*;
         // NMI Vector 
         .nmi_vector(cptra_status_agent_bus.nmi_vector),
         .nmi_intr(cptra_status_agent_bus.nmi_intr),
+        .crypto_error('0),
         // ICCM Lock
         .iccm_lock(cptra_status_agent_bus.iccm_lock),
         .iccm_axs_blocked(cptra_ctrl_agent_bus.iccm_axs_blocked),
