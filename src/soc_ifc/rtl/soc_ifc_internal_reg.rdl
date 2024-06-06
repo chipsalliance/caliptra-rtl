@@ -85,7 +85,7 @@ reg {
     rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
     rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
-    ro_ro    mask_crypto_err=0;       /* Crypto parallell operation error No Mask  */
+    ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error No Mask */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";
