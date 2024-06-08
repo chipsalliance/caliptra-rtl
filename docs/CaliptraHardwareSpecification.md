@@ -1585,10 +1585,10 @@ Data vault is a set of generic scratch pad registers with specific lock function
 
 The following table describes cryptographic errors. 
 
-| Errors     | Error type         | Description                                                                                                                                               |
-| :--------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ECC_R_ZERO | HW_ERROR_NON_FATAL | Indicates a non-fatal error in ECC signing if the computed signature R is equal to 0. FW should change the message or privkey to perform a valid signing. |
-| CRYPTO_ERROR | HW_ERROR_FATAL | Indicates a fatal error due to multiple crypto operations occurring at once. FW must only operate one crypto engine at a |
+| Errors       | Error type         | Description                                                                                                                                               |
+| :----------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ECC_R_ZERO   | HW_ERROR_NON_FATAL | Indicates a non-fatal error in ECC signing if the computed signature R is equal to 0. FW should change the message or privkey to perform a valid signing. |
+| CRYPTO_ERROR | HW_ERROR_FATAL     | Indicates a fatal error due to multiple cryptographic operations occurring simultaneously. FW must only operate one cryptographic engine at a time.       |
 
 # Terminology
 
