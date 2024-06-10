@@ -791,12 +791,16 @@ import soc_ifc_pkg::*;
    );
 
    logic cptra_dmi_reg_en_jtag_acccess_allowed, cptra_dmi_reg_wr_en_jtag_acccess_allowed, cptra_jtag_access_allowed;
-  
+   logic veer_dmi_reg_en_jtag_acccess_allowed, veer_dmi_reg_wr_en_jtag_acccess_allowed, veer_jtag_access_allowed;
+
    // reg enable towards core is not enabled unless it is equal to or less than 0x4F - as in 0x50 to 0x7F are not routed
    // Core tap reg aperture is 0x0 to 0x4F and uncore is 0x50 to 0x7F
    assign cptra_uncore_tap_aperture = (dmi_reg_addr[6] & (dmi_reg_addr[5] | dmi_reg_addr[4]));
 
-   // All JTAG accesses are blocked unless debug mode or manufacturing mode is enabled
+   // JTAG Accesses are permissable to VeeR aperture only when debug is unlocked
+   assign veer_jtag_access_allowed = ~(cptra_security_state_Latched.debug_locked); 
+
+   // Cptra JTAG accesses are blocked unless debug mode or manufacturing mode is enabled
    // JTAG access is allowed if Caliptra is in debug or manuf mode (driven by SOC security_state inputs) when caliptra reset is deasserted
    // Any change to debug or manuf mode bits after Caliptra reset is deasserted will keep JTAG locked.
    assign cptra_jtag_access_allowed = ~(cptra_security_state_Latched.debug_locked) | 
@@ -804,12 +808,16 @@ import soc_ifc_pkg::*;
 
    assign cptra_dmi_reg_en_jtag_acccess_allowed    = dmi_reg_en_preQ & cptra_jtag_access_allowed;
    assign cptra_dmi_reg_wr_en_jtag_acccess_allowed = dmi_reg_wr_en_preQ & cptra_jtag_access_allowed;
+
+   assign veer_dmi_reg_en_jtag_acccess_allowed     = dmi_reg_en_preQ & veer_jtag_access_allowed;
+   assign veer_dmi_reg_wr_en_jtag_acccess_allowed  = dmi_reg_wr_en_preQ & veer_jtag_access_allowed;
+
    assign cptra_dmi_reg_en_preQ                    = dmi_reg_en_preQ;
 
    // Driving core vs uncore enables based on the right aperture
-   assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_en_jtag_acccess_allowed;
+   assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : veer_dmi_reg_en_jtag_acccess_allowed;
    assign cptra_uncore_dmi_reg_en    = cptra_uncore_tap_aperture ? cptra_dmi_reg_en_jtag_acccess_allowed    : '0;
-   assign dmi_reg_wr_en              = cptra_uncore_tap_aperture ? '0                                       : cptra_dmi_reg_wr_en_jtag_acccess_allowed;
+   assign dmi_reg_wr_en              = cptra_uncore_tap_aperture ? '0                                       : veer_dmi_reg_wr_en_jtag_acccess_allowed;
    assign cptra_uncore_dmi_reg_wr_en = cptra_uncore_tap_aperture ? cptra_dmi_reg_wr_en_jtag_acccess_allowed : '0;
 
    // Qualified read data from core vs uncore

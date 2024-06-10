@@ -30,12 +30,14 @@
     covergroup soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg with function sample(
     input bit [1-1:0] iccm_ecc_unc,
     input bit [1-1:0] dccm_ecc_unc,
-    input bit [1-1:0] nmi_pin
+    input bit [1-1:0] nmi_pin,
+    input bit [1-1:0] crypto_err
     );
         option.per_instance = 1;
         iccm_ecc_unc_cp : coverpoint iccm_ecc_unc;
         dccm_ecc_unc_cp : coverpoint dccm_ecc_unc;
         nmi_pin_cp : coverpoint nmi_pin;
+        crypto_err_cp : coverpoint crypto_err;
 
     endgroup
 
@@ -1386,13 +1388,15 @@
     covergroup soc_ifc_reg__internal_hw_error_fatal_mask_fld_cg with function sample(
     input bit [1-1:0] mask_iccm_ecc_unc,
     input bit [1-1:0] mask_dccm_ecc_unc,
-    input bit [1-1:0] mask_nmi_pin
+    input bit [1-1:0] mask_nmi_pin,
+    input bit [1-1:0] mask_crypto_err
     );
         option.per_instance = 1;
         option.auto_bin_max = 64;
         mask_iccm_ecc_unc_cp : coverpoint mask_iccm_ecc_unc;
         mask_dccm_ecc_unc_cp : coverpoint mask_dccm_ecc_unc;
         mask_nmi_pin_cp : coverpoint mask_nmi_pin;
+        mask_crypto_err_cp : coverpoint mask_crypto_err {illegal_bins ro_value = {1};}
 
     endgroup
 
