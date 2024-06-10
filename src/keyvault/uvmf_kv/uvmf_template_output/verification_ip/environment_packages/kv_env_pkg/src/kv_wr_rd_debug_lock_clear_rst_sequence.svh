@@ -135,7 +135,7 @@ class kv_wr_rd_debug_lock_clear_rst_sequence #(
         //Set each CTRL reg with random lock data
         for(write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
             // Construct the transaction
-            lock_data = 'h3; //$urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+            lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together //3
             reg_model.kv_reg_rm.KEY_CTRL[write_entry].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
             assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry))
         end

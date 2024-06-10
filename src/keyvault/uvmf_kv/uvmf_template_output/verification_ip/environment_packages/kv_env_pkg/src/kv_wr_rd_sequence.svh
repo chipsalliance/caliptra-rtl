@@ -112,6 +112,7 @@ class kv_wr_rd_sequence #(
                 else
                     `uvm_error("KV WR RD", "kv_ecc_privkey_read_agent_config.sequencer is null!");
             end
+        join
             begin
                 if(configuration.kv_doe_write_agent_config.sequencer != null)
                     repeat(10) begin
@@ -121,6 +122,7 @@ class kv_wr_rd_sequence #(
                 else
                     `uvm_error("KV WR RD", "kv_doe_write_agent_config.sequencer is null!");
             end
+        fork
             begin
                 if(configuration.kv_sha512_write_agent_config.sequencer != null)
                     repeat(10) begin
@@ -136,6 +138,8 @@ class kv_wr_rd_sequence #(
                 else
                     `uvm_error("KV WR RD", "kv_hmac_block_read_agent_config.sequencer is null!");
             end
+        join
+        fork
             begin
                 if(configuration.kv_hmac_write_agent_config.sequencer != null)
                     repeat(10) begin
