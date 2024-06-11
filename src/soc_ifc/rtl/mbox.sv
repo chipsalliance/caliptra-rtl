@@ -221,7 +221,7 @@ always_comb arc_MBOX_EXECUTE_SOC_MBOX_ERROR  = (mbox_fsm_ps == MBOX_EXECUTE_SOC)
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
 always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW[DEPTH_LOG2:0] :
-                               DEPTH_LOG2'(hwif_out.mbox_dlen.length.value >> 2) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
+                               (hwif_out.mbox_dlen.length.value[DEPTH_LOG2+2:2]) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
 //this avoids a case where a sender writes less than programmed and the receiver can read beyond that
 //if the mailbox is full (flag set when writing last entry), always take the programmed dlen

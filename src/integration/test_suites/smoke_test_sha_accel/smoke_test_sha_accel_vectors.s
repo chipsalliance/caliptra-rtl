@@ -15,56 +15,20 @@
  */
 .section .dccm
 hw_data:
-// start of input message
-.word 0x61626380
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000018
+SHA384ExpRes:
 // expected value
-.word 0xDDAF35A1
-.word 0x93617ABA
-.word 0xCC417349
-.word 0xAE204131
-.word 0x12E6FA4E
-.word 0x89A97EA2
-.word 0x0A9EEEE6
-.word 0x4B55D39A
-.word 0x2192992A
-.word 0x274FC1A8
-.word 0x36BA3C23
-.word 0xA3FEEBBD
-.word 0x454D4423
-.word 0x643CE80E
-.word 0x2A9AC94F
-.word 0xA54CA49F
+.word 0xcad195e7
+.word 0xc3f2b250
+.word 0xb35ac78b
+.word 0x17b7c2f2
+.word 0x29e134b8
+.word 0x61f2d0be
+.word 0x15b7d954
+.word 0x6971f85e
+.word 0xc040693e
+.word 0x5a222188
+.word 0x7977fdea
+.word 0x6f89efee
 SHA512ShortMsg:
 // SHA512ShortMsgvector_2
 // vector length
