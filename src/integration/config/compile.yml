@@ -18,6 +18,7 @@ schema_version: 2.4.0
 requires:
   - caliptra_top_defines
   - libs
+  - axi_sub
   - kv_defines_pkg
   - pv_defines_pkg
   - dv_defines_pkg

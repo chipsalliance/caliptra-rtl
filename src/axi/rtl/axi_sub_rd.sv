@@ -49,7 +49,10 @@ module axi_sub_rd import axi_pkg::*; #(
     // Exclusive Access Signals
     input  logic            [ID_NUM-1:0] ex_clr,
     output logic            [ID_NUM-1:0] ex_active,
-    output var axi_ex_ctx_t [ID_NUM-1:0] ex_ctx,
+    output struct packed {
+        logic [AW-1:0] addr;
+        logic [AW-1:0] addr_mask;
+    } [ID_NUM-1:0] ex_ctx,
 
     //COMPONENT INF
     output logic          dv,
@@ -66,6 +69,24 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Localparams/Typedefs                    //
     // --------------------------------------- //
+
+    // Transaction context
+    typedef struct packed {
+        logic [AW-1:0] addr;
+        axi_burst_e    burst;
+        logic [2:0]    size;
+        logic [7:0]    len;
+        logic [UW-1:0] user;
+        logic [IW-1:0] id;
+        logic          lock;
+    } axi_ctx_t;
+
+    typedef struct packed {
+        logic [IW-1:0] id;
+        logic [UW-1:0] user;
+        axi_resp_e     resp;
+        logic          last;
+    } xfer_ctx_t;
 
 
     // --------------------------------------- //
@@ -125,7 +146,7 @@ module axi_sub_rd import axi_pkg::*; #(
 //        end
         if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_ctx.addr  <= s_axi_if.araddr;
-            txn_ctx.burst <= s_axi_if.arburst;
+            txn_ctx.burst <= axi_burst_e'(s_axi_if.arburst);
             txn_ctx.size  <= s_axi_if.arsize;
             txn_ctx.len   <= s_axi_if.arlen ;
             txn_ctx.user  <= s_axi_if.aruser;
@@ -360,8 +381,8 @@ module axi_sub_rd import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , (s_axi_if.rvalid ? s_axi_if.rlast : '0), clk, !rst_n)
 
     // Handshake rules
-    `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, s_axi_if.arvalid && !s_axi_if.arready => s_axi_if.arvalid, clk, !rst_n)
-    `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  s_axi_if.rvalid  && !s_axi_if.rready  => s_axi_if.rvalid,  clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, (s_axi_if.arvalid && !s_axi_if.arready) |=> s_axi_if.arvalid, clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  (s_axi_if.rvalid  && !s_axi_if.rready ) |=> s_axi_if.rvalid,  clk, !rst_n)
 
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && $isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
@@ -369,9 +390,9 @@ module axi_sub_rd import axi_pkg::*; #(
     //   - Must have an address that is aligned to burst byte count
     //   - Byte count must be power of 2 inside 1:128
     //   - Max burst length = 16
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_UNALGN  , (s_axi_if.arvalid && s_axi_if.arlock) -> ~|s_axi_if.araddr[$clog2((1<<s_axi_if.arsize)*(s_axi_if.arlen+1))-1:0], clk, !rst_n)
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_BYTE_CNT, (s_axi_if.arvalid && s_axi_if.arlock) -> ((1<<s_axi_if.arsize)*(s_axi_if.arlen+1) inside {1,2,4,8,16,32,64,128}), clk, !rst_n)
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_MAX_LEN,  (s_axi_if.arvalid && s_axi_if.arlock) -> (s_axi_if.arlen < 16), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_UNALGN  , (s_axi_if.arvalid && s_axi_if.arlock) |-> ~|(s_axi_if.araddr & ((1 << $clog2((1<<s_axi_if.arsize)*(s_axi_if.arlen+1)))-1)), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_BYTE_CNT, (s_axi_if.arvalid && s_axi_if.arlock) |-> ((1<<s_axi_if.arsize)*(s_axi_if.arlen+1) inside {1,2,4,8,16,32,64,128}), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_MAX_LEN,  (s_axi_if.arvalid && s_axi_if.arlock) |-> (s_axi_if.arlen < 16), clk, !rst_n)
 
     genvar sva_ii;
     generate
