@@ -67,7 +67,10 @@ module axi_sub import axi_pkg::*; #(
     // Exclusive Access Signals
     logic        [ID_NUM-1:0] ex_clr;
     logic        [ID_NUM-1:0] ex_active;
-    axi_ex_ctx_t [ID_NUM-1:0] ex_ctx;
+    struct packed {
+        logic [AW-1:0] addr;
+        logic [AW-1:0] addr_mask;
+    } [ID_NUM-1:0] ex_ctx;
 
     //Read Subordinate INF
     logic          r_dv;

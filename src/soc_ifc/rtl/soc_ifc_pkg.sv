@@ -119,12 +119,13 @@ package soc_ifc_pkg;
 
     //Any request into soc ifc block
     typedef struct packed {
-        logic   [SOC_IFC_ADDR_W-1:0] addr;
-        logic   [SOC_IFC_DATA_W-1:0] wdata;
+        logic   [SOC_IFC_ADDR_W-1:0]   addr;
+        logic   [SOC_IFC_DATA_W-1:0]   wdata;
+        logic   [SOC_IFC_DATA_W/8-1:0] wstrb;
 //        logic   [SOC_IFC_USER_W-1:0] user;
-        logic   [SOC_IFC_ID_W  -1:0] id;
-        logic                        write;
-        logic                        soc_req;
+        logic   [SOC_IFC_ID_W  -1:0]   id;
+        logic                          write;
+        logic                          soc_req;
     } soc_ifc_req_t;
     // ECC protected data
     typedef struct packed {
