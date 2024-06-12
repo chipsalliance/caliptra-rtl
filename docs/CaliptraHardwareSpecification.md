@@ -34,18 +34,13 @@ BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchroni
 
 ## FW update reset (Impactless FW update)
 
-Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
+When a firmware update is initiated, Runtime FW writes to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Reset is deasserted synchronously after a programmable number of cycles; the minimum allowed number of wait cycles is 5, which is also the default configured value. Reset de-assertion is done through a two flip-flop synchronizer. Since ICCM is locked during runtime, the boot FSM unlocks it when the RISC-V reset is asserted. Following FW update reset deassertion, normal boot flow updates the ICCM with the new FW from the mailbox SRAM. The boot flow is modified as shown in the following figure.
 
 *Figure 2: Mailbox Boot FSM state diagram for FW update reset*
 
 ![](./images/mbox_boot_fsm_FW_update_reset.png)
 
-After Caliptra comes out of global reset and enters the BOOT\_DONE state, a write to the fw\_update\_reset register triggers the FW update reset flow. In the BOOT\_FWRST state, only the reset to the VeeR core is asserted, ICCM is unlocked and the timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted.
-
-| Control register | Start address | Description |
-| :------- | :---------- | :--------- |
-| FW_UPDATE_RESET | 0x30030418 | Register to trigger the FW update reset flow. Setting it to 1 starts the Boot FSM. The field auto-clears to 0. |
-| FW_UPDATE_RESET_WAIT_CYCLES | 0x3003041C | Programmable wait time to keep the microcontroller reset asserted. |
+Impactless firmware updates may be initiated by writing to the fw\_update\_reset register after Caliptra comes out of global reset and enters the BOOT\_DONE state. In the BOOT\_FWRST state, only the reset to the RISC-V core is asserted and the wait timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted and ICCM is unlocked.
 
 ## RISC-V core
 
