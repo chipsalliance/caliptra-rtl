@@ -342,6 +342,7 @@ i_ahb_slv_sif_soc_ifc (
 //always_comb uc_req.user = '1;
 always_comb uc_req.id = '1;
 always_comb uc_req.soc_req = 1'b0;
+always_comb uc_req.wstrb = {AHB_DATA_WIDTH/8{1'b1}};
 
 //mailbox_arb
 //This module contains the arbitration logic between SoC and Caliptra uC requests
@@ -697,7 +698,7 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_is_wr(soc_ifc_reg_req_data.write),
     .s_cpuif_addr(soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(soc_ifc_reg_req_data.wdata),
-    .s_cpuif_wr_biten('1),
+    .s_cpuif_wr_biten('1), // FIXME
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
@@ -995,10 +996,10 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_ID_WIDTH  , SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
 
 `CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b)
 //this generates an NMI in the core, but we don't have a handler so it just hangs

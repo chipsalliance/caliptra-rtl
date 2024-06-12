@@ -120,6 +120,8 @@ module caliptra_top
     logic                       rdc_clk_cg      ;
     logic                       uc_clk_cg       ;
 
+    logic        [2:0]          s_axi_active    ;
+
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
     logic                       ic_hmastlock    ;
@@ -637,10 +639,39 @@ el2_veer_wrapper rvtop (
 //=========================================================================-
 // Clock gating instance
 //=========================================================================-
+always_ff@(posedge clk or negedge cptra_rst_b) begin
+    if (!cptra_rst_b) begin
+        s_axi_active <= 2'd0;
+    end
+    else begin
+        case ({s_axi_r_if.rvalid && s_axi_r_if.rready && s_axi_r_if.rlast,
+               s_axi_r_if.arvalid && s_axi_r_if.arready,
+               s_axi_w_if.bvalid && s_axi_w_if.bready,
+               s_axi_w_if.awvalid && s_axi_w_if.awready}) inside
+            4'b0000: s_axi_active <= s_axi_active       ;
+            4'b0001: s_axi_active <= s_axi_active + 3'd1;
+            4'b0010: s_axi_active <= s_axi_active - 3'd1;
+            4'b0011: s_axi_active <= s_axi_active       ;
+            4'b0100: s_axi_active <= s_axi_active + 3'd1;
+            4'b0101: s_axi_active <= s_axi_active + 3'd2;
+            4'b0110: s_axi_active <= s_axi_active       ;
+            4'b0111: s_axi_active <= s_axi_active + 3'd1;
+            4'b1000: s_axi_active <= s_axi_active - 3'd1;
+            4'b1001: s_axi_active <= s_axi_active       ;
+            4'b1010: s_axi_active <= s_axi_active - 3'd2;
+            4'b1011: s_axi_active <= s_axi_active - 3'd1;
+            4'b1100: s_axi_active <= s_axi_active       ;
+            4'b1101: s_axi_active <= s_axi_active + 3'd1;
+            4'b1110: s_axi_active <= s_axi_active - 3'd1;
+            4'b1111: s_axi_active <= s_axi_active       ;
+        endcase
+    end
+end
+
 clk_gate cg (
     .clk(clk),
     .cptra_rst_b(cptra_noncore_rst_b),
-    .psel(PSEL),
+    .psel(|s_axi_active || s_axi_r_if.arvalid || s_axi_w_if.awvalid),
     .clk_gate_en(clk_gating_en),
     .cpu_halt_status(o_cpu_halt_status),
     .rdc_clk_dis(rdc_clk_dis),

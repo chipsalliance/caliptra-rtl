@@ -22,7 +22,6 @@
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr
   `define CALIPTRA_AHB_HDATA_SIZE      64 // bit-width AHB data
-  `define CALIPTRA_AXI_ADDR_WIDTH      32 // bit-width AXI address
   `define CALIPTRA_AXI_DATA_WIDTH      32 // bit-width AXI data
   `define CALIPTRA_AXI_USER_WIDTH      32 // bit-width AXI USER field
   `define CALIPTRA_AXI_ID_WIDTH        5  // bit-width AXI ID field
