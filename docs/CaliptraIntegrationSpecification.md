@@ -1,8 +1,8 @@
-![image](https://github.com/chipsalliance/caliptra-rtl/assets/111372010/c898db5c-c993-42dc-9e66-351d304de6e3)![OCP Logo](./images/OCP_logo.png)
+![OCP Logo](./images/OCP_logo.png)
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 1.0</p>
+<p style="text-align: center;">Version 1.1</p>
 
 <div style="page-break-after: always"></div>
 
@@ -900,15 +900,15 @@ The target foundry technology node is an industry standard, moderately advanced 
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 5/2/2024 | CALIPTRACLK          | 463.2MHz          | -0.2        | 463.2MHz                   |
-| CALIPTRA_WRAPPER | 5/2/2024 | JTAG_TCK             | 100MHz            | 4606.5      | 100MHz                   |
-| CALIPTRA_WRAPPER | 5/2/2024 | clock_gating_default | 463.2MHz          | 0           | 463.2MHz                   |
-| CALIPTRA_WRAPPER | 5/2/2024 | io_to_flop           | 463.2MHz          | 0           | 463.2MHz                   |
-| CALIPTRA_WRAPPER | 5/2/2024 | flop_to_io           | 463.2MHz          | 0           | 463.2MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | CALIPTRACLK          | 500MHz            | -0.09       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | JTAG_TCK             | 100MHz            | 4606.5      | 100MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | clock_gating_default | 500MHz            | 3.36        | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | io_to_flop           | 500MHz            | 429.8       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | flop_to_io           | 500MHz            | 0.10        | 500MHz                   |
 
 | **IP Name**      | **Date**  | **Stdcell Area** | **Macro Area** | **Memory Area** | **Total Area** | **Flop Count** | **No Clock Regs/Pins Count** | **FM Status** | **FM Eqv Pts** | **FM Non-Eqv Pts** | **FM Abort Pts** | **FM FM**<br> **Non-Comp** **Pts** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 5/2/2024 | 93703            | 0           | 247808          | 341512         | 164505          | 0                           | SUCCEEDED     | 166241         | 0                  | 0                | 0                              |
+| CALIPTRA_WRAPPER | 6/11/2024 | 93916            | 0           | 239937          | 341725         | 164505          | 0                           | SUCCEEDED     | 166241         | 0                  | 0                | 0                              |
 
 # Recommended LINT rules
 
