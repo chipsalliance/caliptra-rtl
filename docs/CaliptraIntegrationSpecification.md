@@ -599,6 +599,8 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
 
 The following table describes SoC integration requirements.
 
+For additional information, see [Caliptra assets and threats](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-assets-and-threats).
+
 *Table 17: SoC integration requirements*
 
 | Category                         | Requirement                                                                                                                                                                                                                                                                    | Definition of done       | Rationale                                         |
