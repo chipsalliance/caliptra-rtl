@@ -105,6 +105,7 @@ jobs:
       - name: Check Timestamp
         run: |
             # Find the last commit that included any design file (not documentation)
+            git log --oneline --graph -n 15 
             last_commit=$(git rev-parse HEAD)
             until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
