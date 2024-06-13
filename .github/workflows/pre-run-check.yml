@@ -94,7 +94,6 @@ jobs:
                                           -o -name "*.yml" \
                                           -o -name "*.sh" \
                                           -o -name "*.py" \
-                                          -o -name "*.md" \
                                           -o -name "pr_timestamp" \
                                           ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
@@ -105,14 +104,21 @@ jobs:
 
       - name: Check Timestamp
         run: |
-            timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct')-3600")
+            # Find the last commit that included any design file (not documentation)
+            last_commit=$(git rev-parse HEAD)
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png' > /dev/null; do
+                last_commit="$(git rev-parse ${last_commit}^)"
+            done
+            echo "Latest non-doc hash is ${last_commit}"
+            # Compare the timestamp from the latest commit with the pr_timestamp file
+            timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
             if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
                 echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
                 exit 1
             fi
             timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
             if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
-                echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest commit to branch by more than an hour [${timestamp_exp}]"
+                echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
                 echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
                 echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
                 exit 1
