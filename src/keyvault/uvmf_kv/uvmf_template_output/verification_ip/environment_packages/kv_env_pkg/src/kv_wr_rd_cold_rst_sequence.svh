@@ -137,7 +137,7 @@ class kv_wr_rd_cold_rst_sequence #(
         fork
             begin
                 //Wait for reset to finish if rand write_id is not current client id
-                if(write_id != ECC)
+                // if(write_id != ECC)
                     active_phase.wait_ptrigger;
                 //Do the writes
                 repeat(10) begin
@@ -145,104 +145,25 @@ class kv_wr_rd_cold_rst_sequence #(
                     ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer); 
                 end
                 //Trigger event after writes are done
-                if(write_id == ECC)
+                // if(write_id == ECC)
                     write_event.trigger;
                 
-            end
-            begin
-                if(read_id != ECC_PRIVKEY)
-                    active_phase.wait_ptrigger;
+            // end
+            // begin
+                // if(read_id != ECC_PRIVKEY)
+                //     active_phase.wait_ptrigger;
 
                 repeat(10) begin
                     ecc_privkey_read_seq.start(configuration.kv_ecc_privkey_read_agent_config.sequencer);
                 end
-                if(read_id == ECC_PRIVKEY)
+                // if(read_id == ECC_PRIVKEY)
                     read_event.trigger;
                 
             end
-            begin
-                if(write_id != DOE)
-                    active_phase.wait_ptrigger;
 
-                repeat(10) begin
-                    uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_doe_write_agent.sequencer.doe_write_seq", "local_write_entry",doe_write_entry);
-                    doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
-                end
-                if(write_id == DOE)
-                    write_event.trigger;
-                
-            end
             begin
-                if(write_id != SHA512)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
-                    sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
-                end
-                if(write_id == SHA512)
-                    write_event.trigger;
-                
-            end
-            begin
-                if(read_id != HMAC_BLOCK)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    hmac_block_read_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
-                end
-                if(read_id == HMAC_BLOCK)
-                    read_event.trigger;
-                
-            end
-            begin
-                if(write_id != HMAC)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",hmac_write_entry);
-                    hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
-                end
-                if(write_id == HMAC)
-                    write_event.trigger;
-                
-            end
-            begin
-                if(read_id != SHA512_BLOCK)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
-                end
-                if(read_id == SHA512_BLOCK)
-                    read_event.trigger;
-
-            end
-            begin
-                if(read_id != HMAC_KEY)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
-                end
-                if(read_id == HMAC_KEY)
-                    read_event.trigger;
-            end
-            begin
-                if(read_id != ECC_SEED)
-                    active_phase.wait_ptrigger;
-
-                repeat(10) begin
-                    ecc_seed_read_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
-                end
-                if(read_id == ECC_SEED)
-                    read_event.trigger;
-                
-            end
-            
-            begin
-                write_event.wait_ptrigger;
-                read_event.wait_ptrigger;
+                // write_event.wait_ptrigger;
+                // read_event.wait_ptrigger;
                 kv_rst_agent_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
                 if(kv_rst_agent_cold_rst_seq.req.set_pwrgood && !kv_rst_agent_cold_rst_seq.req.assert_rst) begin
                     active_phase.trigger;
@@ -251,6 +172,127 @@ class kv_wr_rd_cold_rst_sequence #(
             
 
         join
+
+        fork
+        begin
+            // if(write_id != DOE)
+                active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_doe_write_agent.sequencer.doe_write_seq", "local_write_entry",doe_write_entry);
+                doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
+            end
+            // if(write_id == DOE)
+                write_event.trigger;
+            
+        end
+        begin
+            // write_event.wait_ptrigger;
+            // read_event.wait_ptrigger;
+            kv_rst_agent_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+            if(kv_rst_agent_cold_rst_seq.req.set_pwrgood && !kv_rst_agent_cold_rst_seq.req.assert_rst) begin
+                active_phase.trigger;
+            end
+        end
+        join
+        fork
+        begin
+            // if(write_id != SHA512)
+                active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
+                sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+            end
+            // if(write_id == SHA512)
+                write_event.trigger;
+            
+        // end
+        // begin
+            // if(read_id != HMAC_BLOCK)
+                // active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                hmac_block_read_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
+            end
+            // if(read_id == HMAC_BLOCK)
+                read_event.trigger;
+            
+        end
+        begin
+            // write_event.wait_ptrigger;
+            // read_event.wait_ptrigger;
+            kv_rst_agent_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+            if(kv_rst_agent_cold_rst_seq.req.set_pwrgood && !kv_rst_agent_cold_rst_seq.req.assert_rst) begin
+                active_phase.trigger;
+            end
+        end
+        join
+        fork
+        begin
+            // if(write_id != HMAC)
+                active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",hmac_write_entry);
+                hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
+            end
+            // if(write_id == HMAC)
+                write_event.trigger;
+            
+        // end
+        // begin
+            // if(read_id != SHA512_BLOCK)
+                // active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+            end
+            // if(read_id == SHA512_BLOCK)
+                read_event.trigger;
+
+        end
+        begin
+            // write_event.wait_ptrigger;
+            // read_event.wait_ptrigger;
+            kv_rst_agent_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+            if(kv_rst_agent_cold_rst_seq.req.set_pwrgood && !kv_rst_agent_cold_rst_seq.req.assert_rst) begin
+                active_phase.trigger;
+            end
+        end
+        join
+        fork
+        begin
+            // if(read_id != HMAC_KEY)
+                active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
+            end
+            // if(read_id == HMAC_KEY)
+                read_event.trigger;
+        end
+        begin
+            // if(read_id != ECC_SEED)
+                active_phase.wait_ptrigger;
+
+            repeat(10) begin
+                ecc_seed_read_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
+            end
+            // if(read_id == ECC_SEED)
+                read_event.trigger;
+            
+        end
+        begin
+            // write_event.wait_ptrigger;
+            // read_event.wait_ptrigger;
+            kv_rst_agent_cold_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+            if(kv_rst_agent_cold_rst_seq.req.set_pwrgood && !kv_rst_agent_cold_rst_seq.req.assert_rst) begin
+                active_phase.trigger;
+            end
+        end
+        join
+
         active_phase.reset;
         configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);

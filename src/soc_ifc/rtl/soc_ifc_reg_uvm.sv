@@ -13,10 +13,12 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg iccm_ecc_unc_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg dccm_ecc_unc_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg nmi_pin_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg crypto_err_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg fld_cg;
         rand uvm_reg_field iccm_ecc_unc;
         rand uvm_reg_field dccm_ecc_unc;
         rand uvm_reg_field nmi_pin;
+        rand uvm_reg_field crypto_err;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_FATAL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -34,10 +36,13 @@ package soc_ifc_reg_uvm;
             this.dccm_ecc_unc.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
             this.nmi_pin = new("nmi_pin");
             this.nmi_pin.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
+            this.crypto_err = new("crypto_err");
+            this.crypto_err.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
                 foreach(nmi_pin_bit_cg[bt]) nmi_pin_bit_cg[bt] = new();
+                foreach(crypto_err_bit_cg[bt]) crypto_err_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1923,10 +1928,12 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_iccm_ecc_unc_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_dccm_ecc_unc_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_nmi_pin_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_crypto_err_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_fld_cg fld_cg;
         rand uvm_reg_field mask_iccm_ecc_unc;
         rand uvm_reg_field mask_dccm_ecc_unc;
         rand uvm_reg_field mask_nmi_pin;
+        rand uvm_reg_field mask_crypto_err;
 
         function new(string name = "soc_ifc_reg__internal_hw_error_fatal_mask");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -1944,10 +1951,13 @@ package soc_ifc_reg_uvm;
             this.mask_dccm_ecc_unc.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
             this.mask_nmi_pin = new("mask_nmi_pin");
             this.mask_nmi_pin.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.mask_crypto_err = new("mask_crypto_err");
+            this.mask_crypto_err.configure(this, 1, 3, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mask_iccm_ecc_unc_bit_cg[bt]) mask_iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(mask_dccm_ecc_unc_bit_cg[bt]) mask_dccm_ecc_unc_bit_cg[bt] = new();
                 foreach(mask_nmi_pin_bit_cg[bt]) mask_nmi_pin_bit_cg[bt] = new();
+                foreach(mask_crypto_err_bit_cg[bt]) mask_crypto_err_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

@@ -733,7 +733,7 @@ module ecc_reg (
             automatic logic load_next_c;
             next_c = field_storage.ECC_SEED[i0].SEED.value;
             load_next_c = '0;
-            if(decoded_reg_strb.ECC_SEED[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            if(decoded_reg_strb.ECC_SEED[i0] && decoded_req_is_wr && hwif_in.ECC_SEED[i0].SEED.swwe) begin // SW write
                 next_c = (field_storage.ECC_SEED[i0].SEED.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end else if(hwif_in.ECC_SEED[i0].SEED.we) begin // HW Write - we
@@ -1010,7 +1010,7 @@ module ecc_reg (
             automatic logic load_next_c;
             next_c = field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value;
             load_next_c = '0;
-            if(decoded_reg_strb.ECC_PRIVKEY_IN[i0] && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            if(decoded_reg_strb.ECC_PRIVKEY_IN[i0] && decoded_req_is_wr && hwif_in.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.swwe) begin // SW write
                 next_c = (field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end else if(hwif_in.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.we) begin // HW Write - we

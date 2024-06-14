@@ -148,7 +148,7 @@ module doe_cbc_tb();
              .obf_uds_seed(obf_uds_seed),
 
              .kv_write(),
-
+             .busy_o(),
              .error_intr(),
              .notif_intr()
             );

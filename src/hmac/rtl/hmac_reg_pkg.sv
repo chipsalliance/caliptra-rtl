@@ -38,6 +38,7 @@ package hmac_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic swwel;
         logic hwclr;
     } hmac_reg__HMAC384_KEY__KEY__in_t;
 
@@ -48,6 +49,7 @@ package hmac_reg_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+        logic swwel;
         logic hwclr;
     } hmac_reg__HMAC384_BLOCK__BLOCK__in_t;
 

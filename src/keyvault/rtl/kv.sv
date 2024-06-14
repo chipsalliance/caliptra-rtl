@@ -78,6 +78,9 @@ kv_reg__out_t kv_reg_hwif_out;
 
 logic [KV_NUM_KEYS-1:0] key_entry_clear;
 
+logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
+logic kv_multi_write_err;
+
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
@@ -127,6 +130,16 @@ always_comb begin : keyvault_pcr_signing
     end 
 end
 
+always_comb begin
+    kv_write_cnt = 0;
+    for (int client = 0; client < KV_NUM_WRITE; client++)begin
+        if (kv_write[client].write_en)
+            kv_write_cnt = kv_write_cnt + 'd1;
+    end
+end
+
+always_comb kv_multi_write_err = kv_write_cnt > 1;
+
 //Generate clear signal for each key entry 
 //don't clear when writes are locked
 //hold the clear when writes are in progress
@@ -137,7 +150,8 @@ generate
                 key_entry_clear[g_entry] <= '0;
             end
             else begin
-                key_entry_clear[g_entry] <= (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
+                key_entry_clear[g_entry] <= kv_multi_write_err |
+                                            (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
                                             (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
             end
         end
