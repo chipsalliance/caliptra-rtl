@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/05/02*_
+_*Last Update: 2024/06/14*_
 
 ## Rev 1p1 ##
 
-#### Rev 1p1 release date: 2024/05/03 ####
+#### Rev 1p1 release date: 2024/06/19 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes
 - Caliptra Integration specification updates to add clarity
 - Caliptra README updates to tool versions, simulation instructions
@@ -29,19 +29,19 @@ _*Last Update: 2024/05/02*_
   - New assertions and firmware tests for LMS accelerator
   - Formal Verification (#493):
     - ECC Montgomery updated to recent changes
-    - SHA512_masked update to entropy instead of LFSR
+    - SHA512\_masked update to entropy instead of LFSR
     - SHA256 LMS extension verified
-  - Fixes for UVM caliptra_top test scenarios
+  - Fixes for UVM caliptra\_top test scenarios
     - Mailbox SRAM initialization
     - Assorted fixes for sequence access contention, error-checking, randomization constraints
     - Added early mailbox command flow to emulate stash measurement functionality
   - Fixes for UVM KeyVault test scenarios
-    - Update clear_secrets prediction
+    - Update clear\_secrets prediction
 - RTL
   - ECC radix48
   - LMS accelerator
   - SHA512 masking
-  - HMAC and HMAC_DRBG enhancements
+  - HMAC and HMAC\_DRBG enhancements
     - Masking for SHA512
   - Modifications for clean Lint
     * Replace casez with case
@@ -53,13 +53,18 @@ _*Last Update: 2024/05/02*_
     * Fixes for redundant logic in RV core
     * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
     * Declare synthesizable package functions as automatic
+    * Declare names for unnamed generate blocks
   - Update PeakRDL tool version and regenerate reg files to resolve lint issues
+  - Update HW\_REV\_ID bit-map and configure value to 1.1
 
 #### Bug Fixes ####
 [RTL] Add connection for JTAG TDO enable signal #415 #425
-[RTL] Entropy source sfifo signal unable to exit reset #503 #506
-[RTL] Async reset condition missing for `nonce_offset_i` #339 #444 #483
-[RTL] Fixed leakage issue in HMAC #325 #429
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506
+[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483
+[HMAC] Fixed leakage issue in HMAC #325 #429
+[KV] Resolve a potential vulnerability in KeyVault usage #528
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541
 
 ## Previous Releases ##
 
