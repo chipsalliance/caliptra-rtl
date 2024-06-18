@@ -14,7 +14,7 @@ This document provides the signoff checklist that is used when finalizing any Ca
 
 ## Versioning
 
-Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the register CPTRA_HW_REV_ID. Steps described in this document are followed for each of these releases.
+Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the CPTRA_HW_REV_ID register. Steps described in this document are followed for each of these releases.
 
 ## Branches
 
