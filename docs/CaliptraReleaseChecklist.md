@@ -20,7 +20,7 @@ Caliptra RTL releases may be created for new major, minor, or patch versions, as
 
 Each major and minor release is created as a tag on the branch `main` of the caliptra-rtl repository. The tag is created using GitHub's repository release tagging feature, which also generates a zip file containing all of the code and documentation for that release. After tagging the release, any subsequent commits to `main` are pursuant to development efforts on future release versions, so the tagged release must be used to download the official release code.
 
-When necessary, a patch release may be applied retroactively to earlier versions of Caliptra. In this case, a new branch is created to contain the patched code base. Patch release branches will follow the naming convention `patch_v<MAJOR>.<MINOR>` to indicate which version is being patched. Once the patched branch has reached it's finalized state, a tag is created on the patch branch to indicate the full version number of that patch. Thus, any patch release will be created as a tag on the same branch, of an incrementing patch version number.
+When necessary, a patch release may be applied retroactively to earlier versions of Caliptra. In this case, a new branch is created to contain the patched code base. Patch release branches follow the naming convention, `patch_v<MAJOR>.<MINOR>`, to indicate which version is being patched. After the patched branch reaches its finalized state, a tag is created on the patch branch to indicate the full version number of that patch. Thus, any patch release is created as a tag on the same branch, with an incrementing patch version number.
 
 ## Steps
 
