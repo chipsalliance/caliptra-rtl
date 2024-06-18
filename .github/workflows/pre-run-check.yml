@@ -114,20 +114,28 @@ jobs:
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
-            # Compare the timestamp from the latest commit with the pr_timestamp file
-            timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
-            if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
-                echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
-                exit 1
+            # If the last non-doc commit is already contained in branch 'main', then skip the
+            # timestamp check -- as that commit would already be signed off through another PR.
+            # Otherwise, that commit would fail because it's part of a commit that was squashed into main
+            # much later than the original stamp commit.
+            if [[ $(git branch --remotes --list 'origin/main' --contains ${last_commit}) =~ 'origin/main' ]]; then
+                echo "Commit ${last_commit} is contained in branch 'main', skipping timestamp check"
+            else
+                # Compare the timestamp from the latest commit with the pr_timestamp file
+                timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
+                if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
+                    echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
+                    exit 1
+                fi
+                timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
+                if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
+                    echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
+                    echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+                    echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
+                    exit 1
+                fi
+                echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
             fi
-            timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
-            if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
-                echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
-                echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
-                echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
-                exit 1
-            fi
-            echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
 
       - name: Check Hash
         run: |
