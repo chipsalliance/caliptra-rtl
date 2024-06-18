@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/06/14*_
+_*Last Update: 2024/06/19*_
 
 ## Rev 1p1 ##
 
 #### Rev 1p1 release date: 2024/06/19 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes
-- Caliptra Integration specification updates to add clarity
+- Caliptra Integration Specification updates to add clarity
 - Caliptra README updates to tool versions, simulation instructions
 - Update RDL register descriptions for clarity, accuracy in generated reg document
 - Verification
@@ -35,7 +35,7 @@ _*Last Update: 2024/06/14*_
     - Mailbox SRAM initialization
     - Assorted fixes for sequence access contention, error-checking, randomization constraints
     - Added early mailbox command flow to emulate stash measurement functionality
-  - Fixes for UVM KeyVault test scenarios
+  - Fixes for UVM Key Vault test scenarios
     - Update clear\_secrets prediction
 - RTL
   - ECC radix48
@@ -62,7 +62,7 @@ _*Last Update: 2024/06/14*_
 [ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506
 [PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483
 [HMAC] Fixed leakage issue in HMAC #325 #429
-[KV] Resolve a potential vulnerability in KeyVault usage #528
+[KV] Resolve a potential vulnerability in Key Vault usage #528
 [JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528
 [JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541
 
@@ -79,7 +79,7 @@ _*Last Update: 2024/06/14*_
   - Adding ECC, DOE, HMAC_DRBG and SHA512_masked formal Assertion IP
   - JTAG with clock gating test cases
   - Fixes for UVM caliptra_top test scenarios
-  - Fixes for UVM KeyVault test scenarios
+  - Fixes for UVM Key Vault test scenarios
 - Updated synthesis tool from Design Compiler to Fusion Compiler (sanity checks only)
 - RTL
   - Remove TODO comments on caliptra_top ports
