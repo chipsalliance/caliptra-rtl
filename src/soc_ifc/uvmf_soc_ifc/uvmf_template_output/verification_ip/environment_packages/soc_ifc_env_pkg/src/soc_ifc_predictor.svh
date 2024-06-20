@@ -2259,37 +2259,10 @@ class soc_ifc_predictor #(
                     if (bootfsm_breakpoint) begin
                         // Similar logic should be tied to the fw_update_reset reg callback
                         p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_wait: 1'b1, default: 1'b0};
-//                        uc_rst_out_asserted = 1; // No transition - this is already asserted on entry to boot_wait by merit of predict_reset("NONCORE")
-                        fw_update_rst_window = 1'b1;
-                        send_cptra_sts_txn = 1'b1;
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset assertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
-                        fork
-                            begin
-                                fw_update_wait_count = p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value();
-                                repeat(32'(p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value())) begin
-                                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-                                    if (fw_update_wait_count == 0)
-                                        `uvm_fatal("PRED_APB", "Decrement will underflow!")
-                                    fw_update_wait_count--;
-                                end
-                                if (!bootfsm_breakpoint) begin
-                                    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
-                                    `uvm_info("PRED_APB", $sformatf("After expiration of fw_update reset counter, bootfsm_breakpoint is already cleared. Submitting transaction prediction immediately for state change."), UVM_HIGH)
-                                    predict_boot_wait_boot_done();
-                                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
-                                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn); // fw_update_rst_window
-                                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
-                                    `uvm_info("PRED_APB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
-                                end
-                                else begin
-                                    `uvm_info("PRED_APB", $sformatf("After expiration of fw_update reset counter, bootfsm_breakpoint is still set. Predicted state change and reset signal updates will be handled on BOOTFSM_GO."), UVM_HIGH)
-                                end
-                            end
-                        join_none
                     end
                     else begin
                         predict_boot_wait_boot_done();
-//                        send_cptra_sts_txn = 1'b1; // fw_update_rst_window was never asserted
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset deassertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
                     end
                     fuse_update_enabled      = 1'b0;
@@ -2315,7 +2288,6 @@ class soc_ifc_predictor #(
                     if (fw_update_wait_count == 0) begin
                         `uvm_info("PRED_APB", $sformatf("Write to %s results in boot FSM state transition and uC reset deassertion", axs_reg.get_name()), UVM_MEDIUM)
                         predict_boot_wait_boot_done();
-                        send_cptra_sts_txn = 1'b1; // fw_update_rst_window
                     end
                     else begin
                         // State transition will be triggered in the thread spawned by CPTRA_FUSE_WR_DONE write instead
@@ -2632,8 +2604,23 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         send_cptra_sts_txn = 1;
     end
 
-    if ((p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_fw_rst || p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait) && !fw_update_rst_window) begin
+    if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_fw_rst && !fw_update_rst_window) begin
+        fork
+            begin
+                fw_update_wait_count = p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value();
+                repeat(32'(p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value())) begin
+                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                    if (fw_update_wait_count == 0)
+                        `uvm_fatal("PRED_APB", "Decrement will underflow!")
+                    fw_update_wait_count--;
+                end
+            end
+        join_none
         fw_update_rst_window = 1;
+        send_cptra_sts_txn = 1;
+    end
+    else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait && (fw_update_wait_count == 0) && fw_update_rst_window) begin
+        fw_update_rst_window = 0;
         send_cptra_sts_txn = 1;
     end
     else if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_done && fw_update_rst_window) begin
