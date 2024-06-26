@@ -236,6 +236,7 @@ void soc_ifc_fw_update(mbox_op_s op) {
 }
 
 uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_count) {
+    uint32_t notif_intr_en;
     if (byte_count > MBOX_DIR_SPAN) {
         VPRINTF(FATAL, "SOC_IFC: Illegal byte_count 0x%x\n", byte_count);
         SEND_STDOUT_CTRL(0x1);
@@ -248,10 +249,16 @@ uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_coun
             return 1;
         }
     }
+    // Disable notification interrupts for soc_req_lock, which will probably
+    // occur at a high frequency while sanitizing the mailbox and cause a slowdown
+    notif_intr_en = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, notif_intr_en & ~(SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SOC_REQ_LOCK_EN_MASK |
+                                                                                  SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MBOX_ECC_COR_EN_MASK));
     for (uint32_t ii=0; ii < byte_count; ii+=4) {
         lsu_write_32(MBOX_DIR_BASE_ADDR+ii, 0x0);
     }
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, notif_intr_en);
     return 0;
 }
 
