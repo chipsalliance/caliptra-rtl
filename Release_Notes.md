@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/05/17*_
+_*Last Update: 2024/06/28*_
 
 ### Rev 1p0p2 ###
 
-#### Rev 1p0p2 release date: 2024/05/22 ####
+#### Rev 1p0p2 release date: 2024/06/28 ####
   - Modifications for clean Lint
     * Replace casez with case
     * Replace 2-state with 4-state typedefs, parameters, enums
@@ -29,11 +29,16 @@ _*Last Update: 2024/05/17*_
     * Fixes for redundant logic in RV core
     * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
     * Declare synthesizable package functions as automatic
+    * Declare names for unnamed generate blocks
   - Update PeakRDL tool version and regenerate reg files to resolve lint issues
+  - Update HW\_REV\_ID bit-map and configure value to 1.0.2
 
 #### Bug Fixes ####
-[RTL] Entropy source sfifo signal unable to exit reset #503 #506
-[RTL] Async reset condition missing for `nonce_offset_i` #339 #444 #483
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506
+[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483
+[KV] Resolve a potential vulnerability in Key Vault usage #528
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541
 
 ## Previous Releases ##
 
