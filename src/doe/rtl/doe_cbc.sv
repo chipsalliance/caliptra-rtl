@@ -66,6 +66,8 @@ module doe_cbc
 
    output logic clear_obf_secrets,
 
+  output logic busy_o,
+
    //interface with kv
    output kv_write_t kv_write,
    input  logic debugUnlock_or_scan_mode_switch
@@ -286,6 +288,8 @@ doe_reg i_doe_reg (
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
+
+always_comb busy_o = flow_in_progress | ~core_ready;
 
 endmodule // doe
 

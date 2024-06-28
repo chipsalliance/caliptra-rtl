@@ -13,7 +13,7 @@ module csrng_core
  import lc_ctrl_pkg::*;
 #(
   parameter aes_pkg::sbox_impl_e SBoxImpl = aes_pkg::SBoxImplLut,
-  parameter int NHwApps = 2,
+  parameter logic [31:0] NHwApps = 2,
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivNonProduction = CsKeymgrDivWidth'(0),
   parameter cs_keymgr_div_t RndCnstCsKeymgrDivProduction = CsKeymgrDivWidth'(0)
 ) (
@@ -60,26 +60,26 @@ module csrng_core
   import caliptra_prim_mubi_pkg::mubi4_test_true_strict;
   import caliptra_prim_mubi_pkg::mubi4_test_invalid;
 
-  localparam int NApps = NHwApps + 1;
-  localparam int AppCmdWidth = 32;
-  localparam int AppCmdFifoDepth = 2;
-  localparam int GenBitsWidth = 128;
-  localparam int Cmd = 3;
-  localparam int StateId = 4;
-  localparam int KeyLen = 256;
-  localparam int BlkLen = 128;
-  localparam int SeedLen = 384;
-  localparam int CtrLen = 32;
-  localparam int NBlkEncArbReqs = 2;
-  localparam int BlkEncArbWidth = KeyLen+BlkLen+StateId+Cmd;
-  localparam int NUpdateArbReqs = 2;
-  localparam int UpdateArbWidth = KeyLen+BlkLen+SeedLen+StateId+Cmd;
-  localparam int MaxClen = 12;
-  localparam int ADataDepthWidth = SeedLen/AppCmdWidth;
-  localparam unsigned ADataDepthClog = $clog2(ADataDepthWidth)+1;
-  localparam int CsEnableCopies = 53;
-  localparam int LcHwDebugCopies = 1;
-  localparam int Flag0Copies = 3;
+  localparam logic [31:0] NApps = NHwApps + 1;
+  localparam logic [31:0] AppCmdWidth = 32;
+  localparam logic [31:0] AppCmdFifoDepth = 2;
+  localparam logic [31:0] GenBitsWidth = 128;
+  localparam logic [31:0] Cmd = 3;
+  localparam logic [31:0] StateId = 4;
+  localparam logic [31:0] KeyLen = 256;
+  localparam logic [31:0] BlkLen = 128;
+  localparam logic [31:0] SeedLen = 384;
+  localparam logic [31:0] CtrLen = 32;
+  localparam logic [31:0] NBlkEncArbReqs = 2;
+  localparam logic [31:0] BlkEncArbWidth = KeyLen+BlkLen+StateId+Cmd;
+  localparam logic [31:0] NUpdateArbReqs = 2;
+  localparam logic [31:0] UpdateArbWidth = KeyLen+BlkLen+SeedLen+StateId+Cmd;
+  localparam logic [31:0] MaxClen = 12;
+  localparam logic [31:0] ADataDepthWidth = SeedLen/AppCmdWidth;
+  localparam logic [31:0] ADataDepthClog = $clog2(ADataDepthWidth)+1;
+  localparam logic [31:0] CsEnableCopies = 53;
+  localparam logic [31:0] LcHwDebugCopies = 1;
+  localparam logic [31:0] Flag0Copies = 3;
 
   // signals
   // interrupt signals

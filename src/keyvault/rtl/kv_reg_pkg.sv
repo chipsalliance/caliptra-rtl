@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package kv_reg_pkg;
+
+    localparam KV_REG_DATA_WIDTH = 32;
+    localparam KV_REG_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic swwel;
     } kv_reg__kvCtrl__lock_wr__in_t;

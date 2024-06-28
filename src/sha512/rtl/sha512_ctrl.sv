@@ -71,12 +71,12 @@ module sha512_ctrl
     //----------------------------------------------------------------
     // sha512
     //----------------------------------------------------------------
-    reg           sha512_cs;
-    reg           sha512_we;
-    reg  [AHB_ADDR_WIDTH - 1 : 0] sha512_address;
-    reg  [31 : 0] sha512_write_data;
-    reg  [31 : 0] sha512_read_data;
-    reg           sha512_err;
+    logic           sha512_cs;
+    logic           sha512_we;
+    logic  [AHB_ADDR_WIDTH - 1 : 0] sha512_address;
+    logic  [31 : 0] sha512_write_data;
+    logic  [31 : 0] sha512_read_data;
+    logic           sha512_err;
 
     sha512 #(
         .ADDR_WIDTH(AHB_ADDR_WIDTH),

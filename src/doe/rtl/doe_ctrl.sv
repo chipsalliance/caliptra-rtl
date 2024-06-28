@@ -59,6 +59,8 @@ module doe_ctrl
 
     output logic clear_obf_secrets,
 
+    output logic busy_o,
+
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
@@ -91,6 +93,7 @@ module doe_ctrl
         .read_data(doe_read_data[31:0]),
         .error_intr(error_intr),
         .notif_intr(notif_intr),
+        .busy_o(busy_o),
         .clear_obf_secrets(clear_obf_secrets),
         .kv_write(kv_write),
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)

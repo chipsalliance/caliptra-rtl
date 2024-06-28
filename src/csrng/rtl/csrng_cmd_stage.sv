@@ -6,9 +6,9 @@
 //
 
 module csrng_cmd_stage import csrng_pkg::*; #(
-  parameter int CmdFifoWidth = 32,
-  parameter int CmdFifoDepth = 16,
-  parameter int StateId = 4
+  parameter logic [31:0] CmdFifoWidth = 32,
+  parameter logic [31:0] CmdFifoDepth = 16,
+  parameter logic [31:0] StateId = 4
 ) (
   input logic                        clk_i,
   input logic                        rst_ni,
@@ -48,9 +48,9 @@ module csrng_cmd_stage import csrng_pkg::*; #(
 );
 
   // Genbits parameters.
-  localparam int GenBitsFifoWidth = 1+128;
-  localparam int GenBitsFifoDepth = 1;
-  localparam int GenBitsCntrWidth = 13;
+  localparam logic[31:0] GenBitsFifoWidth = 1+128;
+  localparam logic[31:0] GenBitsFifoDepth = 1;
+  localparam logic[31:0] GenBitsCntrWidth = 13;
 
   // Command FIFO.
   logic [CmdFifoWidth-1:0] sfifo_cmd_rdata;
@@ -191,7 +191,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
     .set_cnt_i(sfifo_cmd_rdata[24:12]),
     .incr_en_i(1'b0),
     .decr_en_i(cmd_gen_cnt_dec), // Count down.
-    .step_i(GenBitsCntrWidth'(1)),
+    .step_i(GenBitsCntrWidth'(unsigned'(1))),
     .cnt_o(cmd_gen_cnt),
     .cnt_next_o(),
     .err_o(cmd_gen_cnt_err_o)
@@ -224,7 +224,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   // Minimum Hamming weight: 1
   // Maximum Hamming weight: 7
   //
-  localparam int StateWidth = 8;
+  localparam logic[31:0] StateWidth = 8;
   typedef    enum logic [StateWidth-1:0] {
     Idle      = 8'b00011011, // idle
     ArbGnt    = 8'b11110101, // general arbiter request
@@ -285,7 +285,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
           cmd_gen_1st_req = 1'b1;
           cmd_arb_sop_o = 1'b1;
           cmd_fifo_pop = 1'b1;
-          if (sfifo_cmd_rdata[24:12] == GenBitsCntrWidth'(1)) begin
+          if (sfifo_cmd_rdata[24:12] == GenBitsCntrWidth'(unsigned'(1))) begin
             cmd_gen_cnt_last = 1'b1;
           end
           if (cmd_len == '0) begin
@@ -350,7 +350,7 @@ module csrng_cmd_stage import csrng_pkg::*; #(
           cmd_gen_inc_req = 1'b1;
           state_d = GenCmdChk;
           // Check for final genbits beat.
-          if (cmd_gen_cnt == GenBitsCntrWidth'(1)) begin
+          if (cmd_gen_cnt == GenBitsCntrWidth'(unsigned'(1))) begin
             cmd_gen_cnt_last = 1'b1;
           end
         end

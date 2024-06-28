@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package dv_reg_pkg;
+
+    localparam DV_REG_DATA_WIDTH = 32;
+    localparam DV_REG_MIN_ADDR_WIDTH = 11;
+
     typedef struct packed{
         logic swwel;
     } dv_reg__StickyDataVaultCtrl__lock_entry__in_t;

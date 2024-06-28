@@ -33,11 +33,11 @@ module entropy_src_ack_sm (
       Idle: begin
         if (enable_i) begin
           if (req_i) begin
-            state_d = Wait;
+            state_d = Wait_Data;
           end
         end
       end
-      Wait: begin
+      Wait_Data: begin
         if (!enable_i) begin
           state_d = Idle;
         end else begin

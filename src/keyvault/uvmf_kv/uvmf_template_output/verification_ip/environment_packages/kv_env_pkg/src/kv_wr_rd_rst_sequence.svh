@@ -139,6 +139,7 @@ class kv_wr_rd_rst_sequence #(
             begin
                 repeat(10) ecc_privkey_read_seq.start(configuration.kv_ecc_privkey_read_agent_config.sequencer);
             end
+        join
             begin
                 if(reset_phase.is_on) begin
                     active_phase.wait_ptrigger;
@@ -149,6 +150,7 @@ class kv_wr_rd_rst_sequence #(
                     doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
                 end
             end
+        fork
             begin
                 if(reset_phase.is_on) begin
                     active_phase.wait_ptrigger;
@@ -162,6 +164,8 @@ class kv_wr_rd_rst_sequence #(
             begin
                 repeat(10) hmac_block_read_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
             end
+        join
+        fork
             begin
                 if(reset_phase.is_on) begin
                     active_phase.wait_ptrigger;

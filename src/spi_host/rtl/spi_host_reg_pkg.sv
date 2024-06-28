@@ -345,7 +345,7 @@ package spi_host_reg_pkg;
   parameter logic [31:0] SPI_HOST_TXDATA_TXDATA_RESVAL = 32'h 0;
 
   // Register index
-  typedef enum int {
+  typedef enum logic [31:0] {
     SPI_HOST_INTR_STATE,
     SPI_HOST_INTR_ENABLE,
     SPI_HOST_INTR_TEST,

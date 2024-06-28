@@ -39,6 +39,7 @@ from peakrdl_regblock.cpuif.passthrough import PassthroughCpuif
 from math import log, ceil, floor
 import sys
 import os
+import re
 import rdl_post_process
 
 #output directory for dumping files
@@ -57,7 +58,7 @@ class SVPkgAppendingListener(RDLListener):
         pkg_file_path = str(self.regfile_name + "_pkg.sv")
         self.file = open(pkg_file_path, 'r')
         for line in self.file.readlines():
-            if (line != "endpackage"):
+            if (re.search(r'\bendpackage\b', line) is None):
                 self.orig_file += line
         self.file.close()
         self.file = open(pkg_file_path, 'w')

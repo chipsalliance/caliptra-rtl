@@ -276,7 +276,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_PAUSER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_PAUSER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h1,
+    "CPTRA_HW_REV_ID"                      : 32'h201,
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_FUSE_VALID_PAUSER"              : 32'hffff_ffff

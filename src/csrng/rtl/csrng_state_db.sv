@@ -10,12 +10,12 @@
 `include "caliptra_prim_assert.sv"
 
 module csrng_state_db import csrng_pkg::*; #(
-  parameter int NApps = 4,
-  parameter int StateId = 4,
-  parameter int BlkLen = 128,
-  parameter int KeyLen = 256,
-  parameter int CtrLen  = 32,
-  parameter int Cmd     = 3
+  parameter logic [31:0] NApps = 4,
+  parameter logic [31:0] StateId = 4,
+  parameter logic [31:0] BlkLen = 128,
+  parameter logic [31:0] KeyLen = 256,
+  parameter logic [31:0] CtrLen  = 32,
+  parameter logic [31:0] Cmd     = 3
 ) (
   input logic                clk_i,
   input logic                rst_ni,
@@ -49,10 +49,10 @@ module csrng_state_db import csrng_pkg::*; #(
   output logic [StateId-1:0] state_db_sts_id_o
 );
 
-  localparam int InternalStateWidth = 2+KeyLen+BlkLen+CtrLen;
-  localparam int RegInternalStateWidth = 30+InternalStateWidth;
-  localparam int RegW = 32;
-  localparam int StateWidth = 1+1+KeyLen+BlkLen+CtrLen+StateId+1;
+  localparam logic[31:0] InternalStateWidth = 2+KeyLen+BlkLen+CtrLen;
+  localparam logic[31:0] RegInternalStateWidth = 30+InternalStateWidth;
+  localparam logic[31:0] RegW = 32;
+  localparam logic[31:0] StateWidth = 1+1+KeyLen+BlkLen+CtrLen+StateId+1;
 
   logic [StateId-1:0]              state_db_id;
   logic [KeyLen-1:0]               state_db_key;

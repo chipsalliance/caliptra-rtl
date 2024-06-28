@@ -41,6 +41,11 @@ targets:
       - $COMPILE_ROOT/rtl/csrng_cmd_stage.sv
       - $COMPILE_ROOT/rtl/csrng.sv
     tops: [csrng]
+  rtl_lint:
+    directories: []
+    waiver_files:
+      - $MSFT_REPO_ROOT/src/csrng/config/design_lint/sglint_waivers
+    tops: [csrng]
 ---
 provides: [csrng_tb]
 schema_version: 2.4.0

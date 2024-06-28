@@ -252,7 +252,7 @@ module sha512
   end // reg_update
 
   always_comb begin
-    unique casez (mode_reg)
+    unique case (mode_reg)
       2'b00 :    get_mask = {{7{32'hffffffff}}, {9{32'h00000000}}};   //SHA512/224
       2'b01 :    get_mask = {{8{32'hffffffff}}, {8{32'h00000000}}};   //SHA512/256
       2'b10 :    get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384
@@ -275,8 +275,9 @@ module sha512
     hwif_in.SHA512_VERSION[0].VERSION.next = SHA512_CORE_VERSION0;
     hwif_in.SHA512_VERSION[1].VERSION.next = SHA512_CORE_VERSION1;
 
-    init_reg = gen_hash_ip ? gen_hash_init_reg : hwif_out.SHA512_CTRL.INIT.value;
-    next_reg = gen_hash_ip ? gen_hash_next_reg : hwif_out.SHA512_CTRL.NEXT.value;
+    //Mask commands when keyvault is busy to prevent runs with partial keys.
+    init_reg = gen_hash_ip ? gen_hash_init_reg : (hwif_out.SHA512_CTRL.INIT.value & kv_src_ready);
+    next_reg = gen_hash_ip ? gen_hash_next_reg : (hwif_out.SHA512_CTRL.NEXT.value & kv_src_ready);
     mode_reg = gen_hash_ip ? 2'b10 : hwif_out.SHA512_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
@@ -347,8 +348,9 @@ always_comb begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
+      //Lock the block for any keyvault data
       block_reg_lock_nxt[dword] = (gen_hash_ip) ? '1 : 
-                                  (pcr_hash_extend_ip & kv_src_write_en & (kv_src_write_offset == dword)) ? '1 : block_reg_lock[dword];
+                                  (kv_src_write_en & (kv_src_write_offset == dword)) ? '1 : block_reg_lock[dword];
     end
   end
 end
@@ -388,10 +390,10 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
-always_comb kv_read = ~pcr_hash_extend_ip ? vault_read : '0;
+always_comb kv_read = '0;
 always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
-always_comb vault_rd_resp = pcr_hash_extend_ip ? pv_rd_resp : kv_rd_resp;
+always_comb vault_rd_resp = pv_rd_resp;
 
 kv_read_client #(
     .DATA_WIDTH(BLOCK_SIZE),
@@ -421,14 +423,14 @@ sha512_block_kv_read
 );
 
 
-always_comb kv_write = ~pcr_hash_extend_ip ? vault_write : '0;
+always_comb kv_write = '0;
 always_comb begin
   pv_write.write_data = pcr_hash_extend_ip ? vault_write.write_data : '0;
   pv_write.write_en = pcr_hash_extend_ip ? vault_write.write_en : '0;
   pv_write.write_entry = pcr_hash_extend_ip ? vault_write.write_entry : '0;
   pv_write.write_offset = pcr_hash_extend_ip ? vault_write.write_offset : '0;
 end
-always_comb vault_wr_resp = pcr_hash_extend_ip ? pv_wr_resp : kv_wr_resp;
+always_comb vault_wr_resp = pv_wr_resp;
 
 //during PCR hash extend overload write control
 //force write enable and always write to the source address that we read from

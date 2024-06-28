@@ -2,6 +2,10 @@
 //  https://github.com/SystemRDL/PeakRDL-regblock
 
 package doe_reg_pkg;
+
+    localparam DOE_REG_DATA_WIDTH = 32;
+    localparam DOE_REG_MIN_ADDR_WIDTH = 12;
+
     typedef struct packed{
         logic hwclr;
     } doe_reg__DOE_IV__IV__in_t;
@@ -50,33 +54,33 @@ package doe_reg_pkg;
 
     typedef struct packed{
         logic hwset;
-    } doe_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t;
+    } doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } doe_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t;
+    } doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } doe_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t;
+    } doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
         logic hwset;
-    } doe_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t;
+    } doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t;
 
     typedef struct packed{
-        doe_reg__error_intr_t__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t error0_sts;
-        doe_reg__error_intr_t__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t error1_sts;
-        doe_reg__error_intr_t__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t error2_sts;
-        doe_reg__error_intr_t__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t error3_sts;
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error0_sts_enable_528ccada_next_b1018582_resetsignal_f7aac87a__in_t error0_sts;
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error1_sts_enable_938cafef_next_f460eb81_resetsignal_f7aac87a__in_t error1_sts;
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_f7aac87a__in_t error2_sts;
+        doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_f7aac87a__in_t error3_sts;
     } doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba__in_t;
 
     typedef struct packed{
         logic hwset;
-    } doe_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
+    } doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t;
 
     typedef struct packed{
-        doe_reg__notif_intr_t__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
+        doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__notif_cmd_done_sts_enable_dabe0b8b_next_540fa3b7__in_t notif_cmd_done_sts;
     } doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
@@ -144,6 +148,13 @@ package doe_reg_pkg;
         doe_reg__DOE_CTRL__out_t DOE_CTRL;
         doe_reg__intr_block_t__out_t intr_block_rf;
     } doe_reg__out_t;
+
+    typedef enum logic [31:0] {
+        doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_IDLE = 'h0,
+        doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_UDS = 'h1,
+        doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_FE = 'h2,
+        doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_CLEAR_OBF_SECRETS = 'h3
+    } doe_reg__DOE_CTRL__CMD__doe_cmd_e_e;
 
     localparam DOE_REG_ADDR_WIDTH = 32'd12;
 

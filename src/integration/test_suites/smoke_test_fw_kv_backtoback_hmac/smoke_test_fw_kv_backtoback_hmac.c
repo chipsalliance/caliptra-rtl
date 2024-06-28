@@ -181,7 +181,7 @@ void main() {
     uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
+    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     
     printf("KV HMAC flow is completed.\n\n");
 

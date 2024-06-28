@@ -176,7 +176,7 @@ module hmac_ctrl_tb();
              .kv_write(),
              .kv_rd_resp('x),
              .kv_wr_resp('x),
-
+             .busy_o(),
              .error_intr(),
              .notif_intr(),
              .debugUnlock_or_scan_mode_switch('0)

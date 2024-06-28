@@ -48,6 +48,8 @@
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
+#include "ecc.h"
+#include "doe.h"
 
 ////////////////////////////////////////////////////////////////////
 // Typedefs
@@ -72,6 +74,7 @@ enum tb_resp_value {
     ICCM_FATAL_OBSERVED             = 0xdeadaca1,
     DCCM_FATAL_OBSERVED             = 0xdeadbeef,
     NMI_FATAL_OBSERVED              = 0xdeadc0a7,
+    CRYPTO_ERROR_OBSERVED           = 0xdeadface,
     DMA_ERROR_OBSERVED              = 0xfadebadd,
     ERROR_NONE_SET                  = 0xba5eba11, /* default value for a test with no activity observed by TB */
 };
@@ -143,6 +146,9 @@ enum test_list {
     PROT_NO_LOCK_MASKED               ,
     PROT_OOO_UNMASKED                 ,
     PROT_OOO_MASKED                   ,
+    CRYPTO_HMAC_ECC                   ,
+    CRYPTO_HMAC_DOE                   ,
+    CRYPTO_DOE_ECC                    ,
     TEST_COUNT                        ,
 };
 enum boot_count_list {
@@ -154,9 +160,10 @@ enum boot_count_list {
     BEFORE_FIRST_NMI_FAILURE      ,
     BEFORE_SECOND_NMI_FAILURE     ,
     BEFORE_THIRD_NMI_FAILURE      ,
-    AFTER_THIRD_NMI_FAILURE       ,
-    AFTER_FIRST_MBOX_OOO_FAILURE  ,
-    AFTER_SECOND_MBOX_OOO_FAILURE
+    BEFORE_FIRST_CRYPTO_FAILURE   ,
+    BEFORE_SECOND_CRYPTO_FAILURE  ,
+    BEFORE_THIRD_CRYPTO_FAILURE   ,
+    AFTER_THIRD_CRYPTO_FAILURE
 };
 //enum boot_count_list {
 //    RUN_MBOX_AND_FIRST_ICCM_SRAM_ECC  = 1,
@@ -234,6 +241,9 @@ enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.per
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
+    NOT_STARTED,
     NOT_STARTED
 };
 
@@ -263,6 +273,10 @@ uint32_t check_mbox_ooo_error    (enum mask_config test_mask);
 /* NMI */
 void     run_nmi_test             (enum mask_config test_mask);
 uint32_t check_nmi_test           (enum mask_config test_mask);
+
+/* Crypto Error */
+void     run_crypto_error         (enum test_list test_case);
+uint32_t check_crypto_error       (enum test_list test_case);
 
 /* Supporting code */
 void nmi_handler       (void);
@@ -985,6 +999,60 @@ void run_mbox_ooo_error(enum mask_config test_mask) {
 
 }
 
+void run_crypto_error(enum test_list test_case) {
+    enum test_list cur_test;
+    VPRINTF(MEDIUM, "\n*** Run Crypto Case ***\n");
+
+    // Get test ID
+    if      (test_case == CRYPTO_DOE_ECC)  { cur_test = CRYPTO_DOE_ECC;  }
+    else if (test_case == CRYPTO_HMAC_DOE) { cur_test = CRYPTO_HMAC_DOE; }
+    else if (test_case == CRYPTO_HMAC_ECC) { cur_test = CRYPTO_HMAC_ECC; }
+
+    //start appropriate crypto engines
+    if (test_case == CRYPTO_DOE_ECC) {
+        //start ecc and doe together
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
+        lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+    } else if (test_case == CRYPTO_HMAC_DOE) {
+        //start hmac and doe together
+        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+        lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW);
+    } else if (test_case == CRYPTO_HMAC_ECC) {
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
+        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    }
+
+    // Flag test as having run
+    test_progress_g[cur_test] = RUN_NOT_CHECKED;
+
+}
+
+uint32_t check_crypto_error(enum test_list test_case) {
+    uint32_t sts = 0;
+    enum test_list cur_test;
+    VPRINTF(MEDIUM, "\n*** Check Crypto Case ***\n  ");
+    // Get test ID
+    if      (test_case == CRYPTO_DOE_ECC)  { cur_test = CRYPTO_DOE_ECC;  }
+    else if (test_case == CRYPTO_HMAC_DOE) { cur_test = CRYPTO_HMAC_DOE; }
+    else if (test_case == CRYPTO_HMAC_ECC) { cur_test = CRYPTO_HMAC_ECC; }
+
+    // Check for generic_input_wires activity
+    if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)) {
+        VPRINTF(ERROR, "ERROR: Gen-in did not tgl\n");
+        sts |= BAD_CPTRA_SIG;
+        test_progress_g[cur_test] = RUN_AND_FAILED;
+    } else if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) != CRYPTO_ERROR_OBSERVED) {
+        VPRINTF(ERROR, "ERROR: Gen-in bad val\n");
+        sts |= BAD_CPTRA_SIG;
+        test_progress_g[cur_test] = RUN_AND_FAILED;
+    } else {
+        sts |= SUCCESS;
+        test_progress_g[cur_test] = RUN_AND_PASSED;
+    }
+
+    return sts;
+}
+
 uint32_t check_mbox_no_lock_error(enum mask_config test_mask) {
     enum test_list cur_test;
     uint32_t sts = 0;
@@ -1142,7 +1210,8 @@ void nmi_handler (void) {
         while(1);
     }
     // NMI occurred, check if we had a fatal error
-    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & (SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_MASK |
+    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & (SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK|
+                                                             SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_MASK |
                                                              SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK)) {
         //Save generic_input_wires value before reset to compare later. This is to avoid flagging the toggle during reset as an error
         generic_input_wires_0_before_rst = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
@@ -1179,6 +1248,8 @@ void main(void) {
         // Setup the NMI Handler
         lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
+        VPRINTF(LOW, "Boot Count: %d\n", boot_count);
+        
         // Test Mailbox SRAM ECC
         if (boot_count == BEFORE_FIRST_ICCM_FAILURE) {
             test_mbox_sram_ecc(NO_MASK);
@@ -1210,19 +1281,26 @@ void main(void) {
                                                                            run_nmi_test(WITH_MASK); }
         else if (boot_count == BEFORE_THIRD_NMI_FAILURE) {               check_nmi_test(WITH_MASK);
         // Test NMI from Masked ICCM ECC through LSU
-                                                            run_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
-        else if (boot_count == AFTER_THIRD_NMI_FAILURE) { check_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
+                                                                run_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
+        else if (boot_count == BEFORE_FIRST_CRYPTO_FAILURE) { check_iccm_sram_ecc(WITH_MASK, FROM_LSU); }
 
         // Test Mailbox Protocol Violations (no reset expected)
-        if      (boot_count == AFTER_THIRD_NMI_FAILURE) {    run_mbox_no_lock_error  (  NO_MASK);
-                                                           check_mbox_no_lock_error  (  NO_MASK);
-                                                             run_mbox_ooo_error      (  NO_MASK);
-                                                           check_mbox_ooo_error      (  NO_MASK);
-                                                             run_mbox_no_lock_error  (WITH_MASK);
-                                                           check_mbox_no_lock_error  (WITH_MASK);
-                                                             run_mbox_ooo_error      (WITH_MASK);
-                                                           check_mbox_ooo_error      (WITH_MASK); }
-
+        if      (boot_count == BEFORE_FIRST_CRYPTO_FAILURE) {    run_mbox_no_lock_error  (  NO_MASK);
+                                                               check_mbox_no_lock_error  (  NO_MASK);
+                                                                 run_mbox_ooo_error      (  NO_MASK);
+                                                               check_mbox_ooo_error      (  NO_MASK);
+                                                                 run_mbox_no_lock_error  (WITH_MASK);
+                                                               check_mbox_no_lock_error  (WITH_MASK);
+                                                                 run_mbox_ooo_error      (WITH_MASK);
+                                                               check_mbox_ooo_error      (WITH_MASK); }
+        // Test crypto error due to simultaneous use
+        if      (boot_count == BEFORE_FIRST_CRYPTO_FAILURE)  { run_crypto_error  (CRYPTO_DOE_ECC); }
+        else if (boot_count == BEFORE_SECOND_CRYPTO_FAILURE) { check_crypto_error(CRYPTO_DOE_ECC);
+                                                               run_crypto_error  (CRYPTO_HMAC_DOE); }
+        else if (boot_count == BEFORE_THIRD_CRYPTO_FAILURE)  { check_crypto_error(CRYPTO_HMAC_DOE);
+                                                               run_crypto_error  (CRYPTO_HMAC_ECC); }
+        else if (boot_count == AFTER_THIRD_CRYPTO_FAILURE)   { check_crypto_error(CRYPTO_HMAC_ECC); }
+ 
         // Final Report
         VPRINTF(MEDIUM, "Eval test progress...\n");
         for (enum test_list tests = 0; tests < TEST_COUNT; tests++) {
