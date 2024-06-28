@@ -32,6 +32,8 @@ For each release, the following steps are followed to ensure code functionality 
   - Directed/Random regression per the [Test Plan](./Caliptra_TestPlan.xlsx)
 - Coverage Review
   - Coverage database is manually reviewed to ensure all required coverpoints are exercised
+- FPGA Validation
+  - Latest RTL is tested in FPGA
 - Register updates:
   - [CPTRA_HW_REV_ID](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_REV_ID): Update version information according to the defined field mapping to match current release
   - [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG): Update any fields to indicate a change in Caliptra capabilities
