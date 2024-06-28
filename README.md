@@ -51,6 +51,10 @@ GCC:
  - G++ Used to compile Verilator objects and test firmware
    - `g++ (GCC) 11.2.0`
 
+CDC:
+ - Questa CDC
+   - `2023.3 5624840 linux_x86_64 19-Jul-2023`
+  
 RDC:
  - Real Intent Meridian
    - `2019.A.P16`
