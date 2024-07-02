@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/06/19*_
+_*Last Update: 2024/07/02*_
 
 ## Rev 1p1 ##
 
-#### Rev 1p1 release date: 2024/06/19 ####
-- Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes
+#### Rev 1p1 release date: 2024/07/02 ####
+- Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes, Key Vault updates
 - Caliptra Integration Specification updates to add clarity
 - Caliptra README updates to tool versions, simulation instructions
 - Update RDL register descriptions for clarity, accuracy in generated reg document
