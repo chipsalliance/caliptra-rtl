@@ -145,10 +145,10 @@ The following tables describe the interface signals.
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | jtag_tck | 1 | input | | |
-| jtag_tms | 1 | input | Synchronous to tck | |
-| jtag_tdi | 1 | input | Synchronous to tck | |
-| jtag_trst_n | 1 | input | Async Deassertion<br> Assertion Synchronous to tck | |
-| jtag_tdo | 1 | output | Synchronous to tck | |
+| jtag_tms | 1 | input | Synchronous to jtag_tck | |
+| jtag_tdi | 1 | input | Synchronous to jtag_tck | |
+| jtag_trst_n | 1 | input | Asynchronous assertion<br>Synchronous deassertion to jtag_tck | |
+| jtag_tdo | 1 | output | Synchronous to jtag_tck | |
 
 *Table 10: UART interface*
 
@@ -663,7 +663,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_PAUSER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_PAUSER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_PAUSER register. | Security                 | Required for Caliptra threat model                |
 | Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing).                  | Statement of conformance | Functionality                                     |
 | Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS\_SEED. It is strongly advised to implement manufacturing policies to protect UDS\_SEED as defense in depth measures. <br>1, Prevent leakage of UDS\_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS\_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra threat model |
-| Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model | 
+| Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model |
 | Chain of trust                   | SoC shall limit the mutable code and configuration that persists across the Caliptra powergood reset. A statement of conformance lists what persists and why this persistence is necessary.                                                                                    | Statement of conformance | Required for Caliptra threat model                |
 | Implementation                   | SoC shall apply size-only constraints on cells tagged with the "u\_\_size\_only\_\_" string and shall ensure that these are not optimized in synthesis and PNR                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                                                                             | GLS simulations pass                 | Functional requirement                |
@@ -672,7 +672,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 
 | Module                    | Warning | Line No. | Description |
 | :--------- | :--------- | :--------- | :--------- |
-| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
+| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)|
 | ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
@@ -725,7 +725,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
     * Pseudo-static: wr\_data, wr\_addr
         * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
         * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
-* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers. 
+* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers.
 
 ## CDC constraints
 * cdc report scheme two\_dff -severity violation
@@ -782,7 +782,7 @@ The following table shows the false paths between various reset groups.
 
 ## Reset sequencing scenarios
 
-The resets defined in *Table 20* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset. 
+The resets defined in *Table 20* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset.
 
 The reset sequencing is illustrated in the following waveform.
 
@@ -803,12 +803,12 @@ The following table defines the order in which resets can get asserted. A ">>" i
 The following set of constraints and assumptions must be provided before running RDC structural analysis of Caliptra Core IP.
 
 1. Caliptra Core IP assumes the primary reset inputs are already synchronized to their respective clocks. The integrator must add external reset synchronizers to achieve the same.
-    - *cptra_pwrgood* and *cptra_rst_b* resets must be synchronzied to *cptra_clk*
-    - *jtag_trst_n* reset must be synchronzied to *jtag_clk*
+    - *cptra_pwrgood* and *cptra_rst_b* resets must be synchronized to *cptra_clk*
+    - Deassertion of *jtag_trst_n* reset must be synchronized to *jtag_clk*. The signal can be asserted asynchronously.
 2. The following debug register, which is driven from JTAG, is not toggled during functional flow.
     - u_caliptra.rvtop.veer.dbg.dmcontrol_reg[0] = 0
 3. Set *scan_mode* to 0 for functional analysis.
-4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 20*. 
+4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 20*.
 5. Create funtional reset grouping - This step must be customized as per the EDA tool, which is being used for RDC analysis. The goal of this customization is to achieve the following three sequencing requirements/constraints.
     - Gate all clocks when *cptra_noncore_rst_b* is asserted. This ensures that the capture flop clock is gated while the source flop's reset is getting asserted, thereby preventing the capture flop from becoming metastable. The result is when *cptra_noncore_rst_b* is going to be asserted, the following signals are constrained to be at 1 at around that time.
         - soc_ifc_top1.i_soc_ifc_boot_fsm.rdc_clk_dis
@@ -845,7 +845,7 @@ Considering the given constraints, three sets of crossings were identified as RD
 
 <br>
 
-For violations in Sl No 1 and 2, the schematic for the crossing is shown in the following figure. 
+For violations in Sl No 1 and 2, the schematic for the crossing is shown in the following figure.
 
 *Figure 11: Schematic for RDC violations #1 and #2*
 
