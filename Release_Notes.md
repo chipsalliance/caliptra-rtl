@@ -27,7 +27,7 @@ _*Last Update: 2024/07/02*_
   - Update zeroize assertions
   - Add X check assertions to all register files
   - New assertions and firmware tests for LMS accelerator
-  - Formal Verification (#493):
+  - Formal Verification [#493](https://github.com/chipsalliance/caliptra-rtl/pull/493):
     - ECC Montgomery updated to recent changes
     - SHA512\_masked update to entropy instead of LFSR
     - SHA256 LMS extension verified
@@ -58,13 +58,13 @@ _*Last Update: 2024/07/02*_
   - Update HW\_REV\_ID bit-map and configure value to 1.1
 
 #### Bug Fixes ####
-[RTL] Add connection for JTAG TDO enable signal #415 #425<br>
-[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506<br>
-[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483<br>
-[HMAC] Fixed leakage issue in HMAC #325 #429<br>
-[KV] Resolve a potential vulnerability in Key Vault usage #528<br>
-[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528<br>
-[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541
+[RTL] Add connection for JTAG TDO enable signal [#415](https://github.com/chipsalliance/caliptra-rtl/issues/415) [#425](https://github.com/chipsalliance/caliptra-rtl/pull/425)<br>
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset [#503](https://github.com/chipsalliance/caliptra-rtl/issues/503) [#506](https://github.com/chipsalliance/caliptra-rtl/pull/506)<br>
+[PV] Async reset condition missing for `nonce_offset_i` [#339](https://github.com/chipsalliance/caliptra-rtl/issues/339) [#444](https://github.com/chipsalliance/caliptra-rtl/issues/444) [#483](https://github.com/chipsalliance/caliptra-rtl/pull/483)<br>
+[HMAC] Fixed leakage issue in HMAC [#325](https://github.com/chipsalliance/caliptra-rtl/pull/325) [#429](https://github.com/chipsalliance/caliptra-rtl/pull/429)<br>
+[KV] Resolve a potential vulnerability in Key Vault usage [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint [#541](https://github.com/chipsalliance/caliptra-rtl/pull/541)
 
 ## Previous Releases ##
 
