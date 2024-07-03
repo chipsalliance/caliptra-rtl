@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 1.0</p>
+<p style="text-align: center;">Version 1.1</p>
 
 <div style="page-break-after: always"></div>
 
@@ -902,22 +902,21 @@ These metrics are inclusive of VeeR core, Caliptra logic, imem/dmem RAM, ROM.
 
 The area is expressed in units of square microns.
 
-The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
+The target foundry technology node is an industry standard, moderately advanced technology node as of 2024 June.
 
 *Table 25: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 6/15/2023 | CALIPTRACLK          | 500MHz          | -15.93      | 496MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | JTAG_TCK             | 100MHz          | 4606.5      | 100MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | clock_gating_default | 500MHz          | 26.56       | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | io_to_io             | 500MHz          | -599.82     | 385MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | io_to_flop           | 500MHz          | 0.25        | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | flop_to_io           | 500MHz          | -627.58     | 381MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | CALIPTRACLK          | 500MHz            | -0.09       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | JTAG_TCK             | 100MHz            | 4606.5      | 100MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | clock_gating_default | 500MHz            | 3.36        | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | io_to_flop           | 500MHz            | 429.8       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | flop_to_io           | 500MHz            | 0.10        | 500MHz                   |
 
 | **IP Name**      | **Date**  | **Stdcell Area** | **Macro Area** | **Memory Area** | **Total Area** | **Flop Count** | **No Clock Regs/Pins Count** | **FM Status** | **FM Eqv Pts** | **FM Non-Eqv Pts** | **FM Abort Pts** | **FM FM**<br> **Non-Comp** **Pts** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 10/4/2023 | 89279            | 7872           | 239937          | 337088         | 45601          | 31                           | SUCCEEDED     | 156211         | 0                  | 0                | 0                              |
+| CALIPTRA_WRAPPER | 6/11/2024 | 93916            | 0           | 239937          | 341725         | 164505          | 0                           | SUCCEEDED     | 166241         | 0                  | 0                | 0                              |
 
 # Recommended LINT rules
 
