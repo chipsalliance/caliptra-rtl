@@ -731,6 +731,7 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
 * cdc report scheme two\_dff -severity violation
 * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
 * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
+* cdc signal rd\_data       -module dmi\_wrapper -stable
 
 # RDC analysis and constraints
 
