@@ -328,3 +328,19 @@ jobs:
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
             -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_cg.tcl
+
+      - name: Build Verilated simulation
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          rm -rf run/*
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=jtag_access_core_reset DEBUG_UNLOCKED=1 \
+            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=jtag_access_core_reset
+
+      - name: Test JTAG access while uC in reset
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator-rst.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/jtag_access_core_reset/jtag_access_core_reset.tcl
