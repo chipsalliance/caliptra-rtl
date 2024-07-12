@@ -15,6 +15,11 @@
 
 package axi_pkg;
 
+    localparam AXI_LEN_MAX_VALUE = 256; // 8-bit LEN signal = 256 beats max
+    localparam AXI_LEN_WIDTH     = $clog2(AXI_LEN_MAX_VALUE);
+    localparam AXI_LEN_MAX_BYTES = 4096;
+    localparam AXI_LEN_BC_WIDTH = $clog2(AXI_LEN_MAX_BYTES);
+
     // AXI Burst Enum
     typedef enum logic [1:0] {
         AXI_BURST_FIXED    = 2'b00,
