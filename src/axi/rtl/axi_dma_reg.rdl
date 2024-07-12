@@ -18,8 +18,11 @@ addrmap axi_dma_reg {
     signal {activelow; async; cpuif_reset; field_reset; } cptra_rst_b;
     signal {activelow; async; } cptra_pwrgood;
 
-    //signal to indicate request is coming from soc side
+    // indicate request is coming from soc side
     signal {} soc_req;
+    // DMA operation parameters are unmodifiable while operation in progress
+    // and also unmodifiable by soc at all times
+    signal {} dma_swwel;
 
     // Default register configuration
     addressing = regalign; // This is the default if not specified
@@ -49,8 +52,8 @@ addrmap axi_dma_reg {
     reg {
         name="Caliptra AXI DMA Control";
         desc="Used to drive command parameters and initiate operations to DMA block.";
-        field { desc="Initiate current configured operation."; sw=rw; swwel=soc_req; onwrite=woset; swmod; hw=r; hwclr=true; } go=1'b0;
-        field { desc="Flush active operations, reset state machines, clear FIFO data."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
+        field { desc="Initiate current configured operation."; sw=rw; swwel=dma_swwel; onwrite=woset; swmod; hw=r; hwclr=true; } go=1'b0;
+        field { desc="Flush active operations, reset state machines, clear FIFO data. Any in-flight AXI transactions will be gracefully completed."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd0[14]=14'h0000;
         field { desc="Read Route. Configures how the AXI read channel operates for the current operation.";
                 enum rd_route_e {
@@ -71,9 +74,9 @@ addrmap axi_dma_reg {
 //                        desc = "AXI Read channel data is routed to the SOC_IFC SHA accelerator.";
 //                    };
                 };
-                sw=rw; swwel=soc_req; hw=r; encode = rd_route_e; } rd_route[2]=0;
+                sw=rw; swwel=dma_swwel; hw=r; encode = rd_route_e; } rd_route[2]=0;
         field { desc="RESERVED."; sw=r; } rsvd1[2]=2'h0;
-        field { desc="Read Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=soc_req; hw=r; } rd_fixed=1'b0;
+        field { desc="Read Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=dma_swwel; hw=r; } rd_fixed=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd2[3]=3'h0;
         field { desc="Write Route. Configures how the AXI write channel operates for the current operation.";
                 enum wr_route_e {
@@ -90,9 +93,9 @@ addrmap axi_dma_reg {
                         desc = "AXI Write channel data is received from AXI Read channel, then sent onto SoC fabric.";
                     };
                 };
-                sw=rw; swwel=soc_req; hw=r; encode = wr_route_e; } wr_route[2]=0;
+                sw=rw; swwel=dma_swwel; hw=r; encode = wr_route_e; } wr_route[2]=0;
         field { desc="RESERVED."; sw=r; } rsvd3[2]=2'h0;
-        field { desc="Write Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=soc_req; hw=r; } wr_fixed=1'b0;
+        field { desc="Write Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=dma_swwel; hw=r; } wr_fixed=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd4[3]=3'h0;
     } ctrl;
 
@@ -110,14 +113,22 @@ addrmap axi_dma_reg {
             desc = "Indicates the present state of the Caliptra AXI DMA FSM.";
 
             enum axi_dma_fsm_e {
-                DMA_IDLE = 3'b000 {
+                DMA_IDLE = 2'b00 {
                     desc = "DMA is idle";
                 };
-                // FIXME
+                DMA_WAIT_DATA = 2'b01 {
+                    desc = "DMA operation is active";
+                };
+                DMA_DONE = 2'b10 {
+                    desc = "DMA operation is complete, with success";
+                };
+                DMA_ERROR = 2'b11 {
+                    desc = "DMA operation is completed or parsed with an error";
+                };
             };
             sw=r; hw=rw; encode = axi_dma_fsm_e;
-        } axi_dma_fsm_ps[3] = 0;
-        field { desc="RESERVED."; sw=r; } rsvd1[13]=13'h0000;
+        } axi_dma_fsm_ps[2] = 0;
+        field { desc="RESERVED."; sw=r; } rsvd1[14]=14'h0000;
     } status0;
 
     // Status 1
@@ -131,31 +142,31 @@ addrmap axi_dma_reg {
     reg {
         name="Caliptra AXI DMA Source Address Low";
         desc="Contains lower 32-bits of address from which current operation will read data.";
-        field { desc="Addr_L"; sw=rw; swwel=soc_req; hw=r; } addr_l[32]=32'h00000000;
+        field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } src_addr_l;
     reg {
         name="Caliptra AXI DMA Source Address High";
         desc="Contains upper 32-bits of address from which current operation will read data.";
-        field { desc="Addr_H"; sw=rw; swwel=soc_req; hw=r; } addr_h[32]=32'h00000000;
+        field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } src_addr_h;
 
     // Destination Address
     reg {
         name="Caliptra AXI DMA Destination Address Low";
         desc="Contains lower 32-bits of address to which current operation will write data.";
-        field { desc="Addr_L"; sw=rw; swwel=soc_req; hw=r; } addr_l[32]=32'h00000000;
+        field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } dst_addr_l;
     reg {
         name="Caliptra AXI DMA Destination Address High";
         desc="Contains upper 32-bits of address to which current operation will write data.";
-        field { desc="Addr_H"; sw=rw; swwel=soc_req; hw=r; } addr_h[32]=32'h00000000;
+        field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } dst_addr_h;
 
     // Byte Count
     reg {
         name="Caliptra AXI DMA Byte Count";
-        desc="Contains total number of bytes to be transferred by current operation. Zero-based value.";
-        field { desc="Byte Count"; sw=rw; swwel=soc_req; hw=r; } count[32]=32'h00000000;
+        desc="Contains total number of bytes to be transferred by current operation.";
+        field { desc="Byte Count"; sw=rw; swwel=dma_swwel; hw=r; } count[32]=32'h00000000;
     } byte_count;
 
     // Block Size
@@ -172,8 +183,9 @@ addrmap axi_dma_reg {
               without any stalls in between transactions.
               Must be a multiple of AXI data width. If block size is not
               aligned to the AXI data width, it will be rounded down.
+              Must be a power of 2.
               Value of 4096 or larger is unsupported – AXI native maximum size is 4096.";
-        field { desc="Block Size"; sw=rw; swwel=soc_req; hw=r; } size[12]=12'h000;
+        field { desc="Block Size"; sw=rw; swwel=dma_swwel; hw=r; } size[12]=12'h000;
         field { desc="RESERVED."; sw=r; } rsvd[20]=20'h00000;
     } block_size;
 
@@ -248,7 +260,6 @@ addrmap axi_dma_reg {
             default hw = na;
             default sw = rw;
 
-            // FIXME vvv
             // Specific enables for the events defined in this
             // event type in the instantiating peripheral.
             field {desc = "Enable bit for Command Decode Error";                                                       } error_cmd_dec_en = 1'b0;
@@ -256,10 +267,8 @@ addrmap axi_dma_reg {
             field {desc = "Enable bit for AXI Write Error";                                                            } error_axi_wr_en = 1'b0;
             field {desc = "Enable bit for Mailbox Not Locked Error";                                                   } error_mbox_lock_en = 1'b0;
             field {desc = "Enable bit for SHA Accel Not Locked Error";                                                 } error_sha_lock_en = 1'b0;
-            field {desc = "Enable bit for Read FIFO Overflow";                                                         } error_rd_fifo_oflow_en = 1'b0;
-            field {desc = "Enable bit for Read FIFO Underflow";                                                        } error_rd_fifo_uflow_en = 1'b0;
-            field {desc = "Enable bit for Write FIFO Overflow";                                                        } error_wr_fifo_oflow_en = 1'b0;
-            field {desc = "Enable bit for Write FIFO Underflow";                                                       } error_wr_fifo_uflow_en = 1'b0;
+            field {desc = "Enable bit for FIFO Overflow";                                                              } error_fifo_oflow_en = 1'b0;
+            field {desc = "Enable bit for FIFO Underflow";                                                             } error_fifo_uflow_en = 1'b0;
         };
 
         /* ---- Notification Interrupt Enable ---- */
@@ -272,11 +281,11 @@ addrmap axi_dma_reg {
 
             // Specific enables for the events defined in this
             // event type in the instantiating peripheral.
-            field {desc = "Enable bit for Transaction Done";    } notif_txn_done_en = 1'b0;
-            field {desc = "Enable bit for Read FIFO Not Empty"; } notif_rd_fifo_not_empty_en = 1'b0;
-            field {desc = "Enable bit for Read FIFO Full";      } notif_rd_fifo_full_en = 1'b0;
-            field {desc = "Enable bit for Write FIFO Not Full"; } notif_wr_fifo_not_full_en = 1'b0;
-            field {desc = "Enable bit for Write FIFO Empty";    } notif_wr_fifo_empty_en = 1'b0;
+            field {desc = "Enable bit for Transaction Done"; } notif_txn_done_en = 1'b0;
+            field {desc = "Enable bit for FIFO Empty";       } notif_fifo_empty_en = 1'b0;
+            field {desc = "Enable bit for FIFO Not Empty";   } notif_fifo_not_empty_en = 1'b0;
+            field {desc = "Enable bit for FIFO Full";        } notif_fifo_full_en = 1'b0;
+            field {desc = "Enable bit for FIFO Not Full";    } notif_fifo_not_full_en = 1'b0;
         };
 
         /* ---- Error Interrupt Status ---- */
@@ -297,10 +306,8 @@ addrmap axi_dma_reg {
             field {desc = "AXI Write Error status bit";                                                            } error_axi_wr_sts = 1'b0;
             field {desc = "Mailbox Not Locked Error status bit";                                                   } error_mbox_lock_sts = 1'b0;
             field {desc = "SHA Accel Not Locked Error status bit";                                                 } error_sha_lock_sts = 1'b0;
-            field {desc = "Read FIFO Overflow status bit";                                                         } error_rd_fifo_oflow_sts = 1'b0;
-            field {desc = "Read FIFO Underflow status bit";                                                        } error_rd_fifo_uflow_sts = 1'b0;
-            field {desc = "Write FIFO Overflow status bit";                                                        } error_wr_fifo_oflow_sts = 1'b0;
-            field {desc = "Write FIFO Underflow status bit";                                                       } error_wr_fifo_uflow_sts = 1'b0;
+            field {desc = "FIFO Overflow status bit";                                                              } error_fifo_oflow_sts = 1'b0;
+            field {desc = "FIFO Underflow status bit";                                                             } error_fifo_uflow_sts = 1'b0;
         };
 
         /* ---- Notification Interrupt Status ---- */
@@ -316,11 +323,11 @@ addrmap axi_dma_reg {
             default woclr = true;
             default level intr;
 
-            field {desc = "Transaction Done status bit";    } notif_txn_done_sts = 1'b0;
-            field {desc = "Read FIFO Not Empty status bit"; } notif_rd_fifo_not_empty_sts = 1'b0;
-            field {desc = "Read FIFO Full status bit";      } notif_rd_fifo_full_sts = 1'b0;
-            field {desc = "Write FIFO Not Full status bit"; } notif_wr_fifo_not_full_sts = 1'b0;
-            field {desc = "Write FIFO Empty status bit";    } notif_wr_fifo_empty_sts = 1'b0;
+            field {desc = "Transaction Done status bit"; } notif_txn_done_sts = 1'b0;
+            field {desc = "FIFO Empty status bit";       } notif_fifo_empty_sts = 1'b0;
+            field {desc = "FIFO Not Empty status bit";   } notif_fifo_not_empty_sts = 1'b0;
+            field {desc = "FIFO Full status bit";        } notif_fifo_full_sts = 1'b0;
+            field {desc = "FIFO Not Full status bit";    } notif_fifo_not_full_sts = 1'b0;
         };
 
         /* ---- Aggregated Interrupt Status ---- */
@@ -358,15 +365,13 @@ addrmap axi_dma_reg {
             default singlepulse = true;
 
             // Instantiate triggers bit-by-bit.
-            field {desc = "Command Decode Error trigger bit";             } error_cmd_dec_trig       = 1'b0;
-            field {desc = "AXI Read Error trigger bit";                   } error_axi_rd_trig        = 1'b0;
-            field {desc = "AXI Write Error trigger bit";                  } error_axi_wr_trig        = 1'b0;
-            field {desc = "Mailbox Not Locked Error trigger bit";         } error_mbox_lock_trig     = 1'b0;
-            field {desc = "SHA Accel Not Locked Error trigger bit";       } error_sha_lock_trig      = 1'b0;
-            field {desc = "Read FIFO Overflow trigger bit";               } error_rd_fifo_oflow_trig = 1'b0;
-            field {desc = "Read FIFO Underflow trigger bit";              } error_rd_fifo_uflow_trig = 1'b0;
-            field {desc = "Write FIFO Overflow trigger bit";              } error_wr_fifo_oflow_trig = 1'b0;
-            field {desc = "Write FIFO Underflow trigger bit";             } error_wr_fifo_uflow_trig = 1'b0;
+            field {desc = "Command Decode Error trigger bit";             } error_cmd_dec_trig    = 1'b0;
+            field {desc = "AXI Read Error trigger bit";                   } error_axi_rd_trig     = 1'b0;
+            field {desc = "AXI Write Error trigger bit";                  } error_axi_wr_trig     = 1'b0;
+            field {desc = "Mailbox Not Locked Error trigger bit";         } error_mbox_lock_trig  = 1'b0;
+            field {desc = "SHA Accel Not Locked Error trigger bit";       } error_sha_lock_trig   = 1'b0;
+            field {desc = "FIFO Overflow trigger bit";                    } error_fifo_oflow_trig = 1'b0;
+            field {desc = "FIFO Underflow trigger bit";                   } error_fifo_uflow_trig = 1'b0;
         };
 
         /* ---- Notification Interrupt Trigger ---- */
@@ -384,11 +389,11 @@ addrmap axi_dma_reg {
             default singlepulse = true;
 
             // Instantiate triggers bit-by-bit.
-            field {desc = "Transaction Done trigger bit";    } notif_txn_done_trig          = 1'b0;
-            field {desc = "Read FIFO Not Empty trigger bit"; } notif_rd_fifo_not_empty_trig = 1'b0;
-            field {desc = "Read FIFO Full trigger bit";      } notif_rd_fifo_full_trig      = 1'b0;
-            field {desc = "Write FIFO Not Full trigger bit"; } notif_wr_fifo_not_full_trig  = 1'b0;
-            field {desc = "Write FIFO Empty trigger bit";    } notif_wr_fifo_empty_trig     = 1'b0;
+            field {desc = "Transaction Done trigger bit";    } notif_txn_done_trig       = 1'b0;
+            field {desc = "FIFO Empty trigger bit";          } notif_fifo_empty_trig     = 1'b0;
+            field {desc = "FIFO Not Empty trigger bit";      } notif_fifo_not_empty_trig = 1'b0;
+            field {desc = "FIFO Full trigger bit";           } notif_fifo_full_trig      = 1'b0;
+            field {desc = "FIFO Not Full trigger bit";       } notif_fifo_not_full_trig  = 1'b0;
         };
 
         /* ---- Interrupt Statistics Counter Incrementor ---- */
@@ -442,20 +447,18 @@ addrmap axi_dma_reg {
         notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
                                                                                                                          //
         // Align this set of registers; number of counters is based on peripheral event requirements                     //
-        intr_count_t      error_cmd_dec_intr_count_r @0x100;        /* Per error */
-        intr_count_t      error_axi_rd_intr_count_r;                /* Per error */
-        intr_count_t      error_axi_wr_intr_count_r;                /* Per error */
-        intr_count_t      error_mbox_lock_intr_count_r;             /* Per error */
-        intr_count_t      error_sha_lock_intr_count_r;              /* Per error */
-        intr_count_t      error_rd_fifo_oflow_intr_count_r;         /* Per error */
-        intr_count_t      error_rd_fifo_uflow_intr_count_r;         /* Per error */
-        intr_count_t      error_wr_fifo_oflow_intr_count_r;         /* Per error */
-        intr_count_t      error_wr_fifo_uflow_intr_count_r;         /* Per error */
-        intr_count_t      notif_txn_done_intr_count_r @0x180;       /* Per notification */                                    //
-        intr_count_t      notif_rd_fifo_not_empty_intr_count_r;     /* Per notification */                                    //
-        intr_count_t      notif_rd_fifo_full_intr_count_r;          /* Per notification */                                    //
-        intr_count_t      notif_wr_fifo_not_full_intr_count_r;      /* Per notification */                                    //
-        intr_count_t      notif_wr_fifo_empty_intr_count_r;         /* Per notification */                                    //
+        intr_count_t      error_cmd_dec_intr_count_r @0x100;        /* Per error */                                      //
+        intr_count_t      error_axi_rd_intr_count_r;                /* Per error */                                      //
+        intr_count_t      error_axi_wr_intr_count_r;                /* Per error */                                      //
+        intr_count_t      error_mbox_lock_intr_count_r;             /* Per error */                                      //
+        intr_count_t      error_sha_lock_intr_count_r;              /* Per error */                                      //
+        intr_count_t      error_fifo_oflow_intr_count_r;            /* Per error */                                      //
+        intr_count_t      error_fifo_uflow_intr_count_r;            /* Per error */                                      //
+        intr_count_t      notif_txn_done_intr_count_r @0x180;       /* Per notification */                               //
+        intr_count_t      notif_fifo_empty_intr_count_r;            /* Per notification */                               //
+        intr_count_t      notif_fifo_not_empty_intr_count_r;        /* Per notification */                               //
+        intr_count_t      notif_fifo_full_intr_count_r;             /* Per notification */                               //
+        intr_count_t      notif_fifo_not_full_intr_count_r;         /* Per notification */                               //
                                                                                                                          //
         // These registers should be treated by SW as reserved, and ignored.                                             //
         // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
@@ -467,15 +470,13 @@ addrmap axi_dma_reg {
         intr_count_incr_t error_axi_wr_intr_count_incr_r;                /* Per error count incrementor pulse */         //
         intr_count_incr_t error_mbox_lock_intr_count_incr_r;             /* Per error count incrementor pulse */         //
         intr_count_incr_t error_sha_lock_intr_count_incr_r;              /* Per error count incrementor pulse */         //
-        intr_count_incr_t error_rd_fifo_oflow_intr_count_incr_r;         /* Per error count incrementor pulse */         //
-        intr_count_incr_t error_rd_fifo_uflow_intr_count_incr_r;         /* Per error count incrementor pulse */         //
-        intr_count_incr_t error_wr_fifo_oflow_intr_count_incr_r;         /* Per error count incrementor pulse */         //
-        intr_count_incr_t error_wr_fifo_uflow_intr_count_incr_r;         /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_fifo_oflow_intr_count_incr_r;            /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_fifo_uflow_intr_count_incr_r;            /* Per error count incrementor pulse */         //
         intr_count_incr_t notif_txn_done_intr_count_incr_r;              /* Per notification count incrementor pulse */  //
-        intr_count_incr_t notif_rd_fifo_not_empty_intr_count_incr_r;     /* Per notification count incrementor pulse */  //
-        intr_count_incr_t notif_rd_fifo_full_intr_count_incr_r;          /* Per notification count incrementor pulse */  //
-        intr_count_incr_t notif_wr_fifo_not_full_intr_count_incr_r;      /* Per notification count incrementor pulse */  //
-        intr_count_incr_t notif_wr_fifo_empty_intr_count_incr_r;         /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_empty_intr_count_incr_r;            /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_not_empty_intr_count_incr_r;        /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_full_intr_count_incr_r;             /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_not_full_intr_count_incr_r;         /* Per notification count incrementor pulse */  //
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
@@ -484,19 +485,15 @@ addrmap axi_dma_reg {
         error_internal_intr_r.error_axi_wr_sts        -> resetsignal = cptra_pwrgood;
         error_internal_intr_r.error_mbox_lock_sts     -> resetsignal = cptra_pwrgood;
         error_internal_intr_r.error_sha_lock_sts      -> resetsignal = cptra_pwrgood;
-        error_internal_intr_r.error_rd_fifo_oflow_sts -> resetsignal = cptra_pwrgood;
-        error_internal_intr_r.error_rd_fifo_uflow_sts -> resetsignal = cptra_pwrgood;
-        error_internal_intr_r.error_wr_fifo_oflow_sts -> resetsignal = cptra_pwrgood;
-        error_internal_intr_r.error_wr_fifo_uflow_sts -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_fifo_oflow_sts    -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_fifo_uflow_sts    -> resetsignal = cptra_pwrgood;
         error_cmd_dec_intr_count_r.cnt       -> resetsignal = cptra_pwrgood;
         error_axi_rd_intr_count_r.cnt        -> resetsignal = cptra_pwrgood;
         error_axi_wr_intr_count_r.cnt        -> resetsignal = cptra_pwrgood;
         error_mbox_lock_intr_count_r.cnt     -> resetsignal = cptra_pwrgood;
         error_sha_lock_intr_count_r.cnt      -> resetsignal = cptra_pwrgood;
-        error_rd_fifo_oflow_intr_count_r.cnt -> resetsignal = cptra_pwrgood;
-        error_rd_fifo_uflow_intr_count_r.cnt -> resetsignal = cptra_pwrgood;
-        error_wr_fifo_oflow_intr_count_r.cnt -> resetsignal = cptra_pwrgood;
-        error_wr_fifo_uflow_intr_count_r.cnt -> resetsignal = cptra_pwrgood;
+        error_fifo_oflow_intr_count_r.cnt    -> resetsignal = cptra_pwrgood;
+        error_fifo_uflow_intr_count_r.cnt    -> resetsignal = cptra_pwrgood;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */
@@ -505,30 +502,26 @@ addrmap axi_dma_reg {
         error_internal_intr_r.error_axi_wr_sts        -> enable = error_intr_en_r.error_axi_wr_en;
         error_internal_intr_r.error_mbox_lock_sts     -> enable = error_intr_en_r.error_mbox_lock_en;
         error_internal_intr_r.error_sha_lock_sts      -> enable = error_intr_en_r.error_sha_lock_en;
-        error_internal_intr_r.error_rd_fifo_oflow_sts -> enable = error_intr_en_r.error_rd_fifo_oflow_en;
-        error_internal_intr_r.error_rd_fifo_uflow_sts -> enable = error_intr_en_r.error_rd_fifo_uflow_en;
-        error_internal_intr_r.error_wr_fifo_oflow_sts -> enable = error_intr_en_r.error_wr_fifo_oflow_en;
-        error_internal_intr_r.error_wr_fifo_uflow_sts -> enable = error_intr_en_r.error_wr_fifo_uflow_en;
-        notif_internal_intr_r.notif_txn_done_sts          -> enable = notif_intr_en_r.notif_txn_done_en;
-        notif_internal_intr_r.notif_rd_fifo_not_empty_sts -> enable = notif_intr_en_r.notif_rd_fifo_not_empty_en;
-        notif_internal_intr_r.notif_rd_fifo_full_sts      -> enable = notif_intr_en_r.notif_rd_fifo_full_en;
-        notif_internal_intr_r.notif_wr_fifo_not_full_sts  -> enable = notif_intr_en_r.notif_wr_fifo_not_full_en;
-        notif_internal_intr_r.notif_wr_fifo_empty_sts     -> enable = notif_intr_en_r.notif_wr_fifo_empty_en;
+        error_internal_intr_r.error_fifo_oflow_sts    -> enable = error_intr_en_r.error_fifo_oflow_en;
+        error_internal_intr_r.error_fifo_uflow_sts    -> enable = error_intr_en_r.error_fifo_uflow_en;
+        notif_internal_intr_r.notif_txn_done_sts       -> enable = notif_intr_en_r.notif_txn_done_en;
+        notif_internal_intr_r.notif_fifo_empty_sts     -> enable = notif_intr_en_r.notif_fifo_empty_en;
+        notif_internal_intr_r.notif_fifo_not_empty_sts -> enable = notif_intr_en_r.notif_fifo_not_empty_en;
+        notif_internal_intr_r.notif_fifo_full_sts      -> enable = notif_intr_en_r.notif_fifo_full_en;
+        notif_internal_intr_r.notif_fifo_not_full_sts  -> enable = notif_intr_en_r.notif_fifo_not_full_en;
 
         error_internal_intr_r.error_cmd_dec_sts       -> next   = error_intr_trig_r.error_cmd_dec_trig;
         error_internal_intr_r.error_axi_rd_sts        -> next   = error_intr_trig_r.error_axi_rd_trig;
         error_internal_intr_r.error_axi_wr_sts        -> next   = error_intr_trig_r.error_axi_wr_trig;
         error_internal_intr_r.error_mbox_lock_sts     -> next   = error_intr_trig_r.error_mbox_lock_trig;
         error_internal_intr_r.error_sha_lock_sts      -> next   = error_intr_trig_r.error_sha_lock_trig;
-        error_internal_intr_r.error_rd_fifo_oflow_sts -> next   = error_intr_trig_r.error_rd_fifo_oflow_trig;
-        error_internal_intr_r.error_rd_fifo_uflow_sts -> next   = error_intr_trig_r.error_rd_fifo_uflow_trig;
-        error_internal_intr_r.error_wr_fifo_oflow_sts -> next   = error_intr_trig_r.error_wr_fifo_oflow_trig;
-        error_internal_intr_r.error_wr_fifo_uflow_sts -> next   = error_intr_trig_r.error_wr_fifo_uflow_trig;
-        notif_internal_intr_r.notif_txn_done_sts          -> next   = notif_intr_trig_r.notif_txn_done_trig;
-        notif_internal_intr_r.notif_rd_fifo_not_empty_sts -> next   = notif_intr_trig_r.notif_rd_fifo_not_empty_trig;
-        notif_internal_intr_r.notif_rd_fifo_full_sts      -> next   = notif_intr_trig_r.notif_rd_fifo_full_trig;
-        notif_internal_intr_r.notif_wr_fifo_not_full_sts  -> next   = notif_intr_trig_r.notif_wr_fifo_not_full_trig;
-        notif_internal_intr_r.notif_wr_fifo_empty_sts     -> next   = notif_intr_trig_r.notif_wr_fifo_empty_trig;
+        error_internal_intr_r.error_fifo_oflow_sts    -> next   = error_intr_trig_r.error_fifo_oflow_trig;
+        error_internal_intr_r.error_fifo_uflow_sts    -> next   = error_intr_trig_r.error_fifo_uflow_trig;
+        notif_internal_intr_r.notif_txn_done_sts       -> next   = notif_intr_trig_r.notif_txn_done_trig;
+        notif_internal_intr_r.notif_fifo_empty_sts     -> next   = notif_intr_trig_r.notif_fifo_empty_trig;
+        notif_internal_intr_r.notif_fifo_not_empty_sts -> next   = notif_intr_trig_r.notif_fifo_not_empty_trig;
+        notif_internal_intr_r.notif_fifo_full_sts      -> next   = notif_intr_trig_r.notif_fifo_full_trig;
+        notif_internal_intr_r.notif_fifo_not_full_sts  -> next   = notif_intr_trig_r.notif_fifo_not_full_trig;
 
         // NOTE: hwset for events is implicitly defined as module input
 
@@ -575,29 +568,17 @@ addrmap axi_dma_reg {
         error_sha_lock_intr_count_incr_r.pulse -> decr     = error_sha_lock_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         error_sha_lock_intr_count_r.cnt        -> incr     = error_sha_lock_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        error_rd_fifo_oflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_rd_fifo_oflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error_rd_fifo_oflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_rd_fifo_oflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_rd_fifo_oflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_rd_fifo_oflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error_rd_fifo_oflow_intr_count_incr_r.pulse -> decr     = error_rd_fifo_oflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error_rd_fifo_oflow_intr_count_r.cnt        -> incr     = error_rd_fifo_oflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        error_fifo_oflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_fifo_oflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_fifo_oflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_fifo_oflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_fifo_oflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_fifo_oflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_fifo_oflow_intr_count_incr_r.pulse -> decr     = error_fifo_oflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_fifo_oflow_intr_count_r.cnt        -> incr     = error_fifo_oflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        error_rd_fifo_uflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_rd_fifo_uflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error_rd_fifo_uflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_rd_fifo_uflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_rd_fifo_uflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_rd_fifo_uflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error_rd_fifo_uflow_intr_count_incr_r.pulse -> decr     = error_rd_fifo_uflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error_rd_fifo_uflow_intr_count_r.cnt        -> incr     = error_rd_fifo_uflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
-
-        error_wr_fifo_oflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_wr_fifo_oflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error_wr_fifo_oflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_wr_fifo_oflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_wr_fifo_oflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_wr_fifo_oflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error_wr_fifo_oflow_intr_count_incr_r.pulse -> decr     = error_wr_fifo_oflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error_wr_fifo_oflow_intr_count_r.cnt        -> incr     = error_wr_fifo_oflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
-
-        error_wr_fifo_uflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_wr_fifo_uflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error_wr_fifo_uflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_wr_fifo_uflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error_wr_fifo_uflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_wr_fifo_uflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error_wr_fifo_uflow_intr_count_incr_r.pulse -> decr     = error_wr_fifo_uflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error_wr_fifo_uflow_intr_count_r.cnt        -> incr     = error_wr_fifo_uflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        error_fifo_uflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_fifo_uflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_fifo_uflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_fifo_uflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_fifo_uflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_fifo_uflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_fifo_uflow_intr_count_incr_r.pulse -> decr     = error_fifo_uflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_fifo_uflow_intr_count_r.cnt        -> incr     = error_fifo_uflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         notif_txn_done_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_txn_done_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         notif_txn_done_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_txn_done_sts -> next;  // /      as a pulse to increment the intr_count_r register
@@ -605,29 +586,29 @@ addrmap axi_dma_reg {
         notif_txn_done_intr_count_incr_r.pulse -> decr  = notif_txn_done_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
         notif_txn_done_intr_count_r.cnt        -> incr  = notif_txn_done_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        notif_rd_fifo_not_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_rd_fifo_not_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        notif_rd_fifo_not_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_rd_fifo_not_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif_rd_fifo_not_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_rd_fifo_not_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        notif_rd_fifo_not_empty_intr_count_incr_r.pulse -> decr  = notif_rd_fifo_not_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        notif_rd_fifo_not_empty_intr_count_r.cnt        -> incr  = notif_rd_fifo_not_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        notif_fifo_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_empty_intr_count_incr_r.pulse -> decr  = notif_fifo_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_empty_intr_count_r.cnt        -> incr  = notif_fifo_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        notif_rd_fifo_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_rd_fifo_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        notif_rd_fifo_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_rd_fifo_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif_rd_fifo_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_rd_fifo_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        notif_rd_fifo_full_intr_count_incr_r.pulse -> decr  = notif_rd_fifo_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        notif_rd_fifo_full_intr_count_r.cnt        -> incr  = notif_rd_fifo_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_not_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_not_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_not_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> decr  = notif_fifo_not_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_not_empty_intr_count_r.cnt        -> incr  = notif_fifo_not_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        notif_wr_fifo_not_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_wr_fifo_not_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        notif_wr_fifo_not_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_wr_fifo_not_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif_wr_fifo_not_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_wr_fifo_not_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        notif_wr_fifo_not_full_intr_count_incr_r.pulse -> decr  = notif_wr_fifo_not_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        notif_wr_fifo_not_full_intr_count_r.cnt        -> incr  = notif_wr_fifo_not_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        notif_fifo_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_full_intr_count_incr_r.pulse -> decr  = notif_fifo_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_full_intr_count_r.cnt        -> incr  = notif_fifo_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        notif_wr_fifo_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_wr_fifo_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        notif_wr_fifo_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_wr_fifo_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        notif_wr_fifo_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_wr_fifo_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        notif_wr_fifo_empty_intr_count_incr_r.pulse -> decr  = notif_wr_fifo_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        notif_wr_fifo_empty_intr_count_r.cnt        -> incr  = notif_wr_fifo_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        notif_fifo_not_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_not_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_not_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_not_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_not_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_not_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_not_full_intr_count_incr_r.pulse -> decr  = notif_fifo_not_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_not_full_intr_count_r.cnt        -> incr  = notif_fifo_not_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
 
     };
