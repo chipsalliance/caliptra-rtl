@@ -30,7 +30,7 @@ module caliptra_axi_sram #(
 
     // AXI INF
     axi_if.w_sub s_axi_w_if,
-    axi_if.r_sub s_axi_r_if,
+    axi_if.r_sub s_axi_r_if
 );
 
 //COMPONENT INF
@@ -40,7 +40,8 @@ logic          write;
 logic [DW-1:0] wdata; // Requires: Component dwidth == AXI dwidth
 logic [DW-1:0] rdata; // Requires: Component dwidth == AXI dwidth
 logic          hold;
-logic          error;
+logic          rd_error;
+logic          wr_error;
 
 
 axi_sub #(
@@ -59,21 +60,23 @@ axi_sub #(
     .s_axi_r_if(s_axi_r_if),
 
     //COMPONENT INF
-    .dv   (dv   ),
-    .addr (addr ), // Byte address
-    .write(write),
-    .user (     ),
-    .id   (     ),
-    .wdata(wdata),
-    .wstrb(     ),
-    .rdata(rdata),
-    .last (     ),
-    .hld  (hold ),
-    .err  (error)
+    .dv      (dv      ),
+    .addr    (addr    ), // Byte address
+    .write   (write   ),
+    .user    (        ),
+    .id      (        ),
+    .wdata   (wdata   ),
+    .wstrb   (        ),
+    .rdata   (rdata   ),
+    .last    (        ),
+    .hld     (hold    ),
+    .rd_err  (rd_error)
+    .wr_err  (wr_error)
 );
 
 assign hold = 1'b0;
-assign error = 1'b0;
+assign rd_error = 1'b0;
+assign wr_error = 1'b0;
 
 caliptra_sram #(
     .DEPTH     (1 << (AW - BW)), // Depth in WORDS

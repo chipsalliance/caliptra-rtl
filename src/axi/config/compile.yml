@@ -23,9 +23,20 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/axi_addr.v
-      - $COMPILE_ROOT/rtl/skidbuffer.v
       - $COMPILE_ROOT/rtl/axi_sub_rd.sv
       - $COMPILE_ROOT/rtl/axi_sub_wr.sv
       - $COMPILE_ROOT/rtl/axi_sub_arb.sv
       - $COMPILE_ROOT/rtl/axi_sub.sv
     tops: [axi_sub]
+---
+provides: [caliptra_axi_sram]
+schema_version: 2.4.0
+requires:
+  - libs
+  - axi_sub
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_axi_sram.sv
+    tops: [caliptra_axi_sram]

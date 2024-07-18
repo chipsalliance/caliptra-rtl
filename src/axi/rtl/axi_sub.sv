@@ -60,7 +60,8 @@ module axi_sub import axi_pkg::*; #(
     input  logic [DW-1:0] rdata, // Requires: Component dwidth == AXI dwidth
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
-    input  logic          err
+    input  logic          rd_err,
+    input  logic          wr_err
 
 );
 
@@ -202,7 +203,8 @@ module axi_sub import axi_pkg::*; #(
         .wstrb  (wstrb  ),
         .last   (last   ),
         .hld    (hld    ),
-        .err    (err    ),
+        .rd_err (rd_err ),
+        .wr_err (wr_err ),
         .rdata  (rdata  ) 
     );
 
