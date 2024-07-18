@@ -14,8 +14,8 @@
 
 
 module caliptra_axi_sram #(
-    parameter AW = 48,
-    parameter DW = 32,
+    parameter AW = 32,
+    parameter DW = 64,
               BC = DW/8,       // Byte Count
               BW = $clog2(BC), // Byte count Width
     parameter UW = 32,         // User Width
