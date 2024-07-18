@@ -72,7 +72,8 @@ module axi_sub_arb import axi_pkg::*; #(
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
-    input  logic          err, // FIXME Does this assert with dv or with rdata for reads (when C_LAT > 0)?
+    input  logic          rd_err, // Asserts with rdata for reads (when C_LAT > 0)
+    input  logic          wr_err, // Asserts with dv for writes
 
     input  logic [DW-1:0] rdata // Requires: Component dwidth == AXI dwidth
 );
@@ -125,17 +126,14 @@ module axi_sub_arb import axi_pkg::*; #(
         last    = r_win ? r_last : w_last;
         r_hld   = hld || !r_win;
         w_hld   = hld ||  r_win;
-        r_err   = err;
-        w_err   = err;
+        r_err   = rd_err;
+        w_err   = wr_err;
         wdata   = w_wdata;
         wstrb   = w_wstrb;
         r_rdata = rdata;
     end
 
     `CALIPTRA_ASSERT_NEVER(AXI_SUB_ARB_CONFLICT, r_dv && !r_hld && w_dv && !w_hld, clk, !rst_n)
-    // This arbiter can't deal with an err signal that asserts at
-    // a delay from the dv signal (as in the case of the read channel).
-    `CALIPTRA_ASSERT(AXI_SUB_ARB_LAT_ERR, C_LAT == 0, clk, !rst_n)
 
 
 endmodule

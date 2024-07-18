@@ -90,7 +90,7 @@ module skidbuffer #(
                 // }}}
         ) (
                 // {{{
-                input   wire                    i_clk, i_reset,
+                input   wire                    i_clk, i_reset, // fixme resetn, async
                 input   wire                    i_valid,
                 output  wire                    o_ready,
                 input   wire    [DW-1:0]        i_data,
