@@ -70,7 +70,7 @@ axi_sub #(
     .rdata   (rdata   ),
     .last    (        ),
     .hld     (hold    ),
-    .rd_err  (rd_error)
+    .rd_err  (rd_error),
     .wr_err  (wr_error)
 );
 
