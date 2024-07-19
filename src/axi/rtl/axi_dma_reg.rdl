@@ -46,7 +46,8 @@ addrmap axi_dma_reg {
     reg {
         name="Caliptra AXI DMA Capabilities";
         desc="Provides information about configuration and enabled capabilities for the DMA block.";
-        field { desc="Reserved"; sw=r; } rsvd[32] = 32'h00000000;
+        field { desc="FIFO MAX DEPTH. Indicates number of available slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
+        field { desc="Reserved"; sw=r; } rsvd[20] = 20'h00000;
     } cap;
 
     reg {
@@ -107,7 +108,8 @@ addrmap axi_dma_reg {
         field { desc="Indicates if an operation has failed due to an error in decoding the command.
                       When set, this field will prevent any further operations until it is cleared by setting the ctrl.flush field.";
                 sw=r; hw=w; } error=1'b0;
-        field { desc="RESERVED."; sw=r; } rsvd0[14]=14'h0000;
+        field { desc="RESERVED."; sw=r; } rsvd0[2]=2'h0;
+        field { desc="FIFO DEPTH. Indicates number of populated slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
         field {
             name = "Caliptra AXI DMA FSM Present State";
             desc = "Indicates the present state of the Caliptra AXI DMA FSM.";

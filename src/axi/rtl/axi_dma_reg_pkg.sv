@@ -7,6 +7,14 @@ package axi_dma_reg_pkg;
     localparam AXI_DMA_REG_MIN_ADDR_WIDTH = 12;
 
     typedef struct packed{
+        logic [11:0] next;
+    } axi_dma_reg__cap__fifo_max_depth__in_t;
+
+    typedef struct packed{
+        axi_dma_reg__cap__fifo_max_depth__in_t fifo_max_depth;
+    } axi_dma_reg__cap__in_t;
+
+    typedef struct packed{
         logic hwclr;
     } axi_dma_reg__ctrl__go__in_t;
 
@@ -28,12 +36,17 @@ package axi_dma_reg_pkg;
     } axi_dma_reg__status0__error__in_t;
 
     typedef struct packed{
+        logic [11:0] next;
+    } axi_dma_reg__status0__fifo_depth__in_t;
+
+    typedef struct packed{
         logic [1:0] next;
     } axi_dma_reg__status0__axi_dma_fsm_ps__in_t;
 
     typedef struct packed{
         axi_dma_reg__status0__busy__in_t busy;
         axi_dma_reg__status0__error__in_t error;
+        axi_dma_reg__status0__fifo_depth__in_t fifo_depth;
         axi_dma_reg__status0__axi_dma_fsm_ps__in_t axi_dma_fsm_ps;
     } axi_dma_reg__status0__in_t;
 
@@ -129,6 +142,7 @@ package axi_dma_reg_pkg;
         logic cptra_pwrgood;
         logic soc_req;
         logic dma_swwel;
+        axi_dma_reg__cap__in_t cap;
         axi_dma_reg__ctrl__in_t ctrl;
         axi_dma_reg__status0__in_t status0;
         axi_dma_reg__status1__in_t status1;

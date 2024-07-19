@@ -150,8 +150,8 @@ import soc_ifc_pkg::*;
     logic [$clog2(FIFO_BC+1)-1:0] rd_credits;
     logic [AXI_LEN_BC_WIDTH-1:0] block_size_mask;
     // 1's based counters
-    logic [31-1:0] rd_bytes_requested;
-    logic [31-1:0] wr_bytes_requested;
+    logic [31:0] rd_bytes_requested;
+    logic [31:0] wr_bytes_requested;
     logic [AXI_LEN_BC_WIDTH-1:0] rd_align_req_byte_count; // byte-count in a request until nearest AXI boundary
     logic [AXI_LEN_BC_WIDTH-1:0] rd_final_req_byte_count; // byte-count in the final request, which may be smaller than a typical request
     logic [AXI_LEN_BC_WIDTH-1:0] rd_req_byte_count;       // byte-count calculated for the current read request
@@ -243,8 +243,10 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.ctrl.go.hwclr    = (ctrl_fsm_ps == DMA_DONE) || ((ctrl_fsm_ps == DMA_ERROR) && hwif_out.ctrl.flush.value);
     always_comb hwif_in.ctrl.flush.hwclr = (ctrl_fsm_ps == DMA_IDLE);
 
+    always_comb hwif_in.cap.fifo_max_depth.next      = FIFO_BC/BC;
     always_comb hwif_in.status0.busy.next            = (ctrl_fsm_ps != DMA_IDLE);
     always_comb hwif_in.status0.error.next           = (ctrl_fsm_ps == DMA_ERROR);
+    always_comb hwif_in.status0.fifo_depth.next      = 12'(fifo_depth);
     always_comb hwif_in.status0.axi_dma_fsm_ps.next  = ctrl_fsm_ps;
     always_comb hwif_in.status1.bytes_remaining.next = bytes_remaining;
 
@@ -454,7 +456,7 @@ import soc_ifc_pkg::*;
         r_req_if.byte_len = rd_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
         r_req_if.lock     = 1'b0; // TODO
-        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count) && (fifo_depth >= wr_req_byte_count);
+        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count) && (fifo_depth >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         w_req_if.addr     = dst_addr + wr_bytes_requested;
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         w_req_if.fixed    = hwif_out.ctrl.wr_fixed.value;

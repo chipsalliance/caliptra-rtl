@@ -162,7 +162,7 @@ module axi_mgr_wr import axi_pkg::*; #(
 
     always_comb txn_final_beat = m_axi_if.wvalid && m_axi_if.wready && m_axi_if.wlast;
     always_comb begin
-        m_axi_if.wvalid = valid_i;
+        m_axi_if.wvalid = txn_active && valid_i;
         m_axi_if.wdata  = data_i;
         m_axi_if.wstrb  = '1; // TODO support this? requires significant ctrl updates
         m_axi_if.wlast = ~|txn_down_cnt;
