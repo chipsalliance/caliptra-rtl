@@ -2949,7 +2949,8 @@ module axi_dma_reg (
     // Assign readback values to a flattened array
     logic [45-1:0][31:0] readback_array;
     assign readback_array[0][31:0] = (decoded_reg_strb.id && !decoded_req_is_wr) ? 32'h67768068 : '0;
-    assign readback_array[1][31:0] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? 32'h0 : '0;
+    assign readback_array[1][11:0] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? hwif_in.cap.fifo_max_depth.next : '0;
+    assign readback_array[1][31:12] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? 20'h0 : '0;
     assign readback_array[2][0:0] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.go.value : '0;
     assign readback_array[2][1:1] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.flush.value : '0;
     assign readback_array[2][15:2] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 14'h0 : '0;
@@ -2963,7 +2964,8 @@ module axi_dma_reg (
     assign readback_array[2][31:29] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 3'h0 : '0;
     assign readback_array[3][0:0] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.busy.next : '0;
     assign readback_array[3][1:1] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.error.next : '0;
-    assign readback_array[3][15:2] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 14'h0 : '0;
+    assign readback_array[3][3:2] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 2'h0 : '0;
+    assign readback_array[3][15:4] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.fifo_depth.next : '0;
     assign readback_array[3][17:16] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? field_storage.status0.axi_dma_fsm_ps.value : '0;
     assign readback_array[3][31:18] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 14'h0 : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.status1 && !decoded_req_is_wr) ? hwif_in.status1.bytes_remaining.next : '0;

@@ -40,8 +40,10 @@ package axi_dma_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        axi_dma_reg__cap_bit_cg rsvd_bit_cg[32];
+        axi_dma_reg__cap_bit_cg fifo_max_depth_bit_cg[12];
+        axi_dma_reg__cap_bit_cg rsvd_bit_cg[20];
         axi_dma_reg__cap_fld_cg fld_cg;
+        rand uvm_reg_field fifo_max_depth;
         rand uvm_reg_field rsvd;
 
         function new(string name = "axi_dma_reg__cap");
@@ -54,9 +56,12 @@ package axi_dma_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
+            this.fifo_max_depth = new("fifo_max_depth");
+            this.fifo_max_depth.configure(this, 12, 0, "RO", 1, 'h0, 0, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 32, 0, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 20, 12, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(fifo_max_depth_bit_cg[bt]) fifo_max_depth_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
@@ -152,13 +157,15 @@ package axi_dma_reg_uvm;
 
         axi_dma_reg__status0_bit_cg busy_bit_cg[1];
         axi_dma_reg__status0_bit_cg error_bit_cg[1];
-        axi_dma_reg__status0_bit_cg rsvd0_bit_cg[14];
+        axi_dma_reg__status0_bit_cg rsvd0_bit_cg[2];
+        axi_dma_reg__status0_bit_cg fifo_depth_bit_cg[12];
         axi_dma_reg__status0_bit_cg axi_dma_fsm_ps_bit_cg[2];
         axi_dma_reg__status0_bit_cg rsvd1_bit_cg[14];
         axi_dma_reg__status0_fld_cg fld_cg;
         rand uvm_reg_field busy;
         rand uvm_reg_field error;
         rand uvm_reg_field rsvd0;
+        rand uvm_reg_field fifo_depth;
         rand uvm_reg_field axi_dma_fsm_ps;
         rand uvm_reg_field rsvd1;
 
@@ -177,7 +184,9 @@ package axi_dma_reg_uvm;
             this.error = new("error");
             this.error.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd0 = new("rsvd0");
-            this.rsvd0.configure(this, 14, 2, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd0.configure(this, 2, 2, "RO", 0, 'h0, 1, 1, 0);
+            this.fifo_depth = new("fifo_depth");
+            this.fifo_depth.configure(this, 12, 4, "RO", 1, 'h0, 0, 1, 0);
             this.axi_dma_fsm_ps = new("axi_dma_fsm_ps");
             this.axi_dma_fsm_ps.configure(this, 2, 16, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
@@ -186,6 +195,7 @@ package axi_dma_reg_uvm;
                 foreach(busy_bit_cg[bt]) busy_bit_cg[bt] = new();
                 foreach(error_bit_cg[bt]) error_bit_cg[bt] = new();
                 foreach(rsvd0_bit_cg[bt]) rsvd0_bit_cg[bt] = new();
+                foreach(fifo_depth_bit_cg[bt]) fifo_depth_bit_cg[bt] = new();
                 foreach(axi_dma_fsm_ps_bit_cg[bt]) axi_dma_fsm_ps_bit_cg[bt] = new();
                 foreach(rsvd1_bit_cg[bt]) rsvd1_bit_cg[bt] = new();
             end

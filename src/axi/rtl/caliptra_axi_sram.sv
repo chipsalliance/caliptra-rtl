@@ -86,7 +86,7 @@ caliptra_sram #(
 
     .cs_i    (dv   ),
     .we_i    (write),
-    .addr_i  (addr ),
+    .addr_i  (addr[AW-1:BW]),
     .wdata_i (wdata),
     .rdata_o (rdata)
 );
