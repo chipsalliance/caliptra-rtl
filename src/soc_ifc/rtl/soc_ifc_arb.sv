@@ -48,6 +48,13 @@ module soc_ifc_arb
     output soc_ifc_req_t sha_req_data,
     input  logic [SOC_IFC_DATA_W-1:0] sha_rdata,
     input  logic sha_error,
+    // AXI DMA INF
+    output logic                      dma_reg_req_dv,
+    output soc_ifc_req_t              dma_reg_req_data,
+    input  logic                      dma_reg_req_hold,
+    input  logic [SOC_IFC_DATA_W-1:0] dma_reg_rdata,
+    input  logic                      dma_reg_error,
+
     //SOC IFC REG inf
     output logic soc_ifc_reg_req_dv,
     input  logic soc_ifc_reg_req_hold,
@@ -66,30 +73,36 @@ logic req_collision;
 logic soc_mbox_req;
 logic soc_reg_req;
 logic soc_sha_req;
+logic soc_dma_req;
 
 logic uc_mbox_req;
 logic uc_mbox_reg_req;
 logic uc_mbox_dir_req;
 logic uc_reg_req;
 logic uc_sha_req;
+logic uc_dma_req;
 
 //grant for each request
 logic soc_mbox_gnt;
 logic soc_reg_gnt;
 logic soc_sha_gnt;
+logic soc_dma_gnt;
 
 logic uc_mbox_gnt;
 logic uc_reg_gnt;
 logic uc_sha_gnt;
+logic uc_dma_gnt;
 
 //track in-progress grants
 logic soc_mbox_req_ip;
 logic soc_reg_req_ip;
 logic soc_sha_req_ip;
+logic soc_dma_req_ip;
 
 logic uc_mbox_req_ip;
 logic uc_reg_req_ip;
 logic uc_sha_req_ip;
+logic uc_dma_req_ip;
 
 //filter mailbox requests by id
 logic valid_mbox_req;
@@ -104,10 +117,12 @@ always_ff @(posedge clk or negedge rst_b) begin
         soc_mbox_req_ip <= '0;
         soc_reg_req_ip <= '0;
         soc_sha_req_ip <= '0;
+        soc_dma_req_ip <= '0;
 
         uc_mbox_req_ip <= '0;
         uc_reg_req_ip <= '0;
         uc_sha_req_ip <= '0;
+        uc_dma_req_ip <= '0;
     end
     else begin
         soc_has_priority <= toggle_priority ? ~soc_has_priority : soc_has_priority;
@@ -115,10 +130,12 @@ always_ff @(posedge clk or negedge rst_b) begin
         soc_mbox_req_ip <= soc_mbox_gnt & mbox_req_hold;
         soc_reg_req_ip <= soc_reg_gnt & soc_ifc_reg_req_hold;
         soc_sha_req_ip <= soc_sha_gnt & sha_req_hold;
+        soc_dma_req_ip <= soc_dma_gnt & dma_reg_req_hold;
 
         uc_mbox_req_ip <= uc_mbox_gnt & mbox_req_hold;
         uc_reg_req_ip <= uc_reg_gnt & soc_ifc_reg_req_hold;
         uc_sha_req_ip <= uc_sha_gnt & sha_req_hold;
+        uc_dma_req_ip <= uc_dma_gnt & dma_reg_req_hold;
     end
 end
 
@@ -146,6 +163,10 @@ always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
 
+// Requests to DMA
+always_comb uc_dma_req = (uc_req_dv & (uc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
+always_comb soc_dma_req = (soc_req_dv & (soc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
+
 //Check if SoC request is coming from a valid id
 //There are 5 valid id registers, check if id attribute matches any of them
 //Check if id matches Default Valid id parameter - this id value is always valid
@@ -161,13 +182,15 @@ end
 //don't toggle priority if the request was held
 always_comb req_collision = (uc_mbox_req & soc_mbox_req & ~mbox_req_hold) |
                             (uc_reg_req & soc_reg_req & ~soc_ifc_reg_req_hold) |
-                            (uc_sha_req & soc_sha_req & ~sha_req_hold);
+                            (uc_sha_req & soc_sha_req & ~sha_req_hold) |
+                            (uc_dma_req & soc_dma_req & ~dma_reg_req_hold);
 
 //drive the dv to the appropriate destination if either client is trying to 
 always_comb mbox_req_dv = uc_mbox_reg_req | soc_mbox_req;
 always_comb mbox_dir_req_dv = uc_mbox_dir_req & uc_mbox_gnt;
 always_comb soc_ifc_reg_req_dv = uc_reg_req | soc_reg_req;
 always_comb sha_req_dv = uc_sha_req | soc_sha_req;
+always_comb dma_reg_req_dv = uc_dma_req | soc_dma_req;
 
 //determine which requests get granted
 //if a request is colliding with another, grant the one with priority
@@ -176,10 +199,12 @@ always_comb sha_req_dv = uc_sha_req | soc_sha_req;
 always_comb soc_mbox_gnt = soc_mbox_req & (~uc_mbox_req | soc_has_priority) & ~uc_mbox_req_ip;
 always_comb soc_reg_gnt  = soc_reg_req  & (~uc_reg_req | soc_has_priority)  & ~uc_reg_req_ip;
 always_comb soc_sha_gnt  = soc_sha_req  & (~uc_sha_req | soc_has_priority)  & ~uc_sha_req_ip;
+always_comb soc_dma_gnt  = soc_dma_req  & (~uc_dma_req | soc_has_priority)  & ~uc_dma_req_ip;
 
 always_comb uc_mbox_gnt = uc_mbox_req & (~soc_mbox_req | uc_has_priority) & ~soc_mbox_req_ip;
 always_comb uc_reg_gnt  = uc_reg_req  & (~soc_reg_req | uc_has_priority)  & ~soc_reg_req_ip;
 always_comb uc_sha_gnt  = uc_sha_req  & (~soc_sha_req | uc_has_priority)  & ~soc_sha_req_ip;
+always_comb uc_dma_gnt  = uc_dma_req  & (~soc_dma_req | uc_has_priority)  & ~soc_dma_req_ip;
 
 //drive the appropriate request to each destination
 always_comb mbox_req_data = ({$bits(soc_ifc_req_t){soc_mbox_gnt}} & soc_req_data) |
@@ -191,36 +216,45 @@ always_comb soc_ifc_reg_req_data = ({$bits(soc_ifc_req_t){soc_reg_gnt}} & soc_re
 always_comb sha_req_data = ({$bits(soc_ifc_req_t){soc_sha_gnt}} & soc_req_data) | 
                            ({$bits(soc_ifc_req_t){uc_sha_gnt}} & uc_req_data);
 
+always_comb dma_reg_req_data = ({$bits(soc_ifc_req_t){soc_dma_gnt}} & soc_req_data) | 
+                               ({$bits(soc_ifc_req_t){uc_dma_gnt}} & uc_req_data);
+
 //drive the appropriate read data back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
 always_comb uc_rdata = ({MBOX_DATA_W{uc_mbox_reg_req}} & mbox_rdata) |
                        ({MBOX_DATA_W{uc_mbox_dir_req}} & mbox_dir_rdata) |
                        ({MBOX_DATA_W{uc_reg_req}} & soc_ifc_reg_rdata) | 
-                       ({MBOX_DATA_W{uc_sha_req}} & sha_rdata);
+                       ({MBOX_DATA_W{uc_sha_req}} & sha_rdata) | 
+                       ({MBOX_DATA_W{uc_dma_req}} & dma_reg_rdata);
 
 always_comb soc_rdata = ({MBOX_DATA_W{soc_mbox_req}} & mbox_rdata) | 
                         ({MBOX_DATA_W{soc_reg_req}} & soc_ifc_reg_rdata) | 
-                        ({MBOX_DATA_W{soc_sha_req}} & sha_rdata);
+                        ({MBOX_DATA_W{soc_sha_req}} & sha_rdata) | 
+                        ({MBOX_DATA_W{soc_dma_req}} & dma_reg_rdata);
 
 //drive the appropraite holds back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
 always_comb uc_req_hold = (uc_mbox_req & (~uc_mbox_gnt | mbox_req_hold)) |
                           (uc_reg_req & (~uc_reg_gnt | soc_ifc_reg_req_hold)) |
-                          (uc_sha_req & (~ uc_sha_gnt | sha_req_hold));
+                          (uc_sha_req & (~ uc_sha_gnt | sha_req_hold)) |
+                          (uc_dma_req & (~ uc_dma_gnt | dma_reg_req_hold));
 
 always_comb soc_req_hold = (soc_mbox_req & (~soc_mbox_gnt | mbox_req_hold)) |
                            (soc_reg_req & (~soc_reg_gnt | soc_ifc_reg_req_hold)) |
-                           (soc_sha_req & (~soc_sha_gnt | sha_req_hold));
+                           (soc_sha_req & (~soc_sha_gnt | sha_req_hold)) |
+                           (soc_dma_req & (~soc_dma_gnt | dma_reg_req_hold));
 
 //Assert error when requested client drives error back, or a request is made that doesn't map to any of the clients
 always_comb uc_error = (uc_mbox_gnt & mbox_error) |
                        (uc_reg_gnt & soc_ifc_reg_error) |
                        (uc_sha_gnt & sha_error) |
-                       (uc_req_dv & ~(uc_mbox_req | uc_reg_req | uc_sha_req));
+                       (uc_dma_gnt & dma_reg_error) |
+                       (uc_req_dv & ~(uc_mbox_req | uc_reg_req | uc_sha_req | uc_dma_req));
 
 always_comb soc_error = (soc_mbox_gnt & mbox_error) |
                         (soc_reg_gnt & soc_ifc_reg_error) |
                         (soc_sha_gnt & sha_error) |
-                        (soc_req_dv & ~(soc_mbox_req | soc_reg_req | soc_sha_req));
+                        (soc_dma_gnt & dma_reg_error) |
+                        (soc_req_dv & ~(soc_mbox_req | soc_reg_req | soc_sha_req | soc_dma_req));
 
 endmodule

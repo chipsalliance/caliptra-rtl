@@ -15,7 +15,7 @@
 `ifndef SOC_IFC_PKG
 `define SOC_IFC_PKG
 
-`include "caliptra_top_reg_defines.svh"
+`include "caliptra_reg_defines.svh"
 
 package soc_ifc_pkg;
     
@@ -33,6 +33,10 @@ package soc_ifc_pkg;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
+    parameter CPTRA_AXI_DMA_DATA_WIDTH = 32;
+    parameter CPTRA_AXI_DMA_ID_WIDTH   = 5;
+    parameter CPTRA_AXI_DMA_USER_WIDTH = 32;
+
     parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
     parameter WDT_TIMEOUT_PERIOD_W = WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
@@ -41,11 +45,13 @@ package soc_ifc_pkg;
     //memory map
     parameter MBOX_DIR_START_ADDR     = 32'h0000_0000;
     parameter MBOX_DIR_END_ADDR       = 32'h0001_FFFF;
-    parameter MBOX_REG_START_ADDR     = `CALIPTRA_TOP_REG_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_REG_START_ADDR     = `CLP_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_REG_END_ADDR       = MBOX_REG_START_ADDR + 32'h0000_0FFF;
-    parameter SHA_REG_START_ADDR      = `CALIPTRA_TOP_REG_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter SHA_REG_START_ADDR      = `CLP_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter SHA_REG_END_ADDR        = SHA_REG_START_ADDR + 32'h0000_0FFF;
-    parameter SOC_IFC_REG_START_ADDR  = `CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter DMA_REG_START_ADDR      = `CLP_AXI_DMA_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter DMA_REG_END_ADDR        = DMA_REG_START_ADDR + 32'h0000_0FFF;
+    parameter SOC_IFC_REG_START_ADDR  = `CLP_SOC_IFC_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
