@@ -48,6 +48,10 @@ module caliptra_top
     axi_if.w_sub s_axi_w_if,
     axi_if.r_sub s_axi_r_if,
 
+    // AXI Manager INF
+    axi_if.w_mgr m_axi_w_if,
+    axi_if.r_mgr m_axi_r_if,
+
     //QSPI Interface
     output logic                                qspi_clk_o,
     output logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_no,
@@ -82,6 +86,8 @@ module caliptra_top
 
     output logic                       mailbox_data_avail,
     output logic                       mailbox_flow_done,
+
+    input  logic                       recovery_data_avail,
 
     input logic                        BootFSM_BrkPoint,
 
@@ -217,7 +223,8 @@ module caliptra_top
     wire soc_ifc_notif_intr;
     wire sha_error_intr;
     wire sha_notif_intr;
-
+    wire dma_error_intr;
+    wire dma_notif_intr;
     logic [NUM_INTR-1:0] intr;
 
     kv_read_t [KV_NUM_READ-1:0]  kv_read;
@@ -397,6 +404,8 @@ always_comb begin
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
+    intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
+    intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
@@ -1196,21 +1205,29 @@ soc_ifc_top #(
     .AXI_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AXI_DATA_WIDTH(`CALIPTRA_AXI_DATA_WIDTH),
     .AXI_ID_WIDTH  (`CALIPTRA_AXI_ID_WIDTH  ),
-    .AXI_USER_WIDTH(`CALIPTRA_AXI_USER_WIDTH)
+    .AXI_USER_WIDTH(`CALIPTRA_AXI_USER_WIDTH),
+    .AXIM_ADDR_WIDTH(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
+    .AXIM_DATA_WIDTH(CPTRA_AXI_DMA_DATA_WIDTH),
+    .AXIM_ID_WIDTH  (CPTRA_AXI_DMA_ID_WIDTH),
+    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH)
     )
 soc_ifc_top1 
     (
-    .clk(clk),
-    .clk_cg(clk_cg),
+    .clk           (clk           ),
+    .clk_cg        (clk_cg        ),
     .soc_ifc_clk_cg(soc_ifc_clk_cg),
-    .rdc_clk_cg(rdc_clk_cg),
-    .cptra_pwrgood(cptra_pwrgood), 
-    .cptra_rst_b(cptra_rst_b),
+    .rdc_clk_cg    (rdc_clk_cg    ),
+
+    .cptra_pwrgood(cptra_pwrgood),
+    .cptra_rst_b  (cptra_rst_b  ),
+
     .ready_for_fuses(ready_for_fuses),
     .ready_for_fw_push(ready_for_fw_push),
     .ready_for_runtime(ready_for_runtime),
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
+
+    .recovery_data_avail(recovery_data_avail),
 
     .security_state(cptra_security_state_Latched),
     
@@ -1241,6 +1258,11 @@ soc_ifc_top1
     .hresp_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hresp),
     .hreadyout_o(responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hreadyout),
     .hrdata_o   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hrdata),
+
+    // AXI Manager INF
+    .m_axi_w_if(m_axi_w_if),
+    .m_axi_r_if(m_axi_r_if),
+
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
@@ -1254,6 +1276,8 @@ soc_ifc_top1
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
+    .dma_error_intr(dma_error_intr),
+    .dma_notif_intr(dma_notif_intr),
     .timer_intr(timer_int),
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
