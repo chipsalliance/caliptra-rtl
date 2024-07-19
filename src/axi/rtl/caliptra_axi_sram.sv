@@ -80,8 +80,7 @@ assign wr_error = 1'b0;
 
 caliptra_sram #(
     .DEPTH     (1 << (AW - BW)), // Depth in WORDS
-    .DATA_WIDTH(DW),
-    .ADDR_WIDTH(AW)
+    .DATA_WIDTH(DW)
 ) i_sram (
     .clk_i   (clk   ),
 
