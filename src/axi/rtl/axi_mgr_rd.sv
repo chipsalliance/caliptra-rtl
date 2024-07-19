@@ -27,8 +27,8 @@ module axi_mgr_rd import axi_pkg::*; #(
     parameter IW = 1,
               ID_NUM = 1 << IW
 ) (
-    input clk,
-    input rst_n,
+    input logic clk,
+    input logic rst_n,
 
     // AXI INF
     axi_if.r_mgr m_axi_if,
@@ -37,9 +37,9 @@ module axi_mgr_rd import axi_pkg::*; #(
     axi_dma_req_if.snk req_if,
 
     // FIFO INF
-    input           ready_i,
-    output          valid_o,
-    output [DW-1:0] data_o
+    input  logic          ready_i,
+    output logic          valid_o,
+    output logic [DW-1:0] data_o
 );
 
     // --------------------------------------- //
@@ -128,8 +128,8 @@ module axi_mgr_rd import axi_pkg::*; #(
         m_axi_if.arlock  = axi_ctx.lock;
     end
 
-    axi_ctx_ready = (!txn_active || txn_final_beat) &&
-                    (m_axi_if.arready || axi_ctx_sent);
+    always_comb axi_ctx_ready = (!txn_active || txn_final_beat) &&
+                                (m_axi_if.arready || axi_ctx_sent);
 
 
     // --------------------------------------- //
@@ -179,10 +179,12 @@ module axi_mgr_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Assertions                              //
     // --------------------------------------- //
+    `ifdef VERILATOR
     `FIXME_ASSERT(req.valid && addr + len <= 4096)
     `FIXME_ASSERT(req_if.byte_len[11:10] == 2'b00)
     `FIXME_ASSERT(req_if.rvalid && txn_active)
     `FIXME_ASSERT_NEVER(fixme_valid_and_ready && ready_i, "Received data with no space in FIFO! Is the FSM credit calculation wrong?")
+    `endif
 
 
 endmodule

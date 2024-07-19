@@ -40,3 +40,21 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/caliptra_axi_sram.sv
     tops: [caliptra_axi_sram]
+---
+provides: [axi_dma]
+schema_version: 2.4.0
+requires:
+  - libs
+  - axi_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_dma_req_if.sv
+      - $COMPILE_ROOT/rtl/axi_dma_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/axi_dma_reg.sv
+      - $COMPILE_ROOT/rtl/axi_mgr_rd.sv
+      - $COMPILE_ROOT/rtl/axi_mgr_wr.sv
+      - $COMPILE_ROOT/rtl/axi_dma_ctrl.sv
+      - $COMPILE_ROOT/rtl/axi_dma_top.sv
+    tops: [axi_dma_top]

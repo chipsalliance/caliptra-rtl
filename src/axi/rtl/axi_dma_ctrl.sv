@@ -25,48 +25,48 @@ import soc_ifc_pkg::*;
               BC = DW/8,       // Byte Count
               BW = $clog2(BC)  // Byte count Width
 )(
-    input clk,
-    input cptra_pwrgood,
-    input rst_n,
+    input logic clk,
+    input logic cptra_pwrgood,
+    input logic rst_n,
 
     // Recovery INF Interrupt
     // Should only assert when a full block_size of data is available at the
     // recovery interface FIFO
-    input recovery_data_avail,
+    input logic recovery_data_avail,
 
     // Internal Signaling
-    input mbox_lock,
-    input sha_lock,
+    input logic mbox_lock,
+    input logic sha_lock,
 
     // Mailbox SRAM INF
-    output                   mb_dv,
-    input                    mb_hold,
-    input                    mb_error,
+    output logic             mb_dv,
+    input  logic             mb_hold,
+    input  logic             mb_error,
     output var soc_ifc_req_t mb_data,
-    input [DW-1:0]           mb_rdata,
+    input  logic [DW-1:0]    mb_rdata,
 
     // AXI Manager Read INF
-    axi_dma_req_if.src r_req_if,
-    output             r_ready_o,
-    input              r_valid_i,
-    input  [DW-1:0]    r_data_i,
+    axi_dma_req_if.src    r_req_if,
+    output logic          r_ready_o,
+    input  logic          r_valid_i,
+    input  logic [DW-1:0] r_data_i,
 
     // AXI Manager Write INF
-    axi_dma_req_if.src w_req_if,
-    input              w_ready_i,
-    output             w_valid_o,
-    output [DW-1:0]    w_data_o,
+    axi_dma_req_if.src    w_req_if,
+    input  logic          w_ready_i,
+    output logic          w_valid_o,
+    output logic [DW-1:0] w_data_o,
 
     // Register INF
-    input dv,
-    input var soc_ifc_req_t req_data,
-    output hold,
-    output [SOC_IFC_DATA_W-1:0] rdata,
-    output error,
+    input  logic                      dv,
+    input var soc_ifc_req_t           req_data,
+    output logic                      hold,
+    output logic [SOC_IFC_DATA_W-1:0] rdata,
+    output logic                      error,
 
     // Interrupt
-    output notif_intr,
-    output error_intr
+    output logic notif_intr,
+    output logic error_intr
 
 );
 
@@ -96,8 +96,8 @@ import soc_ifc_pkg::*;
     // Signals                                 //
     // --------------------------------------- //
 
-    axi_dma_reg_pkg::axi_dma_reg__in_t hwif_in,
-    axi_dma_reg_pkg::axi_dma_reg__out_t hwif_out
+    axi_dma_reg_pkg::axi_dma_reg__in_t hwif_in;
+    axi_dma_reg_pkg::axi_dma_reg__out_t hwif_out;
 
     enum logic [2:0] {
         DMA_IDLE,
@@ -171,21 +171,21 @@ import soc_ifc_pkg::*;
         .clk(clk ),
         .rst(1'b0),
 
-        .s_cpuif_req         (dv                  ),
-        .s_cpuif_req_is_wr   (req_data.write      ),
-        .s_cpuif_addr        (req_data.addr       ),
-        .s_cpuif_wr_data     (req_data.wdata      ),
-        .s_cpuif_wr_biten    ('1/*FIXME req_data.wstrb*/),
-        .s_cpuif_req_stall_wr(reg_wr_stall        ),
-        .s_cpuif_req_stall_rd(reg_rd_stall        ),
-        .s_cpuif_rd_ack      (reg_rd_ack_nc       ),
-        .s_cpuif_rd_err      (reg_rd_err          ),
-        .s_cpuif_rd_data     (rdata               ),
-        .s_cpuif_wr_ack      (reg_wr_ack_nc       ),
-        .s_cpuif_wr_err      (reg_wr_err          ),
+        .s_cpuif_req         (dv                                                            ),
+        .s_cpuif_req_is_wr   (req_data.write                                                ),
+        .s_cpuif_addr        (req_data.addr[axi_dma_reg_pkg::AXI_DMA_REG_MIN_ADDR_WIDTH-1:0]),
+        .s_cpuif_wr_data     (req_data.wdata                                                ),
+        .s_cpuif_wr_biten    ('1/*FIXME req_data.wstrb*/                                    ),
+        .s_cpuif_req_stall_wr(reg_wr_stall                                                  ),
+        .s_cpuif_req_stall_rd(reg_rd_stall                                                  ),
+        .s_cpuif_rd_ack      (reg_rd_ack_nc                                                 ),
+        .s_cpuif_rd_err      (reg_rd_err                                                    ),
+        .s_cpuif_rd_data     (rdata                                                         ),
+        .s_cpuif_wr_ack      (reg_wr_ack_nc                                                 ),
+        .s_cpuif_wr_err      (reg_wr_err                                                    ),
 
-        .hwif_in             (hwif_in             ),
-        .hwif_out            (hwif_out            )
+        .hwif_in             (hwif_in                                                       ),
+        .hwif_out            (hwif_out                                                      )
     );
     assign error = reg_rd_err   || reg_wr_err;
     assign hold  = reg_rd_stall || reg_wr_stall;
@@ -243,33 +243,39 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.ctrl.go.hwclr    = (ctrl_fsm_ps == DMA_DONE) || ((ctrl_fsm_ps == DMA_ERROR) && hwif_out.ctrl.flush.value);
     always_comb hwif_in.ctrl.flush.hwclr = (ctrl_fsm_ps == DMA_IDLE);
 
-    always_comb hwif_in.status0.busy.next = (ctrl_fsm_ps != DMA_IDLE);
-    always_comb hwif_in.status0.error.next = (ctrl_fsm_ps == DMA_ERROR);
-    always_comb hwif_in.status0.axi_dma_fsm_ps.next = ctrl_fsm_ps;
+    always_comb hwif_in.status0.busy.next            = (ctrl_fsm_ps != DMA_IDLE);
+    always_comb hwif_in.status0.error.next           = (ctrl_fsm_ps == DMA_ERROR);
+    always_comb hwif_in.status0.axi_dma_fsm_ps.next  = ctrl_fsm_ps;
     always_comb hwif_in.status1.bytes_remaining.next = bytes_remaining;
 
 
     // --------------------------------------- //
     // Command Decode                          //
     // --------------------------------------- //
-    always_comb begin
+    generate
         if (AW < 32) begin
-            src_addr    = hwif_out.src_addr_l.addr_l.value[AW-1:0];
-            dst_addr    = hwif_out.dst_addr_l.addr_l.value[AW-1:0];
+            always_comb begin
+                src_addr    = hwif_out.src_addr_l.addr_l.value[AW-1:0];
+                dst_addr    = hwif_out.dst_addr_l.addr_l.value[AW-1:0];
+            end
         end
         else if (AW < 64) begin
-            src_addr    = {hwif_out.src_addr_h.addr_h.value[AW-32-1:0],
-                           hwif_out.src_addr_l.addr_l.value};
-            dst_addr    = {hwif_out.dst_addr_h.addr_h.value[AW-32-1:0],
-                           hwif_out.dst_addr_l.addr_l.value};
+            always_comb begin
+                src_addr    = {hwif_out.src_addr_h.addr_h.value[AW-32-1:0],
+                               hwif_out.src_addr_l.addr_l.value};
+                dst_addr    = {hwif_out.dst_addr_h.addr_h.value[AW-32-1:0],
+                               hwif_out.dst_addr_l.addr_l.value};
+            end
         end
         else begin
-            src_addr    = {hwif_out.src_addr_h.addr_h.value,
-                           hwif_out.src_addr_l.addr_l.value};
-            dst_addr    = {hwif_out.dst_addr_h.addr_h.value,
-                           hwif_out.dst_addr_l.addr_l.value};
+            always_comb begin
+                src_addr    = {hwif_out.src_addr_h.addr_h.value,
+                               hwif_out.src_addr_l.addr_l.value};
+                dst_addr    = {hwif_out.dst_addr_h.addr_h.value,
+                               hwif_out.dst_addr_l.addr_l.value};
+            end
         end
-    end
+    endgenerate
 
     always_comb begin
         cmd_inv_rd_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
@@ -324,27 +330,6 @@ import soc_ifc_pkg::*;
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
         endcase
-        // An address is invalid if:
-        //   * improperly aligned
-        //   * MSB bits are set (out of address range)
-        if (AW < 32) begin
-            cmd_inv_src_addr    = |src_addr[BW-1:0] ||
-                                  |hwif_out.src_addr_l.addr_l.value[31:AW] ||
-                                  |hwif_out.src_addr_h.addr_h.value;
-            cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
-                                  |hwif_out.dst_addr_l.addr_l.value[31:AW] ||
-                                  |hwif_out.dst_addr_h.addr_h.value;
-        end
-        else if (AW < 64) begin
-            cmd_inv_src_addr    = |src_addr[BW-1:0] ||
-                                  |hwif_out.src_addr_h.addr_h.value[31:AW-32];
-            cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
-                                  |hwif_out.dst_addr_h.addr_h.value[31:AW-32];
-        end
-        else begin
-            cmd_inv_src_addr    = |src_addr[BW-1:0];
-            cmd_inv_dst_addr    = |dst_addr[BW-1:0];
-        end
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
                               (hwif_out.byte_count.count.value > MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
@@ -368,20 +353,52 @@ import soc_ifc_pkg::*;
                               cmd_inv_mbox_lock   ||
                               cmd_inv_sha_lock;
     end
+    generate
+        // An address is invalid if:
+        //   * improperly aligned
+        //   * MSB bits are set (out of address range)
+        if (AW < 32) begin
+            always_comb begin
+                cmd_inv_src_addr    = |src_addr[BW-1:0] ||
+                                      |hwif_out.src_addr_l.addr_l.value[31:AW] ||
+                                      |hwif_out.src_addr_h.addr_h.value;
+                cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
+                                      |hwif_out.dst_addr_l.addr_l.value[31:AW] ||
+                                      |hwif_out.dst_addr_h.addr_h.value;
+            end
+        end
+        else if (AW < 64) begin
+            always_comb begin
+                cmd_inv_src_addr    = |src_addr[BW-1:0] ||
+                                      |hwif_out.src_addr_h.addr_h.value[31:AW-32];
+                cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
+                                      |hwif_out.dst_addr_h.addr_h.value[31:AW-32];
+            end
+        end
+        else begin
+            always_comb begin
+                cmd_inv_src_addr    = |src_addr[BW-1:0];
+                cmd_inv_dst_addr    = |dst_addr[BW-1:0];
+            end
+        end
+    endgenerate
 
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts       .hwset = (axi_dma_fsm_ps == DMA_IDLE) && hwif_out.ctrl.go.value && cmd_parse_error;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts       .hwset = (ctrl_fsm_ps == DMA_IDLE) && hwif_out.ctrl.go.value && cmd_parse_error;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_rd_sts        .hwset = r_req_if.resp_valid && r_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_wr_sts        .hwset = w_req_if.resp_valid && w_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts     .hwset = mb_lock_dropped && !mb_lock_error; // pulse to set
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = (axi_dma_fsm_ps == DMA_IDLE) && hwif_out.ctrl.go.value && cmd_inv_mbox_lock; // FIXME with real-time checking
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = (ctrl_fsm_ps == DMA_IDLE) && hwif_out.ctrl.go.value && cmd_inv_mbox_lock; // FIXME with real-time checking
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts    .hwset = (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) &&  fifo_w_valid && !fifo_w_ready;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts    .hwset = (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !fifo_r_valid &&  fifo_r_ready;
 
-    always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts      .hwset = axi_dma_fsm_ps inside {DMA_DONE,DMA_ERROR};
+    always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts      .hwset = ctrl_fsm_ps inside {DMA_DONE,DMA_ERROR};
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts    .hwset =  fifo_empty && !fifo_empty_r;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts.hwset = !fifo_empty &&  fifo_empty_r;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_full_sts     .hwset =  fifo_full && !fifo_full_r;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts .hwset = !fifo_full &&  fifo_full_r;
+
+    assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
+    assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 
 
     // --------------------------------------- //
@@ -406,7 +423,7 @@ import soc_ifc_pkg::*;
         if (!rst_n) begin
             wr_resp_pending <= '0;
         end
-        else if (axi_dma_fsm_ps == DMA_IDLE) begin
+        else if (ctrl_fsm_ps == DMA_IDLE) begin
             wr_resp_pending <= '0;
         end
         else begin
@@ -539,6 +556,7 @@ import soc_ifc_pkg::*;
             fifo_w_data  = r_data_i;
             fifo_w_valid = r_valid_i;
         end
+        r_ready_o = fifo_w_ready;
     end
 
     always_comb begin
@@ -551,6 +569,8 @@ import soc_ifc_pkg::*;
         else begin
             fifo_r_ready = w_ready_i;
         end
+        w_valid_o = fifo_r_valid;
+        w_data_o  = fifo_r_data;
     end
 
     always_comb r_data_mask = {DW{hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO}};
@@ -560,7 +580,7 @@ import soc_ifc_pkg::*;
         if (!rst_n) begin
             axi_error <= 1'b0;
         end
-        else if (axi_dma_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value) begin
+        else if (ctrl_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value) begin
             axi_error <= 1'b0;
         end
         else if (r_req_if.resp_valid) begin
@@ -571,7 +591,7 @@ import soc_ifc_pkg::*;
         end
     end
 
-    always_comb mb_lock_dropped = axi_dma_fsm_ps == DMA_WAIT_DATA &&
+    always_comb mb_lock_dropped = ctrl_fsm_ps == DMA_WAIT_DATA &&
                                   ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                    (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)) &&
                                   !mbox_lock;
@@ -579,7 +599,7 @@ import soc_ifc_pkg::*;
         if (!rst_n) begin
             mb_lock_error <= 1'b0;
         end
-        else if (axi_dma_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value) begin
+        else if (ctrl_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value) begin
             mb_lock_error <= 1'b0;
         end
         else if (mb_lock_dropped) begin
@@ -597,11 +617,11 @@ import soc_ifc_pkg::*;
       .Depth            (FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
       .Secure           (1'b0)  // use prim count for pointers TODO review if this is needed
-    ) (
+    ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (hwif_out.flush_fixme),
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE && hwif_out.ctrl.flush.value),
       // write port
       .wvalid_i(fifo_w_valid  ),
       .wready_o(fifo_w_ready  ),
@@ -621,15 +641,18 @@ import soc_ifc_pkg::*;
         if (!rst_n) begin
             fifo_full_r  <= 1'b0;
             fifo_empty_r <= 1'b1;
+        end
         else begin
             fifo_full_r  <= fifo_full;
             fifo_empty_r <= fifo_empty;
         end
     end
 
+    `ifdef VERILATOR
     FIXME_ASSERT_INIT(DW == 32)
     FIXME_ASSERT(rd_credits <= FIFO_BC)
     FIXME_ASSERT(!((rd_credits < BC) && rd_req_hshake))
     FIXME_ASSERT(!((ctrl_fsm_ps == DMA_DONE) && (rd_credits != FIFO_BC)))
+    `endif
 
 endmodule

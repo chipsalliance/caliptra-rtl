@@ -27,8 +27,8 @@ module axi_mgr_wr import axi_pkg::*; #(
     parameter IW = 1,
               ID_NUM = 1 << IW
 ) (
-    input clk,
-    input rst_n,
+    input logic clk,
+    input logic rst_n,
 
     // AXI INF
     axi_if.w_mgr m_axi_if,
@@ -37,9 +37,9 @@ module axi_mgr_wr import axi_pkg::*; #(
     axi_dma_req_if.snk req_if,
 
     // FIFO INF
-    input           valid_i,
-    input  [DW-1:0] data_i,
-    output          ready_o
+    input  logic          valid_i,
+    input  logic [DW-1:0] data_i,
+    output logic          ready_o
 );
 
     // --------------------------------------- //
@@ -129,8 +129,8 @@ module axi_mgr_wr import axi_pkg::*; #(
         m_axi_if.awlock  = axi_ctx.lock;
     end
 
-    axi_ctx_ready = (!txn_active || txn_final_beat) &&
-                    (m_axi_if.awready || axi_ctx_sent);
+    always_comb axi_ctx_ready = (!txn_active || txn_final_beat) &&
+                                (m_axi_if.awready || axi_ctx_sent);
 
 
     // --------------------------------------- //
@@ -155,7 +155,7 @@ module axi_mgr_wr import axi_pkg::*; #(
         else if (axi_ctx_valid && axi_ctx_ready) begin
             txn_down_cnt <= axi_ctx.len;
         end
-        else if (m_axi_if.walid && m_axi_if.wready) begin
+        else if (m_axi_if.wvalid && m_axi_if.wready) begin
             txn_down_cnt <= txn_down_cnt - 1;
         end
     end
@@ -181,8 +181,10 @@ module axi_mgr_wr import axi_pkg::*; #(
     // --------------------------------------- //
     // Assertions                              //
     // --------------------------------------- //
+    `ifdef VERILATOR
     `FIXME_ASSERT(req.valid && addr + len <= 4096)
     `FIXME_ASSERT(req_if.byte_len[11:10] == 2'b00)
     `FIXME_ASSERT(req_if.rvalid && txn_active)
+    `endif
 
 endmodule
