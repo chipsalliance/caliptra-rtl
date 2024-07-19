@@ -16,7 +16,10 @@
 //      Top wrapper on AXI4 Manager (DMA) block
 //
 
-module axi_dma_top import axi_pkg::*; #(
+module axi_dma_top
+import axi_pkg::*;
+import soc_ifc_pkg::*;
+#(
     parameter AW = 64,
     parameter DW = 32,         // Data Width
               BC = DW/8,       // Byte Count
@@ -25,23 +28,40 @@ module axi_dma_top import axi_pkg::*; #(
     parameter IW = 1,          // ID Width
               ID_NUM = 1 << IW // Don't override
 )(
-    input clk,
-    input rst_n,
+    input logic clk,
+    input logic cptra_pwrgood,
+    input logic rst_n,
+
+    // Recovery INF Interrupt
+    // Should only assert when a full block_size of data is available at the
+    // recovery interface FIFO
+    input logic recovery_data_avail,
 
     // SOC_IFC Internal Signaling
-    input mbox_lock,
-    input sha_lock,
+    input logic mbox_lock,
+    input logic sha_lock,
 
     // AXI INF
-    axi_if.w_mgr m_axi_wr,
-    axi_if.r_mgr m_axi_rd,
+    axi_if.w_mgr m_axi_w_if,
+    axi_if.r_mgr m_axi_r_if,
 
     // Component INF
-    input dv,
+    input logic dv,
     input var soc_ifc_req_t req_data,
-    output hold,
-    output [SOC_IFC_DATA_W-1:0] rdata,
-    output error
+    output logic hold,
+    output logic [SOC_IFC_DATA_W-1:0] rdata,
+    output logic error,
+
+    // Mailbox SRAM INF
+    output logic                   mb_dv,
+    input  logic                   mb_hold,
+    input  logic                   mb_error,
+    output var soc_ifc_req_t       mb_data,
+    input  logic [DW-1:0]          mb_rdata,
+
+    // Interrupt
+    output logic notif_intr,
+    output logic error_intr
 
 );
 
@@ -56,18 +76,118 @@ module axi_dma_top import axi_pkg::*; #(
     // --------------------------------------- //
     // Signals                                 //
     // --------------------------------------- //
+    // AXI Manager Read INF
+    axi_dma_req_if #(.AW(AW)) r_req_if (.clk(clk), .rst_n(rst_n));
+    logic                     r_ready;
+    logic                     r_valid;
+    logic  [DW-1:0]           r_data;
+
+    // AXI Manager Write INF
+    axi_dma_req_if #(.AW(AW)) w_req_if (.clk(clk), .rst_n(rst_n));
+    logic                     w_ready;
+    logic                     w_valid;
+    logic  [DW-1:0]           w_data;
+
 
     // --------------------------------------- //
     // Control State Machine                   //
     // --------------------------------------- //
+    axi_dma_ctrl #(
+        .AW(AW),
+        .DW(DW)
+    ) i_axi_dma_ctrl (
+        .clk          (clk          ),
+        .cptra_pwrgood(cptra_pwrgood),
+        .rst_n        (rst_n        ),
+
+        // Recovery INF Interrupt
+        // Should only assert when a full block_size of data is available at the
+        // recovery interface FIFO
+        .recovery_data_avail(recovery_data_avail),
+
+        // Internal Signaling
+        .mbox_lock(mbox_lock),
+        .sha_lock (sha_lock ),
+
+        // Mailbox SRAM INF
+        .mb_dv   (mb_dv   ),
+        .mb_hold (mb_hold ),
+        .mb_error(mb_error),
+        .mb_data (mb_data ),
+        .mb_rdata(mb_rdata),
+
+        // AXI Manager Read INF
+        .r_req_if (r_req_if.src),
+        .r_ready_o(r_ready     ),
+        .r_valid_i(r_valid     ),
+        .r_data_i (r_data      ),
+
+        // AXI Manager Write INF
+        .w_req_if (w_req_if.src),
+        .w_ready_i(w_ready     ),
+        .w_valid_o(w_valid     ),
+        .w_data_o (w_data      ),
+
+        // Register INF
+        .dv      (dv      ),
+        .req_data(req_data),
+        .hold    (hold    ),
+        .rdata   (rdata   ),
+        .error   (error   ),
+
+        // Interrupt
+        .notif_intr(notif_intr),
+        .error_intr(error_intr)
+
+    );
 
     // --------------------------------------- //
     // AXI Manager Read Channel                //
     // --------------------------------------- //
+    axi_mgr_rd #(
+        .AW(AW),
+        .DW(DW),
+        .UW(UW),
+        .IW(IW)
+    ) i_axi_mgr_rd (
+        .clk(clk),
+        .rst_n(rst_n),
+
+        // AXI INF
+        .m_axi_if(m_axi_r_if),
+
+        // REQ INF
+        .req_if(r_req_if.snk),
+
+        // FIFO INF
+        .ready_i(r_ready),
+        .valid_o(r_valid),
+        .data_o (r_data )
+    );
 
     // --------------------------------------- //
     // AXI Manager Write Channel               //
     // --------------------------------------- //
+    axi_mgr_wr #(
+        .AW(AW),
+        .DW(DW),
+        .UW(UW),
+        .IW(IW)
+    ) i_axi_mgr_wr (
+        .clk  (clk  ),
+        .rst_n(rst_n),
+
+        // AXI INF
+        .m_axi_if(m_axi_w_if),
+
+        // REQ INF
+        .req_if(w_req_if.snk),
+
+        // FIFO INF
+        .valid_i(w_valid),
+        .data_i (w_data ),
+        .ready_o(w_ready)
+    );
 
     // --------------------------------------- //
     // Assertions                              //
