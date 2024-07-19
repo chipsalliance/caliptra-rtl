@@ -26,6 +26,10 @@ module soc_ifc_top
     ,parameter AXI_USER_WIDTH = 32
     ,parameter AHB_ADDR_WIDTH = 18
     ,parameter AHB_DATA_WIDTH = 32
+    ,parameter AXIM_ADDR_WIDTH = 48
+    ,parameter AXIM_DATA_WIDTH = 32
+    ,parameter AXIM_ID_WIDTH   = 5
+    ,parameter AXIM_USER_WIDTH = 32
     )
     (
     input logic clk,
@@ -44,6 +48,8 @@ module soc_ifc_top
     output logic mailbox_data_avail,
     output logic mailbox_flow_done,
 
+    input  logic recovery_data_avail,
+
     input var security_state_t security_state,
 
     input logic  [1:0][31:0] generic_input_wires,
@@ -53,17 +59,6 @@ module soc_ifc_top
     //SoC AXI Interface
     axi_if.w_sub s_axi_w_if,
     axi_if.r_sub s_axi_r_if,
-
-//    //SoC APB Interface
-//    input logic [APB_ADDR_WIDTH-1:0]     paddr_i,
-//    input logic                          psel_i,
-//    input logic                          penable_i,
-//    input logic                          pwrite_i,
-//    input logic [APB_DATA_WIDTH-1:0]     pwdata_i,
-//    input logic [APB_USER_WIDTH-1:0]     pauser_i,
-//    output logic                         pready_o,
-//    output logic [APB_DATA_WIDTH-1:0]    prdata_o,
-//    output logic                         pslverr_o,
 
     //uC AHB Lite Interface
     input logic [AHB_ADDR_WIDTH-1:0]  haddr_i,
@@ -78,6 +73,10 @@ module soc_ifc_top
     output logic                      hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
+    // AXI Manager INF
+    axi_if.w_mgr m_axi_w_if,
+    axi_if.r_mgr m_axi_r_if,
+
     //SoC Interrupts
     output logic             cptra_error_fatal,
     output logic             cptra_error_non_fatal,
@@ -88,6 +87,8 @@ module soc_ifc_top
     output wire              soc_ifc_notif_intr,
     output wire              sha_error_intr,
     output wire              sha_notif_intr,
+    output wire              dma_error_intr,
+    output wire              dma_notif_intr,
     output wire              timer_intr,
 
     //SRAM interface
@@ -160,6 +161,13 @@ soc_ifc_req_t sha_req_data;
 logic [SOC_IFC_DATA_W-1:0] sha_rdata;
 logic sha_error;
 
+//DMA reg inf
+logic dma_reg_req_dv;
+logic dma_reg_req_hold;
+soc_ifc_req_t dma_reg_req_data;
+logic [SOC_IFC_DATA_W-1:0] dma_reg_rdata;
+logic dma_reg_error;
+
 //mbox reg inf
 logic soc_ifc_reg_req_dv;
 logic soc_ifc_reg_req_hold;
@@ -172,6 +180,13 @@ logic sha_sram_req_dv;
 logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
 mbox_sram_resp_t sha_sram_resp;
 logic sha_sram_hold;
+
+//DMA SRAM direct inf
+logic dma_sram_req_dv;
+logic dma_sram_req_hold;
+soc_ifc_req_t dma_sram_req_data;
+logic [SOC_IFC_DATA_W-1:0] dma_sram_rdata;
+logic dma_sram_error;
 
 logic [4:0][AXI_ID_WIDTH-1:0] valid_mbox_ids;
 
@@ -190,6 +205,7 @@ logic [1:0] generic_input_toggle;
 mbox_protocol_error_t mbox_protocol_error;
 logic mbox_inv_id_p;
 
+logic uc_mbox_lock;
 logic iccm_unlock;
 logic fw_upd_rst_executed;
 logic fuse_wr_done_reg_write_observed;
@@ -286,17 +302,18 @@ axi_sub #(
     .s_axi_r_if(s_axi_r_if),
 
     //COMPONENT INF
-    .dv   (soc_req_dv   ),
-    .addr (soc_req.addr ), // Byte address
-    .write(soc_req.write),
-    .user (/*soc_req.user*/),
-    .id   (soc_req.id   ),
-    .wdata(soc_req.wdata), // Requires: Component dwidth == AXI dwidth
-    .wstrb(soc_req.wstrb), // Requires: Component dwidth == AXI dwidth
-    .rdata(soc_req_rdata), // Requires: Component dwidth == AXI dwidth
-    .last (             ), // Asserted with final 'dv' of a burst
-    .hld  (soc_req_hold ),
-    .err  (soc_req_error)
+    .dv    (soc_req_dv      ),
+    .addr  (soc_req.addr    ), // Byte address
+    .write (soc_req.write   ),
+    .user  (/*soc_req.user*/),
+    .id    (soc_req.id      ),
+    .wdata (soc_req.wdata   ), // Requires: Component dwidth == AXI dwidth
+    .wstrb (soc_req.wstrb   ), // Requires: Component dwidth == AXI dwidth
+    .rdata (soc_req_rdata   ), // Requires: Component dwidth == AXI dwidth
+    .last  (                ), // Asserted with final 'dv' of a burst
+    .hld   (soc_req_hold    ),
+    .rd_err(soc_req_error   ),
+    .wr_err(soc_req_error   )
 );
 
 //req from axi is for soc always
@@ -382,6 +399,13 @@ soc_ifc_arb #(
     .sha_req_data(sha_req_data),
     .sha_rdata(sha_rdata),
     .sha_error(sha_error),
+    //DMA inf
+    .dma_reg_req_dv  (dma_reg_req_dv  ),
+    .dma_reg_req_data(dma_reg_req_data),
+    .dma_reg_req_hold(dma_reg_req_hold),
+    .dma_reg_rdata   (dma_reg_rdata   ),
+    .dma_reg_error   (dma_reg_error   ),
+
     //FUNC reg inf
     .soc_ifc_reg_req_dv(soc_ifc_reg_req_dv), 
     .soc_ifc_reg_req_hold(soc_ifc_reg_req_hold),
@@ -837,10 +861,16 @@ i_mbox (
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
     .sha_sram_hold(sha_sram_hold),
+    .dma_sram_req_dv  (dma_sram_req_dv  ),
+    .dma_sram_req_data(dma_sram_req_data),
+    .dma_sram_rdata   (dma_sram_rdata   ),
+    .dma_sram_hold    (dma_sram_req_hold),
+    .dma_sram_error   (dma_sram_error   ),
     .mbox_sram_req(mbox_sram_req),
     .mbox_sram_resp(mbox_sram_resp),
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
+    .uc_mbox_lock(uc_mbox_lock),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
@@ -848,6 +878,50 @@ i_mbox (
     .mbox_inv_axi_id_axs(mbox_inv_id_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_reg(mbox_dmi_reg)
+);
+
+// AXI Manager (DMA)
+axi_dma_top #(
+    .AW(AXIM_ADDR_WIDTH),         // Addr Width
+    .DW(AXIM_DATA_WIDTH),         // Data Width
+    .UW(AXIM_USER_WIDTH),         // User Width
+    .IW(AXIM_ID_WIDTH)            // ID Width
+) i_axi_dma (
+    .clk          (clk                ),
+    .cptra_pwrgood(cptra_pwrgood      ),
+    .rst_n        (cptra_noncore_rst_b),
+
+    // Recovery INF Interrupt
+    // Should only assert when a full block_size of data is available at the
+    // recovery interface FIFO
+    .recovery_data_avail(recovery_data_avail),
+
+    // SOC_IFC Internal Signaling
+    .mbox_lock(uc_mbox_lock),
+    .sha_lock (1'b0 /*FIXME*/ ),
+
+    // AXI INF
+    .m_axi_w_if(m_axi_w_if),
+    .m_axi_r_if(m_axi_r_if),
+
+    // Component INF
+    .dv      (dma_reg_req_dv  ),
+    .req_data(dma_reg_req_data),
+    .hold    (dma_reg_req_hold),
+    .rdata   (dma_reg_rdata   ),
+    .error   (dma_reg_error   ),
+
+    // Mailbox SRAM INF
+    .mb_dv   (dma_sram_req_dv  ),
+    .mb_hold (dma_sram_req_hold),
+    .mb_error(dma_sram_error   ),
+    .mb_data (dma_sram_req_data),
+    .mb_rdata(dma_sram_rdata   ),
+
+    // Interrupt
+    .notif_intr(dma_notif_intr),
+    .error_intr(dma_error_intr)
+
 );
 
 //-------------------------
