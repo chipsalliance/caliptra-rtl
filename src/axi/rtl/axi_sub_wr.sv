@@ -168,12 +168,11 @@ module axi_sub_wr import axi_pkg::*; #(
 
     always_comb req_matches_ex = (req_ctx.addr & ex_ctx[req_ctx.id].addr_mask) == ex_ctx[req_ctx.id].addr;
 
-    // TODO reset?
-    always_ff@(posedge clk/* or negedge rst_n*/) begin
-//        if (!rst_n) begin
-//            txn_ctx <= '{default:0};
-//        end
-        if (req_valid && req_ready) begin
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            txn_ctx <= '{default:0};
+        end
+        else if (req_valid && req_ready) begin
             txn_ctx.addr  <= req_ctx.addr;
             txn_ctx.burst <= req_ctx.burst;
             txn_ctx.size  <= req_ctx.size;
