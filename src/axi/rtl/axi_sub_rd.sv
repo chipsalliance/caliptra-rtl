@@ -144,7 +144,7 @@ module axi_sub_rd import axi_pkg::*; #(
             txn_ctx <= '{default:0, burst:AXI_BURST_FIXED};
             txn_cnt <= '0;
         end
-        if (s_axi_if.arvalid && s_axi_if.arready) begin
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_ctx.addr  <= s_axi_if.araddr;
             txn_ctx.burst <= axi_burst_e'(s_axi_if.arburst);
             txn_ctx.size  <= s_axi_if.arsize;
