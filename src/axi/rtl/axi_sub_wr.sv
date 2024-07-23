@@ -170,7 +170,7 @@ module axi_sub_wr import axi_pkg::*; #(
 
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            txn_ctx <= '{default:0};
+            txn_ctx <= '{default:0, burst:AXI_BURST_FIXED};
         end
         else if (req_valid && req_ready) begin
             txn_ctx.addr  <= req_ctx.addr;
