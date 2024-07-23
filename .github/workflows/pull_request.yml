@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
   pull_request:
 
+permissions:
+  pages: write
+  id-token: write
+
 jobs:
   # Call auxiliary workflows
   pre_run:
