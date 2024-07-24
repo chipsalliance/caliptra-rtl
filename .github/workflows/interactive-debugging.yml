@@ -15,8 +15,7 @@ jobs:
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
-      # TODO: To update to 5.006, clean up lint errors
+      SCCACHE_VERSION: 0.8.1
       VERILATOR_VERSION: v5.012
       SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
       SCCACHE_GHA_CACHE_FROM: sccache-verilator-
@@ -93,7 +92,7 @@ jobs:
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
+      SCCACHE_VERSION: 0.8.1
       # A custom fork is needed to allow bypassing core examination and accessing
       # peripherals regardless of core state.
       OPENOCD_REPO: https://github.com/antmicro/openocd

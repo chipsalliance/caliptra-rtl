@@ -10,7 +10,7 @@ on:
 
 env:
   CARGO_INCREMENTAL: 0
-  SCCACHE_VERSION: 0.3.3
+  SCCACHE_VERSION: 0.8.1
   RISCV_VERSION: v12.1.0
   VERILATOR_VERSION: v5.012
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
