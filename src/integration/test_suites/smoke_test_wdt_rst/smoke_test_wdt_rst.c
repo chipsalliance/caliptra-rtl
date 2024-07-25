@@ -168,10 +168,14 @@ void main() {
         SEND_STDOUT_CTRL(0xf1);
         configure_wdt_cascade(0x200, 0x00, 0xffffffff, 0xffffffff);
         VPRINTF(LOW, "Cascaded mode with timer2 timeout - NMI - cold rst\n");
+        *wdt_timer1_en = 0x0;
         *wdt_timer2_en = 0x0;
-        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
+//        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
         set_t2_period(0x00000200, 0x00000000);
+
+        *wdt_timer1_en = 0x1;
+        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
         VPRINTF(LOW, "Stall until timer1 times out\n");
         VPRINTF(LOW, "Stall until timer2 times out\n");
