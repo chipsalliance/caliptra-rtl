@@ -243,8 +243,75 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
-inline void service_axi_dma_error_intr() {return;}
-inline void service_axi_dma_notif_intr() {return;}
+inline void service_axi_dma_error_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_DEC_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_DEC_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_DEC_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_RD_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_RD_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_RD_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_WR_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_WR_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_WR_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_LOCK_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_LOCK_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_LOCK_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_SHA_LOCK_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_SHA_LOCK_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_SHA_LOCK_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_OFLOW_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_OFLOW_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_OFLOW_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK;
+        cptra_intr_rcv.soc_ifc_error |= AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad axi_dma_error_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
+inline void service_axi_dma_notif_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+//    VPRINTF(LOW, "ntf\n");
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_EMPTY_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_EMPTY_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_EMPTY_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_EMPTY_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_EMPTY_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_EMPTY_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_FULL_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_FULL_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_FULL_STS_MASK;
+    }
+    if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_FULL_STS_MASK) {
+        *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_FULL_STS_MASK;
+        cptra_intr_rcv.soc_ifc_notif |= AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_FIFO_NOT_FULL_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad axi_dma_notif_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
 
 
 #endif //CALIPTRA_ISR_H

@@ -260,7 +260,7 @@ module caliptra_top_tb_services
     //         8'he4        - Disable all SRAM error injection (Mailbox, ICCM, DCCM)
     //         8'he5        - Request TB to initiate Mailbox flow without lock (violation)
     //         8'he6        - Request TB to initiate Mailbox flow with out-of-order accesses (violation)
-    //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue)
+    //         8'he7        - Reset mailbox out-of-order flag when non-fatal error is masked (allows the test to continue) [Deprecated]
     //         8'he8        - Enable scan mode when DOE fsm transitions to done state
     //         8'he9        - Force dmi_reg_en input to clk gate to emulate JTAG accesses
     //         8'hea        - Set random values to WDT timer1 and timer2
@@ -323,32 +323,22 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
-            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
-            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if((WriteData[7:0] == 8'he5) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b1;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
-            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
-            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if((WriteData[7:0] == 8'he6) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b1;
-            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
-            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
         else if ((WriteData[7:0] == 8'he7) && mailbox_write) begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
-            ras_test_ctrl.reset_ooo_done_flag   <= 1'b1;
-            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b1;
         end
         else begin
             ras_test_ctrl.do_no_lock_access     <= 1'b0;
             ras_test_ctrl.do_ooo_access         <= 1'b0;
-            ras_test_ctrl.reset_ooo_done_flag   <= 1'b0;
-            ras_test_ctrl.reset_no_lock_done_flag   <= 1'b0;
         end
     end
 

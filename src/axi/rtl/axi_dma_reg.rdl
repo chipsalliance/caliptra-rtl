@@ -167,7 +167,7 @@ addrmap axi_dma_reg {
     // Byte Count
     reg {
         name="Caliptra AXI DMA Byte Count";
-        desc="Contains total number of bytes to be transferred by current operation.";
+        desc="Contains total number of bytes to be transferred by current operation. Must be a multiple of the AXI Data Width. (Narrow/unaligned transfers are not supported)";
         field { desc="Byte Count"; sw=rw; swwel=dma_swwel; hw=r; } count[32]=32'h00000000;
     } byte_count;
 

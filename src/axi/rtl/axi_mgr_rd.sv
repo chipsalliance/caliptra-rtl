@@ -179,12 +179,10 @@ module axi_mgr_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Assertions                              //
     // --------------------------------------- //
-    `ifdef VERILATOR
-    `FIXME_ASSERT(req.valid && addr + len <= 4096)
-    `FIXME_ASSERT(req_if.byte_len[11:10] == 2'b00)
-    `FIXME_ASSERT(req_if.rvalid && txn_active)
-    `FIXME_ASSERT_NEVER(fixme_valid_and_ready && ready_i, "Received data with no space in FIFO! Is the FSM credit calculation wrong?")
-    `endif
+    `CALIPTRA_ASSERT(AXI_MGR_REQ_BND, req_if.valid |-> ((req_if.addr[11:0] + req_if.byte_len) <= 4096), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_MGR_LEGAL_LEN, req_if.valid |-> (req_if.byte_len[AXI_LEN_BC_WIDTH-1:BW]) < AXI_LEN_MAX_VALUE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_MGR_DATA_WHILE_ACTIVE, valid_o |-> txn_active, clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(AXI_MGR_OFLOW, m_axi_if.rready && !ready_i, clk, !rst_n)
 
 
 endmodule
