@@ -830,7 +830,11 @@ caliptra_axi_sram #(
     .s_axi_w_if(axi_sram_if.w_sub),
     .s_axi_r_if(axi_sram_if.r_sub)
 );
+`ifdef VERILATOR
 initial i_axi_sram.i_sram.ram = '{default:'{default:8'h00}};
+`else
+initial i_axi_sram.i_sram.ram = '{default:8'h00};
+`endif
 
 `define RV_INST caliptra_top_dut.rvtop
 `define RV_IDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]
