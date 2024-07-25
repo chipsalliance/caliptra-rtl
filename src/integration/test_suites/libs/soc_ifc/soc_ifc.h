@@ -38,6 +38,27 @@ enum mbox_fsm_e {
     MBOX_ERROR        = 0x7
 };
 
+enum axi_dma_rd_route_e {
+    axi_dma_rd_route_DISABLE  = 0x0,
+    axi_dma_rd_route_MBOX     = 0x1,
+    axi_dma_rd_route_AHB_FIFO = 0x2,
+    axi_dma_rd_route_AXI_WR   = 0x3
+};
+
+enum axi_dma_wr_route_e {
+    axi_dma_wr_route_DISABLE  = 0x0,
+    axi_dma_wr_route_MBOX     = 0x1,
+    axi_dma_wr_route_AHB_FIFO = 0x2,
+    axi_dma_wr_route_AXI_RD   = 0x3
+};
+
+enum axi_dma_fsm_e {
+    axi_dma_fsm_DMA_IDLE      = 0x0,
+    axi_dma_fsm_DMA_WAIT_DATA = 0x1,
+    axi_dma_fsm_DMA_DONE      = 0x2,
+    axi_dma_fsm_DMA_ERROR     = 0x3
+};
+
 /**
 * Decode:
 *   [31]: Firmware command
@@ -127,5 +148,12 @@ inline void soc_ifc_sha_accel_execute() {
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
 void soc_ifc_w1clr_sha_lock_field();
+
+// AXI DMA Functions
+uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size);
 
 #endif

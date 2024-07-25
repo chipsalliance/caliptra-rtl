@@ -99,7 +99,7 @@ import soc_ifc_pkg::*;
     axi_dma_reg_pkg::axi_dma_reg__in_t hwif_in;
     axi_dma_reg_pkg::axi_dma_reg__out_t hwif_out;
 
-    enum logic [2:0] {
+    enum logic [1:0] {
         DMA_IDLE,
         DMA_WAIT_DATA,
         DMA_DONE,
@@ -237,6 +237,9 @@ import soc_ifc_pkg::*;
                     ctrl_fsm_ns = DMA_IDLE;
                 end
             end
+            default: begin
+                    ctrl_fsm_ns = ctrl_fsm_ps;
+            end
         endcase
     end
 
@@ -337,7 +340,7 @@ import soc_ifc_pkg::*;
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)));
         // power of 2 and word-aligned
-        cmd_inv_block_size  = |(hwif_out.block_size.size.value & hwif_out.block_size.size.value) ||
+        cmd_inv_block_size  = |(hwif_out.block_size.size.value & (hwif_out.block_size.size.value-1)) ||
                               |hwif_out.block_size.size.value[BW-1:0];
         cmd_inv_rd_fixed    = hwif_out.ctrl.rd_fixed.value && hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE;
         cmd_inv_wr_fixed    = hwif_out.ctrl.wr_fixed.value && hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE;
@@ -413,11 +416,11 @@ import soc_ifc_pkg::*;
         else if (hwif_out.block_size.size.value == 0) begin
             rd_req_stall <= 1'b0;
         end
-        else if (rd_req_hshake) begin
-            rd_req_stall <= 1'b1;
-        end
         else if (recovery_data_avail) begin
             rd_req_stall <= 1'b0;
+        end
+        else if (rd_req_hshake || hwif_out.ctrl.go.value) begin
+            rd_req_stall <= 1'b1;
         end
     end
 
@@ -440,11 +443,13 @@ import soc_ifc_pkg::*;
 
     always_comb block_size_mask = hwif_out.block_size.size.value - 1;
     always_comb begin
-        rd_align_req_byte_count = (MAX_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask;
+        rd_align_req_byte_count = ~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE < hwif_out.block_size.size.value) ? (MAX_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
+                                                                                                                          hwif_out.block_size.size.value - (r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0] & block_size_mask);
         rd_final_req_byte_count = hwif_out.byte_count.count.value - rd_bytes_requested;
         rd_req_byte_count       = rd_final_req_byte_count < rd_align_req_byte_count ? rd_final_req_byte_count :
                                                                                       rd_align_req_byte_count;
-        wr_align_req_byte_count = (MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask;
+        wr_align_req_byte_count = ~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE < hwif_out.block_size.size.value) ? (MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
+                                                                                                                          hwif_out.block_size.size.value - (w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0] & block_size_mask);
         wr_final_req_byte_count = hwif_out.byte_count.count.value - wr_bytes_requested;
         wr_req_byte_count       = wr_final_req_byte_count < wr_align_req_byte_count ? wr_final_req_byte_count :
                                                                                       wr_align_req_byte_count;
@@ -650,11 +655,15 @@ import soc_ifc_pkg::*;
         end
     end
 
-    `ifdef VERILATOR
-    FIXME_ASSERT_INIT(DW == 32)
-    FIXME_ASSERT(rd_credits <= FIFO_BC)
-    FIXME_ASSERT(!((rd_credits < BC) && rd_req_hshake))
-    FIXME_ASSERT(!((ctrl_fsm_ps == DMA_DONE) && (rd_credits != FIFO_BC)))
-    `endif
+    // Requests must have valid length
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_LEN, rd_req_hshake |-> r_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_LEN, wr_req_hshake |-> w_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
+    // Requests must not cross AXI boundary (4KiB)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
+    `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
+    `CALIPTRA_ASSERT(AXI_DMA_LIM_RD_CRED, rd_credits <= FIFO_BC, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_MIN_RD_CRED, !((rd_credits < BC) && rd_req_hshake), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_RST_RD_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (rd_credits == FIFO_BC), clk, !rst_n)
 
 endmodule

@@ -306,3 +306,116 @@ void soc_ifc_sha_accel_clr_lock() {
     //Write one to clear
     lsu_write_32((CLP_SHA512_ACC_CSR_LOCK), SHA512_ACC_CSR_LOCK_LOCK_MASK);
 }   
+
+// AXI DMA Functions
+uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+    uint16_t mdepth;
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg |= AXI_DMA_REG_CTRL_GO_MASK;
+    reg |= axi_dma_rd_route_DISABLE << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
+    reg |= axi_dma_wr_route_AHB_FIFO << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
+    reg |= fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0;
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Send data
+    mdepth = (lsu_read_32(CLP_AXI_DMA_REG_CAP) & AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_MASK) >> AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_LOW;
+    for (uint32_t dw_sent = 0; dw_sent < (byte_count>>2); dw_sent++) {
+        // Wait for there to be available space in the FIFO
+        while(((lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_FIFO_DEPTH_MASK) >> AXI_DMA_REG_STATUS0_FIFO_DEPTH_LOW) == mdepth);
+        lsu_write_32(CLP_AXI_DMA_REG_WRITE_DATA, payload[dw_sent]);
+    }
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for FIFO-to-AXI xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+}
+
+uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+    uint16_t mdepth;
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg |= AXI_DMA_REG_CTRL_GO_MASK;
+    reg |= axi_dma_rd_route_AHB_FIFO << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
+    reg |= axi_dma_wr_route_DISABLE << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
+    reg |= fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0;
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Read data
+    mdepth = (lsu_read_32(CLP_AXI_DMA_REG_CAP) & AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_MASK) >> AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_LOW;
+    for (uint32_t dw_rcv = 0; dw_rcv < (byte_count>>2); dw_rcv++) {
+        // Wait for there to be available data in the FIFO
+        while(((lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_FIFO_DEPTH_MASK) >> AXI_DMA_REG_STATUS0_FIFO_DEPTH_LOW) == 0);
+        payload[dw_rcv] = lsu_read_32(CLP_AXI_DMA_REG_READ_DATA);
+    }
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for AXI-to-FIFO xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+}
+
+uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+}
+
+uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+}
+
+uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg |= AXI_DMA_REG_CTRL_GO_MASK;
+    reg |= axi_dma_rd_route_AXI_WR << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
+    reg |= axi_dma_wr_route_AXI_RD << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
+    reg |= src_fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0;
+    reg |= dst_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0;
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Report any errors
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for AXI-to-AXI xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+}

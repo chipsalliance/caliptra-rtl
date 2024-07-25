@@ -103,8 +103,8 @@ module axi_sub_rd import axi_pkg::*; #(
     logic      [AW-1:0]  txn_addr_nxt;
     logic      [   7:0]  txn_cnt; // Internal down-counter to track txn progress
     logic                txn_active;
-    logic      [C_LAT:0] txn_rvalid;
-    xfer_ctx_t [C_LAT:0] txn_xfer_ctx;
+    logic                txn_rvalid [C_LAT+1];
+    xfer_ctx_t           txn_xfer_ctx [C_LAT+1];
     logic                txn_final_beat;
 
     // Data pipeline signals (skid buffer)
@@ -168,9 +168,9 @@ module axi_sub_rd import axi_pkg::*; #(
 
     // Only make the request to component if we have space in the pipeline to
     // store the result (under worst-case AXI backpressure)
-    // To check this, look at the 'ready' output from the FINAL stage of the
+    // To check this, look at the 'ready' output from all stages of the
     // skidbuffer pipeline
-    always_comb dv = txn_active && dp_rready[C_LAT];
+    always_comb dv = txn_active && &dp_rready;
     always_comb txn_rvalid[0] = dv && !hld;
 
     // Asserts on the final beat of the COMPONENT INF which means it lags the
@@ -212,25 +212,23 @@ module axi_sub_rd import axi_pkg::*; #(
     // Shift Register to track requests made to component
     generate
     if (C_LAT > 0) begin: TXN_SR
-        always_ff@(posedge clk or negedge rst_n) begin
-            if (!rst_n) begin
-                txn_rvalid[C_LAT:1] <= C_LAT'(0);
-            end
-            else begin
-                txn_rvalid[C_LAT:1] <= txn_rvalid[C_LAT-1:0];
-            end
-        end
-
         // Context is maintained alongside request while waiting for
         // component response to arrive
-        if (C_LAT > 1) begin
-            for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
-                // No reset needed on data path -- txn_rvalid (control path) is reset
-                always_ff@(posedge clk) begin
-                    txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
+        for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
+            always_ff@(posedge clk or negedge rst_n) begin
+                if (!rst_n) begin
+                    txn_rvalid[cp] <= 1'b0;
                 end
-            end: CTX_PIPELINE
-        end
+                else begin
+                    txn_rvalid[cp] <= txn_rvalid[cp-1];
+                end
+            end
+
+            // No reset needed on data path -- txn_rvalid (control path) is reset
+            always_ff@(posedge clk) begin
+                txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
+            end
+        end: CTX_PIPELINE
 
     end: TXN_SR
     endgenerate
@@ -395,8 +393,9 @@ module axi_sub_rd import axi_pkg::*; #(
     generate
         if (C_LAT > 0) begin
             for (sva_ii = 0; sva_ii < C_LAT; sva_ii++) begin
-                // Last stage should be first to fill and last to go empty
-                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF, dp_rready[sva_ii+1] && !dp_rready[sva_ii], clk, !rst_n)
+                // Last stage should be first to fill and first to go empty
+                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_FILL,  $fell(dp_rready[sva_ii+1]) && !dp_rready[sva_ii], clk, !rst_n)
+                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_DRAIN, $rose(dp_rready[sva_ii+1]) &&  dp_rready[sva_ii], clk, !rst_n)
             end
         end
     endgenerate
