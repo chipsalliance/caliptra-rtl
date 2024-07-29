@@ -479,8 +479,8 @@ module keccak_2share
   // C[x,z] = A[x,0,z] ^ A[x,1,z] ^ A[x,2,z] ^ A[x,3,z] ^ A[x,4,z]
   // D[x,z] = C[x-1,z] ^ C[x+1,z-1]
   // theta = A[x,y,z] ^ D[x,z]
-  parameter int ThetaIndexX1 [5] = '{4, 0, 1, 2, 3}; // (x-1)%5
-  parameter int ThetaIndexX2 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
+  parameter logic [2:0] ThetaIndexX1 [5] = '{4, 0, 1, 2, 3}; // (x-1)%5
+  parameter logic [2:0] ThetaIndexX2 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
   function automatic box_t theta(box_t state);
     plane_t c;
     plane_t d;
@@ -490,7 +490,7 @@ module keccak_2share
     end
     for (int x = 0 ; x < 5 ; x++) begin
       for (int z = 0 ; z < W ; z++) begin
-        int index_z;
+        logic [$clog2(W)-1:0] index_z;
         index_z = (z == 0) ? W-1 : z-1; // (z+1)%W
         d[x][z] = c[ThetaIndexX1[x]][z] ^ c[ThetaIndexX2[x]][index_z];
       end
@@ -544,7 +544,7 @@ module keccak_2share
   // pi
   // rearrange the position of lanes
   // pi[x,y,z] = state[(x+3y),x,z]
-  localparam int PiRotate [5][5] = '{
+  localparam logic [2:0] PiRotate [5][5] = '{
     //y  0    1    2    3    4     x
     '{   0,   3,   1,   4,   2},// 0
     '{   1,   4,   2,   0,   3},// 1
@@ -564,8 +564,8 @@ module keccak_2share
 
   // chi
   // chi[x,y,z] = state[x,y,z] ^ ((state[x+1,y,z] ^ 1) & state[x+2,y,z])
-  parameter int ChiIndexX1 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
-  parameter int ChiIndexX2 [5] = '{2, 3, 4, 0, 1}; // (x+2)%5
+  parameter logic [2:0] ChiIndexX1 [5] = '{1, 2, 3, 4, 0}; // (x+1)%5
+  parameter logic [2:0] ChiIndexX2 [5] = '{2, 3, 4, 0, 1}; // (x+2)%5
   function automatic box_t chi(box_t state);
     box_t result;
     for (int x = 0 ; x < 5 ; x++) begin

@@ -71,7 +71,6 @@ module sha512_acc_top
   logic [MBOX_ADDR_W:0] mbox_rdptr;
   logic [MBOX_ADDR_W-1:0] mbox_start_addr, mbox_end_addr;
   logic mbox_read_to_end;
-  logic mbox_ptr_round_up;
   logic mbox_read_en;
   logic mbox_read_done;
   logic mbox_block_we;
@@ -303,10 +302,13 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   //byte address aligning to mailbox read pointer
   always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[MBOX_ADDR_W+1:2];
-  always_comb mbox_ptr_round_up = (|hwif_out.DLEN.LENGTH.value[1:0]);
+
+  //Convert DLEN to an end address. DLEN is in bytes, address is in dwords
   //detect overflow of end address to indicate we want to read to the end of the mailbox
-  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_ptr_round_up ? mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2) + 'd1 : 
-                                                                      mbox_start_addr + (hwif_out.DLEN.LENGTH.value>>2);
+  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_start_addr + 
+                                                  hwif_out.DLEN.LENGTH.value[MBOX_ADDR_W+2:2] + 
+                                                  (hwif_out.DLEN.LENGTH.value[1] | hwif_out.DLEN.LENGTH.value[0]);
+  
   always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | 
                                //If the DLEN overflowed our end address, just read to the end of the mailbox and stop
                                //Otherwise read until read pointer == end address

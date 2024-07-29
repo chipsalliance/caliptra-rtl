@@ -27,9 +27,9 @@ package entropy_src_ack_sm_pkg;
   //
   localparam int StateWidth = 6;
   typedef enum logic [StateWidth-1:0] {
-    Idle  = 6'b011101, // idle
-    Wait  = 6'b101100, // wait until the fifo has an entry
-    Error = 6'b000010  // illegal state reached and hang
+    Idle      = 6'b011101, // idle
+    Wait_Data = 6'b101100, // wait until the fifo has an entry
+    Error     = 6'b000010  // illegal state reached and hang
   } state_e;
 
 endpackage

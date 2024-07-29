@@ -80,6 +80,7 @@ localparam PROT_OOO_NON_FATAL_OBSERVED     = 32'h600dcafe;
 localparam ICCM_FATAL_OBSERVED             = 32'hdeadaca1;
 localparam DCCM_FATAL_OBSERVED             = 32'hdeadbeef;
 localparam NMI_FATAL_OBSERVED              = 32'hdeadc0a7;
+localparam CRYPTO_ERROR_OBSERVED           = 32'hdeadface;
 localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
 

@@ -360,7 +360,7 @@ package uart_reg_pkg;
   parameter logic [15:0] UART_VAL_RESVAL = 16'h 0;
 
   // Register index
-  typedef enum int {
+  typedef enum logic [31:0] {
     UART_INTR_STATE,
     UART_INTR_ENABLE,
     UART_INTR_TEST,

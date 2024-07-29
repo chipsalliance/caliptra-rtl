@@ -114,7 +114,7 @@ import uvmf_base_pkg_hdl::*;
       .hresp_o          (ECC_out_agent_bus.hresp),
       .hreadyout_o      (ECC_out_agent_bus.hreadyout),
       .hrdata_o         (ECC_out_agent_bus.hrdata), 
-
+      .busy_o           (),
       .error_intr       (),
       .notif_intr       (),
       .debugUnlock_or_scan_mode_switch('0)

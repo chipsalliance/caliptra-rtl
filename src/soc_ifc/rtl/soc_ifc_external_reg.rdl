@@ -27,6 +27,7 @@ reg {
     rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
     rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
+    rw_rw_sticky_hw crypto_err=0;       /* Crypto parallel operation error No Mask */ 
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
@@ -306,7 +307,11 @@ reg {
             SoC stepping ID is repopulated with the value in the fuse register on every warm reset
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
-    field {sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=1;
+    field {desc = "Caliptra official release version. Bit field encoding is:
+                   [br][lb]15:8[rb] Patch version
+                   [br][lb] 7:4[rb] Minor version
+                   [br][lb] 3:0[rb] Major version";
+           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0201;
     field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {

@@ -79,6 +79,8 @@ module ecc_dsa_ctrl
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
 
+    output logic busy_o,
+
     // Interrupts (from ecc_reg)
     output logic error_intr,
     output logic notif_intr,
@@ -178,9 +180,12 @@ module ecc_dsa_ctrl
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_write_ready, kv_write_done;
-    //KV Read Data Present
-    logic kv_read_data_present;
-    logic kv_read_data_present_set, kv_read_data_present_reset;
+    //KV Seed Data Present
+    logic kv_seed_data_present;
+    logic kv_seed_data_present_set, kv_seed_data_present_reset;
+    //KV Key Data Present
+    logic kv_key_data_present;
+    logic kv_key_data_present_set, kv_key_data_present_reset;
     
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
@@ -297,7 +302,7 @@ module ecc_dsa_ctrl
 
     always_comb 
     begin : SCA_config
-        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (scalar_in_reg << RND_SIZE);
+        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (REG_SIZE+RND_SIZE)'(scalar_in_reg << RND_SIZE);
         lambda_reg = (sca_point_rnd_en)? lambda : ONE_CONST;
         masking_rnd_reg = (sca_mask_sign_en)? masking_rnd : ZERO_CONST;
     end // SCA_config
@@ -309,7 +314,8 @@ module ecc_dsa_ctrl
 
     // read the registers written by sw
     always_comb begin
-        cmd_reg = hwif_out.ECC_CTRL.CTRL.value;
+        //Mask the command if KV clients are not idle
+        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & {2{kv_seed_ready}} & {2{kv_privkey_ready}};
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
@@ -324,23 +330,27 @@ module ecc_dsa_ctrl
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
-            kv_read_data_present <= '0;
+            kv_seed_data_present <= '0;
+            kv_key_data_present <= '0;
         end
         else if (zeroize_reg) begin
             privkey_we_reg      <= '0;
             privkey_we_reg_ff   <= '0;
             kv_reg    <= '0;
-            kv_read_data_present <= '0;
+            kv_seed_data_present <= '0;
+            kv_key_data_present <= '0;
         end
         //Store private key here before pushing to keyvault
         else begin
             privkey_we_reg <= hw_privkey_we;
             privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_out_we & (dest_keyvault | kv_read_data_present))
+            if (privkey_out_we & (dest_keyvault | kv_seed_data_present))
                 kv_reg <= read_reg;
 
-            kv_read_data_present <= kv_read_data_present_set ? '1 :
-                                    kv_read_data_present_reset ? '0 : kv_read_data_present;
+            kv_seed_data_present <= kv_seed_data_present_set ? '1 :
+                                    kv_seed_data_present_reset ? '0 : kv_seed_data_present;
+            kv_key_data_present  <= kv_key_data_present_set ? '1 :
+                                    kv_key_data_present_reset ? '0 : kv_key_data_present;
         end
     end
 
@@ -368,13 +378,16 @@ module ecc_dsa_ctrl
             //don't store the private key generated in sw accessible register if it's going to keyvault
             privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = (pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword))) & !zeroize_reg;
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode ? pcr_signing_data.pcr_signing_privkey[dword] : kv_privkey_write_en? kv_privkey_write_data : read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_signing_privkey[dword] : 
+                                                            kv_privkey_write_en ? kv_privkey_write_data : 
+                                                                                  read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = dsa_ready_reg & ~kv_key_data_present;
         end 
 
         for (int dword=0; dword < 12; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_out_we & ~(dest_keyvault | kv_read_data_present)) & !zeroize_reg;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_out_we & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
@@ -383,7 +396,8 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_read_data_present_reset;
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
+            hwif_in.ECC_SEED[dword].SEED.swwe  = dsa_ready_reg & ~kv_seed_data_present;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -454,7 +468,7 @@ module ecc_dsa_ctrl
     end
     
 
-    always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |hwif_out.ECC_CTRL.CTRL.value;
+    always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
@@ -490,9 +504,12 @@ module ecc_dsa_ctrl
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_seed_read_ctrl_reg, ecc_kv_rd_seed_ctrl)
     `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, ecc_kv_wr_pkey_ctrl)
 
-    //Force result into KV reg whenever source came from KV
-    always_comb kv_read_data_present_set = kv_seed_read_ctrl_reg.read_en;
-    always_comb kv_read_data_present_reset = kv_read_data_present & privkey_out_we;
+    //Detect keyvault data coming in to lock api registers and protect outputs
+    always_comb kv_seed_data_present_set = kv_seed_read_ctrl_reg.read_en;
+    always_comb kv_seed_data_present_reset = kv_seed_data_present & ecc_status_done_p;
+    
+    always_comb kv_key_data_present_set = kv_privkey_read_ctrl_reg.read_en;
+    always_comb kv_key_data_present_reset = kv_key_data_present & ecc_status_done_p;
 
     always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
 
@@ -536,7 +553,7 @@ module ecc_dsa_ctrl
         hw_verify_r_we = 0;
         hw_pk_chk_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
                 PUBKEYX_ID      : hw_pubkeyx_we = 1;
                 PUBKEYY_ID      : hw_pubkeyy_we = 1;
@@ -569,7 +586,7 @@ module ecc_dsa_ctrl
     begin : write_to_pm_core
         write_reg = '0;
         if (prog_instr.opcode == DSA_UOP_WR_CORE) begin
-            unique casez (prog_instr.reg_id)
+            unique case (prog_instr.reg_id)
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
                 CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
@@ -594,9 +611,9 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
-            unique casez (prog_instr.reg_id)
-                SCALAR_PK_ID          : write_reg = (scalar_PK_reg << RND_SIZE);
-                SCALAR_G_ID           : write_reg = (scalar_G_reg << RND_SIZE);
+            unique case (prog_instr.reg_id)
+                SCALAR_PK_ID          : write_reg = (REG_SIZE+RND_SIZE)'(scalar_PK_reg << RND_SIZE);
+                SCALAR_G_ID           : write_reg = (REG_SIZE+RND_SIZE)'(scalar_G_reg << RND_SIZE);
                 SCALAR_ID             : write_reg = scalar_out_reg; // SCA
                 default               : write_reg = '0;
             endcase
@@ -727,13 +744,13 @@ module ecc_dsa_ctrl
             end
             else begin
                 cycle_cnt <= '0;
-                unique casez (prog_cntr)
+                unique case (prog_cntr)
                     DSA_NOP : begin 
                         keygen_process      <= 0;
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         // Waiting for new valid command 
-                        unique casez (cmd_reg)
+                        unique case (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
                                 dsa_valid_reg <= 0;
@@ -899,5 +916,7 @@ module ecc_dsa_ctrl
         .kv_ready(kv_write_ready),
         .dest_done(kv_write_done)
     );
+
+always_comb busy_o = ~dsa_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
 
 endmodule

@@ -132,7 +132,7 @@ module caliptra_prim_packer_fifo #(
 
     assign lsb_is_one = {{DepthW{1'b0}},1'b1};
     assign max_value = FullDepth;
-    assign rdata_shifted = data_q >> ptr_q*OutW;
+    assign rdata_shifted = MaxW'(data_q >> ptr_q*OutW);
     assign clear_status = (rready_i && (depth_q == lsb_is_one)) || clr_q;
     assign clear_data = (ClearOnRead && clear_status) || clr_q;
     assign load_data = wvalid_i && wready_o;

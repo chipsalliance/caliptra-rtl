@@ -86,7 +86,7 @@ always_comb ready = (kv_fsm_ps == KV_IDLE);
 // Padding starts with a leading 1 after the valid data followed by 0's until 
 // the length of the valid data is stored in the last 4 dwords.
 // HMAC adds 1024 bits to the length to account for the key
-always_comb length_for_pad = (HMAC == 1) ? (num_dwords_data << 5) + 'd1024 : (num_dwords_data << 5);
+always_comb length_for_pad = (HMAC == 1) ? (32'b0 | ((num_dwords_data << 5) + 'd1024)) : (32'b0 | (num_dwords_data << 5));
 
 always_comb arc_KV_IDLE_KV_RW = start;
 always_comb arc_KV_RW_KV_DONE = ((PAD == 0) | pcr_hash_extend) & (offset_nxt == num_dwords_total); //jump to done when we've written all dwords
@@ -107,7 +107,7 @@ always_comb begin : kv_fsm_comb
     offset_nxt = '0;
     pad_data = '0;
     done = '0;
-    unique casez (kv_fsm_ps)
+    unique case (kv_fsm_ps)
         KV_IDLE: begin
             if (arc_KV_IDLE_KV_RW) kv_fsm_ns = KV_RW;
         end
@@ -155,21 +155,36 @@ always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
-        num_dwords_data <= '0;
     end
     else if (zeroize) begin
         kv_fsm_ps <= KV_IDLE;
         offset <= '0;
-        num_dwords_data <= '0;
     end
     else begin
         kv_fsm_ps <= kv_fsm_ns;
         offset <= offset_rst ? '0 :
                   offset_en ? offset_nxt : offset;
-        //store the offset_nxt on the last cycle of valid data, this is the number of dwords of valid data
-        num_dwords_data <= arc_KV_RW_KV_PAD ? offset_nxt : num_dwords_data;
     end
 end
+
+generate
+    if (PAD==1) begin
+        always_ff @(posedge clk or negedge rst_b) begin
+            if (!rst_b) begin
+                num_dwords_data <= '0;
+            end
+            else if (zeroize) begin
+                num_dwords_data <= '0;
+            end
+            else begin
+                //store the offset_nxt on the last cycle of valid data, this is the number of dwords of valid data
+                num_dwords_data <= arc_KV_RW_KV_PAD ? offset_nxt : num_dwords_data;
+            end
+        end
+    end else begin
+        always_comb num_dwords_data = '0;
+    end
+endgenerate
 
 always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[OFFSET_W-1:0] : '0;
 always_comb write_offset = offset[OFFSET_W-1:0];

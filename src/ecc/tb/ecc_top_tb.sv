@@ -170,7 +170,7 @@ module ecc_top_tb
              .kv_rd_resp(kv_rd_resp_tb),
              .kv_wr_resp(kv_wr_resp_tb),
              .pcr_signing_data(pcr_signing_data_tb),
-
+             .busy_o(),
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb),
              .debugUnlock_or_scan_mode_switch('0)

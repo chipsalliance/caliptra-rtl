@@ -153,7 +153,7 @@ virtual task queue_writes();
          gen_rand_entries();
         std::randomize(wr_clients);
 
-        fork
+      //   fork
          begin
             if (wr_clients[HMAC_WRITE]) begin
                 `uvm_info("QUEUE_HMAC_WRITE", $sformatf("hmac write with entry = %h", hmac_write_entry), UVM_HIGH)
@@ -182,7 +182,7 @@ virtual task queue_writes();
                 ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
             end
          end
-        join
+      //   join
          configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
          configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
          configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);

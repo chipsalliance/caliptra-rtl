@@ -7,12 +7,12 @@
 // implementation using security_strength = 256
 
 module csrng_ctr_drbg_upd #(
-  parameter int Cmd = 3,
-  parameter int StateId = 4,
-  parameter int BlkLen = 128,
-  parameter int KeyLen = 256,
-  parameter int SeedLen = 384,
-  parameter int CtrLen  = 32
+  parameter logic [31:0] Cmd = 3,
+  parameter logic [31:0] StateId = 4,
+  parameter logic [31:0] BlkLen = 128,
+  parameter logic [31:0] KeyLen = 256,
+  parameter logic [31:0] SeedLen = 384,
+  parameter logic [31:0] CtrLen  = 32
 ) (
   input logic                clk_i,
   input logic                rst_ni,
@@ -59,16 +59,16 @@ module csrng_ctr_drbg_upd #(
   output logic               ctr_drbg_updob_sm_err_o
 );
 
-  localparam int UpdReqFifoDepth = 1;
-  localparam int UpdReqFifoWidth = KeyLen+BlkLen+SeedLen+StateId+Cmd;
-  localparam int BlkEncReqFifoDepth = 1;
-  localparam int BlkEncReqFifoWidth = KeyLen+BlkLen+StateId+Cmd;
-  localparam int BlkEncAckFifoDepth = 1;
-  localparam int BlkEncAckFifoWidth = BlkLen+StateId+Cmd;
-  localparam int PDataFifoDepth = 1;
-  localparam int PDataFifoWidth = SeedLen;
-  localparam int FinalFifoDepth = 1;
-  localparam int FinalFifoWidth = KeyLen+BlkLen+StateId+Cmd;
+  localparam logic[31:0] UpdReqFifoDepth = 1;
+  localparam logic[31:0] UpdReqFifoWidth = KeyLen+BlkLen+SeedLen+StateId+Cmd;
+  localparam logic[31:0] BlkEncReqFifoDepth = 1;
+  localparam logic[31:0] BlkEncReqFifoWidth = KeyLen+BlkLen+StateId+Cmd;
+  localparam logic[31:0] BlkEncAckFifoDepth = 1;
+  localparam logic[31:0] BlkEncAckFifoWidth = BlkLen+StateId+Cmd;
+  localparam logic[31:0] PDataFifoDepth = 1;
+  localparam logic[31:0] PDataFifoWidth = SeedLen;
+  localparam logic[31:0] FinalFifoDepth = 1;
+  localparam logic[31:0] FinalFifoWidth = KeyLen+BlkLen+StateId+Cmd;
 
   // signals
   logic [SeedLen-1:0] updated_key_and_v;
@@ -173,7 +173,7 @@ module csrng_ctr_drbg_upd #(
 // Maximum Hamming weight: 3
 //
 
-  localparam int BlkEncStateWidth = 5;
+  localparam logic[31:0] BlkEncStateWidth = 5;
   typedef enum logic [BlkEncStateWidth-1:0] {
     ReqIdle = 5'b11000,
     ReqSend = 5'b10011,
@@ -207,7 +207,7 @@ module csrng_ctr_drbg_upd #(
 // Maximum Hamming weight: 4
 //
 
-  localparam int OutBlkStateWidth = 6;
+  localparam logic[31:0] OutBlkStateWidth = 6;
   typedef enum logic [OutBlkStateWidth-1:0] {
     AckIdle = 6'b110110,
     Load    = 6'b110001,
@@ -312,7 +312,7 @@ module csrng_ctr_drbg_upd #(
              interate_ctr_inc ? (interate_ctr_q + 1) :
              interate_ctr_q;
 
-  assign interate_ctr_done = (int'(interate_ctr_q) >= SeedLen/BlkLen);
+  assign interate_ctr_done = (32'(interate_ctr_q) >= SeedLen/BlkLen);
 
   //--------------------------------------------
   // state machine to send values to block_encrypt
@@ -507,7 +507,7 @@ module csrng_ctr_drbg_upd #(
          concat_ctr_inc ? (concat_ctr_q + 1) :
          concat_ctr_q;
 
-  assign concat_ctr_done = (int'(concat_ctr_q) >= (SeedLen/BlkLen));
+  assign concat_ctr_done = (32'(concat_ctr_q) >= (SeedLen/BlkLen));
 
   assign concat_inst_id_d =
          (!ctr_drbg_upd_enable_i) ? '0 :

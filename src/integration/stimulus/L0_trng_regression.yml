@@ -14,6 +14,7 @@ contents:
         - ../test_suites/c_intr_handler/c_intr_handler.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ../test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
         - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml

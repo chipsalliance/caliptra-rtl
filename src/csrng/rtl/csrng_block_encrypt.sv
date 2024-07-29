@@ -7,10 +7,10 @@
 
 module csrng_block_encrypt import csrng_pkg::*; #(
   parameter aes_pkg::sbox_impl_e SBoxImpl = aes_pkg::SBoxImplLut,
-  parameter int Cmd = 3,
-  parameter int StateId = 4,
-  parameter int BlkLen = 128,
-  parameter int KeyLen = 256
+  parameter logic [31:0] Cmd = 3,
+  parameter logic [31:0] StateId = 4,
+  parameter logic [31:0] BlkLen = 128,
+  parameter logic [31:0] KeyLen = 256
 ) (
   input logic                clk_i,
   input logic                rst_ni,
@@ -33,9 +33,9 @@ module csrng_block_encrypt import csrng_pkg::*; #(
   output logic [2:0]         block_encrypt_sfifo_blkenc_err_o
 );
 
-  localparam int BlkEncFifoDepth = 1;
-  localparam int BlkEncFifoWidth = StateId+Cmd;
-  localparam int NumShares = 1;
+  localparam logic[31:0] BlkEncFifoDepth = 1;
+  localparam logic[31:0] BlkEncFifoWidth = StateId+Cmd;
+  localparam logic[31:0] NumShares = 1;
 
   // signals
   // blk_encrypt_in fifo

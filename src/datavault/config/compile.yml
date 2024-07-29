@@ -37,8 +37,6 @@ targets:
     directories: []
     waiver_files:
       - $COMPILE_ROOT/config/design_lint/datavault/sglint_waivers
-    black_box:
-      - dv_reg
 global:
   tool:
     vcs:

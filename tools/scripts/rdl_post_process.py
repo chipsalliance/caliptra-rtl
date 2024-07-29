@@ -35,10 +35,15 @@ def scrub_line_by_line(fname):
         has_reg_strb = re.search(r'\bdecoded_reg_strb\b', line)
         has_unpacked = re.search(r'\[\d+\]', line)
         has_struct = re.search(r'\bstruct\b\s*(?:unpacked)?', line)
+        has_enum = re.search(r'\btypedef enum\b', line)
         # Skip lines with logic assignments or references to signals; we
         # only want to scrub signal definitions for unpacked arrays
         if (has_assign is not None or has_reg_strb is not None):
             mod_lines+=line
+        elif (has_enum is not None):
+            line = re.sub('enum', 'enum logic [31:0]', line)
+            mod_lines+=line
+            mod_cnt+=1
         elif (has_struct is not None):
             line = re.sub(r'(\bstruct\b)\s*(?:unpacked)?', r'\1 packed', line)
             mod_lines+=line

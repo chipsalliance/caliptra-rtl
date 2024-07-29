@@ -273,6 +273,7 @@ module soc_ifc_tb
 
              .nmi_vector(),
              .nmi_intr(),
+             .crypto_error('0),
 
              .iccm_lock(),
              .iccm_axs_blocked(1'b0), // MH. Tie off here unless need control
