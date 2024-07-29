@@ -11,7 +11,7 @@ on:
 
 env:
   CARGO_INCREMENTAL: 0
-  SCCACHE_VERSION: 0.8.1
+  SCCACHE_VERSION: 0.3.3
   RISCV_VERSION: v12.1.0
   VERILATOR_VERSION: v5.012
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
@@ -47,7 +47,7 @@ jobs:
       - name: Install sccache
         if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
         run: |
-          cargo install sccache --version ${SCCACHE_VERSION} --no-default-features --features=gha
+          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
       - name: Save sccache binary
         uses: actions/cache/save@v3
         if: steps.sccache_bin_restore.outputs.cache-hit != 'true'

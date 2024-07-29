@@ -16,7 +16,7 @@ jobs:
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.8.1
+      SCCACHE_VERSION: 0.3.3
       VERILATOR_VERSION: v5.012
       SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
       SCCACHE_GHA_CACHE_FROM: sccache-verilator-
@@ -34,7 +34,7 @@ jobs:
       - name: Install sccache
         if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
         run: |
-          cargo install sccache --version ${SCCACHE_VERSION} --no-default-features --features=gha
+          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
 
       - name: Save sccache binary
         uses: actions/cache/save@v3
@@ -93,7 +93,7 @@ jobs:
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.8.1
+      SCCACHE_VERSION: 0.3.3
       # A custom fork is needed to allow bypassing core examination and accessing
       # peripherals regardless of core state.
       OPENOCD_REPO: https://github.com/antmicro/openocd
@@ -114,7 +114,7 @@ jobs:
       - name: Install sccache
         if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
         run: |
-          cargo install sccache --version ${SCCACHE_VERSION} --no-default-features --features=gha
+          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
 
       - name: Save sccache binary
         uses: actions/cache/save@v3
