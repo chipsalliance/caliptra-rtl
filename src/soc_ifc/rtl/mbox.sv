@@ -453,7 +453,7 @@ always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.
                             sha_sram_req_dv;
 always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & ((~dma_sram_req_dv_q & req_data.write) | (dma_sram_req_dv_q & dma_sram_req_data.write));
 always_comb dir_req_addr = sha_sram_req_dv   ? sha_sram_req_addr :
-                           dma_sram_req_dv_q ? dma_sram_req_data.addr :
+                           dma_sram_req_dv_q ? dma_sram_req_data.addr[DEPTH_LOG2+1:2] :
                                                req_data.addr[DEPTH_LOG2+1:2];
 
 // Arb precedence:
@@ -469,7 +469,7 @@ always_comb req_hold = (dir_req_dv_q & /*~sha_sram_req_dv & (~dma_sram_req_dv_q 
                        //in an update cycle for dataout register
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
-always_comb dma_sram_hold = sha_sram_req_dv;
+always_comb dma_sram_hold = (sha_sram_req_dv && !dma_sram_req_rd_phase) || (dma_sram_req_dv_q && !dma_sram_req_data.write);
 always_comb sha_sram_hold = 1'b0;
 
 //SRAM interface
@@ -526,7 +526,7 @@ rvecc_decode ecc_decode (
 //control for sram write and read pointer
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
 //uC accesses can specify the specific read or write address, or rely on mailbox to control
-always_comb sram_wdata = req_data.wdata;
+always_comb sram_wdata = (dma_sram_req_dv_q && dma_sram_req_data.write ) ? dma_sram_req_data.wdata : req_data.wdata;
 
 //in ready for data state we increment the pointer each time we write
 always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
