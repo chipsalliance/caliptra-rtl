@@ -146,8 +146,8 @@ void main(void) {
         soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, 16*4, 0);
         for (uint8_t ii = 0; ii < 16; ii++) {
             if (read_payload[ii] != send_payload[ii]) {
-                fail = 1;
                 VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
+                fail = 1;
             }
         }
 
@@ -165,8 +165,8 @@ void main(void) {
         for (uint32_t dw = 0; dw < 16; dw++) {
             mbox_read_payload[dw] = lsu_read_32(MBOX_DIR_BASE_ADDR + 0x8800 + (dw << 2));
             if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
-                fail = 1;
                 VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
+                fail = 1;
             }
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
