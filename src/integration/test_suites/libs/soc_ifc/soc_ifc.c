@@ -318,10 +318,10 @@ uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint3
     lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
     lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
-    reg |= AXI_DMA_REG_CTRL_GO_MASK;
-    reg |= axi_dma_rd_route_DISABLE << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
-    reg |= axi_dma_wr_route_AHB_FIFO << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
-    reg |= fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0;
+    reg =  AXI_DMA_REG_CTRL_GO_MASK                                    |
+          (axi_dma_rd_route_DISABLE << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)  |
+          (axi_dma_wr_route_AHB_FIFO << AXI_DMA_REG_CTRL_WR_ROUTE_LOW) |
+          (fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
     // Send data
@@ -355,10 +355,10 @@ uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint3
     lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
     lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
-    reg |= AXI_DMA_REG_CTRL_GO_MASK;
-    reg |= axi_dma_rd_route_AHB_FIFO << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
-    reg |= axi_dma_wr_route_DISABLE << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
-    reg |= fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0;
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                                   |
+          (axi_dma_rd_route_AHB_FIFO << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
+          (axi_dma_wr_route_DISABLE << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)  |
+          (fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
     // Read data
@@ -383,9 +383,105 @@ uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint3
 }
 
 uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+
+    // Acquire the mailbox lock
+    if (soc_ifc_mbox_acquire_lock(1)) {
+        VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+        return 1;
+    }
+
+    // src_addr checks
+    if (src_addr & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+        VPRINTF(ERROR, "src_addr 0x%x is out of bounds for mbox span!\n", src_addr);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+    if ((src_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+        VPRINTF(ERROR, "reading 0x%x bytes from src_addr 0x%x goes out of bounds for mbox span!\n", src_addr, byte_count);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                                   |
+          (axi_dma_rd_route_DISABLE << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)  |
+          (axi_dma_wr_route_MBOX << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)     |
+          (fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check status
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for MBOX-to-AXI xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 }
 
 uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+
+    // Acquire the mailbox lock
+    if (soc_ifc_mbox_acquire_lock(1)) {
+        VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+        return 1;
+    }
+
+    // dst_addr checks
+    if (dst_addr & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+        VPRINTF(ERROR, "dst_addr 0x%x is out of bounds for mbox span!\n", dst_addr);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+    if ((dst_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+        VPRINTF(ERROR, "writing 0x%x bytes to dst_addr 0x%x goes out of bounds for mbox span!\n", dst_addr, byte_count);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                                   |
+          (axi_dma_rd_route_MBOX << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)     |
+          (axi_dma_wr_route_DISABLE << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)  |
+          (fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check status
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for AXI-to-MBOX xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 }
 
 uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size) {
@@ -399,11 +495,11 @@ uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, ui
     lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
     lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
-    reg |= AXI_DMA_REG_CTRL_GO_MASK;
-    reg |= axi_dma_rd_route_AXI_WR << AXI_DMA_REG_CTRL_RD_ROUTE_LOW;
-    reg |= axi_dma_wr_route_AXI_RD << AXI_DMA_REG_CTRL_WR_ROUTE_LOW;
-    reg |= src_fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0;
-    reg |= dst_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0;
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                                 |
+          (axi_dma_rd_route_AXI_WR << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
+          (axi_dma_wr_route_AXI_RD << AXI_DMA_REG_CTRL_WR_ROUTE_LOW) |
+          (src_fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0)           |
+          (dst_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
     // Check completion
