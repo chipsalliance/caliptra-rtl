@@ -122,6 +122,9 @@ import soc_ifc_pkg::*;
     logic               fifo_empty, fifo_empty_r;
 
     // Internal signals
+    axi_dma_reg__ctrl__rd_route__rd_route_e_e rd_route;
+    axi_dma_reg__ctrl__wr_route__wr_route_e_e wr_route;
+
     logic cmd_inv_rd_route;
     logic cmd_inv_wr_route;
     logic cmd_inv_route_combo;
@@ -147,7 +150,8 @@ import soc_ifc_pkg::*;
     logic [DW-1:0] r_data_mask;
 
     logic [AW-1:0] src_addr, dst_addr;
-    logic [$clog2(FIFO_BC+1)-1:0] rd_credits;
+    logic [$clog2(FIFO_BC/BC+1)-1:0] rd_credits;
+    logic [$clog2(FIFO_BC/BC+1)-1:0] wr_credits;
     logic [AXI_LEN_BC_WIDTH-1:0] block_size_mask;
     // 1's based counters
     logic [31:0] rd_bytes_requested;
@@ -281,6 +285,12 @@ import soc_ifc_pkg::*;
             end
         end
     endgenerate
+
+    // Simulation visibility to enumerated value is helpful for debug
+    always_comb begin
+        rd_route = axi_dma_reg__ctrl__rd_route__rd_route_e_e'(hwif_out.ctrl.rd_route.value);
+        wr_route = axi_dma_reg__ctrl__wr_route__wr_route_e_e'(hwif_out.ctrl.wr_route.value);
+    end
 
     always_comb begin
         cmd_inv_rd_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
@@ -456,12 +466,12 @@ import soc_ifc_pkg::*;
     end
 
     always_comb begin
-        r_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !rd_req_hshake_bypass && (rd_bytes_requested < hwif_out.byte_count.count) && (rd_credits >= rd_req_byte_count) && !rd_req_stall;
+        r_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !rd_req_hshake_bypass && (rd_bytes_requested < hwif_out.byte_count.count) && (rd_credits >= rd_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]) && !rd_req_stall;
         r_req_if.addr     = src_addr + rd_bytes_requested;
         r_req_if.byte_len = rd_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
         r_req_if.lock     = 1'b0; // TODO
-        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count) && (fifo_depth >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
+        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count) && (wr_credits >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         w_req_if.addr     = dst_addr + wr_bytes_requested;
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         w_req_if.fixed    = hwif_out.ctrl.wr_fixed.value;
@@ -478,8 +488,8 @@ import soc_ifc_pkg::*;
                            (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX &&
                             (rd_bytes_requested < hwif_out.byte_count.count) &&
                             fifo_w_ready));
-        mb_data.addr    = hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX ? w_req_if.addr :
-                                                                                                          r_req_if.addr;
+        mb_data.addr    = hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX ? SOC_IFC_ADDR_W'(w_req_if.addr) :
+                                                                                                          SOC_IFC_ADDR_W'(r_req_if.addr);
         mb_data.wdata   = fifo_r_data;
         mb_data.wstrb   = '1;
         mb_data.id      = '1;
@@ -501,7 +511,7 @@ import soc_ifc_pkg::*;
         else if (rd_req_hshake) begin
             rd_bytes_requested <= rd_bytes_requested + rd_req_byte_count;
         end
-        else if (mb_dv && !mb_hold) begin
+        else if (mb_dv && !mb_data.write && !mb_hold) begin
             rd_bytes_requested <= rd_bytes_requested + BC;
         end
         else if (ctrl_fsm_ps == DMA_IDLE) begin
@@ -515,6 +525,9 @@ import soc_ifc_pkg::*;
         else if (wr_req_hshake) begin
             wr_bytes_requested <= wr_bytes_requested + wr_req_byte_count;
         end
+        else if (mb_dv && mb_data.write && !mb_hold) begin
+            wr_bytes_requested <= wr_bytes_requested + BC;
+        end
         else if (ctrl_fsm_ps == DMA_IDLE) begin
             wr_bytes_requested <= '0;
         end
@@ -522,19 +535,37 @@ import soc_ifc_pkg::*;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rd_credits <= FIFO_BC;
+            rd_credits <= FIFO_BC/BC;
+        end
+        else if ((ctrl_fsm_ps == DMA_IDLE) || (rd_req_hshake_bypass)) begin
+            rd_credits <= FIFO_BC/BC;
         end
         else if (rd_req_hshake && (fifo_r_valid && fifo_r_ready)) begin
-            rd_credits <= rd_credits + BC - rd_req_byte_count;
+            rd_credits <= rd_credits + 1 - rd_req_byte_count[AXI_LEN_BC_WIDTH-1:BW];
         end
         else if (rd_req_hshake) begin
-            rd_credits <= rd_credits - rd_req_byte_count;
+            rd_credits <= rd_credits - rd_req_byte_count[AXI_LEN_BC_WIDTH-1:BW];
         end
         else if (fifo_r_valid && fifo_r_ready) begin
-            rd_credits <= rd_credits + BC;
+            rd_credits <= rd_credits + 1;
         end
-        else if (ctrl_fsm_ps == DMA_IDLE) begin
-            rd_credits <= FIFO_BC;
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            wr_credits <= 0;
+        end
+        else if ((ctrl_fsm_ps == DMA_IDLE) || (wr_req_hshake_bypass)) begin
+            wr_credits <= 0;
+        end
+        else if (wr_req_hshake && (fifo_w_valid && fifo_w_ready)) begin
+            wr_credits <= wr_credits + 1 - wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW];
+        end
+        else if (wr_req_hshake) begin
+            wr_credits <= wr_credits - wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW];
+        end
+        else if (fifo_w_valid && fifo_w_ready) begin
+            wr_credits <= wr_credits + 1;
         end
     end
 
@@ -662,8 +693,12 @@ import soc_ifc_pkg::*;
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
-    `CALIPTRA_ASSERT(AXI_DMA_LIM_RD_CRED, rd_credits <= FIFO_BC, clk, !rst_n)
+    `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == MBOX_DATA_W)
+    `CALIPTRA_ASSERT(AXI_DMA_LIM_RD_CRED, rd_credits <= FIFO_BC/BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_MIN_RD_CRED, !((rd_credits < BC) && rd_req_hshake), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_RST_RD_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (rd_credits == FIFO_BC), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_RST_RD_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (rd_credits == FIFO_BC/BC), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_LIM_WR_CRED, wr_credits <= FIFO_BC/BC, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_MIN_WR_CRED, !((wr_credits < BC) && wr_req_hshake), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_RST_WR_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (wr_credits == 0), clk, !rst_n)
 
 endmodule
