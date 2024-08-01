@@ -10,6 +10,7 @@ export PATH=${RISC64_GCC_HOME}/bin:${PATH}
 export MSFT_REPO_ROOT=${root}
 export CALIPTRA_WORKSPACE=${WORKSPACE}/chipsalliance
 export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
+export ADAMS_BRIDGE_ROOT=${CALIPTRA_WORKSPACE}/adams-bridge
 export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
 export SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
 export TOOLS=${MSFT_TOOLS}

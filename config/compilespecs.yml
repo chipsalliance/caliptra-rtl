@@ -28,6 +28,21 @@ files:
   - ../chipsalliance/caliptra-rtl/src/entropy_src/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/csrng/config/compile.yml
   # -- End RNG --
+  # Adams Bridge
+  - ../chipsalliance/adams-bridge/src/abr_libs/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/abr_prim_generic/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/abr_prim/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/ntt_top/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sha3/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/rej_sampler/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/rej_bounded/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/exp_mask/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sample_in_ball/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sampler_top/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/adamsbridge_top/config/compile.yml
+  # UVMF TBs
+  - ../chipsalliance/adams-bridge/src/adamsbridge_top/uvmf/config/compile.yml
+
   # UVMF TBs
 # - ../chipsalliance/caliptra-rtl/src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/ecc/uvmf_ecc/config/compile.yml
