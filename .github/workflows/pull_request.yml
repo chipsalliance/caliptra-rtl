@@ -18,6 +18,9 @@ jobs:
     uses: ./.github/workflows/interactive-debugging.yml
   doc_gen:
     uses: ./.github/workflows/doc-gen.yml
+    permissions:
+      pages: write
+      id-token: write
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
