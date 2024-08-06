@@ -15,6 +15,21 @@
 
 package axi_pkg;
 
+    localparam int AXI_DW = 32;
+    localparam int AXI_AW = 32;
+    localparam int AXI_IW = 1;
+    localparam int AXI_BC = AXI_DW/8;
+    localparam int BW = $clog2(BC);
+
+    // Data that is returned upon an a TL-UL error belonging to an instruction fetch.
+    // Note that this data will be returned with the correct bus integrity value.
+    parameter logic [top_pkg::TL_DW-1:0] DataWhenInstrError = '0;
+    // Data that is returned upon an a TL-UL error not belonging to an instruction fetch.
+    // Note that this data will be returned with the correct bus integrity value.
+    parameter logic [top_pkg::TL_DW-1:0] DataWhenError      = {top_pkg::TL_DW{1'b1}};
+
+
+
     // AXI Burst Enum
     typedef enum logic [1:0] {
         AXI_BURST_FIXED    = 2'b00,

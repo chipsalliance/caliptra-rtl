@@ -1,0 +1,33 @@
+---
+provides: [fc_ctrl]
+schema_version: 2.4.0
+requires:
+  - caliptra_prim
+targets:
+  tb:
+    directories: 
+    files:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_adapter_sram.sv
+      - $COMPILE_ROOT/rtl/axi_lc_gate.sv
+      - $COMPILE_ROOT/rtl/axi_sram_byte.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_core_reg_top.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_prim_reg_top.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_axi_pkg.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_dai.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_ecc_reg.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_kdi.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_lci.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_lfsr_timer.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_part_buf.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_part_pkg.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_part_unbuf.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_pkg.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_scrmbl.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl.sv_orig
+      - $COMPILE_ROOT/rtl/otp_ctrl_token_const.sv
+      - $COMPILE_ROOT/rtl/otp_ctrl_top.sv

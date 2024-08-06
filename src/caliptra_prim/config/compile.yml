@@ -71,4 +71,5 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_sum_tree.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_edge_detector.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_blanker.sv
     tops: [caliptra_prim]
