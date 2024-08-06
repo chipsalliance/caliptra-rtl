@@ -1,22 +1,60 @@
 ---
-provides: [axi_sub]
+provides: [axi_pkg]
 schema_version: 2.4.0
-requires:
-  - libs
 targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/axi_if.sv
       - $COMPILE_ROOT/rtl/axi_pkg.sv
-      - $COMPILE_ROOT/rtl/axi_addr.v
-      - $COMPILE_ROOT/rtl/skidbuffer.v
-      - $COMPILE_ROOT/rtl/axi_sub_rd.sv
+      - $COMPILE_ROOT/rtl/axi_if.sv
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/axi_if.sv
       - $COMPILE_ROOT/rtl/axi_pkg.sv
+      - $COMPILE_ROOT/rtl/axi_if.sv
+---
+provides: [axi_sub]
+schema_version: 2.4.0
+requires:
+  - libs
+  - axi_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
       - $COMPILE_ROOT/rtl/axi_addr.v
-      - $COMPILE_ROOT/rtl/skidbuffer.v
       - $COMPILE_ROOT/rtl/axi_sub_rd.sv
+      - $COMPILE_ROOT/rtl/axi_sub_wr.sv
+      - $COMPILE_ROOT/rtl/axi_sub_arb.sv
+      - $COMPILE_ROOT/rtl/axi_sub.sv
+    tops: [axi_sub]
+---
+provides: [caliptra_axi_sram]
+schema_version: 2.4.0
+requires:
+  - libs
+  - axi_sub
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_axi_sram.sv
+    tops: [caliptra_axi_sram]
+---
+provides: [axi_dma]
+schema_version: 2.4.0
+requires:
+  - libs
+  - axi_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_dma_req_if.sv
+      - $COMPILE_ROOT/rtl/axi_dma_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/axi_dma_reg.sv
+      - $COMPILE_ROOT/rtl/axi_mgr_rd.sv
+      - $COMPILE_ROOT/rtl/axi_mgr_wr.sv
+      - $COMPILE_ROOT/rtl/axi_dma_ctrl.sv
+      - $COMPILE_ROOT/rtl/axi_dma_top.sv
+    tops: [axi_dma_top]

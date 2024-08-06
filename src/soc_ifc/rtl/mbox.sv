@@ -40,6 +40,12 @@ module mbox
     output mbox_sram_resp_t sha_sram_resp,
     output logic sha_sram_hold, // Throttle the SRAM requests when writing corrected ECC
 
+    input logic dma_sram_req_dv,
+    input soc_ifc_req_t dma_sram_req_data,
+    output logic [MBOX_DATA_W-1:0] dma_sram_rdata,
+    output logic dma_sram_hold, // Throttle the SRAM requests when SHA accel has access.
+    output logic dma_sram_error,
+
     //SRAM interface
     output mbox_sram_req_t  mbox_sram_req,
     input  mbox_sram_resp_t mbox_sram_resp,
@@ -48,12 +54,15 @@ module mbox
     output logic sram_single_ecc_error,
     output logic sram_double_ecc_error,
 
+    // Status
+    output logic uc_mbox_lock,
+
     //interrupts
     output logic uc_mbox_data_avail,
     output logic soc_mbox_data_avail,
     output logic soc_req_mbox_lock,
     output mbox_protocol_error_t mbox_protocol_error,
-    output logic mbox_inv_pauser_axs,
+    output logic mbox_inv_axi_id_axs,
 
     //DMI reg access
     input logic dmi_inc_rdptr,
@@ -118,6 +127,7 @@ logic mbox_protocol_sram_we;
 logic mbox_protocol_sram_rd, mbox_protocol_sram_rd_f;
 logic dir_req_dv_q, dir_req_rd_phase;
 logic dir_req_wr_ph;
+logic dma_sram_req_dv_q, dma_sram_req_rd_phase;
 logic mask_rdata;
 logic [DEPTH_LOG2-1:0] dir_req_addr;
 
@@ -146,10 +156,10 @@ assign mbox_error = read_error | write_error;
 
 //Determine if this is a valid request from the requester side
 //1) uC requests are valid if uc has lock
-//2) SoC requests are valid if soc has lock and it's the user that locked it 
+//2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value)));
+                               ( req_data.soc_req & soc_has_lock & (req_data.id == hwif_out.mbox_id.id.value)));
 
 //Determine if this is a valid request from the receiver side
 always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
@@ -162,7 +172,7 @@ always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
                                                  (~soc_has_lock & (mbox_fsm_ps == MBOX_EXECUTE_UC)))));
 
 //We want to mask read data when
-//Invalid user is trying to access the mailbox data
+//Invalid ID is trying to access the mailbox data
 always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
@@ -191,7 +201,7 @@ always_comb arc_FORCE_MBOX_UNLOCK = hwif_out.mbox_unlock.unlock.value;
 // Any register write or read by an INVALID agent results in the access
 // being silently dropped.
 // Assumption: uC (ROM, FMC, RT) will never make an invalid request.
-// NOTE: Any APB agent can trigger the error at any point during a uC->SOC flow
+// NOTE: Any AXI agent can trigger the error at any point during a uC->SOC flow
 //       by writing to mbox_status (since it's a valid_receiver).
 //       FIXED! valid_receiver is restricted by FSM state now.
 always_comb arc_MBOX_RDY_FOR_CMD_MBOX_ERROR  = (mbox_fsm_ps == MBOX_RDY_FOR_CMD) &&
@@ -256,7 +266,7 @@ always_comb begin : mbox_fsm_combo
             end
             // Flag a non-fatal error, but don't change states, if mbox is already IDLE
             // when an unexpected SOC access happens
-            if (req_dv && req_data.soc_req && !req_hold && (req_data.write || hwif_out.mbox_dataout.dataout.swacc)) begin
+            if (req_dv && req_data.soc_req && ~req_hold && (req_data.write || hwif_out.mbox_dataout.dataout.swacc)) begin
                 mbox_protocol_error_nxt.axs_without_lock = 1'b1;
             end
         end
@@ -289,7 +299,7 @@ always_comb begin : mbox_fsm_combo
         end
         MBOX_RDY_FOR_DATA: begin
             //update the write pointers to sram when accessing datain register
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_requester;
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod & valid_requester & ~req_hold;
             if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
                 //reset wrptr so receiver can write response
@@ -318,8 +328,8 @@ always_comb begin : mbox_fsm_combo
         //only uC can write to datain here to respond to SoC
         MBOX_EXECUTE_UC: begin
             uc_mbox_data_avail = 1;
-            inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & ~req_data.soc_req);
-            inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req;
+            inc_rdptr = dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & ~req_data.soc_req & ~req_hold);
+            inc_wrptr = hwif_out.mbox_datain.datain.swmod & ~req_data.soc_req & ~req_hold;
             if (arc_MBOX_EXECUTE_UC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
             end
@@ -340,12 +350,12 @@ always_comb begin : mbox_fsm_combo
             end
         end
         //uC set execute, data is for the SoC
-        //If we're here, restrict reading to the user that requested the data
+        //If we're here, restrict reading to the AXI ID that requested the data
         //Only SoC can read from mbox
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin
             soc_mbox_data_avail = 1;
-            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver));
+            inc_rdptr = (dmi_inc_rdptr | (hwif_out.mbox_dataout.dataout.swacc & req_data.soc_req & valid_receiver & ~req_hold));
             if (arc_MBOX_EXECUTE_SOC_MBOX_IDLE) begin
                 mbox_fsm_ns = MBOX_IDLE;
             end
@@ -379,10 +389,10 @@ always_comb begin : mbox_fsm_combo
     endcase
 end
 
-// Any ol' PAUSER is fine for reg-reads (except dataout)
-// NOTE: This only captures accesses by APB agents that are valid, but do not
+// Any ol' AXI_ID is fine for reg-reads (except dataout)
+// NOTE: This only captures accesses by AXI agents that are valid, but do not
 //       have lock. Invalid agent accesses are blocked by arbiter.
-assign mbox_inv_pauser_axs = req_dv && req_data.soc_req && !req_hold &&
+assign mbox_inv_axi_id_axs = req_dv && req_data.soc_req && !req_hold &&
                              !valid_requester && !valid_receiver &&
                              (req_data.write || hwif_out.mbox_dataout.dataout.swacc);
 
@@ -397,6 +407,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_fsm_ps <= MBOX_IDLE;
         soc_has_lock <= '0;
         dir_req_rd_phase <= '0;
+        dma_sram_req_rd_phase <= '0;
         mbox_wrptr <= '0;
         mbox_wr_full <= '0;
         mbox_rdptr <= '0;
@@ -411,7 +422,8 @@ always_ff @(posedge clk or negedge rst_b) begin
         mbox_fsm_ps <= mbox_fsm_ns;
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : 
                         hwif_out.mbox_lock.lock.value ? soc_has_lock : '0;
-        dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write;
+        dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~(dma_sram_req_dv_q & dma_sram_req_data.write) & ~req_data.write;
+        dma_sram_req_rd_phase <= dma_sram_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_data.write;
         mbox_wrptr <= ((inc_wrptr & wrptr_inc_valid) | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_wr_full <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wr_full_nxt : mbox_wr_full;
         mbox_rdptr <= (mbox_protocol_sram_rd) ? mbox_rdptr_nxt : mbox_rdptr;
@@ -422,29 +434,42 @@ always_ff @(posedge clk or negedge rst_b) begin
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
         //enable ecc for mbox protocol, direct reads, or SHA direct reads
-        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) | sha_sram_req_dv;
+        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) | (dma_sram_req_dv_q & ~dma_sram_req_data.write) | sha_sram_req_dv;
     end
 end
 
+always_comb uc_mbox_lock = hwif_out.mbox_lock.lock.value && ~soc_has_lock;
 
 
+
+always_comb dma_sram_req_dv_q = dma_sram_req_dv & hwif_out.mbox_lock.lock.value & ~soc_has_lock & ~dma_sram_req_rd_phase;
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
 //mask the request and hold the interface if SHA is using the mailbox
 //hold when a read to dataout is coming and we haven't updated the data yet
 always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.lock.value & (~soc_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_UC))) | 
+                           (dma_sram_req_dv_q) |
                             sha_sram_req_dv;
-always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & req_data.write;
-always_comb dir_req_addr = sha_sram_req_dv ? sha_sram_req_addr : req_data.addr[DEPTH_LOG2+1:2];
+always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & ((~dma_sram_req_dv_q & req_data.write) | (dma_sram_req_dv_q & dma_sram_req_data.write));
+always_comb dir_req_addr = sha_sram_req_dv   ? sha_sram_req_addr :
+                           dma_sram_req_dv_q ? dma_sram_req_data.addr[DEPTH_LOG2+1:2] :
+                                               req_data.addr[DEPTH_LOG2+1:2];
+
+// Arb precedence:
+//   SHA accelerator: highest
+//   DMA (with lock): next
+//   Direct request:  lowest
+// No arbitration/round-robin -- this is strictly observed for every txn
 
                        //Direct read from uC, stall 1 clock dv_q will be de-asserted second clock
-always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & ~req_data.write) |
-                       //Direct access from uC while sha accelerator is reading
-                       (dir_req_dv & ~dir_req_rd_phase & sha_sram_req_dv) |
+always_comb req_hold = (dir_req_dv_q & /*~sha_sram_req_dv & (~dma_sram_req_dv_q | dma_sram_req_rd_phase) &*/ ~req_data.write) |
+                       //Direct access from uC while sha accelerator or DMA is accessing
+                       (dir_req_dv & ~dir_req_rd_phase & (sha_sram_req_dv | dma_sram_req_dv_q)) |
                        //in an update cycle for dataout register
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
+always_comb dma_sram_hold = (sha_sram_req_dv && !dma_sram_req_rd_phase) || (dma_sram_req_dv_q && !dma_sram_req_data.write);
 always_comb sha_sram_hold = 1'b0;
 
 //SRAM interface
@@ -457,6 +482,9 @@ always_comb sram_waddr = dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //We want to mask the read data for certain accesses
 always_comb rdata = ({DATA_W{~mask_rdata}} & csr_rdata);
 always_comb dir_rdata = dir_req_rd_phase ? sram_rdata_cor : '0;
+always_comb dma_sram_rdata = dma_sram_req_rd_phase ? sram_rdata_cor : '0;
+
+always_comb dma_sram_error = 1'b0; // TODO: ecc error?
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
@@ -498,7 +526,7 @@ rvecc_decode ecc_decode (
 //control for sram write and read pointer
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
 //uC accesses can specify the specific read or write address, or rely on mailbox to control
-always_comb sram_wdata = req_data.wdata;
+always_comb sram_wdata = (dma_sram_req_dv_q && dma_sram_req_data.write ) ? dma_sram_req_data.wdata : req_data.wdata;
 
 //in ready for data state we increment the pointer each time we write
 always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
@@ -519,18 +547,18 @@ always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == 
 always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
-always_comb hwif_in.mbox_user.user.next = req_data.user;
+always_comb hwif_in.mbox_id.id.next = req_data.id;
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
 
 always_comb hwif_in.soc_req = req_data.soc_req;
-//check the requesting user:
+//check the requesting ID:
 //don't update mailbox data if lock hasn't been acquired
 //if uc has the lock, check that this request is from uc
-//if soc has the lock, check that this request is from soc and user attributes match
+//if soc has the lock, check that this request is from soc and ID attributes match
 always_comb hwif_in.valid_requester = valid_requester;
 always_comb hwif_in.valid_receiver = valid_receiver;
 
-//indicate that requesting user is setting the lock
+//indicate that requesting ID is setting the lock
 always_comb hwif_in.lock_set = arc_MBOX_IDLE_MBOX_RDY_FOR_CMD;
 
 //update dataout
@@ -576,7 +604,7 @@ mbox_csr1(
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data.wdata),
-    .s_cpuif_wr_biten('1),
+    .s_cpuif_wr_biten('1), // FIXME
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),

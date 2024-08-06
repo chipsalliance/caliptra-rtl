@@ -44,6 +44,8 @@ addrmap clp {
 
     sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
 
+    axi_dma_reg axi_dma_reg @ 0x3002_2000;
+
     soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 
 };

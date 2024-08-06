@@ -28,10 +28,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error extends soc_ifc_reg_delay_j
             `uvm_fatal("SOC_IFC_REG_DELAY_JOB", "Missing handle for fld, map, or rm")
 
         `uvm_info("SOC_IFC_REG_DELAY_JOB", "Running delayed job for mbox_csr due to detected protocol error", UVM_HIGH)
-        if (error.axs_without_lock && (rm.mbox_lock.lock.get_mirrored_value() || !rm.mbox_fn_state_sigs.mbox_idle)) begin
-            `uvm_fatal("SOC_IFC_REG_DELAY_JOB", "no_lock mbox error while mbox is locked or not-idle! This shouldn't happen and I haven't thought of how to deal with this yet! FIXME!")
-        end
-        else if (error.axs_without_lock) begin
+        if (error.axs_without_lock) begin
             uvm_reg_block top;
             uvm_reg_block blk;
             uvm_reg_field intr_fld;

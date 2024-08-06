@@ -781,7 +781,7 @@ module hmac_reg (
             automatic logic load_next_c;
             next_c = field_storage.HMAC384_KEY[i0].KEY.value;
             load_next_c = '0;
-            if(decoded_reg_strb.HMAC384_KEY[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.HMAC384_KEY[i0] && decoded_req_is_wr && !(hwif_in.HMAC384_KEY[i0].KEY.swwel)) begin // SW write
                 next_c = (field_storage.HMAC384_KEY[i0].KEY.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end else if(hwif_in.HMAC384_KEY[i0].KEY.we) begin // HW Write - we
@@ -810,7 +810,7 @@ module hmac_reg (
             automatic logic load_next_c;
             next_c = field_storage.HMAC384_BLOCK[i0].BLOCK.value;
             load_next_c = '0;
-            if(decoded_reg_strb.HMAC384_BLOCK[i0] && decoded_req_is_wr) begin // SW write
+            if(decoded_reg_strb.HMAC384_BLOCK[i0] && decoded_req_is_wr && !(hwif_in.HMAC384_BLOCK[i0].BLOCK.swwel)) begin // SW write
                 next_c = (field_storage.HMAC384_BLOCK[i0].BLOCK.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end else if(hwif_in.HMAC384_BLOCK[i0].BLOCK.we) begin // HW Write - we

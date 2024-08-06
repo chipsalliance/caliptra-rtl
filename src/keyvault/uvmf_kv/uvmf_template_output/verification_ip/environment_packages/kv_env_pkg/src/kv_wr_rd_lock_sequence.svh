@@ -186,7 +186,7 @@ class kv_wr_rd_lock_sequence #(
             kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
         else
             `uvm_error("KV_WR_RD_LOCK", "kv_rst_agent_config.sequencer is null!")
-        fork
+        // fork
         begin
             repeat(20) begin
             //Set each CTRL reg with random lock data
@@ -212,9 +212,9 @@ class kv_wr_rd_lock_sequence #(
             configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
 
         end
-        join
+        // join
 
-        fork
+        // fork
             begin
                 repeat(20) begin
                 //Set each CTRL reg with random lock data
@@ -253,7 +253,7 @@ class kv_wr_rd_lock_sequence #(
                 configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
     
             end
-        join
+        // join
     endtask
 
 endclass

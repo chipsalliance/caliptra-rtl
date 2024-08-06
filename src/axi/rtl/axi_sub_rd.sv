@@ -49,7 +49,10 @@ module axi_sub_rd import axi_pkg::*; #(
     // Exclusive Access Signals
     input  logic            [ID_NUM-1:0] ex_clr,
     output logic            [ID_NUM-1:0] ex_active,
-    output var axi_ex_ctx_t [ID_NUM-1:0] ex_ctx,
+    output struct packed {
+        logic [AW-1:0] addr;
+        logic [AW-1:0] addr_mask;
+    } [ID_NUM-1:0] ex_ctx,
 
     //COMPONENT INF
     output logic          dv,
@@ -67,6 +70,24 @@ module axi_sub_rd import axi_pkg::*; #(
     // Localparams/Typedefs                    //
     // --------------------------------------- //
 
+    // Transaction context
+    typedef struct packed {
+        logic [AW-1:0] addr;
+        axi_burst_e    burst;
+        logic [2:0]    size;
+        logic [7:0]    len;
+        logic [UW-1:0] user;
+        logic [IW-1:0] id;
+        logic          lock;
+    } axi_ctx_t;
+
+    typedef struct packed {
+        logic [IW-1:0] id;
+        logic [UW-1:0] user;
+        axi_resp_e     resp;
+        logic          last;
+    } xfer_ctx_t;
+
 
     // --------------------------------------- //
     // Signals                                 //
@@ -82,8 +103,8 @@ module axi_sub_rd import axi_pkg::*; #(
     logic      [AW-1:0]  txn_addr_nxt;
     logic      [   7:0]  txn_cnt; // Internal down-counter to track txn progress
     logic                txn_active;
-    logic      [C_LAT:0] txn_rvalid;
-    xfer_ctx_t [C_LAT:0] txn_xfer_ctx;
+    logic                txn_rvalid [C_LAT+1];
+    xfer_ctx_t           txn_xfer_ctx [C_LAT+1];
     logic                txn_final_beat;
 
     // Data pipeline signals (skid buffer)
@@ -118,14 +139,14 @@ module axi_sub_rd import axi_pkg::*; #(
         end
     end
 
-    // TODO reset?
-    always_ff@(posedge clk/* or negedge rst_n*/) begin
-//        if (!rst_n) begin
-//            txn_ctx <= '{default:0};
-//        end
-        if (s_axi_if.arvalid && s_axi_if.arready) begin
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            txn_ctx <= '{default:0, burst:AXI_BURST_FIXED};
+            txn_cnt <= '0;
+        end
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_ctx.addr  <= s_axi_if.araddr;
-            txn_ctx.burst <= s_axi_if.arburst;
+            txn_ctx.burst <= axi_burst_e'(s_axi_if.arburst);
             txn_ctx.size  <= s_axi_if.arsize;
             txn_ctx.len   <= s_axi_if.arlen ;
             txn_ctx.user  <= s_axi_if.aruser;
@@ -143,16 +164,13 @@ module axi_sub_rd import axi_pkg::*; #(
             txn_ctx.lock  <= txn_ctx.lock;
             txn_cnt       <= |txn_cnt ? txn_cnt - 1 : txn_cnt; // Prevent underflow to 255 at end to reduce switching power. Extra logic cost worth it?
         end
-        else begin
-            txn_ctx       <= txn_ctx;
-        end
     end
 
     // Only make the request to component if we have space in the pipeline to
     // store the result (under worst-case AXI backpressure)
-    // To check this, look at the 'ready' output from the FINAL stage of the
+    // To check this, look at the 'ready' output from all stages of the
     // skidbuffer pipeline
-    always_comb dv = txn_active && dp_rready[C_LAT];
+    always_comb dv = txn_active && &dp_rready;
     always_comb txn_rvalid[0] = dv && !hld;
 
     // Asserts on the final beat of the COMPONENT INF which means it lags the
@@ -171,8 +189,7 @@ module axi_sub_rd import axi_pkg::*; #(
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(
         .AW  (AW),
-        .DW  (DW),
-        .LENB(8 )
+        .DW  (DW)
     ) i_axi_addr (
         .i_last_addr(txn_ctx.addr ),
         .i_size     (txn_ctx.size ), // 1b, 2b, 4b, 8b, etc
@@ -195,25 +212,23 @@ module axi_sub_rd import axi_pkg::*; #(
     // Shift Register to track requests made to component
     generate
     if (C_LAT > 0) begin: TXN_SR
-        always_ff@(posedge clk or negedge rst_n) begin
-            if (!rst_n) begin
-                txn_rvalid[C_LAT:1] <= C_LAT'(0);
-            end
-            else begin
-                txn_rvalid[C_LAT:1] <= txn_rvalid[C_LAT-1:0];
-            end
-        end
-
         // Context is maintained alongside request while waiting for
         // component response to arrive
-        if (C_LAT > 1) begin
-            for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
-                // No reset needed on data path -- txn_rvalid (control path) is reset
-                always_ff@(posedge clk) begin
-                    txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
+        for (cp = 1; cp <= C_LAT; cp++) begin: CTX_PIPELINE
+            always_ff@(posedge clk or negedge rst_n) begin
+                if (!rst_n) begin
+                    txn_rvalid[cp] <= 1'b0;
                 end
-            end: CTX_PIPELINE
-        end
+                else begin
+                    txn_rvalid[cp] <= txn_rvalid[cp-1];
+                end
+            end
+
+            // No reset needed on data path -- txn_rvalid (control path) is reset
+            always_ff@(posedge clk) begin
+                txn_xfer_ctx[cp] <= txn_xfer_ctx[cp-1];
+            end
+        end: CTX_PIPELINE
 
     end: TXN_SR
     endgenerate
@@ -361,8 +376,8 @@ module axi_sub_rd import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , (s_axi_if.rvalid ? s_axi_if.rlast : '0), clk, !rst_n)
 
     // Handshake rules
-    `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, s_axi_if.arvalid && !s_axi_if.arready => s_axi_if.arvalid, clk, !rst_n)
-    `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  s_axi_if.rvalid  && !s_axi_if.rready  => s_axi_if.rvalid,  clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, (s_axi_if.arvalid && !s_axi_if.arready) |=> s_axi_if.arvalid, clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  (s_axi_if.rvalid  && !s_axi_if.rready ) |=> s_axi_if.rvalid,  clk, !rst_n)
 
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && $isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
@@ -370,16 +385,17 @@ module axi_sub_rd import axi_pkg::*; #(
     //   - Must have an address that is aligned to burst byte count
     //   - Byte count must be power of 2 inside 1:128
     //   - Max burst length = 16
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_UNALGN  , (s_axi_if.arvalid && s_axi_if.arlock) -> ~|s_axi_if.araddr[$clog2((1<<s_axi_if.arsize)*(s_axi_if.arlen+1))-1:0], clk, !rst_n)
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_BYTE_CNT, (s_axi_if.arvalid && s_axi_if.arlock) -> ((1<<s_axi_if.arsize)*(s_axi_if.arlen+1) inside {1,2,4,8,16,32,64,128}), clk, !rst_n)
-    `CALIPTRA_ASSERT      (ERR_AXI_EX_MAX_LEN,  (s_axi_if.arvalid && s_axi_if.arlock) -> (s_axi_if.arlen < 16), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_UNALGN  , (s_axi_if.arvalid && s_axi_if.arlock) |-> ~|(s_axi_if.araddr & ((1 << $clog2((1<<s_axi_if.arsize)*(s_axi_if.arlen+1)))-1)), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_BYTE_CNT, (s_axi_if.arvalid && s_axi_if.arlock) |-> ((1<<s_axi_if.arsize)*(s_axi_if.arlen+1) inside {1,2,4,8,16,32,64,128}), clk, !rst_n)
+    `CALIPTRA_ASSERT      (ERR_AXI_EX_MAX_LEN,  (s_axi_if.arvalid && s_axi_if.arlock) |-> (s_axi_if.arlen < 16), clk, !rst_n)
 
     genvar sva_ii;
     generate
         if (C_LAT > 0) begin
             for (sva_ii = 0; sva_ii < C_LAT; sva_ii++) begin
-                // Last stage should be first to fill and last to go empty
-                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF, dp_rready[sva_ii+1] && !dp_rready[sva_ii], clk, !rst_n)
+                // Last stage should be first to fill and first to go empty
+                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_FILL,  $fell(dp_rready[sva_ii+1]) && !dp_rready[sva_ii], clk, !rst_n)
+                `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_DRAIN, $rose(dp_rready[sva_ii+1]) &&  dp_rready[sva_ii], clk, !rst_n)
             end
         end
     endgenerate

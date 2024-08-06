@@ -14,6 +14,7 @@
 //
 
 package caliptra_top_tb_pkg;
+import soc_ifc_pkg::*;
 
 `ifndef VERILATOR
 class bitflip_mask_generator #(int MBOX_DATA_AND_ECC_W = 39);
@@ -69,8 +70,6 @@ typedef struct packed {
     logic reset_generic_input_wires;
     logic do_no_lock_access;
     logic do_ooo_access;
-    logic reset_ooo_done_flag;
-    logic reset_no_lock_done_flag;
 } ras_test_ctrl_t;
 
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing
@@ -80,7 +79,14 @@ localparam PROT_OOO_NON_FATAL_OBSERVED     = 32'h600dcafe;
 localparam ICCM_FATAL_OBSERVED             = 32'hdeadaca1;
 localparam DCCM_FATAL_OBSERVED             = 32'hdeadbeef;
 localparam NMI_FATAL_OBSERVED              = 32'hdeadc0a7;
+localparam CRYPTO_ERROR_OBSERVED           = 32'hdeadface;
 localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
+
+// AXI SRAM config
+localparam AXI_SRAM_SIZE_BYTES   = 65536;
+localparam AXI_SRAM_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
+localparam AXI_SRAM_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
+localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2345_0000; 
 
 endpackage

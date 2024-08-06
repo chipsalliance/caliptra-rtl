@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Version 1.0</p>
+<p style="text-align: center;">Version 1.1</p>
 
 <div style="page-break-after: always"></div>
 
@@ -34,18 +34,13 @@ BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchroni
 
 ## FW update reset (Impactless FW update)
 
-Runtime FW updates write to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Since ICCM is locked during runtime, it must be unlocked after the RISC-V reset is asserted. Reset is deasserted synchronously after a programmable number of cycles (currently set to 5 clocks) and normal boot flow updates the ICCM with the new FW from the mailbox SRAM. Reset de-assertion is done through a two flip-flop synchronizer. The boot flow is modified as shown in the following figure.
+When a firmware update is initiated, Runtime FW writes to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Reset is deasserted synchronously after a programmable number of cycles; the minimum allowed number of wait cycles is 5, which is also the default configured value. Reset de-assertion is done through a two flip-flop synchronizer. Since ICCM is locked during runtime, the boot FSM unlocks it when the RISC-V reset is asserted. Following FW update reset deassertion, normal boot flow updates the ICCM with the new FW from the mailbox SRAM. The boot flow is modified as shown in the following figure.
 
 *Figure 2: Mailbox Boot FSM state diagram for FW update reset*
 
 ![](./images/mbox_boot_fsm_FW_update_reset.png)
 
-After Caliptra comes out of global reset and enters the BOOT\_DONE state, a write to the fw\_update\_reset register triggers the FW update reset flow. In the BOOT\_FWRST state, only the reset to the VeeR core is asserted, ICCM is unlocked and the timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted.
-
-| Control register | Start address | Description |
-| :------- | :---------- | :--------- |
-| FW_UPDATE_RESET | 0x30030418 | Register to trigger the FW update reset flow. Setting it to 1 starts the Boot FSM. The field auto-clears to 0. |
-| FW_UPDATE_RESET_WAIT_CYCLES | 0x3003041C | Programmable wait time to keep the microcontroller reset asserted. |
+Impactless firmware updates may be initiated by writing to the fw\_update\_reset register after Caliptra comes out of global reset and enters the BOOT\_DONE state. In the BOOT\_FWRST state, only the reset to the RISC-V core is asserted and the wait timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted and ICCM is unlocked.
 
 ## RISC-V core
 
@@ -160,8 +155,8 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | ECC (Notifications)                                 | 4                | 7                                               |
 | HMAC (Errors)                                       | 5                | 8                                               |
 | HMAC (Notifications)                                | 6                | 7                                               |
-| KeyVault (Errors)                                   | 7                | 8                                               |
-| KeyVault (Notifications)                            | 8                | 7                                               |
+| Key Vault (Errors)                                  | 7                | 8                                               |
+| Key Vault (Notifications)                           | 8                | 7                                               |
 | SHA512 (Errors)                                     | 9                | 8                                               |
 | SHA512 (Notifications)                              | 10               | 7                                               |
 | SHA256 (Errors)                                     | 11               | 8                                               |
@@ -430,7 +425,7 @@ Caliptra provides a clock gating feature that turns off clocks when the microcon
 | :------------------- | :---------------- | :------------------------ |
 | CPTRA_CLK_GATING_EN  | 0x300300bc        | Register bit to enable or disable the clock gating feature. |
 
-When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (keyvault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
+When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (key vault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
 
 There are a total of 4 clocks in Caliptra: ungated clock, gated clock, gated RDC clock, and gated SoC IFC clock. The following table shows the different modules and their designated clocks.
 
@@ -1456,10 +1451,10 @@ FW must set a last cycle flag before running the last iteration of the SHA engin
 
 Key Vault (KV) is a register file that stores the keys to be used by the microcontroller, but this register file is not observed by the microcontroller. Each cryptographic function has a control register and functional block designed to read from and write to the KV.  
 
-| KV register                      | Description                                              |
-| :------------------------------- | :------------------------------------------------------- |
-| Key Control\[7:0\]               | 8 Control registers, 32 bits each                        |
-| Key Entry\[7:0\]\[15:0\]\[31:0\] | 8 Key entries, 512 bits each <br>No read or write access |
+| KV register                       | Description                                               |
+| :-------------------------------- | :-------------------------------------------------------- |
+| Key Control\[31:0\]               | 32 Control registers, 32 bits each                        |
+| Key Entry\[31:0\]\[11:0\]\[31:0\] | 32 Key entries, 384 bits each <br>No read or write access |
 
 ### Key vault functional block
 
@@ -1485,13 +1480,17 @@ The destination valid field is programmed by FW in the cryptographic block gener
 
 A generic block is instantiated in each cryptographic block to enable access to KV. 
 
-Each input to a cryptographic engine can have a key vault read block associated with it. The KV read block takes in a keyvault read control register that drives an FSM to copy an entry from the keyvault into the appropriate input register of the cryptographic engine.
+Each input to a cryptographic engine can have a key vault read block associated with it. The KV read block takes in a key vault read control register that drives an FSM to copy an entry from the key vault into the appropriate input register of the cryptographic engine.
 
-Each output generated by a cryptographic engine can have its result copied to a slot in the keyvault. The KV write block takes in a keyvault write control register. This register drives an FSM to copy the result from the cryptographic engine into the appropriate keyvault entry. It also programs a control field for that entry to indicate where that entry can be used.
+Each output generated by a cryptographic engine can have its result copied to a slot in the key vault. The KV write block takes in a key vault write control register. This register drives an FSM to copy the result from the cryptographic engine into the appropriate key vault entry. It also programs a control field for that entry to indicate where that entry can be used.
 
 After programming the key vault read control, FW needs to query the associated key vault read status to confirm that the requested key was copied successfully. After valid is set and the error field reports success, the key is ready to be used.
 
 Similarly, after programming the key vault write control and initiating the cryptographic function that generates the key to be written, FW needs to query the associated key vault write status to confirm that the requested key was generated and written successfully.
+
+When a key is read from the key vault, the API register is locked and any result generated from the cryptographic block is not readable by firmware. The digest can only be sent to the key vault by appropriately programming the key vault write controls. After the cryptographic block completes its operation, the lock is cleared and the key is cleared from the API registers.
+
+If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
 The following tables describe read, write, and status values for key vault blocks.
 
@@ -1547,11 +1546,11 @@ A de-obfuscation engine (DOE) is used in conjunction with AES cryptography to de
 
 The following tables describe DOE register and control fields.
 
-| DOE Register | Address    | Description                                                                                                                    |
-| :----------- | :--------- | :----------------------------------------------------------------------------------------------------------------------------- |
-| IV           | 0x10000000 | 128 bit IV for DOE flow. Stored in big-endian representation.                                                                  |
-| CTRL         | 0x10000010 | Controls for DOE flows.                                                                                                        |
-| STATUS       | 0x10000014 | Valid indicates the command is done and results are stored in keyvault. Ready indicates the core is ready for another command. |
+| DOE Register | Address    | Description                                                                                                                     |
+| :----------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| IV           | 0x10000000 | 128 bit IV for DOE flow. Stored in big-endian representation.                                                                   |
+| CTRL         | 0x10000010 | Controls for DOE flows.                                                                                                         |
+| STATUS       | 0x10000014 | Valid indicates the command is done and results are stored in key vault. Ready indicates the core is ready for another command. |
 
 | DOE Ctrl Fields  | Reset        | Description                                                                                                                                  |
 | :--------------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1581,9 +1580,10 @@ Data vault is a set of generic scratch pad registers with specific lock function
 
 The following table describes cryptographic errors. 
 
-| Errors     | Error type         | Description                                                                                                                                               |
-| :--------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ECC_R_ZERO | HW_ERROR_NON_FATAL | Indicates a non-fatal error in ECC signing if the computed signature R is equal to 0. FW should change the message or privkey to perform a valid signing. |
+| Errors       | Error type         | Description                                                                                                                                               |
+| :----------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ECC_R_ZERO   | HW_ERROR_NON_FATAL | Indicates a non-fatal error in ECC signing if the computed signature R is equal to 0. FW should change the message or privkey to perform a valid signing. |
+| CRYPTO_ERROR | HW_ERROR_FATAL     | Indicates a fatal error due to multiple cryptographic operations occurring simultaneously. FW must only operate one cryptographic engine at a time.       |
 
 # Terminology
 

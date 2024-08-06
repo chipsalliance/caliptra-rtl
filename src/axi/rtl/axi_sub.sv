@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
+//
 // -------------------------------------------------------------
 // AXI Subordinate
 // -------------------------------------------------------------
@@ -60,14 +60,18 @@ module axi_sub import axi_pkg::*; #(
     input  logic [DW-1:0] rdata, // Requires: Component dwidth == AXI dwidth
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
-    input  logic          err
+    input  logic          rd_err,
+    input  logic          wr_err
 
 );
 
     // Exclusive Access Signals
     logic        [ID_NUM-1:0] ex_clr;
     logic        [ID_NUM-1:0] ex_active;
-    axi_ex_ctx_t [ID_NUM-1:0] ex_ctx;
+    struct packed {
+        logic [AW-1:0] addr;
+        logic [AW-1:0] addr_mask;
+    } [ID_NUM-1:0] ex_ctx;
 
     //Read Subordinate INF
     logic          r_dv;
@@ -199,7 +203,8 @@ module axi_sub import axi_pkg::*; #(
         .wstrb  (wstrb  ),
         .last   (last   ),
         .hld    (hld    ),
-        .err    (err    ),
+        .rd_err (rd_err ),
+        .wr_err (wr_err ),
         .rdata  (rdata  ) 
     );
 

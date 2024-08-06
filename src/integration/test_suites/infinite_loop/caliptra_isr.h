@@ -49,6 +49,8 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
+    uint32_t axi_dma_error;
+    uint32_t axi_dma_notif;
 } caliptra_intr_received_s;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -86,5 +88,9 @@ inline void service_soc_ifc_notif_intr () {return;}
 
 inline void service_sha512_acc_error_intr() {return;}
 inline void service_sha512_acc_notif_intr() {return;}
+
+inline void service_axi_dma_error_intr() {return;}
+inline void service_axi_dma_notif_intr() {return;}
+
 
 #endif //CALIPTRA_ISR_H

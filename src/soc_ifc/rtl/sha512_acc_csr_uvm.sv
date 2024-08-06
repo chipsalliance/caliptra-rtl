@@ -34,17 +34,17 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__LOCK
 
-    // Reg - sha512_acc_csr::USER
-    class sha512_acc_csr__USER extends uvm_reg;
+    // Reg - sha512_acc_csr::ID
+    class sha512_acc_csr__ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        sha512_acc_csr__USER_bit_cg USER_bit_cg[32];
-        sha512_acc_csr__USER_fld_cg fld_cg;
-        rand uvm_reg_field USER;
+        sha512_acc_csr__ID_bit_cg ID_bit_cg[32];
+        sha512_acc_csr__ID_fld_cg fld_cg;
+        rand uvm_reg_field ID;
 
-        function new(string name = "sha512_acc_csr__USER");
+        function new(string name = "sha512_acc_csr__ID");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -54,15 +54,15 @@ package sha512_acc_csr_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.USER = new("USER");
-            this.USER.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.ID = new("ID");
+            this.ID.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(USER_bit_cg[bt]) USER_bit_cg[bt] = new();
+                foreach(ID_bit_cg[bt]) ID_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : sha512_acc_csr__USER
+    endclass : sha512_acc_csr__ID
 
     // Reg - sha512_acc_csr::MODE
     class sha512_acc_csr__MODE extends uvm_reg;
@@ -1063,7 +1063,7 @@ package sha512_acc_csr_uvm;
     // Addrmap - sha512_acc_csr
     class sha512_acc_csr extends uvm_reg_block;
         rand sha512_acc_csr__LOCK LOCK;
-        rand sha512_acc_csr__USER USER;
+        rand sha512_acc_csr__ID ID;
         rand sha512_acc_csr__MODE MODE;
         rand sha512_acc_csr__START_ADDRESS START_ADDRESS;
         rand sha512_acc_csr__DLEN DLEN;
@@ -1085,11 +1085,11 @@ package sha512_acc_csr_uvm;
 
             this.LOCK.build();
             this.default_map.add_reg(this.LOCK, 'h0);
-            this.USER = new("USER");
-            this.USER.configure(this);
+            this.ID = new("ID");
+            this.ID.configure(this);
 
-            this.USER.build();
-            this.default_map.add_reg(this.USER, 'h4);
+            this.ID.build();
+            this.default_map.add_reg(this.ID, 'h4);
             this.MODE = new("MODE");
             this.MODE.configure(this);
 

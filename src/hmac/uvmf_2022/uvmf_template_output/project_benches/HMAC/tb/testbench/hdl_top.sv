@@ -118,6 +118,7 @@ hmac_ctrl #(
      .kv_write   (),
      .kv_rd_resp (kv_rd_resp),
      .kv_wr_resp (kv_wr_resp),
+     .busy_o     (),
      .error_intr (),
      .notif_intr (),
      .debugUnlock_or_scan_mode_switch('0)

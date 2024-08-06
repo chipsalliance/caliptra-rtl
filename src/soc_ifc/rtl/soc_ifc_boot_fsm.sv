@@ -87,7 +87,8 @@ always_comb arc_BOOT_DONE_BOOT_IDLE = '0;
 always_comb arc_IDLE = cptra_rst_window_sync;
 
 //Masks combo paths from uc reset flops into other reset domains
-always_comb fw_update_rst_window = boot_fsm_ps inside {BOOT_FW_RST,BOOT_WAIT};
+always_comb fw_update_rst_window = (boot_fsm_ps == BOOT_FW_RST) |
+                                   ((boot_fsm_ps == BOOT_WAIT) & (wait_count != 0));
 //clock gate all flops on warm reset to prevent RDC metastability issues
 //cover 2 clocks after synchronized reset assertion (cptra_rst_window_sync) to handle bootfsm transitions
 always_comb rdc_clk_dis = cptra_rst_window_sync | cptra_rst_window_sync_f | cptra_rst_window_sync_2f;

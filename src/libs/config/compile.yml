@@ -17,6 +17,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_icg.sv
       - $COMPILE_ROOT/rtl/clk_gate.sv
       - $COMPILE_ROOT/rtl/caliptra_2ff_sync.sv
+      - $COMPILE_ROOT/rtl/skidbuffer.v
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
@@ -31,6 +32,7 @@ targets:
       - $COMPILE_ROOT/rtl/clk_gate.sv
       - $COMPILE_ROOT/rtl/caliptra_2ff_sync.sv
       - $COMPILE_ROOT/rtl/ahb_to_reg_adapter.sv
+      - $COMPILE_ROOT/rtl/skidbuffer.v
 ---
 provides: [uvm_lib]
 schema_version: 2.4.0

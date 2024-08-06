@@ -14,11 +14,63 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/01/18*_
+_*Last Update: 2024/07/02*_
 
-## Rev 1p0 ##
+## Rev 1p1 ##
 
-### Rev 1p0 release date: 2024/01/18 ###
+#### Rev 1p1 release date: 2024/07/02 ####
+- Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes, Key Vault updates
+- Caliptra Integration Specification updates to add clarity
+- Caliptra README updates to tool versions, simulation instructions
+- Update RDL register descriptions for clarity, accuracy in generated reg document
+- Verification
+  - Update zeroize assertions
+  - Add X check assertions to all register files
+  - New assertions and firmware tests for LMS accelerator
+  - Formal Verification [#493](https://github.com/chipsalliance/caliptra-rtl/pull/493):
+    - ECC Montgomery updated to recent changes
+    - SHA512\_masked update to entropy instead of LFSR
+    - SHA256 LMS extension verified
+  - Fixes for UVM caliptra\_top test scenarios
+    - Mailbox SRAM initialization
+    - Assorted fixes for sequence access contention, error-checking, randomization constraints
+    - Added early mailbox command flow to emulate stash measurement functionality
+  - Fixes for UVM Key Vault test scenarios
+    - Update clear\_secrets prediction
+- RTL
+  - ECC radix48
+  - LMS accelerator
+  - SHA512 masking
+  - HMAC and HMAC\_DRBG enhancements
+    - Masking for SHA512
+  - Modifications for clean Lint
+    * Replace casez with case
+    * Replace 2-state with 4-state typedefs, parameters, enums
+    * Replace 'reg' with 'logic' type
+    * Radix fixes for many signals
+    * Logical/boolean operator fixes
+    * Logic reorganization to resolve undriven ICache signals in RV core
+    * Fixes for redundant logic in RV core
+    * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
+    * Declare synthesizable package functions as automatic
+    * Declare names for unnamed generate blocks
+  - Update PeakRDL tool version and regenerate reg files to resolve lint issues
+  - Update HW\_REV\_ID bit-map and configure value to 1.1
+
+#### Bug Fixes ####
+[RTL] Add connection for JTAG TDO enable signal [#415](https://github.com/chipsalliance/caliptra-rtl/issues/415) [#425](https://github.com/chipsalliance/caliptra-rtl/pull/425)<br>
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset [#503](https://github.com/chipsalliance/caliptra-rtl/issues/503) [#506](https://github.com/chipsalliance/caliptra-rtl/pull/506)<br>
+[PV] Async reset condition missing for `nonce_offset_i` [#339](https://github.com/chipsalliance/caliptra-rtl/issues/339) [#444](https://github.com/chipsalliance/caliptra-rtl/issues/444) [#483](https://github.com/chipsalliance/caliptra-rtl/pull/483)<br>
+[HMAC] Fixed leakage issue in HMAC [#325](https://github.com/chipsalliance/caliptra-rtl/pull/325) [#429](https://github.com/chipsalliance/caliptra-rtl/pull/429)<br>
+[KV] Resolve a potential vulnerability in Key Vault usage [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint [#541](https://github.com/chipsalliance/caliptra-rtl/pull/541)
+
+## Previous Releases ##
+
+### Rev 1p0 ###
+
+#### Rev 1p0 release date: 2024/01/18 ####
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
@@ -27,16 +79,14 @@ _*Last Update: 2024/01/18*_
   - Adding ECC, DOE, HMAC_DRBG and SHA512_masked formal Assertion IP
   - JTAG with clock gating test cases
   - Fixes for UVM caliptra_top test scenarios
-  - Fixes for UVM KeyVault test scenarios
+  - Fixes for UVM Key Vault test scenarios
 - Updated synthesis tool from Design Compiler to Fusion Compiler (sanity checks only)
 - RTL
   - Remove TODO comments on caliptra_top ports
   - Remove JTAG IDCODE command from RISC-V processor
 
-### Bug Fixes ###
+#### Bug Fixes ####
 [MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
-
-## Previous Releases ##
 
 ### Rev 1p0-rc1 ###
 

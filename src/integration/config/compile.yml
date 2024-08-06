@@ -65,6 +65,7 @@ schema_version: 2.4.0
 requires:
   - asserts
   - libs
+  - caliptra_axi_sram
   - spiflash
   - caliptra_top
   - el2_veer_pkg

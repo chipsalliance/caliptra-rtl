@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 1.0</p>
+<p style="text-align: center;">Version 1.1</p>
 
 <div style="page-break-after: always"></div>
 
@@ -145,10 +145,10 @@ The following tables describe the interface signals.
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | jtag_tck | 1 | input | | |
-| jtag_tms | 1 | input | Synchronous to tck | |
-| jtag_tdi | 1 | input | Synchronous to tck | |
-| jtag_trst_n | 1 | input | Async Deassertion<br> Assertion Synchronous to tck | |
-| jtag_tdo | 1 | output | Synchronous to tck | |
+| jtag_tms | 1 | input | Synchronous to jtag_tck | |
+| jtag_tdi | 1 | input | Synchronous to jtag_tck | |
+| jtag_trst_n | 1 | input | Asynchronous assertion<br>Synchronous deassertion to jtag_tck | |
+| jtag_tdo | 1 | output | Synchronous to jtag_tck | |
 
 *Table 10: UART interface*
 
@@ -599,6 +599,8 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
 
 The following table describes SoC integration requirements.
 
+For additional information, see [Caliptra assets and threats](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-assets-and-threats).
+
 *Table 17: SoC integration requirements*
 
 | Category                         | Requirement                                                                                                                                                                                                                                                                    | Definition of done       | Rationale                                         |
@@ -627,6 +629,11 @@ The following table describes SoC integration requirements.
 | Resets and Clocks                | SoC shall start input clock before caliptra\_pwrgood assertion.                                                                                                                                                                                                                | Statement of conformance | Functional                                        |
 | Resets and Clocks                | SoC reset logic shall assume reset assertions are asynchronous and deassertions are synchronous.                                                                                                                                                                               | Statement of conformance | Functional                                        |
 | Resets and Clocks                | SoC shall ensure Caliptra's powergood is tied to SoC’s own powergood or any other reset that triggers SoC’s cold boot flow.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC shall ensure Caliptra clock is derived from an on-die oscillator circuit.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC shall ensure that any programmable Caliptra clock controls are restricted to the SoC Manager.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC should defend against external clock stop attacks.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC should defend against external clock glitching attacks.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC should defend against external clock overclocking attacks.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
 | TRNG                             | SoC shall either provision Caliptra with a dedicated TRNG or shared TRNG. It is highly recommended to use dedicated ITRNG                                                                                                                                                      | Statement of conformance | Required for Caliptra threat model and Functional |
 | TRNG                             | SoC shall provision the Caliptra embedded TRNG with an entropy source if that is used (vs. SoC-shared TRNG API support).                                                                                                                                                       | Statement of conformance | Functional                                        |
 | TRNG                             | If the TRNG is shared, then upon TRNG\_REQ, SoC shall use immutable logic or code to program Caliptra's TRNG registers.                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model and Functional |
@@ -656,7 +663,7 @@ The following table describes SoC integration requirements.
 | FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_PAUSER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_PAUSER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_PAUSER register. | Security                 | Required for Caliptra threat model                |
 | Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing).                  | Statement of conformance | Functionality                                     |
 | Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS\_SEED. It is strongly advised to implement manufacturing policies to protect UDS\_SEED as defense in depth measures. <br>1, Prevent leakage of UDS\_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS\_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra threat model |
-| Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model | 
+| Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model |
 | Chain of trust                   | SoC shall limit the mutable code and configuration that persists across the Caliptra powergood reset. A statement of conformance lists what persists and why this persistence is necessary.                                                                                    | Statement of conformance | Required for Caliptra threat model                |
 | Implementation                   | SoC shall apply size-only constraints on cells tagged with the "u\_\_size\_only\_\_" string and shall ensure that these are not optimized in synthesis and PNR                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                                                                             | GLS simulations pass                 | Functional requirement                |
@@ -665,7 +672,7 @@ The following table describes SoC integration requirements.
 
 | Module                    | Warning | Line No. | Description |
 | :--------- | :--------- | :--------- | :--------- |
-| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)| 
+| sha512_acc_top            | Empty netlist for always_comb                                                             | 417      |Unused logic (no load)|
 | ecc_scalar_blinding       | Netlist for always_ff block does not contain flip flop                                    | 301      |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
@@ -718,12 +725,13 @@ The following code snippet and schematic diagram illustrate JTAG originating CDC
     * Pseudo-static: wr\_data, wr\_addr
         * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
         * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
-* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers. 
+* The core clock frequency must be at least twice the TCK clock frequency for the JTAG data to pass correctly through the synchronizers.
 
 ## CDC constraints
 * cdc report scheme two\_dff -severity violation
 * cdc signal reg\_wr\_data  -module dmi\_wrapper -stable
 * cdc signal reg\_wr\_addr  -module dmi\_wrapper -stable
+* cdc signal rd\_data       -module dmi\_wrapper -stable
 
 # RDC analysis and constraints
 
@@ -774,7 +782,7 @@ The following table shows the false paths between various reset groups.
 
 ## Reset sequencing scenarios
 
-The resets defined in *Table 20* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset. 
+The resets defined in *Table 20* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset.
 
 The reset sequencing is illustrated in the following waveform.
 
@@ -795,12 +803,12 @@ The following table defines the order in which resets can get asserted. A ">>" i
 The following set of constraints and assumptions must be provided before running RDC structural analysis of Caliptra Core IP.
 
 1. Caliptra Core IP assumes the primary reset inputs are already synchronized to their respective clocks. The integrator must add external reset synchronizers to achieve the same.
-    - *cptra_pwrgood* and *cptra_rst_b* resets must be synchronzied to *cptra_clk*
-    - *jtag_trst_n* reset must be synchronzied to *jtag_clk*
+    - *cptra_pwrgood* and *cptra_rst_b* resets must be synchronized to *cptra_clk*
+    - Deassertion of *jtag_trst_n* reset must be synchronized to *jtag_clk*. The signal can be asserted asynchronously.
 2. The following debug register, which is driven from JTAG, is not toggled during functional flow.
     - u_caliptra.rvtop.veer.dbg.dmcontrol_reg[0] = 0
 3. Set *scan_mode* to 0 for functional analysis.
-4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 20*. 
+4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 20*.
 5. Create funtional reset grouping - This step must be customized as per the EDA tool, which is being used for RDC analysis. The goal of this customization is to achieve the following three sequencing requirements/constraints.
     - Gate all clocks when *cptra_noncore_rst_b* is asserted. This ensures that the capture flop clock is gated while the source flop's reset is getting asserted, thereby preventing the capture flop from becoming metastable. The result is when *cptra_noncore_rst_b* is going to be asserted, the following signals are constrained to be at 1 at around that time.
         - soc_ifc_top1.i_soc_ifc_boot_fsm.rdc_clk_dis
@@ -837,7 +845,7 @@ Considering the given constraints, three sets of crossings were identified as RD
 
 <br>
 
-For violations in Sl No 1 and 2, the schematic for the crossing is shown in the following figure. 
+For violations in Sl No 1 and 2, the schematic for the crossing is shown in the following figure.
 
 *Figure 11: Schematic for RDC violations #1 and #2*
 
@@ -894,166 +902,25 @@ These metrics are inclusive of VeeR core, Caliptra logic, imem/dmem RAM, ROM.
 
 The area is expressed in units of square microns.
 
-The target foundry technology node is an industry standard, moderately advanced technology node as of 2023 September.
+The target foundry technology node is an industry standard, moderately advanced technology node as of 2024 June.
 
 *Table 25: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 6/15/2023 | CALIPTRACLK          | 500MHz          | -15.93      | 496MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | JTAG_TCK             | 100MHz          | 4606.5      | 100MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | clock_gating_default | 500MHz          | 26.56       | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | io_to_io             | 500MHz          | -599.82     | 385MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | io_to_flop           | 500MHz          | 0.25        | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/15/2023 | flop_to_io           | 500MHz          | -627.58     | 381MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | CALIPTRACLK          | 500MHz            | -0.09       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | JTAG_TCK             | 100MHz            | 4606.5      | 100MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | clock_gating_default | 500MHz            | 3.36        | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | io_to_flop           | 500MHz            | 429.8       | 500MHz                   |
+| CALIPTRA_WRAPPER | 6/11/2024 | flop_to_io           | 500MHz            | 0.10        | 500MHz                   |
 
 | **IP Name**      | **Date**  | **Stdcell Area** | **Macro Area** | **Memory Area** | **Total Area** | **Flop Count** | **No Clock Regs/Pins Count** | **FM Status** | **FM Eqv Pts** | **FM Non-Eqv Pts** | **FM Abort Pts** | **FM FM**<br> **Non-Comp** **Pts** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 10/4/2023 | 89279            | 7872           | 239937          | 337088         | 45601          | 31                           | SUCCEEDED     | 156211         | 0                  | 0                | 0                              |
+| CALIPTRA_WRAPPER | 6/11/2024 | 93916            | 0           | 239937          | 341725         | 164505          | 0                           | SUCCEEDED     | 166241         | 0                  | 0                | 0                              |
 
 # Recommended LINT rules
 
-The following LINT rules are the recommended minimum set for standalone analysis of Caliptra IP. The same set is recommended as a minimum subset that may be applied by Caliptra integrators.
-
-Error: "x" in casez statements not allowed
-
-Error: All instance inputs must be driven
-
-Error: An event variable is declared but never triggered
-
-Error: Bit truncation hazard; LHS/RHS truncation of extra bits
-
-Error: Blocking and non-blocking assignment to a signal/variable detected
-
-Error: Case expression width mismatch; case expression width does not match case select expression width
-
-Error: Combinational loops detected
-
-Error: Constant value clock pin of sequential instance
-
-Error: Detected a logical/scalar operation on a vector
-
-Error: Detected that a tristate is used below top-level of design
-
-Error: Detected always or process constructs that do not have an event control
-
-Error: Detected arithmetic comparison operator with unequal length
-
-Error: Detected conversion of unsigned (reg type) to integer
-
-Error: Detected floating or unconnected inout port of an instance
-
-Error: Detected loop step statement variables incorrectly incremented or decremented
-
-Error: Detected nonblocking assignment in a combinational always block
-
-Error: Detected reset or set used both synchronously and asynchronously
-
-Error: Detected signal read inside combinational always block missing from sensitivity list
-
-Error: Detected tri-state 'Z' or '?' value used in assign or comparison
-
-Error: Detected two state data type signals; must support 4 state data type
-
-Error: Detected undriven but loaded input of an instance
-
-Error: Detected undriven but loaded net is detected
-
-Error: Detected undriven but loaded output port of module
-
-Error: Detected undriven output pins connected to instance input
-
-Error: Detected unequal length operands in the bit-wise logical, arithmetic, and ternary operators
-
-Error: Detected unpacked structure declaration outside the package
-
-Error: Duplicate conditions of a case, unique-case, or priority-case
-
-Error: Function return does not set all bits of return variable
-
-Error: Inout port is not read or assigned
-
-Error: Instance pin connections must use named-association rather than positional association
-
-Error: LHS or RHS mismatch hazard; multi-bit expression assigned to single bit signal
-
-Error: Latch inference not permitted
-
-Error: Must declare enum base type explicitly as sized logic type
-
-Error: Negative or enum array index detected
-
-Error: Non-synthesizable construct; functions of type real detected
-
-Error: Non-synthesizable construct; repeat statement
-
-Error: Non-synthesizable construct; delays ignored by synthesis tools
-
-Error: Non-synthesizable construct; modelling style where clock and reset cannot be inferred in sequential inference
-
-Error: Non-synthesizable construct; states are not updated on the same clock phase in sequential inference
-
-Error: Null Ports detected
-
-Error: Port referred before definition
-
-Error: Range index or slice of an array discrepancy
-
-Error: Read before set hazard in blocking assignment signal
-
-Error: Recursive task hazard
-
-Error: Redeclaration of a port range
-
-Error: Text Macro Redefinition TMR
-
-Error: Variable is too short for array index
-
-Error: Identified case constructs without the default or `OTHERS` clause
-
-Fatal: Asynchronous reset inference must have "if" statement as first statement in the block
-
-Fatal: Blocking assignment detected in sequential always block
-
-Fatal: Detected a function or a sub-program sets a global signal or variable
-
-Fatal: Detected a function or a sub-program uses a global signal or variable
-
-Fatal: Detected assignment to input ports
-
-Fatal: Detected edge and non-edge conditions in block sensitivity list
-
-Fatal: Detected variable in which both the edges are used in an event control list
-
-Fatal: Event control detected in RHS of assignment statement
-
-Fatal: Illegal case construct label detected
-
-Fatal: Module instance port connection mismatch width compared to the port definition
-
-Fatal: Non-synthesizable construct; case equal operators (===) (!==) operators may not be synthesizable
-
-Fatal: Non-synthesizable construct; detected real operands that are used in logical comparisons
-
-Fatal: Non-synthesizable construct; detected real variables that are unsynthesizable
-
-Fatal: Non-synthesizable construct; MOS switches, such as cmos, pmos, and nmos
-
-Fatal: Non-synthesizable construct; disable statements detected
-
-Fatal: Non-synthesizable construct; event control expressions have multiple edges in sequential inference
-
-Fatal: Non-synthesizable construct; event variables
-
-Fatal: Non-synthesizable construct; the tri0 net declarations
-
-Fatal: Non-synthesizable construct; time declarations
-
-Fatal: Non-synthesizable construct; tri1 net declarations
-
-Fatal: Non-synthesizable construct; trireg declarations
-
-Fatal: The 'default' or 'others' must be last case in a case statement
+A standardized set of lint rules is used to sign off on each release. The lint policy may be provided directly to integrators upon request to ensure lint is clean in the SoC.
 
 # Terminology
 
