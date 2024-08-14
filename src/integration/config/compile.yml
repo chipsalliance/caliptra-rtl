@@ -103,6 +103,7 @@ targets:
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_soc_bfm.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
