@@ -691,12 +691,19 @@ class soc_ifc_predictor #(
     $cast(ahb_txn, t);
     soc_ifc_sb_ahb_ap_output_transaction.copy(ahb_txn);
     // Address must be aligned to the native data width in the SOC IFC! I.e. 4-byte aligned
+    // Exception is for READS to the Mailbox via direct mode
     address_aligned = ahb_txn.address & ~(SOC_IFC_DATA_W/8 - 1);
     if (ahb_txn.address & ((SOC_IFC_DATA_W/8 - 1))) begin
-        `uvm_error("PRED_AHB", "Detected AHB transfer with bad address alignment! Address: 0x%x, expected alignment: 0x%x")
+        if (ahb_txn.RnW == AHB_WRITE)
+            `uvm_error("PRED_AHB", $sformatf("Detected AHB write with bad address alignment! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
+        else if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) == null)
+            `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with bad address alignment that does not target the Mailbox SRAM! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
+        else
+            `uvm_info("PRED_AHB", $sformatf("Detected unaligned AHB transfer that targets the Mailbox SRAM. Address: 0x%x, alignment boundary: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8), UVM_FULL)
     end
     // Grab the data from the address offset, similar to how it's done in HW
     data_active = SOC_IFC_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
+    // Determine which sub-block in soc_ifc is being targeted
     if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) != null) begin: MEM_HANDLE
         `uvm_info("PRED_AHB", $sformatf("Detected access to mailbox at address: 0x%x", ahb_txn.address), UVM_MEDIUM)
         axs_mem = p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address);
