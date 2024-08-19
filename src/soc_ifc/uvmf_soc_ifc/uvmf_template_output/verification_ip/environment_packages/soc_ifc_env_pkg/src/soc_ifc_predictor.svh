@@ -698,8 +698,10 @@ class soc_ifc_predictor #(
             `uvm_error("PRED_AHB", $sformatf("Detected AHB write with bad address alignment! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
         else if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) == null)
             `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with bad address alignment that does not target the Mailbox SRAM! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
-        else
+        else begin
             `uvm_info("PRED_AHB", $sformatf("Detected unaligned AHB transfer that targets the Mailbox SRAM. Address: 0x%x, alignment boundary: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8), UVM_FULL)
+            address_aligned = ahb_txn.address; // Use the unaligned address in "expected" AHB txn to prevent scoreboard from throwing an error
+        end
     end
     // Grab the data from the address offset, similar to how it's done in HW
     data_active = SOC_IFC_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
