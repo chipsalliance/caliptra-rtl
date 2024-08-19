@@ -218,6 +218,8 @@ Each IP component in the Caliptra system uses a native AHB data width of 32-bits
 
 As a result of this implementation, 64-bit data transfers are not supported on the Caliptra AHB fabric. Firmware running on the internal microprocessor may only access memory and registers using a 32-bit or smaller request size, as 64-bit transfer requests will be corrupted.
 
+All AHB requests internal to Caliptra must be to an address that is aligned to the native data width of 4-bytes. Any AHB read or write by the Caliptra RISC-V processor that is not aligned to this boundary will fail to decode to the targeted register, will fail to write the submitted data, and will return read data of all zeroes. The only exception to this is when the RISC-V processor performs byte-aligned reads to the Mailbox SRAM using the direct-access mechanism described in [SoC Mailbox](#SoC-mailbox). Byte aligned read addresses are aligned in hardware, and will successfully complete with the correct data at the specified byte offset. Direct mode SRAM writes must be aligned to the 4-byte boundary. Hardware writes the entire dword of data to the aligned address, so attempts to write a partial word of data may result in data corruption.
+
 ## Cryptographic subsystem
 
 For details, see the [Cryptographic subsystem architecture](#cryptographic-subsystem-architecture) section.
@@ -389,6 +391,8 @@ The UART block architecture inputs and outputs are described in the following ta
 ## SoC mailbox
 
 For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs/mbox_csr](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
+
+The RISC-V processor is able to access the SoC mailbox SRAM using a direct access mode (which bypasses the defined mailbox protocol). The addresses for performing this access are described in [SoC interface subsystem](#SoC-interface-subsystem) and in [mbox_sram](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_sram). In this mode, firmware must first acquire the mailbox lock. Then, reads and writes to the direct access address region will go directly to the SRAM block. Firmware must release the mailbox lock by writing to the [mbox_unlock](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr.mbox_unlock) register after direct access operations are completed.
 
 
 ## Security state
