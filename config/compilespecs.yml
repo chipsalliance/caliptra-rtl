@@ -32,21 +32,22 @@ files:
   - ../chipsalliance/adams-bridge/src/abr_libs/config/compile.yml
   - ../chipsalliance/adams-bridge/src/abr_prim_generic/config/compile.yml
   - ../chipsalliance/adams-bridge/src/abr_prim/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/ntt_top/config/compile.yml
   - ../chipsalliance/adams-bridge/src/sha3/config/compile.yml
   - ../chipsalliance/adams-bridge/src/rej_sampler/config/compile.yml
   - ../chipsalliance/adams-bridge/src/rej_bounded/config/compile.yml
   - ../chipsalliance/adams-bridge/src/exp_mask/config/compile.yml
   - ../chipsalliance/adams-bridge/src/sample_in_ball/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/sampler_top/config/compile.yml
   - ../chipsalliance/adams-bridge/src/decompose/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sk_encode/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sk_decode/config/compile.yml
   - ../chipsalliance/adams-bridge/src/makehint/config/compile.yml
   - ../chipsalliance/adams-bridge/src/norm_check/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/pk_decode/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/sk_decode/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/sig_decode_z/config/compile.yml
   - ../chipsalliance/adams-bridge/src/sig_encode_z/config/compile.yml
-  #- ../chipsalliance/adams-bridge/src/sigdecode_h/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sig_decode_z/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sigdecode_h/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/pk_decode/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/sampler_top/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/ntt_top/config/compile.yml
   - ../chipsalliance/adams-bridge/src/adamsbridge_top/config/compile.yml
   # UVMF TBs
   - ../chipsalliance/adams-bridge/src/adamsbridge_top/uvmf/config/compile.yml
