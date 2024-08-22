@@ -201,7 +201,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
       - CALIPTRA_INTERNAL_I3C
       - CALIPTRA_INTERNAL_TRNG
 1. Copy the test generator scripts to the run output directory:
-    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+    - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)
         * Necessary for [randomized_pcr_signing](src/integration/test_suites/randomized_pcr_signing)
         * OPTIONAL otherwise
     - [src/doe/tb/doe_test_gen.py](src/doe/tb/doe_test_gen.py)
@@ -304,7 +304,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 1. ALL compilation steps may be completed by using the file-list found at `src/<block>/uvmf_<name>/config/<name>.vf`
 1. NOTE: `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
 1. Copy the test generator scripts to the run output directory:
-    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+    - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)
         * Necessary for ECC unittest
     - [src/hmac/tb/test_gen.py](src/hmac/tb/test_gen.py)
         * Required for uvmf_hmac unittest
