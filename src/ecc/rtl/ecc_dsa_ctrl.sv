@@ -129,7 +129,7 @@ module ecc_dsa_ctrl
     logic ecc_status_done_d;
     logic ecc_status_done_p;
 
-    logic [3  : 0]          cmd_reg;
+    logic [2  : 0]          cmd_reg;
     logic [3  : 0]          pm_cmd_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reduced_reg;
