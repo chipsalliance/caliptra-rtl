@@ -346,7 +346,7 @@ module ecc_dsa_ctrl
         else begin
             privkey_we_reg <= hw_privkey_we;
             sharedkey_we_reg <= hw_sharedkey_we;
-            if (privkey_out_we & (dest_keyvault | kv_seed_data_present))            
+            if (secretkey_we & (dest_keyvault | kv_seed_data_present))            
                 kv_reg <= read_reg;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
@@ -384,7 +384,7 @@ module ecc_dsa_ctrl
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = dsa_ready_reg & ~kv_key_data_present;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
         for (int dword=0; dword < 12; dword++)begin
@@ -399,7 +399,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
-            hwif_in.ECC_SEED[dword].SEED.swwe  = dsa_ready_reg & ~kv_seed_data_present;
+            hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -454,7 +454,7 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin
-            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_read_data_present)) & !zeroize_reg;
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg[11-dword];  
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
@@ -945,7 +945,7 @@ module ecc_dsa_ctrl
         .dest_done(kv_write_done)
     );
 
-always_comb busy_o = ~dsa_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
+always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, reset_n)
 
