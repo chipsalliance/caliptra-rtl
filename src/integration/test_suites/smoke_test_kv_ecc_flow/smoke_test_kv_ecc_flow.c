@@ -201,9 +201,6 @@ void main(){
     ecc_io pubkey_y_dh;
     ecc_io sharedkey_dh;
 
-    privkey_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        privkey_dh.data[i] = ecc_privkey_dh[i];
 
     pubkey_x_dh.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
@@ -213,9 +210,11 @@ void main(){
     for (int i = 0; i < 12; i++)
         pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
 
-    sharedkey_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
+    sharedkey_dh.kv_intf = TRUE;
+    sharedkey_dh.kv_id = sharedkey_kv_id;
+
+    privkey_dh.kv_intf = TRUE;
+    privkey_dh.kv_id = privkey_kv_id;
 
     seed.kv_intf = TRUE;
     seed.kv_id = seed_kv_id;
@@ -258,15 +257,6 @@ void main(){
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;
-
-    ecc_sharedkey_flow(nonce, iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
-    cptra_intr_rcv.ecc_notif = 0;
-
-    sharedkey_dh.kv_intf = TRUE;
-    sharedkey_dh.kv_id = sharedkey_kv_id;
-
-    privkey_dh.kv_intf = TRUE;
-    privkey_dh.kv_id = privkey_kv_id;
 
     ecc_sharedkey_flow(nonce, iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
