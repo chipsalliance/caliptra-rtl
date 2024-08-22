@@ -667,6 +667,7 @@ class soc_ifc_predictor #(
     bit do_reg_prediction = 1;
     bit [SOC_IFC_DATA_W-1:0] data_active;
     bit [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
+    ahb_transfer_size_e native_size;
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
@@ -691,17 +692,24 @@ class soc_ifc_predictor #(
     $cast(ahb_txn, t);
     soc_ifc_sb_ahb_ap_output_transaction.copy(ahb_txn);
     // Address must be aligned to the native data width in the SOC IFC! I.e. 4-byte aligned
-    // Exception is for READS to the Mailbox via direct mode
-    address_aligned = ahb_txn.address & ~(SOC_IFC_DATA_W/8 - 1);
-    if (ahb_txn.address & ((SOC_IFC_DATA_W/8 - 1))) begin
-        if (ahb_txn.RnW == AHB_WRITE)
-            `uvm_error("PRED_AHB", $sformatf("Detected AHB write with bad address alignment! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
-        else if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) == null)
-            `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with bad address alignment that does not target the Mailbox SRAM! Address: 0x%x, expected alignment: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8))
-        else begin
-            `uvm_info("PRED_AHB", $sformatf("Detected unaligned AHB transfer that targets the Mailbox SRAM. Address: 0x%x, alignment boundary: 0x%x", ahb_txn.address, SOC_IFC_DATA_W/8), UVM_FULL)
-            address_aligned = ahb_txn.address; // Use the unaligned address in "expected" AHB txn to prevent scoreboard from throwing an error
-        end
+    native_size = (SOC_IFC_DATA_W == 8) ? AHB_BITS_8 :
+                                          ahb_transfer_size_e'($clog2(SOC_IFC_DATA_W/8));
+    address_aligned = ahb_txn.address & ~((1 << ahb_txn.size) - 1);
+    if (ahb_txn.size == native_size) begin
+        if (ahb_txn.address & ((SOC_IFC_DATA_W/8 - 1)))
+            `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with bad address alignment! Address: 0x%x, Size: %p, expected alignment: 0x%x", ahb_txn.address, ahb_txn.size, SOC_IFC_DATA_W/8))
+    end
+    else if (ahb_txn.size == AHB_BITS_8) begin
+        if (p_soc_ifc_AHB_map.get_mem_by_offset(ahb_txn.address) == null)
+            `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with non-DW size that does not target the Mailbox SRAM! Size: %p, expected size: %p", ahb_txn.size, native_size))
+        else if (ahb_txn.RnW == AHB_WRITE)
+            `uvm_error("PRED_AHB", $sformatf("Detected AHB write with bad size! Size: %p, expected %p", ahb_txn.size, native_size))
+        // Byte alignment exception is for READS to the Mailbox via direct mode
+        else
+            `uvm_info("PRED_AHB", $sformatf("Detected AHB byte transfer that targets the Mailbox SRAM. Address: 0x%x, size %p, native alignment boundary: 0x%x", ahb_txn.address, ahb_txn.size, SOC_IFC_DATA_W/8), UVM_FULL)
+    end
+    else begin
+        `uvm_error("PRED_AHB", $sformatf("Detected AHB transfer with bad size! Size: %p, expected %p or %p", ahb_txn.size, AHB_BITS_8, native_size))
     end
     // Grab the data from the address offset, similar to how it's done in HW
     data_active = SOC_IFC_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
