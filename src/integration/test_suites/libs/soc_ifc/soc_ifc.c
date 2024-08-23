@@ -241,12 +241,16 @@ uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_coun
         VPRINTF(FATAL, "SOC_IFC: Illegal byte_count 0x%x\n", byte_count);
         SEND_STDOUT_CTRL(0x1);
     }
-    if (soc_ifc_mbox_acquire_lock(attempt_count) != 0) {
+    if(soc_ifc_mbox_acquire_lock(attempt_count) != 0) {
         VPRINTF(WARNING, "Failed to acquire lock - mbox sanitize\n");
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-        if (soc_ifc_mbox_acquire_lock(1) != 0) {
-            VPRINTF(FATAL, "FATAL: Failed to acquire lock after force unlock\n");
-            return 1;
+        for(uint32_t ii=1; ii<attempt_count; ii++) {
+            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+            if((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 0) {
+                break;
+            } else if (ii == attempt_count) {
+                VPRINTF(FATAL, "FATAL: Failed to acquire lock after force unlock\n");
+                return 1;
+            }
         }
     }
     // Disable notification interrupts for soc_req_lock, which will probably
