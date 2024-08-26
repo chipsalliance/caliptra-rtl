@@ -16,7 +16,7 @@
 #include "riscv_hw_if.h"
 #include "soc_ifc.h"
 #include <stdint.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include "printf.h"
 #include "caliptra_isr.h"
 
@@ -53,11 +53,11 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_notif = 0,
 };
 
-#ifndef MY_RANDOM_SEED
-#define MY_RANDOM_SEED 17
-#endif // MY_RANDOM_SEED
-
-const long seed = MY_RANDOM_SEED; 
+//#ifndef MY_RANDOM_SEED
+//#define MY_RANDOM_SEED 17
+//#endif // MY_RANDOM_SEED
+//
+//const long seed = MY_RANDOM_SEED; 
 
 void main () {
 
@@ -69,9 +69,9 @@ void main () {
     VPRINTF(LOW, " Caliptra Mbox SRAM DIR Smoke Test!!\n"    );
     VPRINTF(LOW, "----------------------------------\n");
 
-    VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-    srand(seed);
-    VPRINTF(MEDIUM, "srand done\n")
+//    VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
+//    srand(seed);
+//    VPRINTF(MEDIUM, "srand done\n")
 
     // Acquire Lock
     if (soc_ifc_mbox_acquire_lock(1)) {
@@ -90,16 +90,36 @@ void main () {
     }
 
     // Read back one byte at a time and check values
-    for (read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR; read_addr <= (uint8_t*) CLP_MBOX_SRAM_END_ADDR; read_addr++) {
+    read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR;
+    while(read_addr <= (uint8_t*) CLP_MBOX_SRAM_END_ADDR) {
         if (((uintptr_t)read_addr & 0xfff) == 0) {
             VPRINTF(MEDIUM, "Reading from addr [0x%x]\n", read_addr)
         }
         // Data should match the address being read from
-        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >> ((((uintptr_t) read_addr) & 0x3)*8))) {
-            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Expected [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (((uintptr_t) read_addr) >> (((uintptr_t) read_addr) & 0x3)*8), *read_addr);
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr)      )) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)              read_addr        , *read_addr);
             SEND_STDOUT_CTRL( 0x1);
             while(1);
         }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >>  8)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 8 ), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >> 16)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 16), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >> 24)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 24), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
     }
 
     // Force unlock
