@@ -97,7 +97,7 @@ void main () {
         }
         // Data should match the address being read from
         if (*read_addr != (uint8_t)(((uintptr_t) read_addr)      )) {
-            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)              read_addr        , *read_addr);
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 0 ), *read_addr);
             SEND_STDOUT_CTRL( 0x1);
             while(1);
         }
