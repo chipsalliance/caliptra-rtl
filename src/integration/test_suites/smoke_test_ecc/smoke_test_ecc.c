@@ -283,7 +283,7 @@ void main() {
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
-    ecc_sharedkey_flow(nonce, iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

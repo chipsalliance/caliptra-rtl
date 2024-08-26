@@ -258,7 +258,7 @@ void main(){
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;
 
-    ecc_sharedkey_flow(nonce, iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);

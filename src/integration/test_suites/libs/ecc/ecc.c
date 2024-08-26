@@ -163,7 +163,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
 }
 
 
-void ecc_sharedkey_flow(ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey){
+void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -205,13 +205,6 @@ void ecc_sharedkey_flow(ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
         *reg_ptr++ = pubkey_y.data[offset++];
-    }
-
-    // Write ECC nonce
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_NONCE_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_NONCE_11) {
-        *reg_ptr++ = nonce.data[offset++];
     }
 
     // Write ECC IV
