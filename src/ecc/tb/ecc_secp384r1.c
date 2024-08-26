@@ -464,8 +464,7 @@ int main( int argc, char *argv[] )
 
     /*
      * Generate ECDH shared key
-     * Method 1: Reuse pubkey, generate other party's privkey, compute ECDH shared key
-     * Method 2: Reuse privkey, generate other party's pubkey by calling keygen again, compute ECDH shared key
+     * Reuse pubkey, generate other party's privkey, compute ECDH shared key
      */
     
     /*
@@ -482,12 +481,9 @@ int main( int argc, char *argv[] )
     //"private key "
     dump_privkey(fptr, "  + Private key B:  ", &ctx_sign_B );
     dump_privkey(fptr_all, "  + Private key B:  ", &ctx_sign_B );
-    // //"public key "
-    // dump_pubkey(fptr, "  + Public key B:  ", &ctx_sign_B );
-    // dump_pubkey(fptr_all, "  + Public key B:  ", &ctx_sign_B );
 
     /*
-     * Compute ECDH shared key (Method 1 - reuse pubkey)
+     * Compute ECDH shared key
      */
     mbedtls_mpi_init( &z);
     if ( ( ret = mbedtls_ecdh_compute_shared(&ctx_sign.MBEDTLS_PRIVATE(grp), &z, &ctx_sign.MBEDTLS_PRIVATE(Q), &ctx_sign_B.MBEDTLS_PRIVATE(d),mbedtls_hmac_drbg_random, p_rng) ) != 0 )
@@ -497,16 +493,6 @@ int main( int argc, char *argv[] )
     }
     mbedtls_mpi_write_binary( &z, z_buf , z_buf_len );
 
-    // /*
-    //  * Compute ECDH shared key (Method 2 - reuse privkey)
-    //  */
-    // mbedtls_mpi_init( &z);
-    // if ( ( ret = mbedtls_ecdh_compute_shared(&ctx_sign.MBEDTLS_PRIVATE(grp), &z, &ctx_sign_B.MBEDTLS_PRIVATE(Q), &ctx_sign.MBEDTLS_PRIVATE(d),mbedtls_hmac_drbg_random, p_rng) ) != 0 )
-    // {
-    //     mbedtls_printf( "failed\n ! mbedtls_ecdh_compute_shared returned %d\n", ret );
-    //     goto exit;
-    // }
-    // mbedtls_mpi_write_binary( &z, z_buf , z_buf_len );
 
     //"shared key "
     print_1_array(fptr, z_buf, z_buf_len);
