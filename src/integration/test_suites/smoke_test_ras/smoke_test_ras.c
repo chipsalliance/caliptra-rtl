@@ -178,7 +178,7 @@ enum boot_count_list {
 // Globals
 //
 extern uintptr_t iccm_code0_start, iccm_code0_end;
-volatile char* stdout = (char *)STDOUT;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
