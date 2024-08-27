@@ -55,6 +55,7 @@ typedef struct packed  { \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_R ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_S ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_verify_R ; \
+  bit [OUTPUT_TEXT_WIDTH-1:0] result_sharedkey ; \
      } ECC_out_monitor_s;
 
   `define ECC_out_TO_MONITOR_STRUCT_FUNCTION \
@@ -66,7 +67,8 @@ typedef struct packed  { \
             this.result_pubkey_y , \
             this.result_R , \
             this.result_S , \
-            this.result_verify_R  \
+            this.result_verify_R , \
+            this.result_sharedkey  \
             };\
     return ( ECC_out_monitor_struct);\
   endfunction\
@@ -79,7 +81,8 @@ typedef struct packed  { \
             this.result_pubkey_y , \
             this.result_R , \
             this.result_S , \
-            this.result_verify_R  \
+            this.result_verify_R , \
+            this.result_sharedkey  \
             } = ECC_out_monitor_struct;\
   endfunction
 
@@ -95,6 +98,7 @@ typedef struct packed  { \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_R ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_S ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_verify_R ; \
+  bit [OUTPUT_TEXT_WIDTH-1:0] result_sharedkey ; \
      } ECC_out_initiator_s;
 
   `define ECC_out_TO_INITIATOR_STRUCT_FUNCTION \
@@ -106,7 +110,8 @@ typedef struct packed  { \
            this.result_pubkey_y , \
            this.result_R , \
            this.result_S , \
-           this.result_verify_R  \
+           this.result_verify_R , \
+           this.result_sharedkey  \
            };\
     return ( ECC_out_initiator_struct);\
   endfunction
@@ -119,7 +124,8 @@ typedef struct packed  { \
            this.result_pubkey_y , \
            this.result_R , \
            this.result_S , \
-           this.result_verify_R  \
+           this.result_verify_R , \
+           this.result_sharedkey  \
            } = ECC_out_initiator_struct;\
   endfunction
 
@@ -135,6 +141,7 @@ typedef struct packed  { \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_R ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_S ; \
   bit [OUTPUT_TEXT_WIDTH-1:0] result_verify_R ; \
+  bit [OUTPUT_TEXT_WIDTH-1:0] result_sharedkey ; \
      } ECC_out_responder_s;
 
   `define ECC_out_TO_RESPONDER_STRUCT_FUNCTION \
@@ -146,7 +153,8 @@ typedef struct packed  { \
            this.result_pubkey_y , \
            this.result_R , \
            this.result_S , \
-           this.result_verify_R  \
+           this.result_verify_R , \
+           this.result_sharedkey  \
            };\
     return ( ECC_out_responder_struct);\
   endfunction
@@ -159,7 +167,8 @@ typedef struct packed  { \
            this.result_pubkey_y , \
            this.result_R , \
            this.result_S , \
-           this.result_verify_R  \
+           this.result_verify_R , \
+           this.result_sharedkey  \
            } = ECC_out_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

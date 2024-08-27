@@ -31,7 +31,7 @@ class ECC_in_transaction #(
 
   //Constraints for the transaction variables:
   constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test}; }
-  constraint ecc_valid_op_constraints { op inside {key_gen, key_sign, key_verify}; }
+  constraint ecc_valid_op_constraints { op inside {key_gen, key_sign, key_verify, ecdh_sharedkey}; }
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

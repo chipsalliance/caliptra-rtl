@@ -109,9 +109,9 @@ module ecc_dsa_ctrl
     logic pm_busy_o;
     
     logic hw_privkey_we;
-    logic privkey_out_we;
     logic privkey_we_reg;
-    logic privkey_we_reg_ff;
+    logic sharedkey_we_reg;
+    logic secretkey_we;
     logic hw_pubkeyx_we;
     logic hw_pubkeyy_we;
     logic hw_r_we;
@@ -120,16 +120,17 @@ module ecc_dsa_ctrl
     logic hw_scalar_PK_we;
     logic hw_verify_r_we;
     logic hw_pk_chk_we;
+    logic hw_sharedkey_we;
     logic scalar_G_sel;
 
-    logic dsa_valid_reg;
-    logic dsa_ready_reg;
+    logic ecc_valid_reg;
+    logic ecc_ready_reg;
 
     logic ecc_status_done_d;
     logic ecc_status_done_p;
 
-    logic [1  : 0]          cmd_reg;
-    logic [2  : 0]          pm_cmd_reg;
+    logic [2  : 0]          cmd_reg;
+    logic [3  : 0]          pm_cmd_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reduced_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  privkey_reg;
@@ -157,7 +158,7 @@ module ecc_dsa_ctrl
     logic                               scalar_sca_en;
     logic                               scalar_sca_busy_o;
 
-    logic                   hmac_mode;
+    logic [1 : 0]           hmac_mode;
     logic                   hmac_init;
     logic                   hmac_ready;
     logic [REG_SIZE-1 : 0]  hmac_drbg_result;
@@ -199,6 +200,7 @@ module ecc_dsa_ctrl
     logic keygen_process;
     logic signing_process;
     logic verifying_process;
+    logic sharedkey_process;
 
     logic privkey_input_outofrange;
     logic r_output_outofrange;
@@ -264,7 +266,7 @@ module ecc_dsa_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
-        .keygen_sign(hmac_mode),
+        .hmac_mode(hmac_mode),
         .en(hmac_init),
         .ready(hmac_ready),
         .keygen_seed(seed_reg),
@@ -315,7 +317,7 @@ module ecc_dsa_ctrl
     // read the registers written by sw
     always_comb begin
         //Mask the command if KV clients are not idle
-        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & {2{kv_seed_ready}} & {2{kv_privkey_ready}};
+        cmd_reg = hwif_out.ECC_CTRL.CTRL.value & {3{kv_seed_ready}} & {3{kv_privkey_ready}};
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
         
         sca_point_rnd_en  = 1'b1;
@@ -328,14 +330,14 @@ module ecc_dsa_ctrl
     begin : ecc_kv_reg
         if (!reset_n) begin
             privkey_we_reg      <= '0;
-            privkey_we_reg_ff   <= '0;
+            sharedkey_we_reg    <= '0;
             kv_reg    <= '0;
             kv_seed_data_present <= '0;
             kv_key_data_present <= '0;
         end
         else if (zeroize_reg) begin
             privkey_we_reg      <= '0;
-            privkey_we_reg_ff   <= '0;
+            sharedkey_we_reg    <= '0;
             kv_reg    <= '0;
             kv_seed_data_present <= '0;
             kv_key_data_present <= '0;
@@ -343,8 +345,8 @@ module ecc_dsa_ctrl
         //Store private key here before pushing to keyvault
         else begin
             privkey_we_reg <= hw_privkey_we;
-            privkey_we_reg_ff <= privkey_we_reg;
-            if (privkey_out_we & (dest_keyvault | kv_seed_data_present))
+            sharedkey_we_reg <= hw_sharedkey_we;
+            if (secretkey_we & (dest_keyvault | kv_seed_data_present))            
                 kv_reg <= read_reg;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
@@ -354,7 +356,7 @@ module ecc_dsa_ctrl
         end
     end
 
-    always_comb privkey_out_we = privkey_we_reg & ~privkey_we_reg_ff;
+    always_comb secretkey_we = (privkey_we_reg | sharedkey_we_reg);
 
     assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
@@ -362,14 +364,14 @@ module ecc_dsa_ctrl
     // write the registers by hw
     always_comb hwif_in.reset_b = reset_n;
     always_comb hwif_in.hard_reset_b = cptra_pwrgood;
-    always_comb hwif_in.ecc_ready = dsa_ready_reg;
+    always_comb hwif_in.ecc_ready = ecc_ready_reg;
     always_comb hwif_in.ECC_NAME[0].NAME.next = ECC_CORE_NAME[31 : 0];
     always_comb hwif_in.ECC_NAME[1].NAME.next = ECC_CORE_NAME[63 : 32];
     always_comb hwif_in.ECC_VERSION[0].VERSION.next = ECC_CORE_VERSION[31 : 0];
     always_comb hwif_in.ECC_VERSION[1].VERSION.next = ECC_CORE_VERSION[63 : 32];
 
-    always_comb hwif_in.ECC_STATUS.READY.next = dsa_ready_reg;
-    always_comb hwif_in.ECC_STATUS.VALID.next = dsa_valid_reg;
+    always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
+    always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
 
     
     always_comb begin // ecc_reg_writing
@@ -382,12 +384,12 @@ module ecc_dsa_ctrl
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = dsa_ready_reg & ~kv_key_data_present;
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
         for (int dword=0; dword < 12; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_out_we & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
@@ -397,7 +399,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
-            hwif_in.ECC_SEED[dword].SEED.swwe  = dsa_ready_reg & ~kv_seed_data_present;
+            hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
         for (int dword=0; dword < 12; dword++)begin
@@ -449,6 +451,12 @@ module ecc_dsa_ctrl
         for (int dword=0; dword < 12; dword++)begin
             IV_reg[dword] = hwif_out.ECC_IV[11-dword].IV.value;
             hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg;
+        end
+
+        for (int dword=0; dword < 12; dword++)begin
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg[11-dword];  
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
     end
 
@@ -552,6 +560,7 @@ module ecc_dsa_ctrl
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
         hw_pk_chk_we = 0;
+        hw_sharedkey_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
             unique case (prog_instr.reg_id)
                 PRIVKEY_ID      : hw_privkey_we = 1;
@@ -563,6 +572,7 @@ module ecc_dsa_ctrl
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
                 PK_VALID_ID     : hw_pk_chk_we = 1;
+                DH_SHAREDKEY_ID : hw_sharedkey_we = 1;
                 default         : 
                     begin 
                         hw_privkey_we = 0;
@@ -574,6 +584,7 @@ module ecc_dsa_ctrl
                         hw_scalar_PK_we = 0;
                         hw_verify_r_we = 0;
                         hw_pk_chk_we = 0;
+                        hw_sharedkey_we = 0;
                     end
             endcase
         end
@@ -699,34 +710,36 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ECDSA_FSM
         if(!reset_n) begin
-            prog_cntr           <= DSA_RESET;
+            prog_cntr           <= ECC_RESET;
             cycle_cnt           <= '0;
             pm_cmd_reg          <= '0;
-            dsa_valid_reg       <= 0;
+            ecc_valid_reg       <= 0;
             scalar_G_sel        <= 0;
-            hmac_mode           <= 0;
+            hmac_mode           <= '0;
             hmac_init           <= 0;
             scalar_sca_en       <= 0;
             keygen_process      <= 0;
             signing_process     <= 0;
             verifying_process   <= 0;
+            sharedkey_process   <= 0;
         end
         else if(zeroize_reg) begin
-            prog_cntr           <= DSA_RESET;
+            prog_cntr           <= ECC_RESET;
             cycle_cnt           <= '0;
             pm_cmd_reg          <= '0;
-            dsa_valid_reg       <= 0;
+            ecc_valid_reg       <= 0;
             scalar_G_sel        <= 0;
-            hmac_mode           <= 0;
+            hmac_mode           <= '0;
             hmac_init           <= 0;
             scalar_sca_en       <= 0;
             keygen_process      <= 0;
             signing_process     <= 0;
             verifying_process   <= 0;
+            sharedkey_process   <= 0;
         end
         else begin
             if (error_flag_edge) begin
-                prog_cntr       <= DSA_NOP;
+                prog_cntr       <= ECC_NOP;
                 cycle_cnt       <= 2'd3;
                 pm_cmd_reg      <= '0;
                 scalar_sca_en   <= 0;
@@ -745,37 +758,46 @@ module ecc_dsa_ctrl
             else begin
                 cycle_cnt <= '0;
                 unique case (prog_cntr)
-                    DSA_NOP : begin 
+                    ECC_NOP : begin 
                         keygen_process      <= 0;
                         signing_process     <= 0;
                         verifying_process   <= 0;
+                        sharedkey_process   <= 0;
                         // Waiting for new valid command 
                         unique case (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= DSA_KG_S;
-                                dsa_valid_reg <= 0;
+                                ecc_valid_reg <= 0;
                                 scalar_G_sel <= 0;
-                                hmac_mode <= 0;
+                                hmac_mode <= 2'b00;
                                 keygen_process <= 1;
                             end   
 
                             SIGN : begin  // signing
                                 prog_cntr <= DSA_SGN_S;
-                                dsa_valid_reg <= 0;
+                                ecc_valid_reg <= 0;
                                 scalar_G_sel <= 0;
-                                hmac_mode <= 1;
+                                hmac_mode <= 2'b01;
                                 signing_process <= 1;
                             end                                   
 
                             VERIFY : begin  // verifying
                                 prog_cntr <= DSA_VER_S;
-                                dsa_valid_reg <= 0;
+                                ecc_valid_reg <= 0;
                                 scalar_G_sel <= 1;
                                 verifying_process <= 1;
                             end
 
+                            SHARED_KEY : begin  // DH shared_key
+                                prog_cntr <= DH_SHARED_S;
+                                ecc_valid_reg <= 0;
+                                scalar_G_sel <= 1;
+                                hmac_mode <= 2'b10;
+                                sharedkey_process <= 1;
+                            end
+
                             default : begin
-                                prog_cntr <= DSA_NOP;
+                                prog_cntr <= ECC_NOP;
                                 scalar_G_sel <= 0;
                             end
                         endcase
@@ -784,24 +806,30 @@ module ecc_dsa_ctrl
                     end                
 
                     DSA_KG_E : begin // end of keygen
-                        prog_cntr <= DSA_NOP;
-                        dsa_valid_reg <= 1;
+                        prog_cntr <= ECC_NOP;
+                        ecc_valid_reg <= 1;
                     end
 
                     DSA_SGN_E : begin // end of signing
-                        prog_cntr <= DSA_NOP;
-                        dsa_valid_reg <= 1;
+                        prog_cntr <= ECC_NOP;
+                        ecc_valid_reg <= 1;
                     end
 
                     DSA_VER_E : begin // end of verifying
-                        prog_cntr <= DSA_NOP;
-                        dsa_valid_reg <= 1;
+                        prog_cntr <= ECC_NOP;
+                        ecc_valid_reg <= 1;
+                    end
+
+                    DH_SHARED_E: begin // end of DH shared key
+                        prog_cntr <= ECC_NOP;
+                        ecc_valid_reg <= 1;
                     end
                     
-                    DSA_RESET,
+                    ECC_RESET,
                     DSA_KG_S,
                     DSA_SGN_S,
-                    DSA_VER_S : begin
+                    DSA_VER_S,
+                    DH_SHARED_S : begin
                         prog_cntr       <= prog_cntr + 1;
                         pm_cmd_reg      <= prog_instr.opcode.pm_cmd;
                         hmac_init       <= prog_instr.opcode.hmac_drbg_en;
@@ -830,8 +858,8 @@ module ecc_dsa_ctrl
     always_comb ecc_status_done_p = hwif_in.ECC_STATUS.VALID.next && !ecc_status_done_d;
 
     // Set the ready/busy flag of ECC
-    assign dsa_busy = (prog_cntr == DSA_NOP)? 1'b0 : 1'b1;
-    always_comb dsa_ready_reg = !(dsa_busy | pm_busy_o);
+    assign dsa_busy = (prog_cntr == ECC_NOP)? 1'b0 : 1'b1;
+    always_comb ecc_ready_reg = !(dsa_busy | pm_busy_o);
     
     //Key Vault Control Modules
     //Read PRIVKEY
@@ -909,7 +937,7 @@ module ecc_dsa_ctrl
 
         //interface with client
         .dest_keyvault(dest_keyvault),
-        .dest_data_avail(privkey_out_we),
+        .dest_data_avail(secretkey_we),
         .dest_data(kv_reg),
 
         .error_code(kv_write_error),
@@ -917,6 +945,8 @@ module ecc_dsa_ctrl
         .dest_done(kv_write_done)
     );
 
-always_comb busy_o = ~dsa_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
+always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
+    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, reset_n)
+    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, reset_n)
 
 endmodule

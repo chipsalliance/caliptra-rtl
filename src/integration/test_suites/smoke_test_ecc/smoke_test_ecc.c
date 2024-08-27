@@ -187,6 +187,24 @@ void main() {
                                     0x8A803D0D,
                                     0x003B2633,
                                     0xB9D0F1BF};
+
+    uint32_t ecc_privkey_dh[] =    {0x52D1791F,
+                                    0xDB4B70F8,
+                                    0x9C0F00D4,
+                                    0x56C2F702,
+                                    0x3B612526,
+                                    0x2C36A7DF,
+                                    0x1F802311,
+                                    0x21CCE3D3,
+                                    0x9BE52E00,
+                                    0xC194A413,
+                                    0x2C4A6C76,
+                                    0x8BCD94D2};
+
+    uint32_t ecc_pubkey_x_dh[] =   {0x793148F1,0X787634D5,0XDA4C6D90,0X74417D05,0XE057AB62,0XF82054D1,0X0EE6B040,0X3D627954,0X7E6A8EA9,0XD1FD7742,0X7D016FE2,0X7A8B8C66};
+    uint32_t ecc_pubkey_y_dh[] =   {0xC6C41294,0X331D23E6,0XF480F4FB,0X4CD40504,0XC947392E,0X94F4C3F0,0X6B8F398B,0XB29E4236,0X8F7A6859,0X23DE3B67,0XBACED214,0XA1A1D128};
+    uint32_t ecc_sharedkey_dh[] =  {0x5EA1FC4A,0XF7256D20,0X55981B11,0X0575E0A8,0XCAE53160,0X137D904C,0X59D926EB,0X1B8456E4,0X27AA8A45,0X40884C37,0XDE159A58,0X028ABC0E}; 
+
     //Call interrupt init
     init_interrupts();
 
@@ -199,6 +217,10 @@ void main() {
     ecc_io msg;
     ecc_io sign_r;
     ecc_io sign_s;
+    ecc_io privkey_dh;
+    ecc_io pubkey_x_dh;
+    ecc_io pubkey_y_dh;
+    ecc_io sharedkey_dh;
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < 12; i++)
@@ -236,6 +258,22 @@ void main() {
     for (int i = 0; i < 12; i++)
         sign_s.data[i] = ecc_sign_s[i];
 
+    privkey_dh.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        privkey_dh.data[i] = ecc_privkey_dh[i];
+
+    pubkey_x_dh.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
+
+    pubkey_y_dh.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
+
+    sharedkey_dh.kv_intf = FALSE;
+    for (int i = 0; i < 12; i++)
+        sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
+
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;
 
@@ -243,6 +281,9 @@ void main() {
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
+    cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

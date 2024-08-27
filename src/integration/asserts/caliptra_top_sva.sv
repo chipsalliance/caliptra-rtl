@@ -544,7 +544,7 @@ module caliptra_top_sva
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `ECC_PATH.dsa_valid_reg |-> `ECC_PATH.dsa_ready_reg 
+                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");      
 

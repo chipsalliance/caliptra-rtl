@@ -77,8 +77,8 @@ interface ecc_top_cov_if
     assign ecc_cmd = ecc_top.ecc_dsa_ctrl_i.cmd_reg;
     assign pcr_sign_mode = ecc_top.ecc_dsa_ctrl_i.pcr_sign_mode;
     assign zeroize = ecc_top.ecc_dsa_ctrl_i.zeroize_reg;
-    assign ready = ecc_top.ecc_dsa_ctrl_i.dsa_ready_reg;
-    assign valid = ecc_top.ecc_dsa_ctrl_i.dsa_valid_reg;
+    assign ready = ecc_top.ecc_dsa_ctrl_i.ecc_ready_reg;
+    assign valid = ecc_top.ecc_dsa_ctrl_i.ecc_valid_reg;
 
     always_ff @(posedge clk) begin
         if (!reset_n) begin
