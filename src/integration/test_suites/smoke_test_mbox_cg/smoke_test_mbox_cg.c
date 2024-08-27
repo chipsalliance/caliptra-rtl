@@ -20,8 +20,8 @@
 #include "caliptra_isr.h"
 #include "clk_gate.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count       = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count       = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity             verbosity_g = CPT_VERBOSITY;
 #else

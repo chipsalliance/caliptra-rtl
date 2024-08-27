@@ -75,7 +75,7 @@ class HeaderPrintingListener(RDLListener):
     def exit_Regfile(self, node):
         self.regfile_offset = 0
     def enter_Reg(self, node):
-        #getting and printing the absolute address and path for reach register
+        #getting and printing the absolute address and path for each register
         register_name = node.get_path("_",'_{index:d}')
         address = hex(node.absolute_address)
         if self.tick == "`":
@@ -101,6 +101,18 @@ class HeaderPrintingListener(RDLListener):
                 field_mask = field_mask.replace("0x", "32'h", 1)
             self.file.write((self.tick + "define " + field_name.upper() + "_LOW" + "\t(" + str(node.low) + ")\n").expandtabs(100))
             self.file.write((self.tick + "define " + field_name.upper() + "_MASK" + "\t(" + field_mask + ")\n").expandtabs(100))
+    def enter_Mem(self, node):
+        #getting and printing the absolute address and path for each register
+        mem_name = node.get_path("_",'_{index:d}')
+        address = hex(node.absolute_address)
+        if self.tick == "`":
+            address = address.replace("0x", "32'h", 1)
+        self.file.write((self.tick + "define " + mem_name.upper() + "_BASE_ADDR" + "\t(" + address + ")\n").expandtabs(100))
+        #getting and printing the end address for the memory
+        address = hex(node.absolute_address + node.size - 1)
+        if self.tick == "`":
+            address = address.replace("0x", "32'h", 1)
+        self.file.write((self.tick + "define " + mem_name.upper() + "_END_ADDR" + "\t(" + address + ")\n").expandtabs(100))
 
 
 #list of address map files to compile

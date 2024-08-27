@@ -5174,6 +5174,8 @@
 `define ENTROPY_SRC_REG_MAIN_SM_STATE                                                               (32'he0)
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (32'h1ff)
+`define CLP_MBOX_SRAM_BASE_ADDR                                                                     (32'h30000000)
+`define CLP_MBOX_SRAM_END_ADDR                                                                      (32'h3001ffff)
 `define CLP_MBOX_CSR_BASE_ADDR                                                                      (32'h30020000)
 `define CLP_MBOX_CSR_MBOX_LOCK                                                                      (32'h30020000)
 `define MBOX_CSR_MBOX_LOCK                                                                          (32'h0)
