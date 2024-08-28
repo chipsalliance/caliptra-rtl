@@ -90,6 +90,7 @@ import soc_ifc_pkg::*;
                                                                                  AXI_LEN_MAX_VALUE * BC;
     localparam MAX_BLOCK_SIZE = AXI_MAX_BLOCK_SIZE > FIFO_BC/2 ? FIFO_BC/2 :
                                                                  AXI_MAX_BLOCK_SIZE;
+    localparam DMA_MAX_XFER_SIZE = 32'h10_0000; // 1MiB
 
 
     // --------------------------------------- //
@@ -346,6 +347,7 @@ import soc_ifc_pkg::*;
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
         endcase
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
+                              (hwif_out.byte_count.count.value > DMA_MAX_XFER_SIZE) ||
                               (hwif_out.byte_count.count.value > MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)));
