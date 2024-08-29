@@ -32,7 +32,7 @@ files:
   - ../chipsalliance/adams-bridge/src/abr_libs/config/compile.yml
   - ../chipsalliance/adams-bridge/src/abr_prim_generic/config/compile.yml
   - ../chipsalliance/adams-bridge/src/abr_prim/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/sha3/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/abr_sha3/config/compile.yml
   - ../chipsalliance/adams-bridge/src/rej_sampler/config/compile.yml
   - ../chipsalliance/adams-bridge/src/rej_bounded/config/compile.yml
   - ../chipsalliance/adams-bridge/src/exp_mask/config/compile.yml
@@ -46,11 +46,12 @@ files:
   - ../chipsalliance/adams-bridge/src/sig_decode_z/config/compile.yml
   - ../chipsalliance/adams-bridge/src/sigdecode_h/config/compile.yml
   - ../chipsalliance/adams-bridge/src/pk_decode/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/sampler_top/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/power2round/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/mldsa_sampler_top/config/compile.yml
   - ../chipsalliance/adams-bridge/src/ntt_top/config/compile.yml
-  - ../chipsalliance/adams-bridge/src/adamsbridge_top/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/mldsa_top/config/compile.yml
   # UVMF TBs
-  - ../chipsalliance/adams-bridge/src/adamsbridge_top/uvmf/config/compile.yml
+  - ../chipsalliance/adams-bridge/src/mldsa_top/uvmf/config/compile.yml
 
   # UVMF TBs
 # - ../chipsalliance/caliptra-rtl/src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
