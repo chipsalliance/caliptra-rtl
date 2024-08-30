@@ -73,7 +73,7 @@ module caliptra_top_tb (
         .DW(`CALIPTRA_AXI_DATA_WIDTH),
         .IW(`CALIPTRA_AXI_ID_WIDTH),
         .UW(`CALIPTRA_AXI_USER_WIDTH)
-    ) s_axi_if (.clk(core_clk), .rst_n(cptra_rst_b));
+    ) m_axi_bfm_if (.clk(core_clk), .rst_n(cptra_rst_b));
     axi_if #(
         .AW(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
         .DW(CPTRA_AXI_DMA_DATA_WIDTH),
@@ -158,7 +158,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .cptra_fe_rand   (cptra_fe_rand   ),
     .cptra_obf_key_tb(cptra_obf_key_tb),
 
-    .s_axi_if(s_axi_if),
+    .m_axi_bfm_if(m_axi_bfm_if),
 
     .ready_for_fuses   (ready_for_fuses   ),
     .ready_for_fw_push (ready_for_fw_push ),
@@ -215,8 +215,8 @@ caliptra_top caliptra_top_dut (
     .jtag_tdoEn(jtag_tdoEn),
     
     //SoC AXI Interface
-    .s_axi_w_if(s_axi_if.w_sub),
-    .s_axi_r_if(s_axi_if.r_sub),
+    .s_axi_w_if(m_axi_bfm_if.w_sub),
+    .s_axi_r_if(m_axi_bfm_if.r_sub),
 
     //AXI DMA Interface
     .m_axi_w_if(m_axi_if.w_mgr),
