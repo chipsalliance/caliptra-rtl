@@ -60,7 +60,7 @@ global:
 #        - '+define+CALIPTRA_INTERNAL_TRNG'
         #- '-v2k_generate'
 ---
-provides: [caliptra_top_tb]
+provides: [caliptra_top_tb_pkg]
 schema_version: 2.4.0
 requires:
   - asserts
@@ -108,6 +108,16 @@ targets:
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
+---
+provides: [caliptra_top_tb]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_tb_pkg
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
@@ -132,9 +142,13 @@ global:
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
 requires:
-  - caliptra_top_tb
+  - caliptra_top_tb_pkg
 targets:
   tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
     pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
