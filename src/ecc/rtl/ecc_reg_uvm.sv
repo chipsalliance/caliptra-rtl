@@ -70,13 +70,15 @@ package ecc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        ecc_reg__ECC_CTRL_bit_cg CTRL_bit_cg[3];
+        ecc_reg__ECC_CTRL_bit_cg CTRL_bit_cg[2];
         ecc_reg__ECC_CTRL_bit_cg ZEROIZE_bit_cg[1];
         ecc_reg__ECC_CTRL_bit_cg PCR_SIGN_bit_cg[1];
+        ecc_reg__ECC_CTRL_bit_cg DH_SHAREDKEY_bit_cg[1];
         ecc_reg__ECC_CTRL_fld_cg fld_cg;
         rand uvm_reg_field CTRL;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field PCR_SIGN;
+        rand uvm_reg_field DH_SHAREDKEY;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -89,15 +91,18 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.CTRL = new("CTRL");
-            this.CTRL.configure(this, 3, 0, "WO", 1, 'h0, 1, 1, 0);
+            this.CTRL.configure(this, 2, 0, "WO", 1, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
-            this.ZEROIZE.configure(this, 1, 3, "WO", 0, 'h0, 1, 1, 0);
+            this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
             this.PCR_SIGN = new("PCR_SIGN");
-            this.PCR_SIGN.configure(this, 1, 4, "WO", 1, 'h0, 1, 1, 0);
+            this.PCR_SIGN.configure(this, 1, 3, "WO", 1, 'h0, 1, 1, 0);
+            this.DH_SHAREDKEY = new("DH_SHAREDKEY");
+            this.DH_SHAREDKEY.configure(this, 1, 4, "WO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(CTRL_bit_cg[bt]) CTRL_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(PCR_SIGN_bit_cg[bt]) PCR_SIGN_bit_cg[bt] = new();
+                foreach(DH_SHAREDKEY_bit_cg[bt]) DH_SHAREDKEY_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1272,38 +1277,38 @@ package ecc_reg_uvm;
                 this.ECC_DH_SHARED_KEY[i0].configure(this);
                 
                 this.ECC_DH_SHARED_KEY[i0].build();
-                this.default_map.add_reg(this.ECC_DH_SHARED_KEY[i0], 'h600 + i0*'h4);
+                this.default_map.add_reg(this.ECC_DH_SHARED_KEY[i0], 'h5c0 + i0*'h4);
             end
             this.ecc_kv_rd_pkey_ctrl = new("ecc_kv_rd_pkey_ctrl");
             this.ecc_kv_rd_pkey_ctrl.configure(this);
 
             this.ecc_kv_rd_pkey_ctrl.build();
-            this.default_map.add_reg(this.ecc_kv_rd_pkey_ctrl, 'h700);
+            this.default_map.add_reg(this.ecc_kv_rd_pkey_ctrl, 'h600);
             this.ecc_kv_rd_pkey_status = new("ecc_kv_rd_pkey_status");
             this.ecc_kv_rd_pkey_status.configure(this);
 
             this.ecc_kv_rd_pkey_status.build();
-            this.default_map.add_reg(this.ecc_kv_rd_pkey_status, 'h704);
+            this.default_map.add_reg(this.ecc_kv_rd_pkey_status, 'h604);
             this.ecc_kv_rd_seed_ctrl = new("ecc_kv_rd_seed_ctrl");
             this.ecc_kv_rd_seed_ctrl.configure(this);
 
             this.ecc_kv_rd_seed_ctrl.build();
-            this.default_map.add_reg(this.ecc_kv_rd_seed_ctrl, 'h708);
+            this.default_map.add_reg(this.ecc_kv_rd_seed_ctrl, 'h608);
             this.ecc_kv_rd_seed_status = new("ecc_kv_rd_seed_status");
             this.ecc_kv_rd_seed_status.configure(this);
 
             this.ecc_kv_rd_seed_status.build();
-            this.default_map.add_reg(this.ecc_kv_rd_seed_status, 'h70c);
+            this.default_map.add_reg(this.ecc_kv_rd_seed_status, 'h60c);
             this.ecc_kv_wr_pkey_ctrl = new("ecc_kv_wr_pkey_ctrl");
             this.ecc_kv_wr_pkey_ctrl.configure(this);
 
             this.ecc_kv_wr_pkey_ctrl.build();
-            this.default_map.add_reg(this.ecc_kv_wr_pkey_ctrl, 'h710);
+            this.default_map.add_reg(this.ecc_kv_wr_pkey_ctrl, 'h610);
             this.ecc_kv_wr_pkey_status = new("ecc_kv_wr_pkey_status");
             this.ecc_kv_wr_pkey_status.configure(this);
 
             this.ecc_kv_wr_pkey_status.build();
-            this.default_map.add_reg(this.ecc_kv_wr_pkey_status, 'h714);
+            this.default_map.add_reg(this.ecc_kv_wr_pkey_status, 'h614);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

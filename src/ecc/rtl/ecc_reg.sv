@@ -153,14 +153,14 @@ module ecc_reg (
             decoded_reg_strb.ECC_PRIVKEY_IN[i0] = cpuif_req_masked & (cpuif_addr == 12'h580 + i0*12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_DH_SHARED_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h4);
+            decoded_reg_strb.ECC_DH_SHARED_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c0 + i0*12'h4);
         end
-        decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h700);
-        decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h704);
-        decoded_reg_strb.ecc_kv_rd_seed_ctrl = cpuif_req_masked & (cpuif_addr == 12'h708);
-        decoded_reg_strb.ecc_kv_rd_seed_status = cpuif_req_masked & (cpuif_addr == 12'h70c);
-        decoded_reg_strb.ecc_kv_wr_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h710);
-        decoded_reg_strb.ecc_kv_wr_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h714);
+        decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h600);
+        decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h604);
+        decoded_reg_strb.ecc_kv_rd_seed_ctrl = cpuif_req_masked & (cpuif_addr == 12'h608);
+        decoded_reg_strb.ecc_kv_rd_seed_status = cpuif_req_masked & (cpuif_addr == 12'h60c);
+        decoded_reg_strb.ecc_kv_wr_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h610);
+        decoded_reg_strb.ecc_kv_wr_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h614);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h808);
@@ -188,7 +188,7 @@ module ecc_reg (
     typedef struct packed{
         struct packed{
             struct packed{
-                logic [2:0] next;
+                logic [1:0] next;
                 logic load_next;
             } CTRL;
             struct packed{
@@ -199,6 +199,10 @@ module ecc_reg (
                 logic next;
                 logic load_next;
             } PCR_SIGN;
+            struct packed{
+                logic next;
+                logic load_next;
+            } DH_SHAREDKEY;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -458,7 +462,7 @@ module ecc_reg (
     typedef struct packed{
         struct packed{
             struct packed{
-                logic [2:0] value;
+                logic [1:0] value;
             } CTRL;
             struct packed{
                 logic value;
@@ -466,6 +470,9 @@ module ecc_reg (
             struct packed{
                 logic value;
             } PCR_SIGN;
+            struct packed{
+                logic value;
+            } DH_SHAREDKEY;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -671,12 +678,12 @@ module ecc_reg (
 
     // Field: ecc_reg.ECC_CTRL.CTRL
     always_comb begin
-        automatic logic [2:0] next_c;
+        automatic logic [1:0] next_c;
         automatic logic load_next_c;
         next_c = field_storage.ECC_CTRL.CTRL.value;
         load_next_c = '0;
         if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-            next_c = (field_storage.ECC_CTRL.CTRL.value & ~decoded_wr_biten[2:0]) | (decoded_wr_data[2:0] & decoded_wr_biten[2:0]);
+            next_c = (field_storage.ECC_CTRL.CTRL.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
         end else if(hwif_in.ECC_CTRL.CTRL.hwclr) begin // HW Clear
             next_c = '0;
@@ -687,7 +694,7 @@ module ecc_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.ECC_CTRL.CTRL.value <= 3'h0;
+            field_storage.ECC_CTRL.CTRL.value <= 2'h0;
         end else if(field_combo.ECC_CTRL.CTRL.load_next) begin
             field_storage.ECC_CTRL.CTRL.value <= field_combo.ECC_CTRL.CTRL.next;
         end
@@ -700,7 +707,7 @@ module ecc_reg (
         next_c = field_storage.ECC_CTRL.ZEROIZE.value;
         load_next_c = '0;
         if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.ECC_CTRL.ZEROIZE.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
+            next_c = (field_storage.ECC_CTRL.ZEROIZE.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
@@ -724,7 +731,7 @@ module ecc_reg (
         next_c = field_storage.ECC_CTRL.PCR_SIGN.value;
         load_next_c = '0;
         if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
-            next_c = (field_storage.ECC_CTRL.PCR_SIGN.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            next_c = (field_storage.ECC_CTRL.PCR_SIGN.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
         end else if(hwif_in.ECC_CTRL.PCR_SIGN.hwclr) begin // HW Clear
             next_c = '0;
@@ -741,6 +748,30 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_CTRL.PCR_SIGN.value = field_storage.ECC_CTRL.PCR_SIGN.value;
+    // Field: ecc_reg.ECC_CTRL.DH_SHAREDKEY
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.ECC_CTRL.DH_SHAREDKEY.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            next_c = (field_storage.ECC_CTRL.DH_SHAREDKEY.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            load_next_c = '1;
+        end else if(hwif_in.ECC_CTRL.DH_SHAREDKEY.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ECC_CTRL.DH_SHAREDKEY.next = next_c;
+        field_combo.ECC_CTRL.DH_SHAREDKEY.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ECC_CTRL.DH_SHAREDKEY.value <= 1'h0;
+        end else if(field_combo.ECC_CTRL.DH_SHAREDKEY.load_next) begin
+            field_storage.ECC_CTRL.DH_SHAREDKEY.value <= field_combo.ECC_CTRL.DH_SHAREDKEY.next;
+        end
+    end
+    assign hwif_out.ECC_CTRL.DH_SHAREDKEY.value = field_storage.ECC_CTRL.DH_SHAREDKEY.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_SEED[].SEED
         always_comb begin
