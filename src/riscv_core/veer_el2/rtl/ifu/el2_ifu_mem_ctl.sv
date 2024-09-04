@@ -924,8 +924,6 @@ logic                                         perr_sb_write_status   ;
 
 
 
-   rvdffe #(.WIDTH(pt.ICACHE_INDEX_HI-pt.ICACHE_TAG_INDEX_LO+1),.OVERRIDE(1)) perr_dat_ff    (.din(ifu_ic_rw_int_addr_ff[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]), .dout(perr_ic_index_ff[pt.ICACHE_INDEX_HI : pt.ICACHE_TAG_INDEX_LO]), .en(perr_sb_write_status),  .*);
-
    assign perr_err_inv_way[pt.ICACHE_NUM_WAYS-1:0]   =  {pt.ICACHE_NUM_WAYS{perr_sel_invalidate}} ;
    assign iccm_correct_ecc     = (perr_state == ECC_CORR);
    assign dma_sb_err_state     = (perr_state == DMA_SB_ERR);
@@ -1281,7 +1279,6 @@ ifc_dma_access_ok_prev,dma_iccm_req_f})
          assign iccm_dma_rd_ecc_double_err = iccm_dma_rvalid && iccm_dma_ecc_error;
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////
 // ECC checking logic for ICCM data.                                               //
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1395,6 +1392,9 @@ assign ic_write_stall                =  write_ic_16_bytes &  ~((((miss_state== C
 ///////////////////////////////////////////////////////////////
 logic [pt.ICACHE_NUM_WAYS-1:0] ic_tag_valid_unq;
 if (pt.ICACHE_ENABLE == 1 ) begin: icache_enabled
+   
+   rvdffe #(.WIDTH(pt.ICACHE_INDEX_HI-pt.ICACHE_TAG_INDEX_LO+1),.OVERRIDE(1)) perr_dat_ff    (.din(ifu_ic_rw_int_addr_ff[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]), .dout(perr_ic_index_ff[pt.ICACHE_INDEX_HI : pt.ICACHE_TAG_INDEX_LO]), .en(perr_sb_write_status),  .*);
+   
    assign  ic_valid  = ~ifu_wr_cumulative_err_data & ~(reset_ic_in | reset_ic_ff) & ~reset_tag_valid_for_miss;
 
    assign ifu_status_wr_addr_w_debug[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] = ((ic_debug_rd_en | ic_debug_wr_en ) & ic_debug_tag_array) ?
@@ -1584,6 +1584,7 @@ end else begin: icache_disabled
    assign way_status_new[pt.ICACHE_STATUS_BITS-1:0]     = '0;
    assign way_status_wr_en                           = '0;
    assign bus_wren[pt.ICACHE_NUM_WAYS-1:0]              = '0;
+   assign bus_ic_wr_en[pt.ICACHE_NUM_WAYS-1:0]              = '0;
 
 end
 
@@ -1653,18 +1654,36 @@ rvdff_fpga #(01+pt.ICACHE_NUM_WAYS) ifu_debug_sel_ff (.*, .clk (debug_c1_clk),
 assign debug_data_clken  =  ic_debug_rd_en_ff;
 
 
+logic ACCESS0_okay;
+logic ACCESS1_okay;
+logic ACCESS2_okay;
+logic ACCESS3_okay;
+logic ACCESS4_okay;
+logic ACCESS5_okay;
+logic ACCESS6_okay;
+logic ACCESS7_okay;
+
+assign ACCESS0_okay = pt.INST_ACCESS_ENABLE0 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK0)) == (pt.INST_ACCESS_ADDR0 | pt.INST_ACCESS_MASK0)); 
+assign ACCESS1_okay = pt.INST_ACCESS_ENABLE1 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK1)) == (pt.INST_ACCESS_ADDR1 | pt.INST_ACCESS_MASK1));
+assign ACCESS2_okay = pt.INST_ACCESS_ENABLE2 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK2)) == (pt.INST_ACCESS_ADDR2 | pt.INST_ACCESS_MASK2));
+assign ACCESS3_okay = pt.INST_ACCESS_ENABLE3 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK3)) == (pt.INST_ACCESS_ADDR3 | pt.INST_ACCESS_MASK3));
+assign ACCESS4_okay = pt.INST_ACCESS_ENABLE4 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK4)) == (pt.INST_ACCESS_ADDR4 | pt.INST_ACCESS_MASK4));
+assign ACCESS5_okay = pt.INST_ACCESS_ENABLE5 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK5)) == (pt.INST_ACCESS_ADDR5 | pt.INST_ACCESS_MASK5));
+assign ACCESS6_okay = pt.INST_ACCESS_ENABLE6 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK6)) == (pt.INST_ACCESS_ADDR6 | pt.INST_ACCESS_MASK6));
+assign ACCESS7_okay = pt.INST_ACCESS_ENABLE7 & ((({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK7)) == (pt.INST_ACCESS_ADDR7 | pt.INST_ACCESS_MASK7));
 
 
 // memory protection  - equation to look identical to the LSU equation
    assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7})) |
-                               (pt.INST_ACCESS_ENABLE0 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK0)) == (pt.INST_ACCESS_ADDR0 | pt.INST_ACCESS_MASK0)) |
-                               (pt.INST_ACCESS_ENABLE1 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK1)) == (pt.INST_ACCESS_ADDR1 | pt.INST_ACCESS_MASK1)) |
-                               (pt.INST_ACCESS_ENABLE2 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK2)) == (pt.INST_ACCESS_ADDR2 | pt.INST_ACCESS_MASK2)) |
-                               (pt.INST_ACCESS_ENABLE3 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK3)) == (pt.INST_ACCESS_ADDR3 | pt.INST_ACCESS_MASK3)) |
-                               (pt.INST_ACCESS_ENABLE4 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK4)) == (pt.INST_ACCESS_ADDR4 | pt.INST_ACCESS_MASK4)) |
-                               (pt.INST_ACCESS_ENABLE5 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK5)) == (pt.INST_ACCESS_ADDR5 | pt.INST_ACCESS_MASK5)) |
-                               (pt.INST_ACCESS_ENABLE6 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK6)) == (pt.INST_ACCESS_ADDR6 | pt.INST_ACCESS_MASK6)) |
-                               (pt.INST_ACCESS_ENABLE7 & (({ifc_fetch_addr_bf[31:1],1'b0} | pt.INST_ACCESS_MASK7)) == (pt.INST_ACCESS_ADDR7 | pt.INST_ACCESS_MASK7));
+                                 | ACCESS0_okay
+                                 | ACCESS1_okay
+                                 | ACCESS2_okay
+                                 | ACCESS3_okay
+                                 | ACCESS4_okay
+                                 | ACCESS5_okay
+                                 | ACCESS6_okay
+                                 | ACCESS7_okay
+                               ;
 
    assign ifc_region_acc_fault_memory_bf   =  ~ifc_iccm_access_bf & ~ifc_region_acc_okay & ifc_fetch_req_bf;
 

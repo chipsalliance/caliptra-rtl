@@ -1911,8 +1911,10 @@ module soc_ifc_reg (
 
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1933,8 +1935,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value = field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1955,8 +1959,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value = field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.nmi_pin
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value & ~(decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1977,8 +1983,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_FATAL.nmi_pin.value = field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1999,8 +2007,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -2021,8 +2031,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
             next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value & ~(decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -2043,8 +2055,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_FATAL.error_code
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_FATAL.error_code.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FW_ERROR_FATAL.error_code.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FW_ERROR_FATAL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_FW_ERROR_FATAL.error_code.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2066,8 +2080,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FW_ERROR_FATAL.error_code.swmod = decoded_reg_strb.CPTRA_FW_ERROR_FATAL && decoded_req_is_wr;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_NON_FATAL.error_code
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2089,8 +2105,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.swmod = decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && decoded_req_is_wr;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_ENC.error_code
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_HW_ERROR_ENC.error_code.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_HW_ERROR_ENC.error_code.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_ENC && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_HW_ERROR_ENC.error_code.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2108,8 +2126,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_ENC.error_code.value = field_storage.CPTRA_HW_ERROR_ENC.error_code.value;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_ENC.error_code
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_FW_ERROR_ENC.error_code.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FW_ERROR_ENC.error_code.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FW_ERROR_ENC && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_FW_ERROR_ENC.error_code.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2128,8 +2148,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.CPTRA_FW_EXTENDED_ERROR_INFO[].error_info
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_FW_EXTENDED_ERROR_INFO[i0].error_info.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_FW_EXTENDED_ERROR_INFO[i0].error_info.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_FW_EXTENDED_ERROR_INFO[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.CPTRA_FW_EXTENDED_ERROR_INFO[i0].error_info.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2148,8 +2170,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_BOOT_STATUS.status
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_BOOT_STATUS.status.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_BOOT_STATUS.status.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_BOOT_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_BOOT_STATUS.status.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2167,8 +2191,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_BOOT_STATUS.status.value = field_storage.CPTRA_BOOT_STATUS.status.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.status
     always_comb begin
-        automatic logic [23:0] next_c = field_storage.CPTRA_FLOW_STATUS.status.value;
-        automatic logic load_next_c = '0;
+        automatic logic [23:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FLOW_STATUS.status.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_FLOW_STATUS.status.value & ~decoded_wr_biten[23:0]) | (decoded_wr_data[23:0] & decoded_wr_biten[23:0]);
             load_next_c = '1;
@@ -2185,8 +2211,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.idevid_csr_ready
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value & ~decoded_wr_biten[24:24]) | (decoded_wr_data[24:24] & decoded_wr_biten[24:24]);
             load_next_c = '1;
@@ -2204,8 +2232,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FLOW_STATUS.idevid_csr_ready.value = field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_fw
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value & ~decoded_wr_biten[28:28]) | (decoded_wr_data[28:28] & decoded_wr_biten[28:28]);
             load_next_c = '1;
@@ -2223,8 +2253,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value = field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_runtime
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value & ~decoded_wr_biten[29:29]) | (decoded_wr_data[29:29] & decoded_wr_biten[29:29]);
             load_next_c = '1;
@@ -2242,8 +2274,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value = field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.mailbox_flow_done
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value & ~decoded_wr_biten[31:31]) | (decoded_wr_data[31:31] & decoded_wr_biten[31:31]);
             load_next_c = '1;
@@ -2261,8 +2295,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FLOW_STATUS.mailbox_flow_done.value = field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
     // Field: soc_ifc_reg.CPTRA_RESET_REASON.FW_UPD_RESET
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value;
+        load_next_c =  '0;
         if(hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we) begin // HW Write - we
             next_c = hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.next;
             load_next_c = '1;
@@ -2280,8 +2316,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_RESET_REASON.FW_UPD_RESET.value = field_storage.CPTRA_RESET_REASON.FW_UPD_RESET.value;
     // Field: soc_ifc_reg.CPTRA_RESET_REASON.WARM_RESET
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
+        load_next_c =  '0;
         if(1) begin // HW Write
             next_c = hwif_in.CPTRA_RESET_REASON.WARM_RESET.next;
             load_next_c = '1;
@@ -2300,8 +2338,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<5; i0++) begin
         // Field: soc_ifc_reg.CPTRA_MBOX_VALID_PAUSER[].PAUSER
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_MBOX_VALID_PAUSER[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.swwel)) begin // SW write
                 next_c = (field_storage.CPTRA_MBOX_VALID_PAUSER[i0].PAUSER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2321,8 +2361,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<5; i0++) begin
         // Field: soc_ifc_reg.CPTRA_MBOX_PAUSER_LOCK[].LOCK
         always_comb begin
-            automatic logic [0:0] next_c = field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value;
-            automatic logic load_next_c = '0;
+            automatic logic [0:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_MBOX_PAUSER_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.swwel)) begin // SW write
                 next_c = (field_storage.CPTRA_MBOX_PAUSER_LOCK[i0].LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
@@ -2341,8 +2383,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_TRNG_VALID_PAUSER.PAUSER
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TRNG_VALID_PAUSER && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_VALID_PAUSER.PAUSER.swwel)) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2360,8 +2404,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_TRNG_VALID_PAUSER.PAUSER.value = field_storage.CPTRA_TRNG_VALID_PAUSER.PAUSER.value;
     // Field: soc_ifc_reg.CPTRA_TRNG_PAUSER_LOCK.LOCK
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TRNG_PAUSER_LOCK.LOCK.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TRNG_PAUSER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_PAUSER_LOCK.LOCK.swwel)) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_PAUSER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2380,8 +2426,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.CPTRA_TRNG_DATA[].DATA
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_TRNG_DATA[i0].DATA.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_TRNG_DATA[i0].DATA.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_TRNG_DATA[i0] && decoded_req_is_wr && hwif_in.CPTRA_TRNG_DATA[i0].DATA.swwe) begin // SW write
                 next_c = (field_storage.CPTRA_TRNG_DATA[i0].DATA.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2403,8 +2451,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_TRNG_CTRL.clear
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_TRNG_CTRL.clear.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TRNG_CTRL.clear.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TRNG_CTRL && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_CTRL.clear.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2425,8 +2475,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_TRNG_CTRL.clear.value = field_storage.CPTRA_TRNG_CTRL.clear.value;
     // Field: soc_ifc_reg.CPTRA_TRNG_STATUS.DATA_REQ
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TRNG_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2444,8 +2496,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_TRNG_STATUS.DATA_REQ.value = field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value;
     // Field: soc_ifc_reg.CPTRA_TRNG_STATUS.DATA_WR_DONE
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TRNG_STATUS && decoded_req_is_wr && hwif_in.CPTRA_TRNG_STATUS.DATA_WR_DONE.swwe) begin // SW write
             next_c = (field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -2465,8 +2519,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_FUSE_WR_DONE.done
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FUSE_WR_DONE.done.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FUSE_WR_DONE.done.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr && hwif_in.CPTRA_FUSE_WR_DONE.done.swwe) begin // SW write
             next_c = (field_storage.CPTRA_FUSE_WR_DONE.done.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2485,8 +2541,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FUSE_WR_DONE.done.swmod = decoded_reg_strb.CPTRA_FUSE_WR_DONE && decoded_req_is_wr;
     // Field: soc_ifc_reg.CPTRA_TIMER_CONFIG.clk_period
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_TIMER_CONFIG.clk_period.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_TIMER_CONFIG.clk_period.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_TIMER_CONFIG && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_TIMER_CONFIG.clk_period.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2503,8 +2561,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_BOOTFSM_GO.GO
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_BOOTFSM_GO.GO.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_BOOTFSM_GO.GO.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_BOOTFSM_GO && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = (field_storage.CPTRA_BOOTFSM_GO.GO.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2525,8 +2585,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_BOOTFSM_GO.GO.value = field_storage.CPTRA_BOOTFSM_GO.GO.value;
     // Field: soc_ifc_reg.CPTRA_DBG_MANUF_SERVICE_REG.DATA
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2547,8 +2609,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value = field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value;
     // Field: soc_ifc_reg.CPTRA_CLK_GATING_EN.clk_gating_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_CLK_GATING_EN && decoded_req_is_wr && hwif_in.soc_req) begin // SW write
             next_c = (field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2567,8 +2631,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_GENERIC_INPUT_WIRES[].generic_wires
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value;
+            load_next_c =  '0;
             if(1) begin // HW Write
                 next_c = hwif_in.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.next;
                 load_next_c = '1;
@@ -2588,8 +2654,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_GENERIC_OUTPUT_WIRES[].generic_wires
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
                 next_c = (field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2609,8 +2677,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_FW_REV_ID[].REV_ID
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_FW_REV_ID[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
                 next_c = (field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2629,8 +2699,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_WDT_TIMER1_EN.timer1_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_TIMER1_EN && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2648,8 +2720,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_WDT_TIMER1_EN.timer1_en.value = field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value;
     // Field: soc_ifc_reg.CPTRA_WDT_TIMER1_CTRL.timer1_restart
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_TIMER1_CTRL && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2671,8 +2745,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[].timer1_timeout_period
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].timer1_timeout_period.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].timer1_timeout_period.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
                 next_c = (field_storage.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i0].timer1_timeout_period.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2691,8 +2767,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_WDT_TIMER2_EN.timer2_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_TIMER2_EN.timer2_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_TIMER2_EN.timer2_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_TIMER2_EN && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_TIMER2_EN.timer2_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2710,8 +2788,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_WDT_TIMER2_EN.timer2_en.value = field_storage.CPTRA_WDT_TIMER2_EN.timer2_en.value;
     // Field: soc_ifc_reg.CPTRA_WDT_TIMER2_CTRL.timer2_restart
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_TIMER2_CTRL.timer2_restart.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_TIMER2_CTRL.timer2_restart.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_TIMER2_CTRL && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_TIMER2_CTRL.timer2_restart.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2733,8 +2813,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[].timer2_timeout_period
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].timer2_timeout_period.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].timer2_timeout_period.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
                 next_c = (field_storage.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0].timer2_timeout_period.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2753,8 +2835,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_WDT_STATUS.t1_timeout
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_STATUS.t1_timeout.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_STATUS.t1_timeout.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_STATUS.t1_timeout.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2775,8 +2859,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_WDT_STATUS.t1_timeout.value = field_storage.CPTRA_WDT_STATUS.t1_timeout.value;
     // Field: soc_ifc_reg.CPTRA_WDT_STATUS.t2_timeout
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_WDT_STATUS.t2_timeout.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_WDT_STATUS.t2_timeout.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_WDT_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.CPTRA_WDT_STATUS.t2_timeout.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -2797,8 +2883,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_WDT_STATUS.t2_timeout.value = field_storage.CPTRA_WDT_STATUS.t2_timeout.value;
     // Field: soc_ifc_reg.CPTRA_FUSE_VALID_PAUSER.PAUSER
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FUSE_VALID_PAUSER && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_VALID_PAUSER.PAUSER.swwel)) begin // SW write
             next_c = (field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2816,8 +2904,10 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_FUSE_VALID_PAUSER.PAUSER.value = field_storage.CPTRA_FUSE_VALID_PAUSER.PAUSER.value;
     // Field: soc_ifc_reg.CPTRA_FUSE_PAUSER_LOCK.LOCK
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_FUSE_PAUSER_LOCK.LOCK.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_FUSE_PAUSER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_PAUSER_LOCK.LOCK.swwel)) begin // SW write
             next_c = (field_storage.CPTRA_FUSE_PAUSER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2836,8 +2926,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_WDT_CFG[].TIMEOUT
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_WDT_CFG[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2855,8 +2947,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold
     always_comb begin
-        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value;
-        automatic logic load_next_c = '0;
+        automatic logic [15:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value & ~decoded_wr_biten[15:0]) | (decoded_wr_data[15:0] & decoded_wr_biten[15:0]);
             load_next_c = '1;
@@ -2873,8 +2967,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold
     always_comb begin
-        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value;
-        automatic logic load_next_c = '0;
+        automatic logic [15:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_0 && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value & ~decoded_wr_biten[31:16]) | (decoded_wr_data[31:16] & decoded_wr_biten[31:16]);
             load_next_c = '1;
@@ -2891,8 +2987,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count
     always_comb begin
-        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value;
-        automatic logic load_next_c = '0;
+        automatic logic [15:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value & ~decoded_wr_biten[15:0]) | (decoded_wr_data[15:0] & decoded_wr_biten[15:0]);
             load_next_c = '1;
@@ -2909,8 +3007,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD
     always_comb begin
-        automatic logic [15:0] next_c = field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value;
-        automatic logic load_next_c = '0;
+        automatic logic [15:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.CPTRA_iTRNG_ENTROPY_CONFIG_1 && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1.RSVD.value & ~decoded_wr_biten[31:16]) | (decoded_wr_data[31:16] & decoded_wr_biten[31:16]);
             load_next_c = '1;
@@ -2928,8 +3028,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_RSVD_REG[].RSVD
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.CPTRA_RSVD_REG[i0].RSVD.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.CPTRA_RSVD_REG[i0].RSVD.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.CPTRA_RSVD_REG[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.CPTRA_RSVD_REG[i0].RSVD.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2948,8 +3050,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.fuse_uds_seed[].seed
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_uds_seed[i0].seed.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_uds_seed[i0].seed.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2972,8 +3076,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.fuse_field_entropy[].seed
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_field_entropy[i0].seed.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_field_entropy[i0].seed.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -2996,8 +3102,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.fuse_key_manifest_pk_hash[].hash
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash[i0].hash.swwel)) begin // SW write
                 next_c = (field_storage.fuse_key_manifest_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3016,8 +3124,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_key_manifest_pk_hash_mask.mask
     always_comb begin
-        automatic logic [3:0] next_c = field_storage.fuse_key_manifest_pk_hash_mask.mask.value;
-        automatic logic load_next_c = '0;
+        automatic logic [3:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_key_manifest_pk_hash_mask.mask.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_key_manifest_pk_hash_mask && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel)) begin // SW write
             next_c = (field_storage.fuse_key_manifest_pk_hash_mask.mask.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
             load_next_c = '1;
@@ -3036,8 +3146,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.fuse_owner_pk_hash[].hash
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_owner_pk_hash[i0].hash.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_owner_pk_hash[i0].hash.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_owner_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_owner_pk_hash[i0].hash.swwel)) begin // SW write
                 next_c = (field_storage.fuse_owner_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3056,8 +3168,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_fmc_key_manifest_svn.svn
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.fuse_fmc_key_manifest_svn.svn.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_fmc_key_manifest_svn.svn.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_fmc_key_manifest_svn && decoded_req_is_wr && !(hwif_in.fuse_fmc_key_manifest_svn.svn.swwel)) begin // SW write
             next_c = (field_storage.fuse_fmc_key_manifest_svn.svn.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3076,8 +3190,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.fuse_runtime_svn[].svn
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_runtime_svn[i0].svn.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_runtime_svn[i0].svn.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_runtime_svn[i0] && decoded_req_is_wr && !(hwif_in.fuse_runtime_svn[i0].svn.swwel)) begin // SW write
                 next_c = (field_storage.fuse_runtime_svn[i0].svn.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3096,8 +3212,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_anti_rollback_disable.dis
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.fuse_anti_rollback_disable.dis.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_anti_rollback_disable.dis.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_anti_rollback_disable && decoded_req_is_wr && !(hwif_in.fuse_anti_rollback_disable.dis.swwel)) begin // SW write
             next_c = (field_storage.fuse_anti_rollback_disable.dis.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3116,8 +3234,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<24; i0++) begin
         // Field: soc_ifc_reg.fuse_idevid_cert_attr[].cert
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_idevid_cert_attr[i0].cert.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_idevid_cert_attr[i0].cert.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_idevid_cert_attr[i0] && decoded_req_is_wr && !(hwif_in.fuse_idevid_cert_attr[i0].cert.swwel)) begin // SW write
                 next_c = (field_storage.fuse_idevid_cert_attr[i0].cert.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3137,8 +3257,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.fuse_idevid_manuf_hsm_id[].hsm_id
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && decoded_req_is_wr && !(hwif_in.fuse_idevid_manuf_hsm_id[i0].hsm_id.swwel)) begin // SW write
                 next_c = (field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3157,8 +3279,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_life_cycle.life_cycle
     always_comb begin
-        automatic logic [1:0] next_c = field_storage.fuse_life_cycle.life_cycle.value;
-        automatic logic load_next_c = '0;
+        automatic logic [1:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_life_cycle.life_cycle.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_life_cycle && decoded_req_is_wr && !(hwif_in.fuse_life_cycle.life_cycle.swwel)) begin // SW write
             next_c = (field_storage.fuse_life_cycle.life_cycle.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
@@ -3176,8 +3300,10 @@ module soc_ifc_reg (
     assign hwif_out.fuse_life_cycle.life_cycle.value = field_storage.fuse_life_cycle.life_cycle.value;
     // Field: soc_ifc_reg.fuse_lms_verify.lms_verify
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.fuse_lms_verify.lms_verify.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_lms_verify.lms_verify.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_lms_verify && decoded_req_is_wr && !(hwif_in.fuse_lms_verify.lms_verify.swwel)) begin // SW write
             next_c = (field_storage.fuse_lms_verify.lms_verify.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3195,8 +3321,10 @@ module soc_ifc_reg (
     assign hwif_out.fuse_lms_verify.lms_verify.value = field_storage.fuse_lms_verify.lms_verify.value;
     // Field: soc_ifc_reg.fuse_lms_revocation.lms_revocation
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.fuse_lms_revocation.lms_revocation.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_lms_revocation.lms_revocation.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_lms_revocation && decoded_req_is_wr && !(hwif_in.fuse_lms_revocation.lms_revocation.swwel)) begin // SW write
             next_c = (field_storage.fuse_lms_revocation.lms_revocation.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3214,8 +3342,10 @@ module soc_ifc_reg (
     assign hwif_out.fuse_lms_revocation.lms_revocation.value = field_storage.fuse_lms_revocation.lms_revocation.value;
     // Field: soc_ifc_reg.fuse_soc_stepping_id.soc_stepping_id
     always_comb begin
-        automatic logic [15:0] next_c = field_storage.fuse_soc_stepping_id.soc_stepping_id.value;
-        automatic logic load_next_c = '0;
+        automatic logic [15:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.fuse_soc_stepping_id.soc_stepping_id.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.fuse_soc_stepping_id && decoded_req_is_wr && !(hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel)) begin // SW write
             next_c = (field_storage.fuse_soc_stepping_id.soc_stepping_id.value & ~decoded_wr_biten[15:0]) | (decoded_wr_data[15:0] & decoded_wr_biten[15:0]);
             load_next_c = '1;
@@ -3234,8 +3364,10 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.internal_obf_key[].key
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.internal_obf_key[i0].key.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c =  field_storage.internal_obf_key[i0].key.value;
+            load_next_c =  '0;
             if(decoded_reg_strb.internal_obf_key[i0] && decoded_req_is_wr && hwif_in.internal_obf_key[i0].key.swwe) begin // SW write
                 next_c = (field_storage.internal_obf_key[i0].key.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3258,8 +3390,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.internal_iccm_lock.lock
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_iccm_lock.lock.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_iccm_lock.lock.value;
+        load_next_c =  '0;
         if(hwif_in.internal_iccm_lock.lock.hwclr) begin // HW Clear
             next_c = '0;
             load_next_c = '1;
@@ -3280,8 +3414,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_iccm_lock.lock.value = field_storage.internal_iccm_lock.lock.value;
     // Field: soc_ifc_reg.internal_fw_update_reset.core_rst
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_fw_update_reset.core_rst.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_fw_update_reset.core_rst.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_fw_update_reset && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_fw_update_reset.core_rst.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3302,8 +3438,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_fw_update_reset.core_rst.value = field_storage.internal_fw_update_reset.core_rst.value;
     // Field: soc_ifc_reg.internal_fw_update_reset_wait_cycles.wait_cycles
     always_comb begin
-        automatic logic [7:0] next_c = field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value;
-        automatic logic load_next_c = '0;
+        automatic logic [7:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_fw_update_reset_wait_cycles && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value & ~decoded_wr_biten[7:0]) | (decoded_wr_data[7:0] & decoded_wr_biten[7:0]);
             load_next_c = '1;
@@ -3321,8 +3459,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value = field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value;
     // Field: soc_ifc_reg.internal_nmi_vector.vec
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_nmi_vector.vec.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_nmi_vector.vec.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_nmi_vector && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_nmi_vector.vec.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3340,8 +3480,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_nmi_vector.vec.value = field_storage.internal_nmi_vector.vec.value;
     // Field: soc_ifc_reg.internal_hw_error_fatal_mask.mask_iccm_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3359,8 +3501,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value = field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value;
     // Field: soc_ifc_reg.internal_hw_error_fatal_mask.mask_dccm_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -3378,8 +3522,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value = field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value;
     // Field: soc_ifc_reg.internal_hw_error_fatal_mask.mask_nmi_pin
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -3397,8 +3543,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin.value = field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value;
     // Field: soc_ifc_reg.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_non_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3416,8 +3564,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value;
     // Field: soc_ifc_reg.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_non_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -3435,8 +3585,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value;
     // Field: soc_ifc_reg.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_hw_error_non_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -3454,8 +3606,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value = field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value;
     // Field: soc_ifc_reg.internal_fw_error_fatal_mask.mask
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_fw_error_fatal_mask.mask.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_fw_error_fatal_mask.mask.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_fw_error_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_fw_error_fatal_mask.mask.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3473,8 +3627,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_fw_error_fatal_mask.mask.value = field_storage.internal_fw_error_fatal_mask.mask.value;
     // Field: soc_ifc_reg.internal_fw_error_non_fatal_mask.mask
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_fw_error_non_fatal_mask.mask.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_fw_error_non_fatal_mask.mask.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_fw_error_non_fatal_mask && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_fw_error_non_fatal_mask.mask.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3492,8 +3648,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_fw_error_non_fatal_mask.mask.value = field_storage.internal_fw_error_non_fatal_mask.mask.value;
     // Field: soc_ifc_reg.internal_rv_mtime_l.count_l
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_rv_mtime_l.count_l.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_rv_mtime_l.count_l.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_rv_mtime_l && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_rv_mtime_l.count_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3521,8 +3679,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_rv_mtime_l.count_l.overflow = field_combo.internal_rv_mtime_l.count_l.overflow;
     // Field: soc_ifc_reg.internal_rv_mtime_h.count_h
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_rv_mtime_h.count_h.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_rv_mtime_h.count_h.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_rv_mtime_h && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_rv_mtime_h.count_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3549,8 +3709,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_rv_mtime_h.count_h.swmod = decoded_reg_strb.internal_rv_mtime_h && decoded_req_is_wr;
     // Field: soc_ifc_reg.internal_rv_mtimecmp_l.compare_l
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_rv_mtimecmp_l.compare_l.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_rv_mtimecmp_l.compare_l.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_rv_mtimecmp_l && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_rv_mtimecmp_l.compare_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3568,8 +3730,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_rv_mtimecmp_l.compare_l.value = field_storage.internal_rv_mtimecmp_l.compare_l.value;
     // Field: soc_ifc_reg.internal_rv_mtimecmp_h.compare_h
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.internal_rv_mtimecmp_h.compare_h.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.internal_rv_mtimecmp_h.compare_h.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.internal_rv_mtimecmp_h && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.internal_rv_mtimecmp_h.compare_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -3587,8 +3751,10 @@ module soc_ifc_reg (
     assign hwif_out.internal_rv_mtimecmp_h.compare_h.value = field_storage.internal_rv_mtimecmp_h.compare_h.value;
     // Field: soc_ifc_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3605,8 +3771,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -3623,8 +3791,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_internal_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3641,8 +3811,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_inv_dev_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -3659,8 +3831,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_cmd_fail_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -3677,8 +3851,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_bad_fuse_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -3695,8 +3871,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_iccm_blocked_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -3713,8 +3891,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -3731,8 +3911,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -3749,8 +3931,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
@@ -3767,8 +3951,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -3785,8 +3971,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -3803,8 +3991,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_debug_locked_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_debug_locked_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_debug_locked_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_debug_locked_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -3821,8 +4011,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_scan_mode_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_scan_mode_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_scan_mode_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_scan_mode_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -3839,8 +4031,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -3857,8 +4051,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -3875,8 +4071,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        load_next_c =  '0;
         if(1) begin // HW Write
             next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
             load_next_c = '1;
@@ -3895,8 +4093,10 @@ module soc_ifc_reg (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: soc_ifc_reg.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        load_next_c =  '0;
         if(1) begin // HW Write
             next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
             load_next_c = '1;
@@ -3915,8 +4115,10 @@ module soc_ifc_reg (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_internal_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
             load_next_c = '1;
@@ -3939,8 +4141,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_inv_dev_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value;
             load_next_c = '1;
@@ -3963,8 +4167,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value;
             load_next_c = '1;
@@ -3987,8 +4193,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value;
             load_next_c = '1;
@@ -4011,8 +4219,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value;
             load_next_c = '1;
@@ -4035,8 +4245,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
             load_next_c = '1;
@@ -4059,8 +4271,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value;
             load_next_c = '1;
@@ -4083,8 +4297,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value;
             load_next_c = '1;
@@ -4116,8 +4332,10 @@ module soc_ifc_reg (
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value);
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value;
             load_next_c = '1;
@@ -4140,8 +4358,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
             load_next_c = '1;
@@ -4164,8 +4384,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value;
             load_next_c = '1;
@@ -4188,8 +4410,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value;
             load_next_c = '1;
@@ -4212,8 +4436,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value;
             load_next_c = '1;
@@ -4236,8 +4462,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value;
             load_next_c = '1;
@@ -4267,8 +4495,10 @@ module soc_ifc_reg (
         || |(field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value);
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_internal_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -4288,8 +4518,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_inv_dev_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -4309,8 +4541,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -4330,8 +4564,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -4351,8 +4587,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -4372,8 +4610,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -4393,8 +4633,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -4414,8 +4656,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
@@ -4435,8 +4679,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -4456,8 +4702,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -4477,8 +4725,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -4498,8 +4748,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -4519,8 +4771,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -4540,8 +4794,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -4561,8 +4817,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4593,8 +4851,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_inv_dev_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4625,8 +4885,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_cmd_fail_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4657,8 +4919,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_bad_fuse_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4689,8 +4953,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_iccm_blocked_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4721,8 +4987,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4753,8 +5021,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_wdt_timer1_timeout_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4785,8 +5055,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_wdt_timer2_timeout_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4817,8 +5089,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_cmd_avail_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4849,8 +5123,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4881,8 +5157,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_debug_locked_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_debug_locked_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_debug_locked_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_debug_locked_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_debug_locked_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4913,8 +5191,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_scan_mode_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_scan_mode_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_scan_mode_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_scan_mode_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4945,8 +5225,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -4977,8 +5259,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -5009,8 +5293,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
             load_next_c = '1;
@@ -5038,8 +5324,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value;
             load_next_c = '1;
@@ -5067,8 +5355,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value;
             load_next_c = '1;
@@ -5096,8 +5386,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value;
             load_next_c = '1;
@@ -5125,8 +5417,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value;
             load_next_c = '1;
@@ -5154,8 +5448,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value;
             load_next_c = '1;
@@ -5183,8 +5479,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value;
             load_next_c = '1;
@@ -5212,8 +5510,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value;
             load_next_c = '1;
@@ -5241,8 +5541,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value;
             load_next_c = '1;
@@ -5270,8 +5572,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value;
             load_next_c = '1;
@@ -5299,8 +5603,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_debug_locked_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_debug_locked_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_debug_locked_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value;
             load_next_c = '1;
@@ -5328,8 +5634,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_scan_mode_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_scan_mode_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_scan_mode_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value;
             load_next_c = '1;
@@ -5357,8 +5665,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_soc_req_lock_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_soc_req_lock_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_soc_req_lock_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value;
             load_next_c = '1;
@@ -5386,8 +5696,10 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value;
             load_next_c = '1;

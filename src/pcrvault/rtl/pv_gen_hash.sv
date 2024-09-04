@@ -201,6 +201,7 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
       block_offset_i <= '0;
       read_entry <= '0;
       read_offset <= '0;
+      nonce_offset_i <= '0;
     end
     else begin
       gen_hash_fsm_ps <= gen_hash_fsm_ns;

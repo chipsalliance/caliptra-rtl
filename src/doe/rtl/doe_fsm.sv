@@ -147,7 +147,7 @@ always_comb begin : kv_doe_fsm
     dest_write_offset_nxt = dest_write_offset;
     flow_done = '0;
 
-    unique casez (kv_doe_fsm_ps)
+    unique case (kv_doe_fsm_ps)
         DOE_IDLE: begin
             if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
             //assert flow done if a locked flow is attempted

@@ -588,8 +588,10 @@ module interrupt_regs (
 
     // Field: interrupt_regs.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
@@ -606,8 +608,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
@@ -624,8 +628,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_en_r.error0_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
@@ -642,8 +648,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_en_r.error1_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
@@ -660,8 +668,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_en_r.error2_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[2:2];
             load_next_c = '1;
@@ -678,8 +688,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_en_r.error3_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[3:3];
             load_next_c = '1;
@@ -696,8 +708,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_en_r.notif0_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif0_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif0_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[0:0];
             load_next_c = '1;
@@ -714,8 +728,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_en_r.notif1_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif1_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif1_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[1:1];
             load_next_c = '1;
@@ -732,8 +748,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_en_r.notif2_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif2_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif2_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[2:2];
             load_next_c = '1;
@@ -750,8 +768,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_en_r.notif3_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif3_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_en_r.notif3_en.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[3:3];
             load_next_c = '1;
@@ -768,8 +788,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        load_next_c =  '0;
         if(1) begin // HW Write
             next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
             load_next_c = '1;
@@ -788,8 +810,10 @@ module interrupt_regs (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: interrupt_regs.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        load_next_c =  '0;
         if(1) begin // HW Write
             next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
             load_next_c = '1;
@@ -808,8 +832,10 @@ module interrupt_regs (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: interrupt_regs.intr_block_rf.error_internal_intr_r.error0_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
             load_next_c = '1;
@@ -832,8 +858,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_internal_intr_r.error1_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
             load_next_c = '1;
@@ -856,8 +884,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_internal_intr_r.error2_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
             load_next_c = '1;
@@ -880,8 +910,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_internal_intr_r.error3_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
             load_next_c = '1;
@@ -909,8 +941,10 @@ module interrupt_regs (
         || |(field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & field_storage.intr_block_rf.error_intr_en_r.error3_en.value);
     // Field: interrupt_regs.intr_block_rf.notif_internal_intr_r.notif0_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif0_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif0_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif0_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value;
             load_next_c = '1;
@@ -933,8 +967,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_internal_intr_r.notif1_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif1_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif1_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif1_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value;
             load_next_c = '1;
@@ -957,8 +993,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_internal_intr_r.notif2_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif2_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif2_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif2_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value;
             load_next_c = '1;
@@ -981,8 +1019,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_internal_intr_r.notif3_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif3_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_internal_intr_r.notif3_sts.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif3_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value;
             load_next_c = '1;
@@ -1010,8 +1050,10 @@ module interrupt_regs (
         || |(field_storage.intr_block_rf.notif_internal_intr_r.notif3_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif3_en.value);
     // Field: interrupt_regs.intr_block_rf.error_intr_trig_r.error0_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value | decoded_wr_data[0:0];
             load_next_c = '1;
@@ -1031,8 +1073,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_trig_r.error1_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value | decoded_wr_data[1:1];
             load_next_c = '1;
@@ -1052,8 +1096,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_trig_r.error2_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value | decoded_wr_data[2:2];
             load_next_c = '1;
@@ -1073,8 +1119,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error_intr_trig_r.error3_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value | decoded_wr_data[3:3];
             load_next_c = '1;
@@ -1094,8 +1142,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_trig_r.notif0_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value | decoded_wr_data[0:0];
             load_next_c = '1;
@@ -1115,8 +1165,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_trig_r.notif1_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value | decoded_wr_data[1:1];
             load_next_c = '1;
@@ -1136,8 +1188,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_trig_r.notif2_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value | decoded_wr_data[2:2];
             load_next_c = '1;
@@ -1157,8 +1211,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif_intr_trig_r.notif3_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value | decoded_wr_data[3:3];
             load_next_c = '1;
@@ -1178,8 +1234,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error0_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error0_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1210,8 +1268,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error1_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error1_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1242,8 +1302,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error2_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error2_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1274,8 +1336,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error3_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.error3_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1306,8 +1370,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif0_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif0_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif0_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif0_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1338,8 +1404,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif1_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif1_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif1_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif1_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1370,8 +1438,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif2_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif2_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif2_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif2_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1402,8 +1472,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif3_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif3_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif3_intr_count_r.cnt.value;
+        load_next_c =  '0;
         if(decoded_reg_strb.intr_block_rf.notif3_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = decoded_wr_data[31:0];
             load_next_c = '1;
@@ -1434,8 +1506,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error0_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
             load_next_c = '1;
@@ -1463,8 +1537,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error1_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
             load_next_c = '1;
@@ -1492,8 +1568,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error2_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
             load_next_c = '1;
@@ -1521,8 +1599,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.error3_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
             load_next_c = '1;
@@ -1550,8 +1630,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif0_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif0_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif0_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif0_trig.value;
             load_next_c = '1;
@@ -1579,8 +1661,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif1_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif1_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif1_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif1_trig.value;
             load_next_c = '1;
@@ -1608,8 +1692,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif2_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif2_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif2_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif2_trig.value;
             load_next_c = '1;
@@ -1637,8 +1723,10 @@ module interrupt_regs (
     end
     // Field: interrupt_regs.intr_block_rf.notif3_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif3_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c =  field_storage.intr_block_rf.notif3_intr_count_incr_r.pulse.value;
+        load_next_c =  '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif3_trig.value;
             load_next_c = '1;

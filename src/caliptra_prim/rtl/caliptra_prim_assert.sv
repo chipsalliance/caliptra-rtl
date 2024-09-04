@@ -100,9 +100,11 @@
 `elsif YOSYS
  `include "caliptra_prim_assert_yosys_macros.svh"
  `define CALIPTRA_INC_ASSERT
-`else
+`elsif SIMULATION 
  `include "caliptra_prim_assert_standard_macros.svh"
  `define CALIPTRA_INC_ASSERT
+`else
+ `include "caliptra_prim_assert_dummy_macros.svh"
 `endif
 
 //////////////////////////////
