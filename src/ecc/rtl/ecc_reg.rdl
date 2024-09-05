@@ -71,16 +71,16 @@ addrmap ecc_reg {
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Control command field: This can be: 
-                [br]             000 for NONE
-                [br]             001 for KEYGEN
-                [br]             010 for SIGNING
-                [br]             011 for VERIFYING
-                [br]             100 for ECDH SHARED KEY
-                [br] After each software write, hardware will erase the register"; swwe = ecc_ready; hwclr;} CTRL[3] = 3'b0;
+                [br]             00 for NONE
+                [br]             01 for KEYGEN
+                [br]             10 for SIGNING
+                [br]             11 for VERIFYING
+                [br] After each software write, hardware will erase the register"; swwe = ecc_ready; hwclr;} CTRL[2] = 2'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after ECC process, to avoid SCA leakage.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Run PCR Signing flow: Run ECC Signing flow to sign PCRs."; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
+        field {desc = "Run ECDH for shared key generation."; swwe = ecc_ready; hwclr;} DH_SHAREDKEY = 1'b0;
     
     } ECC_CTRL @0x00000010;
 
@@ -323,9 +323,9 @@ addrmap ecc_reg {
         default resetsignal = reset_b;
         field {desc = "DH Shared Key field"; hwclr;} DH_SHARED_KEY[32] = 32'b0;
     
-    } ECC_DH_SHARED_KEY[12] @0x00000600;
+    } ECC_DH_SHARED_KEY[12] @0x000005C0;
 
-    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000700;
+    kv_read_ctrl_reg ecc_kv_rd_pkey_ctrl  @0x00000600;
     kv_status_reg ecc_kv_rd_pkey_status;
     kv_read_ctrl_reg ecc_kv_rd_seed_ctrl;
     kv_status_reg ecc_kv_rd_seed_status;
