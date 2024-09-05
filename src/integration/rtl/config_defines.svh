@@ -24,7 +24,7 @@
   `define CALIPTRA_AHB_HDATA_SIZE      64 // bit-width AHB data
   `define CALIPTRA_AXI_DATA_WIDTH      32 // bit-width AXI data
   `define CALIPTRA_AXI_USER_WIDTH      32 // bit-width AXI USER field
-  `define CALIPTRA_AXI_ID_WIDTH        5  // bit-width AXI ID field
+  `define CALIPTRA_AXI_ID_WIDTH        8  // bit-width AXI ID field
   `define CALIPTRA_AXI_DMA_ADDR_WIDTH  48
   `define CALIPTRA_QSPI_CS_WIDTH       2
   `define CALIPTRA_QSPI_IO_WIDTH       4
