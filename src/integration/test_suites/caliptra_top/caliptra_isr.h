@@ -56,6 +56,8 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
+    uint32_t mldsa_error;
+    uint32_t mldsa_notif;
 } caliptra_intr_received_s;
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
@@ -231,5 +233,26 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
+inline void service_mldsa_error_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_MLDSA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    if (sts != 0) {
+        cptra_intr_rcv.mldsa_error = 0xFFFFFFFF;
+        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
+
+inline void service_mldsa_notif_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    if (sts != 0) {
+        cptra_intr_rcv.mldsa_notif = 0xFFFFFFFF;
+        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
 
 #endif //CALIPTRA_ISR_H

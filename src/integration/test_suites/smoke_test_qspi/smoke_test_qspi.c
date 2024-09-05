@@ -54,6 +54,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
+    .mldsa_error      = 0,
+    .mldsa_notif      = 0
 };
 
 typedef enum { Dummy = 0, RdOnly = 1, WrOnly = 2, BiDir = 3 } direction_t;

@@ -66,6 +66,8 @@ static void nonstd_veer_isr_sha512_error  (void) __attribute__ ((interrupt ("mac
 static void nonstd_veer_isr_sha512_notif  (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha256_error  (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha256_notif  (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_mldsa_error   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_mldsa_notif   (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_qspi_error    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_qspi_notif    (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_uart_error    (void) __attribute__ ((interrupt ("machine")));
@@ -101,10 +103,10 @@ static void (* const nonstd_veer_isr_18) (void) = std_rv_nop_machine          ; 
 static void (* const nonstd_veer_isr_19) (void) = nonstd_veer_isr_soc_ifc_error;   //        |
 static void (* const nonstd_veer_isr_20) (void) = nonstd_veer_isr_soc_ifc_notif;   //        |
 static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_error;//        |
-static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;// -------'
-static void (* const nonstd_veer_isr_23) (void) = std_rv_nop_machine; // --------|
-static void (* const nonstd_veer_isr_24) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_veer_isr_25) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;//        | 
+static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_mldsa_error ;    //        |
+static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_mldsa_notif ;    //-------.|
+static void (* const nonstd_veer_isr_25) (void) = std_rv_nop_machine; // -------'|
 static void (* const nonstd_veer_isr_26) (void) = std_rv_nop_machine; // Unimplemented ISR
 static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; //         |
@@ -177,6 +179,7 @@ void init_interrupts(void) {
     volatile uint32_t * const sha512_reg     = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
     volatile uint32_t * const sha256_reg     = (uint32_t*) CLP_SHA256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_acc_csr = (uint32_t*) CLP_SHA512_ACC_CSR_BASE_ADDR;
+    volatile uint32_t * const mldsa_reg      = (uint32_t*) CLP_MLDSA_REG_BASE_ADDR;
     volatile uint32_t * const mtime_l        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L;
     volatile uint32_t * const mtime_h        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H;
     volatile uint32_t * const mtimecmp_l     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L;
@@ -240,6 +243,8 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_SOC_IFC_NOTIF   ] = VEER_INTR_PRIO_SOC_IFC_NOTIF   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA512_ACC_ERROR] = VEER_INTR_PRIO_SHA512_ACC_ERROR; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA512_ACC_NOTIF] = VEER_INTR_PRIO_SHA512_ACC_NOTIF; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_MLDSA_ERROR     ] = VEER_INTR_PRIO_MLDSA_ERROR     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_MLDSA_NOTIF     ] = VEER_INTR_PRIO_MLDSA_NOTIF     ; __asm__ volatile ("fence");
     for (uint8_t undef = VEER_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
@@ -304,6 +309,12 @@ void init_interrupts(void) {
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                              SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+
+    // MLDSA
+    mldsa_reg[MLDSA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = MLDSA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK;
+    mldsa_reg[MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    mldsa_reg[MLDSA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = MLDSA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                       MLDSA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // Mailbox
     // Clear DEBUG locked, which is always set on reset deassertion due to rst_val != TB input val
@@ -703,7 +714,9 @@ static void nonstd_veer_isr_0 (void) {
      * service_soc_ifc_error_intr                                                                     \
      * service_soc_ifc_notif_intr                                                                     \
      * service_sha512_acc_error_intr                                                                  \
-     * service_sha512_acc_notif_intr                                                                  \
+     * service_sha512_acc_notif_intr
+     * service_mldsa_error_intr                                                                         \
+     * service_mldsa_notif_intr                                                                         \
      */                                                                                               \
     service_##name##_intr();                                                                          \
                                                                                                       \
@@ -774,4 +787,9 @@ nonstd_veer_isr(soc_ifc_notif)
 nonstd_veer_isr(sha512_acc_error)
 // Non-Standard Vectored Interrupt Handler (SHA Notification = vector 22)
 nonstd_veer_isr(sha512_acc_notif)
+// Non-Standard Vectored Interrupt Handler (SHA Error = vector 23)
+nonstd_veer_isr(mldsa_error)
+// Non-Standard Vectored Interrupt Handler (SHA Notification = vector 24)
+nonstd_veer_isr(mldsa_notif)
+
 

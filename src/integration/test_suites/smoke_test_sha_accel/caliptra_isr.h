@@ -57,6 +57,8 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
+    uint32_t mldsa_error;
+    uint32_t mldsa_notif;
 } caliptra_intr_received_s;
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
@@ -106,5 +108,7 @@ inline void service_sha512_acc_notif_intr() {
         sha_intr_status = *reg;
     }
 }
+inline void service_mldsa_error_intr() {printf("ERROR");}
+inline void service_mldsa_notif_intr() {printf("ERROR");}
 
 #endif //CALIPTRA_ISR_H

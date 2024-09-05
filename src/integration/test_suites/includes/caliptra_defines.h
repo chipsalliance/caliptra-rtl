@@ -79,6 +79,14 @@
 #define STATUS_READY_BIT          0x0
 #define STATUS_VALID_BIT          0x1
 
+/* ---- MLDSA ----*/
+#define MLDSA_CMD_KEYGEN       0x1
+#define MLDSA_CMD_SIGNING      0x2
+#define MLDSA_CMD_VERIFYING    0x3
+#define MLDSA_CMD_KEYGEN_SIGN  0x4
+// #define STATUS_READY_BIT          0x0
+// #define STATUS_VALID_BIT          0x1
+
 /* ---- Interrupts ---- */
 #define VEER_INTR_VEC_DOE_ERROR        1
 #define VEER_INTR_VEC_DOE_NOTIF        2
@@ -102,8 +110,10 @@
 #define VEER_INTR_VEC_SOC_IFC_NOTIF    20
 #define VEER_INTR_VEC_SHA512_ACC_ERROR 21
 #define VEER_INTR_VEC_SHA512_ACC_NOTIF 22
+#define VEER_INTR_VEC_MLDSA_ERROR      23
+#define VEER_INTR_VEC_MLDSA_NOTIF      24
 // Used to tie-off unused upper intr bits
-#define VEER_INTR_VEC_MAX_ASSIGNED VEER_INTR_VEC_SHA512_ACC_NOTIF
+#define VEER_INTR_VEC_MAX_ASSIGNED VEER_INTR_VEC_MLDSA_NOTIF
 
 #define VEER_INTR_PRIO_DOE_ERROR        8
 #define VEER_INTR_PRIO_DOE_NOTIF        7
@@ -127,6 +137,8 @@
 #define VEER_INTR_PRIO_I3C_NOTIF        3
 #define VEER_INTR_PRIO_SOC_IFC_ERROR    8
 #define VEER_INTR_PRIO_SOC_IFC_NOTIF    7
+#define VEER_INTR_PRIO_MLDSA_ERROR      8
+#define VEER_INTR_PRIO_MLDSA_NOTIF      7
 
 
 #endif // CALIPTRA_DEFINES_H

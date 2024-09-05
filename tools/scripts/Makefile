@@ -62,6 +62,7 @@ PRINTF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/printf
 COMP_LIB_NAMES := aes \
 		  doe \
 		  ecc \
+		  mldsa \
 		  hmac \
 		  keyvault \
 		  datavault \

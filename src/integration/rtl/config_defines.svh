@@ -18,7 +18,7 @@
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 
-  `define CALIPTRA_AHB_SLAVES_NUM      5'd17 // Number of slaves AHB
+  `define CALIPTRA_AHB_SLAVES_NUM      5'd18 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr
   `define CALIPTRA_AHB_HDATA_SIZE      64 // bit-width AHB data
@@ -30,9 +30,9 @@
   `define CALIPTRA_SOC_SEC_STATE_WIDTH 3
 
   // AHB Address Map
-  `define CALIPTRA_SLAVE_NAMES         {"ENTROPY_SRC", "CSRNG"      , "IMEM"       , "SHA256"     , "VEER_ICCM_DMA" , "VEER_DCCM_DMA"  , "SOC_IFC"    , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "DATAVAULT"  , "PCRVAULT"   , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL"   } /* Array of names for peripherals */
-  `define CALIPTRA_SLAVE_BASE_ADDR     {32'h2000_3000, 32'h2000_2000, 32'h0000_0000, 32'h1002_8000, 32'h4000_0000   , 32'h5000_0000    , 32'h3000_0000, 32'hFFFF_FFFF, 32'h2000_1000, 32'h2000_0000, 32'h1002_0000, 32'h1001_C000, 32'h1001_A000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
-  `define CALIPTRA_SLAVE_MASK_ADDR     {32'h2000_3FFF, 32'h2000_2FFF, 32'h0000_BFFF, 32'h1002_FFFF, 32'h4001_FFFF   , 32'h5001_FFFF    , 32'h3003_FFFF, 32'hFFFF_FFFF, 32'h2000_1FFF, 32'h2000_0FFF, 32'h1002_7FFF, 32'h1001_DFFF, 32'h1001_BFFF, 32'h1001_9FFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
+  `define CALIPTRA_SLAVE_NAMES         {"ENTROPY_SRC", "CSRNG"      , "IMEM"       , "SHA256"     , "VEER_ICCM_DMA" , "VEER_DCCM_DMA"  , "SOC_IFC"    , "I3C"        , "UART"       , "QSPI"       , "SHA512"     , "DATAVAULT"  , "PCRVAULT"   , "KEYVAULT"   , "HMAC"       , "ECC"        , "DOE_CTRL",    "MLDSA"   } /* Array of names for peripherals */
+  `define CALIPTRA_SLAVE_BASE_ADDR     { 32'h1003_0000, 32'h2000_3000, 32'h2000_2000, 32'h0000_0000, 32'h1002_8000, 32'h4000_0000   , 32'h5000_0000    , 32'h3000_0000, 32'hFFFF_FFFF, 32'h2000_1000, 32'h2000_0000, 32'h1002_0000, 32'h1001_C000, 32'h1001_A000, 32'h1001_8000, 32'h1001_0000, 32'h1000_8000, 32'h1000_0000} /* Array with slave base address */
+  `define CALIPTRA_SLAVE_MASK_ADDR     { 32'h1003_7FFF, 32'h2000_3FFF, 32'h2000_2FFF, 32'h0000_BFFF, 32'h1002_FFFF, 32'h4001_FFFF   , 32'h5001_FFFF    , 32'h3003_FFFF, 32'hFFFF_FFFF, 32'h2000_1FFF, 32'h2000_0FFF, 32'h1002_7FFF, 32'h1001_DFFF, 32'h1001_BFFF, 32'h1001_9FFF, 32'h1001_0FFF, 32'h1000_FFFF, 32'h1000_7FFF} /* Array with slave offset address */
   `define CALIPTRA_SLAVE_ADDR_MASK     (`CALIPTRA_SLAVE_BASE_ADDR ^ `CALIPTRA_SLAVE_MASK_ADDR) /* Array indicating meaningful address bits for each slave */
   `define CALIPTRA_SLAVE_ADDR_WIDTH(n) $clog2((`CALIPTRA_SLAVE_ADDR_MASK >> (`CALIPTRA_AHB_HADDR_SIZE*n)) & {`CALIPTRA_AHB_HADDR_SIZE{1'b1}}) /* Decode address width for each slave from assigned BASE/MASK address */
   `define CALIPTRA_SLAVE_SEL_DOE         0
@@ -52,6 +52,7 @@
   `define CALIPTRA_SLAVE_SEL_IMEM        14
   `define CALIPTRA_SLAVE_SEL_CSRNG       15
   `define CALIPTRA_SLAVE_SEL_ENTROPY_SRC 16
+  `define CALIPTRA_SLAVE_SEL_MLDSA    17
 
   // Interrupt Assignments
   // NOTE Vector 0 is reserved by VeeR
@@ -77,8 +78,10 @@
   `define VEER_INTR_VEC_SOC_IFC_NOTIF 20
   `define VEER_INTR_VEC_SHA_ERROR     21
   `define VEER_INTR_VEC_SHA_NOTIF     22
+  `define VEER_INTR_VEC_MLDSA_ERROR   23
+  `define VEER_INTR_VEC_MLDSA_NOTIF   24
   // Used to tie-off unused upper intr bits
-  `define VEER_INTR_VEC_MAX_ASSIGNED `VEER_INTR_VEC_SHA_NOTIF
+  `define VEER_INTR_VEC_MAX_ASSIGNED `VEER_INTR_VEC_MLDSA_NOTIF
 
   //`define CALIPTRA_KV_NUM_READ 6
   //`define CALIPTRA_KV_NUM_WRITE 4
