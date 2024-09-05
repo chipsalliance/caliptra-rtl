@@ -34,10 +34,10 @@ module ecc_top_tb
   string      ecc_test_vector_file; // Input test vector file
   string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test
 
-  localparam ECC_CMD_KEYGEN              = 3'b001;
-  localparam ECC_CMD_SIGNING             = 3'b010;
-  localparam ECC_CMD_VERIFYING           = 3'b011;
-  localparam ECC_CMD_DH_SHARED           = 3'b100;
+  localparam ECC_CMD_KEYGEN              = 2'b01;
+  localparam ECC_CMD_SIGNING             = 2'b10;
+  localparam ECC_CMD_VERIFYING           = 2'b11;
+  localparam ECC_CMD_DH_SHARED           = (1 << `ECC_REG_ECC_CTRL_DH_SHAREDKEY_LOW);
   
   parameter           R_WIDTH                   = 384;
   typedef bit         [R_WIDTH-1:0]             r_t;
@@ -449,7 +449,7 @@ module ecc_top_tb
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task trig_ECC(input [3 : 0] cmd);
+  task trig_ECC(input [31 : 0] cmd);
     begin
       write_single_word(`ECC_REG_ECC_CTRL, cmd);
       #(CLK_PERIOD);
