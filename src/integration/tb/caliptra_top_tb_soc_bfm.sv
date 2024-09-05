@@ -7,7 +7,9 @@
 module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
 import soc_ifc_pkg::*;
-import caliptra_top_tb_pkg::*; (
+import caliptra_top_tb_pkg::*; #(
+    parameter SKIP_BRINGUP = 0
+) (
     input logic core_clk,
     output logic                       cptra_pwrgood,
     output logic                       cptra_rst_b,
@@ -167,6 +169,8 @@ import caliptra_top_tb_pkg::*; (
                     // Repeat this flow after every warm reset
                     @(posedge cptra_rst_b)
                     $display("CLP: Observed cptra_rst_b deassertion\n");
+
+                    if (!SKIP_BRINGUP) begin: DO_BOOT_AND_CMD_FLOW
 
                     // Fuse download sequence
                     wait(ready_for_fuses == 1);
@@ -414,6 +418,10 @@ import caliptra_top_tb_pkg::*; (
                         end
                         @(posedge core_clk);
                     end
+                    end: DO_BOOT_AND_CMD_FLOW
+                    else begin: SKIP_BOOT_AND_CMD_FLOW
+                        forever @(posedge core_clk);
+                    end: SKIP_BOOT_AND_CMD_FLOW
                 end: BOOT_AND_CMD_FLOW
                 begin: CLK_GATE_FLOW
                     wait(cycleCnt_smpl_en);
