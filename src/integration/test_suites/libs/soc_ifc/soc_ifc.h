@@ -22,6 +22,13 @@
 #include "riscv_hw_if.h"
 
 /* --------------- symbols/typedefs --------------- */
+enum boot_fsm_state_e {
+    BOOT_IDLE   = 0x0,
+    BOOT_FUSE   = 0x1,
+    BOOT_FW_RST = 0x2,
+    BOOT_WAIT   = 0x3,
+    BOOT_DONE   = 0x4
+};
 enum mbox_status_e {
     CMD_BUSY      = 0,
     DATA_READY    = 1,
