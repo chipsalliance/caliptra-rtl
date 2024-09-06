@@ -158,13 +158,13 @@ void main() {
     uint8_t store_to_kv         = 0x1;
     uint8_t tag_kv_id           = 0x0;
 
-    hmac_io hmac_key;
+    hmac_io hmac384_key;
     hmac_io hmac_block;
     hmac_io hmac_lfsr_seed;
-    hmac_io hmac_tag;
+    hmac_io hmac384_tag;
 
-    hmac_key.kv_intf = TRUE;
-    hmac_key.kv_id = hmackey_kv_id;
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = hmackey_kv_id;
 
     hmac_block.kv_intf = FALSE;
     hmac_block.kv_id = hmacblock_kv_id;
@@ -177,18 +177,18 @@ void main() {
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = TRUE;
-    hmac_tag.kv_id = tag_kv_id;
-    hmac_tag.data_size = 12;
-    for (int i = 0; i < hmac_tag.data_size; i++)
-        hmac_tag.data[i] = expected_tag[i];
+    hmac384_tag.kv_intf = TRUE;
+    hmac384_tag.kv_id = tag_kv_id;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = expected_tag[i];
 
 
-    //inject hmac_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
+    //inject hmac384_key to kv key reg (in RTL)
+    uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
     
     printf("KV HMAC flow is completed.\n\n");
 
@@ -211,7 +211,7 @@ void main() {
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_11) {
         if (tag_zerokey_zeroblock[offset] != *reg_ptr) {
-            printf("At offset [%d], hmac_tag data mismatch!\n", offset);
+            printf("At offset [%d], hmac384_tag data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", *reg_ptr);
             printf("Expected data: 0x%x\n", tag_zerokey_zeroblock[offset]);
             printf("%c", 0x1); //fail_cmd
