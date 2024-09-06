@@ -111,9 +111,9 @@ void kv_doe(uint8_t doe_fe_dest_id){
 //******************************************************************
 // HMAC(OBF_KEY , FE)
 //****************************************************************** 
-void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
+void kv_hmac384(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     
-    hmac_io hmac_key;
+    hmac_io hmac384_key;
     hmac_io hmac_block;
     hmac_io hmac_lfsr_seed;
     hmac_io hmac_tag;
@@ -126,9 +126,9 @@ void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     uint32_t lfsr_seed_data[]={0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,0x3C9E16FB,0x800AF504,0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,0x3C9E16FB,0x800AF504,0xC8F518D4,0xF3AA1BD4}; //this is a random lfsr_seed
     uint32_t expected_tag[] = {0xaf2799d0,0x1f135a1e,0xf963dfd0,0x59f99604,0xb0e33be1,0xca38e70c,0x9b2c1073,0x1f17173a,0xd8f2681c,0xa64aeac5,0xf5a4b368,0x457460dc};
 
-    hmac_key.kv_intf = TRUE;
-    hmac_key.kv_id = key_id; // UDS from DOE
-    VPRINTF(LOW,"hmac key kv id = %x\n", hmac_key.kv_id);
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = key_id; // UDS from DOE
+    VPRINTF(LOW,"hmac key kv id = %x\n", hmac384_key.kv_id);
 
     hmac_block.kv_intf = TRUE;
     hmac_block.kv_id = block_id;  // FE from DOE
@@ -147,11 +147,11 @@ void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac_tag.kv_id);
     */
 
-    //inject hmac_key to kv key reg (in RTL)
-    //uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x1f);
+    //inject hmac384_key to kv key reg (in RTL)
+    //uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x1f);
     //printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     //printf("%c", 0x1);
 }
 
@@ -308,7 +308,7 @@ void main(){
 
         kv_doe(doe_fe_dest_id);
 
-        kv_hmac(0, doe_fe_dest_id, uds_key_id);
+        kv_hmac384(0, doe_fe_dest_id, uds_key_id);
 
         kv_ecc(uds_key_id, idevid_privkey_id);
 
