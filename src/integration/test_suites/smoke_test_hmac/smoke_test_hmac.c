@@ -161,7 +161,7 @@ void main() {
         hmac_tag.data[i] = expected_tag[i];
 
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.

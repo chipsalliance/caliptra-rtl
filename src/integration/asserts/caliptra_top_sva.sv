@@ -362,7 +362,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_KEY_NUM_DWORDS; dword++) begin
         hmac_key_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_KEY[dword].KEY.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC512_KEY[dword].KEY.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 key zeroize mismatch!");
     end
@@ -370,7 +370,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_BLOCK_NUM_DWORDS; dword++) begin
         hmac_block_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_BLOCK[dword].BLOCK.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC512_BLOCK[dword].BLOCK.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 block zeroize mismatch!");
     end
@@ -378,7 +378,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_TAG_NUM_DWORDS; dword++) begin
         hmac_tag_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.field_storage.HMAC384_TAG[dword].TAG.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.field_storage.HMAC512_TAG[dword].TAG.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 tag zeroize mismatch!");                      
     end

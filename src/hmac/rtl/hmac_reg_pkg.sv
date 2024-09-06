@@ -8,63 +8,63 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
-    } hmac_reg__HMAC384_NAME__NAME__in_t;
+    } hmac_reg__HMAC512_NAME__NAME__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_NAME__NAME__in_t NAME;
-    } hmac_reg__HMAC384_NAME__in_t;
+        hmac_reg__HMAC512_NAME__NAME__in_t NAME;
+    } hmac_reg__HMAC512_NAME__in_t;
 
     typedef struct packed{
         logic [31:0] next;
-    } hmac_reg__HMAC384_VERSION__VERSION__in_t;
+    } hmac_reg__HMAC512_VERSION__VERSION__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_VERSION__VERSION__in_t VERSION;
-    } hmac_reg__HMAC384_VERSION__in_t;
-
-    typedef struct packed{
-        logic next;
-    } hmac_reg__HMAC384_STATUS__READY__in_t;
+        hmac_reg__HMAC512_VERSION__VERSION__in_t VERSION;
+    } hmac_reg__HMAC512_VERSION__in_t;
 
     typedef struct packed{
         logic next;
-    } hmac_reg__HMAC384_STATUS__VALID__in_t;
+    } hmac_reg__HMAC512_STATUS__READY__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_STATUS__READY__in_t READY;
-        hmac_reg__HMAC384_STATUS__VALID__in_t VALID;
-    } hmac_reg__HMAC384_STATUS__in_t;
+        logic next;
+    } hmac_reg__HMAC512_STATUS__VALID__in_t;
+
+    typedef struct packed{
+        hmac_reg__HMAC512_STATUS__READY__in_t READY;
+        hmac_reg__HMAC512_STATUS__VALID__in_t VALID;
+    } hmac_reg__HMAC512_STATUS__in_t;
 
     typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
         logic hwclr;
-    } hmac_reg__HMAC384_KEY__KEY__in_t;
+    } hmac_reg__HMAC512_KEY__KEY__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_KEY__KEY__in_t KEY;
-    } hmac_reg__HMAC384_KEY__in_t;
+        hmac_reg__HMAC512_KEY__KEY__in_t KEY;
+    } hmac_reg__HMAC512_KEY__in_t;
 
     typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
         logic hwclr;
-    } hmac_reg__HMAC384_BLOCK__BLOCK__in_t;
+    } hmac_reg__HMAC512_BLOCK__BLOCK__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_BLOCK__BLOCK__in_t BLOCK;
-    } hmac_reg__HMAC384_BLOCK__in_t;
+        hmac_reg__HMAC512_BLOCK__BLOCK__in_t BLOCK;
+    } hmac_reg__HMAC512_BLOCK__in_t;
 
     typedef struct packed{
         logic [31:0] next;
         logic hwclr;
-    } hmac_reg__HMAC384_TAG__TAG__in_t;
+    } hmac_reg__HMAC512_TAG__TAG__in_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_TAG__TAG__in_t TAG;
-    } hmac_reg__HMAC384_TAG__in_t;
+        hmac_reg__HMAC512_TAG__TAG__in_t TAG;
+    } hmac_reg__HMAC512_TAG__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -140,62 +140,72 @@ package hmac_reg_pkg;
     typedef struct packed{
         logic reset_b;
         logic error_reset_b;
-        hmac_reg__HMAC384_NAME__in_t [2-1:0]HMAC384_NAME;
-        hmac_reg__HMAC384_VERSION__in_t [2-1:0]HMAC384_VERSION;
-        hmac_reg__HMAC384_STATUS__in_t HMAC384_STATUS;
-        hmac_reg__HMAC384_KEY__in_t [12-1:0]HMAC384_KEY;
-        hmac_reg__HMAC384_BLOCK__in_t [32-1:0]HMAC384_BLOCK;
-        hmac_reg__HMAC384_TAG__in_t [12-1:0]HMAC384_TAG;
-        kv_read_ctrl_reg__in_t HMAC384_KV_RD_KEY_CTRL;
-        kv_status_reg__in_t HMAC384_KV_RD_KEY_STATUS;
-        kv_read_ctrl_reg__in_t HMAC384_KV_RD_BLOCK_CTRL;
-        kv_status_reg__in_t HMAC384_KV_RD_BLOCK_STATUS;
-        kv_write_ctrl_reg__in_t HMAC384_KV_WR_CTRL;
-        kv_status_reg__in_t HMAC384_KV_WR_STATUS;
+        hmac_reg__HMAC512_NAME__in_t [2-1:0]HMAC512_NAME;
+        hmac_reg__HMAC512_VERSION__in_t [2-1:0]HMAC512_VERSION;
+        hmac_reg__HMAC512_STATUS__in_t HMAC512_STATUS;
+        hmac_reg__HMAC512_KEY__in_t [16-1:0]HMAC512_KEY;
+        hmac_reg__HMAC512_BLOCK__in_t [32-1:0]HMAC512_BLOCK;
+        hmac_reg__HMAC512_TAG__in_t [16-1:0]HMAC512_TAG;
+        kv_read_ctrl_reg__in_t HMAC512_KV_RD_KEY_CTRL;
+        kv_status_reg__in_t HMAC512_KV_RD_KEY_STATUS;
+        kv_read_ctrl_reg__in_t HMAC512_KV_RD_BLOCK_CTRL;
+        kv_status_reg__in_t HMAC512_KV_RD_BLOCK_STATUS;
+        kv_write_ctrl_reg__in_t HMAC512_KV_WR_CTRL;
+        kv_status_reg__in_t HMAC512_KV_WR_STATUS;
         hmac_reg__intr_block_t__in_t intr_block_rf;
     } hmac_reg__in_t;
 
     typedef struct packed{
         logic value;
-    } hmac_reg__HMAC384_CTRL__INIT__out_t;
+    } hmac_reg__HMAC512_CTRL__INIT__out_t;
 
     typedef struct packed{
         logic value;
-    } hmac_reg__HMAC384_CTRL__NEXT__out_t;
+    } hmac_reg__HMAC512_CTRL__NEXT__out_t;
 
     typedef struct packed{
         logic value;
-    } hmac_reg__HMAC384_CTRL__ZEROIZE__out_t;
+    } hmac_reg__HMAC512_CTRL__ZEROIZE__out_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_CTRL__INIT__out_t INIT;
-        hmac_reg__HMAC384_CTRL__NEXT__out_t NEXT;
-        hmac_reg__HMAC384_CTRL__ZEROIZE__out_t ZEROIZE;
-    } hmac_reg__HMAC384_CTRL__out_t;
+        logic value;
+    } hmac_reg__HMAC512_CTRL__MODE__out_t;
 
     typedef struct packed{
-        logic [31:0] value;
-    } hmac_reg__HMAC384_KEY__KEY__out_t;
+        logic value;
+    } hmac_reg__HMAC512_CTRL__Reserved__out_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_KEY__KEY__out_t KEY;
-    } hmac_reg__HMAC384_KEY__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } hmac_reg__HMAC384_BLOCK__BLOCK__out_t;
-
-    typedef struct packed{
-        hmac_reg__HMAC384_BLOCK__BLOCK__out_t BLOCK;
-    } hmac_reg__HMAC384_BLOCK__out_t;
+        hmac_reg__HMAC512_CTRL__INIT__out_t INIT;
+        hmac_reg__HMAC512_CTRL__NEXT__out_t NEXT;
+        hmac_reg__HMAC512_CTRL__ZEROIZE__out_t ZEROIZE;
+        hmac_reg__HMAC512_CTRL__MODE__out_t MODE;
+        hmac_reg__HMAC512_CTRL__Reserved__out_t Reserved;
+    } hmac_reg__HMAC512_CTRL__out_t;
 
     typedef struct packed{
         logic [31:0] value;
-    } hmac_reg__HMAC384_LFSR_SEED__LFSR_SEED__out_t;
+    } hmac_reg__HMAC512_KEY__KEY__out_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_LFSR_SEED__LFSR_SEED__out_t LFSR_SEED;
-    } hmac_reg__HMAC384_LFSR_SEED__out_t;
+        hmac_reg__HMAC512_KEY__KEY__out_t KEY;
+    } hmac_reg__HMAC512_KEY__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } hmac_reg__HMAC512_BLOCK__BLOCK__out_t;
+
+    typedef struct packed{
+        hmac_reg__HMAC512_BLOCK__BLOCK__out_t BLOCK;
+    } hmac_reg__HMAC512_BLOCK__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } hmac_reg__HMAC512_LFSR_SEED__LFSR_SEED__out_t;
+
+    typedef struct packed{
+        hmac_reg__HMAC512_LFSR_SEED__LFSR_SEED__out_t LFSR_SEED;
+    } hmac_reg__HMAC512_LFSR_SEED__out_t;
 
     typedef struct packed{
         logic value;
@@ -287,13 +297,13 @@ package hmac_reg_pkg;
     } hmac_reg__intr_block_t__out_t;
 
     typedef struct packed{
-        hmac_reg__HMAC384_CTRL__out_t HMAC384_CTRL;
-        hmac_reg__HMAC384_KEY__out_t [12-1:0]HMAC384_KEY;
-        hmac_reg__HMAC384_BLOCK__out_t [32-1:0]HMAC384_BLOCK;
-        hmac_reg__HMAC384_LFSR_SEED__out_t [12-1:0]HMAC384_LFSR_SEED;
-        kv_read_ctrl_reg__out_t HMAC384_KV_RD_KEY_CTRL;
-        kv_read_ctrl_reg__out_t HMAC384_KV_RD_BLOCK_CTRL;
-        kv_write_ctrl_reg__out_t HMAC384_KV_WR_CTRL;
+        hmac_reg__HMAC512_CTRL__out_t HMAC512_CTRL;
+        hmac_reg__HMAC512_KEY__out_t [16-1:0]HMAC512_KEY;
+        hmac_reg__HMAC512_BLOCK__out_t [32-1:0]HMAC512_BLOCK;
+        hmac_reg__HMAC512_LFSR_SEED__out_t [12-1:0]HMAC512_LFSR_SEED;
+        kv_read_ctrl_reg__out_t HMAC512_KV_RD_KEY_CTRL;
+        kv_read_ctrl_reg__out_t HMAC512_KV_RD_BLOCK_CTRL;
+        kv_write_ctrl_reg__out_t HMAC512_KV_WR_CTRL;
         hmac_reg__intr_block_t__out_t intr_block_rf;
     } hmac_reg__out_t;
 
