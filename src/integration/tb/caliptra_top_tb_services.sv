@@ -678,10 +678,10 @@ endgenerate //IV_NO
     always@(negedge clk) begin
         if (inject_zeroize_to_hmac) begin
             if (inject_zeroize_to_hmac_cnt == 4'h5) begin
-                force caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC384_CTRL.ZEROIZE.value = 1'b1;
+                force caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value = 1'b1;
             end
             else begin
-                release caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC384_CTRL.ZEROIZE.value;
+                release caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value;
             end
         end
     end
