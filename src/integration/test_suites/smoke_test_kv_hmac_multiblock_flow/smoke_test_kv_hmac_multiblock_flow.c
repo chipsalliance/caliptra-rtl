@@ -203,11 +203,11 @@ void main() {
     uint8_t store_to_kv         = 0x1;
     uint8_t tag_kv_id           = 0x0;
 
-    hmac_io hmac_key;
+    hmac_io hmac384_key;
     hmac_io hmac_block1;
     hmac_io hmac_block2;
     hmac_io hmac_lfsr_seed;
-    hmac_io hmac_tag;
+    hmac_io hmac384_tag;
 
     uint8_t privkey_kv_id = 0x0;
 
@@ -217,8 +217,8 @@ void main() {
     ecc_io sign_r;
     ecc_io sign_s;
 
-    hmac_key.kv_intf = TRUE;
-    hmac_key.kv_id = hmackey_kv_id;
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = hmackey_kv_id;
 
     hmac_block1.kv_intf = FALSE;
     hmac_block1.kv_id = hmacblock_kv_id;
@@ -237,11 +237,11 @@ void main() {
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = TRUE;
-    hmac_tag.kv_id = tag_kv_id;
-    hmac_tag.data_size = 12;
-    for (int i = 0; i < hmac_tag.data_size; i++)
-        hmac_tag.data[i] = expected_tag[i];
+    hmac384_tag.kv_intf = TRUE;
+    hmac384_tag.kv_id = tag_kv_id;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = expected_tag[i];
 
     
     iv.kv_intf = FALSE;
@@ -263,12 +263,12 @@ void main() {
     for (int i = 0; i < 12; i++)
         sign_s.data[i] = expected_sign_s[i];
 
-    //inject hmac_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
+    //inject hmac384_key to kv key reg (in RTL)
+    uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block1, hmac_lfsr_seed, hmac_tag, TRUE);
-    hmac_flow(hmac_key, hmac_block2, hmac_lfsr_seed, hmac_tag, FALSE);
+    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
     hmac_zeroize();
 
     //sign with the generated key
