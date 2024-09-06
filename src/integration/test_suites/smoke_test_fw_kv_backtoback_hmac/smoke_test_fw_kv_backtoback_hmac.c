@@ -126,7 +126,7 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4}; 
 
-    uint32_t expected_tag[12] =   {0xb6a8d563,
+    uint32_t expected384_tag[12] =   {0xb6a8d563,
                                     0x6f5c6a72,
                                     0x24f9977d,
                                     0xcf7ee6c7,
@@ -139,7 +139,7 @@ void main() {
                                     0xfb68dab9,
                                     0xf1b582c2}; 
 
-    uint32_t tag_zerokey_zeroblock[12] =   
+    uint32_t tag384_zerokey_zeroblock[12] =   
                                    {0x6E120BA2,
                                     0x27BF3557,
                                     0x676B0256,
@@ -181,7 +181,7 @@ void main() {
     hmac384_tag.kv_id = tag_kv_id;
     hmac384_tag.data_size = 12;
     for (int i = 0; i < hmac384_tag.data_size; i++)
-        hmac384_tag.data[i] = expected_tag[i];
+        hmac384_tag.data[i] = expected384_tag[i];
 
 
     //inject hmac384_key to kv key reg (in RTL)
@@ -201,19 +201,20 @@ void main() {
     */
     printf("Start FW HMAC\n");
     // Enable HMAC core with next command to avoid changing the key
-    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_NEXT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                            (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
     printf("Load TAG from FW HMAC\n");
-    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC384_TAG_0;
+    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_11) {
-        if (tag_zerokey_zeroblock[offset] != *reg_ptr) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
+        if (tag384_zerokey_zeroblock[offset] != *reg_ptr) {
             printf("At offset [%d], hmac384_tag data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", tag_zerokey_zeroblock[offset]);
+            printf("Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
             printf("%c", 0x1); //fail_cmd
             while(1);
         }
