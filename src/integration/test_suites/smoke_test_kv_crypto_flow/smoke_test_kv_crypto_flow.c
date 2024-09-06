@@ -312,7 +312,7 @@ void main(){
 
         kv_ecc(uds_key_id, idevid_privkey_id);
 
-        kv_hmac(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
+        kv_hmac384(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
 
         //issue zeroize
         ecc_zeroize();
