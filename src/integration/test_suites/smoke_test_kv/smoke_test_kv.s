@@ -96,40 +96,40 @@ _start:
     li x5, 0xa1
     sb x5, 0(x3)
 
-    // Program CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL
     // Read key from KEY 1
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL
     li x4, 0x00000003
     sw x4, 0(x3)
 
-    // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL
     // Read block from Key 7
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL
     li x4, 0x00000001
     sw x4, 0(x3)
 
-    // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_WR_CTRL
     // Write to key 0 with all dest valid
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_WR_CTRL
     li x4, 0x00000fc1
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
-    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK
     block_done_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, block_done_poll_loop
 
-    // Enable HMAC core
-    li x3, CLP_HMAC_REG_HMAC384_CTRL
-    li x4, HMAC_REG_HMAC384_CTRL_INIT_MASK
+    // Enable HMAC core in HMAC384 mode
+    li x3, CLP_HMAC_REG_HMAC512_CTRL
+    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
-    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
+    li x3, CLP_HMAC_REG_HMAC512_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK
     dest_done_loop:
         lw x5, 0(x3)
         and x5, x5, x1
@@ -141,48 +141,48 @@ _start:
     //CDI LDEVID
     //-------
 
-    // Program CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL
     // Read Key from key slot 0
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL
     li x4, 0x00000001
     sw x4, 0(x3)
 
-    // Program CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL
     // Read block from Key slot 7
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL
     li x4, 0x0000000f
     sw x4, 0(x3)
 
-    // Program CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    // Program CLP_HMAC_REG_HMAC512_KV_WR_CTRL
     // Write result to entry 11, all dest valid
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_CTRL
+    li x3, CLP_HMAC_REG_HMAC512_KV_WR_CTRL
     li x4, 0x00000fd7
     sw x4, 0(x3)
 
     // Check that HMAC KEY and BLOCK are loaded
-    li x3, CLP_HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS
-    li x1, HMAC_REG_HMAC384_KV_RD_BLOCK_STATUS_VALID_MASK
+    li x3, CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS
+    li x1, HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK
     block_done2_poll_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, block_done2_poll_loop
 
-    // Enable HMAC core
-    li x3, CLP_HMAC_REG_HMAC384_CTRL
-    li x4, HMAC_REG_HMAC384_CTRL_INIT_MASK
+    // Enable HMAC core in HMAC384 mode
+    li x3, CLP_HMAC_REG_HMAC512_CTRL
+    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process
-    li x3, CLP_HMAC_REG_HMAC384_STATUS
-    li x1, HMAC_REG_HMAC384_STATUS_VALID_MASK
+    li x3, CLP_HMAC_REG_HMAC512_STATUS
+    li x1, HMAC_REG_HMAC512_STATUS_VALID_MASK
     ready_loop:
         lw x5, 0(x3)
         and x5, x5, x1
         bne x5, x1, ready_loop
 
     // wait for HMAC process - check dest done
-    li x3, CLP_HMAC_REG_HMAC384_KV_WR_STATUS
-    li x1, HMAC_REG_HMAC384_KV_WR_STATUS_VALID_MASK
+    li x3, CLP_HMAC_REG_HMAC512_KV_WR_STATUS
+    li x1, HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK
     dest_done2_loop:
         lw x5, 0(x3)
         and x5, x5, x1
