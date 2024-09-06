@@ -22,6 +22,8 @@
 // 
 //======================================================================
 
+`include "caliptra_reg_defines.svh"
+
 module hmac_ctrl_tb();
 
   //----------------------------------------------------------------
@@ -32,84 +34,13 @@ module hmac_ctrl_tb();
   parameter CLK_HALF_PERIOD = 2;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
-  // The address map.
-  parameter BASE_ADDR        = 32'h10010000;
+  parameter CTRL_INIT_VALUE  = `HMAC_REG_HMAC512_CTRL_INIT_MASK;
+  parameter CTRL_NEXT_VALUE  = `HMAC_REG_HMAC512_CTRL_NEXT_MASK;
+  
+  parameter HMAC512_MODE     = (1'b1 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
+  parameter HMAC384_MODE     = (1'b0 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
 
-  parameter ADDR_NAME        = BASE_ADDR + 32'h00000000;
-  parameter ADDR_VERSION     = BASE_ADDR + 32'h00000008;
-
-  parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  parameter CTRL_INIT_VALUE  = 2'h1;
-  parameter CTRL_NEXT_VALUE  = 2'h2;
-
-  parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
-  parameter STATUS_READY_BIT = 0;
-  parameter STATUS_VALID_BIT = 1;
-
-  parameter ADDR_KEY0        = BASE_ADDR + 32'h00000040;
-  parameter ADDR_KEY1        = BASE_ADDR + 32'h00000044;
-  parameter ADDR_KEY2        = BASE_ADDR + 32'h00000048;
-  parameter ADDR_KEY3        = BASE_ADDR + 32'h0000004C;
-  parameter ADDR_KEY4        = BASE_ADDR + 32'h00000050;
-  parameter ADDR_KEY5        = BASE_ADDR + 32'h00000054;
-  parameter ADDR_KEY6        = BASE_ADDR + 32'h00000058;
-  parameter ADDR_KEY7        = BASE_ADDR + 32'h0000005C;
-  parameter ADDR_KEY8        = BASE_ADDR + 32'h00000060;
-  parameter ADDR_KEY9        = BASE_ADDR + 32'h00000064;
-  parameter ADDR_KEY10       = BASE_ADDR + 32'h00000068;
-  parameter ADDR_KEY11       = BASE_ADDR + 32'h0000006C;
-
-  parameter ADDR_BLOCK0      = BASE_ADDR + 32'h00000080;
-  parameter ADDR_BLOCK1      = BASE_ADDR + 32'h00000084;
-  parameter ADDR_BLOCK2      = BASE_ADDR + 32'h00000088;
-  parameter ADDR_BLOCK3      = BASE_ADDR + 32'h0000008C;
-  parameter ADDR_BLOCK4      = BASE_ADDR + 32'h00000090;
-  parameter ADDR_BLOCK5      = BASE_ADDR + 32'h00000094;
-  parameter ADDR_BLOCK6      = BASE_ADDR + 32'h00000098;
-  parameter ADDR_BLOCK7      = BASE_ADDR + 32'h0000009C;
-  parameter ADDR_BLOCK8      = BASE_ADDR + 32'h000000a0;
-  parameter ADDR_BLOCK9      = BASE_ADDR + 32'h000000a4;
-  parameter ADDR_BLOCK10     = BASE_ADDR + 32'h000000a8;
-  parameter ADDR_BLOCK11     = BASE_ADDR + 32'h000000aC;
-  parameter ADDR_BLOCK12     = BASE_ADDR + 32'h000000b0;
-  parameter ADDR_BLOCK13     = BASE_ADDR + 32'h000000b4;
-  parameter ADDR_BLOCK14     = BASE_ADDR + 32'h000000b8;
-  parameter ADDR_BLOCK15     = BASE_ADDR + 32'h000000bC;
-  parameter ADDR_BLOCK16     = BASE_ADDR + 32'h000000c0;
-  parameter ADDR_BLOCK17     = BASE_ADDR + 32'h000000c4;
-  parameter ADDR_BLOCK18     = BASE_ADDR + 32'h000000c8;
-  parameter ADDR_BLOCK19     = BASE_ADDR + 32'h000000cC;
-  parameter ADDR_BLOCK20     = BASE_ADDR + 32'h000000d0;
-  parameter ADDR_BLOCK21     = BASE_ADDR + 32'h000000d4;
-  parameter ADDR_BLOCK22     = BASE_ADDR + 32'h000000d8;
-  parameter ADDR_BLOCK23     = BASE_ADDR + 32'h000000dC;
-  parameter ADDR_BLOCK24     = BASE_ADDR + 32'h000000e0;
-  parameter ADDR_BLOCK25     = BASE_ADDR + 32'h000000e4;
-  parameter ADDR_BLOCK26     = BASE_ADDR + 32'h000000e8;
-  parameter ADDR_BLOCK27     = BASE_ADDR + 32'h000000eC;
-  parameter ADDR_BLOCK28     = BASE_ADDR + 32'h000000f0;
-  parameter ADDR_BLOCK29     = BASE_ADDR + 32'h000000f4;
-  parameter ADDR_BLOCK30     = BASE_ADDR + 32'h000000f8;
-  parameter ADDR_BLOCK31     = BASE_ADDR + 32'h000000fC;
-
-  parameter ADDR_TAG0        =  BASE_ADDR + 32'h00000100;
-  parameter ADDR_TAG1        =  BASE_ADDR + 32'h00000104;
-  parameter ADDR_TAG2        =  BASE_ADDR + 32'h00000108;
-  parameter ADDR_TAG3        =  BASE_ADDR + 32'h0000010C;
-  parameter ADDR_TAG4        =  BASE_ADDR + 32'h00000110;
-  parameter ADDR_TAG5        =  BASE_ADDR + 32'h00000114;
-  parameter ADDR_TAG6        =  BASE_ADDR + 32'h00000118;
-  parameter ADDR_TAG7        =  BASE_ADDR + 32'h0000011C;
-  parameter ADDR_TAG8        =  BASE_ADDR + 32'h00000120;
-  parameter ADDR_TAG9        =  BASE_ADDR + 32'h00000124;
-  parameter ADDR_TAG10       =  BASE_ADDR + 32'h00000128;
-  parameter ADDR_TAG11       =  BASE_ADDR + 32'h0000012C;
-
-  parameter ADDR_LFSR_SEED0  =  BASE_ADDR + 32'h00000130;
-  parameter ADDR_LFSR_SEED1  =  BASE_ADDR + 32'h00000134;
-  parameter ADDR_LFSR_SEED2  =  BASE_ADDR + 32'h00000138;
-  parameter ADDR_LFSR_SEED3  =  BASE_ADDR + 32'h0000013C;
-  parameter ADDR_LFSR_SEED4  =  BASE_ADDR + 32'h00000140;
+  parameter CTRL_ZEROIZE  = `HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -143,7 +74,7 @@ module hmac_ctrl_tb();
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
   reg [63 : 0]  read_data;
-  reg [383 : 0] digest_data;
+  reg [511 : 0] digest_data;
 
   //bind coverage file
   hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
@@ -211,8 +142,9 @@ module hmac_ctrl_tb();
   //
   // 
   //----------------------------------------------------------------
-  function logic [159 : 0] random_gen();
-    return { $random, $random, $random, $random, $random};
+  function logic [383 : 0] random_gen();
+    return { $random, $random, $random, $random, $random, $random,
+             $random, $random, $random, $random, $random, $random};
   endfunction
 
   //----------------------------------------------------------------
@@ -301,7 +233,7 @@ module hmac_ctrl_tb();
 
       while (read_data == 0)
         begin
-          read_single_word(ADDR_STATUS);
+          read_single_word(`HMAC_REG_HMAC512_STATUS);
         end
     end
   endtask // wait_ready
@@ -338,77 +270,88 @@ module hmac_ctrl_tb();
   //----------------------------------------------------------------
   task write_block(input [1023 : 0] block);
     begin
-      write_single_word(ADDR_BLOCK0, block[1023: 992]);
-      write_single_word(ADDR_BLOCK1,  block[991: 960]);
-      write_single_word(ADDR_BLOCK2,  block[959: 928]);
-      write_single_word(ADDR_BLOCK3,  block[927: 896]);
-      write_single_word(ADDR_BLOCK4,  block[895: 864]);
-      write_single_word(ADDR_BLOCK5,  block[863: 832]);
-      write_single_word(ADDR_BLOCK6,  block[831: 800]);
-      write_single_word(ADDR_BLOCK7,  block[799: 768]);
-      write_single_word(ADDR_BLOCK8,  block[767: 736]);
-      write_single_word(ADDR_BLOCK9,  block[735: 704]);
-      write_single_word(ADDR_BLOCK10, block[703: 672]);
-      write_single_word(ADDR_BLOCK11, block[671: 640]);
-      write_single_word(ADDR_BLOCK12, block[639: 608]);
-      write_single_word(ADDR_BLOCK13, block[607: 576]);
-      write_single_word(ADDR_BLOCK14, block[575: 544]);
-      write_single_word(ADDR_BLOCK15, block[543: 512]);
-      write_single_word(ADDR_BLOCK16, block[511: 480]);
-      write_single_word(ADDR_BLOCK17, block[479: 448]);
-      write_single_word(ADDR_BLOCK18, block[447: 416]);
-      write_single_word(ADDR_BLOCK19, block[415: 384]);
-      write_single_word(ADDR_BLOCK20, block[383: 352]);
-      write_single_word(ADDR_BLOCK21, block[351: 320]);
-      write_single_word(ADDR_BLOCK22, block[319: 288]);
-      write_single_word(ADDR_BLOCK23, block[287: 256]);
-      write_single_word(ADDR_BLOCK24, block[255: 224]);
-      write_single_word(ADDR_BLOCK25, block[223: 192]);
-      write_single_word(ADDR_BLOCK26, block[191: 160]);
-      write_single_word(ADDR_BLOCK27, block[159: 128]);
-      write_single_word(ADDR_BLOCK28, block[127: 96 ]);
-      write_single_word(ADDR_BLOCK29, block[95 : 64 ]);
-      write_single_word(ADDR_BLOCK30, block[63 : 32 ]);
-      write_single_word(ADDR_BLOCK31, block[31 : 0  ]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_0, block[1023: 992]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_1,  block[991: 960]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_2,  block[959: 928]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_3,  block[927: 896]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_4,  block[895: 864]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_5,  block[863: 832]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_6,  block[831: 800]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_7,  block[799: 768]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_8,  block[767: 736]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_9,  block[735: 704]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_10, block[703: 672]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_11, block[671: 640]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_12, block[639: 608]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_13, block[607: 576]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_14, block[575: 544]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_15, block[543: 512]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_16, block[511: 480]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_17, block[479: 448]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_18, block[447: 416]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_19, block[415: 384]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_20, block[383: 352]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_21, block[351: 320]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_22, block[319: 288]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_23, block[287: 256]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_24, block[255: 224]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_25, block[223: 192]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_26, block[191: 160]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_27, block[159: 128]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_28, block[127: 96 ]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_29, block[95 : 64 ]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_30, block[63 : 32 ]);
+      write_single_word(`HMAC_REG_HMAC512_BLOCK_31, block[31 : 0  ]);
       
     end
   endtask // write_block
 
 
   //----------------------------------------------------------------
-  // write_key()
+  // hmac_write_key()
   //
   // Write the given key to the dut.
   //----------------------------------------------------------------
-  task write_key(input [383 : 0] key);
+  task hmac_write_key(input [511 : 0] key);
     begin
-      write_single_word(ADDR_KEY0,  key[383: 352]);
-      write_single_word(ADDR_KEY1,  key[351: 320]);
-      write_single_word(ADDR_KEY2,  key[319: 288]);
-      write_single_word(ADDR_KEY3,  key[287: 256]);
-      write_single_word(ADDR_KEY4,  key[255: 224]);
-      write_single_word(ADDR_KEY5,  key[223: 192]);
-      write_single_word(ADDR_KEY6,  key[191: 160]);
-      write_single_word(ADDR_KEY7,  key[159: 128]);
-      write_single_word(ADDR_KEY8,  key[127: 96 ]);
-      write_single_word(ADDR_KEY9,  key[95 : 64 ]);
-      write_single_word(ADDR_KEY10, key[63 : 32 ]);
-      write_single_word(ADDR_KEY11, key[31 : 0  ]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_0,  key[511: 480]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_1,  key[479: 448]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_2,  key[447: 416]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_3,  key[415: 384]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_4,  key[383: 352]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_5,  key[351: 320]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_6,  key[319: 288]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_7,  key[287: 256]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_8,  key[255: 224]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_9,  key[223: 192]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_10, key[191: 160]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_11, key[159: 128]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_12, key[127: 96 ]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_13, key[95 : 64 ]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_14, key[63 : 32 ]);
+      write_single_word(`HMAC_REG_HMAC512_KEY_15, key[31 : 0  ]);
     end
-  endtask // write_key
+  endtask // hmac384_write_key
 
   //----------------------------------------------------------------
   // write_seed()
   //
   // Write the given seed to the dut.
   //----------------------------------------------------------------
-  task write_seed(input [159 : 0] seed);
+  task write_seed(input [383 : 0] seed);
     begin
-      write_single_word(ADDR_LFSR_SEED0, seed[159: 128]);
-      write_single_word(ADDR_LFSR_SEED1, seed[127: 96 ]);
-      write_single_word(ADDR_LFSR_SEED2, seed[95 : 64 ]);
-      write_single_word(ADDR_LFSR_SEED3, seed[63 : 32 ]);
-      write_single_word(ADDR_LFSR_SEED4, seed[31 : 0  ]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_0,  seed[383: 352]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_1,  seed[351: 320]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_2,  seed[319: 288]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_3,  seed[287: 256]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_4,  seed[255: 224]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_5,  seed[223: 192]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_6,  seed[191: 160]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_7,  seed[159: 128]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_8,  seed[127: 96 ]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_9,  seed[95 : 64 ]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_10, seed[63 : 32 ]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_11, seed[31 : 0  ]);
     end
   endtask // write_seed
 
@@ -447,9 +390,9 @@ module hmac_ctrl_tb();
     reg [63 : 0] version;
     begin
 
-      read_single_word(ADDR_NAME);
+      read_single_word(`HMAC_REG_HMAC512_NAME_0);
       name = read_data;
-      read_single_word(ADDR_VERSION);
+      read_single_word(`HMAC_REG_HMAC512_VERSION_0);
       version = read_data;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
@@ -467,86 +410,84 @@ module hmac_ctrl_tb();
 
 
   //----------------------------------------------------------------
-  // read_digest()
+  // hmac_read_digest()
   //
   // Read the digest in the dut. The resulting digest will be
   // available in the global variable digest_data.
   //----------------------------------------------------------------
-  task read_digest;
+  task hmac_read_digest;
     begin
-      read_single_word(ADDR_TAG0);
+      read_single_word(`HMAC_REG_HMAC512_TAG_0);
+      digest_data[511 : 480] = read_data;
+      read_single_word(`HMAC_REG_HMAC512_TAG_1);
+      digest_data[479 : 448] = read_data;
+      read_single_word(`HMAC_REG_HMAC512_TAG_2);
+      digest_data[447 : 416] = read_data;
+      read_single_word(`HMAC_REG_HMAC512_TAG_3);
+      digest_data[415 : 384] = read_data;
+      read_single_word(`HMAC_REG_HMAC512_TAG_4);
       digest_data[383 : 352] = read_data;
-      read_single_word(ADDR_TAG1);
+      read_single_word(`HMAC_REG_HMAC512_TAG_5);
       digest_data[351 : 320] = read_data;
-      read_single_word(ADDR_TAG2);
+      read_single_word(`HMAC_REG_HMAC512_TAG_6);
       digest_data[319 : 288] = read_data;
-      read_single_word(ADDR_TAG3);
+      read_single_word(`HMAC_REG_HMAC512_TAG_7);
       digest_data[287 : 256] = read_data;
-      read_single_word(ADDR_TAG4);
+      read_single_word(`HMAC_REG_HMAC512_TAG_8);
       digest_data[255 : 224] = read_data;
-      read_single_word(ADDR_TAG5);
+      read_single_word(`HMAC_REG_HMAC512_TAG_9);
       digest_data[223 : 192] = read_data;
-      read_single_word(ADDR_TAG6);
+      read_single_word(`HMAC_REG_HMAC512_TAG_10);
       digest_data[191 : 160] = read_data;
-      read_single_word(ADDR_TAG7);
+      read_single_word(`HMAC_REG_HMAC512_TAG_11);
       digest_data[159 : 128] = read_data;
-      read_single_word(ADDR_TAG8);
+      read_single_word(`HMAC_REG_HMAC512_TAG_12);
       digest_data[127 : 96] = read_data;
-      read_single_word(ADDR_TAG9);
+      read_single_word(`HMAC_REG_HMAC512_TAG_13);
       digest_data[95 : 64] = read_data;
-      read_single_word(ADDR_TAG10);
+      read_single_word(`HMAC_REG_HMAC512_TAG_14);
       digest_data[63 :  32] = read_data;
-      read_single_word(ADDR_TAG11);
+      read_single_word(`HMAC_REG_HMAC512_TAG_15);
       digest_data[31  :   0] = read_data;
     end
-  endtask // read_digest
-
+  endtask // hmac_read_digest
 
   //----------------------------------------------------------------
-  // single_block_test()
+  // hmac_single_block_test()
   //
   //
   // Perform test of a single block digest.
   //----------------------------------------------------------------
-  task single_block_test(input [383 : 0] key,
+  task hmac_single_block_test(input [31:0] mode,
+                         input [511 : 0] key,
                          input [1023: 0] block,
-                         input [159: 0]  seed,
-                         input [383 : 0] expected
+                         input [383: 0]  seed,
+                         input [511 : 0] expected
                         );
     begin
       reg [31  : 0] start_time;
       reg [31 : 0] end_time;
-      reg [31 : 0] data_in_time;
 
       start_time = cycle_ctr;
 
       $display("*** TC%01d - Single block test started.", tc_ctr);
 
-      write_key(key);
-
+      hmac_write_key(key);
       write_block(block);
-
       write_seed(seed);
-
-      data_in_time = cycle_ctr - start_time;
-      $display("***       DATA IN processing time = %01d cycles", data_in_time);
-
-      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-
+      
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
       wait_ready();
-      data_in_time = cycle_ctr;
-      read_digest();
+      hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
-
-      data_in_time = cycle_ctr - data_in_time;
-      $display("***       DATA OUT processing time = %01d cycles", data_in_time);
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
 
       if (digest_data == expected)
         begin
@@ -555,28 +496,30 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR.", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
+      
       $display("*** TC%01d - Single block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // single_block_test
+  endtask // hmac_single_block_test
 
 
   //----------------------------------------------------------------
-  // double_block_test()
+  // hmac_double_block_test()
   //
   //
   // Perform test of a double block digest. Note that we check
   // the digests for both the first and final block.
   //----------------------------------------------------------------
-  task double_block_test(input [383 : 0] key,
+  task hmac_double_block_test(input [31:0] mode,
+                         input [511 : 0] key,
                          input [1023: 0] block0,
                          input [1023: 0] block1,
-                         input [159: 0]  seed,
-                         input [383 : 0] expected
+                         input [383: 0]  seed,
+                         input [511 : 0] expected
                         );
     begin
       reg [31  : 0] start_time;
@@ -585,14 +528,14 @@ module hmac_ctrl_tb();
       start_time = cycle_ctr;
       $display("*** TC%01d - Double block test started.", tc_ctr);
 
-      write_key(key);
+      hmac_write_key(key);
 
       // First block
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -602,15 +545,15 @@ module hmac_ctrl_tb();
       // Final block
       write_block(block1);
 
-      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
       #(CLK_PERIOD);
       wait_ready();
-      read_digest();
+      hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
 
       end_time = cycle_ctr - start_time;
       $display("*** Double block test processing time = %01d cycles", end_time);
@@ -622,15 +565,15 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // double_block_test
+  endtask // hmac_double_block_test
 
 
   //----------------------------------------------------------------
@@ -639,11 +582,12 @@ module hmac_ctrl_tb();
   //
   // Perform test of a double block digest.
   //----------------------------------------------------------------
-  task continuous_cmd_test(input [383 : 0] key,
+  task continuous_cmd_test(input [31:0] mode,
+                         input [511 : 0] key,
                          input [1023: 0] block0,
                          input [1023: 0] block1,
-                         input [159: 0]  seed,
-                         input [383 : 0] expected
+                         input [383: 0]  seed,
+                         input [511 : 0] expected
                         );
     begin
       reg [31  : 0] start_time;
@@ -652,14 +596,14 @@ module hmac_ctrl_tb();
       start_time = cycle_ctr;
       $display("*** TC%01d - continuous_cmd_test started.", tc_ctr);
 
-      write_key(key);
+      hmac_write_key(key);
 
       // First block
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -667,9 +611,9 @@ module hmac_ctrl_tb();
 
       for (int i=0; i<10; i++)
         begin
-          write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
           #CLK_PERIOD;
-          write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
           #CLK_PERIOD;
         end
 
@@ -679,7 +623,7 @@ module hmac_ctrl_tb();
       // Final block
       write_block(block1);
 
-      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -687,17 +631,17 @@ module hmac_ctrl_tb();
 
       for (int i=0; i<10; i++)
         begin
-          write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
           #CLK_PERIOD;
-          write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
           #CLK_PERIOD;
         end
 
       #(CLK_PERIOD);
       wait_ready();
-      read_digest();
+      hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
 
       end_time = cycle_ctr - start_time;
       $display("*** continuous_cmd_test processing time = %01d cycles", end_time);
@@ -709,8 +653,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -723,24 +667,25 @@ module hmac_ctrl_tb();
   // zeroize_test()
   //
   //----------------------------------------------------------------
-  task zeroize_test(input [383 : 0] key,
+  task zeroize_test(input [31:0] mode,
+                    input [511 : 0] key,
                     input [1023: 0] block0,
                     input [1023: 0] block1,
-                    input [159: 0]  seed,
-                    input [383 : 0] expected
+                    input [383: 0]  seed,
+                    input [511 : 0] expected
                   );
     begin
 
       $display("*** TC%01d - zeroize test started.", tc_ctr);
 
       // First test: assert zeroize when engine is working
-      write_key(key);
+      hmac_write_key(key);
       
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -749,10 +694,10 @@ module hmac_ctrl_tb();
           #(CLK_PERIOD);
         end
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
 
       wait_ready();
-      read_digest();
+      hmac_read_digest();
       if (digest_data == 0)
         begin
           $display("TC%01d final block: OK.", tc_ctr);
@@ -767,19 +712,19 @@ module hmac_ctrl_tb();
       tc_ctr = tc_ctr + 1;
 
       // Second test: assert zeroize with INIT
-      write_key(key);
+      hmac_write_key(key);
       
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, CTRL_INIT_VALUE}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE | mode | CTRL_INIT_VALUE); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
 
       wait_ready();
-      read_digest();
+      hmac_read_digest();
       if (digest_data == 0)
         begin
           $display("TC%01d final block: OK.", tc_ctr);
@@ -794,19 +739,19 @@ module hmac_ctrl_tb();
       tc_ctr = tc_ctr + 1;
 
       // Third test: assert zeroize with NEXT
-      write_key(key);
+      hmac_write_key(key);
       
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, CTRL_NEXT_VALUE}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE | mode | CTRL_NEXT_VALUE); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
 
       wait_ready();
-      read_digest();
+      hmac_read_digest();
       if (digest_data == 0)
         begin
           $display("TC%01d final block: OK.", tc_ctr);
@@ -821,13 +766,13 @@ module hmac_ctrl_tb();
       tc_ctr = tc_ctr + 1;
 
       // Forth test: assert zeroize after NEXT
-      write_key(key);
+      hmac_write_key(key);
       
       write_block(block0);
 
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -836,10 +781,10 @@ module hmac_ctrl_tb();
           #(CLK_PERIOD);
         end
 
-      write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
 
       wait_ready();
-      read_digest();
+      hmac_read_digest();
       if (digest_data == 0)
         begin
           $display("TC%01d final block: OK.", tc_ctr);
@@ -858,43 +803,43 @@ module hmac_ctrl_tb();
   endtask // zeroize_test
 
   //----------------------------------------------------------------
-  // hmac_tests()
+  // hmac384_tests()
   //
   // Run test cases for hmac.
   // Test cases taken from:
   // https://datatracker.ietf.org/doc/html/rfc4868#section-2.7 
   //----------------------------------------------------------------
-  task hmac_tests;
-    begin : hmac_tests_block
+  task hmac384_tests;
+    begin : hmac384_tests_block
       reg [383 : 0] key0;
       reg [1023: 0] data0;
-      reg [159 : 0] seed0;
+      reg [383 : 0] seed0;
       reg [383 : 0] expected0;
 
       reg [383 : 0] key1;
       reg [1023: 0] data1;
-      reg [159 : 0] seed1;
+      reg [383 : 0] seed1;
       reg [383 : 0] expected1;
 
       reg [383 : 0] key2;
       reg [1023: 0] data2;
-      reg [159 : 0] seed2;
+      reg [383 : 0] seed2;
       reg [383 : 0] expected2;
 
       reg [383 : 0] key3;
       reg [1023: 0] data3;
-      reg [159 : 0] seed3;
+      reg [383 : 0] seed3;
       reg [383 : 0] expected3;
 
       reg [383 : 0] key4;
       reg [1023: 0] data40;
       reg [1023: 0] data41;
-      reg [159 : 0] seed4;
+      reg [383 : 0] seed4;
       reg [383 : 0] expected4;
 
       
 
-      $display("*** Testcases for PRF-HMAC-SHA-384 functionality started.");
+      $display("\n\n*** Testcases for PRF-HMAC-SHA-384 functionality started.");
 
       key0 = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
       data0 = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
@@ -916,13 +861,13 @@ module hmac_ctrl_tb();
       expected3 = 384'h5b540085c6e6358096532b2493609ed1cb298f774f87bb5c2ebf182c83cc7428707fb92eab2536a5812258228bc96687;
       seed3 = random_gen();
             
-      single_block_test(key0, data0, seed0, expected0);
+      hmac_single_block_test(HMAC384_MODE, {key0, 128'b0}, data0, seed0, {expected0, 128'b0});
 
-      single_block_test(key1, data1, seed1, expected1);
+      hmac_single_block_test(HMAC384_MODE, {key1, 128'b0}, data1, seed1, {expected1, 128'b0});
 
-      single_block_test(key2, data2, seed2, expected2);
+      hmac_single_block_test(HMAC384_MODE, {key2, 128'b0}, data2, seed2, {expected2, 128'b0});
 
-      single_block_test(key3, data3, seed3, expected3);
+      hmac_single_block_test(HMAC384_MODE, {key3, 128'b0}, data3, seed3, {expected3, 128'b0});
 
       key4   = 384'h1e6a3e8998be7c36c5a511c4f03fcfba543d678f1000e2f6a61c2a95f79bb006fc782a679a0b890e3374b20df710f6c2;
       data40 = 1024'hdbf031b43f84bcf3cc9339e65c3659151d3061dd2d5fb0b2d37fbe4fca4ea373b567ae3513ea095013efc7b19f6851ad73c26176034964999c2c3cf2fd58561a9f791839a2199f2a9405edd0478ac64a9557aec86940d465d90364489e4d32f168ce2eefec74eb7e653f8da640308f72f0bd7b1a698c683870c7439869b969ae;
@@ -930,33 +875,117 @@ module hmac_ctrl_tb();
       expected4 = 384'h8aba65c07793e1d8a709fbda35ae71804dc0741166dda5746fb3b1c0e91957bbd0d539a469c2ea3577b75d5c0f150ce7;
       seed4 = random_gen();
 
-      double_block_test(key4, data40, data41, seed4, expected4);
+      hmac_double_block_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
 
-      continuous_cmd_test(key4, data40, data41, seed4, expected4);
+      continuous_cmd_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
 
-      zeroize_test(key4, data40, data41, seed4, expected4);
+      zeroize_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end
-  endtask // hmac_tests
+  endtask // hmac384_tests
 
+  //----------------------------------------------------------------
+  // hmac512_tests()
+  //
+  // Run test cases for hmac.
+  // Test cases taken from:
+  // https://datatracker.ietf.org/doc/html/rfc4868#section-2.7 
+  //----------------------------------------------------------------
+  task hmac512_tests;
+    begin : hmac512_tests_block
+      reg [511 : 0] key0;
+      reg [1023: 0] data0;
+      reg [383 : 0] seed0;
+      reg [511 : 0] expected0;
+
+      reg [511 : 0] key1;
+      reg [1023: 0] data1;
+      reg [383 : 0] seed1;
+      reg [511 : 0] expected1;
+
+      reg [511 : 0] key2;
+      reg [1023: 0] data2;
+      reg [383 : 0] seed2;
+      reg [511 : 0] expected2;
+
+      reg [511 : 0] key3;
+      reg [1023: 0] data3;
+      reg [383 : 0] seed3;
+      reg [511 : 0] expected3;
+
+      reg [511 : 0] key4;
+      reg [1023: 0] data40;
+      reg [1023: 0] data41;
+      reg [383 : 0] seed4;
+      reg [511 : 0] expected4;
+
+      
+
+      $display("\n\n*** Testcases for PRF-HMAC-SHA-512 functionality started.");
+                      
+      key0 =  {4{128'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b}};
+      data0 = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
+      expected0 = 512'h637edc6e01dce7e6742a99451aae82df23da3e92439e590e43e761b33e910fb8ac2878ebd5803f6f0b61dbce5e251ff8789a4722c1be65aea45fd464e89f8f5b;
+      seed0 = random_gen();
+
+      key1      = {4{128'h4a6566654a6566654a6566654a656665}};
+      data1 = 1024'h7768617420646f2079612077616e7420666f72206e6f7468696e673f800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004e0;
+      expected1 = 512'hcb370917ae8a7ce28cfd1d8f4705d6141c173b2a9362c15df235dfb251b154546aa334ae9fb9afc2184932d8695e397bfa0ffb93466cfcceaae38c833b7dba38;
+      seed1 = random_gen();
+
+      key2      = {4{128'haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}};
+      data2 = 1024'hdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000590;
+      expected2 = 512'h2ee7acd783624ca9398710f3ee05ae41b9f9b0510c87e49e586cc9bf961733d8623c7b55cebefccf02d5581acc1c9d5fb1ff68a1de45509fbe4da9a433922655;
+      seed2 = random_gen();
+
+      key3      = 512'h0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40;
+      data3     = 1024'hcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000590;
+      expected3 = 512'h5e6688e5a3daec826ca32eaea224eff5e700628947470e13ad01302561bab108b8c48cbc6b807dcfbd850521a685babc7eae4a2a2e660dc0e86b931d65503fd2;
+      seed3 = random_gen();
+            
+      hmac_single_block_test(HMAC512_MODE, key0, data0, seed0, expected0);
+
+      hmac_single_block_test(HMAC512_MODE, key1, data1, seed1, expected1);
+
+      hmac_single_block_test(HMAC512_MODE, key2, data2, seed2, expected2);
+
+      hmac_single_block_test(HMAC512_MODE, key3, data3, seed3, expected3);
+
+      //Key4=sha512('haaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
+      key4   = 512'he1b52c4ff8ce9c4b60bd8ec785ab7bf3dffc7023f7c51588f96b94eeba80ca3b9b9ed05ab2ac8797bb7039d681f2e41fcfe6dddab2e95122d9c716c2b8406bd4;
+      data40 = 1024'h5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365;
+      data41 = 1024'h642062792074686520484d414320616c676f726974686d2e80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008C0;
+      expected4 = 512'he37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58;
+      seed4 = random_gen();
+
+      hmac_double_block_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
+
+      continuous_cmd_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
+
+      zeroize_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
+      
+      $display("*** Testcases for PRF-HMAC-SHA-512 functionality completed.");
+    end
+  endtask // hmac_tests
 
   //----------------------------------------------------------------
   // The main test functionality.
   //----------------------------------------------------------------
   initial
     begin : main
-      $display("   -- Testbench for PRF-HMAC-SHA-384 started --");
+      $display("   -- Testbench for HMAC started --");
 
       init_sim();
       reset_dut();
 
       check_name_version();
-      hmac_tests();
+      hmac384_tests();
+      hmac512_tests();
 
       display_test_result();
 
-      $display("   -- Testbench for PRF-HMAC-SHA-384 done. --");
+      $display("   -- Testbench for HMAC done. --");
       $finish;
     end // main
 endmodule // hmac_ctrl_tb
