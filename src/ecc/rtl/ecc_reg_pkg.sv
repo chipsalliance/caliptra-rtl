@@ -31,8 +31,13 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__PCR_SIGN__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } ecc_reg__ECC_CTRL__DH_SHAREDKEY__in_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__in_t CTRL;
         ecc_reg__ECC_CTRL__PCR_SIGN__in_t PCR_SIGN;
+        ecc_reg__ECC_CTRL__DH_SHAREDKEY__in_t DH_SHAREDKEY;
     } ecc_reg__ECC_CTRL__in_t;
 
     typedef struct packed{
@@ -252,7 +257,7 @@ package ecc_reg_pkg;
     } ecc_reg__in_t;
 
     typedef struct packed{
-        logic [2:0] value;
+        logic [1:0] value;
     } ecc_reg__ECC_CTRL__CTRL__out_t;
 
     typedef struct packed{
@@ -264,9 +269,14 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__PCR_SIGN__out_t;
 
     typedef struct packed{
+        logic value;
+    } ecc_reg__ECC_CTRL__DH_SHAREDKEY__out_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__out_t CTRL;
         ecc_reg__ECC_CTRL__ZEROIZE__out_t ZEROIZE;
         ecc_reg__ECC_CTRL__PCR_SIGN__out_t PCR_SIGN;
+        ecc_reg__ECC_CTRL__DH_SHAREDKEY__out_t DH_SHAREDKEY;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{
