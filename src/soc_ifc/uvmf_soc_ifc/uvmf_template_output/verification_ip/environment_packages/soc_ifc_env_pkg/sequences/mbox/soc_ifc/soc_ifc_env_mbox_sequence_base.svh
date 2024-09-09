@@ -237,16 +237,18 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
         while (teardown_proc == null) begin
             @(soc_ifc_status_agent_rsp_seq.new_rsp) sts_rsp_count++;
         end
-        while ((teardown_proc == null) && (!saw_mbox_unlock)) begin
-            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-            saw_mbox_unlock = reg_model.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value();
-        end
     join_none
 
     `uvm_info("MBOX_SEQ", $sformatf("Initiating command sequence to mailbox with cmd: [%p] dlen: [%p] resp_dlen: [%p]", mbox_op_rand.cmd.cmd_e, mbox_op_rand.dlen, mbox_resp_expected_dlen), UVM_MEDIUM)
 
     mbox_setup();               if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_acquire_lock(op_sts);  if (rand_delay_en) do_rand_delay(1, step_delay);
+    fork
+        while ((teardown_proc == null) && (!saw_mbox_unlock)) begin
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            saw_mbox_unlock = reg_model.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value();
+        end
+    join_none
     mbox_set_cmd(mbox_op_rand); if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_push_datain();         if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_execute();             if (rand_delay_en) do_rand_delay(1, step_delay);
