@@ -311,10 +311,11 @@ end
   parameter ADDR_VERSION1    = BASE_ADDR + 32'h0000000C;
 
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  parameter KEYGEN           = 3'b001;
-  parameter SIGN             = 3'b010;
-  parameter VERIFY           = 3'b011;
-  parameter DH_SHARED        = 3'b100;
+  parameter KEYGEN           = 2'b01;
+  parameter SIGN             = 2'b10;
+  parameter VERIFY           = 2'b11;
+  parameter DH_SHARED        = (1 << 4);
+
 
   parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
@@ -353,20 +354,13 @@ end
   localparam ADDR_PRIVKEY_IN_START   = BASE_ADDR + 32'h00000580;
   localparam ADDR_PRIVKEY_IN_END     = BASE_ADDR + 32'h000005AC;
 
-  parameter ADDR_DH_SHARED_KEY_START = BASE_ADDR + 32'h00000600;
-  parameter ADDR_DH_SHARED_KEY_END   = BASE_ADDR + 32'h0000062C;
+  parameter ADDR_DH_SHARED_KEY_START = BASE_ADDR + 32'h000005C0;
+  parameter ADDR_DH_SHARED_KEY_END   = BASE_ADDR + 32'h000005EC;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
   parameter ADD_NUM_ADDS  = 1;
   parameter ADD_BASE_SZ   = 384;
-
-
-  localparam NOP_CMD        = 3'b000;
-  localparam KEYGEN_CMD     = 3'b001;
-  localparam SIGN_CMD       = 3'b010;
-  localparam VERIFY_CMD     = 3'b100;
-  // localparam DH_SHARED_CMD  = 3'b100;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -628,7 +622,7 @@ end
   //----------------------------------------------------------------
   // trig_ECC()
   //----------------------------------------------------------------
-  task trig_ECC(input [3 : 0] cmd);
+  task trig_ECC(input [31 : 0] cmd);
     begin
       write_single_word(ADDR_CTRL  , cmd);
       repeat (10) @(posedge clk_i);
