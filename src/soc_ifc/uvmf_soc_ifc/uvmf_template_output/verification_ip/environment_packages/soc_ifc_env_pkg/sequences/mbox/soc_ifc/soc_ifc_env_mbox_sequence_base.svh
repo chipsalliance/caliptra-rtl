@@ -39,11 +39,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   int sts_rsp_count;
   uvm_status_e reg_sts;
   uvm_event in_report_reg_sts;
+  process teardown_proc;
   rand bit do_apb_lock_check;
   rand bit retry_failed_reg_axs;
   bit mbox_sts_exp_error = 0; // Indicates this sequence will inject an error, which should manifest as a CMD_FAILURE response status
                               // TODO make this more comprehensive/intelligent about randomized error injection
   mbox_sts_exp_error_type_e mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
+  bit saw_mbox_unlock = 1'b0;
   int datain_ii = MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
                                      // evaluated against specific offsets for some error checking cases. So give it an
                                      // unambiguously invalid init value prior to use.
@@ -232,7 +234,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
     sts_rsp_count = 0;
 
     fork
-        forever begin
+        while (teardown_proc == null) begin
             @(soc_ifc_status_agent_rsp_seq.new_rsp) sts_rsp_count++;
         end
     join_none
@@ -241,6 +243,12 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
     mbox_setup();               if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_acquire_lock(op_sts);  if (rand_delay_en) do_rand_delay(1, step_delay);
+    fork
+        while ((teardown_proc == null) && (!saw_mbox_unlock)) begin
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            saw_mbox_unlock = reg_model.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value();
+        end
+    join_none
     mbox_set_cmd(mbox_op_rand); if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_push_datain();         if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_execute();             if (rand_delay_en) do_rand_delay(1, step_delay);
@@ -519,6 +527,8 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
                                          "soc_ifc_env_mbox_reg_axs_invalid_medium_sequence",
                                          "soc_ifc_env_mbox_reg_axs_invalid_large_sequence"})
             `uvm_info("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since this is an invalid reg-access sequence [%s]", dlen, mbox_resp_expected_dlen, this.get_type_name()), UVM_LOW)
+        else if (saw_mbox_unlock)
+            `uvm_info("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since mbox_unlock was observed", dlen, mbox_resp_expected_dlen), UVM_LOW)
         else
             `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
     end
@@ -552,10 +562,13 @@ task soc_ifc_env_mbox_sequence_base::mbox_poll_status();
     do begin
         do_rand_delay(1, poll_delay);
         mbox_check_status(data, state);
-    end while (data == CMD_BUSY && state != MBOX_IDLE);
+    end while (data == CMD_BUSY && state != MBOX_IDLE && !saw_mbox_unlock);
 
     if (state == MBOX_IDLE) begin
         `uvm_info("MBOX_SEQ", "Detected mailbox state transition to IDLE - was mbox_unlock expected?", UVM_HIGH)
+    end
+    else if (saw_mbox_unlock) begin
+        `uvm_info("MBOX_SEQ", "Detected mailbox unlock - was mbox_unlock expected?", UVM_HIGH)
     end
     else if (data == DATA_READY) begin
         if (mbox_resp_expected_dlen == 0 && sts_rsp_count > 0 && soc_ifc_status_agent_rsp_seq.rsp.cptra_error_non_fatal_intr_pending) begin
@@ -635,6 +648,7 @@ endtask
 //              Currently just reports PAUSER violation count.
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
+    this.teardown_proc = process::self();
     // Summary at sequence end
     `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %0d", hit_invalid_pauser_count), UVM_MEDIUM)
 endtask

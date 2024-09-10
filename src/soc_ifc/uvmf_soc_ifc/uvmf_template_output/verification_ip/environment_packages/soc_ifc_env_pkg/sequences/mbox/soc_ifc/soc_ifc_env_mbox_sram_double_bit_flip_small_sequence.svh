@@ -37,8 +37,11 @@ class soc_ifc_env_mbox_sram_double_bit_flip_small_sequence extends soc_ifc_env_m
   // Valid solution for the custom delay ruleset, to control random delays while
   // waiting to inject random error accesses
   constraint custom_delay_c { rand_delay > 0;
-                              rand_delay dist {[1                   :mbox_op_rand.dlen*2 -1] :/ 250,
-                                               [mbox_op_rand.dlen*2 :mbox_op_rand.dlen*5 -1] :/ 100,
-                                               [mbox_op_rand.dlen*5 :mbox_op_rand.dlen*15-1] :/ 25}; }
+                              if (mbox_op_rand.dlen == 0)
+                                  rand_delay < 25;
+                              else
+                                  rand_delay dist {[1                   :mbox_op_rand.dlen*2 -1] :/ 250,
+                                                   [mbox_op_rand.dlen*2 :mbox_op_rand.dlen*5 -1] :/ 100,
+                                                   [mbox_op_rand.dlen*5 :mbox_op_rand.dlen*15-1] :/ 25}; }
 
 endclass

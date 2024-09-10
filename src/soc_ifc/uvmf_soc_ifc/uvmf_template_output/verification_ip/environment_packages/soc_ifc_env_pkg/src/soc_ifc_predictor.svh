@@ -53,6 +53,18 @@ class reset_flag extends uvm_object;
 endclass
 `endif
 
+`define SOC_IFC_PRED_PULSE_1_CYCLE(pulse_sig) \
+    begin \
+        pulse_sig = 1'b1; \
+        fork \
+        begin \
+            configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); \
+            uvm_wait_for_nba_region(); \
+            pulse_sig = 1'b0; \
+        end \
+        join_none \
+    end
+
 class soc_ifc_predictor #(
   type CONFIG_T,
   type BASE_T = uvm_component
@@ -177,14 +189,18 @@ class soc_ifc_predictor #(
   bit cptra_error_fatal = 1'b0;
   bit cptra_error_non_fatal = 1'b0;
   bit fuse_update_enabled = 1'b1;
-  bit ready_for_fw_push = 1'b0; // TODO
-  bit ready_for_runtime = 1'b0;
-  bit mailbox_flow_done = 1'b0;
+  bit ready_for_fw_push      = 1'b0;
+  bit ready_for_fw_push_fall = 1'b0;
+  bit ready_for_runtime      = 1'b0;
+  bit ready_for_runtime_fall = 1'b0;
+  bit mailbox_flow_done      = 1'b0;
+  bit mailbox_flow_done_fall = 1'b0;
   bit clk_gate_active         = 1'b1; // TODO
   bit rdc_clk_gate_active     = 1'b1;
   bit soc_ifc_clk_gate_active = 1'b1; // TODO
 
-  bit mailbox_data_avail = 1'b0;
+  bit mailbox_data_avail      = 1'b0;
+  bit mailbox_data_avail_fall = 1'b0;
 
   int datain_count = 0;
   int dataout_count = 0;
@@ -199,7 +215,8 @@ class soc_ifc_predictor #(
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
   int unsigned fw_update_wait_count = 0;
 
-  bit [63:0] generic_output_wires = 64'h0;
+  bit [63:0] generic_output_wires      = 64'h0;
+  bit        generic_output_wires_fall = 1'b0;
 
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6]    = '{default: '1};
   bit [4:0]                                    mbox_valid_users_locked = 5'b00000;
@@ -1169,6 +1186,12 @@ class soc_ifc_predictor #(
                         ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw.get_mirrored_value()      != this.ready_for_fw_push) ||
                          (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value() != this.ready_for_runtime) ||
                          (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value() != this.mailbox_flow_done))) begin
+                        if (this.ready_for_fw_push && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value())
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_fw_push_fall)
+                        if (this.ready_for_runtime && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value())
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_runtime_fall)
+                        if (this.mailbox_flow_done && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value())
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.mailbox_flow_done_fall)
                         this.ready_for_fw_push = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value();
                         this.ready_for_runtime = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value();
                         this.mailbox_flow_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value();
@@ -1276,12 +1299,16 @@ class soc_ifc_predictor #(
                         endcase
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[31:0];
                         generic_output_wires = {generic_output_wires[63:32],data_active}; // FIXME for data width?
+                        if (!data_active && |generic_output_wires[31:0] && ~|generic_output_wires[63:32])
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(generic_output_wires_fall)
                     end
                 end
                 "CPTRA_GENERIC_OUTPUT_WIRES[1]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         send_soc_ifc_sts_txn = data_active != generic_output_wires[63:32];
                         generic_output_wires = {data_active,generic_output_wires[31:0]}; // FIXME for data width?
+                        if (!data_active && |generic_output_wires[63:32] && ~|generic_output_wires[31:0])
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(generic_output_wires_fall)
                     end
                 end
                 "CPTRA_HW_REV_ID": begin
@@ -1957,6 +1984,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
             end
@@ -1966,6 +1994,7 @@ class soc_ifc_predictor #(
                 end
                 else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 else begin
@@ -1982,6 +2011,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE &&
@@ -2008,6 +2038,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error && mailbox_data_avail) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
@@ -2043,6 +2074,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
@@ -2066,6 +2098,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 // Log the step for coverage
@@ -2086,6 +2119,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 // Log the step for coverage
@@ -2107,6 +2141,7 @@ class soc_ifc_predictor #(
                 void'(check_mbox_inv_user_error(apb_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
+                    `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
@@ -2508,8 +2543,9 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
     // are sticky
     else if (mailbox_data_avail && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage) begin
         `uvm_info("PRED_DLY", $sformatf("Resetting mailbox_data_avail"), UVM_HIGH)
-        send_soc_ifc_sts_txn = 1'b1;
         mailbox_data_avail = 1'b0;
+        `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
+        send_soc_ifc_sts_txn = 1'b1;
     end
     // Write to mbox_status hands control back to SOC
     // if the status field is updated, the mbox flow has not been
@@ -2528,6 +2564,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
              !p_soc_ifc_rm.mbox_csr_rm.mbox_unlock.unlock.get_mirrored_value() && p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value()) begin
         `uvm_info("PRED_DLY", "Observed transition to uc_done_stage after delay job, triggering mailbox_data_avail deassertion", UVM_HIGH)
         mailbox_data_avail = 1'b0;
+        `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
         send_soc_ifc_sts_txn = 1'b1;
     end
     // === soc_ifc_notif_intr_pending ===
@@ -3129,8 +3166,15 @@ endtask
 
 
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_noncore_reset();
+    // If the reset occurs in the clock cycle immediately after status signals are deasserted
+    // by some other cause, the expected transaction is flushed from the scoreboard, but the
+    // signal deassertion will still be observed at the same time as the reset.
+    // Thus, generate an expected status transaction for these signals based on falling edges.
     /* FIXME calculate all of these from the reg-model somehow? */
-    return ready_for_fw_push || ready_for_runtime || mailbox_data_avail || |generic_output_wires /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
+    return ready_for_fw_push || ready_for_fw_push_fall ||
+           ready_for_runtime || ready_for_runtime_fall ||
+           mailbox_data_avail || mailbox_data_avail_fall ||
+           |generic_output_wires || generic_output_wires_fall /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
 endfunction
 
 function bit soc_ifc_predictor::cptra_status_txn_expected_after_noncore_reset();
