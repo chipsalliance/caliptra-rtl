@@ -900,9 +900,9 @@ In this architecture, the SHA256 interface and controller are implemented in RIS
 | Double block          | 1355                | 3.39                  | 295,203             |
 | 1 KiB message         | 8761                | 21.90                 | 45,657              |
 
-## HMAC512
+## HMAC512/HMAC384
 
-Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports HMAC-SHA-512-256 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-512-256 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
+Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports the HMAC512 variants HMAC-SHA-512-256 and HMAC-SHA-384-192 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-512-256 and HMAC-SHA-384-192 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
 
 Caliptra HMAC implementation uses SHA512 as the hash function, accepts a 512-bit key, and generates a 512-bit tag.
 
@@ -978,6 +978,7 @@ The HMAC architecture inputs and outputs are described in the following table.
 | init               | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next               | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
 | zeroize            | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
+| mode               | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
 | key\[511:0\]       | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]    | input           | The input padded block of message.                                                                                                                                          |
 | LFSR_seed\[159:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
