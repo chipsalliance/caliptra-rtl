@@ -123,8 +123,8 @@ module mldsa_reg (
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
-        automatic logic is_external = '0;
-    
+        automatic logic is_external;
+        is_external = '0;
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.MLDSA_NAME[i0] = cpuif_req_masked & (cpuif_addr == 15'h0 + i0*15'h4);
         end
@@ -175,7 +175,6 @@ module mldsa_reg (
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 15'h6204);
         decoded_strb_is_external = is_external;
         external_req = is_external;
-    
     end
 
     // Pass down signals to next stage
@@ -434,8 +433,10 @@ module mldsa_reg (
 
     // Field: mldsa_reg.MLDSA_CTRL.CTRL
     always_comb begin
-        automatic logic [2:0] next_c = field_storage.MLDSA_CTRL.CTRL.value;
-        automatic logic load_next_c = '0;
+        automatic logic [2:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.MLDSA_CTRL.CTRL.value;
+        load_next_c = '0;
         if(decoded_reg_strb.MLDSA_CTRL && decoded_req_is_wr && hwif_in.mldsa_ready) begin // SW write
             next_c = (field_storage.MLDSA_CTRL.CTRL.value & ~decoded_wr_biten[2:0]) | (decoded_wr_data[2:0] & decoded_wr_biten[2:0]);
             load_next_c = '1;
@@ -456,8 +457,10 @@ module mldsa_reg (
     assign hwif_out.MLDSA_CTRL.CTRL.value = field_storage.MLDSA_CTRL.CTRL.value;
     // Field: mldsa_reg.MLDSA_CTRL.ZEROIZE
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.MLDSA_CTRL.ZEROIZE.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.MLDSA_CTRL.ZEROIZE.value;
+        load_next_c = '0;
         if(decoded_reg_strb.MLDSA_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.MLDSA_CTRL.ZEROIZE.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -479,8 +482,10 @@ module mldsa_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: mldsa_reg.MLDSA_ENTROPY[].ENTROPY
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.MLDSA_ENTROPY[i0].ENTROPY.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.MLDSA_ENTROPY[i0].ENTROPY.value;
+            load_next_c = '0;
             if(decoded_reg_strb.MLDSA_ENTROPY[i0] && decoded_req_is_wr && hwif_in.mldsa_ready) begin // SW write
                 next_c = (field_storage.MLDSA_ENTROPY[i0].ENTROPY.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -503,8 +508,10 @@ module mldsa_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: mldsa_reg.MLDSA_SEED[].SEED
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.MLDSA_SEED[i0].SEED.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.MLDSA_SEED[i0].SEED.value;
+            load_next_c = '0;
             if(decoded_reg_strb.MLDSA_SEED[i0] && decoded_req_is_wr && hwif_in.mldsa_ready) begin // SW write
                 next_c = (field_storage.MLDSA_SEED[i0].SEED.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -530,8 +537,10 @@ module mldsa_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: mldsa_reg.MLDSA_SIGN_RND[].SIGN_RND
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.MLDSA_SIGN_RND[i0].SIGN_RND.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.MLDSA_SIGN_RND[i0].SIGN_RND.value;
+            load_next_c = '0;
             if(decoded_reg_strb.MLDSA_SIGN_RND[i0] && decoded_req_is_wr && hwif_in.mldsa_ready) begin // SW write
                 next_c = (field_storage.MLDSA_SIGN_RND[i0].SIGN_RND.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -554,8 +563,10 @@ module mldsa_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: mldsa_reg.MLDSA_MSG[].MSG
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.MLDSA_MSG[i0].MSG.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.MLDSA_MSG[i0].MSG.value;
+            load_next_c = '0;
             if(decoded_reg_strb.MLDSA_MSG[i0] && decoded_req_is_wr && hwif_in.mldsa_ready) begin // SW write
                 next_c = (field_storage.MLDSA_MSG[i0].MSG.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -581,8 +592,10 @@ module mldsa_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: mldsa_reg.MLDSA_VERIFY_RES[].VERIFY_RES
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.MLDSA_VERIFY_RES[i0].VERIFY_RES.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.MLDSA_VERIFY_RES[i0].VERIFY_RES.value;
+            load_next_c = '0;
             if(hwif_in.MLDSA_VERIFY_RES[i0].VERIFY_RES.we) begin // HW Write - we
                 next_c = hwif_in.MLDSA_VERIFY_RES[i0].VERIFY_RES.next;
                 load_next_c = '1;
@@ -628,8 +641,10 @@ module mldsa_reg (
     assign hwif_out.MLDSA_PRIVKEY_IN.wr_biten = decoded_wr_biten;
     // Field: mldsa_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -646,8 +661,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -664,8 +681,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.error_intr_en_r.error_internal_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -682,8 +701,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -700,8 +721,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
@@ -720,8 +743,10 @@ module mldsa_reg (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: mldsa_reg.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
@@ -740,8 +765,10 @@ module mldsa_reg (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: mldsa_reg.intr_block_rf.error_internal_intr_r.error_internal_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
             load_next_c = '1;
@@ -766,8 +793,10 @@ module mldsa_reg (
         |(field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value);
     // Field: mldsa_reg.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
             load_next_c = '1;
@@ -792,8 +821,10 @@ module mldsa_reg (
         |(field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value);
     // Field: mldsa_reg.intr_block_rf.error_intr_trig_r.error_internal_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -813,8 +844,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -834,8 +867,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.error_internal_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -866,8 +901,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -898,8 +935,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.error_internal_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
             load_next_c = '1;
@@ -927,8 +966,10 @@ module mldsa_reg (
     end
     // Field: mldsa_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
             load_next_c = '1;
@@ -1000,7 +1041,7 @@ module mldsa_reg (
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-    
+
     // Assign readback values to a flattened array
     logic [1841-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
