@@ -1,3 +1,17 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 
 `include "common_defines.sv"
 `include "config_defines.svh"
@@ -14,13 +28,13 @@ import caliptra_top_tb_pkg::*; #(
     output logic                       cptra_pwrgood,
     output logic                       cptra_rst_b,
     output logic                       BootFSM_BrkPoint,
-    input int                         cycleCnt,
+    input int                          cycleCnt,
 
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key,
 
-    input logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
-    input logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand,
-    input logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb,
+    input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
+    input  logic [0:`CLP_OBF_FE_DWORDS-1] [31:0]          cptra_fe_rand,
+    input  logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb,
 
     axi_if m_axi_bfm_if,
 
@@ -28,7 +42,7 @@ import caliptra_top_tb_pkg::*; #(
     input logic ready_for_fw_push,
     input logic mailbox_data_avail,
 
-    input  var   ras_test_ctrl_t ras_test_ctrl,
+    input  var  ras_test_ctrl_t ras_test_ctrl,
 
     output logic [63:0] generic_input_wires,
 
