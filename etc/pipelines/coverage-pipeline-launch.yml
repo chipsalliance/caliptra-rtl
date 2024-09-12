@@ -25,7 +25,8 @@ parameters:
   - name: skip_db_update
     displayName: Skip merged coverage summary upload to Kusto
     type: boolean
-    default: false
+    #FIXME TODO: set back to false when kusto db is fixed
+    default: true
 
 extends:
   template: coverage-pipeline.yml

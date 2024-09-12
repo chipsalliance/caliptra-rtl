@@ -20,8 +20,12 @@ variables:
 # and this pipeline is used to verify it, or that a user wishes to manually
 # run the pipeline on an ADO branch.
 parameters:
-- name: run_github_val_flow
-  displayName: Run Promote Pipeline to validate GitHub PullRequest
+- name: run_clp_github_val_flow
+  displayName: Run Promote Pipeline to validate Caliptra GitHub PullRequest
+  type: boolean
+  default: false
+- name: run_abr_github_val_flow
+  displayName: Run Promote Pipeline to validate Adamsbridge GitHub PullRequest
   type: boolean
   default: false
 - name: github_branch_name
@@ -46,12 +50,19 @@ stages:
     # detection of basic issues
     pre_test_timeout: 120
     pre_test_steps:
+      # Fail if running both abr and clp flags were selected
+      - script: |
+          echo "Both ABR and CLP github val flow flags were set, these are mutex"
+          exit 1
+        displayName: 'Boolean flags should be mutex'
+        enabled: True
+        condition: ${{ and(parameters.run_clp_github_val_flow, parameters.run_abr_github_val_flow)}}
       # Fail if running a GitHub validation pipeline on any branch other than master
       - script: |
           echo "Used invalid ADO branch [${BUILD_SOURCEBRANCHNAME}] to run promote pipeline when attempting to validate a GitHub Pull Request. Use 'master'"
           exit 1
         displayName: 'Evaluate build branch validity'
-        enabled: ${{ parameters.run_github_val_flow }}
+        enabled: ${{ or(parameters.run_clp_github_val_flow, parameters.run_abr_github_val_flow)}}
         condition: and(eq(variables['Build.Reason'], 'Manual'), ne(variables['Build.SourceBranchName'], 'master'))
 
       # Create a merged branch in caliptra-rtl representing the result of the Pull Request
@@ -65,12 +76,29 @@ stages:
   
           enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_ROOT\""
         displayName: 'CREATE MERGED TEST BRANCH'
-        enabled: ${{ parameters.run_github_val_flow }}
+        enabled: ${{ parameters.run_clp_github_val_flow }}
+        condition: eq(variables['Build.Reason'], 'Manual')
+        timeoutInMinutes: 10
+
+
+      # Create a merged branch in adams-bridge representing the result of the Pull Request
+      # when running validation for GitHub PR
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_abr_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_abr_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$ADAMSBRIDGE_ROOT\""
+        displayName: 'CREATE MERGED TEST BRANCH'
+        enabled: ${{ parameters.run_abr_github_val_flow }}
         condition: eq(variables['Build.Reason'], 'Manual')
         timeoutInMinutes: 10
 
       # License Header check and RDL check are run natively on GitHub Actions for caliptra-rtl
       # Pull Requests. Only run them here for internal ADO PRs and manual runs without a github target.
+      # TODO: enable license check on adams-bridge github
       - script: |
           source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
           module load settings/tsd/pipelines/frontend
@@ -81,7 +109,7 @@ stages:
           enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh" && cd $MSFT_REPO_ROOT && bash $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh'
   
         displayName: 'LICENSE_HEADER_CHECK'
-        enabled: ${{ not(parameters.run_github_val_flow) }}
+        enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
         timeoutInMinutes: 5
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -108,7 +136,7 @@ stages:
           enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_rdl_check.sh $(derivedTargetBranchName)'
   
         displayName: 'RDL GEN CHECK'
-        enabled: ${{ not(parameters.run_github_val_flow) }}
+        enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
         timeoutInMinutes: 30
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -122,7 +150,7 @@ stages:
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
 
           # Run the Filelist generator script
-          if [[ (${BUILD_REASON} == 'PullRequest') || ( "${{ parameters.run_github_val_flow }}" == "false" ) ]]; then
+          if [[ (${BUILD_REASON} == 'PullRequest') || ( "${{ parameters.run_clp_github_val_flow }}" == "false" ) ]]; then
               enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName)'
           else
               enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName) "chips/${{ parameters.github_dest_name }}"'
@@ -135,7 +163,7 @@ stages:
     build_and_sim_map:
     - integration_top_vcs:
       - display_name: 'Build integration_lib with VCS'
-      - enabled: true
+      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top_tb'
       - args: ''
@@ -150,7 +178,7 @@ stages:
 
     - integration_top_trng_vcs:
       - display_name: 'Build integration_lib with VCS and enable TRNG'
-      - enabled: true
+      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top_trng_tb'
       - args: ''
@@ -165,7 +193,7 @@ stages:
 
     - uvmf_soc_ifc:
         - display_name: 'UVMF_SOC_IFC'
-        - enabled: true
+        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
         - configspec_name: 'integration_lib'
         - dut: 'uvmf_soc_ifc'
         #- args: '--submit-resource-args RAM/28000'
@@ -181,7 +209,7 @@ stages:
 
     - uvmf_caliptra_top:
         - display_name: 'UVMF_CALIPTRA_TOP'
-        - enabled: true
+        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
         - configspec_name: 'integration_lib'
         - dut: 'uvmf_caliptra_top'
         #- args: '--submit-resource-args RAM/28000'
@@ -203,12 +231,29 @@ stages:
       - args: '--tool ius --targets packages rtl elab --options rtl="+define+TSD_DISABLE_ASSERTIONS"'
       - timeout: 10
 
+    - uvmf_mldsa:
+        - display_name: 'UVMF_MLDSA'
+        - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
+        - configspec_name: 'integration_lib'
+        - dut: 'uvmf_mldsa'
+        - timeout: 25
+        #-testsuites: todo
+
     design_lint_map:
     - caliptra_top_sglint:
-      - enabled: true
+      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top'
       - top: 'caliptra_top'
+      - lint_tool: 'sglint'
+      - timeout: 45
+      - args: '--inherit-waivers=True --waivers-from-compile-yml --goal=caliptra_lint_rtl_msft --platform synth'
+
+    - mldsa_top_sglint:
+      - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
+      - configspec_name: 'integration_lib'
+      - dut: 'mldsa_top'
+      - top: 'mldsa_top'
       - lint_tool: 'sglint'
       - timeout: 45
       - args: '--inherit-waivers=True --waivers-from-compile-yml --goal=caliptra_lint_rtl_msft --platform synth'
@@ -227,7 +272,7 @@ stages:
       # Pull Requests. Only run here for internal ADO PRs.
       - verilator_smoke_test:
         - display_name: 'Verilator Smoke Test'
-        - enabled: ${{ not(parameters.run_github_val_flow) }}
+        - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
         - run_in_workspace: True
         - timeout: 120
         - commands:
@@ -237,22 +282,34 @@ stages:
             # Run the Verilator test regression and dump logfiles to scratch
             - 'submit -i python3 \$SCRIPTS_DIR/run_verilator_l0_regression.py'
 
-      - synthesis_elab_check:
-        - display_name: 'Synthesis Elab Check'
-        - enabled: true
+      - caliptra_synthesis_elab_check:
+        - display_name: 'Caliptra Synthesis Elab Check'
+        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
         - run_in_workspace: True
         - timeout: 25
         - commands:
           - 'set -e'
           - 'module load tools/python/python3/3.9.2'
-          #- 'module load tools/synopsys/dc/2020.09-SP1'
           - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
 
           # Run synthesis on top level and exit after elaborate stage
           - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
 
+      - adamsbridge_synthesis_elab_check:
+        - display_name: 'Adamsbridge Synthesis Elab Check'
+        - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
+        - run_in_workspace: True
+        - timeout: 25
+        - commands:
+          - 'set -e'
+          - 'module load tools/python/python3/3.9.2'
+          - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
+
+          # Run synthesis on top level and exit after elaborate stage
+          - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py mldsa_top 1'
+
     post_test_steps:
-      # If this pipeline was run to validate a GitHub Pull Request, finalize by
+      # If this pipeline was run to validate a CLP GitHub Pull Request, finalize by
       # updating the timestamp and file list hash on the target branch and pushing
       # to GitHub. This allows the GitHub Action to succeed for that PR
       - script: |
@@ -264,6 +321,21 @@ stages:
   
           enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_branch.sh with ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_branch.sh ${{ parameters.github_branch_name }} $(caliptra-rtl-write-token)"
         displayName: 'STAMP MERGE BRANCH'
-        enabled: ${{ parameters.run_github_val_flow }}
+        enabled: ${{ parameters.run_clp_github_val_flow }}
+        condition: eq(variables['Build.Reason'], 'Manual')
+        timeoutInMinutes: 10
+      # If this pipeline was run to validate an ABR GitHub Pull Request, finalize by
+      # updating the timestamp and file list hash on the target branch and pushing
+      # to GitHub. This allows the GitHub Action to succeed for that PR
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_abr_branch.sh with ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_stamp_target_abr_branch.sh ${{ parameters.github_branch_name }} $(adams-bridge-write-token)"
+        displayName: 'STAMP MERGE BRANCH'
+        enabled: ${{ parameters.run_abr_github_val_flow }}
         condition: eq(variables['Build.Reason'], 'Manual')
         timeoutInMinutes: 10
