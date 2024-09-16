@@ -54,7 +54,6 @@ module ecc_pm_ctrl
 
     // from arith_unit
     input  wire  [3  :   0]                 ecc_cmd_i,
-    input  wire                             sca_en_i,
     input  wire                             digit_i,
     output pm_instr_struct_t                instr_o,
     output logic                            req_digit_o,
@@ -167,12 +166,12 @@ module ecc_pm_ctrl
                         ecc_cmd_reg <= ecc_cmd_i;
                         unique case (ecc_cmd_i)
                             KEYGEN_CMD : begin  // keygen
-                                mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_SCA_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
                             end   
 
                             SIGN_CMD : begin  // signing
-                                mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_SCA_MONT_COUNT;
                                 prog_cntr <= PM_INIT_G_S;
                             end                                   
 
@@ -194,7 +193,7 @@ module ecc_pm_ctrl
                             end
 
                             DH_SHARED_CMD : begin  // DH shared key
-                                mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_SCA_MONT_COUNT;
                                 prog_cntr <= PM_INIT_DH_S;
                             end
 
