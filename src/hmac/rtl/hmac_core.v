@@ -107,7 +107,7 @@ module hmac_core
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready      = ready_flag;
-  assign tag        = H2_digest;
+  assign tag        = digest_valid_reg? H2_digest : 512'b0;
   assign tag_valid  = digest_valid_reg;
   //----------------------------------------------------------------
   // core instantiation.

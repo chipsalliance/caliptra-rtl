@@ -705,8 +705,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
       tc_ctr = tc_ctr + 1;
@@ -732,8 +732,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
       tc_ctr = tc_ctr + 1;
@@ -759,8 +759,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
       tc_ctr = tc_ctr + 1;
@@ -792,8 +792,8 @@ module hmac_ctrl_tb();
       else
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
-          $display("TC%01d: Expected: 0x%096x", tc_ctr, 0);
-          $display("TC%01d: Got:      0x%096x", tc_ctr, digest_data);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
