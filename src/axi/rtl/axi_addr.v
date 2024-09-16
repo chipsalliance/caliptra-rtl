@@ -233,3 +233,4 @@ module  axi_addr #(
         // Verilator lint_on UNUSED
         // }}}
 endmodule
+`default_nettype wire
