@@ -79,7 +79,7 @@ exclude_suffix='*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cf
 exclude_regs='*_reg*.{sv,rdl}'
 exclude_csr='*_csr*.*'
 exclude_file='{sglint_waivers,pr_hash,pr_timestamp,.git-comodules,.gitignore,spyglass_lint.policy,ascent.ctl,clp_mapfile,readme.md,README.md,SECURITY.md,c_sample.c}'
-apache_patn='Licensed under the Apache License'
+apache_patn='Licensed under the Apache License\|Apache License, Version 2\.0 (the \"License\")'
 
 # Recursive find through repository with some major exclusions
 # 'eval' is used to expand exclude vars into a usable glob pattern
