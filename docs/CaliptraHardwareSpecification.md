@@ -953,17 +953,23 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 
 #### Hashing
 
-The HMAC core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
 *Figure 28: HMAC-SHA-512-256 data flow*
 
 ![](./images/HMAC_SHA_512_256.png)
 
+The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+
+*Figure 29: HMAC-SHA-384-192 data flow*
+
+![](./images/HMAC_SHA_384_192.png)
+
 ### FSM
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
-*Figure 29: HMAC FSM*
+*Figure 30: HMAC FSM*
 
 ![](./images/HMAC_FSM.png)
 
@@ -981,7 +987,7 @@ The HMAC architecture inputs and outputs are described in the following table.
 | mode               | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
 | key\[511:0\]       | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]    | input           | The input padded block of message.                                                                                                                                          |
-| LFSR_seed\[159:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
+| LFSR_seed\[383:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready              | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
 | tag\[511:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
 | tag_valid          | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
@@ -994,7 +1000,7 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
-*Figure 30: HMAC pseudocode*
+*Figure 31: HMAC pseudocode*
 
 ![](./images/HMAC_pseudo.png)
 
@@ -1006,7 +1012,7 @@ To protect the HMAC algorithm from side-channel attacks, a masking countermeasur
 
 The embedded countermeasures are based on "Differential Power Analysis of HMAC Based on SHA-2, and Countermeasures" by McEvoy et. al. To provide the required random values for masking intermediate values, a lightweight 74-bit LFSR is implemented. Based on “Spin Me Right Round Rotational Symmetry for FPGA-specific AES” by Wegener et. al., LFSR is sufficient for masking statistical randomness.
 
-Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 160-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
+Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 384-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
 
 ### Performance
 
@@ -1116,7 +1122,7 @@ The hardware implementation also supports ECDH, 384 Bits (Prime Field), also kno
 
 Secp384r1 parameters are shown in the following figure.
 
-*Figure 31: Secp384r1 parameters*
+*Figure 32: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
 
@@ -1124,7 +1130,7 @@ Secp384r1 parameters are shown in the following figure.
 
 The ECDSA consists of three operations, shown in the following figure.
 
-*Figure 32: ECDSA operations*
+*Figure 33: ECDSA operations*
 
 ![](./images/ECDSA_ops.png)
 
@@ -1169,7 +1175,7 @@ In ECDH sharedkey generation, the shared key is generated by ECDH_sharedkey(priv
 
 The ECC top-level architecture is shown in the following figure.
 
-*Figure 33: ECC architecture*
+*Figure 34: ECC architecture*
 
 ![](./images/ECC_arch.png)
 
@@ -1208,25 +1214,25 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 #### KeyGen
 
-*Figure 34: KeyGen pseudocode*
+*Figure 35: KeyGen pseudocode*
 
 ![](./images/keygen_pseudo.png)
 
 #### Signing
 
-*Figure 35: Signing pseudocode*
+*Figure 36: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
 
 #### Verifying
 
-*Figure 36: Verifying pseudocode*
+*Figure 37: Verifying pseudocode*
 
 ![](./images/verify_pseudo.png)
 
 #### ECDH sharedkey
 
-*Figure 37: ECDH sharedkey pseudocode*
+*Figure 38: ECDH sharedkey pseudocode*
 
 ![](./images/sharedkey_pseudo.png)
 
@@ -1292,7 +1298,7 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 2. KEYGEN PRIVKEY: Running HMAC\_DRBG with seed and nonce to generate the privkey in KEYGEN operation.
 3. SIGNING NONCE: Running HMAC\_DRBG based on RFC6979 in SIGNING operation with privkey and hashed\_msg.
 
-*Figure 38: HMAC\_DRBG utilization*
+*Figure 39: HMAC\_DRBG utilization*
 
 ![](./images/HMAC_DRBG_util.png)
 
@@ -1308,7 +1314,7 @@ In SCA random generator state:
 
 The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in the following figure.
 
-*Figure 39: HMAC\_DRBG data flow*
+*Figure 40: HMAC\_DRBG data flow*
 
 ![](./images/HMAC_DRBG_data.png)
 
@@ -1318,7 +1324,7 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
-*Figure 40: TVLA threshold as a function of the number of samples per trace*
+*Figure 41: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
 
@@ -1328,7 +1334,7 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
 
-*Figure 41: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
+*Figure 42: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
 
@@ -1336,13 +1342,13 @@ The TVLA results for performing seed/nonce-dependent leakage detection using 200
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
 
-*Figure 42: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
+*Figure 43: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
 ![](./images/TVLA_privekey.png)
 
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
-*Figure 43: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+*Figure 44: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
 
 ![](./images/TVLA_msg_dependent.png)
 
@@ -1381,13 +1387,13 @@ LMS cryptography is a type of hash-based digital signature scheme that was stand
 
 Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
 
-*Figure 44: LMS-OTS Verification algorithm*
+*Figure 45: LMS-OTS Verification algorithm*
 
 ![](./images/LMS_verifying_alg.png)
 
 The high-level architecture of LMS is shown in the following figure.
 
-*Figure 45: LMS high-level architecture*
+*Figure 46: LMS high-level architecture*
 
 ![](./images/LMS_high_level.png)
 
@@ -1411,7 +1417,7 @@ LMS parameters are shown in the following table:
 
 The Winternitz hash chain can be accelerated in hardware to enhance the performance of the design. For that, a configurable architecture is proposed that can reuse SHA256 engine. The LMS accelerator architecture is shown in the following figure, while H is SHA256 engine.
 
-*Figure 46: Winternitz chain architecture*
+*Figure 47: Winternitz chain architecture*
 
 ![](./images/LMS_wntz_arch.png)
 
