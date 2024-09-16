@@ -250,8 +250,6 @@ module doe_core_cbc(
                 st_IV_engine_stars:
                 begin
                     if (IV_updated_delayed)
-                        IV_enc_state <= st_IV_engine_idle; 
-                    else if(enc_ready)
                         IV_enc_state <= st_IV_engine_idle;
                     else
                         IV_enc_state <= st_IV_engine_stars;                 

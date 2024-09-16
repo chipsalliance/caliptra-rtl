@@ -160,7 +160,7 @@ module ecc_pm_ctrl
                     default      :  begin stalled <= 1'b0; stall_cntr <= '0; end
                 endcase
             end
-            else if ((!stalled) | (stalled & (stall_cntr == 0))) begin
+            else begin
                 stalled <= 0;
                 unique case (prog_cntr)
                     NOP : begin     // Waiting for new valid command
