@@ -38,8 +38,7 @@
 
 module ecc_hmac_drbg_interface#(
     parameter                  REG_SIZE       = 384,
-    parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter [REG_SIZE-1 : 0] LFSR_INIT_SEED = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c   // a random value
+    parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
     )
     (
     // Clock and reset.
@@ -115,8 +114,7 @@ module ecc_hmac_drbg_interface#(
 
     hmac_drbg #(
         .REG_SIZE(REG_SIZE),
-        .HMAC_DRBG_PRIME(GROUP_ORDER),
-        .LFSR_INIT_SEED(LFSR_INIT_SEED)
+        .HMAC_DRBG_PRIME(GROUP_ORDER)
         )    
         hmac_drbg_i (
         .clk(clk),
@@ -200,14 +198,14 @@ module ecc_hmac_drbg_interface#(
             scalar_rnd_reg <= '0;
             masking_rnd_reg <= '0;
             drbg_reg <= '0;
-            lfsr_seed_reg <= LFSR_INIT_SEED;
+            lfsr_seed_reg <= '0;
         end
         else if (zeroize) begin
             lambda_reg <= '0;
             scalar_rnd_reg <= '0;
             masking_rnd_reg <= '0;
             drbg_reg <= '0;
-            lfsr_seed_reg <= LFSR_INIT_SEED;
+            lfsr_seed_reg <= '0;
         end
         else
             if (hmac_done_edge) begin
@@ -223,7 +221,7 @@ module ecc_hmac_drbg_interface#(
                         scalar_rnd_reg <= '0;
                         masking_rnd_reg <= '0;
                         drbg_reg <= '0;
-                        lfsr_seed_reg <= LFSR_INIT_SEED;
+                        lfsr_seed_reg <= '0;
                     end
                 endcase
             end
@@ -262,8 +260,6 @@ module ecc_hmac_drbg_interface#(
     always_ff @(posedge clk or negedge reset_n) 
     begin : counter_reg_update
         if (!reset_n)
-            counter_reg       <= '0;
-        else if (zeroize)
             counter_reg       <= '0;
         else
             counter_reg       <= counter_reg + 1;

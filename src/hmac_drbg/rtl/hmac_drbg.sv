@@ -33,8 +33,7 @@
 module hmac_drbg  
 #(
   parameter                  REG_SIZE        = 384,
-  parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973,
-  parameter [REG_SIZE-1 : 0] LFSR_INIT_SEED  = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c   // a random value
+  parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
 )    
 (
   // Clock and reset.
@@ -119,9 +118,7 @@ module hmac_drbg
   //----------------------------------------------------------------
   // HMAC module instantiation.
   //----------------------------------------------------------------
-  hmac_core #(
-    .LFSR_INIT_SEED(LFSR_INIT_SEED)
-    ) 
+  hmac_core
     HMAC_K 
     (
     .clk(clk),
