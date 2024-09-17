@@ -19,6 +19,9 @@
 // Creator:     Dan Gisselquist, Ph.D.
 //              Gisselquist Technology, LLC
 //
+// Caliptra Modifications:
+//     Revert the default_nettype assignment at file end
+//
 ////////////////////////////////////////////////////////////////////////////////
 // }}}
 // Copyright (C) 2019-2024, Gisselquist Technology, LLC
@@ -233,3 +236,4 @@ module  axi_addr #(
         // Verilator lint_on UNUSED
         // }}}
 endmodule
+`default_nettype wire
