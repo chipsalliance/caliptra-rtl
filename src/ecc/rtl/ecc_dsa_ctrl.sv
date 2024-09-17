@@ -207,7 +207,6 @@ module ecc_dsa_ctrl
 
     logic error_flag;
     logic error_flag_reg;
-    logic error_flag_edge;
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -651,18 +650,13 @@ module ecc_dsa_ctrl
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : error_detection
-        if(!reset_n) begin
-            error_flag_reg <= '0;
-        end
-        else if(zeroize_reg) begin
-            error_flag_reg <= '0;
-        end
-        else begin
-            error_flag_reg  <= error_flag;
-        end
+        if(!reset_n)
+            error_flag_reg <= 1'b0;
+        else if(zeroize_reg)
+            error_flag_reg <= 1'b0;
+        else if (error_flag)
+            error_flag_reg <= 1'b1;
     end // error_detection
-
-    assign error_flag_edge = error_flag & (!error_flag_reg);
     
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
     assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
@@ -715,15 +709,22 @@ module ecc_dsa_ctrl
             verifying_process   <= 0;
             sharedkey_process   <= 0;
         end
+        else if (error_flag | error_flag_reg) begin
+            prog_cntr           <= ECC_NOP;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            ecc_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= '0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
+            sharedkey_process   <= 0;
+        end
         else begin
-            if (error_flag_edge) begin
-                prog_cntr       <= ECC_NOP;
-                cycle_cnt       <= 2'd3;
-                pm_cmd_reg      <= '0;
-                scalar_sca_en   <= 0;
-                hmac_init       <= 0;
-            end
-            else if (subcomponent_busy) begin //Stalled until sub-component is done
+            if (subcomponent_busy) begin //Stalled until sub-component is done
                 prog_cntr       <= prog_cntr;
                 cycle_cnt       <= 2'd3;
                 pm_cmd_reg      <= '0;

@@ -957,6 +957,69 @@ module ecc_top_tb
     end
   endtask // zeroize_test
 
+
+  //----------------------------------------------------------------
+  // ecc_fault_test()
+  //
+  //----------------------------------------------------------------
+  task ecc_fault_test();
+    operand_t       privKey_faulty;
+    
+    begin
+      privKey_faulty = '0;
+      wait_ready();
+
+      $display("*** fault test started.");
+      tc_ctr = tc_ctr + 1;
+
+      //enable the interrupt
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, `ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, `ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK);
+
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, privKey_faulty);
+      trig_ECC(ECC_CMD_SIGNING);
+      wait_ready();
+
+      #(2 * CLK_PERIOD);  //there are 2 cycles latency to set error_intr
+
+      if (error_intr_tb)
+        begin
+          $display("*** fault test successful.");
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: fault test NOT successful.");
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+      trig_ECC(ECC_CMD_SIGNING);
+      
+      wait_ready();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
+      #(2 * CLK_PERIOD);
+
+      if (dut.ecc_dsa_ctrl_i.error_flag_reg == 0) 
+        begin
+          $display("*** fault test successful.");
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: fault test NOT successful.");
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+      reset_dut();
+    end
+  endtask // ecc_fault_test
+
   //----------------------------------------------------------------
   // ecc_openssl_keygen_test()
   //
@@ -1036,6 +1099,7 @@ module ecc_top_tb
       
       continuous_cmd_test(test_vectors[0]);
       zeroize_test(test_vectors[1]);
+      ecc_fault_test();
     end
   endtask // ecc_test
 
