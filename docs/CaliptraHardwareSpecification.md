@@ -86,7 +86,7 @@ The following table shows the memory map address ranges for each of the IP block
 | :---------------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Cryptographic Initialization Engine | 0         | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
 | ECC Secp384                         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
-| HMAC384                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
+| HMAC512                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
 | Key Vault                           | 3         | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
 | PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
@@ -663,7 +663,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
     * De-obfuscation engine
      * SHA512/384 (based on NIST FIPS 180-4 [2])
      * SHA256 (based on NIST FIPS 180-4 [2])
-     * HMAC384 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
 * Public-key cryptography
      * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4  [11] and RFC 6979 [7])
 * Key vault
@@ -900,13 +900,13 @@ In this architecture, the SHA256 interface and controller are implemented in RIS
 | Double block          | 1355                | 3.39                  | 295,203             |
 | 1 KiB message         | 8761                | 21.90                 | 45,657              |
 
-## HMAC384
+## HMAC512/HMAC384
 
-Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports HMAC-SHA-384-192 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-384-192 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
+Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports the HMAC512 variants HMAC-SHA-512-256 and HMAC-SHA-384-192 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-512-256 and HMAC-SHA-384-192 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
 
-Caliptra HMAC implementation uses SHA384 as the hash function, accepts a 384-bit key, and generates a 384-bit tag.
+Caliptra HMAC implementation uses SHA512 as the hash function, accepts a 512-bit key, and generates a 512-bit tag.
 
-The implementation also supports PRF-HMAC-SHA-384. The PRF-HMAC-SHA-384 algorithm is identical to HMAC-SHA-384-192, except that variable-length keys are permitted, and the truncation step is not performed.
+The implementation also supports PRF-HMAC-SHA-512. The PRF-HMAC-SHA-512 algorithm is identical to HMAC-SHA-512-256, except that variable-length keys are permitted, and the truncation step is not performed.
 
 The HMAC algorithm is described as follows:
 * The key is fed to the HMAC core to be padded
@@ -953,9 +953,15 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 
 #### Hashing
 
-The HMAC core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-*Figure 28: HMAC-SHA-384-192 data flow*
+*Figure 28: HMAC-SHA-512-256 data flow*
+
+![](./images/HMAC_SHA_512_256.png)
+
+The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+
+*Figure 29: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
 
@@ -963,7 +969,7 @@ The HMAC core performs the sha2-384 function to process the hash value of the gi
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
-*Figure 29: HMAC FSM*
+*Figure 30: HMAC FSM*
 
 ![](./images/HMAC_FSM.png)
 
@@ -978,11 +984,12 @@ The HMAC architecture inputs and outputs are described in the following table.
 | init               | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next               | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
 | zeroize            | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
-| key\[383:0\]       | input           | The input key.                                                                                                                                                              |
+| mode               | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
+| key\[511:0\]       | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]    | input           | The input padded block of message.                                                                                                                                          |
-| LFSR_seed\[159:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
+| LFSR_seed\[383:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready              | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
-| tag\[383:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-384, a 384-bit tag is required. For HMAC-SHA-384-192, the host is responsible for reading 192 bits from the MSB. |
+| tag\[511:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
 | tag_valid          | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
 
 ### Address map
@@ -993,7 +1000,7 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
-*Figure 30: HMAC pseudocode*
+*Figure 31: HMAC pseudocode*
 
 ![](./images/HMAC_pseudo.png)
 
@@ -1005,7 +1012,7 @@ To protect the HMAC algorithm from side-channel attacks, a masking countermeasur
 
 The embedded countermeasures are based on "Differential Power Analysis of HMAC Based on SHA-2, and Countermeasures" by McEvoy et. al. To provide the required random values for masking intermediate values, a lightweight 74-bit LFSR is implemented. Based on “Spin Me Right Round Rotational Symmetry for FPGA-specific AES” by Wegener et. al., LFSR is sufficient for masking statistical randomness.
 
-Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 160-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
+Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 384-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
 
 ### Performance
 
@@ -1115,7 +1122,7 @@ The hardware implementation also supports ECDH, 384 Bits (Prime Field), also kno
 
 Secp384r1 parameters are shown in the following figure.
 
-*Figure 31: Secp384r1 parameters*
+*Figure 32: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
 
@@ -1123,7 +1130,7 @@ Secp384r1 parameters are shown in the following figure.
 
 The ECDSA consists of three operations, shown in the following figure.
 
-*Figure 32: ECDSA operations*
+*Figure 33: ECDSA operations*
 
 ![](./images/ECDSA_ops.png)
 
@@ -1139,7 +1146,7 @@ In the deterministic key generation, the paired key of (privKey, pubKey) is gene
 
 #### Signing
 
-In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA384. The signing algorithm includes:
+In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA512. The signing algorithm includes:
 
 * Generate a random number k in the range [1..n-1], while k = HMAC\_DRBG(privKey, h)
 * Calculate the random point R = k × G
@@ -1149,7 +1156,7 @@ In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), t
 
 #### Verifying
 
-The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the public key pubKey and hash of message m, h=hash(m) using the same cryptographic hash function SHA384. The output is r’ value of verifying a signature. The ECDSA verify algorithm includes:
+The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the public key pubKey and hash of message m, h=hash(m) using the same cryptographic hash function SHA512. The output is r’ value of verifying a signature. The ECDSA verify algorithm includes:
 
 * Calculate s1 = s<sup>−1</sup> mod n
 * Compute R' = (h × s1) × G + (r × s1) × pubKey
@@ -1168,7 +1175,7 @@ In ECDH sharedkey generation, the shared key is generated by ECDH_sharedkey(priv
 
 The ECC top-level architecture is shown in the following figure.
 
-*Figure 33: ECC architecture*
+*Figure 34: ECC architecture*
 
 ![](./images/ECC_arch.png)
 
@@ -1187,7 +1194,7 @@ The ECC architecture inputs and outputs are described in the following table.
 | nonce \[383:0\]            | input           | The deterministic nonce for HMAC_DRBG in the KeyGen operation.                                                             |
 | privKey_in\[383:0\]        | input           | The input private key used in the signing operation.                                                                       |
 | pubKey_in\[1:0\]\[383:0\]  | input           | The input public key(x,y) used in the verifying operation.                                                                 |
-| hashed_msg\[383:0\]        | input           | The hash of message using SHA384.                                                                                          |
+| hashed_msg\[383:0\]        | input           | The hash of message using SHA512.                                                                                          |
 | ready                      | output          | When HIGH, the signal indicates the core is ready.                                                                         |
 | privKey_out\[383:0\]       | output          | The generated private key in the KeyGen operation.                                                                         |
 | pubKey_out\[1:0\]\[383:0\] | output          | The generated public key(x,y) in the KeyGen operation.                                                                     |
@@ -1207,25 +1214,25 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 #### KeyGen
 
-*Figure 34: KeyGen pseudocode*
+*Figure 35: KeyGen pseudocode*
 
 ![](./images/keygen_pseudo.png)
 
 #### Signing
 
-*Figure 35: Signing pseudocode*
+*Figure 36: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
 
 #### Verifying
 
-*Figure 36: Verifying pseudocode*
+*Figure 37: Verifying pseudocode*
 
 ![](./images/verify_pseudo.png)
 
 #### ECDH sharedkey
 
-*Figure 37: ECDH sharedkey pseudocode*
+*Figure 38: ECDH sharedkey pseudocode*
 
 ![](./images/sharedkey_pseudo.png)
 
@@ -1291,7 +1298,7 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 2. KEYGEN PRIVKEY: Running HMAC\_DRBG with seed and nonce to generate the privkey in KEYGEN operation.
 3. SIGNING NONCE: Running HMAC\_DRBG based on RFC6979 in SIGNING operation with privkey and hashed\_msg.
 
-*Figure 38: HMAC\_DRBG utilization*
+*Figure 39: HMAC\_DRBG utilization*
 
 ![](./images/HMAC_DRBG_util.png)
 
@@ -1307,7 +1314,7 @@ In SCA random generator state:
 
 The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in the following figure.
 
-*Figure 39: HMAC\_DRBG data flow*
+*Figure 40: HMAC\_DRBG data flow*
 
 ![](./images/HMAC_DRBG_data.png)
 
@@ -1317,7 +1324,7 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
-*Figure 40: TVLA threshold as a function of the number of samples per trace*
+*Figure 41: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
 
@@ -1327,7 +1334,7 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
 
-*Figure 41: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
+*Figure 42: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
 
@@ -1335,13 +1342,13 @@ The TVLA results for performing seed/nonce-dependent leakage detection using 200
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
 
-*Figure 42: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
+*Figure 43: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
 ![](./images/TVLA_privekey.png)
 
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
-*Figure 43: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+*Figure 44: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
 
 ![](./images/TVLA_msg_dependent.png)
 
@@ -1380,13 +1387,13 @@ LMS cryptography is a type of hash-based digital signature scheme that was stand
 
 Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
 
-*Figure 44: LMS-OTS Verification algorithm*
+*Figure 45: LMS-OTS Verification algorithm*
 
 ![](./images/LMS_verifying_alg.png)
 
 The high-level architecture of LMS is shown in the following figure.
 
-*Figure 45: LMS high-level architecture*
+*Figure 46: LMS high-level architecture*
 
 ![](./images/LMS_high_level.png)
 
@@ -1410,7 +1417,7 @@ LMS parameters are shown in the following table:
 
 The Winternitz hash chain can be accelerated in hardware to enhance the performance of the design. For that, a configurable architecture is proposed that can reuse SHA256 engine. The LMS accelerator architecture is shown in the following figure, while H is SHA256 engine.
 
-*Figure 46: Winternitz chain architecture*
+*Figure 47: Winternitz chain architecture*
 
 ![](./images/LMS_wntz_arch.png)
 
@@ -1442,7 +1449,7 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 ## PCR vault
 
 * Platform Configuration Register (PCR) vault is a register file that stores measurements to be used by the microcontroller.
-* PCR entries are read-only registers of 384 bits each.
+* PCR entries are read-only registers of 512 bits each.
 * Control bits allow for entries to be cleared by FW, which sets their values back to 0.
 * A lock bit can be set by FW to prevent the entry from being cleared. The lock bit is sticky and only resets on a powergood cycle.
 
