@@ -110,10 +110,12 @@ module hmac_drbg
   reg                   HMAC_next;
   reg  [1023:0]         HMAC_block;
   reg  [REG_SIZE-1:0]   HMAC_key;
+  logic [511:0]         HMAC512_key;
 
   wire                  HMAC_ready;
   wire                  HMAC_tag_valid;
-  wire [REG_SIZE-1:0]   HMAC_tag;
+  logic [REG_SIZE-1:0]  HMAC_tag;
+  logic [511:0]         HMAC512_tag;
 
   //----------------------------------------------------------------
   // HMAC module instantiation.
@@ -126,11 +128,12 @@ module hmac_drbg
     .zeroize(zeroize),
     .init_cmd(HMAC_init),
     .next_cmd(HMAC_next),
+    .mode_cmd(1'b0),  //hardcoded to HMAC384 mode
     .lfsr_seed(lfsr_seed),
-    .key(HMAC_key),
+    .key(HMAC512_key),
     .block_msg(HMAC_block),
     .ready(HMAC_ready),
-    .tag(HMAC_tag),
+    .tag(HMAC512_tag),
     .tag_valid(HMAC_tag_valid)
     );
 
@@ -139,6 +142,12 @@ module hmac_drbg
   // Update functionality for all registers in the core.
   //----------------------------------------------------------------
   
+  always_comb
+  begin
+    HMAC512_key = {HMAC_key, 128'b0};
+    HMAC_tag = HMAC512_tag[511 : 128];
+  end
+
   always_comb
   begin : edge_detector
     first_round = (drbg_st_reg == drbg_st_reg_last)? 1'b0 : 1'b1;

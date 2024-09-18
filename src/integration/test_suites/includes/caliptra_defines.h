@@ -67,6 +67,11 @@
 #define SHA256_MODE_SHA_224         0x0
 #define SHA256_MODE_SHA_256         0x1
 
+/* ---- HMAC ---- */
+
+#define HMAC384_MODE              0x0
+#define HMAC512_MODE              0x1
+
 /* ---- Mailbox ---- */
 #define MBOX_DIR_BASE_ADDR        0x30000000
 #define MBOX_DIR_SPAN             0x00020000 /* 128 KiB */

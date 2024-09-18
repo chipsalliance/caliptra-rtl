@@ -31,15 +31,16 @@ module hmac_core
       // Control.
       input wire            init_cmd,
       input wire            next_cmd,
+      input wire            mode_cmd,
       output wire           ready,
       output wire           tag_valid,
 
       // Data ports.
       input wire [383 : 0]  lfsr_seed,
 
-      input wire [383 : 0]  key,
+      input wire [511 : 0]  key,
       input wire [1023 : 0] block_msg,
-      output wire [383 : 0] tag
+      output wire [511 : 0] tag
     );
 
 
@@ -48,7 +49,8 @@ module hmac_core
   //----------------------------------------------------------------
   localparam bit [1023:0] IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
   localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
-  localparam bit [639:0]  FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
+  localparam bit [639:0]  HMAC384_FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
+  localparam bit [511:0]  HMAC512_FINAL_PAD  = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
 
   localparam [2 : 0] CTRL_IDLE   = 3'd0;
   localparam [2 : 0] CTRL_IPAD   = 3'd1;
@@ -78,6 +80,7 @@ module hmac_core
   reg         IPAD_ready;
   reg         OPAD_ready;
   reg         HMAC_ready;
+  reg [1:0]   mode_reg;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -85,16 +88,15 @@ module hmac_core
   reg             H1_next;
   reg  [1023 : 0] H1_block;
   wire            H1_ready;
-  wire [383 : 0]  H1_digest;
+  wire [511 : 0]  H1_digest;
   wire            H1_digest_valid;
 
   reg             H2_init;
   reg             H2_next;
   reg  [1023 : 0] H2_block;
   wire            H2_ready;
-  wire [383 : 0]  H2_digest;
+  wire [511 : 0]  H2_digest;
   wire            H2_digest_valid;
-  wire [127:0]    garbage_bit_vector1,garbage_bit_vector2;
 
   wire [383 : 0]  entropy;
 
@@ -102,7 +104,7 @@ module hmac_core
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready      = ready_flag;
-  assign tag        = H2_digest;
+  assign tag        = digest_valid_reg? H2_digest : 512'b0;
   assign tag_valid  = digest_valid_reg;
   //----------------------------------------------------------------
   // core instantiation.
@@ -115,14 +117,14 @@ module hmac_core
 
                      .init_cmd(H1_init),
                      .next_cmd(H1_next),
-                     .mode(2'h2),
+                     .mode(mode_reg),
 
                      .entropy(entropy[191 : 0]),
 
                      .block_msg(H1_block),
 
                      .ready(H1_ready),
-                     .digest({H1_digest,garbage_bit_vector1}),
+                     .digest(H1_digest),
                      .digest_valid(H1_digest_valid)
                     );
 
@@ -134,14 +136,14 @@ module hmac_core
 
                      .init_cmd(H2_init),
                      .next_cmd(H2_next),
-                     .mode(2'h2),
+                     .mode(mode_reg),
 
                      .entropy(entropy[383 : 192]),
 
                      .block_msg(H2_block),
 
                      .ready(H2_ready),
-                     .digest({H2_digest,garbage_bit_vector2}),
+                     .digest(H2_digest),
                      .digest_valid(H2_digest_valid)
                     );
 
@@ -197,6 +199,20 @@ module hmac_core
         end
     end // reg_update
 
+
+  always @ (posedge clk or negedge reset_n)
+    begin
+      if (!reset_n)
+        mode_reg <= '0;
+      else if (zeroize)
+        mode_reg <= '0;
+      else begin
+        if (hmac_ctrl_reg == CTRL_IDLE)
+          mode_reg <= {1'b1, mode_cmd};  //hashing algorithm mode: 00 for SHA512/224, 01 for SHA512/256, 10 for SHA384, 11 for SHA512
+      end
+    end
+          
+
   //----------------------------------------------------------------
   // state_logic
   //
@@ -210,9 +226,10 @@ module hmac_core
       OPAD_ready = H1_ready & H2_ready;
       HMAC_ready = H2_ready;
 
-      key_ipadded = {key, 640'b0} ^ IPAD;
-      key_opadded = {key, 640'b0} ^ OPAD;
-      HMAC_padded = {H1_digest, FINAL_PAD};
+      key_ipadded = {key, 512'b0} ^ IPAD;
+      key_opadded = {key, 512'b0} ^ OPAD;
+      HMAC_padded = mode_reg[0]? {H1_digest, HMAC512_FINAL_PAD}: 
+                                 {H1_digest[511: 128], HMAC384_FINAL_PAD};
       
       H1_block = key_ipadded;
       H2_block = key_opadded;
