@@ -1,6 +1,8 @@
 name: integration_lib
 files:
   # Components
+  - ../chipsalliance/caliptra-ss/src/mcu/config/compile.yml
+  - ../chipsalliance/caliptra-ss/src/riscv_core/veer_el2/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/libs/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/ahb_lite_bus/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/riscv_core/veer_el2/config/compile.yml
@@ -18,6 +20,7 @@ files:
   - ../chipsalliance/caliptra-rtl/src/sha512_masked/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/uart/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/spi_host/config/compile.yml
+  - ../chipsalliance/caliptra-rtl/src/axi/config/compile.yml
   # -- Start RNG --
   - ../chipsalliance/caliptra-rtl/src/caliptra_prim_generic/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/caliptra_prim/config/compile.yml
@@ -65,3 +68,4 @@ files:
   - ../chipsalliance/caliptra-rtl/src/integration/uvmf_caliptra_top/config/compile.yml
   # Please add your next file/folder above not below the line
   - ../chipsalliance/caliptra-rtl/src/integration/config/compile.yml
+  - ../chipsalliance/caliptra-ss/src/integration/config/compile.yml

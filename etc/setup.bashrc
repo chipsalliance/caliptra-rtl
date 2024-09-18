@@ -8,11 +8,21 @@ export MSFT_SCRIPTS_DIR=${MSFT_TOOLS}/scripts
 export RISC64_GCC_HOME=/home/noncad/riscv-gnu/2023.04.29
 export PATH=${RISC64_GCC_HOME}/bin:${PATH}
 export MSFT_REPO_ROOT=${root}
-export CALIPTRA_WORKSPACE=${WORKSPACE}/chipsalliance
-export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
-export ADAMS_BRIDGE_ROOT=${CALIPTRA_WORKSPACE}/adams-bridge
-export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
-export SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
 export TOOLS=${MSFT_TOOLS}
+
+export CHIPS=${WORKSPACE}/chipsalliance
+export ADAMS_BRIDGE=${CHIPS}/adams-bridge
+
+export CALIPTRA_WORKSPACE=${CHIPS}
+export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
+export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
+export CALIPTRA_SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
+
+export ADAMS_BRIDGE_ROOT=${CALIPTRA_WORKSPACE}/adams-bridge
+
+export CALIPTRA_SS=${CHIPS}/caliptra-ss
+export CALIPTRA_SS_TOOLS=${CALIPTRA_SS}/tools
+export CALIPTRA_SS_SCRIPTS_DIR=${CALIPTRA_SS_TOOLS}/scripts
+
 export UVM_HOME=/home/cad/tools/mentor/questa/2022.2_1/questasim/verilog_src/uvm-1.1d
 export UVMF_HOME=/home/cad/tools/mentor/uvmf/UVMF_2022.3

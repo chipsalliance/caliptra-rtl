@@ -50,8 +50,8 @@ fi
 cpt_ymls=$(grep '^\s*\- ../chipsalliance/caliptra-rtl/src' ${MSFT_REPO_ROOT}/config/compilespecs.yml | sed 's/^\s*- \(..\/chipsalliance\/caliptra-rtl\/src.*\)/\1/')
 declare -A procs;
 for i in ${cpt_ymls}; do
-    cpt_dir=$(realpath $(sed 's,\(..\/chipsalliance\/caliptra-rtl\/src/.\+/config\)/.*,\1,' <<< ${i}))
-    cpt_libs=$(grep '^\s*provides' ${i} | sed 's/.*\[\(\w\+\)\].*/\1/')
+    cpt_dir=$(realpath ${CALIPTRA_ROOT}/$(sed 's,..\/chipsalliance\/caliptra-rtl\/\(src/.\+/config\)/.*,\1,' <<< ${i}))
+    cpt_libs=$(grep '^\s*provides' ${cpt_dir}/compile.yml | sed 's/.*\[\(\w\+\)\].*/\1/')
     for j in ${cpt_libs}; do
         gen_pb_file_list ${cpt_dir} ${j} &
         procs["$i_$j"]=$!

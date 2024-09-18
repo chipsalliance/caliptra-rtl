@@ -86,9 +86,9 @@ unset -f module
 unset -f switchml
 unset -f _module_raw
 
-# This is the UVM-based ROM test
+# This is the UVM-based ROM test for Caliptra
 if [[ $TESTNAME == "caliptra_top_rom_test" ]]; then
-    cmd="make -f $SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=fw_test_rom program.hex"
+    cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=fw_test_rom program.hex"
     echo "$cmd"
     $cmd
 # This is any other UVM-based test in caliptra_top bench
@@ -96,29 +96,38 @@ elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
     if [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*wdt\w*_test") ]]; then
       BUILD_CFLAGS="-DWDT_TEST=1"
     fi
-    clean="make -f $SCRIPTS_DIR/Makefile clean_fw"
+    clean="make -f $CALIPTRA_SCRIPTS_DIR/Makefile clean_fw"
     echo "$clean"
-    cmd="make -f $SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_top program.hex"
+    cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_top program.hex"
     echo "$cmd"
     $clean
     $cmd
-    cmd="make -f $SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_fmc caliptra_fmc.hex"
+    cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_fmc caliptra_fmc.hex"
     echo "$cmd"
     $clean
     $cmd
-    cmd="make -f $SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_rt BUILD_CFLAGS=$BUILD_CFLAGS caliptra_rt.hex"
+    cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile PLAYBOOK_RANDOM_SEED=$seed TESTNAME=caliptra_rt BUILD_CFLAGS=$BUILD_CFLAGS caliptra_rt.hex"
     echo "$cmd"
     $clean
     $cmd
 # This is any other FW-based smoke test running on the basic caliptra top SV bench
 else
-    build_args="CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0"
+    cptra_build_args="CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0"
     if [[ "${CONFIG}" == "caliptra_top_trng_tb" ]]; then
-        build_args="${build_args} CALIPTRA_INTERNAL_TRNG=1"
+        cptra_build_args="${cptra_build_args} CALIPTRA_INTERNAL_TRNG=1"
+    elif [[ "${CONFIG}" == "caliptra_ss_top" ]]; then
+        cptra_build_args="${cptra_build_args} CALIPTRA_INTERNAL_TRNG=0 TESTNAME=smoke_test_mbox"
     else
-        build_args="${build_args} CALIPTRA_INTERNAL_TRNG=0"
+        cptra_build_args="${cptra_build_args} CALIPTRA_INTERNAL_TRNG=0"
     fi
-    cmd="make -f $SCRIPTS_DIR/Makefile ${build_args} program.hex"
+    cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile ${cptra_build_args} program.hex"
     echo "$cmd"
     $cmd
+
+    if [[ "${CONFIG}" == "caliptra_ss_top" ]]; then
+        # Build MCU Firmware for Subsystem Tests
+        cmd="make -f $CALIPTRA_SS_SCRIPTS_DIR/Makefile mcu_program.hex"
+        echo "$cmd"
+        $cmd
+    fi
 fi

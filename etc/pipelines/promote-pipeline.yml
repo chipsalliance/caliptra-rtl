@@ -280,7 +280,7 @@ stages:
             - 'module load tools/python/python3/3.9.2'
 
             # Run the Verilator test regression and dump logfiles to scratch
-            - 'submit -i python3 \$SCRIPTS_DIR/run_verilator_l0_regression.py'
+            - 'submit -i python3 \$CALIPTRA_SCRIPTS_DIR/run_verilator_l0_regression.py'
 
       - caliptra_synthesis_elab_check:
         - display_name: 'Caliptra Synthesis Elab Check'

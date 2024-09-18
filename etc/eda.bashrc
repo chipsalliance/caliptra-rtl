@@ -48,3 +48,6 @@ module load tools/verilator/5.012
 
 # 7z is used to extract ROM images from release bundle for directed regression
 module load tools/p7zip/16.02
+
+# license server 
+export AVERYDES_LICENSE_FILE=50004@wanlic.svceng.com
