@@ -156,41 +156,39 @@ module hmac_drbg
   end
 
   always_ff @ (posedge clk or negedge reset_n) 
-  begin
-    if (!reset_n)
-      ready_reg   <= '0; 
-    else if (zeroize)
-      ready_reg   <= '0; 
-    else
-      ready_reg   <= (drbg_st_reg == IDLE_ST);
-  end
-
-  always_ff @ (posedge clk or negedge reset_n) 
   begin : valid_drbg_regs_updates
     if (!reset_n) begin
-      valid_reg   <= 0;
-      drbg_reg   <= '0;
+      ready_reg   <= 1'b0; 
+      valid_reg   <= 1'b0; 
+      drbg_reg    <= '0;
     end
     else if (zeroize) begin
-      valid_reg   <= 0;
-      drbg_reg   <= '0;
+      ready_reg   <= 1'b0; 
+      valid_reg   <= 1'b0; 
+      drbg_reg    <= '0;
     end
     else
     begin
       unique case (drbg_st_reg)
         IDLE_ST: begin
-          if (init_cmd | next_cmd)
-            valid_reg    <= 0;
+          if (init_cmd | next_cmd) begin
+            ready_reg   <= 1'b0;
+            valid_reg   <= 1'b0;
+          end
+          else
+            ready_reg   <= 1'b1;
         end
 
         DONE_ST: begin
           drbg_reg   <= HMAC_tag;
           valid_reg   <= HMAC_tag_valid;
+          ready_reg   <= HMAC_ready;
         end
 
         default: begin
-          valid_reg   <= 0;
-          drbg_reg   <= '0;
+          ready_reg   <= 1'b0; 
+          valid_reg   <= 1'b0;
+          drbg_reg    <= '0;
         end
       endcase
     end
