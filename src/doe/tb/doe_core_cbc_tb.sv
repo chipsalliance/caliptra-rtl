@@ -283,6 +283,90 @@ module doe_core_cbc_tb();
 
 
   //----------------------------------------------------------------
+  // cbc_enc_dec_back2back_test()
+  //
+  // Perform CBC mode encryption or decryption single block test.
+  //----------------------------------------------------------------
+  task cbc_enc_dec_back2back_test(input [7 : 0]   tc_number,
+                                  input           encdec,
+                                  input [255 : 0] key,
+                                  input           key_length,
+                                  input [127 : 0] IV,
+                                  input [127 : 0] block,
+                                  input [127 : 0] expected);    
+    reg encdec_not;                            
+    begin
+      $display("*** TC %0d CBC mode enc_dec back2back test started.", tc_number);
+      if (encdec==0)
+        $display("*** DECRYPTION *** ");
+      else
+        $display("*** ENCRYPTION *** ");
+      tc_ctr = tc_ctr + 1;
+
+      init_key(key, key_length);
+      
+      core_IV_tb = IV;
+      IV_updated_tb = 1'b1;      
+      
+      #(CLK_PERIOD);
+      IV_updated_tb = 0;
+      core_block_tb = block;
+      core_encdec_tb = encdec;
+      core_next_tb       = 1'b1;
+
+      #(CLK_PERIOD);
+      core_next_tb       = 0;
+      wait_ready();
+      
+      if (core_result_tb == expected)
+        begin
+          $display("*** TC %0d successful.", tc_number);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d NOT successful.", tc_number);
+          $display("Expected: 0x%032x", expected);
+          $display("Got:      0x%032x", core_result_tb);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+      encdec_not = ~encdec;
+      if (encdec_not==0)
+        $display("*** DECRYPTION *** ");
+      else
+        $display("*** ENCRYPTION *** ");
+      tc_ctr = tc_ctr + 1;
+            
+      #(CLK_PERIOD);
+      core_block_tb = core_result_tb;
+      core_encdec_tb = encdec_not;
+      core_next_tb       = 1'b1;
+
+      #(CLK_PERIOD);
+      core_next_tb       = 0;
+      wait_ready();
+      
+      if (core_result_tb == block)
+        begin
+          $display("*** TC %0d successful.", tc_number+1);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d NOT successful.", tc_number+1);
+          $display("Expected: 0x%032x", block);
+          $display("Got:      0x%032x", core_result_tb);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // cbc_mode_single_block_test
+
+  //----------------------------------------------------------------
   // cbc_mode_double_block_test()
   //
   // Perform CBC mode encryption or decryption double block test.
@@ -641,6 +725,12 @@ module doe_core_cbc_tb();
                                  nist_plaintext0, nist_cbc_128_enc_expected0);
 
       $display("---------------------");
+
+      cbc_enc_dec_back2back_test(8'h09, DOE_ENCIPHER, nist_doe_key    , DOE_256_BIT_KEY, nist_IV0,
+                                 nist_plaintext0, nist_cbc_128_enc_expected0);
+
+      cbc_enc_dec_back2back_test(8'h0B, DOE_DECIPHER, nist_doe_key    , DOE_256_BIT_KEY, nist_IV0,
+                                 nist_cbc_128_enc_expected0, nist_plaintext0);
 
     end
   endtask // doe_cbc_test
