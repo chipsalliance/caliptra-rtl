@@ -15,6 +15,7 @@
 `ifndef SOC_IFC_PKG
 `define SOC_IFC_PKG
 
+`include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 
 package soc_ifc_pkg;
@@ -22,7 +23,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_ADDR_W = 18;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
-    parameter SOC_IFC_ID_W   = 5;
+    parameter SOC_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
     
     parameter MBOX_SIZE_KB = 128;
     parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
@@ -34,7 +35,7 @@ package soc_ifc_pkg;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
     parameter CPTRA_AXI_DMA_DATA_WIDTH = 32;
-    parameter CPTRA_AXI_DMA_ID_WIDTH   = 5;
+    parameter CPTRA_AXI_DMA_ID_WIDTH   = 5; // FIXME related to CALIPTRA_AXI_ID_WIDTH?
     parameter CPTRA_AXI_DMA_USER_WIDTH = 32;
 
     parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
