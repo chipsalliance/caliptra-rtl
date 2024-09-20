@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/07/02*_
+_*Last Update: 2024/09/20*_
 
 :warning:**$${\textsf{\color{red}DISCLAIMER:\ This\ repository\ is\ under\ active\ development\ towards\ a\ Gen2\ release\ on\ branch\ \textbf{main}.}}$$**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Functionality\ or\ quality\ is\ not\ guaranteed.}}$$**<br>
