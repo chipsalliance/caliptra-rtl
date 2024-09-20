@@ -37,6 +37,7 @@ jobs:
       - name: Stage documents
         run: |
           mkdir -p /tmp/pages-docs/main
+          cp -R .github/assets/gh-pages-base/* /tmp/pages-docs/main
           cp -R src/integration/docs/caliptra_reg_html /tmp/pages-docs/main/internal-regs
           cp -R src/soc_ifc/docs/caliptra_top_reg_html /tmp/pages-docs/main/external-regs
           find /tmp/pages-docs
