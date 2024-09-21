@@ -229,12 +229,13 @@ import caliptra_top_tb_pkg::*; #(
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO), .data(32'h00000001), .resp(wresp));
                     end
 
+                    $display ("CLP: ROM Flow in progress...\n");
+
                     // Test sequence (Mailbox or error handling)
                     wait(ready_for_fw_push || ras_test_ctrl.error_injection_seen);
 
                     // Mailbox flow
                     if (ready_for_fw_push) begin
-                        $display ("CLP: ROM Flow in progress...\n");
                         repeat(5) @(posedge core_clk);
 
                         $display ("CLP: Ready for firmware push\n");
