@@ -155,6 +155,8 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         input  bready
     );
 
+    // synthesis translate_off
+
     // Tasks
     `ifdef VERILATOR
         `define EQ__ =
@@ -360,5 +362,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
 
     `undef EQ__
     `undef TIME_ALGN
+
+    // synthesis translate_on
 
 endinterface
