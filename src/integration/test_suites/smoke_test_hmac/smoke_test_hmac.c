@@ -56,7 +56,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 void main() {
 
     //this is the key 384-bit
-    uint32_t key_data[] = {0x0b0b0b0b,
+    uint32_t key384_data[] = {0x0b0b0b0b,
                            0x0b0b0b0b,
                            0x0b0b0b0b,
                            0x0b0b0b0b,
@@ -68,6 +68,24 @@ void main() {
                            0x0b0b0b0b,
                            0x0b0b0b0b,
                            0x0b0b0b0b};
+    //this is the key 512-bit
+    uint32_t key512_data[] = {0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b};
+
     uint32_t block_data[] = {0x48692054,
                              0x68657265,
                              0x80000000,
@@ -100,7 +118,7 @@ void main() {
                              0x00000000,
                              0x00000000,
                              0x00000440};
-    uint32_t expected_tag[] = {0xb6a8d563,
+    uint32_t expected384_tag[] = {0xb6a8d563,
                                 0x6f5c6a72,
                                 0x24f9977d,
                                 0xcf7ee6c7,
@@ -112,6 +130,22 @@ void main() {
                                 0x5b3297b4,
                                 0xfb68dab9,
                                 0xf1b582c2};
+    uint32_t expected512_tag[] = {0x637edc6e,
+                                  0x01dce7e6,
+                                  0x742a9945,
+                                  0x1aae82df,
+                                  0x23da3e92,
+                                  0x439e590e,
+                                  0x43e761b3,
+                                  0x3e910fb8,
+                                  0xac2878eb,
+                                  0xd5803f6f,
+                                  0x0b61dbce,
+                                  0x5e251ff8,
+                                  0x789a4722,
+                                  0xc1be65ae,
+                                  0xa45fd464,
+                                  0xe89f8f5b};
     //this is a random lfsr_seed
     uint32_t lfsr_seed_data[12] =  {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -129,21 +163,24 @@ void main() {
 
     // Entry message
     VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " HMAC smoke test !!\n"               );
+    VPRINTF(LOW, " HMAC384 smoke test !!\n"            );
     VPRINTF(LOW, "----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
 
-    hmac_io hmac_key;
+    hmac_io hmac384_key;
     hmac_io hmac_block;
     hmac_io hmac_lfsr_seed;
-    hmac_io hmac_tag;
+    hmac_io hmac384_tag;
 
-    hmac_key.kv_intf = FALSE;
-    hmac_key.data_size = 12;
-    for (int i = 0; i < hmac_key.data_size; i++)
-        hmac_key.data[i] = key_data[i];
+    hmac_io hmac512_key;
+    hmac_io hmac512_tag;
+
+    hmac384_key.kv_intf = FALSE;
+    hmac384_key.data_size = 12;
+    for (int i = 0; i < hmac384_key.data_size; i++)
+        hmac384_key.data[i] = key384_data[i];
 
     hmac_block.kv_intf = FALSE;
     hmac_block.data_size = 32;
@@ -155,13 +192,32 @@ void main() {
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = FALSE;
-    hmac_tag.data_size = 12;
-    for (int i = 0; i < hmac_tag.data_size; i++)
-        hmac_tag.data[i] = expected_tag[i];
+    hmac384_tag.kv_intf = FALSE;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = expected384_tag[i];
 
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
+    hmac_zeroize();
+
+
+    // Entry message
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " HMAC512 smoke test !!\n"            );
+    VPRINTF(LOW, "----------------------------------\n");
+
+    hmac512_key.kv_intf = FALSE;
+    hmac512_key.data_size = 16;
+    for (int i = 0; i < hmac512_key.data_size; i++)
+        hmac512_key.data[i] = key512_data[i];
+
+    hmac512_tag.kv_intf = FALSE;
+    hmac512_tag.data_size = 16;
+    for (int i = 0; i < hmac512_tag.data_size; i++)
+        hmac512_tag.data[i] = expected512_tag[i];
+
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.

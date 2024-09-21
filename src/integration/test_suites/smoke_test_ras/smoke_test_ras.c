@@ -1017,11 +1017,13 @@ void run_crypto_error(enum test_list test_case) {
         lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
     } else if (test_case == CRYPTO_HMAC_DOE) {
         //start hmac and doe together
-        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK  |
+                                                (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
         lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW);
     } else if (test_case == CRYPTO_HMAC_ECC) {
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
-        lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
     }
 
     // Flag test as having run

@@ -86,7 +86,7 @@ inline void service_hmac_notif_intr  () {
     if (sts == 0) {
         printf("bad hmac_notif_intr sts:%x\n", sts);
     } else {
-        reg = (uint32_t *) (CLP_HMAC_REG_HMAC384_STATUS);
+        reg = (uint32_t *) (CLP_HMAC_REG_HMAC512_STATUS);
         hmac_intr_status = *reg;
     }
 }
