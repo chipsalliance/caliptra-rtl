@@ -110,7 +110,6 @@ ${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_props.sv
 ${CALIPTRA_ROOT}/src/integration/coverage/caliptra_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/test_suites/libs/jtagdpi/jtagdpi.sv
-${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_addr.v
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_sub_rd.sv
