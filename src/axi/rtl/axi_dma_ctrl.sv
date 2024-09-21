@@ -74,6 +74,7 @@ import soc_ifc_pkg::*;
     // Imports                                 //
     // --------------------------------------- //
     import axi_dma_reg_pkg::*;
+    `include "caliptra_prim_assert.sv"
 
 
     // --------------------------------------- //
