@@ -191,37 +191,40 @@ stages:
           - timeout: 45
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
 
-    - uvmf_soc_ifc:
-        - display_name: 'UVMF_SOC_IFC'
-        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
-        - configspec_name: 'integration_lib'
-        - dut: 'uvmf_soc_ifc'
-        #- args: '--submit-resource-args RAM/28000'
-        - timeout: 25
-        - testsuites:
-          - l0_regress:
-            - enabled: true
-            - configspec_name: 'integration_lib'
-            - dut: 'uvmf_soc_ifc'
-            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_top_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=soc_ifc_env_cptra_init_interrupts_sequence +CLP_SEQ=soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence'
-            - path: '${CALIPTRA_ROOT}/src/soc_ifc/stimulus/testsuites/uvmf_soc_ifc_promote_regression.yml'
-            - timeout: 1440
-
-    - uvmf_caliptra_top:
-        - display_name: 'UVMF_CALIPTRA_TOP'
-        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
-        - configspec_name: 'integration_lib'
-        - dut: 'uvmf_caliptra_top'
-        #- args: '--submit-resource-args RAM/28000'
-        - timeout: 25
-        - testsuites:
-          - l0_regress:
-            - enabled: true
-            - configspec_name: 'integration_lib'
-            - dut: 'uvmf_caliptra_top'
-            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=CLP_RERUN_FW_INIT +CLP_SEQ=soc_ifc_env_mbox_rand_medium_interference_sequence +CLP_SEQ=soc_ifc_env_mbox_fw_upd_sequence'
-            - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/uvmf_caliptra_top_promote_regression.yml'
-            - timeout: 1440
+# ===================================== AXI FIXME =====================================
+# == Reenable these checks once UVM env is updated to AXI
+#    - uvmf_soc_ifc:
+#        - display_name: 'UVMF_SOC_IFC'
+#        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+#        - configspec_name: 'integration_lib'
+#        - dut: 'uvmf_soc_ifc'
+#        #- args: '--submit-resource-args RAM/28000'
+#        - timeout: 25
+#        - testsuites:
+#          - l0_regress:
+#            - enabled: true
+#            - configspec_name: 'integration_lib'
+#            - dut: 'uvmf_soc_ifc'
+#            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_top_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=soc_ifc_env_cptra_init_interrupts_sequence +CLP_SEQ=soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence'
+#            - path: '${CALIPTRA_ROOT}/src/soc_ifc/stimulus/testsuites/uvmf_soc_ifc_promote_regression.yml'
+#            - timeout: 1440
+#
+#    - uvmf_caliptra_top:
+#        - display_name: 'UVMF_CALIPTRA_TOP'
+#        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+#        - configspec_name: 'integration_lib'
+#        - dut: 'uvmf_caliptra_top'
+#        #- args: '--submit-resource-args RAM/28000'
+#        - timeout: 25
+#        - testsuites:
+#          - l0_regress:
+#            - enabled: true
+#            - configspec_name: 'integration_lib'
+#            - dut: 'uvmf_caliptra_top'
+#            - sim_args: '+CLP_REGRESSION +CLP_SHORT_SUITE +CLP_SEQ=soc_ifc_env_mbox_rand_small_sequence +CLP_SEQ=soc_ifc_env_mbox_rst_warm_rand_medium_sequence +CLP_SEQ=CLP_RERUN_FW_INIT +CLP_SEQ=soc_ifc_env_mbox_rand_medium_interference_sequence +CLP_SEQ=soc_ifc_env_mbox_fw_upd_sequence'
+#            - path: '${CALIPTRA_ROOT}/src/integration/stimulus/testsuites/uvmf_caliptra_top_promote_regression.yml'
+#            - timeout: 1440
+# ===================================== END AXI FIXME =====================================
 
     - integration_top_ius:
       - display_name: 'Build integration_lib with IUS/Xcelium'
