@@ -22,8 +22,8 @@ _*Last Update: 2024/09/20*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
-Releases are published as a tag, and also contain downloadable packages (which should not be used).
-Instead of downloading the collateral attached to the published release, integrators should consume Caliptra releases by pulling code from the repository at the associated tag, due to https://github.com/chipsalliance/caliptra-rtl/issues/471.
+Releases are published as a tag, and also contain downloadable assets (which should not be used).
+Instead of downloading the assets attached to the published release, integrators should consume Caliptra releases by pulling code from the repository at the associated tag, due to https://github.com/chipsalliance/caliptra-rtl/issues/471.
 
 ## **Tools Used** ##
 
