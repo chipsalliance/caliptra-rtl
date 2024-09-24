@@ -165,7 +165,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   //SHA API
   //Acquire the lock and store the id
-  always_comb hwif_in.ID.ID.next = req_data.id;
+  always_comb hwif_in.ID.ID.next = 32'(req_data.id);
   //Detect the lock getting set when swmod is asserted and lock is 0 and it's not a write
   //Since this lock is cleared by writing, the swmod asserts on write attempts too, but we only want to set lock on read when value is 0
   always_comb lock_set = ~hwif_out.LOCK.LOCK.value & hwif_out.LOCK.LOCK.swmod & ~req_data.write;

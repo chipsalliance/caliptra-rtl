@@ -547,7 +547,7 @@ always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == 
 always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
-always_comb hwif_in.mbox_id.id.next = req_data.id;
+always_comb hwif_in.mbox_id.id.next = 32'(req_data.id);
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
 
 always_comb hwif_in.soc_req = req_data.soc_req;
