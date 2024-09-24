@@ -5,21 +5,19 @@
 // OTP Controller top.
 //
 
-`include "prim_assert.sv"
+`include "caliptra_prim_assert.sv"
 
 module otp_ctrl
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_reg_pkg::*;
-  import otp_ctrl_part_pkg::*;
-  import axi_pkg::*;
-  import otp_ctrl_axi_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_reg_pkg::*;
+  import caliptra_otp_ctrl_part_pkg::*;
 #(
   // Enable asynchronous transitions on alerts.
   parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
   // Compile time random constants, to be overriden by topgen.
   parameter lfsr_seed_t RndCnstLfsrSeed = RndCnstLfsrSeedDefault,
   parameter lfsr_perm_t RndCnstLfsrPerm = RndCnstLfsrPermDefault,
-  parameter scrmbl_key_init_t RndCnstScrmblKeyInit = RndCnstScrmblKeyInitDefault,
+  //parameter scrmbl_key_init_t RndCnstScrmblKeyInit = RndCnstScrmblKeyInitDefault,
   // Hexfile file to initialize the OTP macro.
   // Note that the hexdump needs to account for ECC.
   parameter MemInitFile = ""
@@ -33,47 +31,16 @@ module otp_ctrl
   output edn_pkg::edn_req_t                          edn_o,
   input  edn_pkg::edn_rsp_t                          edn_i,
   // Bus Interface
-  
-  /*
   input  tlul_pkg::tl_h2d_t                          core_tl_i,
   output tlul_pkg::tl_d2h_t                          core_tl_o,
-  */
-  input  logic                                      core_dv,
-  input  logic [AW-1:0]                             core_addr,
-  input logic                                       core_write,
-  //input otp_ctrl_axi_pkg::axi_a_user_t              core_a_user,
-  input logic   [IW-1:0]                            core_id,
-  input logic   [DW-1:0]                            core_wdata,
-  input logic   [BC-1:0]                            core_wstrb,
-  output logic  [DW-1:0]                            core_rdata,
-  input logic                                       core_last,
-  output logic                                      core_hld,
-  output logic                                      core_err,
-  //output otp_ctrl_axi_pkg::axi_d_user_t             ore_d_user,
-
-  /*
   input  tlul_pkg::tl_h2d_t                          prim_tl_i,
   output tlul_pkg::tl_d2h_t                          prim_tl_o,
-  */
- input  logic                                      prim_dv,
- input  logic [AW-1:0]                             prim_addr,
- input logic                                       prim_write,
- //input otp_ctrl_axi_pkg::axi_a_user_t              prim_a_user,
- input logic   [IW-1:0]                            prim_id,
- input logic   [DW-1:0]                            prim_wdata,
- input logic   [BC-1:0]                            prim_wstrb,
- output logic  [DW-1:0]                            prim_rdata,
- input logic                                       prim_last,
- output logic                                      prim_hld,
- output logic                                      prim_err,
- //output otp_ctrl_axi_pkg::axi_d_user_t             prim_d_user,
-
   // Interrupt Requests
   output logic                                       intr_otp_operation_done_o,
   output logic                                       intr_otp_error_o,
   // Alerts
-  input  prim_alert_pkg::alert_rx_t [NumAlerts-1:0]  alert_rx_i,
-  output prim_alert_pkg::alert_tx_t [NumAlerts-1:0]  alert_tx_o,
+  input  caliptra_prim_alert_pkg::alert_rx_t [NumAlerts-1:0]  alert_rx_i,
+  output caliptra_prim_alert_pkg::alert_tx_t [NumAlerts-1:0]  alert_tx_o,
   // Observability to AST
   input ast_pkg::ast_obs_ctrl_t                      obs_ctrl_i,
   output logic [7:0]                                 otp_obs_o,
@@ -100,7 +67,8 @@ module otp_ctrl
   // OTP broadcast outputs
   // SEC_CM: TOKEN_VALID.CTRL.MUBI
   output otp_lc_data_t                               otp_lc_data_o,
-  output otp_keymgr_key_t                            otp_keymgr_key_o,
+  //output otp_keymgr_key_t                            otp_keymgr_key_o,
+  /* 
   // Scrambling key requests
   input  flash_otp_key_req_t                         flash_otp_key_i,
   output flash_otp_key_rsp_t                         flash_otp_key_o,
@@ -108,6 +76,11 @@ module otp_ctrl
   output sram_otp_key_rsp_t [NumSramKeyReqSlots-1:0] sram_otp_key_o,
   input  otbn_otp_key_req_t                          otbn_otp_key_i,
   output otbn_otp_key_rsp_t                          otbn_otp_key_o,
+  */
+  // Secret wire outputs
+  output obfuscated_uds_seed_t                       obfuscated_uds_seed_o,
+  output field_entropy_t                             field_entropy_o,
+  output pk_hash_t                                   pk_hash_o,
   // Hardware config bits
   output otp_broadcast_t                             otp_broadcast_o,
   // External voltage for OTP
@@ -115,31 +88,31 @@ module otp_ctrl
   // Scan
   input                                              scan_en_i,
   input                                              scan_rst_ni,
-  input prim_mubi_pkg::mubi4_t                       scanmode_i,
+  input caliptra_prim_mubi_pkg::mubi4_t                       scanmode_i,
   // Test-related GPIO output
   output logic [OtpTestVectWidth-1:0]                cio_test_o,
   output logic [OtpTestVectWidth-1:0]                cio_test_en_o
 );
 
-  import prim_mubi_pkg::*;
-  import prim_util_pkg::vbits;
+  import caliptra_prim_mubi_pkg::*;
+  import caliptra_prim_util_pkg::vbits;
 
   ////////////////////////
   // Integration Checks //
   ////////////////////////
 
   // This ensures that we can transfer scrambler data blocks in and out of OTP atomically.
-  `ASSERT_INIT(OtpIfWidth_A, OtpIfWidth == ScrmblBlockWidth)
+  `CALIPTRA_ASSERT_INIT(OtpIfWidth_A, OtpIfWidth == ScrmblBlockWidth)
 
   // These error codes need to be identical.
-  `ASSERT_INIT(ErrorCodeWidth_A, OtpErrWidth == prim_otp_pkg::ErrWidth)
-  `ASSERT_INIT(OtpErrorCode0_A,  int'(NoError) == int'(prim_otp_pkg::NoError))
-  `ASSERT_INIT(OtpErrorCode1_A,  int'(MacroError) == int'(prim_otp_pkg::MacroError))
-  `ASSERT_INIT(OtpErrorCode2_A,  int'(MacroEccCorrError) == int'(prim_otp_pkg::MacroEccCorrError))
-  `ASSERT_INIT(OtpErrorCode3_A,
-               int'(MacroEccUncorrError) == int'(prim_otp_pkg::MacroEccUncorrError))
-  `ASSERT_INIT(OtpErrorCode4_A,
-               int'(MacroWriteBlankError) == int'(prim_otp_pkg::MacroWriteBlankError))
+  `CALIPTRA_ASSERT_INIT(ErrorCodeWidth_A, OtpErrWidth == caliptra_prim_otp_pkg::ErrWidth)
+  `CALIPTRA_ASSERT_INIT(OtpErrorCode0_A,  int'(NoError) == int'(caliptra_prim_otp_pkg::NoError))
+  `CALIPTRA_ASSERT_INIT(OtpErrorCode1_A,  int'(MacroError) == int'(caliptra_prim_otp_pkg::MacroError))
+  `CALIPTRA_ASSERT_INIT(OtpErrorCode2_A,  int'(MacroEccCorrError) == int'(caliptra_prim_otp_pkg::MacroEccCorrError))
+  `CALIPTRA_ASSERT_INIT(OtpErrorCode3_A,
+               int'(MacroEccUncorrError) == int'(caliptra_prim_otp_pkg::MacroEccUncorrError))
+  `CALIPTRA_ASSERT_INIT(OtpErrorCode4_A,
+               int'(MacroWriteBlankError) == int'(caliptra_prim_otp_pkg::MacroWriteBlankError))
 
   /////////////
   // Regfile //
@@ -148,61 +121,20 @@ module otp_ctrl
   // We have one CSR node, one functional TL-UL window and a gate module for that window
   logic [2:0] intg_error;
 
-  /*
   tlul_pkg::tl_h2d_t tl_win_h2d;
   tlul_pkg::tl_d2h_t tl_win_d2h;
-  */
 
-  logic           win_dv,
-  logic [AW-1:0]  win_addr,
-  logic           win_write,
-  //logic [UW-1:0]  win_user,
-  logic [IW-1:0]  win_id,
-  logic [DW-1:0]  win_wdata,
-  logic [BC-1:0]  win_wstrb,
-  logic [DW-1:0]  win_rdata,
-  logic           win_last,
-  logic           win_hld,
-  logic           win_err,
-
-
-
-
-  otp_ctrl_reg_pkg::otp_ctrl_core_reg2hw_t reg2hw;
-  otp_ctrl_reg_pkg::otp_ctrl_core_hw2reg_t hw2reg;
+  caliptra_otp_ctrl_reg_pkg::caliptra_otp_ctrl_core_reg2hw_t reg2hw;
+  caliptra_otp_ctrl_reg_pkg::caliptra_otp_ctrl_core_hw2reg_t hw2reg;
 
   // SEC_CM: DIRECT_ACCESS.CONFIG.REGWEN, CHECK_TRIGGER.CONFIG.REGWEN, CHECK.CONFIG.REGWEN
-  otp_ctrl_core_reg_top u_reg_core (
+  caliptra_otp_ctrl_core_reg_top u_reg_core (
     .clk_i,
     .rst_ni,
-    /*
     .tl_i      ( core_tl_i     ),
     .tl_o      ( core_tl_o     ),
     .tl_win_o  ( tl_win_h2d    ),
     .tl_win_i  ( tl_win_d2h    ),
-    */
-    .core_dv   ( core_dv       ),
-    .core_addr ( core_addr     ),
-    .core_write( core_write    ),
-    //.core_user ( core_user     ),
-    .core_id   ( core_id       ),
-    .core_wdata( core_wdata    ),
-    .core_wstrb( core_wstrb    ),
-    .core_rdata( core_rdata    ),
-    .core_last ( core_last     ),
-    .core_hld  ( core_hld      ),
-    .core_err  ( core_err      ),
-    .win_dv    ( win_dv        ),
-    .win_addr  ( win_addr      ),
-    .win_write ( win_write     ),
-    //.win_user  ( win_user      ),
-    .win_id    ( win_id        ),
-    .win_wdata ( win_wdata     ),
-    .win_wstrb ( win_wstrb     ),
-    .win_rdata ( win_rdata     ),
-    .win_last  ( win_last      ),
-    .win_hld   ( win_hld       ),
-    .win_err   ( win_err       ),
     .reg2hw    ( reg2hw        ),
     .hw2reg    ( hw2reg        ),
     // SEC_CM: BUS.INTEGRITY
@@ -221,7 +153,7 @@ module otp_ctrl
   // Single wire for gating assertions in arbitration and CDC primitives.
   logic lc_escalate_en_any;
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(NumAgentsIdx+2)
   ) u_prim_lc_sync_escalate_en (
     .clk_i,
@@ -230,7 +162,7 @@ module otp_ctrl
     .lc_en_o(lc_escalate_en_synced)
   );
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(1)
   ) u_prim_lc_sync_creator_seed_sw_rw_en (
     .clk_i,
@@ -239,7 +171,7 @@ module otp_ctrl
     .lc_en_o({lc_creator_seed_sw_rw_en})
   );
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(1)
   ) u_prim_lc_sync_owner_seed_sw_rw_en (
     .clk_i,
@@ -248,7 +180,7 @@ module otp_ctrl
     .lc_en_o({lc_owner_seed_sw_rw_en})
   );
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(1)
   ) u_prim_lc_sync_seed_hw_rd_en (
     .clk_i,
@@ -257,7 +189,7 @@ module otp_ctrl
     .lc_en_o({lc_seed_hw_rd_en})
   );
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(3)
   ) u_prim_lc_sync_dft_en (
     .clk_i,
@@ -266,7 +198,7 @@ module otp_ctrl
     .lc_en_o(lc_dft_en)
   );
 
-  prim_lc_sync #(
+  caliptra_prim_lc_sync #(
     .NumCopies(1)
   ) u_prim_lc_sync_check_byp_en (
     .clk_i,
@@ -285,8 +217,8 @@ module otp_ctrl
   logic [1:0]  tlul_rerror;
   logic [31:0] tlul_rdata;
 
-  import prim_mubi_pkg::MuBi4False;
-  axi_adapter_sram #(
+  import caliptra_prim_mubi_pkg::MuBi4False;
+  tlul_adapter_sram #(
     .SramAw      ( SwWindowAddrWidth ),
     .SramDw      ( 32 ),
     .Outstanding ( 1  ),
@@ -296,16 +228,8 @@ module otp_ctrl
     .clk_i,
     .rst_ni,
     .en_ifetch_i      ( MuBi4False         ),
-    .axi_dv             ( tl_win_h2d         ),
-    .axi_addr             ( tl_win_d2h         ),
-    .axi_write          (),
-    .axi_id             (),
-    .axi_wdata          (),
-    .axi_wstrb          (),
-    .axi_rdata          (),
-    .axi_last           (),
-    .axi_hld            (),
-    .axi_err            (),
+    .tl_i             ( tl_win_h2d         ),
+    .tl_o             ( tl_win_d2h         ),
     .req_o            (  tlul_req          ),
     .gnt_i            (  tlul_gnt          ),
     .we_o             (                    ), // unused
@@ -321,50 +245,50 @@ module otp_ctrl
     .rmw_in_progress_o(                    )
   );
 
-  logic [NumPart-1:0] axi_part_sel_oh;
+  logic [NumPart-1:0] tlul_part_sel_oh;
   for (genvar k = 0; k < NumPart; k++) begin : gen_part_sel
     localparam logic [OtpByteAddrWidth:0] PartEnd = (OtpByteAddrWidth+1)'(PartInfo[k].offset) +
                                                     (OtpByteAddrWidth+1)'(PartInfo[k].size);
     if (PartInfo[k].offset == 0) begin : gen_zero_offset
-      assign axi_part_sel_oh[k] = ({1'b0, {tlul_addr, 2'b00}} < PartEnd);
+      assign tlul_part_sel_oh[k] = ({1'b0, {tlul_addr, 2'b00}} < PartEnd);
     end else begin : gen_nonzero_offset
-      assign axi_part_sel_oh[k] = ({tlul_addr, 2'b00} >= PartInfo[k].offset) &
+      assign tlul_part_sel_oh[k] = ({tlul_addr, 2'b00} >= PartInfo[k].offset) &
                                    ({1'b0, {tlul_addr, 2'b00}} < PartEnd);
     end
   end
 
-  `ASSERT(PartSelMustBeOnehot_A, $onehot0(axi_part_sel_oh))
+  `CALIPTRA_ASSERT(PartSelMustBeOnehot_A, $onehot0(tlul_part_sel_oh))
 
-  logic [NumPartWidth-1:0] axi_part_idx;
+  logic [NumPartWidth-1:0] tlul_part_idx;
   caliptra_prim_arbiter_fixed #(
     .N(NumPart),
     .EnDataPort(0)
   ) u_part_sel_idx (
     .clk_i,
     .rst_ni,
-    .req_i   ( axi_part_sel_oh  ),
+    .req_i   ( tlul_part_sel_oh  ),
     .data_i  ( '{default: '0}    ),
     .gnt_o   (                   ), // unused
-    .idx_o   ( axi_part_idx     ),
+    .idx_o   ( tlul_part_idx     ),
     .valid_o (                   ), // unused
     .data_o  (                   ), // unused
     .ready_i ( 1'b0              )
   );
 
   logic tlul_oob_err_d, tlul_oob_err_q;
-  logic [NumPart-1:0] part_axi_req, part_axi_gnt, part_axi_rvalid;
-  logic [SwWindowAddrWidth-1:0] part_axi_addr;
-  logic [NumPart-1:0][1:0]  part_axi_rerror;
-  logic [NumPart-1:0][31:0] part_axi_rdata;
+  logic [NumPart-1:0] part_tlul_req, part_tlul_gnt, part_tlul_rvalid;
+  logic [SwWindowAddrWidth-1:0] part_tlul_addr;
+  logic [NumPart-1:0][1:0]  part_tlul_rerror;
+  logic [NumPart-1:0][31:0] part_tlul_rdata;
 
   always_comb begin : p_tlul_assign
     // Send request to the correct partition.
-    part_axi_addr   = tlul_addr;
-    part_axi_req    = '0;
+    part_tlul_addr   = tlul_addr;
+    part_tlul_req    = '0;
     tlul_oob_err_d   = 1'b0;
     if (tlul_req) begin
-      if (axi_part_sel_oh != '0) begin
-        part_axi_req[axi_part_idx] = 1'b1;
+      if (tlul_part_sel_oh != '0) begin
+        part_tlul_req[tlul_part_idx] = 1'b1;
       end else begin
         // Error out in the next cycle if address was out of bounds.
         tlul_oob_err_d = 1'b1;
@@ -372,13 +296,13 @@ module otp_ctrl
     end
 
     // aggregate TL-UL responses
-    tlul_gnt         = |part_axi_gnt    | tlul_oob_err_q;
-    tlul_rvalid      = |part_axi_rvalid | tlul_oob_err_q;
+    tlul_gnt         = |part_tlul_gnt    | tlul_oob_err_q;
+    tlul_rvalid      = |part_tlul_rvalid | tlul_oob_err_q;
     tlul_rerror      = '0;
     tlul_rdata       = '0;
     for (int k = 0; k < NumPart; k++) begin
-      tlul_rerror |= part_axi_rerror[k];
-      tlul_rdata  |= part_axi_rdata[k];
+      tlul_rerror |= part_tlul_rerror[k];
+      tlul_rdata  |= part_tlul_rdata[k];
     end
   end
 
@@ -412,14 +336,14 @@ module otp_ctrl
     if (lc_ctrl_pkg::lc_tx_test_false_loose(lc_creator_seed_sw_rw_en)) begin
       for (int k = 0; k < NumPart; k++) begin
         if (PartInfo[k].iskeymgr_creator) begin
-          part_access_pre[k] = {2{prim_mubi_pkg::MuBi8True}};
+          part_access_pre[k] = {2{caliptra_prim_mubi_pkg::MuBi8True}};
         end
       end
     end
     if (lc_ctrl_pkg::lc_tx_test_false_loose(lc_owner_seed_sw_rw_en)) begin
       for (int k = 0; k < NumPart; k++) begin
         if (PartInfo[k].iskeymgr_owner) begin
-          part_access_pre[k] = {2{prim_mubi_pkg::MuBi8True}};
+          part_access_pre[k] = {2{caliptra_prim_mubi_pkg::MuBi8True}};
         end
       end
     end
@@ -608,7 +532,7 @@ module otp_ctrl
                      chk_timeout,
                      lfsr_fsm_err,
                      scrmbl_fsm_err,
-                     part_fsm_err[KdiIdx],
+                     //part_fsm_err[KdiIdx],
                      fatal_bus_integ_error_q,
                      dai_idle,
                      chk_pending};
@@ -641,7 +565,7 @@ end
     .intr_o                 ( intr_otp_operation_done_o               )
   );
 
- caliptra_a_prim_intr_hw #(
+ caliptra_prim_intr_hw #(
     .Width(1)
   ) u_intr_error (
     .clk_i,
@@ -766,17 +690,17 @@ end
   // Both the key derivation and LFSR reseeding are low bandwidth,
   // hence they can share the same EDN interface.
   logic edn_req, edn_ack;
-  logic key_edn_req, key_edn_ack;
+  //logic key_edn_req, key_edn_ack;
   caliptra_prim_arbiter_tree #(
-    .N(2),
+    .N(1),
     .EnDataPort(0)
   ) u_edn_arb (
     .clk_i,
     .rst_ni,
     .req_chk_i ( ~lc_escalate_en_any         ),
-    .req_i     ( {lfsr_edn_req, key_edn_req} ),
+    .req_i     ( lfsr_edn_req                ), // {lfsr_edn_req, key_edn_req}
     .data_i    ( '{default: '0}              ),
-    .gnt_o     ( {lfsr_edn_ack, key_edn_ack} ),
+    .gnt_o     ( lfsr_edn_ack                ), // {lfsr_edn_ack, key_edn_ack}
     .idx_o     (                             ), // unused
     .valid_o   ( edn_req                     ),
     .data_o    (                             ), // unused
@@ -807,7 +731,7 @@ end
   ///////////////////////////////
 
   typedef struct packed {
-    prim_otp_pkg::cmd_e          cmd;
+    caliptra_prim_otp_pkg::cmd_e cmd;
     logic [OtpSizeWidth-1:0]     size; // Number of native words to write.
     logic [OtpIfWidth-1:0]       wdata;
     logic [OtpAddrWidth-1:0]     addr; // Halfword address.
@@ -844,51 +768,24 @@ end
   assign otp_prim_valid     = otp_arb_valid & otp_rsp_fifo_ready;
   assign otp_rsp_fifo_valid = otp_prim_ready & otp_prim_valid;
 
-  prim_otp_pkg::err_e          part_otp_err;
+  caliptra_prim_otp_pkg::err_e          part_otp_err;
   logic [OtpIfWidth-1:0]       part_otp_rdata;
   logic                        otp_rvalid;
-  //tlul_pkg::tl_h2d_t           prim_tl_h2d_gated;
-  //tlul_pkg::tl_d2h_t           prim_tl_d2h_gated;
-  logic                       prim_dv_gated;
-  logic [AW-1:0]              prim_addr_gated;
-  logic                                      prim_write_gate;d
-    logic [IW-1:0]                             prim_id_gated;
-    logic [DW-1:0]                             prim_wdata_gated;
-    logic [BC-1:0]                             prim_wstrb_gated;
-    logic [DW-1:0]                             prim_rdata_gated;
-    logic                                      prim_last_gated;
-    logic                                       prim_hld_gated;
-    logic                                       prim_err_gated;
-
+  tlul_pkg::tl_h2d_t           prim_tl_h2d_gated;
+  tlul_pkg::tl_d2h_t           prim_tl_d2h_gated;
 
   // Life cycle qualification of TL-UL test interface.
   // SEC_CM: TEST.BUS.LC_GATED
   // SEC_CM: TEST_TL_LC_GATE.FSM.SPARSE
-  axi_lc_gate #(
+  tlul_lc_gate #(
     .NumGatesPerDirection(2)
   ) u_tlul_lc_gate (
     .clk_i,
     .rst_ni,
-    .prim_dv,
-    .prim_addr,
-    .prim_write,
-    .prim_id, 
-    .prim_wdata,
-    .prim_wstrb,
-    .prim_rdata,
-    .prim_last,
-    .prim_hld, 
-    .prim_err,
-    .prim_dv_gated,
-    .prim_addr_gated,
-    .prim_write_gated,
-    .prim_id_gated, 
-    .prim_wdata_gated,
-    .prim_wstrb_gated,
-    .prim_rdata_gated,
-    .prim_last_gated,
-    .prim_hld_gated, 
-    .prim_err_gated,
+    .tl_h2d_i(prim_tl_i),
+    .tl_d2h_o(prim_tl_o),
+    .tl_h2d_o(prim_tl_h2d_gated),
+    .tl_d2h_i(prim_tl_d2h_gated),
     .lc_en_i (lc_dft_en[0]),
     .flush_req_i('0),
     .flush_ack_o(),
@@ -905,7 +802,7 @@ end
                          {OtpTestVectWidth{1'b1}} : '0;
 
   // SEC_CM: MACRO.MEM.CM, MACRO.MEM.INTEGRITY
-  caliptra_prim_otp #(
+  caliptra_prim_generic_otp #(
     .Width            ( OtpWidth            ),
     .Depth            ( OtpDepth            ),
     .SizeWidth        ( OtpSizeWidth        ),
@@ -983,7 +880,7 @@ end
   end
 
   // Note that this must be true by construction.
-  `ASSERT(OtpRespFifoUnderflow_A, otp_rvalid |-> otp_fifo_valid)
+  `CALIPTRA_ASSERT(OtpRespFifoUnderflow_A, otp_rvalid |-> otp_fifo_valid)
 
   /////////////////////////////////////////
   // Scrambling Datapath and Arbitration //
@@ -1079,7 +976,7 @@ end
 
   // The init request comes from the power manager, which lives in the AON clock domain.
   logic pwr_otp_req_synced;
-  calipra_prim_flop_2sync #(
+  caliptra_prim_flop_2sync #(
     .Width(1)
   ) u_otp_init_sync (
     .clk_i,
@@ -1185,6 +1082,9 @@ end
                                     part_scrmbl_req_ready[LciIdx],
                                     part_scrmbl_rsp_valid[LciIdx]};
 
+
+  /* NOT USED BY CALIPTRA 
+   *                         
   ////////////////////////////////////
   // Key Derivation Interface (KDI) //
   ////////////////////////////////////
@@ -1235,6 +1135,9 @@ end
   assign unused_kdi_otp_sigs = ^{part_otp_arb_gnt[KdiIdx],
                                  part_otp_rvalid[KdiIdx]};
 
+
+  */
+
   /////////////////////////
   // Partition Instances //
   /////////////////////////
@@ -1257,12 +1160,12 @@ end
         .access_i      ( part_access[k]               ),
         .access_o      ( part_access_dai[k]           ),
         .digest_o      ( part_digest[k]               ),
-        .tlul_req_i    ( part_axi_req[k]             ),
-        .tlul_gnt_o    ( part_axi_gnt[k]             ),
-        .tlul_addr_i   ( part_axi_addr               ),
-        .tlul_rerror_o ( part_axi_rerror[k]          ),
-        .tlul_rvalid_o ( part_axi_rvalid[k]          ),
-        .tlul_rdata_o  ( part_axi_rdata[k]           ),
+        .tlul_req_i    ( part_tlul_req[k]             ),
+        .tlul_gnt_o    ( part_tlul_gnt[k]             ),
+        .tlul_addr_i   ( part_tlul_addr               ),
+        .tlul_rerror_o ( part_tlul_rerror[k]          ),
+        .tlul_rvalid_o ( part_tlul_rvalid[k]          ),
+        .tlul_rdata_o  ( part_tlul_rdata[k]           ),
         .otp_req_o     ( part_otp_arb_req[k]          ),
         .otp_cmd_o     ( part_otp_arb_bundle[k].cmd   ),
         .otp_size_o    ( part_otp_arb_bundle[k].size  ),
@@ -1294,7 +1197,7 @@ end
                                          cnsty_chk_req[k]};
 
       // Alert assertion for sparse FSM.
-      `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartUnbufFsmCheck_A,
+      `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartUnbufFsmCheck_A,
           u_part_unbuf.u_state_regs, alert_tx_o[1])
     ////////////////////////////////////////////////////////////////////////////////////////////////
     end else if (PartInfo[k].variant == Buffered) begin : gen_buffered
@@ -1341,17 +1244,17 @@ end
       );
 
       // Buffered partitions are not accessible via the TL-UL window.
-      logic unused_part_axi_sigs;
-      assign unused_part_axi_sigs = ^part_axi_req[k];
-      assign part_axi_gnt[k]    = 1'b0;
-      assign part_axi_rerror[k] = '0;
-      assign part_axi_rvalid[k] = 1'b0;
-      assign part_axi_rdata[k]  = '0;
+      logic unused_part_tlul_sigs;
+      assign unused_part_tlul_sigs = ^part_tlul_req[k];
+      assign part_tlul_gnt[k]    = 1'b0;
+      assign part_tlul_rerror[k] = '0;
+      assign part_tlul_rvalid[k] = 1'b0;
+      assign part_tlul_rdata[k]  = '0;
 
       // Alert assertion for sparse FSM.
-      `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartBufFsmCheck_A,
+      `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartBufFsmCheck_A,
           u_part_buf.u_state_regs, alert_tx_o[1])
-      `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntPartBufCheck_A,
+      `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntPartBufCheck_A,
           u_part_buf.u_prim_count, alert_tx_o[1])
     ////////////////////////////////////////////////////////////////////////////////////////////////
     end else if (PartInfo[k].variant == LifeCycle) begin : gen_lifecycle
@@ -1401,12 +1304,12 @@ end
       );
 
       // Buffered partitions are not accessible via the TL-UL window.
-      logic unused_part_axi_sigs;
-      assign unused_part_axi_sigs = ^part_axi_req[k];
-      assign part_axi_gnt[k]    = 1'b0;
-      assign part_axi_rerror[k] = '0;
-      assign part_axi_rvalid[k] = 1'b0;
-      assign part_axi_rdata[k]  = '0;
+      logic unused_part_tlul_sigs;
+      assign unused_part_tlul_sigs = ^part_tlul_req[k];
+      assign part_tlul_gnt[k]    = 1'b0;
+      assign part_tlul_rerror[k] = '0;
+      assign part_tlul_rvalid[k] = 1'b0;
+      assign part_tlul_rdata[k]  = '0;
 
       // Tie off unused connections.
       assign part_scrmbl_mtx_req[k]    = '0;
@@ -1418,9 +1321,9 @@ end
                                          part_scrmbl_req_ready[k],
                                          part_scrmbl_rsp_valid[k]};
       // Alert assertion for sparse FSM.
-      `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartLcFsmCheck_A,
+      `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlPartLcFsmCheck_A,
           u_part_buf.u_state_regs, alert_tx_o[1])
-      `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntPartLcCheck_A,
+      `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntPartLcCheck_A,
           u_part_buf.u_prim_count, alert_tx_o[1])
     ////////////////////////////////////////////////////////////////////////////////////////////////
     end else begin : gen_invalid
@@ -1442,7 +1345,7 @@ end
 
   // Make sure the broadcast valid is flopped before sending it out.
   lc_ctrl_pkg::lc_tx_t otp_broadcast_valid_q;
-  prim_lc_sender u_prim_lc_sender_otp_broadcast_valid (
+  caliptra_prim_lc_sender u_prim_lc_sender_otp_broadcast_valid (
     .clk_i,
     .rst_ni,
     .lc_en_i(otp_broadcast.valid),
@@ -1453,8 +1356,8 @@ end
     otp_broadcast_o       = otp_broadcast;
     otp_broadcast_o.valid = otp_broadcast_valid_q;
   end
-
-  // Root keys and seeds.
+  /*
+   *   // Root keys and seeds.
   // This uses a generated function to assign all collateral that is marked with "iskeymgr" in
   // the memory map. Note that in this case the type is static and represents a superset of all
   // options so that we can maintain a stable interface with keymgr (otherwise keymgr will have
@@ -1489,7 +1392,6 @@ end
            creator_seed_valid_q,
            owner_seed_valid_q})
   );
-
   always_comb begin : p_otp_keymgr_key_valid
     // Valid reg inputs
     creator_root_key_share0_valid_d = otp_keymgr_key.creator_root_key_share0_valid;
@@ -1503,25 +1405,33 @@ end
     otp_keymgr_key_o.creator_seed_valid            = creator_seed_valid_q;
     otp_keymgr_key_o.owner_seed_valid              = owner_seed_valid_q;
   end
+    
 
   // Check that the lc_seed_hw_rd_en remains stable, once the key material is valid.
-  `ASSERT(LcSeedHwRdEnStable0_A,
+  `CALIPTRA_ASSERT(LcSeedHwRdEnStable0_A,
     $rose(creator_root_key_share0_valid_q) |=> $stable(lc_seed_hw_rd_en) [*1:$],
     clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i) // Disable if escalating
   )
-  `ASSERT(LcSeedHwRdEnStable1_A,
+  `CALIPTRA_ASSERT(LcSeedHwRdEnStable1_A,
     $rose(creator_root_key_share1_valid_q) |=> $stable(lc_seed_hw_rd_en) [*1:$],
     clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i) // Disable if escalating
   )
-  `ASSERT(LcSeedHwRdEnStable2_A,
+  `CALIPTRA_ASSERT(LcSeedHwRdEnStable2_A,
     $rose(creator_seed_valid_q) |=> $stable(lc_seed_hw_rd_en) [*1:$],
     clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i) // Disable if escalating
   )
-  `ASSERT(LcSeedHwRdEnStable3_A,
+  `CALIPTRA_ASSERT(LcSeedHwRdEnStable3_A,
     $rose(owner_seed_valid_q) |=> $stable(lc_seed_hw_rd_en) [*1:$],
     clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i) // Disable if escalating
   )
+  */
 
+  // Secrets
+  assign obfuscated_uds_seed_o  = part_buf_data[UdsSeedOffset +: UdsSeedSize];
+  assign field_entropy_o        = part_buf_data[FieldEntropyOffset +: FieldEntropySize];
+  assign pk_hash_o              = part_buf_data[KeyManifestPkHashOffset +: KeyManifestPkHashSize];
+
+  /*
   // Scrambling Keys
   assign scrmbl_key_seed_valid = part_digest[Secret1Idx] != '0;
   assign sram_data_key_seed    = part_buf_data[SramDataKeySeedOffset +:
@@ -1530,6 +1440,7 @@ end
                                                FlashDataKeySeedSize];
   assign flash_addr_key_seed   = part_buf_data[FlashAddrKeySeedOffset +:
                                                FlashAddrKeySeedSize];
+  */                                  
 
   // Test unlock and exit tokens and RMA token
   assign otp_lc_data_o.test_exit_token   = part_buf_data[TestExitTokenOffset +:
@@ -1539,13 +1450,15 @@ end
   assign otp_lc_data_o.rma_token         = part_buf_data[RmaTokenOffset +:
                                                          RmaTokenSize];
 
-  lc_ctrl_pkg::lc_tx_t test_tokens_valid, rma_token_valid, secrets_valid;
+  lc_ctrl_pkg::lc_tx_t test_tokens_valid, rma_token_valid, obfs_uds_seed_valid, field_entropy_valid;
   // The test tokens have been provisioned.
   assign test_tokens_valid = (part_digest[Secret0Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
   // The rma token has been provisioned.
-  assign rma_token_valid = (part_digest[Secret2Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
-  // The device is personalized if the root key has been provisioned and locked.
-  assign secrets_valid = (part_digest[Secret2Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
+  assign rma_token_valid = (part_digest[Secret3Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
+  // The obfuscated UDS seed has been provisioned and locked.
+  assign obfs_uds_seed_valid = (part_digest[Secret1Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
+  // The field entropy has been provisioned and locked. 
+  assign field_entropy_valid = (part_digest[Secret2Idx] != '0) ? lc_ctrl_pkg::On : lc_ctrl_pkg::Off;
 
   // Buffer these constants in order to ensure that synthesis does not try to optimize the encoding.
   // SEC_CM: TOKEN_VALID.CTRL.MUBI
@@ -1569,12 +1482,22 @@ end
 
   caliptra_prim_lc_sender #(
     .AsyncOn(0)
-  ) u_prim_lc_sender_secrets_valid (
+  ) _prim_lc_sender_uds_seed_valid (
     .clk_i,
     .rst_ni,
-    .lc_en_i(secrets_valid),
-    .lc_en_o(otp_lc_data_o.secrets_valid)
+    .lc_en_i(obfs_uds_seed_valid),
+    .lc_en_o(otp_lc_data_o.obfs_uds_seed_valid)
   );
+
+  caliptra_prim_lc_sender #(
+    .AsyncOn(0)
+  ) _prim_lc_sender_field_entropy_valid (
+    .clk_i,
+    .rst_ni,
+    .lc_en_i(field_entropy_valid),
+    .lc_en_o(otp_lc_data_o.field_entropy_valid)
+  );
+
 
   // Lifecycle state
   assign otp_lc_data_o.state = lc_ctrl_state_pkg::lc_state_e'(part_buf_data[LcStateOffset +:
@@ -1597,78 +1520,89 @@ end
   // Assertions //
   ////////////////
 
-  `ASSERT_INIT(CreatorRootKeyShare0Size_A, KeyMgrKeyWidth == CreatorRootKeyShare0Size * 8)
-  `ASSERT_INIT(CreatorRootKeyShare1Size_A, KeyMgrKeyWidth == CreatorRootKeyShare1Size * 8)
-  `ASSERT_INIT(FlashDataKeySeedSize_A,     FlashKeySeedWidth == FlashDataKeySeedSize * 8)
-  `ASSERT_INIT(FlashAddrKeySeedSize_A,     FlashKeySeedWidth == FlashAddrKeySeedSize * 8)
-  `ASSERT_INIT(SramDataKeySeedSize_A,      SramKeySeedWidth == SramDataKeySeedSize * 8)
+  /*
+  `CALIPTRA_ASSERT_INIT(CreatorRootKeyShare0Size_A, KeyMgrKeyWidth == CreatorRootKeyShare0Size * 8)
+  `CALIPTRA_ASSERT_INIT(CreatorRootKeyShare1Size_A, KeyMgrKeyWidth == CreatorRootKeyShare1Size * 8)
+  `CALIPTRA_ASSERT_INIT(FlashDataKeySeedSize_A,     FlashKeySeedWidth == FlashDataKeySeedSize * 8)
+  `CALIPTRA_ASSERT_INIT(FlashAddrKeySeedSize_A,     FlashKeySeedWidth == FlashAddrKeySeedSize * 8)
+  `CALIPTRA_ASSERT_INIT(SramDataKeySeedSize_A,      SramKeySeedWidth == SramDataKeySeedSize * 8)
+  */
+  `CALIPTRA_ASSERT_INIT(RmaTokenSize_A,        lc_ctrl_state_pkg::LcTokenWidth == RmaTokenSize * 8)
+  `CALIPTRA_ASSERT_INIT(TestUnlockTokenSize_A, lc_ctrl_state_pkg::LcTokenWidth == TestUnlockTokenSize * 8)
+  `CALIPTRA_ASSERT_INIT(TestExitTokenSize_A,   lc_ctrl_state_pkg::LcTokenWidth == TestExitTokenSize * 8)
+  `CALIPTRA_ASSERT_INIT(LcStateSize_A,         lc_ctrl_state_pkg::LcStateWidth == LcStateSize * 8)
+  `CALIPTRA_ASSERT_INIT(LcTransitionCntSize_A, lc_ctrl_state_pkg::LcCountWidth == LcTransitionCntSize * 8)
 
-  `ASSERT_INIT(RmaTokenSize_A,        lc_ctrl_state_pkg::LcTokenWidth == RmaTokenSize * 8)
-  `ASSERT_INIT(TestUnlockTokenSize_A, lc_ctrl_state_pkg::LcTokenWidth == TestUnlockTokenSize * 8)
-  `ASSERT_INIT(TestExitTokenSize_A,   lc_ctrl_state_pkg::LcTokenWidth == TestExitTokenSize * 8)
-  `ASSERT_INIT(LcStateSize_A,         lc_ctrl_state_pkg::LcStateWidth == LcStateSize * 8)
-  `ASSERT_INIT(LcTransitionCntSize_A, lc_ctrl_state_pkg::LcCountWidth == LcTransitionCntSize * 8)
-
-  `ASSERT_KNOWN(OtpAstPwrSeqKnown_A,         otp_ast_pwr_seq_o)
-  `ASSERT_KNOWN(CoreTlOutKnown_A,            core_tl_o)
-  `ASSERT_KNOWN(PrimTlOutKnown_A,            prim_tl_o)
-  `ASSERT_KNOWN(IntrOtpOperationDoneKnown_A, intr_otp_operation_done_o)
-  `ASSERT_KNOWN(IntrOtpErrorKnown_A,         intr_otp_error_o)
-  `ASSERT_KNOWN(AlertTxKnown_A,              alert_tx_o)
-  `ASSERT_KNOWN(PwrOtpInitRspKnown_A,        pwr_otp_o)
-  `ASSERT_KNOWN(LcOtpProgramRspKnown_A,      lc_otp_program_o)
-  `ASSERT_KNOWN(OtpLcDataKnown_A,            otp_lc_data_o)
-  `ASSERT_KNOWN(OtpKeymgrKeyKnown_A,         otp_keymgr_key_o)
-  `ASSERT_KNOWN(FlashOtpKeyRspKnown_A,       flash_otp_key_o)
-  `ASSERT_KNOWN(OtpSramKeyKnown_A,           sram_otp_key_o)
-  `ASSERT_KNOWN(OtpOtgnKeyKnown_A,           otbn_otp_key_o)
-  `ASSERT_KNOWN(OtpBroadcastKnown_A,         otp_broadcast_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpAstPwrSeqKnown_A,         otp_ast_pwr_seq_o)
+  `CALIPTRA_ASSERT_KNOWN(CoreTlOutKnown_A,            core_tl_o)
+  `CALIPTRA_ASSERT_KNOWN(PrimTlOutKnown_A,            prim_tl_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrOtpOperationDoneKnown_A, intr_otp_operation_done_o)
+  `CALIPTRA_ASSERT_KNOWN(IntrOtpErrorKnown_A,         intr_otp_error_o)
+  `CALIPTRA_ASSERT_KNOWN(AlertTxKnown_A,              alert_tx_o)
+  `CALIPTRA_ASSERT_KNOWN(PwrOtpInitRspKnown_A,        pwr_otp_o)
+  `CALIPTRA_ASSERT_KNOWN(LcOtpProgramRspKnown_A,      lc_otp_program_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpLcDataKnown_A,            otp_lc_data_o)
+  `CALIPTRA_ASSERT_KNOWN(ObfuscatedUdsSeed_A,         obfuscated_uds_seed_o)
+  `CALIPTRA_ASSERT_KNOWN(FieldEntropy_A,              field_entropy_o)
+  `CALIPTRA_ASSERT_KNOWN(PK_Hash_A,                   pk_hash_o)
+  //`CALIPTRA_ASSERT_KNOWN(OtpKeymgrKeyKnown_A,         otp_keymgr_key_o)
+  //`CALIPTRA_ASSERT_KNOWN(FlashOtpKeyRspKnown_A,       flash_otp_key_o)
+  //`CALIPTRA_ASSERT_KNOWN(OtpSramKeyKnown_A,           sram_otp_key_o)
+  //`CALIPTRA_ASSERT_KNOWN(OtpOtgnKeyKnown_A,           otbn_otp_key_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpBroadcastKnown_A,         otp_broadcast_o)
 
   // Alert assertions for sparse FSMs.
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlDaiFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlDaiFsmCheck_A,
       u_otp_ctrl_dai.u_state_regs, alert_tx_o[1])
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlKdiFsmCheck_A,
-      u_otp_ctrl_kdi.u_state_regs, alert_tx_o[1])
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlLciFsmCheck_A,
+  //`CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlKdiFsmCheck_A,
+  //    u_otp_ctrl_kdi.u_state_regs, alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlLciFsmCheck_A,
       u_otp_ctrl_lci.u_state_regs, alert_tx_o[1])
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlLfsrTimerFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlLfsrTimerFsmCheck_A,
       u_otp_ctrl_lfsr_timer.u_state_regs, alert_tx_o[1])
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlScrambleFsmCheck_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(CtrlScrambleFsmCheck_A,
       u_otp_ctrl_scrmbl.u_state_regs, alert_tx_o[1])
+  
 
   // Alert assertions for redundant counters.
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntIntegCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntIntegCheck_A,
       u_otp_ctrl_lfsr_timer.u_prim_count_integ, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntCnstyCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntCnstyCheck_A,
       u_otp_ctrl_lfsr_timer.u_prim_count_cnsty, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntDaiCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntDaiCheck_A,
       u_otp_ctrl_dai.u_prim_count, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntKdiSeedCheck_A,
-      u_otp_ctrl_kdi.u_prim_count_seed, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntKdiEntropyCheck_A,
-      u_otp_ctrl_kdi.u_prim_count_entropy, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntLciCheck_A,
+  //`CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntKdiSeedCheck_A,
+  //    u_otp_ctrl_kdi.u_prim_count_seed, alert_tx_o[1])
+  //`CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntKdiEntropyCheck_A,
+  //    u_otp_ctrl_kdi.u_prim_count_entropy, alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntLciCheck_A,
       u_otp_ctrl_lci.u_prim_count, alert_tx_o[1])
-  `ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntScrmblCheck_A,
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(CntScrmblCheck_A,
       u_otp_ctrl_scrmbl.u_prim_count, alert_tx_o[1])
-  `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(TlLcGateFsm_A,
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(TlLcGateFsm_A,
       u_tlul_lc_gate.u_state_regs, alert_tx_o[2])
 
   // Alert assertions for double LFSR.
-  `ASSERT_PRIM_DOUBLE_LFSR_ERROR_TRIGGER_ALERT(DoubleLfsrCheck_A,
+  `CALIPTRA_ASSERT_PRIM_DOUBLE_LFSR_ERROR_TRIGGER_ALERT(DoubleLfsrCheck_A,
       u_otp_ctrl_lfsr_timer.u_prim_double_lfsr, alert_tx_o[1])
 
   // Alert assertions for reg_we onehot check
-  `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg_core, alert_tx_o[2])
+  `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg_core, alert_tx_o[2])
 
+   
   // Assertions for countermeasures inside prim_otp
-  `ifndef PRIM_DEFAULT_IMPL
-    `define PRIM_DEFAULT_IMPL prim_pkg::ImplGeneric
+  `ifndef CALIPTRA_PRIM_DEFAULT_IMPL
+    `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
   `endif
-  if (`PRIM_DEFAULT_IMPL == prim_pkg::ImplGeneric) begin : gen_reg_we_assert_generic
-    `ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(PrimFsmCheck_A,
-        u_otp.gen_generic.u_impl_generic.u_state_regs, alert_tx_o[3])
-    `ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(PrimRegWeOnehotCheck_A,
-        u_otp.gen_generic.u_impl_generic.u_reg_top, alert_tx_o[3])
+  if (`CALIPTRA_PRIM_DEFAULT_IMPL == caliptra_prim_pkg::ImplGeneric) begin : gen_reg_we_assert_generic
+    `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(PrimFsmCheck_A,
+        u_otp.u_state_regs, alert_tx_o[3])
+        //u_otp.gen_generic.u_impl_generic.u_state_regs, alert_tx_o[3])
+    `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(PrimRegWeOnehotCheck_A,
+        u_otp.u_reg_top, alert_tx_o[3])
+    //    //u_otp.gen_generic.u_impl_generic.u_reg_top, alert_tx_o[3])
   end
+        
+      
+
 endmodule : otp_ctrl

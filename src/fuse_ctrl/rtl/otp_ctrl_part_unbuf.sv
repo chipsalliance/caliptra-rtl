@@ -5,12 +5,12 @@
 // Unbuffered partition for OTP controller.
 //
 
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_flop_macros.sv"
 
 module otp_ctrl_part_unbuf
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_reg_pkg::*;
-  import otp_ctrl_part_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_reg_pkg::*;
+  import caliptra_otp_ctrl_part_pkg::*;
 #(
   // Partition information.
   parameter part_info_t Info = PartInfoDefault
@@ -49,22 +49,22 @@ module otp_ctrl_part_unbuf
   output logic [31:0]                 tlul_rdata_o,
   // OTP interface
   output logic                        otp_req_o,
-  output prim_otp_pkg::cmd_e          otp_cmd_o,
+  output caliptra_prim_otp_pkg::cmd_e          otp_cmd_o,
   output logic [OtpSizeWidth-1:0]     otp_size_o,
   output logic [OtpIfWidth-1:0]       otp_wdata_o,
   output logic [OtpAddrWidth-1:0]     otp_addr_o,
   input                               otp_gnt_i,
   input                               otp_rvalid_i,
   input  [ScrmblBlockWidth-1:0]       otp_rdata_i,
-  input  prim_otp_pkg::err_e          otp_err_i
+  input  caliptra_prim_otp_pkg::err_e          otp_err_i
 );
 
   ////////////////////////
   // Integration Checks //
   ////////////////////////
 
-  import prim_mubi_pkg::*;
-  import prim_util_pkg::vbits;
+  import caliptra_prim_mubi_pkg::*;
+  import caliptra_prim_util_pkg::vbits;
 
   localparam logic [OtpByteAddrWidth:0] PartEnd = (OtpByteAddrWidth+1)'(Info.offset) +
                                                   (OtpByteAddrWidth+1)'(Info.size);
@@ -73,9 +73,9 @@ module otp_ctrl_part_unbuf
   localparam bit [OtpByteAddrWidth-1:0] DigestOffset = DigestOffsetInt[OtpByteAddrWidth-1:0];
 
   // Integration checks for parameters.
-  `ASSERT_INIT(OffsetMustBeBlockAligned_A, (Info.offset % (ScrmblBlockWidth/8)) == 0)
-  `ASSERT_INIT(SizeMustBeBlockAligned_A, (Info.size % (ScrmblBlockWidth/8)) == 0)
-  `ASSERT_INIT(DigestOffsetMustBeRepresentable_A, DigestOffsetInt == int'(DigestOffset))
+  `CALIPTRA_ASSERT_INIT(OffsetMustBeBlockAligned_A, (Info.offset % (ScrmblBlockWidth/8)) == 0)
+  `CALIPTRA_ASSERT_INIT(SizeMustBeBlockAligned_A, (Info.size % (ScrmblBlockWidth/8)) == 0)
+  `CALIPTRA_ASSERT_INIT(DigestOffsetMustBeRepresentable_A, DigestOffsetInt == int'(DigestOffset))
 
   ///////////////////////
   // OTP Partition FSM //
@@ -145,10 +145,10 @@ module otp_ctrl_part_unbuf
   // point and does not report any integrity errors if integrity is disabled.
   otp_err_e otp_err;
   if (Info.integrity) begin : gen_integrity
-    assign otp_cmd_o = prim_otp_pkg::Read;
+    assign otp_cmd_o = caliptra_prim_otp_pkg::Read;
     assign otp_err = otp_err_e'(otp_err_i);
   end else begin : gen_no_integrity
-    assign otp_cmd_o = prim_otp_pkg::ReadRaw;
+    assign otp_cmd_o = caliptra_prim_otp_pkg::ReadRaw;
     always_comb begin
       if (otp_err_e'(otp_err_i) inside {MacroEccCorrError, MacroEccUncorrError}) begin
         otp_err = NoError;
@@ -158,7 +158,7 @@ module otp_ctrl_part_unbuf
     end
   end
 
-  `ASSERT_KNOWN(FsmStateKnown_A, state_q)
+  `CALIPTRA_ASSERT_KNOWN(FsmStateKnown_A, state_q)
   always_comb begin : p_fsm
     // Default assignments
     state_d = state_q;
@@ -397,7 +397,7 @@ module otp_ctrl_part_unbuf
   // Aggregate all possible DAI write locks. The partition is also locked when uninitialized.
   // Note that the locks are redundantly encoded values.
   part_access_t access_pre;
-  prim_mubi8_sender #(
+  caliptra_prim_mubi8_sender #(
     .AsyncOn(0)
   ) u_prim_mubi8_sender_write_lock_pre (
     .clk_i,
@@ -405,7 +405,7 @@ module otp_ctrl_part_unbuf
     .mubi_i(mubi8_and_lo(init_locked, access_i.write_lock)),
     .mubi_o(access_pre.write_lock)
   );
-  prim_mubi8_sender #(
+  caliptra_prim_mubi8_sender #(
     .AsyncOn(0)
   ) u_prim_mubi8_sender_read_lock_pre (
     .clk_i,
@@ -420,7 +420,7 @@ module otp_ctrl_part_unbuf
     assign digest_locked = (digest_o != '0) ? MuBi8True : MuBi8False;
 
     // This prevents the synthesis tool from optimizing the multibit signal.
-    prim_mubi8_sender #(
+    caliptra_prim_mubi8_sender #(
       .AsyncOn(0)
     ) u_prim_mubi8_sender_write_lock (
       .clk_i,
@@ -429,7 +429,7 @@ module otp_ctrl_part_unbuf
       .mubi_o(access_o.write_lock)
     );
 
-    `ASSERT(DigestWriteLocksPartition_A, digest_o |-> mubi8_test_true_loose(access_o.write_lock))
+    `CALIPTRA_ASSERT(DigestWriteLocksPartition_A, digest_o |-> mubi8_test_true_loose(access_o.write_lock))
   end else begin : gen_no_digest_write_lock
     assign access_o.write_lock = access_pre.write_lock;
   end
@@ -440,7 +440,7 @@ module otp_ctrl_part_unbuf
     assign digest_locked = (digest_o != '0) ? MuBi8True : MuBi8False;
 
     // This prevents the synthesis tool from optimizing the multibit signal.
-    prim_mubi8_sender #(
+    caliptra_prim_mubi8_sender #(
       .AsyncOn(0)
     ) u_prim_mubi8_sender_read_lock (
       .clk_i,
@@ -449,7 +449,7 @@ module otp_ctrl_part_unbuf
       .mubi_o(access_o.read_lock)
     );
 
-    `ASSERT(DigestReadLocksPartition_A, digest_o |-> mubi8_test_true_loose(access_o.read_lock))
+    `CALIPTRA_ASSERT(DigestReadLocksPartition_A, digest_o |-> mubi8_test_true_loose(access_o.read_lock))
   end else begin : gen_no_digest_read_lock
     assign access_o.read_lock = access_pre.read_lock;
   end
@@ -458,7 +458,7 @@ module otp_ctrl_part_unbuf
   // Registers //
   ///////////////
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs
     if (!rst_ni) begin
@@ -479,50 +479,50 @@ module otp_ctrl_part_unbuf
   ////////////////
 
   // Known assertions
-  `ASSERT_KNOWN(InitDoneKnown_A,   init_done_o)
-  `ASSERT_KNOWN(ErrorKnown_A,      error_o)
-  `ASSERT_KNOWN(AccessKnown_A,     access_o)
-  `ASSERT_KNOWN(DigestKnown_A,     digest_o)
-  `ASSERT_KNOWN(TlulGntKnown_A,    tlul_gnt_o)
-  `ASSERT_KNOWN(TlulRerrorKnown_A, tlul_rerror_o)
-  `ASSERT_KNOWN(TlulRvalidKnown_A, tlul_rvalid_o)
-  `ASSERT_KNOWN(TlulRdataKnown_A,  tlul_rdata_o)
-  `ASSERT_KNOWN(OtpReqKnown_A,     otp_req_o)
-  `ASSERT_KNOWN(OtpCmdKnown_A,     otp_cmd_o)
-  `ASSERT_KNOWN(OtpSizeKnown_A,    otp_size_o)
-  `ASSERT_KNOWN(OtpWdataKnown_A,   otp_wdata_o)
-  `ASSERT_KNOWN(OtpAddrKnown_A,    otp_addr_o)
+  `CALIPTRA_ASSERT_KNOWN(InitDoneKnown_A,   init_done_o)
+  `CALIPTRA_ASSERT_KNOWN(ErrorKnown_A,      error_o)
+  `CALIPTRA_ASSERT_KNOWN(AccessKnown_A,     access_o)
+  `CALIPTRA_ASSERT_KNOWN(DigestKnown_A,     digest_o)
+  `CALIPTRA_ASSERT_KNOWN(TlulGntKnown_A,    tlul_gnt_o)
+  `CALIPTRA_ASSERT_KNOWN(TlulRerrorKnown_A, tlul_rerror_o)
+  `CALIPTRA_ASSERT_KNOWN(TlulRvalidKnown_A, tlul_rvalid_o)
+  `CALIPTRA_ASSERT_KNOWN(TlulRdataKnown_A,  tlul_rdata_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpReqKnown_A,     otp_req_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpCmdKnown_A,     otp_cmd_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpSizeKnown_A,    otp_size_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpWdataKnown_A,   otp_wdata_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpAddrKnown_A,    otp_addr_o)
 
   // Uninitialized partitions should always be locked, no matter what.
-  `ASSERT(InitWriteLocksPartition_A,
+  `CALIPTRA_ASSERT(InitWriteLocksPartition_A,
       ~init_done_o
       |->
       mubi8_test_true_loose(access_o.write_lock))
-  `ASSERT(InitReadLocksPartition_A,
+  `CALIPTRA_ASSERT(InitReadLocksPartition_A,
       ~init_done_o
       |->
       mubi8_test_true_loose(access_o.read_lock))
   // Incoming Lock propagation
-  `ASSERT(WriteLockPropagation_A,
+  `CALIPTRA_ASSERT(WriteLockPropagation_A,
       mubi8_test_true_loose(access_i.write_lock)
       |->
       mubi8_test_true_loose(access_o.write_lock))
-  `ASSERT(ReadLockPropagation_A,
+  `CALIPTRA_ASSERT(ReadLockPropagation_A,
       mubi8_test_true_loose(access_i.read_lock)
       |->
       mubi8_test_true_loose(access_o.read_lock))
   // If the partition is read locked, the TL-UL access must error out
-  `ASSERT(TlulReadOnReadLock_A,
+  `CALIPTRA_ASSERT(TlulReadOnReadLock_A,
       tlul_req_i && tlul_gnt_o ##1 mubi8_test_true_loose(access_o.read_lock)
       |->
       tlul_rerror_o > '0 && tlul_rvalid_o)
   // ECC error in buffer regs.
-  `ASSERT(EccErrorState_A,
+  `CALIPTRA_ASSERT(EccErrorState_A,
       ecc_err
       |=>
       state_q == ErrorSt)
   // OTP error response
-  `ASSERT(OtpErrorState_A,
+  `CALIPTRA_ASSERT(OtpErrorState_A,
       state_q inside {InitWaitSt, ReadWaitSt} && otp_rvalid_i &&
       !(otp_err inside {NoError, MacroEccCorrError}) && !ecc_err
       |=>

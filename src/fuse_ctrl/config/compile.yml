@@ -1,33 +1,78 @@
 ---
-provides: [fc_ctrl]
+provides: [fuse_ctrl_pkg]
 schema_version: 2.4.0
 requires:
   - caliptra_prim
 targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_part_pkg.sv
   tb:
-    directories: 
-    files:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_part_pkg.sv
+---
+provides: [fuse_ctrl]
+schema_version: 2.4.0
+requires:
+  - caliptra_prim
+  - caliptra_prim_generic
+  - tlul
+  - axi2tlul
+  - edn_pkg
+  - ast_pkg
+  - pwrmgr_pkg
+  - lc_ctrl_pkg
+  - fuse_ctrl_pkg
+targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/axi_adapter_sram.sv
-      - $COMPILE_ROOT/rtl/axi_lc_gate.sv
-      - $COMPILE_ROOT/rtl/axi_sram_byte.sv
       - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_core_reg_top.sv
       - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_prim_reg_top.sv
-      - $COMPILE_ROOT/rtl/caliptra_otp_ctrl_reg_pkg.sv
-      - $COMPILE_ROOT/rtl/otp_ctrl_axi_pkg.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_dai.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_ecc_reg.sv
-      - $COMPILE_ROOT/rtl/otp_ctrl_kdi.sv
+      #- $COMPILE_ROOT/rtl/otp_ctrl_kdi.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_lci.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_lfsr_timer.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_part_buf.sv
-      - $COMPILE_ROOT/rtl/otp_ctrl_part_pkg.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_part_unbuf.sv
-      - $COMPILE_ROOT/rtl/otp_ctrl_pkg.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_scrmbl.sv
       - $COMPILE_ROOT/rtl/otp_ctrl.sv
-      - $COMPILE_ROOT/rtl/otp_ctrl.sv_orig
-      - $COMPILE_ROOT/rtl/otp_ctrl_token_const.sv
+      #- $COMPILE_ROOT/rtl/otp_ctrl_token_const.sv
       - $COMPILE_ROOT/rtl/otp_ctrl_top.sv
+    tops: [otp_ctrl_top]
+---
+provides: [fuse_ctrl_tb_pkg]
+schema_version: 2.4.0
+requires:
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/otp_ctrl_top_tb_pkg.sv
+    tops: [otp_ctrl_top_tb_pkg]
+---
+provides: [fuse_ctrl_tb]
+schema_version: 2.4.0
+requires:
+  - fuse_ctrl
+  - fuse_ctrl_tb_pkg
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/otp_ctrl_top_tb.sv
+    tops: [otp_ctrl_top_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - '-noinherit_timescale=1ns/1ps'

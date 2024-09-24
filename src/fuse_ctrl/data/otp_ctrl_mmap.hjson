@@ -40,6 +40,10 @@
                 name:  "Secret2Key",
                 value: "<random>",
             }
+            {
+                name:  "Secret3Key",
+                value: "<random>",
+            }
         ]
         digests: [
             // This is the consistency digest used by all partitions.
@@ -48,6 +52,7 @@
                 iv_value:   "<random>",
                 cnst_value: "<random>",
             }
+            /*
             // The other digest configurations below are used for
             // key derivation and token hashing.
             {
@@ -65,6 +70,7 @@
                 iv_value:   "<random>",
                 cnst_value: "<random>",
             }
+            */
         ]
     }
 
@@ -170,12 +176,21 @@
             bkout_type: false,
             items: [
                 {
-                    name:   "UDS_SEED",
-                    size:   "48"
+                    name: "TEST_UNLOCK_TOKEN",
+                    // This will generate a random default to be output in
+                    // case partition has not initialized or is in error state.
+                    // If not specified, a value of '0 will be used.
+                    inv_default: "<random>",
+                    size: "16"
+                }
+                {
+                    name: "TEST_EXIT_TOKEN",
+                    inv_default: "<random>",
+                    size: "16"
                 }
             ],
-            desc:   '''Secret partition 0.
-            This contains Obfuscated UDS seed. 
+            desc: '''Secret partition 0.
+            This contains TEST lifecycle unlock tokens.
             '''
         }
         {
@@ -191,12 +206,12 @@
             bkout_type: false,
             items: [
                 {
-                    name:   "FIELD_ENTROPY",
-                    size:   "32"
+                    name:   "UDS_SEED",
+                    size:   "48"
                 }
             ],
-            desc: '''Secret partition 1. 
-            This contains obfuscated field entropy. 
+            desc:   '''Secret partition 1.
+            This contains Obfuscated UDS seed. 
             '''
         }
         {
@@ -212,12 +227,38 @@
             bkout_type: false,
             items: [
                 {
+                    name:   "FIELD_ENTROPY",
+                    size:   "32"
+                }
+            ],
+            desc: '''Secret partition 2. 
+            This contains obfuscated field entropy. 
+            '''
+        }
+        {
+            name:       "SECRET3",
+            variant:    "Buffered",
+            secret:     true,
+            sw_digest:  false,
+            hw_digest:  true,
+            write_lock: "Digest",
+            read_lock:  "Digest",
+            key_sel:    "Secret3Key",
+            integrity:  true,
+            bkout_type: false,
+            items: [
+                {
                     name:   "KEY_MANIFEST_PK_HASH",
                     size:   "48"
                 }
+                { 
+                    name:   "RMA_TOKEN",
+                    inv_default: "<random>",
+                    size:   "16"
+                }
             ],
-            desc: '''Secret partition 2.
-            This contains public key hash. 
+            desc: '''Secret partition 3.
+            This contains public key hash and RMA unlock token. 
             '''
         }
         {

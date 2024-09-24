@@ -1,0 +1,210 @@
+// Copyright lowRISC contributors (OpenTitan project).
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{
+  // Run with a named build mode, and enable a named run mode. This allows an external testbench to
+  // override this build / run mode to apply additional common settings for all of these tests.
+  build_modes: [
+    {
+      name: xbar_build_mode
+    }
+  ]
+  run_modes: [
+    {
+      name: xbar_run_mode
+    }
+  ]
+
+  // We rename the "default" build mode to "xbar_build_mode" so that it can be use to apply
+  // additional settings externally. We hence, map other settings that assume the build mode to be
+  // called as "default" to "xbar_build_mode".
+  xbar_build_mode_vcs_cov_cfg_file: "{default_vcs_cov_cfg_file}"
+  xbar_build_mode_xcelium_cov_cfg_file: "{default_xcelium_cov_cfg_file}"
+
+  // List of test specifications.
+  tests: [
+    {
+      name: "xbar_smoke"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_smoke_vseq
+    }
+
+    {
+      name: "xbar_smoke_zero_delays"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_smoke_vseq
+      run_opts: ["+zero_delays=1"]
+    }
+
+    {
+      name: "xbar_smoke_large_delays"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_smoke_vseq
+      run_opts: ["+max_host_req_delay=1000",
+                 "+max_host_rsp_delay=1000",
+                 "+max_device_req_delay=1000",
+                 "+max_device_rsp_delay=1000",
+                 "+max_host_valid_len=2000",
+                 "+max_device_valid_len=2000"]
+    }
+
+    {
+      name: "xbar_smoke_slow_rsp"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_smoke_vseq
+      run_opts: ["+max_host_req_delay=10",
+                 "+max_host_rsp_delay=1000",
+                 "+max_device_req_delay=1000",
+                 "+max_device_rsp_delay=10",
+                 "+max_host_valid_len=2000",
+                 "+max_device_valid_len=2000"]
+    }
+
+    {
+      name: "xbar_random"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_random_vseq
+    }
+
+    {
+      name: "xbar_random_zero_delays"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_random_vseq
+      run_opts: ["+zero_delays=1"]
+    }
+
+    {
+      name: "xbar_random_large_delays"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_random_vseq
+      run_opts: ["+max_host_req_delay=1000",
+                 "+max_host_rsp_delay=1000",
+                 "+max_device_req_delay=1000",
+                 "+max_device_rsp_delay=1000",
+                 "+max_host_valid_len=2000",
+                 "+max_device_valid_len=2000"]
+    }
+
+    {
+      name: "xbar_random_slow_rsp"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_random_vseq
+      run_opts: ["+max_host_req_delay=10",
+                 "+max_host_rsp_delay=1000",
+                 "+max_device_req_delay=1000",
+                 "+max_device_rsp_delay=10",
+                 "+max_host_valid_len=2000",
+                 "+max_device_valid_len=2000"]
+    }
+
+    {
+      name: "xbar_access_same_device"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_access_same_device_vseq
+    }
+
+    {
+      name: "xbar_access_same_device_slow_rsp"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_access_same_device_vseq
+      run_opts: ["+max_host_req_delay=10",
+                 "+max_host_rsp_delay=1000",
+                 "+max_device_req_delay=1000",
+                 "+max_device_rsp_delay=10",
+                 "+max_host_valid_len=2000",
+                 "+max_device_valid_len=2000"]
+    }
+
+    {
+      name: "xbar_same_source"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_same_source_vseq
+    }
+
+    {
+      name: "xbar_error_random"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_error_test
+      uvm_test_seq: xbar_random_vseq
+    }
+
+    {
+      name: "xbar_unmapped_addr"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_unmapped_addr_vseq
+    }
+
+    {
+      name: "xbar_error_and_unmapped_addr"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_error_test
+      uvm_test_seq: xbar_unmapped_addr_vseq
+    }
+
+    {
+      name: "xbar_stress_all"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_stress_all_vseq
+    }
+
+    {
+      name: "xbar_stress_all_with_rand_reset"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_base_test
+      uvm_test_seq: xbar_stress_all_with_rand_reset_vseq
+    }
+
+    {
+      name: "xbar_stress_all_with_error"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_error_test
+      uvm_test_seq: xbar_stress_all_vseq
+    }
+
+    {
+      name: "xbar_stress_all_with_reset_error"
+      build_mode: "xbar_build_mode"
+      en_run_modes: ["xbar_run_mode"]
+      uvm_test: xbar_error_test
+      uvm_test_seq: xbar_stress_all_with_rand_reset_vseq
+    }
+  ]
+
+  // List of regressions.
+  regressions: [
+    {
+      name: smoke
+      tests: ["xbar_smoke"]
+    }
+  ]
+}

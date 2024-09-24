@@ -9,13 +9,13 @@ package caliptra_otp_ctrl_reg_pkg;
   // Param list
   parameter int NumSramKeyReqSlots = 4;
   parameter int OtpByteAddrWidth = 12;
-  parameter int NumErrorEntries = 8;
+  parameter int NumErrorEntries = 9;
   parameter int NumDaiWords = 2;
   parameter int NumDigestWords = 2;
   parameter int NumSwCfgWindowWords = 1024;
-  parameter int NumPart = 6;
+  parameter int NumPart = 7;
   parameter int NumPartUnbuf = 2;
-  parameter int NumPartBuf = 4;
+  parameter int NumPartBuf = 5;
   parameter int VendorTestOffset = 0;
   parameter int VendorTestSize = 64;
   parameter int ScratchOffset = 0;
@@ -23,7 +23,7 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter int VendorTestDigestOffset = 56;
   parameter int VendorTestDigestSize = 8;
   parameter int NonSecretFusesOffset = 64;
-  parameter int NonSecretFusesSize = 3792;
+  parameter int NonSecretFusesSize = 3736;
   parameter int FmcKeyManifestSvnOffset = 64;
   parameter int FmcKeyManifestSvnSize = 4;
   parameter int RuntimeSvnOffset = 68;
@@ -42,26 +42,36 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter int IdevidManufHsmIdSize = 16;
   parameter int SocSteppingIdOffset = 256;
   parameter int SocSteppingIdSize = 4;
-  parameter int NonSecretFusesDigestOffset = 3848;
+  parameter int NonSecretFusesDigestOffset = 3792;
   parameter int NonSecretFusesDigestSize = 8;
-  parameter int Secret0Offset = 3856;
-  parameter int Secret0Size = 56;
-  parameter int UdsSeedOffset = 3856;
-  parameter int UdsSeedSize = 48;
-  parameter int Secret0DigestOffset = 3904;
+  parameter int Secret0Offset = 3800;
+  parameter int Secret0Size = 40;
+  parameter int TestUnlockTokenOffset = 3800;
+  parameter int TestUnlockTokenSize = 16;
+  parameter int TestExitTokenOffset = 3816;
+  parameter int TestExitTokenSize = 16;
+  parameter int Secret0DigestOffset = 3832;
   parameter int Secret0DigestSize = 8;
-  parameter int Secret1Offset = 3912;
-  parameter int Secret1Size = 40;
-  parameter int FieldEntropyOffset = 3912;
-  parameter int FieldEntropySize = 32;
-  parameter int Secret1DigestOffset = 3944;
+  parameter int Secret1Offset = 3840;
+  parameter int Secret1Size = 56;
+  parameter int UdsSeedOffset = 3840;
+  parameter int UdsSeedSize = 48;
+  parameter int Secret1DigestOffset = 3888;
   parameter int Secret1DigestSize = 8;
-  parameter int Secret2Offset = 3952;
-  parameter int Secret2Size = 56;
-  parameter int KeyManifestPkHashOffset = 3952;
-  parameter int KeyManifestPkHashSize = 48;
-  parameter int Secret2DigestOffset = 4000;
+  parameter int Secret2Offset = 3896;
+  parameter int Secret2Size = 40;
+  parameter int FieldEntropyOffset = 3896;
+  parameter int FieldEntropySize = 32;
+  parameter int Secret2DigestOffset = 3928;
   parameter int Secret2DigestSize = 8;
+  parameter int Secret3Offset = 3936;
+  parameter int Secret3Size = 72;
+  parameter int KeyManifestPkHashOffset = 3936;
+  parameter int KeyManifestPkHashSize = 48;
+  parameter int RmaTokenOffset = 3984;
+  parameter int RmaTokenSize = 16;
+  parameter int Secret3DigestOffset = 4000;
+  parameter int Secret3DigestSize = 8;
   parameter int LifeCycleOffset = 4008;
   parameter int LifeCycleSize = 88;
   parameter int LcTransitionCntOffset = 4008;
@@ -218,6 +228,9 @@ package caliptra_otp_ctrl_reg_pkg;
     } secret2_error;
     struct packed {
       logic        d;
+    } secret3_error;
+    struct packed {
+      logic        d;
     } life_cycle_error;
     struct packed {
       logic        d;
@@ -234,9 +247,9 @@ package caliptra_otp_ctrl_reg_pkg;
     struct packed {
       logic        d;
     } scrambling_fsm_error;
-    struct packed {
-      logic        d;
-    } key_deriv_fsm_error;
+    //struct packed {
+    //  logic        d;
+    //} key_deriv_fsm_error;
     struct packed {
       logic        d;
     } bus_integ_error;
@@ -280,6 +293,10 @@ package caliptra_otp_ctrl_reg_pkg;
     logic [31:0] d;
   } caliptra_otp_ctrl_hw2reg_secret2_digest_mreg_t;
 
+  typedef struct packed {
+    logic [31:0] d;
+  } caliptra_otp_ctrl_hw2reg_secret3_digest_mreg_t;
+
   // Register -> HW type for core interface
   typedef struct packed {
     caliptra_otp_ctrl_reg2hw_intr_state_reg_t intr_state; // [203:202]
@@ -300,17 +317,18 @@ package caliptra_otp_ctrl_reg_pkg;
 
   // HW -> register type for core interface
   typedef struct packed {
-    caliptra_otp_ctrl_hw2reg_intr_state_reg_t intr_state; // [427:424]
-    caliptra_otp_ctrl_hw2reg_status_reg_t status; // [423:409]
-    caliptra_otp_ctrl_hw2reg_err_code_mreg_t [7:0] err_code; // [408:385]
-    caliptra_otp_ctrl_hw2reg_direct_access_regwen_reg_t direct_access_regwen; // [384:384]
-    caliptra_otp_ctrl_hw2reg_direct_access_rdata_mreg_t [1:0] direct_access_rdata; // [383:320]
-    caliptra_otp_ctrl_hw2reg_vendor_test_digest_mreg_t [1:0] vendor_test_digest; // [319:256]
+    caliptra_otp_ctrl_hw2reg_intr_state_reg_t intr_state; // [495:492]
+    caliptra_otp_ctrl_hw2reg_status_reg_t status; // [491:476]
+    caliptra_otp_ctrl_hw2reg_err_code_mreg_t [8:0] err_code; // [475:449]
+    caliptra_otp_ctrl_hw2reg_direct_access_regwen_reg_t direct_access_regwen; // [448:448]
+    caliptra_otp_ctrl_hw2reg_direct_access_rdata_mreg_t [1:0] direct_access_rdata; // [447:384]
+    caliptra_otp_ctrl_hw2reg_vendor_test_digest_mreg_t [1:0] vendor_test_digest; // [383:320]
     caliptra_otp_ctrl_hw2reg_non_secret_fuses_digest_mreg_t [1:0]
-        non_secret_fuses_digest; // [255:192]
-    caliptra_otp_ctrl_hw2reg_secret0_digest_mreg_t [1:0] secret0_digest; // [191:128]
-    caliptra_otp_ctrl_hw2reg_secret1_digest_mreg_t [1:0] secret1_digest; // [127:64]
-    caliptra_otp_ctrl_hw2reg_secret2_digest_mreg_t [1:0] secret2_digest; // [63:0]
+        non_secret_fuses_digest; // [319:256]
+    caliptra_otp_ctrl_hw2reg_secret0_digest_mreg_t [1:0] secret0_digest; // [255:192]
+    caliptra_otp_ctrl_hw2reg_secret1_digest_mreg_t [1:0] secret1_digest; // [191:128]
+    caliptra_otp_ctrl_hw2reg_secret2_digest_mreg_t [1:0] secret2_digest; // [127:64]
+    caliptra_otp_ctrl_hw2reg_secret3_digest_mreg_t [1:0] secret3_digest; // [63:0]
   } caliptra_otp_ctrl_core_hw2reg_t;
 
   // Register offsets for core interface
@@ -327,31 +345,34 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_ERR_CODE_5_OFFSET = 13'h 28;
   parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_ERR_CODE_6_OFFSET = 13'h 2c;
   parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_ERR_CODE_7_OFFSET = 13'h 30;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN_OFFSET = 13'h 34;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD_OFFSET = 13'h 38;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_ADDRESS_OFFSET = 13'h 3c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_0_OFFSET = 13'h 40;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_1_OFFSET = 13'h 44;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_0_OFFSET = 13'h 48;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_1_OFFSET = 13'h 4c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_REGWEN_OFFSET = 13'h 50;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_OFFSET = 13'h 54;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_REGWEN_OFFSET = 13'h 58;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TIMEOUT_OFFSET = 13'h 5c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_INTEGRITY_CHECK_PERIOD_OFFSET = 13'h 60;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CONSISTENCY_CHECK_PERIOD_OFFSET = 13'h 64;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_READ_LOCK_OFFSET = 13'h 68;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_READ_LOCK_OFFSET = 13'h 6c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_0_OFFSET = 13'h 70;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_1_OFFSET = 13'h 74;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_0_OFFSET = 13'h 78;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_1_OFFSET = 13'h 7c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_0_OFFSET = 13'h 80;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_1_OFFSET = 13'h 84;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_0_OFFSET = 13'h 88;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_1_OFFSET = 13'h 8c;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0_OFFSET = 13'h 90;
-  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1_OFFSET = 13'h 94;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_ERR_CODE_8_OFFSET = 13'h 34;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN_OFFSET = 13'h 38;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD_OFFSET = 13'h 3c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_ADDRESS_OFFSET = 13'h 40;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_0_OFFSET = 13'h 44;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_1_OFFSET = 13'h 48;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_0_OFFSET = 13'h 4c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_1_OFFSET = 13'h 50;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_REGWEN_OFFSET = 13'h 54;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_OFFSET = 13'h 58;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_REGWEN_OFFSET = 13'h 5c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CHECK_TIMEOUT_OFFSET = 13'h 60;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_INTEGRITY_CHECK_PERIOD_OFFSET = 13'h 64;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_CONSISTENCY_CHECK_PERIOD_OFFSET = 13'h 68;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_READ_LOCK_OFFSET = 13'h 6c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_READ_LOCK_OFFSET = 13'h 70;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_0_OFFSET = 13'h 74;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_1_OFFSET = 13'h 78;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_0_OFFSET = 13'h 7c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_1_OFFSET = 13'h 80;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_0_OFFSET = 13'h 84;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_1_OFFSET = 13'h 88;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_0_OFFSET = 13'h 8c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_1_OFFSET = 13'h 90;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0_OFFSET = 13'h 94;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1_OFFSET = 13'h 98;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_0_OFFSET = 13'h 9c;
+  parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_1_OFFSET = 13'h a0;
 
   // Reset values for hwext registers and their fields for core interface
   parameter logic [1:0] CALIPTRA_OTP_CTRL_INTR_TEST_RESVAL = 2'h 0;
@@ -363,12 +384,13 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_ALERT_TEST_FATAL_BUS_INTEG_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_ALERT_TEST_FATAL_PRIM_OTP_ALERT_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_ALERT_TEST_RECOV_PRIM_OTP_ALERT_RESVAL = 1'h 0;
-  parameter logic [14:0] CALIPTRA_OTP_CTRL_STATUS_RESVAL = 15'h 0;
+  parameter logic [15:0] CALIPTRA_OTP_CTRL_STATUS_RESVAL = 16'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_VENDOR_TEST_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_NON_SECRET_FUSES_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_SECRET0_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_SECRET1_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_SECRET2_ERROR_RESVAL = 1'h 0;
+  parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_SECRET3_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_LIFE_CYCLE_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_DAI_ERROR_RESVAL = 1'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_STATUS_LCI_ERROR_RESVAL = 1'h 0;
@@ -395,6 +417,8 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter logic [2:0] CALIPTRA_OTP_CTRL_ERR_CODE_6_ERR_CODE_6_RESVAL = 3'h 0;
   parameter logic [2:0] CALIPTRA_OTP_CTRL_ERR_CODE_7_RESVAL = 3'h 0;
   parameter logic [2:0] CALIPTRA_OTP_CTRL_ERR_CODE_7_ERR_CODE_7_RESVAL = 3'h 0;
+  parameter logic [2:0] CALIPTRA_OTP_CTRL_ERR_CODE_8_RESVAL = 3'h 0;
+  parameter logic [2:0] CALIPTRA_OTP_CTRL_ERR_CODE_8_ERR_CODE_8_RESVAL = 3'h 0;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN_RESVAL = 1'h 1;
   parameter logic [0:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN_DIRECT_ACCESS_REGWEN_RESVAL = 1'h 1;
   parameter logic [2:0] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD_RESVAL = 3'h 0;
@@ -440,6 +464,10 @@ package caliptra_otp_ctrl_reg_pkg;
   parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0_SECRET2_DIGEST_0_RESVAL = 32'h 0;
   parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1_RESVAL = 32'h 0;
   parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1_SECRET2_DIGEST_1_RESVAL = 32'h 0;
+  parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_0_RESVAL = 32'h 0;
+  parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_0_SECRET3_DIGEST_0_RESVAL = 32'h 0;
+  parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_1_RESVAL = 32'h 0;
+  parameter logic [31:0] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_1_SECRET3_DIGEST_1_RESVAL = 32'h 0;
 
   // Window parameters for core interface
   parameter logic [CoreAw-1:0] CALIPTRA_OTP_CTRL_SW_CFG_WINDOW_OFFSET = 13'h 1000;
@@ -461,6 +489,7 @@ package caliptra_otp_ctrl_reg_pkg;
     CALIPTRA_OTP_CTRL_ERR_CODE_5,
     CALIPTRA_OTP_CTRL_ERR_CODE_6,
     CALIPTRA_OTP_CTRL_ERR_CODE_7,
+    CALIPTRA_OTP_CTRL_ERR_CODE_8,
     CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN,
     CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD,
     CALIPTRA_OTP_CTRL_DIRECT_ACCESS_ADDRESS,
@@ -485,11 +514,13 @@ package caliptra_otp_ctrl_reg_pkg;
     CALIPTRA_OTP_CTRL_SECRET1_DIGEST_0,
     CALIPTRA_OTP_CTRL_SECRET1_DIGEST_1,
     CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0,
-    CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1
+    CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1,
+    CALIPTRA_OTP_CTRL_SECRET3_DIGEST_0,
+    CALIPTRA_OTP_CTRL_SECRET3_DIGEST_1
   } caliptra_otp_ctrl_core_id_e;
 
   // Register width information to check illegal writes for core interface
-  parameter logic [3:0] CALIPTRA_OTP_CTRL_CORE_PERMIT [38] = '{
+  parameter logic [3:0] CALIPTRA_OTP_CTRL_CORE_PERMIT [41] = '{
     4'b 0001, // index[ 0] CALIPTRA_OTP_CTRL_INTR_STATE
     4'b 0001, // index[ 1] CALIPTRA_OTP_CTRL_INTR_ENABLE
     4'b 0001, // index[ 2] CALIPTRA_OTP_CTRL_INTR_TEST
@@ -503,31 +534,34 @@ package caliptra_otp_ctrl_reg_pkg;
     4'b 0001, // index[10] CALIPTRA_OTP_CTRL_ERR_CODE_5
     4'b 0001, // index[11] CALIPTRA_OTP_CTRL_ERR_CODE_6
     4'b 0001, // index[12] CALIPTRA_OTP_CTRL_ERR_CODE_7
-    4'b 0001, // index[13] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN
-    4'b 0001, // index[14] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD
-    4'b 0011, // index[15] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_ADDRESS
-    4'b 1111, // index[16] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_0
-    4'b 1111, // index[17] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_1
-    4'b 1111, // index[18] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_0
-    4'b 1111, // index[19] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_1
-    4'b 0001, // index[20] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_REGWEN
-    4'b 0001, // index[21] CALIPTRA_OTP_CTRL_CHECK_TRIGGER
-    4'b 0001, // index[22] CALIPTRA_OTP_CTRL_CHECK_REGWEN
-    4'b 1111, // index[23] CALIPTRA_OTP_CTRL_CHECK_TIMEOUT
-    4'b 1111, // index[24] CALIPTRA_OTP_CTRL_INTEGRITY_CHECK_PERIOD
-    4'b 1111, // index[25] CALIPTRA_OTP_CTRL_CONSISTENCY_CHECK_PERIOD
-    4'b 0001, // index[26] CALIPTRA_OTP_CTRL_VENDOR_TEST_READ_LOCK
-    4'b 0001, // index[27] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_READ_LOCK
-    4'b 1111, // index[28] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_0
-    4'b 1111, // index[29] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_1
-    4'b 1111, // index[30] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_0
-    4'b 1111, // index[31] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_1
-    4'b 1111, // index[32] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_0
-    4'b 1111, // index[33] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_1
-    4'b 1111, // index[34] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_0
-    4'b 1111, // index[35] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_1
-    4'b 1111, // index[36] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0
-    4'b 1111  // index[37] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1
+    4'b 0001, // index[13] CALIPTRA_OTP_CTRL_ERR_CODE_8
+    4'b 0001, // index[14] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_REGWEN
+    4'b 0001, // index[15] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_CMD
+    4'b 0011, // index[16] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_ADDRESS
+    4'b 1111, // index[17] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_0
+    4'b 1111, // index[18] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_WDATA_1
+    4'b 1111, // index[19] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_0
+    4'b 1111, // index[20] CALIPTRA_OTP_CTRL_DIRECT_ACCESS_RDATA_1
+    4'b 0001, // index[21] CALIPTRA_OTP_CTRL_CHECK_TRIGGER_REGWEN
+    4'b 0001, // index[22] CALIPTRA_OTP_CTRL_CHECK_TRIGGER
+    4'b 0001, // index[23] CALIPTRA_OTP_CTRL_CHECK_REGWEN
+    4'b 1111, // index[24] CALIPTRA_OTP_CTRL_CHECK_TIMEOUT
+    4'b 1111, // index[25] CALIPTRA_OTP_CTRL_INTEGRITY_CHECK_PERIOD
+    4'b 1111, // index[26] CALIPTRA_OTP_CTRL_CONSISTENCY_CHECK_PERIOD
+    4'b 0001, // index[27] CALIPTRA_OTP_CTRL_VENDOR_TEST_READ_LOCK
+    4'b 0001, // index[28] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_READ_LOCK
+    4'b 1111, // index[29] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_0
+    4'b 1111, // index[30] CALIPTRA_OTP_CTRL_VENDOR_TEST_DIGEST_1
+    4'b 1111, // index[31] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_0
+    4'b 1111, // index[32] CALIPTRA_OTP_CTRL_NON_SECRET_FUSES_DIGEST_1
+    4'b 1111, // index[33] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_0
+    4'b 1111, // index[34] CALIPTRA_OTP_CTRL_SECRET0_DIGEST_1
+    4'b 1111, // index[35] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_0
+    4'b 1111, // index[36] CALIPTRA_OTP_CTRL_SECRET1_DIGEST_1
+    4'b 1111, // index[37] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_0
+    4'b 1111, // index[38] CALIPTRA_OTP_CTRL_SECRET2_DIGEST_1
+    4'b 1111, // index[39] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_0
+    4'b 1111  // index[40] CALIPTRA_OTP_CTRL_SECRET3_DIGEST_1
   };
 
   ///////////////////////////////////////////////

@@ -19,10 +19,15 @@ package caliptra_prim_mubi_pkg;
   //////////////////////////////////////////////
 
   parameter int MuBi4Width = 4;
+  localparam  MuBi4True = 4'h6, 
+              MuBi4False = 4'h9;
+  typedef logic [MuBi4Width-1:0] mubi4_t;
+  /*
   typedef enum logic [MuBi4Width-1:0] {
     MuBi4True = 4'h6, // enabled
     MuBi4False = 4'h9  // disabled
   } mubi4_t;
+  */
 
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi4ValsComplementary_A, MuBi4True == ~MuBi4False)

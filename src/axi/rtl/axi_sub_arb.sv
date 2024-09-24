@@ -45,6 +45,7 @@ module axi_sub_arb import axi_pkg::*; #(
     input  logic [AW-1:0] r_addr,  // Byte address
     input  logic [UW-1:0] r_user,
     input  logic [IW-1:0] r_id,
+    input  logic [2:0]    r_size,
     input  logic          r_last,  // Asserted with final 'dv' of a burst
     output logic          r_hld,
     output logic          r_err,
@@ -58,6 +59,7 @@ module axi_sub_arb import axi_pkg::*; #(
     input  logic [IW-1:0] w_id,
     input  logic [DW-1:0] w_wdata, // Requires: Component dwidth == AXI dwidth
     input  logic [BC-1:0] w_wstrb, // Requires: Component dwidth == AXI dwidth
+    input  logic [2:0]    w_size,
     input  logic          w_last,  // Asserted with final 'dv' of a burst
     output logic          w_hld,
     output logic          w_err,
@@ -70,6 +72,7 @@ module axi_sub_arb import axi_pkg::*; #(
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
+    output logic [2:0]    size,
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
     input  logic          rd_err, // Asserts with rdata for reads (when C_LAT > 0)
@@ -124,6 +127,7 @@ module axi_sub_arb import axi_pkg::*; #(
         user    = r_win ? r_user : w_user;
         id      = r_win ? r_id   : w_id  ;
         last    = r_win ? r_last : w_last;
+        size    = r_win ? r_size : w_size;
         r_hld   = hld || !r_win;
         w_hld   = hld ||  r_win;
         r_err   = rd_err;

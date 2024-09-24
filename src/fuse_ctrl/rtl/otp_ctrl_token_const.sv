@@ -6,14 +6,18 @@
 // This implementation relies on constant propagation to precompute these constants from the
 // random netlist constants at compile time, and hence does not contain any "real" logic.
 
-module otp_ctrl_token_const import otp_ctrl_pkg::*; #(
-  // Compile time random constants, to be overriden by topgen.
-  parameter digest_const_array_t    RndCnstDigestConst    = RndCnstDigestConstDefault,
-  parameter digest_iv_array_t       RndCnstDigestIV       = RndCnstDigestIVDefault,
-  parameter lc_ctrl_pkg::lc_token_t RndCnstRawUnlockToken = RndCnstRawUnlockTokenDefault
+module otp_ctrl_token_const 
+  import caliptra_otp_ctrl_pkg::*; 
+  import caliptra_otp_ctrl_part_pkg::*;
+  import lc_ctrl_pkg::*;
+  #(
+    // Compile time random constants, to be overriden by topgen.
+    parameter digest_const_array_t          RndCnstDigestConst    = RndCnstDigestConstDefault,
+    parameter digest_iv_array_t             RndCnstDigestIV       = RndCnstDigestIVDefault,
+    parameter lc_ctrl_state_pkg::lc_token_t RndCnstRawUnlockToken = RndCnstRawUnlockTokenDefault
 ) (
-  output lc_ctrl_pkg::lc_token_t all_zero_token_hashed_o,
-  output lc_ctrl_pkg::lc_token_t raw_unlock_token_hashed_o
+  output lc_ctrl_state_pkg::lc_token_t all_zero_token_hashed_o,
+  output lc_ctrl_state_pkg::lc_token_t raw_unlock_token_hashed_o
 );
 
   localparam int NumHashes = 2;
@@ -41,7 +45,7 @@ module otp_ctrl_token_const import otp_ctrl_pkg::*; #(
 
       // This relies on constant propagation to
       // statically precompute the hashed token values.
-      prim_present #(
+      caliptra_prim_present #(
         .KeyWidth(128),
         .NumRounds(NumPresentRounds)
       ) u_prim_present_enc_0 (

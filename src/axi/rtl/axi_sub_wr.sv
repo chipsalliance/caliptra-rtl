@@ -57,6 +57,7 @@ module axi_sub_wr import axi_pkg::*; #(
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
+    output logic [2:0]    wsize,
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
     input  logic          err
@@ -271,7 +272,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (DW + BC + 1),
+        .DW             (DW + BC + 3 + 1),
         .OPT_INITIAL    (1'b1)
     ) i_dp_skd (
         .i_clk  (clk             ),
@@ -280,11 +281,13 @@ module axi_sub_wr import axi_pkg::*; #(
         .o_ready(txn_wready      ),
         .i_data ({s_axi_if.wdata,
                   s_axi_if.wstrb,
+                  txn_ctx.size,
                   s_axi_if.wlast}),
         .o_valid(dv_pre          ),
         .i_ready(!hld            ),
         .o_data ({wdata,
                   wstrb,
+                  wsize,
                   last }         )
     );
 

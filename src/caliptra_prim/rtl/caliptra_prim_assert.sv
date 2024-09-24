@@ -6,7 +6,7 @@
 //  - Provides default clk and rst options to simplify code
 //  - Provides boiler plate template for common assertions
 
-`ifndef PRIM_ASSERT_SV
+`ifndef CALIPTRA_PRIM_ASSERT_SV
 `define CALIPTRA_PRIM_ASSERT_SV
 
 ///////////////////

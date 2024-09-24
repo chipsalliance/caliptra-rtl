@@ -4,7 +4,7 @@
 
 // // Macros and helper code for security countermeasures.
 
-`ifndef PRIM_ASSERT_SEC_CM_SVH
+`ifndef CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 `define CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 
 `define _CALIPTRA_SEC_CM_ALERT_MAX_CYC 30

@@ -26,11 +26,11 @@
 // This can be useful if SW chooses to leave the periodic checks disabled.
 //
 
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_flop_macros.sv"
 
 module otp_ctrl_lfsr_timer
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_reg_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_reg_pkg::*;
 #(
   // Compile time random constants, to be overriden by topgen.
   parameter lfsr_seed_t RndCnstLfsrSeed = RndCnstLfsrSeedDefault,
@@ -90,7 +90,7 @@ module otp_ctrl_lfsr_timer
   // If any of the two is glitched and the two LFSR states do not agree,
   // the FSM below is moved into a terminal error state.
   // SEC_CM: TIMER.LFSR.REDUN
-  prim_double_lfsr #(
+  caliptra_prim_double_lfsr #(
     .LfsrDw      ( LfsrWidth      ),
     .EntropyDw   ( LfsrWidth      ),
     .StateOutDw  ( LfsrWidth      ),
@@ -113,7 +113,7 @@ module otp_ctrl_lfsr_timer
   logic unused_seed;
   assign unused_seed = ^edn_data_i;
 
-  `ASSERT_INIT(EdnIsWideEnough_A, EdnDataWidth >= LfsrWidth)
+  `CALIPTRA_ASSERT_INIT(EdnIsWideEnough_A, EdnDataWidth >= LfsrWidth)
 
   //////////////////////////////
   // Tandem Counter Instances //
@@ -144,7 +144,7 @@ module otp_ctrl_lfsr_timer
   assign cnsty_cnt_set_val = (cnsty_set_period) ? (lfsr_state & cnsty_mask) : LfsrWidth'(timeout_i);
 
   // SEC_CM: TIMER_INTEG.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(LfsrWidth)
   ) u_prim_count_integ (
     .clk_i,
@@ -162,7 +162,7 @@ module otp_ctrl_lfsr_timer
   );
 
   // SEC_CM: TIMER_CNSTY.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(LfsrWidth)
   ) u_prim_count_cnsty (
     .clk_i,
@@ -364,7 +364,7 @@ module otp_ctrl_lfsr_timer
   // Registers //
   ///////////////
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs
     if (!rst_ni) begin
@@ -388,10 +388,10 @@ module otp_ctrl_lfsr_timer
   // Assertions //
   ////////////////
 
-  `ASSERT_KNOWN(EdnReqKnown_A,      edn_req_o)
-  `ASSERT_KNOWN(ChkPendingKnown_A,  chk_pending_o)
-  `ASSERT_KNOWN(IntegChkReqKnown_A, integ_chk_req_o)
-  `ASSERT_KNOWN(CnstyChkReqKnown_A, cnsty_chk_req_o)
-  `ASSERT_KNOWN(ChkTimeoutKnown_A,  chk_timeout_o)
+  `CALIPTRA_ASSERT_KNOWN(EdnReqKnown_A,      edn_req_o)
+  `CALIPTRA_ASSERT_KNOWN(ChkPendingKnown_A,  chk_pending_o)
+  `CALIPTRA_ASSERT_KNOWN(IntegChkReqKnown_A, integ_chk_req_o)
+  `CALIPTRA_ASSERT_KNOWN(CnstyChkReqKnown_A, cnsty_chk_req_o)
+  `CALIPTRA_ASSERT_KNOWN(ChkTimeoutKnown_A,  chk_timeout_o)
 
 endmodule : otp_ctrl_lfsr_timer

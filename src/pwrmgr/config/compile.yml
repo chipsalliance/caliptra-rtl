@@ -1,0 +1,15 @@
+---
+provides: [pwrmgr_pkg]
+schema_version: 2.4.0
+requires:
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+    - $COMPILE_ROOT/rtl/pwrmgr_reg_pkg.sv
+    - $COMPILE_ROOT/rtl/pwrmgr_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+    - $COMPILE_ROOT/rtl/pwrmgr_reg_pkg.sv
+    - $COMPILE_ROOT/rtl/pwrmgr_pkg.sv

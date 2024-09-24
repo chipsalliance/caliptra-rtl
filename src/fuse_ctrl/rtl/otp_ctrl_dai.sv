@@ -5,12 +5,12 @@
 // Direct access interface for OTP controller.
 //
 
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_flop_macros.sv"
 
 module otp_ctrl_dai
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_reg_pkg::*;
-  import otp_ctrl_part_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_reg_pkg::*;
+  import caliptra_otp_ctrl_part_pkg::*;
 (
   input                                  clk_i,
   input                                  rst_ni,
@@ -48,14 +48,14 @@ module otp_ctrl_dai
   output logic [NumDaiWords-1:0][31:0]   dai_rdata_o,
   // OTP interface
   output logic                           otp_req_o,
-  output prim_otp_pkg::cmd_e             otp_cmd_o,
+  output caliptra_prim_otp_pkg::cmd_e    otp_cmd_o,
   output logic [OtpSizeWidth-1:0]        otp_size_o,
   output logic [OtpIfWidth-1:0]          otp_wdata_o,
   output logic [OtpAddrWidth-1:0]        otp_addr_o,
   input                                  otp_gnt_i,
   input                                  otp_rvalid_i,
   input  [ScrmblBlockWidth-1:0]          otp_rdata_i,
-  input  prim_otp_pkg::err_e             otp_err_i,
+  input  caliptra_prim_otp_pkg::err_e    otp_err_i,
   // Scrambling mutex request
   output logic                           scrmbl_mtx_req_o,
   input                                  scrmbl_mtx_gnt_i,
@@ -74,14 +74,14 @@ module otp_ctrl_dai
   // Integration Checks //
   ////////////////////////
 
-  import prim_mubi_pkg::*;
-  import prim_util_pkg::vbits;
+  import caliptra_prim_mubi_pkg::*;
+  import caliptra_prim_util_pkg::vbits;
 
   localparam int CntWidth = OtpByteAddrWidth - $clog2(ScrmblBlockWidth/8);
 
   // Integration checks for parameters.
-  `ASSERT_INIT(CheckNativeOtpWidth0_A, (ScrmblBlockWidth % OtpWidth) == 0)
-  `ASSERT_INIT(CheckNativeOtpWidth1_A, (32 % OtpWidth) == 0)
+  `CALIPTRA_ASSERT_INIT(CheckNativeOtpWidth0_A, (ScrmblBlockWidth % OtpWidth) == 0)
+  `CALIPTRA_ASSERT_INIT(CheckNativeOtpWidth1_A, (32 % OtpWidth) == 0)
 
   /////////////////////
   // DAI Control FSM //
@@ -197,7 +197,7 @@ module otp_ctrl_dai
 
     // OTP signals
     otp_req_o = 1'b0;
-    otp_cmd_o = prim_otp_pkg::Init;
+    otp_cmd_o = caliptra_prim_otp_pkg::Init;
 
     // Scrambling mutex
     scrmbl_mtx_req_o = 1'b0;
@@ -318,9 +318,9 @@ module otp_ctrl_dai
           // Depending on the partition configuration,
           // the wrapper is instructed to ignore integrity errors.
           if (PartInfo[part_idx].integrity) begin
-            otp_cmd_o = prim_otp_pkg::Read;
+            otp_cmd_o = caliptra_prim_otp_pkg::Read;
           end else begin
-            otp_cmd_o = prim_otp_pkg::ReadRaw;
+            otp_cmd_o = caliptra_prim_otp_pkg::ReadRaw;
           end
           if (otp_gnt_i) begin
             state_d = ReadWaitSt;
@@ -421,9 +421,9 @@ module otp_ctrl_dai
           // Depending on the partition configuration,
           // the wrapper is instructed to ignore integrity errors.
           if (PartInfo[part_idx].integrity) begin
-            otp_cmd_o = prim_otp_pkg::Write;
+            otp_cmd_o = caliptra_prim_otp_pkg::Write;
           end else begin
-            otp_cmd_o = prim_otp_pkg::WriteRaw;
+            otp_cmd_o = caliptra_prim_otp_pkg::WriteRaw;
           end
           if (otp_gnt_i) begin
             state_d = WriteWaitSt;
@@ -554,9 +554,9 @@ module otp_ctrl_dai
           // Depending on the partition configuration,
           // the wrapper is instructed to ignore integrity errors.
           if (PartInfo[part_idx].integrity) begin
-            otp_cmd_o = prim_otp_pkg::Read;
+            otp_cmd_o = caliptra_prim_otp_pkg::Read;
           end else begin
-            otp_cmd_o = prim_otp_pkg::ReadRaw;
+            otp_cmd_o = caliptra_prim_otp_pkg::ReadRaw;
           end
           if (otp_gnt_i) begin
             state_d = DigReadWaitSt;
@@ -708,7 +708,7 @@ module otp_ctrl_dai
     // PartEnd has an extra bit to cope with the case where offset + size overflows. However, we
     // arrange the address map to make sure that PartEndInt is at most 1 << OtpByteAddrWidth. Check
     // that here.
-    `ASSERT_INIT(PartEndMax_A, PartEndInt <= (1 << OtpByteAddrWidth))
+    `CALIPTRA_ASSERT_INIT(PartEndMax_A, PartEndInt <= (1 << OtpByteAddrWidth))
 
     // The shift right by OtpAddrShift drops exactly the bottom bits that are needed to convert
     // between OtpAddrWidth and OtpByteAddrWidth, so we know that we can slice safely here.
@@ -724,10 +724,10 @@ module otp_ctrl_dai
     assign digest_addr_lut[k] = DigestAddrLut;
   end
 
-  `ASSERT(ScrmblBlockWidthGe8_A, ScrmblBlockWidth >= 8)
-  `ASSERT(PartSelMustBeOnehot_A, $onehot0(part_sel_oh))
+  `CALIPTRA_ASSERT(ScrmblBlockWidthGe8_A, ScrmblBlockWidth >= 8)
+  `CALIPTRA_ASSERT(PartSelMustBeOnehot_A, $onehot0(part_sel_oh))
 
-  prim_arbiter_fixed #(
+  caliptra_prim_arbiter_fixed #(
     .N(NumPart),
     .EnDataPort(0)
   ) u_part_sel_idx (
@@ -773,7 +773,7 @@ module otp_ctrl_dai
   // Address counter - this is only used for computing a digest, hence the increment is
   // fixed to 8 byte.
   // SEC_CM: DAI.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(CntWidth)
   ) u_prim_count (
     .clk_i,
@@ -800,7 +800,7 @@ module otp_ctrl_dai
   // Registers //
   ///////////////
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs
     if (!rst_ni) begin
@@ -831,25 +831,25 @@ module otp_ctrl_dai
   ////////////////
 
   // Known assertions
-  `ASSERT_KNOWN(InitDoneKnown_A,     init_done_o)
-  `ASSERT_KNOWN(PartInitReqKnown_A,  part_init_req_o)
-  `ASSERT_KNOWN(ErrorKnown_A,        error_o)
-  `ASSERT_KNOWN(DaiIdleKnown_A,      dai_idle_o)
-  `ASSERT_KNOWN(DaiRdataKnown_A,     dai_rdata_o)
-  `ASSERT_KNOWN(OtpReqKnown_A,       otp_req_o)
-  `ASSERT_KNOWN(OtpCmdKnown_A,       otp_cmd_o)
-  `ASSERT_KNOWN(OtpSizeKnown_A,      otp_size_o)
-  `ASSERT_KNOWN(OtpWdataKnown_A,     otp_wdata_o)
-  `ASSERT_KNOWN(OtpAddrKnown_A,      otp_addr_o)
-  `ASSERT_KNOWN(ScrmblMtxReqKnown_A, scrmbl_mtx_req_o)
-  `ASSERT_KNOWN(ScrmblCmdKnown_A,    scrmbl_cmd_o)
-  `ASSERT_KNOWN(ScrmblModeKnown_A,   scrmbl_mode_o)
-  `ASSERT_KNOWN(ScrmblSelKnown_A,    scrmbl_sel_o)
-  `ASSERT_KNOWN(ScrmblDataKnown_A,   scrmbl_data_o)
-  `ASSERT_KNOWN(ScrmblValidKnown_A,  scrmbl_valid_o)
+  `CALIPTRA_ASSERT_KNOWN(InitDoneKnown_A,     init_done_o)
+  `CALIPTRA_ASSERT_KNOWN(PartInitReqKnown_A,  part_init_req_o)
+  `CALIPTRA_ASSERT_KNOWN(ErrorKnown_A,        error_o)
+  `CALIPTRA_ASSERT_KNOWN(DaiIdleKnown_A,      dai_idle_o)
+  `CALIPTRA_ASSERT_KNOWN(DaiRdataKnown_A,     dai_rdata_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpReqKnown_A,       otp_req_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpCmdKnown_A,       otp_cmd_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpSizeKnown_A,      otp_size_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpWdataKnown_A,     otp_wdata_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpAddrKnown_A,      otp_addr_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblMtxReqKnown_A, scrmbl_mtx_req_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblCmdKnown_A,    scrmbl_cmd_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblModeKnown_A,   scrmbl_mode_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblSelKnown_A,    scrmbl_sel_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblDataKnown_A,   scrmbl_data_o)
+  `CALIPTRA_ASSERT_KNOWN(ScrmblValidKnown_A,  scrmbl_valid_o)
 
   // OTP error response
-  `ASSERT(OtpErrorState_A,
+  `CALIPTRA_ASSERT(OtpErrorState_A,
       state_q inside {InitOtpSt, ReadWaitSt, WriteWaitSt, DigReadWaitSt} && otp_rvalid_i &&
       !(otp_err inside {NoError, MacroEccCorrError, MacroWriteBlankError})
       |=>

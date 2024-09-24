@@ -141,13 +141,13 @@ module caliptra_prim_onehot_check #(
   // CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ALERT to check the error with alert, in case that
   // caliptra_prim_onehot_check is used in design without adding this assertion check.
   `ifdef CALIPTRA_INC_ASSERT
-  `ifndef PRIM_DEFAULT_IMPL
+  `ifndef CALIPTRA_PRIM_DEFAULT_IMPL
     `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
   `endif
   parameter caliptra_prim_pkg::impl_e Impl = `CALIPTRA_PRIM_DEFAULT_IMPL;
 
   logic unused_assert_connected;
-  // TODO(#13337): only check generic for now. The path of this prim in other Impl may differ
+  // TODO(#13337): only check generic for now. The path of this prim in other Impl may differ. 
   if (Impl == caliptra_prim_pkg::ImplGeneric) begin : gen_generic
     `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
   end

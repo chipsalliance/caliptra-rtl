@@ -17,16 +17,17 @@ package axi_pkg;
 
     localparam int AXI_DW = 32;
     localparam int AXI_AW = 32;
+    localparam int AXI_UW = 32;
     localparam int AXI_IW = 1;
     localparam int AXI_BC = AXI_DW/8;
-    localparam int BW = $clog2(BC);
+    localparam int AXI_BW = $clog2(AXI_BC);
 
     // Data that is returned upon an a TL-UL error belonging to an instruction fetch.
     // Note that this data will be returned with the correct bus integrity value.
-    parameter logic [top_pkg::TL_DW-1:0] DataWhenInstrError = '0;
+    //parameter logic [top_pkg::TL_DW-1:0] DataWhenInstrError = '0;
     // Data that is returned upon an a TL-UL error not belonging to an instruction fetch.
     // Note that this data will be returned with the correct bus integrity value.
-    parameter logic [top_pkg::TL_DW-1:0] DataWhenError      = {top_pkg::TL_DW{1'b1}};
+    //parameter logic [top_pkg::TL_DW-1:0] DataWhenError      = {top_pkg::TL_DW{1'b1}};
 
 
     localparam AXI_LEN_MAX_VALUE = 256; // 8-bit LEN signal = 256 beats max
@@ -52,25 +53,25 @@ package axi_pkg;
 
     // Transaction context
     typedef struct packed {
-        logic [AW-1:0] addr;
+        logic [AXI_AW-1:0] addr;
         logic [1:0]    burst;
         logic [2:0]    size;
         logic [7:0]    len;
-        logic [UW-1:0] user;
-        logic [IW-1:0] id;
+        logic [AXI_UW-1:0] user;
+        logic [AXI_IW-1:0] id;
         logic          lock;
     } axi_ctx_t;
 
     typedef struct packed {
-        logic [IW-1:0] id;
-        logic [UW-1:0] user;
+        logic [AXI_IW-1:0] id;
+        logic [AXI_UW-1:0] user;
         axi_resp_e     resp;
         logic          last;
     } xfer_ctx_t;
 
     typedef struct packed {
-        logic [AW-1:0] addr;
-        logic [AW-1:0] addr_mask;
+        logic [AXI_AW-1:0] addr;
+        logic [AXI_AW-1:0] addr_mask;
     } axi_ex_ctx_t;
 
 endpackage

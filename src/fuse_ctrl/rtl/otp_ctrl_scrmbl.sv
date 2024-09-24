@@ -68,11 +68,11 @@
 //             - http://www.lightweightcrypto.org/present/present_ches2007.pdf
 //
 
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_flop_macros.sv"
 
 module otp_ctrl_scrmbl
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_part_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_part_pkg::*;
 (
   input                               clk_i,
   input                               rst_ni,
@@ -91,7 +91,7 @@ module otp_ctrl_scrmbl
   output logic                        fsm_err_o
 );
 
-  import prim_util_pkg::vbits;
+  import caliptra_prim_util_pkg::vbits;
 
   ////////////////////////
   // Decryption Key LUT //
@@ -103,7 +103,7 @@ module otp_ctrl_scrmbl
   digest_iv_array_t rnd_cnst_digest_iv_anchor;
 
   for (genvar i = 0; i < NumScrmblKeys; i++) begin : gen_anchor_keys
-    prim_sec_anchor_buf #(
+    caliptra_prim_sec_anchor_buf #(
       .Width(ScrmblKeyWidth)
     ) u_key_anchor_buf (
       .in_i(RndCnstKey[i]),
@@ -112,14 +112,14 @@ module otp_ctrl_scrmbl
   end
 
   for (genvar i = 0; i < NumDigestSets; i++) begin : gen_anchor_digests
-    prim_sec_anchor_buf #(
+    caliptra_prim_sec_anchor_buf #(
       .Width(ScrmblKeyWidth)
     ) u_const_anchor_buf (
       .in_i(RndCnstDigestConst[i]),
       .out_o(rnd_cnst_digest_anchor[i])
     );
 
-    prim_sec_anchor_buf #(
+    caliptra_prim_sec_anchor_buf #(
       .Width(ScrmblBlockWidth)
     ) u_iv_anchor_buf (
       .in_i(RndCnstDigestIV[i]),
@@ -135,7 +135,7 @@ module otp_ctrl_scrmbl
   logic [2**$clog2(NumDigestSets)-1:0][ScrmblBlockWidth-1:0] digest_iv_lut;
 
   // This pre-calculates the inverse scrambling keys at elab time.
-  `ASSERT_INIT(NumMaxPresentRounds_A, NumPresentRounds <= 31)
+  `CALIPTRA_ASSERT_INIT(NumMaxPresentRounds_A, NumPresentRounds <= 31)
 
   always_comb begin : p_luts
     otp_enc_key_lut = '0;
@@ -149,7 +149,7 @@ module otp_ctrl_scrmbl
       // Due to the PRESENT key schedule, we have to step the key schedule function by
       // NumPresentRounds forwards to get the decryption key.
       otp_dec_key_lut[k] =
-          prim_cipher_pkg::present_get_dec_key128(rnd_cnst_key_anchor[k], NumRounds);
+          caliptra_prim_cipher_pkg::present_get_dec_key128(rnd_cnst_key_anchor[k], NumRounds);
     end
 
     for (int k = 0; k < NumDigestSets; k++) begin
@@ -157,10 +157,10 @@ module otp_ctrl_scrmbl
       digest_iv_lut[k]    = rnd_cnst_digest_iv_anchor[k];
     end
   end
-  `ASSERT_KNOWN(EncKeyLutKnown_A,      otp_enc_key_lut)
-  `ASSERT_KNOWN(DecKeyLutKnown_A,      otp_dec_key_lut)
-  `ASSERT_KNOWN(DigestConstLutKnown_A, digest_const_lut)
-  `ASSERT_KNOWN(DigestIvLutKnown_A,    digest_iv_lut)
+  `CALIPTRA_ASSERT_KNOWN(EncKeyLutKnown_A,      otp_enc_key_lut)
+  `CALIPTRA_ASSERT_KNOWN(DecKeyLutKnown_A,      otp_dec_key_lut)
+  `CALIPTRA_ASSERT_KNOWN(DigestConstLutKnown_A, digest_const_lut)
+  `CALIPTRA_ASSERT_KNOWN(DigestIvLutKnown_A,    digest_iv_lut)
 
   //////////////
   // Datapath //
@@ -202,9 +202,9 @@ module otp_ctrl_scrmbl
   assign otp_digest_iv_mux    = digest_iv_lut[DigestSetSelWidth'(sel_i)];
 
   // Make sure we always select a valid key / digest constant.
-  `ASSERT(CheckNumEncKeys_A, key_state_sel == SelEncKeyInit  |-> sel_i < NumScrmblKeys)
-  `ASSERT(CheckNumDecKeys_A, key_state_sel == SelDecKeyInit  |-> sel_i < NumScrmblKeys)
-  `ASSERT(CheckNumDigest1_A, key_state_sel == SelDigestConst |-> sel_i < NumDigestSets)
+  `CALIPTRA_ASSERT(CheckNumEncKeys_A, key_state_sel == SelEncKeyInit  |-> sel_i < NumScrmblKeys)
+  `CALIPTRA_ASSERT(CheckNumDecKeys_A, key_state_sel == SelDecKeyInit  |-> sel_i < NumScrmblKeys)
+  `CALIPTRA_ASSERT(CheckNumDigest1_A, key_state_sel == SelDigestConst |-> sel_i < NumDigestSets)
 
   assign data_state_d    = (data_state_sel == SelEncDataOut)    ? enc_data_out     :
                            (data_state_sel == SelDecDataOut)    ? dec_data_out     :
@@ -281,7 +281,7 @@ module otp_ctrl_scrmbl
   assign valid_o = valid_q;
 
   // SEC_CM: SCRMBL.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(CntWidth)
   ) u_prim_count (
     .clk_i,
@@ -441,7 +441,7 @@ module otp_ctrl_scrmbl
   // PRESENT DEC/ENC Modules //
   /////////////////////////////
 
-  prim_present #(
+  caliptra_prim_present #(
     .KeyWidth(128),
     .NumRounds(NumPresentRounds),
     .NumPhysRounds(1)
@@ -454,7 +454,7 @@ module otp_ctrl_scrmbl
     .idx_o  ( enc_idx_out  )
   );
 
-  prim_present #(
+  caliptra_prim_present #(
     .KeyWidth(128),
     // We are using an iterative full-round implementation here.
     .NumRounds(NumPresentRounds),
@@ -473,7 +473,7 @@ module otp_ctrl_scrmbl
   // Registers //
   ///////////////
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, IdleSt)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, IdleSt)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs
     if (!rst_ni) begin

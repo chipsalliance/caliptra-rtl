@@ -5,12 +5,12 @@
 // Life cycle interface for performing life cycle transitions in OTP.
 //
 
-`include "prim_flop_macros.sv"
+`include "caliptra_prim_flop_macros.sv"
 
 module otp_ctrl_lci
-  import otp_ctrl_pkg::*;
-  import otp_ctrl_reg_pkg::*;
-  import otp_ctrl_part_pkg::*;
+  import caliptra_otp_ctrl_pkg::*;
+  import caliptra_otp_ctrl_reg_pkg::*;
+  import caliptra_otp_ctrl_part_pkg::*;
 #(
   // Lifecycle partition information
   parameter part_info_t Info = PartInfoDefault
@@ -44,21 +44,21 @@ module otp_ctrl_lci
   output logic                              lci_prog_idle_o,
   // OTP interface
   output logic                              otp_req_o,
-  output prim_otp_pkg::cmd_e                otp_cmd_o,
+  output caliptra_prim_otp_pkg::cmd_e       otp_cmd_o,
   output logic [OtpSizeWidth-1:0]           otp_size_o,
   output logic [OtpIfWidth-1:0]             otp_wdata_o,
   output logic [OtpAddrWidth-1:0]           otp_addr_o,
   input                                     otp_gnt_i,
   input                                     otp_rvalid_i,
   input  [ScrmblBlockWidth-1:0]             otp_rdata_i,
-  input  prim_otp_pkg::err_e                otp_err_i
+  input  caliptra_prim_otp_pkg::err_e       otp_err_i
 );
 
   ////////////////////////
   // Integration Checks //
   ////////////////////////
 
-  import prim_util_pkg::vbits;
+  import caliptra_prim_util_pkg::vbits;
 
   localparam int NumLcOtpWords = int'(Info.size) >> OtpAddrShift;
   localparam int CntWidth = vbits(NumLcOtpWords);
@@ -67,7 +67,7 @@ module otp_ctrl_lci
   localparam bit [CntWidth-1:0] LastLcOtpWord = LastLcOtpWordInt[CntWidth-1:0];
 
   // This is required, since each native OTP word can only be programmed once.
-  `ASSERT_INIT(LcValueMustBeWiderThanNativeOtpWidth_A, lc_ctrl_state_pkg::LcValueWidth >= OtpWidth)
+  `CALIPTRA_ASSERT_INIT(LcValueMustBeWiderThanNativeOtpWidth_A, lc_ctrl_state_pkg::LcValueWidth >= OtpWidth)
 
   ////////////////////
   // Controller FSM //
@@ -125,7 +125,7 @@ module otp_ctrl_lci
 
     // OTP signals
     otp_req_o = 1'b0;
-    otp_cmd_o = prim_otp_pkg::Read;
+    otp_cmd_o = caliptra_prim_otp_pkg::Read;
 
     // Response to LC controller
     lc_err_o = 1'b0;
@@ -158,7 +158,7 @@ module otp_ctrl_lci
       // programmed to 1 before, the OTP errors out.
       WriteSt: begin
         otp_req_o = 1'b1;
-        otp_cmd_o = prim_otp_pkg::Write;
+        otp_cmd_o = caliptra_prim_otp_pkg::Write;
         lci_prog_idle_o = 1'b0;
         if (otp_gnt_i) begin
           state_d = WriteWaitSt;
@@ -235,7 +235,7 @@ module otp_ctrl_lci
 
   // Native OTP word counter
   // SEC_CM: LCI.CTR.REDUN
-  prim_count #(
+  caliptra_prim_count #(
     .Width(CntWidth)
   ) u_prim_count (
     .clk_i,
@@ -271,7 +271,7 @@ module otp_ctrl_lci
   // Registers //
   ///////////////
 
-  `PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, state_d, state_q, state_e, ResetSt)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : p_regs
     if (!rst_ni) begin
@@ -285,14 +285,14 @@ module otp_ctrl_lci
   // Assertions //
   ////////////////
 
-  `ASSERT_KNOWN(LcAckKnown_A,    lc_ack_o)
-  `ASSERT_KNOWN(LcErrKnown_A,    lc_err_o)
-  `ASSERT_KNOWN(ErrorKnown_A,    error_o)
-  `ASSERT_KNOWN(LciIdleKnown_A,  lci_prog_idle_o)
-  `ASSERT_KNOWN(OtpReqKnown_A,   otp_req_o)
-  `ASSERT_KNOWN(OtpCmdKnown_A,   otp_cmd_o)
-  `ASSERT_KNOWN(OtpSizeKnown_A,  otp_size_o)
-  `ASSERT_KNOWN(OtpWdataKnown_A, otp_wdata_o)
-  `ASSERT_KNOWN(OtpAddrKnown_A,  otp_addr_o)
+  `CALIPTRA_ASSERT_KNOWN(LcAckKnown_A,    lc_ack_o)
+  `CALIPTRA_ASSERT_KNOWN(LcErrKnown_A,    lc_err_o)
+  `CALIPTRA_ASSERT_KNOWN(ErrorKnown_A,    error_o)
+  `CALIPTRA_ASSERT_KNOWN(LciIdleKnown_A,  lci_prog_idle_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpReqKnown_A,   otp_req_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpCmdKnown_A,   otp_cmd_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpSizeKnown_A,  otp_size_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpWdataKnown_A, otp_wdata_o)
+  `CALIPTRA_ASSERT_KNOWN(OtpAddrKnown_A,  otp_addr_o)
 
 endmodule : otp_ctrl_lci

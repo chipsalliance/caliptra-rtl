@@ -1,0 +1,47 @@
+---
+provides: [tlul_pkg]
+schema_version: 2.4.0
+requires: 
+  - caliptra_prim_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/tlul_pkg.sv
+      - $COMPILE_ROOT/rtl/tlul_assert_multiple.sv
+      - $COMPILE_ROOT/rtl/tlul_assert.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/tlul_pkg.sv
+      - $COMPILE_ROOT/rtl/tlul_assert_multiple.sv
+      - $COMPILE_ROOT/rtl/tlul_assert.sv
+---
+provides: [tlul]
+schema_version: 2.4.0
+requires:
+  - caliptra_prim
+  - tlul_pkg
+targets:
+  rtl:  
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sram2tlul.sv
+      - $COMPILE_ROOT/rtl/tlul_adapter_host.sv
+      - $COMPILE_ROOT/rtl/tlul_adapter_reg.sv
+      - $COMPILE_ROOT/rtl/tlul_adapter_sram.sv
+      - $COMPILE_ROOT/rtl/tlul_cmd_intg_chk.sv
+      - $COMPILE_ROOT/rtl/tlul_cmd_intg_gen.sv
+      - $COMPILE_ROOT/rtl/tlul_data_integ_dec.sv
+      - $COMPILE_ROOT/rtl/tlul_data_integ_enc.sv
+      - $COMPILE_ROOT/rtl/tlul_err_resp.sv
+      - $COMPILE_ROOT/rtl/tlul_err.sv
+      - $COMPILE_ROOT/rtl/tlul_fifo_async.sv
+      - $COMPILE_ROOT/rtl/tlul_fifo_sync.sv
+      - $COMPILE_ROOT/rtl/tlul_lc_gate.sv
+      - $COMPILE_ROOT/rtl/tlul_rsp_intg_chk.sv
+      - $COMPILE_ROOT/rtl/tlul_rsp_intg_gen.sv
+      - $COMPILE_ROOT/rtl/tlul_socket_1n.sv
+      - $COMPILE_ROOT/rtl/tlul_socket_m1.sv
+      - $COMPILE_ROOT/rtl/tlul_sram_byte.sv
+

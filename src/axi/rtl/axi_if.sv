@@ -197,8 +197,9 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                        output axi_resp_e     resp);
         `TIME_ALGN
         rready `EQ__ 1;
-        do
+        do begin
             @(posedge clk);
+        end
         while (!rvalid);
         data   `EQ__ rdata;
         resp   `EQ__ axi_resp_e'(rresp);

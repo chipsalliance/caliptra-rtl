@@ -13,10 +13,24 @@
 // limitations under the License.
 //
 
+`include "caliptra_prim_assert.sv"
 
 module otp_ctrl_top
     import axi_pkg::*;
-    (
+    import caliptra_otp_ctrl_pkg::*;
+    import caliptra_otp_ctrl_reg_pkg::*;
+    import caliptra_otp_ctrl_part_pkg::*;
+    #( 
+        // Enable asynchronous transitions on alerts.
+        parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
+        // Compile time random constants, to be overriden by topgen.
+        parameter lfsr_seed_t RndCnstLfsrSeed = RndCnstLfsrSeedDefault,
+        parameter lfsr_perm_t RndCnstLfsrPerm = RndCnstLfsrPermDefault,
+        //parameter scrmbl_key_init_t RndCnstScrmblKeyInit = RndCnstScrmblKeyInitDefault,
+        // Hexfile file to initialize the OTP macro.
+        // Note that the hexdump needs to account for ECC.
+        parameter MemInitFile = ""
+    )(
         input clk_i,
         input rst_ni, 
 
@@ -27,6 +41,15 @@ module otp_ctrl_top
         //AXI Interface Prim
         axi_if.w_sub s_prim_axi_w_if,
         axi_if.r_sub s_prim_axi_r_if,
+
+        //AXI Secret Registers Interface
+        axi_if.r_sub s_secreg_axi_r_if,
+
+        // EDN clock and interface
+        logic                                              clk_edn_i,
+        logic                                              rst_edn_ni,
+        output edn_pkg::edn_req_t                          edn_o,
+        input  edn_pkg::edn_rsp_t                          edn_i,
 
         // Interrupt Requests
         output logic                                       intr_otp_operation_done_o,
@@ -60,14 +83,14 @@ module otp_ctrl_top
         // OTP broadcast outputs
         // SEC_CM: TOKEN_VALID.CTRL.MUBI
         output otp_lc_data_t                               otp_lc_data_o,
-        output otp_keymgr_key_t                            otp_keymgr_key_o,
+        //output otp_keymgr_key_t                            otp_keymgr_key_o,
         // Scrambling key requests
-        input  flash_otp_key_req_t                         flash_otp_key_i,
-        output flash_otp_key_rsp_t                         flash_otp_key_o,
-        input  sram_otp_key_req_t [NumSramKeyReqSlots-1:0] sram_otp_key_i,
-        output sram_otp_key_rsp_t [NumSramKeyReqSlots-1:0] sram_otp_key_o,
-        input  otbn_otp_key_req_t                          otbn_otp_key_i,
-        output otbn_otp_key_rsp_t                          otbn_otp_key_o,
+        //input  flash_otp_key_req_t                         flash_otp_key_i,
+        //output flash_otp_key_rsp_t                         flash_otp_key_o,
+        //input  sram_otp_key_req_t [NumSramKeyReqSlots-1:0] sram_otp_key_i,
+        //output sram_otp_key_rsp_t [NumSramKeyReqSlots-1:0] sram_otp_key_o,
+        //input  otbn_otp_key_req_t                          otbn_otp_key_i,
+        //output otbn_otp_key_rsp_t                          otbn_otp_key_o,
         // Hardware config bits
         output otp_broadcast_t                             otp_broadcast_o,
         // External voltage for OTP
@@ -75,110 +98,78 @@ module otp_ctrl_top
         // Scan
         input                                              scan_en_i,
         input                                              scan_rst_ni,
-        input prim_mubi_pkg::mubi4_t                       scanmode_i,
+        input caliptra_prim_mubi_pkg::mubi4_t              scanmode_i,
         // Test-related GPIO output
         output logic [OtpTestVectWidth-1:0]                cio_test_o,
         output logic [OtpTestVectWidth-1:0]                cio_test_en_o
 
     );
 
-    logic           core_dv;
-    logic [AW-1:0]  core_addr;
-    logic           core_write;
-    logic [UW-1:0]  core_user;
-    logic [IW-1:0]  core_id;
-    logic [DW-1:0]  core_wdata;
-    logic [BC-1:0]  core_wstrb;
-    logic [DW-1:0]  core_rdata;
-    logic           core_last;
-    logic           core_hld;
-    logic           core_err;
+    // AXI2TL/FC core interface signals
+    tlul_pkg::tl_h2d_t core_tl_i;
+    tlul_pkg::tl_d2h_t core_tl_o;
 
-    logic           prim_dv;
-    logic [AW-1:0]  prim_addr;
-    logic           prim_write;
-    logic [UW-1:0]  prim_user;
-    logic [IW-1:0]  prim_id;
-    logic [DW-1:0]  prim_wdata;
-    logic [BC-1:0]  prim_wstrb;
-    logic [DW-1:0]  prim_rdata;
-    logic           prim_last;
-    logic           prim_hld;
-    logic           prim_err;
+    // AXI2TL/FC prim interface signals
+    tlul_pkg::tl_h2d_t prim_tl_i;
+    tlul_pkg::tl_d2h_t prim_tl_o;
 
+    // secret wires to secret registers
+    obfuscated_uds_seed_t   obfuscated_uds_seed;
+    field_entropy_t         field_entropy;
+    pk_hash_t               pk_hash;
 
-    // Core AXI sub instance
-    axi_sub core_axi_sub #(
-
-    ) (
+    // Core AXI2TLUL instance
+    axi2tlul #(
+        .AW     (32),
+        .DW     (32),
+        .UW     (32),
+        .IW     (1 )
+    ) u_core_axi2tlul (
         .clk            (clk_i),
-        .rst_n          (rst_ni), 
+        .rst_n          (rst_ni),
         .s_axi_w_if     (s_core_axi_w_if),
         .s_axi_r_if     (s_core_axi_r_if),
-        .dv             (core_dv),
-        .addr           (core_addr),
-        .write          (core_user),
-        .id             (core_id),
-        .wdata          (core_wdata),
-        .rdata          (core_rdata),
-        .last           (core_last),
-        .hld            (core_hld),
-        .err            (core_err)
+        .tl_o           (core_tl_i),
+        .tl_i           (core_tl_o)
     );
     
-    // Prim AXI sub instance
-    axi_sub prim_axi_sub #(
-
-    ) (
+    // Prim AXI2TLUL instance
+    axi2tlul #(
+        .AW     (32),
+        .DW     (32),
+        .UW     (32),
+        .IW     (1 )
+    ) u_prim_axi2tlul (
         .clk            (clk_i),
         .rst_n          (rst_ni), 
         .s_axi_w_if     (s_prim_axi_w_if),
         .s_axi_r_if     (s_prim_axi_r_if),
-        .dv             (prim_dv),
-        .addr           (prim_addr),
-        .write          (prim_user),
-        .id             (prim_id),
-        .wdata          (prim_wdata),
-        .rdata          (prim_rdata),
-        .last           (prim_last),
-        .hld            (prim_hld),
-        .err            (prim_err)
+        .tl_o           (prim_tl_i),
+        .tl_i           (prim_tl_o)
     );
 
     //  OTP Ctrl instance
-    otp_ctrl otp_ctrl #( 
-        
-    ) (
+    otp_ctrl #(
+        .AlertAsyncOn       (AlertAsyncOn),
+        .RndCnstLfsrSeed    (RndCnstLfsrSeed),
+        .RndCnstLfsrPerm    (RndCnstLfsrPerm),
+        .MemInitFile        (MemInitFile)
+    ) u_otp_ctrl       
+    (
         .clk_i,
         .rst_ni,
         .clk_edn_i,
         .rst_edn_ni,
         .edn_o, 
         .edn_i,
-        .core_dv        (core_dv),
-        .core_addr      (core_addr),
-        .core_write     (core_write),
-        .core_wstrb     (core_wstrb),
-        .core_id        (core_id),
-        .core_wdata     (core_wdata),
-        .core_rdata     (core_rdata),
-        .core_last      (core_last),
-        .core_hld       (core_hld),
-        .core_err       (core_err),
-        .prim_dv        (prim_dv),
-        .prim_addr      (prim_addr),
-        .prim_write     (prim_write),
-        .prim_wstrb     (prim_wstrb),
-        .prim_id        (prim_id),
-        .prim_wdata     (prim_wdata),
-        .prim_rdata     (prim_rdata),
-        .prim_last      (prim_last),
-        .prim_hld       (prim_hld),
-        .prim_err       (prim_err),
+        .core_tl_i, 
+        .core_tl_o,
+        .prim_tl_i,
+        .prim_tl_o,
         .intr_otp_operation_done_o,
         .intr_otp_error_o,
         .alert_rx_i,
-        .alert_rx_o,
+        .alert_tx_o,
         .obs_ctrl_i,
         .otp_obs_o,
         .otp_ast_pwr_seq_o,
@@ -196,13 +187,9 @@ module otp_ctrl_top
         .lc_escalate_en_i,
         .lc_check_byp_en_i,
         .otp_lc_data_o,
-        .otp_keymgr_key_o,
-        .flash_otp_key_i (),
-        .flash_otp_key_o (),
-        .sram_otp_key_i (),
-        .sram_otp_key_o (),
-        .otbn_otp_key_i (),
-        .otbn_otp_key_o (),
+        .obfuscated_uds_seed_o (obfuscated_uds_seed),
+        .field_entropy_o (field_entropy),
+        .pk_hash_o (pk_hash),
         .otp_broadcast_o,
         .otp_ext_voltage_h_io,
         .scan_en_i,
@@ -211,5 +198,8 @@ module otp_ctrl_top
         .cio_test_o,
         .cio_test_en_o
     );
+
+    //TODO: Secret registers instantiation
+
 
 endmodule

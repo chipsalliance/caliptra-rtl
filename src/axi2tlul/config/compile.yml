@@ -1,0 +1,29 @@
+---
+provides: [axi2tlul]
+schema_version: 2.4.0
+requires:
+  - axi_pkg
+  - axi_sub
+  - tlul_pkg
+  - caliptra_prim_secded
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:  
+      - $COMPILE_ROOT/rtl/axi2tlul_cmd_intg_gen.sv
+      - $COMPILE_ROOT/rtl/sub2tlul.sv
+      - $COMPILE_ROOT/rtl/axi2tlul.sv
+    tops: [axi2tlul]
+---
+provides: [axi2tlul_tb]
+schema_version: 2.4.0
+requires:
+  - axi2tlul
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/memory_model.sv
+      - $COMPILE_ROOT/tb/axi2tlul_tb.sv
+    tops: [axi2tlul_tb]
+

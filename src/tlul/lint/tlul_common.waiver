@@ -1,0 +1,17 @@
+# Copyright lowRISC contributors (OpenTitan project).
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+#
+# waiver file for common TLUL elements
+
+# TLUL Error
+waive -rules {HIER_NET_NOT_READ HIER_BRANCH_NOT_READ INPUT_NOT_READ NOT_READ PARAM_NOT_USED} -location {tlul_err.sv} \
+      -comment "All error checkings are comb logic and only portion of signals are used"
+waive -rules {ASSIGN_SIGN} -location {tlul_err.sv} -regexp {Unsigned target 'mask'} \
+      -comment "Waive for readability"
+waive -rules {HIER_NET_NOT_READ} -regexp {Connected net 'tl_i.a_(address|param|user).*in module 'tlul_err'} \
+      -comment "unused signal is back-propagated to the instance"
+
+# TL-UL fifo
+waive -rules {HIER_BRANCH_NOT_READ} -location {tlul_fifo_sync.sv} -regexp {Connected net '(clk_i|rst_ni)' at prim_fifo_sync.sv:.* is not read from in module 'prim_fifo_sync'} \
+      -comment "In passthrough mode, clk and reset are not read form within this module"

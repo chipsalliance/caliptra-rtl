@@ -1,6 +1,8 @@
 ---
 provides: [caliptra_prim_pkg]
 schema_version: 2.4.0
+requires: 
+  - libs
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -12,6 +14,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_otp_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_ram_1p_pkg.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
@@ -22,6 +27,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_otp_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_ram_1p_pkg.sv
 ---
 provides: [caliptra_prim]
 schema_version: 2.4.0
@@ -39,6 +47,14 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_cdc_rand_delay.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_flop_2sync.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_lfsr.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_double_lfsr.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_arbiter_fixed.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_arbiter_tree.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_edn_req.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_present.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_lc_sender.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sync_reqack.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sync_reqack_data.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi4_sync.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_diff_decode.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_sec_anchor_buf.sv
@@ -57,6 +73,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_intr_hw.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_onehot_check.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi8_sync.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_mubi8_sender.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_sync_cnt.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_buf.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_lc_sync.sv
@@ -72,4 +89,52 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_edge_detector.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_blanker.sv
-    tops: [caliptra_prim]
+      - $COMPILE_ROOT/rtl/caliptra_prim_ram_1p_adv.sv
+    tops: [calitpra_prim]
+---
+provides: [caliptra_prim_secded]
+schema_version: 2.4.0
+requires:
+  - caliptra_prim_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_22_16_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_22_16_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_28_22_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_28_22_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_39_32_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_39_32_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_64_57_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_64_57_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_72_64_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_72_64_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_22_16_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_22_16_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_39_32_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_39_32_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_72_64_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_72_64_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_76_68_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_hamming_76_68_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_22_16_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_22_16_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_28_22_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_28_22_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_39_32_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_39_32_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_64_57_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_64_57_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_72_64_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_72_64_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_22_16_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_22_16_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_39_32_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_39_32_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_72_64_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_72_64_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_76_68_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_hamming_76_68_enc.sv
+      # - $COMPILE_ROOT/rtl/caliptra_prim_secded_pkg.sv
+    tops: [caliptra_prim_secded]
