@@ -48,6 +48,7 @@ targets:
       - $MSFT_REPO_ROOT/src/integration/config/design_lint/sglint_waivers
     options:
       - '+define+CALIPTRA_INTERNAL_TRNG'
+      - '+define+CALIPTRA_AXI_DMA_ADDR_WIDTH=32'
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
