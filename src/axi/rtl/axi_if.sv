@@ -16,7 +16,7 @@
 //      Signals for a standard AXI4 compliant interface
 //
 
-interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, parameter integer IW = 3, parameter integer UW = 32) (input logic clk, input logic rst_n);
+interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, parameter integer IW = 8, parameter integer UW = 32) (input logic clk, input logic rst_n);
 
     import axi_pkg::*;
 
