@@ -98,7 +98,7 @@ module axi_mgr_wr import axi_pkg::*; #(
         .OPT_INITIAL    (1'b1)
     ) i_ctx_skd (
         .i_clk  (clk                ),
-        .i_reset(!rst_n             ),
+        .i_reset(rst_n              ),
         .i_valid(req_if.valid       ),
         .o_ready(req_if.ready       ),
         .i_data (req_ctx            ),

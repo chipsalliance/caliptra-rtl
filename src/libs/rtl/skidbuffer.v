@@ -56,7 +56,9 @@
 //              Gisselquist Technology, LLC
 //
 // Caliptra Modifications:
-//     Revert the default_nettype assignment at file end
+//   * Revert the default_nettype assignment at file end
+//   * Convert i_reset from active-high synchronous reset to
+//     active-low asynchronous reset
 //
 ////////////////////////////////////////////////////////////////////////////////
 // }}}
@@ -93,7 +95,7 @@ module skidbuffer #(
                 // }}}
         ) (
                 // {{{
-                input   wire                    i_clk, i_reset, // fixme resetn, async
+                input   wire                    i_clk, i_reset, // Changed to resetn, async
                 input   wire                    i_valid,
                 output  wire                    o_ready,
                 input   wire    [DW-1:0]        i_data,
@@ -134,9 +136,9 @@ module skidbuffer #(
 
                 // r_valid
                 // {{{
-                initial if (OPT_INITIAL) r_valid = 0;
-                always @(posedge i_clk)
-                if (i_reset)
+//                initial if (OPT_INITIAL) r_valid = 0;
+                always @(posedge i_clk or negedge i_reset)
+                if (!i_reset)
                         r_valid <= 0;
                 else if ((i_valid && o_ready) && (o_valid && !i_ready))
                         // We have incoming data, but the output is stalled
@@ -147,9 +149,9 @@ module skidbuffer #(
 
                 // r_data
                 // {{{
-                initial if (OPT_INITIAL) r_data = 0;
-                always @(posedge i_clk)
-                if (OPT_LOWPOWER && i_reset)
+//                initial if (OPT_INITIAL) r_data = 0;
+                always @(posedge i_clk or negedge i_reset)
+                if (OPT_LOWPOWER && !i_reset) // FIXME OPT_LOWPOWER + async reset is untested
                         r_data <= 0;
                 else if (OPT_LOWPOWER && (!o_valid || i_ready))
                         r_data <= 0;
@@ -173,7 +175,8 @@ module skidbuffer #(
                         // {{{
                         // o_valid
                         // {{{
-                        assign  o_valid = !i_reset && (i_valid || r_valid);
+                        // NOTE: As i_reset is now asynchronous, omit from the equation
+                        assign  o_valid = /*i_reset && */(i_valid || r_valid);
                         // }}}
 
                         // o_data
@@ -194,9 +197,9 @@ module skidbuffer #(
                         // {{{
                         reg     ro_valid;
 
-                        initial if (OPT_INITIAL) ro_valid = 0;
-                        always @(posedge i_clk)
-                        if (i_reset)
+//                        initial if (OPT_INITIAL) ro_valid = 0;
+                        always @(posedge i_clk or negedge i_reset)
+                        if (!i_reset) // FIXME OPT_LOWPOWER + async reset is untested
                                 ro_valid <= 0;
                         else if (!o_valid || i_ready)
                                 ro_valid <= (i_valid || r_valid);
@@ -206,9 +209,9 @@ module skidbuffer #(
 
                         // o_data
                         // {{{
-                        initial if (OPT_INITIAL) o_data = 0;
-                        always @(posedge i_clk)
-                        if (OPT_LOWPOWER && i_reset)
+//                        initial if (OPT_INITIAL) o_data = 0;
+                        always @(posedge i_clk or negedge i_reset)
+                        if (OPT_LOWPOWER && !i_reset) // FIXME OPT_LOWPOWER + async reset is untested
                                 o_data <= 0;
                         else if (!o_valid || i_ready)
                         begin

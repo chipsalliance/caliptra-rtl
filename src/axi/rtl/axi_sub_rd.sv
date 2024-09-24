@@ -337,7 +337,7 @@ module axi_sub_rd import axi_pkg::*; #(
                 .OPT_INITIAL    (1'b1)
             ) i_dp_skd (
                 .i_clk  (clk                ),
-                .i_reset(!rst_n             ),
+                .i_reset(rst_n              ),
                 .i_valid(dp_rvalid[dp]      ),
                 .o_ready(dp_rready[dp]      ),
                 .i_data ({dp_rdata[dp],

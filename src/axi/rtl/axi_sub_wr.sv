@@ -141,7 +141,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_INITIAL    (1'b1)
     ) i_req_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(s_axi_if.awvalid),
         .o_ready(s_axi_if.awready),
         .i_data (s_axi_if_ctx    ),
@@ -176,6 +176,7 @@ module axi_sub_wr import axi_pkg::*; #(
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             txn_ctx <= '{default:0, burst:AXI_BURST_FIXED};
+            txn_allow <= !EX_EN;
         end
         else if (req_valid && req_ready) begin
             txn_ctx.addr  <= req_ctx.addr;
@@ -280,7 +281,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_INITIAL    (1'b1)
     ) i_dp_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(txn_wvalid      ),
         .o_ready(txn_wready      ),
         .i_data ({s_axi_if.wdata,
@@ -318,7 +319,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_INITIAL    (1'b1)
     ) i_rsp_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(rp_valid        ),
         .o_ready(rp_ready        ),
         .i_data ({rp_resp,
