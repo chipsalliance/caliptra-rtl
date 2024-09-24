@@ -176,7 +176,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //if uc has the lock, check that this request is from uc
   //if soc has the lock, check that this request is from soc and id attributes match
   always_comb hwif_in.valid_id = hwif_out.LOCK.LOCK.value & ((~soc_has_lock & ~req_data.soc_req) |
-                                                              (soc_has_lock & req_data.soc_req & (req_data.id == hwif_out.ID.ID.value)));
+                                                              (soc_has_lock & req_data.soc_req & (req_data.id == hwif_out.ID.ID.value[SOC_IFC_ID_W-1:0])));
   always_comb hwif_in.soc_req = req_data.soc_req;
   always_comb hwif_in.STATUS.SOC_HAS_LOCK.next = soc_has_lock;
   

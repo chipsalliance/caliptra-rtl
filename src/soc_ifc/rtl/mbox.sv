@@ -159,7 +159,7 @@ assign mbox_error = read_error | write_error;
 //2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                               ( req_data.soc_req & soc_has_lock & (req_data.id == hwif_out.mbox_id.id.value)));
+                               ( req_data.soc_req & soc_has_lock & (req_data.id == hwif_out.mbox_id.id.value[SOC_IFC_ID_W-1:0])));
 
 //Determine if this is a valid request from the receiver side
 always_comb valid_receiver = hwif_out.mbox_lock.lock.value &

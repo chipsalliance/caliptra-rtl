@@ -175,7 +175,7 @@ always_comb begin
     for (int i=0; i < 5; i++) begin
         valid_mbox_req |= soc_req_dv & (soc_req_data.id == valid_mbox_ids[i]);
     end
-    valid_mbox_req |= soc_req_dv & (soc_req_data.id == CPTRA_DEF_MBOX_VALID_AXI_ID);
+    valid_mbox_req |= soc_req_dv & (soc_req_data.id == CPTRA_DEF_MBOX_VALID_AXI_ID[SOC_IFC_ID_W-1:0]);
 end
 
 //check for collisions
