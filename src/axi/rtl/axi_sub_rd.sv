@@ -190,6 +190,7 @@ module axi_sub_rd import axi_pkg::*; #(
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
     always_comb user = txn_ctx.user;
     always_comb id   = txn_ctx.id;
+    always_comb last = txn_cnt == 0;
 
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(

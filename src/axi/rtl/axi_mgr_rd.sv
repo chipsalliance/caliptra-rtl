@@ -108,13 +108,13 @@ module axi_mgr_rd import axi_pkg::*; #(
 
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            axi_ctx_sent = 1'b0;
+            axi_ctx_sent <= 1'b0;
         end
         else if (axi_ctx_valid && axi_ctx_ready) begin
-            axi_ctx_sent = 1'b0;
+            axi_ctx_sent <= 1'b0;
         end
         else if (m_axi_if.arvalid && m_axi_if.arready) begin
-            axi_ctx_sent = 1'b1;
+            axi_ctx_sent <= 1'b1;
         end
     end
 
