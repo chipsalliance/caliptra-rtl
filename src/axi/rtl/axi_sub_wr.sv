@@ -122,7 +122,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // --------------------------------------- //
 
     always_comb begin
-        s_axi_if_ctx.addr  = s_axi_if.awaddr ;
+        s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
         s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
         s_axi_if_ctx.size  = s_axi_if.awsize ;
         s_axi_if_ctx.len   = s_axi_if.awlen  ;
