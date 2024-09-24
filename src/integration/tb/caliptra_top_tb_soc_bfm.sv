@@ -140,7 +140,8 @@ import caliptra_top_tb_pkg::*; #(
 
         if($test$plusargs("RAND_DOE_VALUES")) begin
             //cptra_obf_key = cptra_obf_key_tb;
-            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+            for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
+                wait(cptra_obf_key_tb[dword] !== 32'hXXXXXXXX);
                 cptra_obf_key[dword] = cptra_obf_key_tb[dword];
             end
 
@@ -161,7 +162,7 @@ import caliptra_top_tb_pkg::*; #(
 
             //swizzle the key so it matches the endianness of AES block
             //used for visual inspection of uds/fe flow, manually switching keys and checking both
-            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
+            for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
                 //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
                 cptra_obf_key[dword] = cptra_obf_key_fe[dword];
             end
