@@ -141,7 +141,9 @@ import caliptra_top_tb_pkg::*; #(
         if($test$plusargs("RAND_DOE_VALUES")) begin
             //cptra_obf_key = cptra_obf_key_tb;
             for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
-                wait(cptra_obf_key_tb[dword] !== 32'hXXXXXXXX);
+                `ifndef VERILATOR
+                    wait(cptra_obf_key_tb[dword] !== 32'hXXXXXXXX);
+                `endif
                 cptra_obf_key[dword] = cptra_obf_key_tb[dword];
             end
 
