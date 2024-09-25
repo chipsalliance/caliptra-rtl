@@ -59,6 +59,8 @@
 //   * Revert the default_nettype assignment at file end
 //   * Convert i_reset from active-high synchronous reset to
 //     active-low asynchronous reset
+//   * Enable OPT_INITIAL behavior by default using async reset instead of
+//     initial block
 //
 ////////////////////////////////////////////////////////////////////////////////
 // }}}
@@ -90,8 +92,7 @@ module skidbuffer #(
                 parameter       [0:0]   OPT_OUTREG = 1,
                 //
                 parameter       [0:0]   OPT_PASSTHROUGH = 0,
-                parameter               DW = 8,
-                parameter       [0:0]   OPT_INITIAL = 1'b1
+                parameter               DW = 8
                 // }}}
         ) (
                 // {{{
@@ -136,7 +137,6 @@ module skidbuffer #(
 
                 // r_valid
                 // {{{
-//                initial if (OPT_INITIAL) r_valid = 0;
                 always @(posedge i_clk or negedge i_reset)
                 if (!i_reset)
                         r_valid <= 0;
@@ -149,9 +149,8 @@ module skidbuffer #(
 
                 // r_data
                 // {{{
-//                initial if (OPT_INITIAL) r_data = 0;
                 always @(posedge i_clk or negedge i_reset)
-                if (OPT_LOWPOWER && !i_reset) // FIXME OPT_LOWPOWER + async reset is untested
+                if (!i_reset)
                         r_data <= 0;
                 else if (OPT_LOWPOWER && (!o_valid || i_ready))
                         r_data <= 0;
@@ -197,9 +196,8 @@ module skidbuffer #(
                         // {{{
                         reg     ro_valid;
 
-//                        initial if (OPT_INITIAL) ro_valid = 0;
                         always @(posedge i_clk or negedge i_reset)
-                        if (!i_reset) // FIXME OPT_LOWPOWER + async reset is untested
+                        if (!i_reset)
                                 ro_valid <= 0;
                         else if (!o_valid || i_ready)
                                 ro_valid <= (i_valid || r_valid);
@@ -209,9 +207,8 @@ module skidbuffer #(
 
                         // o_data
                         // {{{
-//                        initial if (OPT_INITIAL) o_data = 0;
                         always @(posedge i_clk or negedge i_reset)
-                        if (OPT_LOWPOWER && !i_reset) // FIXME OPT_LOWPOWER + async reset is untested
+                        if (!i_reset)
                                 o_data <= 0;
                         else if (!o_valid || i_ready)
                         begin
@@ -272,7 +269,7 @@ module skidbuffer #(
         always @(posedge i_clk)
         if (!f_past_valid)
         begin
-                `ASSUME(!i_valid || !OPT_INITIAL);
+                `ASSUME(!i_valid);
         end else if ($past(i_valid && !o_ready && i_reset) && i_reset)
                 `ASSUME(i_valid && $stable(i_data));
 
@@ -309,7 +306,7 @@ module skidbuffer #(
                 if (!f_past_valid) // || $past(!i_reset))
                 begin
                         // Following any reset, valid must be deasserted
-                        assert(!o_valid || !OPT_INITIAL);
+                        assert(!o_valid);
                 end else if ($past(o_valid && !i_ready && i_reset) && i_reset)
                         // Following any stall, valid must remain high and
                         // data must be preserved

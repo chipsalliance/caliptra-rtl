@@ -137,8 +137,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             ($bits(axi_ctx_t)),
-        .OPT_INITIAL    (1'b1)
+        .DW             ($bits(axi_ctx_t))
     ) i_req_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),
@@ -278,8 +277,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (DW + BC + 1),
-        .OPT_INITIAL    (1'b1)
+        .DW             (DW + BC + 1)
     ) i_dp_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),
@@ -316,8 +314,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (1   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (IW + $bits(axi_resp_e)),
-        .OPT_INITIAL    (1'b1)
+        .DW             (IW + $bits(axi_resp_e))
     ) i_rsp_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),

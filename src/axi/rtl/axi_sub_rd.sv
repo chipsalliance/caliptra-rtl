@@ -334,8 +334,7 @@ module axi_sub_rd import axi_pkg::*; #(
                 .OPT_OUTREG     (0   ),
                 //
                 .OPT_PASSTHROUGH(0   ),
-                .DW             (DW + $bits(xfer_ctx_t)),
-                .OPT_INITIAL    (1'b1)
+                .DW             (DW + $bits(xfer_ctx_t))
             ) i_dp_skd (
                 .i_clk  (clk                ),
                 .i_reset(rst_n              ),
