@@ -463,9 +463,9 @@ always_comb dir_req_addr = sha_sram_req_dv   ? sha_sram_req_addr :
 // No arbitration/round-robin -- this is strictly observed for every txn
 
                        //Direct read from uC, stall 1 clock dv_q will be de-asserted second clock
-always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & (~dma_sram_req_dv_q | dma_sram_req_rd_phase) & ~req_data.write) |
+always_comb req_hold = (dir_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_dv_q & ~req_data.write) |
                        //Direct access from uC while sha accelerator or DMA is accessing
-                       (dir_req_dv & ~dir_req_rd_phase & (sha_sram_req_dv | dma_sram_req_dv_q)) |
+                       (dir_req_dv & ~dir_req_rd_phase & (sha_sram_req_dv | dma_sram_req_dv_q | dma_sram_req_rd_phase)) |
                        //in an update cycle for dataout register
                        (hwif_out.mbox_dataout.dataout.swacc & mbox_protocol_sram_rd_f);
 
