@@ -45,6 +45,7 @@ provides: [axi_dma]
 schema_version: 2.4.0
 requires:
   - libs
+  - caliptra_prim
   - axi_pkg
 targets:
   rtl:

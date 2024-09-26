@@ -64,6 +64,11 @@ module axi_sub_wr import axi_pkg::*; #(
 );
 
     // --------------------------------------- //
+    // Imports                                 //
+    // --------------------------------------- //
+    `include "caliptra_prim_assert.sv"
+
+    // --------------------------------------- //
     // Localparams/Typedefs                    //
     // --------------------------------------- //
 
@@ -117,7 +122,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // --------------------------------------- //
 
     always_comb begin
-        s_axi_if_ctx.addr  = s_axi_if.awaddr ;
+        s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
         s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
         s_axi_if_ctx.size  = s_axi_if.awsize ;
         s_axi_if_ctx.len   = s_axi_if.awlen  ;
@@ -132,11 +137,10 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             ($bits(axi_ctx_t)),
-        .OPT_INITIAL    (1'b1)
+        .DW             ($bits(axi_ctx_t))
     ) i_req_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(s_axi_if.awvalid),
         .o_ready(s_axi_if.awready),
         .i_data (s_axi_if_ctx    ),
@@ -170,7 +174,9 @@ module axi_sub_wr import axi_pkg::*; #(
 
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            txn_ctx <= '{default:0, burst:AXI_BURST_FIXED};
+            txn_ctx   <= '{default:0, burst:AXI_BURST_FIXED};
+            txn_allow <= !EX_EN;
+            txn_err   <= 1'b0;
         end
         else if (req_valid && req_ready) begin
             txn_ctx.addr  <= req_ctx.addr;
@@ -271,11 +277,10 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (DW + BC + 1),
-        .OPT_INITIAL    (1'b1)
+        .DW             (DW + BC + 1)
     ) i_dp_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(txn_wvalid      ),
         .o_ready(txn_wready      ),
         .i_data ({s_axi_if.wdata,
@@ -309,11 +314,10 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (1   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (IW + $bits(axi_resp_e)),
-        .OPT_INITIAL    (1'b1)
+        .DW             (IW + $bits(axi_resp_e))
     ) i_rsp_skd (
         .i_clk  (clk             ),
-        .i_reset(!rst_n          ),
+        .i_reset(rst_n           ),
         .i_valid(rp_valid        ),
         .o_ready(rp_ready        ),
         .i_data ({rp_resp,

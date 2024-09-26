@@ -65,6 +65,8 @@ inline void service_soc_ifc_error_intr  () {printf("ERROR");}
 inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
 inline void service_sha512_acc_error_intr() {printf("ERROR");}
 inline void service_sha512_acc_notif_intr() {printf("ERROR");}
+inline void service_axi_dma_error_intr() {printf("ERROR");}
+inline void service_axi_dma_notif_intr() {printf("ERROR");}
 
 
 #endif //CALIPTRA_ISR_H

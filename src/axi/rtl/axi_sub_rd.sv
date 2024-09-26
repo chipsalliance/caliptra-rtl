@@ -67,6 +67,11 @@ module axi_sub_rd import axi_pkg::*; #(
 );
 
     // --------------------------------------- //
+    // Imports                                 //
+    // --------------------------------------- //
+    `include "caliptra_prim_assert.sv"
+
+    // --------------------------------------- //
     // Localparams/Typedefs                    //
     // --------------------------------------- //
 
@@ -145,7 +150,7 @@ module axi_sub_rd import axi_pkg::*; #(
             txn_cnt <= '0;
         end
         else if (s_axi_if.arvalid && s_axi_if.arready) begin
-            txn_ctx.addr  <= s_axi_if.araddr;
+            txn_ctx.addr  <= s_axi_if.araddr[AW-1:0];
             txn_ctx.burst <= axi_burst_e'(s_axi_if.arburst);
             txn_ctx.size  <= s_axi_if.arsize;
             txn_ctx.len   <= s_axi_if.arlen ;
@@ -185,6 +190,7 @@ module axi_sub_rd import axi_pkg::*; #(
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
     always_comb user = txn_ctx.user;
     always_comb id   = txn_ctx.id;
+    always_comb last = txn_cnt == 0;
 
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(
@@ -328,11 +334,10 @@ module axi_sub_rd import axi_pkg::*; #(
                 .OPT_OUTREG     (0   ),
                 //
                 .OPT_PASSTHROUGH(0   ),
-                .DW             (DW + $bits(xfer_ctx_t)),
-                .OPT_INITIAL    (1'b1)
+                .DW             (DW + $bits(xfer_ctx_t))
             ) i_dp_skd (
                 .i_clk  (clk                ),
-                .i_reset(!rst_n             ),
+                .i_reset(rst_n              ),
                 .i_valid(dp_rvalid[dp]      ),
                 .o_ready(dp_rready[dp]      ),
                 .i_data ({dp_rdata[dp],

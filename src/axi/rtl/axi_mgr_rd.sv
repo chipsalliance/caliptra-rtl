@@ -45,6 +45,7 @@ module axi_mgr_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Imports                                 //
     // --------------------------------------- //
+    `include "caliptra_prim_assert.sv"
 
 
     // --------------------------------------- //
@@ -92,11 +93,10 @@ module axi_mgr_rd import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             ($bits(req_ctx_t)),
-        .OPT_INITIAL    (1'b1)
+        .DW             ($bits(req_ctx_t))
     ) i_ctx_skd (
         .i_clk  (clk                ),
-        .i_reset(!rst_n             ),
+        .i_reset(rst_n              ),
         .i_valid(req_if.valid       ),
         .o_ready(req_if.ready       ),
         .i_data (req_ctx            ),
@@ -107,13 +107,13 @@ module axi_mgr_rd import axi_pkg::*; #(
 
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            axi_ctx_sent = 1'b0;
+            axi_ctx_sent <= 1'b0;
         end
         else if (axi_ctx_valid && axi_ctx_ready) begin
-            axi_ctx_sent = 1'b0;
+            axi_ctx_sent <= 1'b0;
         end
         else if (m_axi_if.arvalid && m_axi_if.arready) begin
-            axi_ctx_sent = 1'b1;
+            axi_ctx_sent <= 1'b1;
         end
     end
 

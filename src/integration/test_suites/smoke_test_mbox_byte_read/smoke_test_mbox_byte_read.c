@@ -51,6 +51,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 //#ifndef MY_RANDOM_SEED

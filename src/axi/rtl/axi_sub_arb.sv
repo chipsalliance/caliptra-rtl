@@ -78,6 +78,8 @@ module axi_sub_arb import axi_pkg::*; #(
     input  logic [DW-1:0] rdata // Requires: Component dwidth == AXI dwidth
 );
 
+    `include "caliptra_prim_assert.sv"
+
     logic r_pri; // Priority to reads
     logic r_win;
 
