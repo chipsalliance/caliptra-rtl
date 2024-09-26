@@ -34,11 +34,11 @@ _*Last Update: 2024/06/28*_
   - Update HW\_REV\_ID bit-map and configure value to 1.0.2
 
 #### Bug Fixes ####
-[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506
-[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483
-[KV] Resolve a potential vulnerability in Key Vault usage #528
-[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528
-[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506<br>
+[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483<br>
+[KV] Resolve a potential vulnerability in Key Vault usage #528<br>
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528<br>
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541<br>
 
 ## Previous Releases ##
 
