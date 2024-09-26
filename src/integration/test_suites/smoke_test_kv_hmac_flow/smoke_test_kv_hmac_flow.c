@@ -142,7 +142,7 @@ void main() {
     hmac_key.kv_intf = TRUE;
     hmac_key.kv_id = hmackey_kv_id;
 
-    hmac_block.kv_intf = FALSE;
+    hmac_block.kv_intf = TRUE;
     hmac_block.kv_id = hmacblock_kv_id;
     hmac_block.data_size = 32;
     for (int i = 0; i < hmac_block.data_size; i++)
@@ -164,7 +164,7 @@ void main() {
     uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
+    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     hmac_zeroize();
 
     printf("%c",0xff); //End the test

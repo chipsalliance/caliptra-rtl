@@ -47,7 +47,7 @@ reg {
 
 reg {
     name = "FW Update Reset Wait Cycles";
-    desc = "Control register to set the number of cycles for which FW update reset must be asserted. Default is 5. Max value is 255 (8 bit).
+    desc = "Control register to set the number of cycles for which FW update reset must be asserted. Minimum value is 5. Max value is 255 (8 bit).
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
 
@@ -85,6 +85,7 @@ reg {
     rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
     rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
+    ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error No Mask */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";

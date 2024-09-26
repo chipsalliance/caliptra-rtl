@@ -22,3 +22,7 @@ targets:
       - $COMPILE_ROOT/rtl/sha3pad.sv
       - $COMPILE_ROOT/rtl/sha3.sv
     tops: [sha3]
+  rtl_lint:
+    directories: []
+    waiver_files: []
+    tops: [sha3]

@@ -151,7 +151,7 @@ void kv_hmac(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     //uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x1f);
     //printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag);
+    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     //printf("%c", 0x1);
 }
 

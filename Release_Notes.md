@@ -14,11 +14,46 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/01/18*_
+_*Last Update: 2024/06/28*_
 
-## Rev 1p0 ##
+### Rev 1p0p2 ###
 
-### Rev 1p0 release date: 2024/01/18 ###
+#### Rev 1p0p2 release date: 2024/06/28 ####
+  - Modifications for clean Lint
+    * Replace casez with case
+    * Replace 2-state with 4-state typedefs, parameters, enums
+    * Replace 'reg' with 'logic' type
+    * Radix fixes for many signals
+    * Logical/boolean operator fixes
+    * Logic reorganization to resolve undriven ICache signals in RV core
+    * Fixes for redundant logic in RV core
+    * Logically equivalent code adjustments to resolve potential index-out-of-bounds errors
+    * Declare synthesizable package functions as automatic
+    * Declare names for unnamed generate blocks
+  - Update PeakRDL tool version and regenerate reg files to resolve lint issues
+  - Update HW\_REV\_ID bit-map and configure value to 1.0.2
+
+#### Bug Fixes ####
+[ENTROPY\_SRC] Entropy source sfifo signal unable to exit reset #503 #506<br>
+[PV] Async reset condition missing for `nonce_offset_i` #339 #444 #483<br>
+[KV] Resolve a potential vulnerability in Key Vault usage #528<br>
+[JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing #528<br>
+[JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint #541<br>
+
+## Previous Releases ##
+
+### Rev 1p0p1 ###
+
+#### Rev 1p0p1 release date: 2024/02/20 ####
+  - NOTE: v1.0.1 patch version was committed to the patch_v1.0 branch,
+    but no tag was created on GitHub and the HW_REV_ID field was not updated.
+
+#### Bug Fixes ####
+[RTL] Add connection for JTAG TDO enable signal #415 #425
+
+### Rev 1p0 ###
+
+#### Rev 1p0 release date: 2024/01/18 ####
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
@@ -33,10 +68,8 @@ _*Last Update: 2024/01/18*_
   - Remove TODO comments on caliptra_top ports
   - Remove JTAG IDCODE command from RISC-V processor
 
-### Bug Fixes ###
+#### Bug Fixes ####
 [MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
-
-## Previous Releases ##
 
 ### Rev 1p0-rc1 ###
 

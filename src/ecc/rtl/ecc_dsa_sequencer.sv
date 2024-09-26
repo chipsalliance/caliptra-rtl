@@ -64,7 +64,7 @@ module ecc_dsa_sequencer
         end
         else begin
             if (ena) begin
-                unique casez(addra)
+                unique case(addra)
                     //PM CORE INIT
                     0       : douta <= {DSA_UOP_NOP,       NOP_ID,                  UOP_OPR_DONTCARE};
                     1       : douta <= {DSA_UOP_WR_CORE,   CONST_ZERO_ID,           UOP_OPR_CONST_ZERO};
