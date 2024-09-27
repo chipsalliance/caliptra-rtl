@@ -18,7 +18,9 @@ interface caliptra_top_cov_if
     import soc_ifc_pkg::*;  
     (
     input logic clk,
-    input logic PSEL,
+    //SoC AXI Interface
+    axi_if.w_sub s_axi_w_if,
+    axi_if.r_sub s_axi_r_if,
     input logic [63:0] generic_input_wires,
     input logic cptra_rst_b,
     input logic cptra_pwrgood,
@@ -55,9 +57,17 @@ interface caliptra_top_cov_if
         //-----------------------------------------
         //CLK GATING coverpoints
         //-----------------------------------------
-        apb_txn:            coverpoint PSEL {
-            bins single_apb_txn = (0 => 1 => 0);
-            bins b2b_apb_txn = (1 [*5]); //5 txns in a row
+        axi_rd_txn:         coverpoint s_axi_r_if.arvalid && s_axi_r_if.arready {
+            bins single_axi_rd_txn = (0 => 1 => 0);
+            bins b2b_axi_rd_txn = (1 [*5]); //5 rd txns in a row
+        }
+        axi_wr_txn:         coverpoint s_axi_w_if.awvalid && s_axi_w_if.awready {
+            bins single_axi_wr_txn = (0 => 1 => 0);
+            bins b2b_axi_wr_txn = (1 [*5]); //5 wr txns in a row
+        }
+        axi_any_txn:        coverpoint (s_axi_r_if.arvalid && s_axi_r_if.arready) || (s_axi_w_if.awvalid && s_axi_w_if.awready) {
+            bins single_axi_txn = (0 => 1 => 0);
+            bins b2b_axi_txn = (1 [*5]); //5 txns in a row
         }
         cg_en:              coverpoint clk_gating_en;
         core_asleep_value:  coverpoint cpu_halt_status;
@@ -88,7 +98,7 @@ interface caliptra_top_cov_if
         enXcore_asleepXdebug:       cross enXcore_asleep, debug;
         enXcore_asleepXfatalerr:    cross enXcore_asleep, fatal_error;
         enXcore_asleepXnmi:         cross enXcore_asleep, nmi;
-        enXcore_asleepXapb:         cross enXcore_asleep, apb_txn;
+        enXcore_asleepXaxi:         cross enXcore_asleep, axi_any_txn;
         enXcore_asleepXgeneric:     cross enXcore_asleep, generic;
     endgroup
 
