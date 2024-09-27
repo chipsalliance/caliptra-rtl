@@ -170,7 +170,7 @@ stages:
       - timeout: 30
       - testsuites:
         - l0_regress:
-          - enabled: true
+          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
           - timeout: 75
@@ -185,7 +185,7 @@ stages:
       - timeout: 30
       - testsuites:
         - l0_trng_regress:
-          - enabled: true
+          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_trng_tb'
           - timeout: 45
@@ -200,7 +200,7 @@ stages:
       - timeout: 30
       - testsuites:
         - l0_regress:
-          - enabled: true
+          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_ss_top'
           - timeout: 75
