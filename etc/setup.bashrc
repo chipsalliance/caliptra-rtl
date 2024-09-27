@@ -12,13 +12,13 @@ export TOOLS=${MSFT_TOOLS}
 
 export CHIPS=${WORKSPACE}/chipsalliance
 export ADAMS_BRIDGE=${CHIPS}/adams-bridge
+export ADAMSBRIDGE_ROOT=${CHIPS}/adams-bridge
 
 export CALIPTRA_WORKSPACE=${CHIPS}
 export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
 export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
 export CALIPTRA_SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
 
-export ADAMS_BRIDGE_ROOT=${CALIPTRA_WORKSPACE}/adams-bridge
 
 export CALIPTRA_SS=${CHIPS}/caliptra-ss
 export CALIPTRA_SS_TOOLS=${CALIPTRA_SS}/tools
