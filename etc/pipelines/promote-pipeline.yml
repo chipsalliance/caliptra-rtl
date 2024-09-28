@@ -12,6 +12,7 @@ variables:
 - group: AHA_POC_Pipelines
 # Provides caliptra-rtl-write-token
 - group: Caliptra_Promote_Pipeline_Secrets
+- group: Adamsbridge_Promote_Pipeline_Secrets
 - name: derivedTargetBranchName
   value: $[ coalesce(variables['System.PullRequest.targetBranchName'], 'master') ]
 # If true, this indicates that the user wishes to validate a Pull Request
