@@ -61,9 +61,17 @@ interface caliptra_top_cov_if
             bins single_axi_rd_txn = (0 => 1 => 0);
             bins b2b_axi_rd_txn = (1 [*5]); //5 rd txns in a row
         }
+        axi_rd_rsp:         coverpoint s_axi_r_if.rvalid && s_axi_r_if.rready {
+            bins axi_rd_hshake = {1'b1};
+            bins single_axi_rd_rsp = (0 => 1 => 0);
+        }
         axi_wr_txn:         coverpoint s_axi_w_if.awvalid && s_axi_w_if.awready {
             bins single_axi_wr_txn = (0 => 1 => 0);
             bins b2b_axi_wr_txn = (1 [*5]); //5 wr txns in a row
+        }
+        axi_wr_rsp:         coverpoint s_axi_w_if.bvalid && s_axi_w_if.bready {
+            bins axi_wr_hshake = {1'b1};
+            bins single_axi_wr_rsp = (0 => 1 => 0);
         }
         axi_any_txn:        coverpoint (s_axi_r_if.arvalid && s_axi_r_if.arready) || (s_axi_w_if.awvalid && s_axi_w_if.awready) {
             bins single_axi_txn = (0 => 1 => 0);
