@@ -43,7 +43,7 @@ fi
 cd $ADAMSBRIDGE_ROOT
 
 # Add remote
-REMOTE_ADDR='https://github.com/chipsalliance/adamsbridge-rtl.git'
+REMOTE_ADDR='https://github.com/chipsalliance/adams-bridge.git'
 sts=$(git config --get remote.chips.url > /dev/null; echo $?)
 echo "Status for git config --get remote.chips.url is $sts"
 if [[ $sts -ne 0 ]]; then
