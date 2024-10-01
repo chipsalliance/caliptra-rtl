@@ -81,9 +81,9 @@ module otp_ctrl_top_tb
     // Lifecycle broadcast inputs
     // SEC_CM: LC_CTRL.INTERSIG.MUBI
     
-    lc_ctrl_pkg::lc_tx_t                        lc_creator_seed_sw_rw_en_i;
-    lc_ctrl_pkg::lc_tx_t                        lc_owner_seed_sw_rw_en_i;
-    lc_ctrl_pkg::lc_tx_t                        lc_seed_hw_rd_en_i;
+    //lc_ctrl_pkg::lc_tx_t                        lc_creator_seed_sw_rw_en_i;
+    //lc_ctrl_pkg::lc_tx_t                        lc_owner_seed_sw_rw_en_i;
+    //lc_ctrl_pkg::lc_tx_t                        lc_seed_hw_rd_en_i;
     lc_ctrl_pkg::lc_tx_t                        lc_dft_en_i;
     lc_ctrl_pkg::lc_tx_t                        lc_escalate_en_i;
     lc_ctrl_pkg::lc_tx_t                        lc_check_byp_en_i;
@@ -215,9 +215,9 @@ module otp_ctrl_top_tb
         .lc_otp_vendor_test_o		(lc_otp_vendor_test_o), //(otp_ctrl_if.otp_vendor_test_status_o),
         .lc_otp_program_i		    (lc_otp_program_i), //({lc_prog_if.req, lc_prog_if.h_data}),
         .lc_otp_program_o		    (lc_otp_program_o), //({lc_prog_if.d_data, lc_prog_if.ack}),
-        .lc_creator_seed_sw_rw_en_i	(lc_creator_seed_sw_rw_en_i), //(otp_ctrl_if.lc_creator_seed_sw_rw_en_i),
-        .lc_owner_seed_sw_rw_en_i	(lc_owner_seed_sw_rw_en_i), //(otp_ctrl_if.lc_owner_seed_sw_rw_en_i),
-        .lc_seed_hw_rd_en_i		    (lc_seed_hw_rd_en_i), //(otp_ctrl_if.lc_seed_hw_rd_en_i),
+        //.lc_creator_seed_sw_rw_en_i	(lc_creator_seed_sw_rw_en_i), //(otp_ctrl_if.lc_creator_seed_sw_rw_en_i),
+        //.lc_owner_seed_sw_rw_en_i	(lc_owner_seed_sw_rw_en_i), //(otp_ctrl_if.lc_owner_seed_sw_rw_en_i),
+        //.lc_seed_hw_rd_en_i		    (lc_seed_hw_rd_en_i), //(otp_ctrl_if.lc_seed_hw_rd_en_i),
         .lc_dft_en_i		        (lc_dft_en_i), //(otp_ctrl_if.lc_dft_en_i),
         .lc_escalate_en_i		    (lc_escalate_en_i), //(otp_ctrl_if.lc_escalate_en_i),
         .lc_check_byp_en_i		    (lc_check_byp_en_i), //(otp_ctrl_if.lc_check_byp_en_i),
@@ -349,9 +349,9 @@ module otp_ctrl_top_tb
             axi_secreg_if.arvalid = 0;
             axi_secreg_if.rready  = 0;    
 
-            lc_creator_seed_sw_rw_en_i  = lc_ctrl_pkg::Off;;
-            lc_owner_seed_sw_rw_en_i    = lc_ctrl_pkg::Off;;
-            lc_seed_hw_rd_en_i          = lc_ctrl_pkg::Off;;
+            //lc_creator_seed_sw_rw_en_i  = lc_ctrl_pkg::Off;;
+            //lc_owner_seed_sw_rw_en_i    = lc_ctrl_pkg::Off;;
+            //lc_seed_hw_rd_en_i          = lc_ctrl_pkg::Off;;
             lc_dft_en_i                 = lc_ctrl_pkg::Off;;
             lc_escalate_en_i            = lc_ctrl_pkg::Off;;
             lc_check_byp_en_i           = lc_ctrl_pkg::Off;;

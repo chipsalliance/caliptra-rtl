@@ -58,9 +58,9 @@ module otp_ctrl
   output lc_otp_program_rsp_t                        lc_otp_program_o,
   // Lifecycle broadcast inputs
   // SEC_CM: LC_CTRL.INTERSIG.MUBI
-  input  lc_ctrl_pkg::lc_tx_t                        lc_creator_seed_sw_rw_en_i,
-  input  lc_ctrl_pkg::lc_tx_t                        lc_owner_seed_sw_rw_en_i,
-  input  lc_ctrl_pkg::lc_tx_t                        lc_seed_hw_rd_en_i,
+  //input  lc_ctrl_pkg::lc_tx_t                        lc_creator_seed_sw_rw_en_i,
+  //input  lc_ctrl_pkg::lc_tx_t                        lc_owner_seed_sw_rw_en_i,
+  //input  lc_ctrl_pkg::lc_tx_t                        lc_seed_hw_rd_en_i,
   input  lc_ctrl_pkg::lc_tx_t                        lc_dft_en_i,
   input  lc_ctrl_pkg::lc_tx_t                        lc_escalate_en_i,
   input  lc_ctrl_pkg::lc_tx_t                        lc_check_byp_en_i,
@@ -145,8 +145,9 @@ module otp_ctrl
   // Life Cycle Signal Synchronization //
   ///////////////////////////////////////
 
-  lc_ctrl_pkg::lc_tx_t       lc_creator_seed_sw_rw_en, lc_owner_seed_sw_rw_en,
-                             lc_seed_hw_rd_en, lc_check_byp_en;
+  //lc_ctrl_pkg::lc_tx_t       lc_creator_seed_sw_rw_en, lc_owner_seed_sw_rw_en,
+  //                           lc_seed_hw_rd_en, 
+  lc_ctrl_pkg::lc_tx_t         lc_check_byp_en;
   lc_ctrl_pkg::lc_tx_t [2:0] lc_dft_en;
   // NumAgents + lfsr timer and scrambling datapath.
   lc_ctrl_pkg::lc_tx_t [NumAgentsIdx+1:0] lc_escalate_en, lc_escalate_en_synced;
@@ -161,7 +162,7 @@ module otp_ctrl
     .lc_en_i(lc_escalate_en_i),
     .lc_en_o(lc_escalate_en_synced)
   );
-
+/*
   caliptra_prim_lc_sync #(
     .NumCopies(1)
   ) u_prim_lc_sync_creator_seed_sw_rw_en (
@@ -188,7 +189,7 @@ module otp_ctrl
     .lc_en_i(lc_seed_hw_rd_en_i),
     .lc_en_o({lc_seed_hw_rd_en})
   );
-
+*/
   caliptra_prim_lc_sync #(
     .NumCopies(3)
   ) u_prim_lc_sync_dft_en (
