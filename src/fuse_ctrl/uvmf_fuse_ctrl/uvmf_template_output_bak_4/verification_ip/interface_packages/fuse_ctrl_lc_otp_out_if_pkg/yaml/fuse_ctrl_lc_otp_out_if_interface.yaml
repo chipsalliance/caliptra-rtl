@@ -1,0 +1,37 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_lc_otp_out_if:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: input
+        name: lc_otp_vendor_test_o
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_vendor_test_rsp_t)'']'
+      - dir: input
+        name: lc_otp_program_o
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_program_rsp_t)'']'
+      - dir: input
+        name: otp_lc_data_o
+        reset_value: '''bz'
+        width: '[''$bits(otp_lc_data_t)'']'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: otp_lc_data_o
+        type: otp_lc_data_t
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

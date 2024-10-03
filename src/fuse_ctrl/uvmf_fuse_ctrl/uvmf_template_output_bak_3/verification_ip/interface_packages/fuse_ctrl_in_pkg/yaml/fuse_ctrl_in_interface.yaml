@@ -1,0 +1,64 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_in:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AlertSyncOn
+        type: int
+        value: '3'
+      - name: RndConstLfrSeed
+        type: lfsr_seed_t
+        value: RndConstLfsrSeedDefault
+      - name: RndCnstLfsrPerm
+        type: lsfr_perm_t
+        value: RndCnstLfsrPermDefault
+      - name: MemInitFile
+        type: string
+      ports:
+      - dir: output
+        name: edn_i
+        reset_value: '''bz'
+        width: '[''$bits(edn_pkg::edn_req_t)'']'
+      - dir: output
+        name: alert_rx_i
+        reset_value: '''bz'
+        width: '[''NumAlerts * $bits(caliptra_prim_alert_pkg::alert_rx_t)'']'
+      - dir: output
+        name: obs_ctrl_i
+        reset_value: '''bz'
+        width: '[''$bits(ast_pkg::ast_obs_ctrl_t)'']'
+      - dir: output
+        name: otp_ast_pwr_seq_h_i
+        reset_value: '''bz'
+        width: '[''$bits(otp_ast_req_t)'']'
+      - dir: output
+        name: scan_en_i
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: scan_rst_ni
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: scanmode_i
+        reset_value: '''bz'
+        width: '1'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: set_alert_rx_i
+        type: caliptra_prim_alert_pkg::alert_rx_t
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

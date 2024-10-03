@@ -1,0 +1,23 @@
+uvmf:
+  util_components:
+    fuse_ctrl_predictor:
+      analysis_exports:
+      - name: fuse_ctrl_rst_agent_ae
+        type: fuse_ctrl_rst_transaction
+      - name: fuse_ctrl_core_axi_write_agent_ae
+        type: fuse_ctrl_write_transaction
+      - name: fuse_ctrl_prim_axi_write_agent_ae
+        type: fuse_ctrl_write_transaction
+      - name: fuse_ctrl_core_axi_read_agent_ae
+        type: fuse_ctrl_read_transaction
+      - name: fuse_ctrl_prim_axi_read_agent_ae
+        type: fuse_ctrl_read_transaction
+      - name: fuse_ctrl_secreg_axi_read_agent_ae
+        type: fuse_ctrl_read_transaction
+      - name: fuse_ctrl_lc_otp_if_agent_ae
+        type: fuse_ctrl_read_transaction
+      analysis_ports:
+      - name: fuse_ctrl_sb_ap
+        type: fuse_ctrl_read_transaction
+      existing_library_component: 'True'
+      type: predictor

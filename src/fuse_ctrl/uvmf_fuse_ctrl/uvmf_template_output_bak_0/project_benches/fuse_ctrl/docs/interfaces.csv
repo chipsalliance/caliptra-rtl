@@ -1,0 +1,33 @@
+//----------------------------------------------------------------------
+// Created with uvmf_gen version 2022.3
+//----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// pragma uvmf custom header begin
+// pragma uvmf custom header end
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//
+
+,
+Interface Description, Interface Type, Interface Transaction, Interface Name,
+fuse_ctrl_rst_agent, fuse_ctrl_rst_driver_bfm fuse_ctrl_rst_monitor_bfm, fuse_ctrl_rst_transaction, fuse_ctrl_rst_pkg_fuse_ctrl_rst_agent_BFM,
+fuse_ctrl_core_axi_write_agent, fuse_ctrl_core_axi_write_if_driver_bfm fuse_ctrl_core_axi_write_if_monitor_bfm, fuse_ctrl_core_axi_write_if_transaction, fuse_ctrl_core_axi_write_if_pkg_fuse_ctrl_core_axi_write_agent_BFM,
+fuse_ctrl_prim_axi_write_agent, fuse_ctrl_prim_axi_write_if_driver_bfm fuse_ctrl_prim_axi_write_if_monitor_bfm, fuse_ctrl_prim_axi_write_if_transaction, fuse_ctrl_prim_axi_write_if_pkg_fuse_ctrl_prim_axi_write_agent_BFM,
+fuse_ctrl_core_axi_read_agent, fuse_ctrl_core_axi_read_if_driver_bfm fuse_ctrl_core_axi_read_if_monitor_bfm, fuse_ctrl_core_axi_read_if_transaction, fuse_ctrl_core_axi_read_if_pkg_fuse_ctrl_core_axi_read_agent_BFM,
+fuse_ctrl_prim_axi_read_agent, fuse_ctrl_prim_axi_read_if_driver_bfm fuse_ctrl_prim_axi_read_if_monitor_bfm, fuse_ctrl_prim_axi_read_if_transaction, fuse_ctrl_prim_axi_read_if_pkg_fuse_ctrl_prim_axi_read_agent_BFM,
+fuse_ctrl_secreg_axi_read_agent, fuse_ctrl_secreg_axi_read_if_driver_bfm fuse_ctrl_secreg_axi_read_if_monitor_bfm, fuse_ctrl_secreg_axi_read_if_transaction, fuse_ctrl_secreg_axi_read_if_pkg_fuse_ctrl_secreg_axi_read_agent_BFM,
+fuse_ctrl_lc_otp_if_agent, fuse_ctrl_lc_otp_if_driver_bfm fuse_ctrl_lc_otp_if_monitor_bfm, fuse_ctrl_lc_otp_if_transaction, fuse_ctrl_lc_otp_if_pkg_fuse_ctrl_lc_otp_if_agent_BFM,
+

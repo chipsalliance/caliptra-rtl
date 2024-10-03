@@ -1,0 +1,81 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_prim_axi_write_out:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AW
+        type: int
+        value: '32'
+      - name: DW
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW
+        type: int
+        value: '32'
+      ports:
+      - dir: input
+        name: awready
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: wready
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: bresp
+        reset_value: '''bz'
+        width: '[''$bits(axi_pkg::axi_burst_e)'']'
+      - dir: input
+        name: bid
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: bvalid
+        reset_value: '''bz'
+        width: '1'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: prim_awready
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: prim_wready
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: prim_bresp
+        type: axi_pkg::axi_burst_e
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: prim_bid
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: prim_bvalid
+        type: logic
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

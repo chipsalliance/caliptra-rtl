@@ -1,0 +1,42 @@
+//----------------------------------------------------------------------
+// Created with uvmf_gen version 2022.3
+//----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// pragma uvmf custom header begin
+// pragma uvmf custom header end
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+//
+
+,
+Interface Description, Interface Type, Interface Transaction, Interface Name,
+fuse_ctrl_rst_in_agent, fuse_ctrl_rst_in_driver_bfm fuse_ctrl_rst_in_monitor_bfm, fuse_ctrl_rst_in_transaction, fuse_ctrl_rst_in_pkg_fuse_ctrl_rst_in_agent_BFM,
+fuse_ctrl_rst_out_agent, fuse_ctrl_rst_out_driver_bfm fuse_ctrl_rst_out_monitor_bfm, fuse_ctrl_rst_out_transaction, fuse_ctrl_rst_out_pkg_fuse_ctrl_rst_out_agent_BFM,
+fuse_ctrl_core_axi_write_in_if_agent, fuse_ctrl_core_axi_write_in_driver_bfm fuse_ctrl_core_axi_write_in_monitor_bfm, fuse_ctrl_core_axi_write_in_transaction, fuse_ctrl_core_axi_write_in_pkg_fuse_ctrl_core_axi_write_in_if_agent_BFM,
+fuse_ctrl_core_axi_write_out_if_agent, fuse_ctrl_core_axi_write_out_driver_bfm fuse_ctrl_core_axi_write_out_monitor_bfm, fuse_ctrl_core_axi_write_out_transaction, fuse_ctrl_core_axi_write_out_pkg_fuse_ctrl_core_axi_write_out_if_agent_BFM,
+fuse_ctrl_prim_axi_write_in_if_agent, fuse_ctrl_prim_axi_write_in_driver_bfm fuse_ctrl_prim_axi_write_in_monitor_bfm, fuse_ctrl_prim_axi_write_in_transaction, fuse_ctrl_prim_axi_write_in_pkg_fuse_ctrl_prim_axi_write_in_if_agent_BFM,
+fuse_ctrl_prim_axi_write_out_if_agent, fuse_ctrl_prim_axi_write_out_driver_bfm fuse_ctrl_prim_axi_write_out_monitor_bfm, fuse_ctrl_prim_axi_write_out_transaction, fuse_ctrl_prim_axi_write_out_pkg_fuse_ctrl_prim_axi_write_out_if_agent_BFM,
+fuse_ctrl_core_axi_read_in_if_agent, fuse_ctrl_core_axi_read_in_driver_bfm fuse_ctrl_core_axi_read_in_monitor_bfm, fuse_ctrl_core_axi_read_in_transaction, fuse_ctrl_core_axi_read_in_pkg_fuse_ctrl_core_axi_read_in_if_agent_BFM,
+fuse_ctrl_core_axi_read_out_if_agent, fuse_ctrl_core_axi_read_out_driver_bfm fuse_ctrl_core_axi_read_out_monitor_bfm, fuse_ctrl_core_axi_read_out_transaction, fuse_ctrl_core_axi_read_out_pkg_fuse_ctrl_core_axi_read_out_if_agent_BFM,
+fuse_ctrl_prim_axi_read_in_if_agent, fuse_ctrl_prim_axi_read_in_driver_bfm fuse_ctrl_prim_axi_read_in_monitor_bfm, fuse_ctrl_prim_axi_read_in_transaction, fuse_ctrl_prim_axi_read_in_pkg_fuse_ctrl_prim_axi_read_in_if_agent_BFM,
+fuse_ctrl_prim_axi_read_out_if_agent, fuse_ctrl_prim_axi_read_out_driver_bfm fuse_ctrl_prim_axi_read_out_monitor_bfm, fuse_ctrl_prim_axi_read_out_transaction, fuse_ctrl_prim_axi_read_out_pkg_fuse_ctrl_prim_axi_read_out_if_agent_BFM,
+fuse_ctrl_secreg_axi_read_in_if_agent, fuse_ctrl_secreg_axi_read_in_driver_bfm fuse_ctrl_secreg_axi_read_in_monitor_bfm, fuse_ctrl_secreg_axi_read_in_transaction, fuse_ctrl_secreg_axi_read_in_pkg_fuse_ctrl_secreg_axi_read_in_if_agent_BFM,
+fuse_ctrl_secreg_axi_read_out_if_agent, fuse_ctrl_secreg_axi_read_out_driver_bfm fuse_ctrl_secreg_axi_read_out_monitor_bfm, fuse_ctrl_secreg_axi_read_out_transaction, fuse_ctrl_secreg_axi_read_out_pkg_fuse_ctrl_secreg_axi_read_out_if_agent_BFM,
+fuse_ctrl_lc_otp_in_if_agent, fuse_ctrl_lc_otp_in_driver_bfm fuse_ctrl_lc_otp_in_monitor_bfm, fuse_ctrl_lc_otp_in_transaction, fuse_ctrl_lc_otp_in_pkg_fuse_ctrl_lc_otp_in_if_agent_BFM,
+fuse_ctrl_lc_otp_out_if_agent, fuse_ctrl_lc_otp_out_driver_bfm fuse_ctrl_lc_otp_out_monitor_bfm, fuse_ctrl_lc_otp_out_transaction, fuse_ctrl_lc_otp_out_pkg_fuse_ctrl_lc_otp_out_if_agent_BFM,
+fuse_ctrl_in_if_agent, fuse_ctrl_in_driver_bfm fuse_ctrl_in_monitor_bfm, fuse_ctrl_in_transaction, fuse_ctrl_in_pkg_fuse_ctrl_in_if_agent_BFM,
+fuse_ctrl_out_if_agent, fuse_ctrl_out_driver_bfm fuse_ctrl_out_monitor_bfm, fuse_ctrl_out_transaction, fuse_ctrl_out_pkg_fuse_ctrl_out_if_agent_BFM,
+

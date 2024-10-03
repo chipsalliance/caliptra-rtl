@@ -1,0 +1,23 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_rst_in_pkg/fuse_ctrl_rst_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_rst_out_pkg/fuse_ctrl_rst_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_write_in_pkg/fuse_ctrl_core_axi_write_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_write_out_pkg/fuse_ctrl_core_axi_write_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_write_in_pkg/fuse_ctrl_prim_axi_write_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_write_out_pkg/fuse_ctrl_prim_axi_write_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_read_in_pkg/fuse_ctrl_core_axi_read_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_read_out_pkg/fuse_ctrl_core_axi_read_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_read_in_pkg/fuse_ctrl_prim_axi_read_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_read_out_pkg/fuse_ctrl_prim_axi_read_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_secreg_axi_read_in_pkg/fuse_ctrl_secreg_axi_read_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_secreg_axi_read_out_pkg/fuse_ctrl_secreg_axi_read_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_lc_otp_in_pkg/fuse_ctrl_lc_otp_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_lc_otp_out_pkg/fuse_ctrl_lc_otp_out.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_in_pkg/fuse_ctrl_in.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_out_pkg/fuse_ctrl_out.compile
+  - ../../../../verification_ip/environment_packages/fuse_ctrl_env_pkg/fuse_ctrl_env_pkg.compile
+  - ../parameters/fuse_ctrl_parameters_pkg.compile
+  - ../sequences/fuse_ctrl_sequences_pkg.compile
+src:
+  - fuse_ctrl_tests_pkg.sv

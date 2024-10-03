@@ -1,0 +1,3 @@
+needs:
+  - fuse_ctrl_lc_otp_in_hvl.compile
+  - fuse_ctrl_lc_otp_in_hdl.compile

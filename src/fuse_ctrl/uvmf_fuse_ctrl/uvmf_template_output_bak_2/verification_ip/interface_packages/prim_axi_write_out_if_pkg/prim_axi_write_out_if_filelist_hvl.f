@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/prim_axi_write_out_if_pkg/prim_axi_write_out_if_pkg.sv

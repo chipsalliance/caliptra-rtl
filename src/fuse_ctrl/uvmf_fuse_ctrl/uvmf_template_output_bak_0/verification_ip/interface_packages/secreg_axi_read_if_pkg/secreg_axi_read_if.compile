@@ -1,0 +1,3 @@
+needs:
+  - secreg_axi_read_if_hvl.compile
+  - secreg_axi_read_if_hdl.compile

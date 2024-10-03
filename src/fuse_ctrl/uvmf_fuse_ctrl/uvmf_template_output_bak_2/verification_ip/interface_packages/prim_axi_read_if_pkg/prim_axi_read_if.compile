@@ -1,0 +1,3 @@
+needs:
+  - prim_axi_read_if_hvl.compile
+  - prim_axi_read_if_hdl.compile

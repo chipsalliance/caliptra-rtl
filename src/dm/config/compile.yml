@@ -1,0 +1,11 @@
+provides: [dm_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/dm_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files: 
+      - $COMPILE_ROOT/rtl/dm_pkg.sv

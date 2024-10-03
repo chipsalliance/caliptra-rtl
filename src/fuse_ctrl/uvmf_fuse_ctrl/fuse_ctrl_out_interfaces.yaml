@@ -1,0 +1,470 @@
+uvmf:
+  interfaces:
+    "fuse_ctrl_rst_out": 
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      ports:
+        # Power manager interface
+        - name: pwr_otp_o
+          dir: input
+          width: [$bits(pwrmgr_pkg::pwr_otp_rsp_t)]
+        # External voltage for OTP
+        - name: otp_ext_voltage_h_io
+          dir: inout
+          width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: pwr_otp_o
+          type: pwrmgr_pkg::pwr_otp_rsp_t
+          isrand: 'False'
+          iscompare: 'True'
+
+    "fuse_ctrl_core_axi_write_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Write Channel Ready
+      - name: awready
+        dir: input 
+        width: '1'
+      # Write Ready
+      - name: wready
+        dir: input
+        width: '1'
+      # Write Response
+      - name: bresp 
+        dir: input
+        width: [$bits(axi_pkg::axi_burst_e)]
+      # Write Response ID
+      - name: bid 
+        dir: input
+        width: '1'
+      # Write Response Valid
+      - name: bvalid
+        dir: input 
+        width: '1' 
+
+      transaction_constraints: []
+      transaction_vars: 
+        - name: core_awready
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_wready
+          type: logic 
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_bresp
+          type: axi_pkg::axi_burst_e
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_bid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_bvalid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+
+    "fuse_ctrl_core_axi_read_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Read Channel Ready
+      - name: arready
+        dir: input
+        width: '1'
+      # Read Data
+      - name: rdata
+        dir: input
+        width: "DW"
+      # Read Response
+      - name: rresp
+        dir: input
+        width: '1'
+      # Read ID
+      - name: rid 
+        dir: input
+        width: '1' 
+      # Read Last
+      - name: rlast 
+        dir: input
+        width: '1'
+      # Read Data Valid
+      - name: rvalid
+        dir: input
+        width: '1' 
+    
+      transaction_constraints: []
+      transaction_vars: 
+        - name: core_arready
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_rdata
+          type: logic [DW-1:0]
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_rresp
+          type: axi_pkg::axi_burst_e
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_rid 
+          type: logic [IW-1:0]
+          iscompare: 'True'
+          isrand: 'False' 
+        - name: core_rlast
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_rvalid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+
+    "fuse_ctrl_prim_axi_write_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Write Channel Ready
+      - name: awready
+        dir: input 
+        width: '1'
+      # Write Ready
+      - name: wready
+        dir: input
+        width: '1'
+      # Write Response
+      - name: bresp 
+        dir: input
+        width: [$bits(axi_pkg::axi_burst_e)]
+      # Write Response ID
+      - name: bid 
+        dir: input
+        width: '1'
+      # Write Response Valid
+      - name: bvalid
+        dir: input 
+        width: '1' 
+
+      transaction_constraints: []
+      transaction_vars: 
+        - name: prim_awready
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_wready
+          type: logic 
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_bresp
+          type: axi_pkg::axi_burst_e
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_bid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_bvalid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+      
+
+    "fuse_ctrl_prim_axi_read_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Read Channel Ready
+      - name: arready
+        dir: input
+        width: '1'
+      # Read Data
+      - name: rdata
+        dir: input
+        width: "DW"
+      # Read Response
+      - name: rresp
+        dir: input
+        width: '1'
+      # Read ID
+      - name: rid 
+        dir: input
+        width: '1' 
+      # Read Last
+      - name: rlast 
+        dir: input
+        width: '1'
+      # Read Data Valid
+      - name: rvalid
+        dir: input
+        width: '1' 
+
+      transaction_constraints: []
+      transaction_vars: 
+        - name: prim_arready
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_rdata
+          type: logic [DW-1:0]
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_rresp
+          type: axi_pkg::axi_burst_e
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_rid 
+          type: logic [IW-1:0]
+          iscompare: 'True'
+          isrand: 'False' 
+        - name: prim_rlast
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_rvalid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+
+    "fuse_ctrl_secreg_axi_read_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Read Channel Ready
+      - name: arready
+        dir: input
+        width: '1'
+      # Read Data
+      - name: rdata
+        dir: input
+        width: "DW"
+      # Read Response
+      - name: rresp
+        dir: input
+        width: '1'
+      # Read ID
+      - name: rid 
+        dir: input
+        width: '1' 
+      # Read Last
+      - name: rlast 
+        dir: input
+        width: '1'
+      # Read Data Valid
+      - name: rvalid
+        dir: input
+        width: '1' 
+
+      transaction_constraints: []
+      transaction_vars: 
+        - name: secreg_arready
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: secreg_rdata
+          type: logic [DW-1:0]
+          iscompare: 'True'
+          isrand: 'False'
+        - name: secreg_rresp
+          type: axi_pkg::axi_burst_e
+          iscompare: 'True'
+          isrand: 'False'
+        - name: secreg_rid 
+          type: logic [IW-1:0]
+          iscompare: 'True'
+          isrand: 'False' 
+        - name: secreg_rlast
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+        - name: secreg_rvalid
+          type: logic
+          iscompare: 'True'
+          isrand: 'False'
+
+    "fuse_ctrl_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AlertSyncOn
+        type: int
+        value: '3'
+      - name: RndConstLfrSeed
+        type: lfsr_seed_t
+        value: 'RndConstLfsrSeedDefault'
+      - name: RndCnstLfsrPerm
+        type: lsfr_perm_t
+        value: 'RndCnstLfsrPermDefault'
+      - name: MemInitFile
+        type: string 
+        value: "" 
+
+      ports:
+      # EDN interface
+      - name: edn_o 
+        dir: input 
+        width: [$bits(edn_pkg::edn_req_t)]
+      # Interrupt Requests
+      - name: intr_otp_operation_done_o
+        dir: input
+        width: '1'
+      - name: intr_otp_error_o
+        dir: input
+        width: '1'
+      # Alerts
+      - name: alert_tx_o
+        dir: input
+        width: [NumAlerts * $bits(caliptra_prim_alert_pkg::alert_tx_t)]
+      # Observability to AST
+      - name: otp_obs_o
+        dir: input
+        width: '8'
+      # Macro-specific power sequencing signal to AST
+      - name: otp_ast_pwr_seq_o
+        dir: input
+        width: [$bits(caliptra_otp_ctrl_pkg::otp_ast_req_t)]
+      
+      # Hardware config bits
+      - name: otp_broadcast_o
+        dir: input
+        width: [$bits(otp_broadcast_t)]
+      
+      # Test-related GPIO output
+      - name: cio_test_o
+        dir: input
+        width: [OtpTestVectWidth]
+      - name: cio_test_en_o
+        dir: input
+        width: [OtpTestVectWidth]
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: pwr_otp_o
+          type: pwrmgr_pkg::pwr_otp_rsp_t
+          iscompare: 'True'
+          isrand: 'False'
+
+    "fuse_ctrl_lc_otp_out":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      ports:
+        # Test register to Life Cycle TAP
+        - name: lc_otp_vendor_test_o
+          dir: input
+          width: [$bits(lc_otp_vendor_test_rsp_t)]
+        # LC transition interface
+        - name: lc_otp_program_o
+          dir: input
+          width: [$bits(lc_otp_program_rsp_t)]
+        # OTP broadcast output
+        - name: otp_lc_data_o
+          dir: input
+          width: [$bits(otp_lc_data_t)]
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: otp_lc_data_o
+          type: otp_lc_data_t
+          iscompare: 'True'
+          isrand: 'False'
+
+
+
+

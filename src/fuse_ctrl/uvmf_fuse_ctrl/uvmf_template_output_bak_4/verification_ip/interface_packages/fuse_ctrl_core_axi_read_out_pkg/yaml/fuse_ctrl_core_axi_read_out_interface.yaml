@@ -1,0 +1,91 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_core_axi_read_out:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AW
+        type: int
+        value: '32'
+      - name: DW
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW
+        type: int
+        value: '32'
+      ports:
+      - dir: input
+        name: arready
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: rdata
+        reset_value: '''bz'
+        width: DW
+      - dir: input
+        name: rresp
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: rid
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: rlast
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: rvalid
+        reset_value: '''bz'
+        width: '1'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_arready
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_rdata
+        type: logic [DW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_rresp
+        type: axi_pkg::axi_burst_e
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_rid
+        type: logic [IW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_rlast
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_rvalid
+        type: logic
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

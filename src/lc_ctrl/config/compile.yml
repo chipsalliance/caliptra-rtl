@@ -16,3 +16,31 @@ targets:
       - $COMPILE_ROOT/rtl/lc_ctrl_reg_pkg.sv
       - $COMPILE_ROOT/rtl/lc_ctrl_state_pkg.sv
       - $COMPILE_ROOT/rtl/lc_ctrl_pkg.sv
+---
+provides: [lc_ctrl]
+schema_version: 2.4.0
+requires:
+  - lc_ctrl_pkg
+  - axi_pkg
+  - kmac_pkg
+  - tlul_pkg
+  - jtag_pkg
+  - pwrmgr_pkg
+  - fuse_ctrl_pkg
+  - ast_pkg
+  - edn_pkg
+  - dm_pkg
+  - alert_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/lc_ctrl_fsm.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_kmac_if.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_reg_top.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_signal_decode.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_state_decode.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl_state_transition.sv
+      - $COMPILE_ROOT/rtl/lc_ctrl.sv 
+      - $COMPILE_ROOT/rtl/lc_ctrl_top.sv 
+    tops: [lc_ctrl_top]

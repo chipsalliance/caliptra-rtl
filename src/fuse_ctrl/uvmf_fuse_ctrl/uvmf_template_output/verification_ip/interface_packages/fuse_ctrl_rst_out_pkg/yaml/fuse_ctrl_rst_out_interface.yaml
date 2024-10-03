@@ -1,0 +1,33 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_rst_out:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: input
+        name: pwr_otp_o
+        reset_value: '''bz'
+        width: '[''$bits(pwrmgr_pkg::pwr_otp_rsp_t)'']'
+      - dir: inout
+        name: otp_ext_voltage_h_io
+        reset_value: '''bz'
+        width: '1'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: pwr_otp_o
+        type: pwrmgr_pkg::pwr_otp_rsp_t
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

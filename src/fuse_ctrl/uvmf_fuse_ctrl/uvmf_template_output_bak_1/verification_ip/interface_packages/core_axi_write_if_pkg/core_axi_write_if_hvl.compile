@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./core_axi_write_if_common.compile
+incdir:
+  - .
+src:
+  - core_axi_write_if_pkg.sv

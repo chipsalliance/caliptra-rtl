@@ -1,0 +1,122 @@
+uvmf:
+  environments:
+    fuse_ctrl:
+      agents:
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_rst_in_agent
+        type: fuse_ctrl_rst_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_rst_out_agent
+        type: fuse_ctrl_rst_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_core_axi_write_in_if_agent
+        type: fuse_ctrl_core_axi_write_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_core_axi_write_out_if_agent
+        type: fuse_ctrl_core_axi_write_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_prim_axi_write_in_if_agent
+        type: fuse_ctrl_prim_axi_write_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_prim_axi_write_out_if_agent
+        type: fuse_ctrl_prim_axi_write_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_core_axi_read_in_if_agent
+        type: fuse_ctrl_core_axi_read_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_core_axi_read_out_if_agent
+        type: fuse_ctrl_core_axi_read_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_prim_axi_read_in_if_agent
+        type: fuse_ctrl_prim_axi_read_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_prim_axi_read_out_if_agent
+        type: fuse_ctrl_prim_axi_read_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_secreg_axi_read_in_if_agent
+        type: fuse_ctrl_secreg_axi_read_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_secreg_axi_read_out_if_agent
+        type: fuse_ctrl_secreg_axi_read_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_lc_otp_in_if_agent
+        type: fuse_ctrl_lc_otp_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_lc_otp_out_if_agent
+        type: fuse_ctrl_lc_otp_out
+      - initiator_responder: INITIATOR
+        name: fuse_ctrl_in_if_agent
+        type: fuse_ctrl_in
+      - initiator_responder: RESPONDER
+        name: fuse_ctrl_out_if_agent
+        type: fuse_ctrl_out
+      analysis_components:
+      - name: fuse_ctrl_pred
+        parameters: []
+        type: fuse_ctrl_predictor
+      - name: fuse_ctrl_sb
+        parameters: []
+        type: fuse_ctrl_scoreboard
+      analysis_exports: []
+      analysis_ports: []
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      hvl_pkg_parameters: []
+      non_uvmf_components: []
+      parameters: []
+      qvip_memory_agents: []
+      scoreboards: []
+      subenvs: []
+      tlm_connections:
+      - driver: fuse_ctrl_rst_in_agent.monitored_ap
+        receiver: fuse_ctrl_pred.fuse_ctrl_rst_agent_ae
+        validate: 'True'
+      - driver: fuse_ctrl_pred.fuse_ctrl_sb_ap
+        receiver: fuse_ctrl_sb.expected_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_rst_out_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_core_axi_write_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_core_axi_write_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_core_axi_read_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_core_axi_read_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_prim_axi_write_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_prim_axi_write_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_prim_axi_read_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_prim_axi_read_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_secreg_axi_read_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_secreg_axi_read_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_lc_otp_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_lc_otp_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_in_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'
+      - driver: fuse_ctrl_out_if_agent.monitored_ap
+        receiver: fuse_ctrl_sb.actual_analysis_export
+        validate: 'True'

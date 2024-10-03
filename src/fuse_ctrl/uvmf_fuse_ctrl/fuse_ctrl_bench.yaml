@@ -1,0 +1,51 @@
+uvmf:
+  benches:
+    fuse_ctrl:
+
+      active_passive:
+        - bfm_name: fuse_ctrl_rst_in_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_rst_out_agent
+          value: PASSIVE
+        ############# WRITE AGENTS ##########
+        - bfm_name: fuse_ctrl_core_axi_write_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_core_axi_write_out_if_agent
+          value: PASSIVE
+        - bfm_name: fuse_ctrl_prim_axi_write_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_prim_axi_write_out_if_agent
+          value: PASSIVE
+        ############# READ AGENTS ###########
+        - bfm_name: fuse_ctrl_core_axi_read_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_core_axi_read_out_if_agent
+          value: PASSIVE
+        - bfm_name: fuse_ctrl_prim_axi_read_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_prim_axi_read_out_if_agent
+          value: PASSIVE
+        - bfm_name: fuse_ctrl_secreg_axi_read_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_secreg_axi_read_out_if_agent
+          value: PASSIVE
+        ############ OTHER AGENTS ###########
+        - bfm_name: fuse_ctrl_lc_otp_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_lc_otp_out_if_agent
+          value: PASSIVE
+        - bfm_name: fuse_ctrl_in_if_agent
+          value: ACTIVE
+        - bfm_name: fuse_ctrl_out_if_agent
+          value: PASSIVE
+
+
+      clock_half_period: 5ns
+      clock_phase_offset: 0ns
+
+      interface_params: []
+
+      reset_assertion_level: 'False'
+      reset_duration: 200ns
+
+      top_env: fuse_ctrl

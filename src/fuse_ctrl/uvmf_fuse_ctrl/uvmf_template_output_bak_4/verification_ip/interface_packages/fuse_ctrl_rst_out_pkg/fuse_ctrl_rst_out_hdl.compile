@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./fuse_ctrl_rst_out_common.compile
+incdir:
+  - .
+src:
+  - src/fuse_ctrl_rst_out_if.sv
+  - src/fuse_ctrl_rst_out_monitor_bfm.sv
+  - src/fuse_ctrl_rst_out_driver_bfm.sv

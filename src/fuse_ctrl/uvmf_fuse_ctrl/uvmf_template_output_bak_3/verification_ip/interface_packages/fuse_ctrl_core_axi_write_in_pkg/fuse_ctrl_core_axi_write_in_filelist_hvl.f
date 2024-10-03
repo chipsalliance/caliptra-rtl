@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/fuse_ctrl_core_axi_write_in_pkg/fuse_ctrl_core_axi_write_in_pkg.sv

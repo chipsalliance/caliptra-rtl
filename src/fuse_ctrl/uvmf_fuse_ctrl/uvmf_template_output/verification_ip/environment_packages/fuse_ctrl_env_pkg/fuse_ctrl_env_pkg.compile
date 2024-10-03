@@ -1,0 +1,22 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_rst_in_pkg/fuse_ctrl_rst_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_rst_out_pkg/fuse_ctrl_rst_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_core_axi_write_in_pkg/fuse_ctrl_core_axi_write_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_core_axi_write_out_pkg/fuse_ctrl_core_axi_write_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_write_in_pkg/fuse_ctrl_prim_axi_write_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_write_out_pkg/fuse_ctrl_prim_axi_write_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_core_axi_read_in_pkg/fuse_ctrl_core_axi_read_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_core_axi_read_out_pkg/fuse_ctrl_core_axi_read_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_read_in_pkg/fuse_ctrl_prim_axi_read_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_read_out_pkg/fuse_ctrl_prim_axi_read_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_secreg_axi_read_in_pkg/fuse_ctrl_secreg_axi_read_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_secreg_axi_read_out_pkg/fuse_ctrl_secreg_axi_read_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_lc_otp_in_pkg/fuse_ctrl_lc_otp_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_lc_otp_out_pkg/fuse_ctrl_lc_otp_out_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_in_pkg/fuse_ctrl_in_hvl.compile
+  - ../../../verification_ip/interface_packages/fuse_ctrl_out_pkg/fuse_ctrl_out_hvl.compile
+
+src:
+  - fuse_ctrl_env_pkg.sv
+

@@ -1,0 +1,698 @@
+uvmf:
+  interfaces:
+    ####################################################
+    ############### RESET INTERFACE ####################
+    ####################################################
+    "fuse_ctrl_rst_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      ports: 
+        # Power manager interface
+        - name: pwr_otp_i
+          dir: output
+          width: [$bits(pwrmgr_pkg::pwr_otp_req_t)]
+        # External voltage for OTP 
+        - name: otp_ext_voltage_h_io
+          dir: inout
+          width: '1'
+      
+      transaction_constraints: []
+      transaction_vars:
+        - name: assert_rst
+          type: bit
+          iscompare: 'False'
+          isrand: 'False'
+        - name: assert_otp_pwr_init
+          type: bit
+          iscompare: 'False'
+          isrand: 'False'
+
+    ####################################################
+    ############### CORE AXI WRITE #####################
+    ####################################################
+    "fuse_ctrl_core_axi_write_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Channel Write Address
+      - name: awaddr
+        dir: output
+        width: [AW]
+      # Burst
+      - name: awburst
+        dir: output
+        width: [$bits(axi_pkg::axi_burst_e)]
+      # size
+      - name: awsize
+        dir: output
+        width: '3' 
+      # Length:
+      - name: awlen
+        dir: output
+        width: '8'
+      # User
+      - name: awuser
+        dir: output
+        width: [UW]
+      # ID
+      - name: awid 
+        dir: output
+        width: [UW]
+      # Lock
+      - name: awlock
+        dir: output
+        width: '1'
+      # Write request valid
+      - name: awvalid
+        dir: output
+        width: '1'
+      # Write data
+      - name: wdata
+        dir: output
+        width: [DW]
+      # Write strobe
+      - name: wstrb
+        dir: output
+        width: [DW/8]
+      # Write data valid
+      - name: wvalid
+        dir: output
+        width: '1'
+      # Write last
+      - name: wlast
+        dir: output 
+        width: '1'
+      # Ready for write
+      - name: bready
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: core_awaddr
+          type: logic [AW-1:0]
+          iscompare: 'False'
+          isrand: 'True'
+        - name: core_awvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awburst
+          type: logic [$bits(axi_pkg::axi_burst_e)]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awsize
+          type: logic [2:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awlen
+          type: logic [7:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awuser
+          type: logic [UW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awid
+          type: logic [IW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_awlock
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_wdata
+          type: logic [DW-1:0]
+          iscompare: 'True'
+          isrand: 'False'
+        - name: core_wstrb
+          type: logic [DW/8 - 1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_wvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False' 
+        - name: core_wlast
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_bready
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+
+    ####################################################
+    ############### CORE AXI READ ######################
+    ####################################################
+    "fuse_ctrl_core_axi_read_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+        # Address Channel Read Address
+        - name: araddr
+          dir: output
+          width: [AW] 
+        # Burst
+        - name: arburst
+          dir: output
+          width: [$bits(axi_pkg::axi_burst_e)]
+        # Size
+        - name: arsize 
+          dir: output
+          width: '3' 
+        # Length:
+        - name: arlen 
+          dir: output
+          width: '8'
+        # User:
+        - name: aruser 
+          dir: output
+          width: [UW]
+        # Id
+        - name: arid 
+          dir: output
+          width: [IW] 
+        # Lock
+        - name: arlock
+          dir: output
+          width: '1'
+        # Address valid
+        - name: arvalid
+          dir: output
+          width: '1'
+        # Device ready
+        - name: rready
+          dir: output
+          width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: core_araddr
+          type: logic [AW-1:0]
+          iscompare: 'False'
+          isrand: 'True'
+        - name: core_arvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_arburst
+          type: logic [$bits(axi_pkg::axi_burst_e)]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_arsize
+          type: logic [2:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_arlen
+          type: logic [7:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_aruser
+          type: logic [UW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_arid
+          type: logic [IW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_arlock
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: core_rready
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+    
+    ####################################################
+    ############### PRIM AXI WRITE #####################
+    ####################################################
+    "fuse_ctrl_prim_axi_write_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+      # Address Channel Write Address
+      - name: awaddr
+        dir: output
+        width: [AW]
+      # Burst
+      - name: awburst
+        dir: output
+        width: [$bits(axi_pkg::axi_burst_e)]
+      # size
+      - name: awsize
+        dir: output
+        width: '3' 
+      # Length:
+      - name: awlen
+        dir: output
+        width: '8'
+      # User
+      - name: awuser
+        dir: output
+        width: [UW]
+      # ID
+      - name: awid 
+        dir: output
+        width: [UW]
+      # Lock
+      - name: awlock
+        dir: output
+        width: '1'
+      # Write request valid
+      - name: awvalid
+        dir: output
+        width: '1'
+      # Write data
+      - name: wdata
+        dir: output
+        width: [DW]
+      # Write strobe
+      - name: wstrb
+        dir: output
+        width: [DW/8]
+      # Write data valid
+      - name: wvalid
+        dir: output
+        width: '1'
+      # Write last
+      - name: wlast
+        dir: output 
+        width: '1'
+      # Ready for write
+      - name: bready
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: prim_awaddr
+          type: logic [AW-1:0]
+          iscompare: 'False'
+          isrand: 'True'
+        - name: prim_awvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awburst
+          type: logic [$bits(axi_pkg::axi_burst_e)]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awsize
+          type: logic [2:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awlen
+          type: logic [7:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awuser
+          type: logic [UW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awid
+          type: logic [IW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_awlock
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_wdata
+          type: logic [DW-1:0]
+          iscompare: 'True'
+          isrand: 'False'
+        - name: prim_wstrb
+          type: logic [DW/8 - 1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_wvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False' 
+        - name: prim_wlast
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_bready
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+
+    ####################################################
+    ############### PRIM AXI READ ######################
+    ####################################################
+    "fuse_ctrl_prim_axi_read_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+        # Address Channel Read Address
+        - name: araddr
+          dir: output
+          width: [AW] 
+        # Burst
+        - name: arburst
+          dir: output
+          width: [$bits(axi_pkg::axi_burst_e)]
+        # Size
+        - name: arsize 
+          dir: output
+          width: '3' 
+        # Length:
+        - name: arlen 
+          dir: output
+          width: '8'
+        # User:
+        - name: aruser 
+          dir: output
+          width: [UW]
+        # Id
+        - name: arid 
+          dir: output
+          width: [IW] 
+        # Lock
+        - name: arlock
+          dir: output
+          width: '1'
+        # Address valid
+        - name: arvalid
+          dir: output
+          width: '1'
+        # Device ready
+        - name: rready
+          dir: output
+          width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: prim_araddr
+          type: logic [AW-1:0]
+          iscompare: 'False'
+          isrand: 'True'
+        - name: prim_arvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_arburst
+          type: logic [$bits(axi_pkg::axi_burst_e)]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_arsize
+          type: logic [2:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_arlen
+          type: logic [7:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_aruser
+          type: logic [UW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_arid
+          type: logic [IW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_arlock
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: prim_rready
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+
+    ####################################################
+    ############### SECREG AXI READ ####################
+    ####################################################
+    "fuse_ctrl_secreg_axi_read_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AW 
+        type: int
+        value: '32'
+      - name: DW 
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW 
+        type: int
+        value: '32'
+
+      ports:
+        # Address Channel Read Address
+        - name: araddr
+          dir: output
+          width: [AW] 
+        # Burst
+        - name: arburst
+          dir: output
+          width: [$bits(axi_pkg::axi_burst_e)]
+        # Size
+        - name: arsize 
+          dir: output
+          width: '3' 
+        # Length:
+        - name: arlen 
+          dir: output
+          width: '8'
+        # User:
+        - name: aruser 
+          dir: output
+          width: [UW]
+        # Id
+        - name: arid 
+          dir: output
+          width: [IW] 
+        # Lock
+        - name: arlock
+          dir: output
+          width: '1'
+        # Address valid
+        - name: arvalid
+          dir: output
+          width: '1'
+        # Device ready
+        - name: rready
+          dir: output
+          width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: secreg_araddr
+          type: logic [AW-1:0]
+          iscompare: 'False'
+          isrand: 'True'
+        - name: secreg_arvalid
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_arburst
+          type: logic [$bits(axi_pkg::axi_burst_e)]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_arsize
+          type: logic [2:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_arlen
+          type: logic [7:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_aruser
+          type: logic [UW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_arid
+          type: logic [IW-1:0]
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_arlock
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+        - name: secreg_rready
+          type: logic
+          iscompare: 'False'
+          isrand: 'False'
+
+    ####################################################
+    ############### FUSE CTRL IF #######################
+    ####################################################
+    "fuse_ctrl_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      parameters:
+      - name: AlertSyncOn
+        type: int
+        value: '3'
+      - name: RndConstLfrSeed
+        type: lfsr_seed_t
+        value: 'RndConstLfsrSeedDefault'
+      - name: RndCnstLfsrPerm
+        type: lsfr_perm_t
+        value: 'RndCnstLfsrPermDefault'
+      - name: MemInitFile
+        type: string 
+        value: "" 
+
+      ports:
+      # EDN interface
+      - name: edn_i 
+        dir: output
+        width: [$bits(edn_pkg::edn_req_t)]
+      # Alerts
+      - name: alert_rx_i
+        dir: output 
+        width: [NumAlerts * $bits(caliptra_prim_alert_pkg::alert_rx_t)]
+      # Observability to AST
+      - name: obs_ctrl_i
+        dir: output 
+        width: [$bits(ast_pkg::ast_obs_ctrl_t)]
+      # macro-specific power sequencing signal from AST
+      - name: otp_ast_pwr_seq_h_i
+        dir: output
+        width: [$bits(otp_ast_req_t)] 
+      # Scan
+      - name: scan_en_i
+        dir: output
+        width: '1'
+      - name: scan_rst_ni
+        dir: output
+        width: '1'
+      - name: scanmode_i
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: set_alert_rx_i
+          type: caliptra_prim_alert_pkg::alert_rx_t
+          iscompare: 'False'
+          isrand: 'False'
+
+      
+    ####################################################
+    ################## OTP LC IF #######################
+    ####################################################
+    "fuse_ctrl_lc_otp_in":
+      clock: "clk_i"
+      reset: "rst_ni"
+      reset_assertion_level: "False"
+
+      ports:
+      # macro specific test register from LC TAP
+      - name: lc_otp_vendor_test_i
+        dir: output
+        width: [$bits(lc_otp_vendor_test_req_t)]
+      # LC transition command interface
+      - name: lc_otp_program_i
+        dir: output
+        width: [$bits(lc_otp_program_req_t)]
+      # LC Broadcast inputs
+      - name: lc_dft_en_i
+        dir: output
+        width: [$bits(lc_ctrl_pkg::lc_tx_t)]
+      - name: lc_escalate_en_i
+        dir: output
+        width: [$bits(lc_ctrl_pkg::lc_tx_t)]
+      - name: lc_check_byp_en_i
+        dir: output
+        width: [$bits(lc_ctrl_pkg::lc_tx_t)]
+
+      response_info:
+        data: []
+        operation: 1'b0
+
+      transaction_constraints: []
+      transaction_vars:
+        - name: lc_dft_en_i
+          type: lc_ctrl_pkg::lc_tx_t
+          iscompare: 'False'
+          isrand: 'False'
+        - name: lc_escalate_en_i
+          type: lc_ctrl_pkg::lc_tx_t
+          iscompare: 'False'
+          isrand: 'False'
+        - name: lc_check_byp_en_i
+          type: lc_ctrl_pkg::lc_tx_t
+          iscompare: 'False'
+          isrand: 'False'
+
+        
+
+        

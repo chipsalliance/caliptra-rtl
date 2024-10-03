@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use fuse_ctrl_core_axi_read_out_pkg_hdl.vinfo
++incdir+@vinfodir
+src/fuse_ctrl_core_axi_read_out_if.sv
+src/fuse_ctrl_core_axi_read_out_driver_bfm.sv
+src/fuse_ctrl_core_axi_read_out_monitor_bfm.sv

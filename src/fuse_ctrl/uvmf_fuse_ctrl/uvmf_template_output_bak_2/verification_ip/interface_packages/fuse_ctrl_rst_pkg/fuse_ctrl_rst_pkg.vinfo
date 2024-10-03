@@ -1,0 +1,4 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use fuse_ctrl_rst_pkg_hdl.vinfo
++incdir+@vinfodir
+fuse_ctrl_rst_pkg.sv

@@ -1,0 +1,9 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ./secreg_axi_read_out_if_common.compile
+incdir:
+  - .
+src:
+  - src/secreg_axi_read_out_if_if.sv
+  - src/secreg_axi_read_out_if_monitor_bfm.sv
+  - src/secreg_axi_read_out_if_driver_bfm.sv

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -40,14 +40,10 @@ package lc_ctrl_pkg;
 
   // Note that changing this encoding has implications on isolation cell
   // values in RTL. Do not change this unless absolutely needed.
-  /*typedef enum logic [TxWidth-1:0] {
+  typedef enum logic [TxWidth-1:0] {
     On  = 4'b0101,
     Off = 4'b1010
-  } lc_tx_t;*/
-  localparam On = 4'b0101,
-                  Off = 4'b1010;
-  typedef logic [3:0]   lc_tx_t;
-
+  } lc_tx_t;
   parameter lc_tx_t LC_TX_DEFAULT = lc_tx_t'(Off);
 
   parameter int RmaSeedWidth = 32;
@@ -58,8 +54,10 @@ package lc_ctrl_pkg;
   typedef logic [LcKeymgrDivWidth-1:0] lc_keymgr_div_t;
 
   typedef struct packed {
-    logic [lc_ctrl_reg_pkg::HwRevFieldWidth-1:0] chip_gen;
-    logic [lc_ctrl_reg_pkg::HwRevFieldWidth-1:0] chip_rev;
+    logic [lc_ctrl_reg_pkg::SiliconCreatorIdWidth-1:0] silicon_creator_id;
+    logic [lc_ctrl_reg_pkg::ProductIdWidth-1:0]        product_id;
+    logic [lc_ctrl_reg_pkg::RevisionIdWidth-1:0]       revision_id;
+    logic [32-lc_ctrl_reg_pkg::RevisionIdWidth-1:0]    reserved;
   } lc_hw_rev_t;
 
   /////////////////////////////////////////////
@@ -149,7 +147,7 @@ package lc_ctrl_pkg;
   // Note: due to the nature of the lc_tx_or() function, it is possible that two
   // non-strictly "act" values may produce a strictly "act" value. If this is
   // of concern, e.g. if the output is consumed with a strict check on "act",
-  // consider using the caliptra_prim_lc_or_hardened primitive instead.
+  // consider using the caliptra_prim_lc_or_hardened caliptra_primitive instead.
   function automatic lc_tx_t lc_tx_or(lc_tx_t a, lc_tx_t b, lc_tx_t act);
     logic [TxWidth-1:0] a_in, b_in, act_in, out;
     a_in = a;

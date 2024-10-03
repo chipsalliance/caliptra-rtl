@@ -1,0 +1,39 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_rst:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: rst_ni
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: pwr_otp_i
+        reset_value: '''bz'
+        width: '[''$bits(pwrmgr_pkg::pwr_otp_req_t)'']'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: assert_rst
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: assert_otp_init
+        type: bit
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

@@ -1,0 +1,98 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_out_if:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AlertSyncOn
+        type: int
+        value: '3'
+      - name: RndConstLfrSeed
+        type: lfsr_seed_t
+        value: RndConstLfsrSeedDefault
+      - name: RndCnstLfsrPerm
+        type: lsfr_perm_t
+        value: RndCnstLfsrPermDefault
+      - name: MemInitFile
+        type: string
+      ports:
+      - dir: input
+        name: edn_o
+        reset_value: '''bz'
+        width: '[''$bits(edn_pkg::edn_req_t)'']'
+      - dir: input
+        name: intr_otp_operation_done_o
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: intr_otp_error_o
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: alert_tx_o
+        reset_value: '''bz'
+        width: '[''NumAlerts * $bits(caliptra_prim_alert_pkg::alert_tx_t)'']'
+      - dir: input
+        name: otp_obs_o
+        reset_value: '''bz'
+        width: '8'
+      - dir: input
+        name: otp_ast_pwr_seq_o
+        reset_value: '''bz'
+        width: '[''$bits(caliptra_otp_ctrl_pkg::otp_ast_req_t)'']'
+      - dir: input
+        name: pwr_otp_o
+        reset_value: '''bz'
+        width: '[''$bits(pwrmgr_pkg::pwr_otp_rsp_t)'']'
+      - dir: input
+        name: lc_otp_vendor_test_o
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_vendor_test_rsp_t)'']'
+      - dir: input
+        name: lc_otp_program_o
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_program_rsp_t)'']'
+      - dir: input
+        name: otp_lc_data_o
+        reset_value: '''bz'
+        width: '[''$bits(otp_lc_data_t)'']'
+      - dir: input
+        name: otp_broadcast_o
+        reset_value: '''bz'
+        width: '[''$bits(otp_broadcast_t)'']'
+      - dir: inout
+        name: otp_ext_voltage_h_io
+        reset_value: '''bz'
+        width: '1'
+      - dir: input
+        name: cio_test_o
+        reset_value: '''bz'
+        width: '[''OtpTestVectWidth'']'
+      - dir: input
+        name: cio_test_en_o
+        reset_value: '''bz'
+        width: '[''OtpTestVectWidth'']'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: otp_lc_data_o
+        type: otp_lc_data_t
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: pwr_otp_o
+        type: pwrmgr_pkg::pwr_otp_rsp_t
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

@@ -1,0 +1,10 @@
+uvmf:
+  util_components:
+    fuse_ctrl_scoreboard:
+      analysis_exports:
+      - name: expected_analysis_export
+        type: fuse_ctrl_read_transaction
+      - name: actual_analysis_export
+        type: fuse_ctrl_read_transaction
+      existing_library_component: 'True'
+      type: scoreboard

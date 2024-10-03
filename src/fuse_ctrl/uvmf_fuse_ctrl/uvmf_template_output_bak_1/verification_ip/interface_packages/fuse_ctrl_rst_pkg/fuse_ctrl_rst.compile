@@ -1,0 +1,3 @@
+needs:
+  - fuse_ctrl_rst_hvl.compile
+  - fuse_ctrl_rst_hdl.compile

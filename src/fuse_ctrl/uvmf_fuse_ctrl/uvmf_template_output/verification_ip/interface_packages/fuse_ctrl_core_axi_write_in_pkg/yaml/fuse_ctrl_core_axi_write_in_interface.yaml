@@ -1,0 +1,161 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_core_axi_write_in:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters:
+      - name: AW
+        type: int
+        value: '32'
+      - name: DW
+        type: int
+        value: '32'
+      - name: IW
+        type: int
+        value: '3'
+      - name: UW
+        type: int
+        value: '32'
+      ports:
+      - dir: output
+        name: awaddr
+        reset_value: '''bz'
+        width: '[''AW'']'
+      - dir: output
+        name: awburst
+        reset_value: '''bz'
+        width: '[''$bits(axi_pkg::axi_burst_e)'']'
+      - dir: output
+        name: awsize
+        reset_value: '''bz'
+        width: '3'
+      - dir: output
+        name: awlen
+        reset_value: '''bz'
+        width: '8'
+      - dir: output
+        name: awuser
+        reset_value: '''bz'
+        width: '[''UW'']'
+      - dir: output
+        name: awid
+        reset_value: '''bz'
+        width: '[''UW'']'
+      - dir: output
+        name: awlock
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: awvalid
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: wdata
+        reset_value: '''bz'
+        width: '[''DW'']'
+      - dir: output
+        name: wstrb
+        reset_value: '''bz'
+        width: '[''DW/8'']'
+      - dir: output
+        name: wvalid
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: wlast
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: bready
+        reset_value: '''bz'
+        width: '1'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: core_awaddr
+        type: logic [AW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awvalid
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awburst
+        type: logic [$bits(axi_pkg::axi_burst_e)]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awsize
+        type: logic [2:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awlen
+        type: logic [7:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awuser
+        type: logic [UW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awid
+        type: logic [IW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_awlock
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: core_wdata
+        type: logic [DW-1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_wstrb
+        type: logic [DW/8 - 1:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_wvalid
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_wlast
+        type: logic
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: core_bready
+        type: logic
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

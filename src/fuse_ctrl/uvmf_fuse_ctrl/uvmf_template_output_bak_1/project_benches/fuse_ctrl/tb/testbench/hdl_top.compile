@@ -1,0 +1,16 @@
+incdir:
+  - ${uvm_path}/src
+  - .
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+  - ../parameters/fuse_ctrl_parameters_pkg.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_rst_pkg/fuse_ctrl_rst_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_write_if_pkg/fuse_ctrl_core_axi_write_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_write_if_pkg/fuse_ctrl_prim_axi_write_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_core_axi_read_if_pkg/fuse_ctrl_core_axi_read_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_prim_axi_read_if_pkg/fuse_ctrl_prim_axi_read_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_secreg_axi_read_if_pkg/fuse_ctrl_secreg_axi_read_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_lc_otp_if_pkg/fuse_ctrl_lc_otp_if_hdl.compile
+  - ../../../../verification_ip/interface_packages/fuse_ctrl_in_if_pkg/fuse_ctrl_in_if_hdl.compile
+src:
+  - hdl_top.sv

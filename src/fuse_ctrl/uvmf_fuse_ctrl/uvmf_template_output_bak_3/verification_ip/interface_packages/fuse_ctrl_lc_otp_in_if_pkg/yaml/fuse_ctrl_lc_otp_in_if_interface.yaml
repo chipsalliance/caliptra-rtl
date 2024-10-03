@@ -1,0 +1,57 @@
+uvmf:
+  interfaces:
+    fuse_ctrl_lc_otp_in_if:
+      clock: clk_i
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: lc_otp_vendor_test_i
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_vendor_test_req_t)'']'
+      - dir: output
+        name: lc_otp_program_i
+        reset_value: '''bz'
+        width: '[''$bits(lc_otp_program_req_t)'']'
+      - dir: output
+        name: lc_dft_en_i
+        reset_value: '''bz'
+        width: '[''$bits(lc_ctrl_pkg::lc_tx_t)'']'
+      - dir: output
+        name: lc_escalate_en_i
+        reset_value: '''bz'
+        width: '[''$bits(lc_ctrl_pkg::lc_tx_t)'']'
+      - dir: output
+        name: lc_check_byp_en_i
+        reset_value: '''bz'
+        width: '[''$bits(lc_ctrl_pkg::lc_tx_t)'']'
+      reset: rst_ni
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: lc_dft_en_i
+        type: lc_ctrl_pkg::lc_tx_t
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: lc_escalate_en_i
+        type: lc_ctrl_pkg::lc_tx_t
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'False'
+        name: lc_check_byp_en_i
+        type: lc_ctrl_pkg::lc_tx_t
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

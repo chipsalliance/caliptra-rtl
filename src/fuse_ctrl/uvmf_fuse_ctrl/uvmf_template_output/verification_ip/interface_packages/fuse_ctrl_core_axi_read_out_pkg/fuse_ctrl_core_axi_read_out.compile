@@ -1,0 +1,3 @@
+needs:
+  - fuse_ctrl_core_axi_read_out_hvl.compile
+  - fuse_ctrl_core_axi_read_out_hdl.compile

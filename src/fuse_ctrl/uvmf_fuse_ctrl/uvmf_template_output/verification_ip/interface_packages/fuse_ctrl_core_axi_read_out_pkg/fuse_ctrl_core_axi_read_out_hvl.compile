@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./fuse_ctrl_core_axi_read_out_common.compile
+incdir:
+  - .
+src:
+  - fuse_ctrl_core_axi_read_out_pkg.sv
