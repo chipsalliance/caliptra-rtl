@@ -28,6 +28,7 @@ module caliptra_top_tb (
     );
 `endif
 
+    import axi_pkg::*;
     import soc_ifc_pkg::*;
     import caliptra_top_tb_pkg::*;
 
@@ -45,7 +46,6 @@ module caliptra_top_tb (
 `endif
 
     int                         cycleCnt;
-    int                         cycleCnt_Flag = '0;
 
 
     logic                       cptra_pwrgood;
@@ -54,56 +54,10 @@ module caliptra_top_tb (
     logic                       scan_mode;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
-    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_uds, cptra_obf_key_fe;
     
-    // logic [11:0][31:0]          cptra_uds_tb;
-    // logic [7:0][31:0]           cptra_fe_tb;
-    logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
-    logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
-
-    // logic [11:0][31:0]          cptra_uds_rand;
-    // logic [7:0][31:0]           cptra_fe_rand;
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
-
-    logic                       start_apb_fuse_sequence;
-
-    enum logic [5:0] {
-        S_APB_IDLE,
-        S_APB_WR_UDS,
-        S_APB_WR_FE,
-        S_APB_WR_SOC_STEPPING_ID,
-        S_APB_WR_FUSE_DONE,
-        S_APB_POLL_FLOW_ST,
-        S_APB_WR_BOOT_GO,
-        S_APB_WAIT_FW_TEST,
-        S_APB_POLL_LOCK,
-        S_APB_PRE_WR_CMD,
-        S_APB_WR_CMD,
-        S_APB_WR_DLEN,
-        S_APB_WR_DATAIN,
-        S_APB_WR_STATUS,
-        S_APB_WR_EXEC,
-        S_APB_WAIT_ERROR_AXS,
-        S_APB_RD_HW_ERROR_FATAL,
-        S_APB_WR_HW_ERROR_FATAL,
-        S_APB_RD_HW_ERROR_NON_FATAL,
-        S_APB_WR_HW_ERROR_NON_FATAL,
-        S_APB_DONE,
-        S_APB_RD_DLEN,
-        S_APB_RD_DATAOUT,
-        S_APB_RST_EXEC,
-        S_APB_ERROR
-    } n_state_apb, c_state_apb;
-
-    parameter FW_NUM_DWORDS         = 256;
-
-    logic [$clog2(FW_NUM_DWORDS)-1:0] apb_wr_count, apb_wr_count_nxt;
-    logic [31:0] apb_rd_count, apb_rd_count_nxt, dlen;
-    logic apb_enable_ph;
-    logic apb_xfer_end;
-    logic execute_mbox_rx_protocol;
 
     //jtag interface
     logic                       jtag_tck;    // JTAG clk
@@ -112,18 +66,26 @@ module caliptra_top_tb (
     logic                       jtag_trst_n; // JTAG Reset
     logic                       jtag_tdo;    // JTAG TDO
     logic                       jtag_tdoEn;  // JTAG TDO enable
-    //APB Interface
-    logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR;
-    logic [2:0]                          PPROT;
-    logic                                PSEL;
-    logic                                PENABLE;
-    logic                                PWRITE;
-    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA;
-    logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER;
 
-    logic                                PREADY;
-    logic                                PSLVERR;
-    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA;
+    // AXI Interface
+    axi_if #(
+        .AW(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
+        .DW(`CALIPTRA_AXI_DATA_WIDTH),
+        .IW(`CALIPTRA_AXI_ID_WIDTH),
+        .UW(`CALIPTRA_AXI_USER_WIDTH)
+    ) m_axi_bfm_if (.clk(core_clk), .rst_n(cptra_rst_b));
+    axi_if #(
+        .AW(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
+        .DW(CPTRA_AXI_DMA_DATA_WIDTH),
+        .IW(CPTRA_AXI_DMA_ID_WIDTH),
+        .UW(CPTRA_AXI_DMA_USER_WIDTH)
+    ) m_axi_if (.clk(core_clk), .rst_n(cptra_rst_b));
+    axi_if #(
+        .AW(AXI_SRAM_ADDR_WIDTH),
+        .DW(CPTRA_AXI_DMA_DATA_WIDTH),
+        .IW(CPTRA_AXI_DMA_ID_WIDTH),
+        .UW(CPTRA_AXI_DMA_USER_WIDTH)
+    ) axi_sram_if (.clk(core_clk), .rst_n(cptra_rst_b));
 
     // QSPI Interface
     logic                                qspi_clk;
@@ -139,7 +101,6 @@ module caliptra_top_tb (
     logic ready_for_fuses;
     logic ready_for_fw_push;
     logic mailbox_data_avail;
-    logic status_set;
     logic mbox_sram_cs;
     logic mbox_sram_we;
     logic [14:0] mbox_sram_addr;
@@ -161,42 +122,18 @@ module caliptra_top_tb (
 
     logic cptra_error_fatal;
     logic cptra_error_non_fatal;
-    logic [15:0] cptra_error_fatal_counter;
-    logic [15:0] cptra_error_non_fatal_counter;
-    logic cptra_error_fatal_dly_p;
-    logic cptra_error_non_fatal_dly_p;
-
-    logic rv_dma_resp_error;
-
-    logic mbox_apb_dataout_read_ooo;
-    logic mbox_ooo_read_done;
-    logic mbox_apb_dataout_read_no_lock;
-    logic mbox_no_lock_read_done;
-
-    logic [`CALIPTRA_APB_DATA_WIDTH-1:0] soc_ifc_hw_error_wdata;
 
     //Interrupt flags
-    //logic nmi_int;
-    //logic soft_int;
-    //logic timer_int;
     logic int_flag;
     logic cycleCnt_smpl_en;
-    int cycleCnt_ff;
 
     //Reset flags
     logic assert_hard_rst_flag;
     logic deassert_hard_rst_flag;
     logic assert_rst_flag_from_service;
-    logic assert_rst_flag_from_fatal;
-    logic assert_rst_flag;
     logic deassert_rst_flag_from_service;
-    int   count_deassert_rst_flag_from_fatal;
-    logic deassert_rst_flag_from_fatal;
-    logic deassert_rst_flag;
 
     el2_mem_if el2_mem_export ();
-
-    logic [FW_NUM_DWORDS-1:0][31:0] fw_blob;
 
 `ifndef VERILATOR
     always
@@ -205,854 +142,46 @@ module caliptra_top_tb (
     end // clk_gen
 `endif
     
-    always@(negedge core_clk) begin
-        if(!cptra_rst_b) cycleCnt_ff <= 'h0;
-        else if(cycleCnt_smpl_en) cycleCnt_ff <= cycleCnt;
-    end
 
-    always@(negedge core_clk) begin
-        if((cycleCnt == cycleCnt_ff + 2000) && int_flag) begin
-            force caliptra_top_dut.soft_int = 'b1;
-        end
-        
-        else if((cycleCnt == cycleCnt_ff + 7000) && int_flag) begin
-            force caliptra_top_dut.timer_int = 'b1;
-        end
-        
-        else if((c_state_apb == S_APB_WR_EXEC) && apb_xfer_end && int_flag) begin
-            //Wait for APB flow to be done before toggling generic_input_wires
-            generic_input_wires <= {$urandom, $urandom}; //Toggle wires
-        end
-        
-        else if((cycleCnt == cycleCnt_ff + 15000) && int_flag) begin
-            force caliptra_top_dut.soft_int = 'b1;
-        end
-        
-        else if (!ras_test_ctrl.error_injection_seen) begin
-            release caliptra_top_dut.soft_int;
-            release caliptra_top_dut.timer_int;
-            generic_input_wires <= 'h0;
-        end
+caliptra_top_tb_soc_bfm soc_bfm_inst (
+    .core_clk        (core_clk        ),
 
-        else if (ras_test_ctrl.reset_generic_input_wires) begin
-            `ifdef VERILATOR
-            generic_input_wires <= {32'h72746C76, ERROR_NONE_SET}; /* 32'h72746c76 is the big-endian ASCII representation of 'vltr' (r t l v) */
-            `else
-            generic_input_wires <= {32'h0, ERROR_NONE_SET};
-            `endif
-        end
+    .cptra_pwrgood   (cptra_pwrgood   ),
+    .cptra_rst_b     (cptra_rst_b     ),
 
-        else if (c_state_apb == S_APB_WAIT_ERROR_AXS && rv_dma_resp_error) begin
-                generic_input_wires <= {32'h0, DMA_ERROR_OBSERVED};
-        end
+    .BootFSM_BrkPoint(BootFSM_BrkPoint),
+    .cycleCnt        (cycleCnt        ),
 
-        else if (c_state_apb == S_APB_RD_HW_ERROR_FATAL && apb_xfer_end) begin
-            if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_LOW]) begin
-                generic_input_wires <= {32'h0, ICCM_FATAL_OBSERVED};
-            end
-            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_ECC_UNC_LOW]) begin
-                generic_input_wires <= {32'h0, DCCM_FATAL_OBSERVED};
-            end
-            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_LOW]) begin
-                generic_input_wires <= {32'h0, NMI_FATAL_OBSERVED};
-            end
-            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW]) begin
-                generic_input_wires <= {32'h0, CRYPTO_ERROR_OBSERVED};
-            end
-            else begin
-                generic_input_wires <= {32'h0, ERROR_NONE_SET};
-            end
-        end
+    .cptra_obf_key   (cptra_obf_key   ),
 
-        else if (c_state_apb == S_APB_RD_HW_ERROR_NON_FATAL && apb_xfer_end) begin
-            if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_LOW]) begin
-                generic_input_wires <= {32'h0, PROT_NO_LOCK_NON_FATAL_OBSERVED};
-            end
-            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_LOW]) begin
-                generic_input_wires <= {32'h0, PROT_OOO_NON_FATAL_OBSERVED};
-            end
-            else if (PRDATA[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW]) begin
-                generic_input_wires <= {32'h0, MBOX_NON_FATAL_OBSERVED};
-            end
-            else begin
-                generic_input_wires <= {32'h0, ERROR_NONE_SET};
-            end
-        end
+    .cptra_uds_rand  (cptra_uds_rand  ),
+    .cptra_fe_rand   (cptra_fe_rand   ),
+    .cptra_obf_key_tb(cptra_obf_key_tb),
 
-    end
+    .m_axi_bfm_if(m_axi_bfm_if),
 
-    always@(negedge core_clk or negedge cptra_pwrgood) begin
-        // This persists across soft reset
-        if (!cptra_pwrgood) begin
-            soc_ifc_hw_error_wdata <= '0;
-        end
-        else if (c_state_apb inside {S_APB_RD_HW_ERROR_FATAL, S_APB_RD_HW_ERROR_NON_FATAL} && apb_xfer_end) begin
-            // HW ERROR registers are W1C, capture the set bits
-            soc_ifc_hw_error_wdata <= PRDATA;
-        end
-        else if (c_state_apb inside {S_APB_WR_HW_ERROR_FATAL, S_APB_WR_HW_ERROR_NON_FATAL} && apb_xfer_end) begin
-            // Clear after completing the write
-            soc_ifc_hw_error_wdata <= 0;
-        end
-    end
+    .ready_for_fuses   (ready_for_fuses   ),
+    .ready_for_fw_push (ready_for_fw_push ),
+    .mailbox_data_avail(mailbox_data_avail),
 
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            cptra_error_fatal_counter     <= 16'h0;
-            cptra_error_non_fatal_counter <= 16'h0;
-        end
-        else begin
-            cptra_error_fatal_counter     <= cptra_error_fatal     ? (cptra_error_fatal_counter     + 16'h1) : 16'h0;
-            cptra_error_non_fatal_counter <= cptra_error_non_fatal ? (cptra_error_non_fatal_counter + 16'h1) : 16'h0;
-        end
-    end
-    // Pulse fires about 640ns after the original error interrupt occurs
-    always_comb cptra_error_fatal_dly_p     = cptra_error_fatal_counter     == 16'h0040;
-    always_comb cptra_error_non_fatal_dly_p = cptra_error_non_fatal_counter == 16'h0040;
+    .ras_test_ctrl(ras_test_ctrl),
 
-    always_comb assert_rst_flag_from_fatal = c_state_apb == S_APB_ERROR;
-    always@(negedge core_clk) begin
-        if (!cptra_pwrgood) begin
-            count_deassert_rst_flag_from_fatal <= 0;
-        end
-        // Start counting after the fatal flag asserts reset, and continue
-        // counting until the reset is deasserted
-        else if (assert_rst_flag_from_fatal || (!cptra_rst_b && |count_deassert_rst_flag_from_fatal)) begin
-            count_deassert_rst_flag_from_fatal <= count_deassert_rst_flag_from_fatal + 1;
-        end
-        else begin
-            count_deassert_rst_flag_from_fatal <= 0;
-        end
-    end
-    // Leave reset asserted for 32 clock cycles
-    always_comb deassert_rst_flag_from_fatal = count_deassert_rst_flag_from_fatal == 31;
+    .generic_input_wires(generic_input_wires),
 
-    assert property (@(posedge core_clk) c_state_apb == S_APB_WR_FUSE_DONE |-> !cptra_error_non_fatal) else begin
-        $error("cptra_error_non_fatal observed during boot up");
-        $finish;
-    end
-    assert property (@(posedge core_clk) c_state_apb == S_APB_WR_FUSE_DONE |-> !cptra_error_fatal) else begin
-        $error("cptra_error_fatal observed during boot up");
-        $finish;
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if(!cptra_rst_b) begin
-            mbox_apb_dataout_read_ooo <= 1'b0;
-        end
-        else if(ras_test_ctrl.do_ooo_access) begin
-            mbox_apb_dataout_read_ooo <= 1'b1;
-        end
-        else if (mbox_apb_dataout_read_ooo && (c_state_apb == S_APB_RD_DATAOUT) && (apb_rd_count == dlen)) begin
-            mbox_apb_dataout_read_ooo <= 1'b0;
-        end
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if(!cptra_rst_b) begin
-            mbox_apb_dataout_read_no_lock <= 1'b0;
-        end
-        else if(ras_test_ctrl.do_no_lock_access) begin
-            mbox_apb_dataout_read_no_lock <= 1'b1;
-        end
-        else if (mbox_apb_dataout_read_no_lock && (c_state_apb == S_APB_RD_DATAOUT) && (apb_rd_count == dlen)) begin
-            mbox_apb_dataout_read_no_lock <= 1'b0;
-        end
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            mbox_ooo_read_done <= 1'b0;
-        end
-        else if (mbox_apb_dataout_read_ooo && (c_state_apb == S_APB_RD_DATAOUT) && (apb_rd_count == dlen)) begin
-            mbox_ooo_read_done <= 1'b1;
-        end
-        else if (c_state_apb == S_APB_WR_HW_ERROR_NON_FATAL)
-            mbox_ooo_read_done <= 1'b0;
-        else if (ras_test_ctrl.reset_ooo_done_flag)
-            mbox_ooo_read_done <= 1'b0;
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            mbox_no_lock_read_done <= 1'b0;
-        end
-        else if (mbox_apb_dataout_read_no_lock && (c_state_apb == S_APB_RD_DATAOUT) && (apb_rd_count == dlen)) begin
-            mbox_no_lock_read_done <= 1'b1;
-        end
-        else if (c_state_apb == S_APB_WR_HW_ERROR_NON_FATAL)
-            mbox_no_lock_read_done <= 1'b0;
-        else if (ras_test_ctrl.reset_no_lock_done_flag)
-            mbox_no_lock_read_done <= 1'b0;
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            execute_mbox_rx_protocol <= 'b0;
-        end
-        else if (c_state_apb == S_APB_WR_EXEC) begin
-            execute_mbox_rx_protocol <= 'b1;
-        end
-        else if (execute_mbox_rx_protocol && ((c_state_apb == S_APB_RST_EXEC) && apb_xfer_end)) begin
-            execute_mbox_rx_protocol <= 'b0;
-        end
-    end
-
-    initial begin
-        cptra_pwrgood = 1'b0;
-        BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
-        cptra_rst_b = 1'b0;
-        start_apb_fuse_sequence = 1'b0;
-        //TIE-OFF
-        PPROT = '0;
-
-`ifndef VERILATOR
-        if($test$plusargs("dumpon")) $dumpvars;
-`endif
-
-        if($test$plusargs("RAND_DOE_VALUES")) begin
-            //cptra_obf_key = cptra_obf_key_tb;
-            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
-                cptra_obf_key[dword] = cptra_obf_key_tb[dword];
-            end
-
-            cptra_uds_tb = cptra_uds_rand;
-            cptra_fe_tb = cptra_fe_rand;
-        end
-        else begin
-            //Key for UDS
-            cptra_obf_key_uds = 256'h54682728db5035eb04b79645c64a95606abb6ba392b6633d79173c027c5acf77;
-            cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
-
-            //Key for FE
-            cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-            cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
-                           /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                           256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                           256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
-
-            //swizzle the key so it matches the endianness of AES block
-            //used for visual inspection of uds/fe flow, manually switching keys and checking both
-            for (int dword = 0; dword < $bits(cptra_obf_key/32); dword++) begin
-                //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-                cptra_obf_key[dword] = cptra_obf_key_fe[dword];
-            end
-        end
-        
-    end
-
-    assign assert_rst_flag   =   assert_rst_flag_from_service ||   assert_rst_flag_from_fatal;
-    assign deassert_rst_flag = deassert_rst_flag_from_service || deassert_rst_flag_from_fatal;
-    always @(posedge core_clk) begin
-        //Reset/pwrgood assertion during runtime
-        if (cycleCnt == 15 || deassert_hard_rst_flag) begin
-            $display ("\n\n\n\n\n\n");
-            $display ("SoC: Asserting cptra_pwrgood and breakpoint\n");
-            //assert power good
-            cptra_pwrgood <= 1'b1;
-            //BootFSM_BrkPoint <= 1'b1;
-        end
-        else if (cycleCnt == 20 || deassert_rst_flag) begin
-            $display ("SoC: De-Asserting cptra_rst_b\n");
-            //de-assert reset
-            cptra_rst_b <= 1'b1;
-        end
-        else if (assert_hard_rst_flag) begin
-            cptra_pwrgood <= 'b0;
-            cptra_rst_b <= 'b0;
-            start_apb_fuse_sequence <= 1'b0;
-        end
-        else if (assert_rst_flag) begin
-            cptra_rst_b <= 'b0;
-            start_apb_fuse_sequence <= 1'b0;
-        end
-        //wait for fuse indication
-        else if (ready_for_fuses == 1'b0) begin
-            //nop
-            cycleCnt_Flag <= cycleCnt;
-        end
-        else if (cycleCnt == cycleCnt_Flag + 5) begin
-            start_apb_fuse_sequence <= 1'b1;
-        end
-    end
-
-    always@(negedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            dlen <= '0;
-        end
-        else if ((c_state_apb == S_APB_RD_DLEN) && apb_xfer_end) begin
-            dlen <= PRDATA;
-        end
-    end
-
-    always@(posedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            c_state_apb  <= S_APB_IDLE;
-            apb_wr_count <= '0;
-            apb_rd_count <= '0;
-            apb_enable_ph <= 0;
-        end
-        else begin
-            c_state_apb  <= n_state_apb;
-            apb_wr_count <= apb_wr_count_nxt;
-            apb_rd_count <= apb_rd_count_nxt;
-            //next phase is an access phase if this is setup phase OR it's access and responder isn't ready
-            apb_enable_ph <= (PSEL & ~PENABLE) | (PSEL & PENABLE & ~PREADY);
-        end
-        if (c_state_apb != n_state_apb) begin
-            case (n_state_apb)
-                S_APB_WR_UDS: begin
-                    $display ("CLP: Ready for fuse download\n");
-                    $display ("SoC: Writing obfuscated UDS to fuse bank\n");
-                end
-                S_APB_WR_FE: begin
-                    $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
-                end
-                S_APB_WR_SOC_STEPPING_ID: begin
-                    $display ("SoC: Writing SOC Stepping ID to fuse bank\n");
-                end
-                S_APB_WR_FUSE_DONE: begin
-                    $display ("SoC: Writing fuse done register\n");
-                end
-                S_APB_POLL_FLOW_ST: begin
-                    $display ("SoC: Polling Flow Status\n");
-                end
-                S_APB_WR_BOOT_GO: begin
-                    $display ("SoC: Writing BootGo register\n");
-                end
-                S_APB_WAIT_FW_TEST: begin
-                    $display ("CLP: ROM Flow in progress...\n");
-                end
-                S_APB_POLL_LOCK: begin
-                    $display ("CLP: Ready for firmware push\n");
-                    $display ("SoC: Requesting mailbox lock\n");
-                end
-                S_APB_PRE_WR_CMD: begin
-                    $display ("SoC: Lock granted\n");
-                end
-                S_APB_WR_CMD: begin
-                    $display ("SoC: Writing the Command Register\n");
-                end
-                S_APB_WR_DLEN: begin
-                    $display ("SoC: Writing the Data Length Register\n");
-                end
-                S_APB_WR_DATAIN: begin
-                    $display ("SoC: Writing the Firmware into Data-in Register\n");
-                end
-                S_APB_WR_EXEC: begin
-                    $display ("SoC: Setting the Execute Register\n");
-                end
-                S_APB_WR_STATUS: begin
-                    $display ("SoC: Writing the Mbox Status Register\n");
-                end
-                S_APB_WAIT_ERROR_AXS: begin
-                    $display("SoC: Waiting to see cptra_error_fatal/non_fatal\n");
-                end
-                S_APB_RD_HW_ERROR_FATAL: begin
-                    $display("SoC: Observed cptra_error_fatal; reading Caliptra register\n");
-                end
-                S_APB_WR_HW_ERROR_FATAL: begin
-                    $display("SoC: Observed cptra_error_fatal; writing to clear Caliptra register\n");
-                end
-                S_APB_RD_HW_ERROR_NON_FATAL: begin
-                    $display("SoC: Observed cptra_error_non_fatal; reading Caliptra register\n");
-                end
-                S_APB_WR_HW_ERROR_NON_FATAL: begin
-                    $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
-                end
-                S_APB_DONE: begin
-                end
-                S_APB_RD_DLEN: begin
-                    $display("SoC: Reading the Data Length Register\n");
-                end
-                S_APB_RD_DATAOUT: begin
-                    $display("SoC: Reading the Data Out Register\n");
-                end
-                S_APB_RST_EXEC: begin
-                    $display("SoC: Resetting the Execute Register\n");
-                end
-                default: begin
-                    $display("Entering unexpected APB state: %p", n_state_apb);
-                end
-            endcase
-        end
-    end
-
-    always_comb begin
-        apb_wr_count_nxt = 0;
-        apb_rd_count_nxt = 0;
-        case (c_state_apb) inside
-            S_APB_IDLE: begin
-                if (start_apb_fuse_sequence)
-                    n_state_apb = S_APB_WR_UDS;
-                else
-                    n_state_apb = S_APB_IDLE;
-            end
-            //load fuses
-            S_APB_WR_UDS: begin
-                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_UDS_DWORDS-1)) begin
-                    n_state_apb = S_APB_WR_FE;
-                    apb_wr_count_nxt = '0;
-                end
-                else if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WR_UDS;
-                    apb_wr_count_nxt = apb_wr_count + 1;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_UDS;
-                    apb_wr_count_nxt = apb_wr_count;
-                end
-            end
-            S_APB_WR_FE: begin
-                if (apb_xfer_end && apb_wr_count == (`CLP_OBF_FE_DWORDS-1)) begin
-                    n_state_apb = S_APB_WR_SOC_STEPPING_ID;
-                    apb_wr_count_nxt = '0;
-                end
-                else if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WR_FE;
-                    apb_wr_count_nxt = apb_wr_count + 1;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_FE;
-                    apb_wr_count_nxt = apb_wr_count;
-                end
-            end
-            S_APB_WR_SOC_STEPPING_ID: begin
-                if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WR_FUSE_DONE;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_SOC_STEPPING_ID;
-                end
-            end
-            //set fuse done
-            S_APB_WR_FUSE_DONE: begin
-                if (apb_xfer_end) begin
-                    if(BootFSM_BrkPoint) begin
-                       n_state_apb = S_APB_POLL_FLOW_ST;
-                    end
-                    else begin
-                       n_state_apb = S_APB_WAIT_FW_TEST;
-                    end
-                end
-                else begin
-                    n_state_apb = S_APB_WR_FUSE_DONE;
-                end
-            end
-            S_APB_POLL_FLOW_ST: begin
-                if (apb_xfer_end && (PRDATA[`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW] == 0)) begin
-                    n_state_apb = S_APB_WR_BOOT_GO;
-                end
-                else begin
-                    n_state_apb = S_APB_POLL_FLOW_ST;
-                end
-            end
-            //Write BootGo register
-            S_APB_WR_BOOT_GO: begin
-                if(apb_xfer_end) begin
-                   n_state_apb = S_APB_WAIT_FW_TEST;
-                end
-                else begin
-                   n_state_apb = S_APB_WR_BOOT_GO;
-                end
-            end
-        
-            //This is for Caliptra Demo, smoke tests will stop here since they don't set ready for fw
-            //wait for fw req
-            S_APB_WAIT_FW_TEST: begin
-                if (ready_for_fw_push & (apb_wr_count == 5)) begin
-                    n_state_apb = S_APB_POLL_LOCK;
-                    apb_wr_count_nxt = 0;
-                end
-                else if (ready_for_fw_push) begin
-                    n_state_apb = S_APB_WAIT_FW_TEST;
-                    apb_wr_count_nxt = apb_wr_count + 1;
-                end
-                else if (ras_test_ctrl.error_injection_seen) begin
-                    n_state_apb = S_APB_WAIT_ERROR_AXS;
-                end
-                else begin
-                    n_state_apb = S_APB_WAIT_FW_TEST;
-                    apb_wr_count_nxt = 0;
-                end
-            end
-            // poll for lock register
-            S_APB_POLL_LOCK: begin
-                if (apb_xfer_end && (PRDATA != 0)) begin
-                    n_state_apb = mbox_apb_dataout_read_ooo ? S_APB_RD_DLEN : S_APB_WR_CMD;
-                end
-                else begin
-                    n_state_apb = S_APB_POLL_LOCK;
-                end
-            end
-            S_APB_PRE_WR_CMD: begin
-                if (apb_wr_count == 5) begin
-                    n_state_apb = S_APB_WR_CMD;
-                    apb_wr_count_nxt = 0;
-                end
-                else begin
-                    n_state_apb = S_APB_PRE_WR_CMD;
-                    apb_wr_count_nxt = apb_wr_count + 1;
-                end
-            end
-            //write to MBOX_ADDR_CMD
-            S_APB_WR_CMD: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_WR_DLEN;
-                else
-                    n_state_apb = S_APB_WR_CMD;
-            end
-            // write to MBOX_ADDR_DLEN
-            S_APB_WR_DLEN: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_WR_DATAIN;
-                else
-                    n_state_apb = S_APB_WR_DLEN;
-            end
-            // write a random block in
-            S_APB_WR_DATAIN: begin
-                if (apb_xfer_end && apb_wr_count == (FW_NUM_DWORDS-1)) begin
-                    n_state_apb = S_APB_WR_EXEC;
-                    apb_wr_count_nxt = '0;
-                end
-                else if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WR_DATAIN;
-                    apb_wr_count_nxt = apb_wr_count + 1;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_DATAIN;
-                    apb_wr_count_nxt = apb_wr_count;
-                end
-            end
-            // execute
-            S_APB_WR_EXEC: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_DONE;
-                else
-                    n_state_apb = S_APB_WR_EXEC;
-            end
-            // status
-            S_APB_WR_STATUS: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_DONE;
-                else
-                    n_state_apb = S_APB_WR_STATUS;
-            end
-            S_APB_WAIT_ERROR_AXS: begin
-                if (cptra_error_fatal_dly_p) begin
-                    n_state_apb = S_APB_RD_HW_ERROR_FATAL;
-                end
-                else if (cptra_error_non_fatal_dly_p) begin
-                    n_state_apb = S_APB_RD_HW_ERROR_NON_FATAL;
-                end
-                else if (soc_ifc_hw_error_wdata) begin
-                    n_state_apb = S_APB_WR_HW_ERROR_FATAL;
-                end
-                else if (ras_test_ctrl.do_no_lock_access) begin
-                    n_state_apb = S_APB_RD_DLEN;
-                end
-                else if (mbox_apb_dataout_read_ooo && !mbox_ooo_read_done) begin
-                    n_state_apb = S_APB_POLL_LOCK;
-                end
-                else begin
-                    n_state_apb = S_APB_WAIT_ERROR_AXS;
-                end
-            end
-            S_APB_RD_HW_ERROR_FATAL: begin
-                // Go to ERROR state to wait for cptra_rst_b to assert
-                if (apb_xfer_end) begin
-                    n_state_apb = S_APB_ERROR;
-                end
-                else begin
-                    n_state_apb = S_APB_RD_HW_ERROR_FATAL;
-                end
-            end
-            S_APB_WR_HW_ERROR_FATAL: begin
-                if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WAIT_ERROR_AXS;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_HW_ERROR_FATAL;
-                end
-            end
-            S_APB_RD_HW_ERROR_NON_FATAL: begin
-                if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WR_HW_ERROR_NON_FATAL;
-                end
-                else begin
-                    n_state_apb = S_APB_RD_HW_ERROR_NON_FATAL;
-                end
-            end
-            S_APB_WR_HW_ERROR_NON_FATAL: begin
-                if (apb_xfer_end) begin
-                    n_state_apb = S_APB_WAIT_ERROR_AXS;
-                end
-                else begin
-                    n_state_apb = S_APB_WR_HW_ERROR_NON_FATAL;
-                end
-            end
-            S_APB_DONE: begin
-                apb_wr_count_nxt = '0;
-                apb_rd_count_nxt = '0;
-                if (mailbox_data_avail && execute_mbox_rx_protocol)
-                    n_state_apb = S_APB_RD_DLEN;
-                else if (mailbox_data_avail && ~status_set && ~execute_mbox_rx_protocol)
-                    n_state_apb = S_APB_WR_STATUS;
-                else
-                    n_state_apb = S_APB_DONE;
-            end
-            S_APB_RD_DLEN: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_RD_DATAOUT;
-                else
-                    n_state_apb = S_APB_RD_DLEN;
-            end
-            S_APB_RD_DATAOUT: begin
-                if (apb_xfer_end && (apb_rd_count == dlen)) begin
-                    n_state_apb = (mbox_no_lock_read_done || mbox_ooo_read_done) ? S_APB_WAIT_ERROR_AXS : S_APB_RST_EXEC;
-                    apb_rd_count_nxt = '0;
-                end
-                else if (apb_xfer_end) begin
-                    n_state_apb = S_APB_RD_DATAOUT;
-                    apb_rd_count_nxt = apb_rd_count + 1;
-                end
-                else begin
-                    n_state_apb = S_APB_RD_DATAOUT;
-                    apb_rd_count_nxt = apb_rd_count;
-                end
-            end
-            S_APB_RST_EXEC: begin
-                if (apb_xfer_end)
-                    n_state_apb = S_APB_DONE;
-                else
-                    n_state_apb = S_APB_RST_EXEC;
-            end
-            default: begin
-                apb_wr_count_nxt = apb_wr_count;
-                apb_rd_count_nxt = apb_rd_count;
-                n_state_apb = S_APB_ERROR;
-            end
-        endcase
-    end
+    .cptra_error_fatal(cptra_error_fatal),
+    .cptra_error_non_fatal(cptra_error_non_fatal),
     
-    always@(posedge core_clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b) begin
-            status_set  <= '0;
-        end else begin
-            status_set <= ~mailbox_data_avail ? '0 :
-                          (c_state_apb == S_APB_WR_STATUS) ? '1 : status_set;
-        end
-    end
+    //Interrupt flags
+    .int_flag(int_flag),
+    .cycleCnt_smpl_en(cycleCnt_smpl_en),
 
-    assign apb_xfer_end = PSEL && PENABLE && PREADY;
-    always@(posedge core_clk) begin
-        if ((n_state_apb == S_APB_WR_DATAIN) && apb_xfer_end)
-            fw_blob[apb_wr_count_nxt] <= $urandom;
-    end
-    always_comb begin
-        case (c_state_apb) inside
-            S_APB_WR_UDS: begin
-                PADDR      = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_0 + 4 * apb_wr_count;
-                PWDATA     = cptra_uds_tb[apb_wr_count];
-            end
-            S_APB_WR_FE: begin
-                PADDR      = `CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * apb_wr_count;
-                PWDATA     = cptra_fe_tb[apb_wr_count];
-            end
-            S_APB_WR_SOC_STEPPING_ID: begin
-                PADDR      = `CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID;
-                PWDATA     = $urandom();
-            end
-            S_APB_WR_FUSE_DONE: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
-                PWDATA     = 32'h00000001;
-            end
-            S_APB_POLL_FLOW_ST: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS; 
-                PWDATA     = '0;
-            end
-            S_APB_WR_BOOT_GO: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO; 
-                PWDATA     = 32'h00000001;
-            end
-            S_APB_POLL_LOCK: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_LOCK;
-                PWDATA     = '0;
-            end
-            S_APB_WR_CMD: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_CMD;
-                PWDATA     = 32'hBA5EBA11;
-            end
-            S_APB_WR_DLEN: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_DLEN;
-                PWDATA     = FW_NUM_DWORDS*4;
-            end
-            S_APB_WR_DATAIN: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_DATAIN;
-                PWDATA     = fw_blob[apb_wr_count];
-            end
-            S_APB_WR_EXEC: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_EXECUTE;
-                PWDATA     = 32'h00000001;
-            end
-            S_APB_WR_STATUS: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_STATUS;
-                PWDATA     = 32'h00000001;
-            end
-            S_APB_RD_HW_ERROR_FATAL: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
-                PWDATA     = soc_ifc_hw_error_wdata;
-            end
-            S_APB_WR_HW_ERROR_FATAL: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL;
-                PWDATA     = soc_ifc_hw_error_wdata;
-            end
-            S_APB_RD_HW_ERROR_NON_FATAL: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL;
-                PWDATA     = soc_ifc_hw_error_wdata;
-            end
-            S_APB_WR_HW_ERROR_NON_FATAL: begin
-                PADDR      = `CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL;
-                PWDATA     = soc_ifc_hw_error_wdata;
-            end
-            S_APB_DONE: begin
-                PADDR      = '0;
-                PWDATA     = '0;
-            end
-            S_APB_RD_DLEN: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_DLEN;
-                PWDATA     = dlen;
-            end
-            S_APB_RD_DATAOUT: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_DATAOUT;
-                PWDATA     = '0;
-            end
-            S_APB_RST_EXEC: begin
-                PADDR      = `CLP_MBOX_CSR_MBOX_EXECUTE;
-                PWDATA     = '0;
-            end
-            default: begin
-                PADDR      = '0;
-                PWDATA     = '0;
-            end
-        endcase
-    end
-    always_comb begin
-        PENABLE = apb_enable_ph;
-        case (c_state_apb) inside
-            S_APB_IDLE: begin
-                PSEL       = 0;
-                PWRITE     = 0;
-                PAUSER     = 0;
-            end
-            S_APB_WR_UDS: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = 0;
-            end
-            S_APB_WR_FE: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = 0;
-            end
-            S_APB_WR_SOC_STEPPING_ID: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = 0;
-            end
-            S_APB_WR_FUSE_DONE: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = 0;
-            end
-            S_APB_POLL_FLOW_ST: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = 0;
-            end
-            S_APB_WR_BOOT_GO: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = 0;
-            end
-            S_APB_POLL_LOCK: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = '1;
-            end
-            S_APB_WR_CMD: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_WR_DLEN: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_WR_DATAIN: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_WR_EXEC: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_WR_STATUS: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_RD_HW_ERROR_FATAL: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = '1;
-            end
-            S_APB_WR_HW_ERROR_FATAL: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_RD_HW_ERROR_NON_FATAL: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = '1;
-            end
-            S_APB_WR_HW_ERROR_NON_FATAL: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            S_APB_DONE: begin
-                PSEL       = 0;
-                PWRITE     = 0;
-                PAUSER     = 0;
-            end
-            S_APB_RD_DLEN: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = '1; //TODO - which value?
-            end
-            S_APB_RD_DATAOUT: begin
-                PSEL       = 1;
-                PWRITE     = 0;
-                PAUSER     = '1;
-            end
-            S_APB_RST_EXEC: begin
-                PSEL       = 1;
-                PWRITE     = 1;
-                PAUSER     = '1;
-            end
-            default: begin
-                PSEL       = 0;
-                PWRITE     = 0;
-                PAUSER     = 0;
-            end
-        endcase
-    end
+    .assert_hard_rst_flag(assert_hard_rst_flag),
+    .deassert_hard_rst_flag(deassert_hard_rst_flag),
+    .assert_rst_flag_from_service(assert_rst_flag_from_service),
+    .deassert_rst_flag_from_service(deassert_rst_flag_from_service)
 
+);
+    
 // JTAG DPI
 jtagdpi #(
     .Name           ("jtag0"),
@@ -1085,16 +214,13 @@ caliptra_top caliptra_top_dut (
     .jtag_tdo(jtag_tdo),
     .jtag_tdoEn(jtag_tdoEn),
     
-    .PADDR(PADDR),
-    .PPROT(PPROT),
-    .PAUSER(PAUSER),
-    .PENABLE(PENABLE),
-    .PRDATA(PRDATA),
-    .PREADY(PREADY),
-    .PSEL(PSEL),
-    .PSLVERR(),
-    .PWDATA(PWDATA),
-    .PWRITE(PWRITE),
+    //SoC AXI Interface
+    .s_axi_w_if(m_axi_bfm_if.w_sub),
+    .s_axi_r_if(m_axi_bfm_if.r_sub),
+
+    //AXI DMA Interface
+    .m_axi_w_if(m_axi_if.w_mgr),
+    .m_axi_r_if(m_axi_if.r_mgr),
 
     .qspi_clk_o (qspi_clk),
     .qspi_cs_no (qspi_cs_n),
@@ -1126,6 +252,8 @@ caliptra_top caliptra_top_dut (
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(),
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
+
+    .recovery_data_avail(1'b1/*TODO*/),
 
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal    ),
@@ -1249,68 +377,72 @@ caliptra_top_tb_services #(
 
 );
 
-`define RV_INST caliptra_top_dut.rvtop
-`define RV_IDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]
-`define RV_DDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_DDMA]
-task force_ahb_dma_read(input logic [31:0] address);
-    while(`RV_INST.dma_hsel) @(posedge core_clk);
-    force `RV_IDMA_RESP_INST.hreadyout = 1'b0;
-    force `RV_DDMA_RESP_INST.hreadyout = 1'b0;
-
-    force `RV_INST.dma_haddr = address;
-    force `RV_INST.dma_hsize = 3'b010; // 4-bytes
-    force `RV_INST.dma_hwrite = 1'b0;
-    force `RV_INST.dma_hwdata = '0;
-    force `RV_INST.dma_hreadyin = 1'b1;
-    force `RV_INST.dma_hsel = 1'b1;
-    force `RV_INST.dma_htrans = 2'b10;
-
-    // Wait for command to be accepted
-    do @(posedge core_clk); while(!`RV_INST.dma_hreadyout);
-    force   `RV_INST.dma_htrans = 2'b00;
-    // Wait for response to be provided
-    do @(posedge core_clk); while(!`RV_INST.dma_hreadyout);
-    $display("[%t] AHB DMA FORCE READ: Address 0x%x Data 0x%x Resp 0x%x", $time, address, `RV_INST.dma_hrdata, `RV_INST.dma_hresp);
-    if (`RV_INST.dma_hresp) 
-        rv_dma_resp_error = 1'b1;
-    release `RV_IDMA_RESP_INST.hreadyout;
-    release `RV_DDMA_RESP_INST.hreadyout;
-
-    release `RV_INST.dma_htrans;
-    release `RV_INST.dma_haddr;
-    release `RV_INST.dma_hsize;
-    release `RV_INST.dma_hwrite;
-    release `RV_INST.dma_hwdata;
-    release `RV_INST.dma_hsel;
-    release `RV_INST.dma_hreadyin;
-endtask
-
-task force_ahb_dma_loop_read(input logic [31:0] start_addr, input logic [19:0] count);
-    automatic logic [31:0] addr;
-    addr = start_addr;
-    $display("[%t] AHB DMA FORCE LOOP READ: Start Address 0x%x Count 0x%x", $time, addr, count);
-    if ($isunknown(start_addr) || $isunknown(addr))
-        $error("[%t] Unknown signal found: start_addr 0x%x addr 0x%x", $time, start_addr, addr);
-    repeat(count) begin
-        force_ahb_dma_read(addr);
-        addr += 4;
-    end
-endtask
-
-initial begin
-    fork
-    forever @(posedge core_clk) begin
-        if (ras_test_ctrl.dccm_read_burst.start)
-            force_ahb_dma_loop_read(ras_test_ctrl.dccm_read_burst.addr, ras_test_ctrl.dccm_read_burst.count);
-        if (ras_test_ctrl.iccm_read_burst.start)
-            force_ahb_dma_loop_read(ras_test_ctrl.iccm_read_burst.addr, ras_test_ctrl.iccm_read_burst.count);
-    end
-    forever @(posedge core_clk) begin
-        if (c_state_apb != S_APB_WAIT_ERROR_AXS)
-            rv_dma_resp_error = 1'b0;
-    end
-    join
+// Dummy interconnect
+always_comb begin
+    // AXI AR
+    axi_sram_if.araddr        = m_axi_if.araddr[AXI_SRAM_ADDR_WIDTH-1:0];
+    axi_sram_if.arburst       = m_axi_if.arburst;
+    axi_sram_if.arsize        = m_axi_if.arsize ;
+    axi_sram_if.arlen         = m_axi_if.arlen  ;
+    axi_sram_if.aruser        = m_axi_if.aruser ;
+    axi_sram_if.arid          = m_axi_if.arid   ;
+    axi_sram_if.arlock        = m_axi_if.arlock ;
+    axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    m_axi_if.arready          = axi_sram_if.arready;
+                                                
+    // AXI R                                    
+    m_axi_if.rdata            = axi_sram_if.rdata ;
+    m_axi_if.rresp            = axi_sram_if.rresp ;
+    m_axi_if.rid              = axi_sram_if.rid   ;
+    m_axi_if.rlast            = axi_sram_if.rlast ;
+    m_axi_if.rvalid           = axi_sram_if.rvalid;
+    axi_sram_if.rready        = m_axi_if.rready ;
+                                                
+    // AXI AW                                   
+    axi_sram_if.awaddr        = m_axi_if.awaddr[AXI_SRAM_ADDR_WIDTH-1:0];
+    axi_sram_if.awburst       = m_axi_if.awburst;
+    axi_sram_if.awsize        = m_axi_if.awsize ;
+    axi_sram_if.awlen         = m_axi_if.awlen  ;
+    axi_sram_if.awuser        = m_axi_if.awuser ;
+    axi_sram_if.awid          = m_axi_if.awid   ;
+    axi_sram_if.awlock        = m_axi_if.awlock ;
+    axi_sram_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    m_axi_if.awready          = axi_sram_if.awready;
+                                                
+    // AXI W                                    
+    axi_sram_if.wdata         = m_axi_if.wdata  ;
+    axi_sram_if.wstrb         = m_axi_if.wstrb  ;
+    axi_sram_if.wvalid        = m_axi_if.wvalid ;
+    axi_sram_if.wlast         = m_axi_if.wlast  ;
+    m_axi_if.wready           = axi_sram_if.wready ;
+                                                
+    // AXI B                                    
+    m_axi_if.bresp            = axi_sram_if.bresp  ;
+    m_axi_if.bid              = axi_sram_if.bid    ;
+    m_axi_if.bvalid           = axi_sram_if.bvalid ;
+    axi_sram_if.bready        = m_axi_if.bready ;
 end
+
+// Fake "MCU" SRAM block
+caliptra_axi_sram #(
+    .AW(AXI_SRAM_ADDR_WIDTH),
+    .DW(CPTRA_AXI_DMA_DATA_WIDTH),
+    .UW(CPTRA_AXI_DMA_USER_WIDTH),
+    .IW(CPTRA_AXI_DMA_ID_WIDTH),
+    .EX_EN(0)
+) i_axi_sram (
+    .clk(core_clk),
+    .rst_n(cptra_rst_b),
+
+    // AXI INF
+    .s_axi_w_if(axi_sram_if.w_sub),
+    .s_axi_r_if(axi_sram_if.r_sub)
+);
+`ifdef VERILATOR
+initial i_axi_sram.i_sram.ram = '{default:'{default:8'h00}};
+`else
+initial i_axi_sram.i_sram.ram = '{default:8'h00};
+`endif
 
 caliptra_top_sva sva();
 

@@ -23,7 +23,7 @@ default regwidth = 32; // reg property
 default accesswidth = 32; // reg property
 
 signal {} lock_set;
-signal {} valid_user;
+signal {} valid_id;
 
 //signal to indicate request is coming from soc side
 signal {} soc_req;

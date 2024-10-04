@@ -15,7 +15,7 @@
 
 
 addrmap hmac_reg {
-    desc="address maps for HMAC384 register space";
+    desc="address maps for HMAC512 register space";
 
     addressing = compact;
     lsb0 = true; // lsb0 property is implicit/default. See docs for
@@ -32,63 +32,68 @@ addrmap hmac_reg {
     * Register definitive definitions
     * ----------------------- */
 
-    /* ---- HMAC384 Component Name ---- */
+    /* ---- HMAC512 Component Name ---- */
     reg {
-        name = "HMAC384 component name register type definition";
+        name = "HMAC512 component name register type definition";
         desc = "Two 32-bit read-only registers representing of the name
-                of HMAC384 component.";
+                of HMAC component.";
 
         default sw = r;
         default hw = w;
         field {desc = "Name field";} NAME[32];
 
-    } HMAC384_NAME[2] @0x00000000;
+    } HMAC512_NAME[2] @0x00000000;
 
 
 
-    /* ---- HMAC384 Component Version ---- */
+    /* ---- HMAC512 Component Version ---- */
     reg {
-        name = "HMAC384 component version register type definition";
+        name = "HMAC component version register type definition";
         desc = "Two 32-bit read-only registers representing of the version
-                of HMAC384 component.";
+                of HMAC512 component.";
 
         default sw = r;
         default hw = w;
         field {desc = "Version field";} VERSION[32];
         
-    } HMAC384_VERSION[2] @0x00000008;
+    } HMAC512_VERSION[2] @0x00000008;
 
 
 
-    /* ---- HMAC384 Component Control ---- */
+    /* ---- HMAC512 Component Control ---- */
     reg {
-        name = "HMAC384 CTRL";
-        desc = "HMAC384 component control register type definition.";
+        name = "HMAC512 CTRL";
+        desc = "HMAC512 component control register type definition.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Control init command bit: Trigs the HMAC384 core to start the 
+        field {desc = "Control init command bit: Trigs the HMAC512 core to start the 
                                 processing for the key and the first padded 
                                 message block.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
-        field {desc = "Control next command bit: ​Trigs the HMAC384 core to start the 
+        field {desc = "Control next command bit: ​Trigs the HMAC512 core to start the 
                                 processing for the remining padded message block.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
+        field {desc = "Control mode command bits: Indicates the HMAC512 core to set dynamically
+                                 the type of hashing algorithm. This can be:
+                                 0 for HMAC384
+                                 1 for HMAC512";} MODE = 1'b1;
+        field {desc = "Reserved";} Reserved = 1'b0;                                 
     
-    } HMAC384_CTRL @0x00000010;
+    } HMAC512_CTRL @0x00000010;
 
 
 
-    /* ---- HMAC384 Component Status ---- */
+    /* ---- HMAC512 Component Status ---- */
     reg {
-        name = "HMAC384 STATUS";
-        desc = "HMAC384 component status register type definition";
+        name = "HMAC512 STATUS";
+        desc = "HMAC512 component status register type definition";
 
         default sw = r;
         default hw = w;
@@ -98,30 +103,30 @@ addrmap hmac_reg {
         field {desc = "Status valid bit: ​Indicates if the process is done and the
                                 results stored in TAG registers are valid.";} VALID = 1'b0;
     
-    } HMAC384_STATUS @0x00000018;
+    } HMAC512_STATUS @0x00000018;
 
 
     
-    /* ---- HMAC384 Component Input Key ---- */
+    /* ---- HMAC512 Component Input Key ---- */
     reg {
-        name = "HMAC384 KEY";
-        desc = "HMAC384 component key register type definition
-                12 32-bit registers storing the 384-bit key in big-endian representation.";
+        name = "HMAC512 KEY";
+        desc = "HMAC512 component key register type definition
+                16 32-bit registers storing the 512-bit key in big-endian representation.";
 
         default sw = w;
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Input HMAC384 key field"; hwclr; swwel;} KEY[32] = 32'b0;
+        field {desc = "Input HMAC key field"; hwclr; swwel;} KEY[32] = 32'b0;
     
-    } HMAC384_KEY[12] @0x00000040;
+    } HMAC512_KEY[16] @0x00000040;
 
 
 
-    /* ---- HMAC384 Component Input Message Block ---- */
+    /* ---- HMAC512 Component Input Message Block ---- */
     reg {
-        name = "HMAC384 BLOCK";
-        desc = "HMAC384 component block register type definition
+        name = "HMAC512 BLOCK";
+        desc = "HMAC512 component block register type definition
                 32 32-bit registers storing the 1024-bit padded input in big-endian representation.";
 
         default sw = w;
@@ -130,28 +135,28 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Input message block field"; hwclr; swwel;} BLOCK[32] = 32'b0;
     
-    } HMAC384_BLOCK[32] @0x00000080;
+    } HMAC512_BLOCK[32] @0x00000080;
 
     
 
-    /* ---- HMAC384 Component Output Tag ---- */
+    /* ---- HMAC512 Component Output Tag ---- */
     reg {
-        name = "HMAC384 TAG";
-        desc = "HMAC384 component tag register type definition
-                12 32-bit registers storing the 384-bit digest output in big-endian representation.";
+        name = "HMAC512 TAG";
+        desc = "HMAC512 component tag register type definition
+                16 32-bit registers storing the 512-bit digest output in big-endian representation.";
 
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
         field {desc = "Output tag field"; hwclr;} TAG[32] = 32'b0;
     
-    } HMAC384_TAG[12] @0x00000100;
+    } HMAC512_TAG[16] @0x00000100;
 
 
-    /* ---- HMAC384 Component Input LFSR Seed ---- */
+    /* ---- HMAC512 Component Input LFSR Seed ---- */
     reg {
-        name = "HMAC384 LFSR SEED";
-        desc = "HMAC384 component lfsr seed register type definition
+        name = "HMAC512 LFSR SEED";
+        desc = "HMAC512 component lfsr seed register type definition
                 12 32-bit registers storing the 384-bit lfsr seed input.";
 
         default sw = w;
@@ -159,15 +164,15 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h3CAB_FFB0; // a random value
     
-    } HMAC384_LFSR_SEED[12] @0x00000130;
+    } HMAC512_LFSR_SEED[12] @0x00000130;
 
     /* ---- HMAC Key Vault Control Reg ---- */
-    kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL @0x00000600;
-    kv_status_reg HMAC384_KV_RD_KEY_STATUS;
-    kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
-    kv_status_reg HMAC384_KV_RD_BLOCK_STATUS;
-    kv_write_ctrl_reg HMAC384_KV_WR_CTRL;
-    kv_status_reg HMAC384_KV_WR_STATUS;
+    kv_read_ctrl_reg HMAC512_KV_RD_KEY_CTRL @0x00000600;
+    kv_status_reg HMAC512_KV_RD_KEY_STATUS;
+    kv_read_ctrl_reg HMAC512_KV_RD_BLOCK_CTRL;
+    kv_status_reg HMAC512_KV_RD_BLOCK_STATUS;
+    kv_write_ctrl_reg HMAC512_KV_WR_CTRL;
+    kv_status_reg HMAC512_KV_WR_STATUS;
 
 
    

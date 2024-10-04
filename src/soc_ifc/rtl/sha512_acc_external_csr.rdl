@@ -19,16 +19,16 @@ reg {
     desc="SHA lock register for SHA access, reading 0 will set the lock, Write 1 to clear the lock
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {rset; woclr; sw=rw; hw=r; swwe=valid_user; swmod=true;} LOCK=1;
+    field {rset; woclr; sw=rw; hw=r; swwe=valid_id; swmod=true;} LOCK=1;
 } LOCK;
 
 reg {
-    name="SHA Accelerator User";
-    desc="Stores the user that locked the SHA
+    name="SHA Accelerator ID";
+    desc="Stores the AXI ID that locked the SHA
           [br]Caliptra Access: RO
           [br]SOC Access:      RO";
-    field {sw=r; hw=rw; we=lock_set;} USER[32]=0;
-} USER;
+    field {sw=r; hw=rw; we=lock_set;} ID[32]=0;
+} ID;
 
 reg {
     name="SHA Accelerator Mode";
@@ -53,7 +53,7 @@ reg {
                 desc = "SHA is in SHA512, mailbox mode";
             };
         };
-        sw=rw; hw=r; swwe=valid_user; swmod=true; encode = sha_cmd_e;} MODE[2]=0;
+        sw=rw; hw=r; swwe=valid_id; swmod=true; encode = sha_cmd_e;} MODE[2]=0;
     field {
         name="Endianness Toggle for SHA in mailbox mode";
         desc="Default behavior assumes that data in mailbox is little endian,
@@ -61,7 +61,7 @@ reg {
               When set to 1, data from the mailbox will be loaded into SHA as-is.
               [br]Caliptra Access: RW
               [br]SOC Access:      RW";
-        sw=rw; hw=r; swwe=valid_user;} ENDIAN_TOGGLE=0;
+        sw=rw; hw=r; swwe=valid_id;} ENDIAN_TOGGLE=0;
 } MODE;
 
 reg {
@@ -70,7 +70,7 @@ reg {
           Start Address must be dword aligned.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=r; swwe=valid_user;} ADDR[32]=0;
+    field {sw=rw; hw=r; swwe=valid_id;} ADDR[32]=0;
 } START_ADDRESS;
 
 reg {
@@ -78,7 +78,7 @@ reg {
     desc="The length of data to be processed in bytes.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=r; swwe=valid_user;} LENGTH[32]=0;
+    field {sw=rw; hw=r; swwe=valid_id;} LENGTH[32]=0;
 } DLEN;
 
 reg {
@@ -86,7 +86,7 @@ reg {
     desc="Data in register for SHA Streaming function
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=na; swwe=valid_user; swmod=true;} DATAIN[32]=0;
+    field {sw=rw; hw=na; swwe=valid_id; swmod=true;} DATAIN[32]=0;
 } DATAIN;
 
 reg {
@@ -95,7 +95,7 @@ reg {
           For the Mailbox SHA Function, indicates that the SHA can begin execution.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {sw=rw; hw=r; hwclr; swwe=valid_user;} EXECUTE=0;
+    field {sw=rw; hw=r; hwclr; swwe=valid_id;} EXECUTE=0;
 } EXECUTE;
 
 reg {

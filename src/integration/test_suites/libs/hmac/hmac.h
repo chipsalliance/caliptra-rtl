@@ -31,7 +31,8 @@ typedef struct {
     uint32_t  data[32];
 }hmac_io;
 
-void hmac_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
+void hmac384_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
+void hmac512_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
 void hmac_zeroize();
 
 #endif

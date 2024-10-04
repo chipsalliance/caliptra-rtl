@@ -36,7 +36,7 @@ if {[compare $actual $golden] != 0} {
 }
 
 echo "Accessing HMAC..."
-set golden { 0x6163686d 0x61327368 0x3030312e 0x0 }
+set golden { 0x6163686d 0x61327368 0x3030322e 0x0 }
 set actual [ read_memory 0x10010000 32 4 phys ]
 if {[compare $actual $golden] != 0} {
     shutdown error

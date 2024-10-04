@@ -20,7 +20,7 @@ uvmf:
         value: '32'
       - name: OUTPUT_TEXT_WIDTH
         type: int
-        value: '384'
+        value: '512'
       - name: BYPASS_HSEL
         type: bit
         value: '0'

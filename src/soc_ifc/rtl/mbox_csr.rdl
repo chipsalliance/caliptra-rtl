@@ -39,15 +39,15 @@ addrmap mbox_csr {
         field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=0;
     } mbox_lock;
 
-    // user register
-    // store user from interface when setting lock
+    // ID register
+    // store AXI ID from interface when setting lock
     reg {
-        name="Mailbox User";
-        desc="Stores the user that locked the mailbox
+        name="Mailbox ID";
+        desc="Stores the AXI ID that locked the mailbox
         [br]Caliptra Access: RO
         [br]SOC Access:      RO";
-        field {sw=r; hw=rw; we=lock_set;} user[32]=0;
-    } mbox_user;
+        field {sw=r; hw=rw; we=lock_set;} id[32]=0;
+    } mbox_id;
 
     reg {
         name="Mailbox Command";

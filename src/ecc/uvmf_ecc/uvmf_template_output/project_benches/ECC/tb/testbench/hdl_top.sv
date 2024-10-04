@@ -56,7 +56,7 @@ import uvmf_base_pkg_hdl::*;
     wire transaction_flag_out_monitor_top;
     wire [31:0] hrdata_top;
     wire hreadyout_top;
-    wire [1:0] op_top;
+    wire [2:0] op_top;
     wire [2:0] test_top;
   // pragma uvmf custom module_item_additional end
 

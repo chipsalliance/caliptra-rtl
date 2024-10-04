@@ -82,7 +82,7 @@ uvmf:
         value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
       - comment: ''
         name: ecc_valid_op_constraints
-        value: '{ op inside {key_gen, key_sign, key_verify}; }'
+        value: '{ op inside {key_gen, key_sign, key_verify, ecdh_sharedkey}; }'
       transaction_vars:
       - comment: ''
         iscompare: 'True'

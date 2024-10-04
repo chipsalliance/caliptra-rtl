@@ -58,7 +58,7 @@ clean:
 # Build program.hex from RUST executable
 program.hex: key_manifest_pk_hash_val.hex owner_pk_hash_val.hex fw_update.hex $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME)
 	@-echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0x8000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
+	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	du -b $(TEST_DIR)/$(TESTNAME) | cut -f1 > $(TESTNAME).size
 
 fw_update.hex: $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME_fw)

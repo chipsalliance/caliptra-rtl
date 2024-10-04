@@ -8,11 +8,11 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic [31:0] next;
-    } sha512_acc_csr__USER__USER__in_t;
+    } sha512_acc_csr__ID__ID__in_t;
 
     typedef struct packed{
-        sha512_acc_csr__USER__USER__in_t USER;
-    } sha512_acc_csr__USER__in_t;
+        sha512_acc_csr__ID__ID__in_t ID;
+    } sha512_acc_csr__ID__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -82,11 +82,11 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic lock_set;
-        logic valid_user;
+        logic valid_id;
         logic soc_req;
         logic cptra_rst_b;
         logic cptra_pwrgood;
-        sha512_acc_csr__USER__in_t USER;
+        sha512_acc_csr__ID__in_t ID;
         sha512_acc_csr__EXECUTE__in_t EXECUTE;
         sha512_acc_csr__STATUS__in_t STATUS;
         sha512_acc_csr__DIGEST__in_t [16-1:0]DIGEST;
@@ -104,11 +104,11 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } sha512_acc_csr__USER__USER__out_t;
+    } sha512_acc_csr__ID__ID__out_t;
 
     typedef struct packed{
-        sha512_acc_csr__USER__USER__out_t USER;
-    } sha512_acc_csr__USER__out_t;
+        sha512_acc_csr__ID__ID__out_t ID;
+    } sha512_acc_csr__ID__out_t;
 
     typedef struct packed{
         logic [1:0] value;
@@ -202,7 +202,7 @@ package sha512_acc_csr_pkg;
 
     typedef struct packed{
         sha512_acc_csr__LOCK__out_t LOCK;
-        sha512_acc_csr__USER__out_t USER;
+        sha512_acc_csr__ID__out_t ID;
         sha512_acc_csr__MODE__out_t MODE;
         sha512_acc_csr__START_ADDRESS__out_t START_ADDRESS;
         sha512_acc_csr__DLEN__out_t DLEN;

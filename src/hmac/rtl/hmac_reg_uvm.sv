@@ -4,17 +4,17 @@ package hmac_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "hmac_reg_covergroups.svh"
-    // Reg - hmac_reg::HMAC384_NAME
-    class hmac_reg__HMAC384_NAME extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_NAME
+    class hmac_reg__HMAC512_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_NAME_bit_cg NAME_bit_cg[32];
-        hmac_reg__HMAC384_NAME_fld_cg fld_cg;
+        hmac_reg__HMAC512_NAME_bit_cg NAME_bit_cg[32];
+        hmac_reg__HMAC512_NAME_fld_cg fld_cg;
         rand uvm_reg_field NAME;
 
-        function new(string name = "hmac_reg__HMAC384_NAME");
+        function new(string name = "hmac_reg__HMAC512_NAME");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -32,19 +32,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_NAME
+    endclass : hmac_reg__HMAC512_NAME
 
-    // Reg - hmac_reg::HMAC384_VERSION
-    class hmac_reg__HMAC384_VERSION extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_VERSION
+    class hmac_reg__HMAC512_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_VERSION_bit_cg VERSION_bit_cg[32];
-        hmac_reg__HMAC384_VERSION_fld_cg fld_cg;
+        hmac_reg__HMAC512_VERSION_bit_cg VERSION_bit_cg[32];
+        hmac_reg__HMAC512_VERSION_fld_cg fld_cg;
         rand uvm_reg_field VERSION;
 
-        function new(string name = "hmac_reg__HMAC384_VERSION");
+        function new(string name = "hmac_reg__HMAC512_VERSION");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -62,23 +62,27 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_VERSION
+    endclass : hmac_reg__HMAC512_VERSION
 
-    // Reg - hmac_reg::HMAC384_CTRL
-    class hmac_reg__HMAC384_CTRL extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_CTRL
+    class hmac_reg__HMAC512_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_CTRL_bit_cg INIT_bit_cg[1];
-        hmac_reg__HMAC384_CTRL_bit_cg NEXT_bit_cg[1];
-        hmac_reg__HMAC384_CTRL_bit_cg ZEROIZE_bit_cg[1];
-        hmac_reg__HMAC384_CTRL_fld_cg fld_cg;
+        hmac_reg__HMAC512_CTRL_bit_cg INIT_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg NEXT_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg ZEROIZE_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg MODE_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg Reserved_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field ZEROIZE;
+        rand uvm_reg_field MODE;
+        rand uvm_reg_field Reserved;
 
-        function new(string name = "hmac_reg__HMAC384_CTRL");
+        function new(string name = "hmac_reg__HMAC512_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -94,29 +98,35 @@ package hmac_reg_uvm;
             this.NEXT.configure(this, 1, 1, "WO", 0, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
             this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
+            this.MODE = new("MODE");
+            this.MODE.configure(this, 1, 3, "WO", 0, 'h1, 1, 1, 0);
+            this.Reserved = new("Reserved");
+            this.Reserved.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
+                foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
+                foreach(Reserved_bit_cg[bt]) Reserved_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_CTRL
+    endclass : hmac_reg__HMAC512_CTRL
 
-    // Reg - hmac_reg::HMAC384_STATUS
-    class hmac_reg__HMAC384_STATUS extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_STATUS
+    class hmac_reg__HMAC512_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_STATUS_bit_cg READY_bit_cg[1];
-        hmac_reg__HMAC384_STATUS_bit_cg VALID_bit_cg[1];
-        hmac_reg__HMAC384_STATUS_fld_cg fld_cg;
+        hmac_reg__HMAC512_STATUS_bit_cg READY_bit_cg[1];
+        hmac_reg__HMAC512_STATUS_bit_cg VALID_bit_cg[1];
+        hmac_reg__HMAC512_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
 
-        function new(string name = "hmac_reg__HMAC384_STATUS");
+        function new(string name = "hmac_reg__HMAC512_STATUS");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -137,19 +147,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_STATUS
+    endclass : hmac_reg__HMAC512_STATUS
 
-    // Reg - hmac_reg::HMAC384_KEY
-    class hmac_reg__HMAC384_KEY extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_KEY
+    class hmac_reg__HMAC512_KEY extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_KEY_bit_cg KEY_bit_cg[32];
-        hmac_reg__HMAC384_KEY_fld_cg fld_cg;
+        hmac_reg__HMAC512_KEY_bit_cg KEY_bit_cg[32];
+        hmac_reg__HMAC512_KEY_fld_cg fld_cg;
         rand uvm_reg_field KEY;
 
-        function new(string name = "hmac_reg__HMAC384_KEY");
+        function new(string name = "hmac_reg__HMAC512_KEY");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -167,19 +177,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_KEY
+    endclass : hmac_reg__HMAC512_KEY
 
-    // Reg - hmac_reg::HMAC384_BLOCK
-    class hmac_reg__HMAC384_BLOCK extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_BLOCK
+    class hmac_reg__HMAC512_BLOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_BLOCK_bit_cg BLOCK_bit_cg[32];
-        hmac_reg__HMAC384_BLOCK_fld_cg fld_cg;
+        hmac_reg__HMAC512_BLOCK_bit_cg BLOCK_bit_cg[32];
+        hmac_reg__HMAC512_BLOCK_fld_cg fld_cg;
         rand uvm_reg_field BLOCK;
 
-        function new(string name = "hmac_reg__HMAC384_BLOCK");
+        function new(string name = "hmac_reg__HMAC512_BLOCK");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -197,19 +207,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_BLOCK
+    endclass : hmac_reg__HMAC512_BLOCK
 
-    // Reg - hmac_reg::HMAC384_TAG
-    class hmac_reg__HMAC384_TAG extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_TAG
+    class hmac_reg__HMAC512_TAG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_TAG_bit_cg TAG_bit_cg[32];
-        hmac_reg__HMAC384_TAG_fld_cg fld_cg;
+        hmac_reg__HMAC512_TAG_bit_cg TAG_bit_cg[32];
+        hmac_reg__HMAC512_TAG_fld_cg fld_cg;
         rand uvm_reg_field TAG;
 
-        function new(string name = "hmac_reg__HMAC384_TAG");
+        function new(string name = "hmac_reg__HMAC512_TAG");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -227,19 +237,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_TAG
+    endclass : hmac_reg__HMAC512_TAG
 
-    // Reg - hmac_reg::HMAC384_LFSR_SEED
-    class hmac_reg__HMAC384_LFSR_SEED extends uvm_reg;
+    // Reg - hmac_reg::HMAC512_LFSR_SEED
+    class hmac_reg__HMAC512_LFSR_SEED extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__HMAC384_LFSR_SEED_bit_cg LFSR_SEED_bit_cg[32];
-        hmac_reg__HMAC384_LFSR_SEED_fld_cg fld_cg;
+        hmac_reg__HMAC512_LFSR_SEED_bit_cg LFSR_SEED_bit_cg[32];
+        hmac_reg__HMAC512_LFSR_SEED_fld_cg fld_cg;
         rand uvm_reg_field LFSR_SEED;
 
-        function new(string name = "hmac_reg__HMAC384_LFSR_SEED");
+        function new(string name = "hmac_reg__HMAC512_LFSR_SEED");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -257,7 +267,7 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__HMAC384_LFSR_SEED
+    endclass : hmac_reg__HMAC512_LFSR_SEED
 
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
@@ -1157,20 +1167,20 @@ package hmac_reg_uvm;
 
     // Addrmap - hmac_reg
     class hmac_reg extends uvm_reg_block;
-        rand hmac_reg__HMAC384_NAME HMAC384_NAME[2];
-        rand hmac_reg__HMAC384_VERSION HMAC384_VERSION[2];
-        rand hmac_reg__HMAC384_CTRL HMAC384_CTRL;
-        rand hmac_reg__HMAC384_STATUS HMAC384_STATUS;
-        rand hmac_reg__HMAC384_KEY HMAC384_KEY[12];
-        rand hmac_reg__HMAC384_BLOCK HMAC384_BLOCK[32];
-        rand hmac_reg__HMAC384_TAG HMAC384_TAG[12];
-        rand hmac_reg__HMAC384_LFSR_SEED HMAC384_LFSR_SEED[12];
-        rand kv_read_ctrl_reg HMAC384_KV_RD_KEY_CTRL;
-        rand kv_status_reg HMAC384_KV_RD_KEY_STATUS;
-        rand kv_read_ctrl_reg HMAC384_KV_RD_BLOCK_CTRL;
-        rand kv_status_reg HMAC384_KV_RD_BLOCK_STATUS;
-        rand kv_write_ctrl_reg HMAC384_KV_WR_CTRL;
-        rand kv_status_reg HMAC384_KV_WR_STATUS;
+        rand hmac_reg__HMAC512_NAME HMAC512_NAME[2];
+        rand hmac_reg__HMAC512_VERSION HMAC512_VERSION[2];
+        rand hmac_reg__HMAC512_CTRL HMAC512_CTRL;
+        rand hmac_reg__HMAC512_STATUS HMAC512_STATUS;
+        rand hmac_reg__HMAC512_KEY HMAC512_KEY[16];
+        rand hmac_reg__HMAC512_BLOCK HMAC512_BLOCK[32];
+        rand hmac_reg__HMAC512_TAG HMAC512_TAG[16];
+        rand hmac_reg__HMAC512_LFSR_SEED HMAC512_LFSR_SEED[12];
+        rand kv_read_ctrl_reg HMAC512_KV_RD_KEY_CTRL;
+        rand kv_status_reg HMAC512_KV_RD_KEY_STATUS;
+        rand kv_read_ctrl_reg HMAC512_KV_RD_BLOCK_CTRL;
+        rand kv_status_reg HMAC512_KV_RD_BLOCK_STATUS;
+        rand kv_write_ctrl_reg HMAC512_KV_WR_CTRL;
+        rand kv_status_reg HMAC512_KV_WR_STATUS;
         rand hmac_reg__intr_block_t intr_block_rf;
 
         function new(string name = "hmac_reg");
@@ -1179,88 +1189,88 @@ package hmac_reg_uvm;
 
         virtual function void build();
             this.default_map = create_map("reg_map", 0, 4, UVM_NO_ENDIAN);
-            foreach(this.HMAC384_NAME[i0]) begin
-                this.HMAC384_NAME[i0] = new($sformatf("HMAC384_NAME[%0d]", i0));
-                this.HMAC384_NAME[i0].configure(this);
+            foreach(this.HMAC512_NAME[i0]) begin
+                this.HMAC512_NAME[i0] = new($sformatf("HMAC512_NAME[%0d]", i0));
+                this.HMAC512_NAME[i0].configure(this);
                 
-                this.HMAC384_NAME[i0].build();
-                this.default_map.add_reg(this.HMAC384_NAME[i0], 'h0 + i0*'h4);
+                this.HMAC512_NAME[i0].build();
+                this.default_map.add_reg(this.HMAC512_NAME[i0], 'h0 + i0*'h4);
             end
-            foreach(this.HMAC384_VERSION[i0]) begin
-                this.HMAC384_VERSION[i0] = new($sformatf("HMAC384_VERSION[%0d]", i0));
-                this.HMAC384_VERSION[i0].configure(this);
+            foreach(this.HMAC512_VERSION[i0]) begin
+                this.HMAC512_VERSION[i0] = new($sformatf("HMAC512_VERSION[%0d]", i0));
+                this.HMAC512_VERSION[i0].configure(this);
                 
-                this.HMAC384_VERSION[i0].build();
-                this.default_map.add_reg(this.HMAC384_VERSION[i0], 'h8 + i0*'h4);
+                this.HMAC512_VERSION[i0].build();
+                this.default_map.add_reg(this.HMAC512_VERSION[i0], 'h8 + i0*'h4);
             end
-            this.HMAC384_CTRL = new("HMAC384_CTRL");
-            this.HMAC384_CTRL.configure(this);
+            this.HMAC512_CTRL = new("HMAC512_CTRL");
+            this.HMAC512_CTRL.configure(this);
 
-            this.HMAC384_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_CTRL, 'h10);
-            this.HMAC384_STATUS = new("HMAC384_STATUS");
-            this.HMAC384_STATUS.configure(this);
+            this.HMAC512_CTRL.build();
+            this.default_map.add_reg(this.HMAC512_CTRL, 'h10);
+            this.HMAC512_STATUS = new("HMAC512_STATUS");
+            this.HMAC512_STATUS.configure(this);
 
-            this.HMAC384_STATUS.build();
-            this.default_map.add_reg(this.HMAC384_STATUS, 'h18);
-            foreach(this.HMAC384_KEY[i0]) begin
-                this.HMAC384_KEY[i0] = new($sformatf("HMAC384_KEY[%0d]", i0));
-                this.HMAC384_KEY[i0].configure(this);
+            this.HMAC512_STATUS.build();
+            this.default_map.add_reg(this.HMAC512_STATUS, 'h18);
+            foreach(this.HMAC512_KEY[i0]) begin
+                this.HMAC512_KEY[i0] = new($sformatf("HMAC512_KEY[%0d]", i0));
+                this.HMAC512_KEY[i0].configure(this);
                 
-                this.HMAC384_KEY[i0].build();
-                this.default_map.add_reg(this.HMAC384_KEY[i0], 'h40 + i0*'h4);
+                this.HMAC512_KEY[i0].build();
+                this.default_map.add_reg(this.HMAC512_KEY[i0], 'h40 + i0*'h4);
             end
-            foreach(this.HMAC384_BLOCK[i0]) begin
-                this.HMAC384_BLOCK[i0] = new($sformatf("HMAC384_BLOCK[%0d]", i0));
-                this.HMAC384_BLOCK[i0].configure(this);
+            foreach(this.HMAC512_BLOCK[i0]) begin
+                this.HMAC512_BLOCK[i0] = new($sformatf("HMAC512_BLOCK[%0d]", i0));
+                this.HMAC512_BLOCK[i0].configure(this);
                 
-                this.HMAC384_BLOCK[i0].build();
-                this.default_map.add_reg(this.HMAC384_BLOCK[i0], 'h80 + i0*'h4);
+                this.HMAC512_BLOCK[i0].build();
+                this.default_map.add_reg(this.HMAC512_BLOCK[i0], 'h80 + i0*'h4);
             end
-            foreach(this.HMAC384_TAG[i0]) begin
-                this.HMAC384_TAG[i0] = new($sformatf("HMAC384_TAG[%0d]", i0));
-                this.HMAC384_TAG[i0].configure(this);
+            foreach(this.HMAC512_TAG[i0]) begin
+                this.HMAC512_TAG[i0] = new($sformatf("HMAC512_TAG[%0d]", i0));
+                this.HMAC512_TAG[i0].configure(this);
                 
-                this.HMAC384_TAG[i0].build();
-                this.default_map.add_reg(this.HMAC384_TAG[i0], 'h100 + i0*'h4);
+                this.HMAC512_TAG[i0].build();
+                this.default_map.add_reg(this.HMAC512_TAG[i0], 'h100 + i0*'h4);
             end
-            foreach(this.HMAC384_LFSR_SEED[i0]) begin
-                this.HMAC384_LFSR_SEED[i0] = new($sformatf("HMAC384_LFSR_SEED[%0d]", i0));
-                this.HMAC384_LFSR_SEED[i0].configure(this);
+            foreach(this.HMAC512_LFSR_SEED[i0]) begin
+                this.HMAC512_LFSR_SEED[i0] = new($sformatf("HMAC512_LFSR_SEED[%0d]", i0));
+                this.HMAC512_LFSR_SEED[i0].configure(this);
                 
-                this.HMAC384_LFSR_SEED[i0].build();
-                this.default_map.add_reg(this.HMAC384_LFSR_SEED[i0], 'h130 + i0*'h4);
+                this.HMAC512_LFSR_SEED[i0].build();
+                this.default_map.add_reg(this.HMAC512_LFSR_SEED[i0], 'h130 + i0*'h4);
             end
-            this.HMAC384_KV_RD_KEY_CTRL = new("HMAC384_KV_RD_KEY_CTRL");
-            this.HMAC384_KV_RD_KEY_CTRL.configure(this);
+            this.HMAC512_KV_RD_KEY_CTRL = new("HMAC512_KV_RD_KEY_CTRL");
+            this.HMAC512_KV_RD_KEY_CTRL.configure(this);
 
-            this.HMAC384_KV_RD_KEY_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_KV_RD_KEY_CTRL, 'h600);
-            this.HMAC384_KV_RD_KEY_STATUS = new("HMAC384_KV_RD_KEY_STATUS");
-            this.HMAC384_KV_RD_KEY_STATUS.configure(this);
+            this.HMAC512_KV_RD_KEY_CTRL.build();
+            this.default_map.add_reg(this.HMAC512_KV_RD_KEY_CTRL, 'h600);
+            this.HMAC512_KV_RD_KEY_STATUS = new("HMAC512_KV_RD_KEY_STATUS");
+            this.HMAC512_KV_RD_KEY_STATUS.configure(this);
 
-            this.HMAC384_KV_RD_KEY_STATUS.build();
-            this.default_map.add_reg(this.HMAC384_KV_RD_KEY_STATUS, 'h604);
-            this.HMAC384_KV_RD_BLOCK_CTRL = new("HMAC384_KV_RD_BLOCK_CTRL");
-            this.HMAC384_KV_RD_BLOCK_CTRL.configure(this);
+            this.HMAC512_KV_RD_KEY_STATUS.build();
+            this.default_map.add_reg(this.HMAC512_KV_RD_KEY_STATUS, 'h604);
+            this.HMAC512_KV_RD_BLOCK_CTRL = new("HMAC512_KV_RD_BLOCK_CTRL");
+            this.HMAC512_KV_RD_BLOCK_CTRL.configure(this);
 
-            this.HMAC384_KV_RD_BLOCK_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_KV_RD_BLOCK_CTRL, 'h608);
-            this.HMAC384_KV_RD_BLOCK_STATUS = new("HMAC384_KV_RD_BLOCK_STATUS");
-            this.HMAC384_KV_RD_BLOCK_STATUS.configure(this);
+            this.HMAC512_KV_RD_BLOCK_CTRL.build();
+            this.default_map.add_reg(this.HMAC512_KV_RD_BLOCK_CTRL, 'h608);
+            this.HMAC512_KV_RD_BLOCK_STATUS = new("HMAC512_KV_RD_BLOCK_STATUS");
+            this.HMAC512_KV_RD_BLOCK_STATUS.configure(this);
 
-            this.HMAC384_KV_RD_BLOCK_STATUS.build();
-            this.default_map.add_reg(this.HMAC384_KV_RD_BLOCK_STATUS, 'h60c);
-            this.HMAC384_KV_WR_CTRL = new("HMAC384_KV_WR_CTRL");
-            this.HMAC384_KV_WR_CTRL.configure(this);
+            this.HMAC512_KV_RD_BLOCK_STATUS.build();
+            this.default_map.add_reg(this.HMAC512_KV_RD_BLOCK_STATUS, 'h60c);
+            this.HMAC512_KV_WR_CTRL = new("HMAC512_KV_WR_CTRL");
+            this.HMAC512_KV_WR_CTRL.configure(this);
 
-            this.HMAC384_KV_WR_CTRL.build();
-            this.default_map.add_reg(this.HMAC384_KV_WR_CTRL, 'h610);
-            this.HMAC384_KV_WR_STATUS = new("HMAC384_KV_WR_STATUS");
-            this.HMAC384_KV_WR_STATUS.configure(this);
+            this.HMAC512_KV_WR_CTRL.build();
+            this.default_map.add_reg(this.HMAC512_KV_WR_CTRL, 'h610);
+            this.HMAC512_KV_WR_STATUS = new("HMAC512_KV_WR_STATUS");
+            this.HMAC512_KV_WR_STATUS.configure(this);
 
-            this.HMAC384_KV_WR_STATUS.build();
-            this.default_map.add_reg(this.HMAC384_KV_WR_STATUS, 'h614);
+            this.HMAC512_KV_WR_STATUS.build();
+            this.default_map.add_reg(this.HMAC512_KV_WR_STATUS, 'h614);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

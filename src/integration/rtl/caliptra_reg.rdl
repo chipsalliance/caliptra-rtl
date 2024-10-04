@@ -42,9 +42,20 @@ addrmap clp {
 
     entropy_src entropy_src_reg @ 0x2000_3000;
 
+    mem {name="Mailbox SRAM";
+         desc="Mailbox SRAM for Caliptra direct-mode accesses. Accessible to Caliptra only after acquiring mbox_lock.
+               [br]Caliptra Access: RW
+               [br]SOC Access:      -";
+         memwidth=32;
+         mementries=32768;
+         sw=rw;
+    } external mbox_sram @ 0x3000_0000;
+
     mbox_csr mbox_csr @ 0x3002_0000;
 
     sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
+
+    axi_dma_reg axi_dma_reg @ 0x3002_2000;
 
     soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 

@@ -28,9 +28,10 @@ package ecc_params_pkg;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter KEYGEN               = 2'b01;
-  parameter SIGN                 = 2'b10;
-  parameter VERIFY               = 2'b11;
+  parameter KEYGEN               = 3'b001;
+  parameter SIGN                 = 3'b010;
+  parameter VERIFY               = 3'b011;
+  parameter SHARED_KEY           = 3'b100;
 
   parameter [63  : 0] ECC_CORE_NAME        = 64'h38342D33_63707365; // "secp-384"
   parameter [63  : 0] ECC_CORE_VERSION     = 64'h00000000_3030312e; // "1.00"

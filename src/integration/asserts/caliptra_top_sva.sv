@@ -19,12 +19,16 @@
 `include "config_defines.svh"
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
-`ifdef UVMF_CALIPTRA_TOP
-`define CPTRA_TB_TOP_NAME hdl_top
-`else
-`define CPTRA_TB_TOP_NAME caliptra_top_tb
+`ifndef CPTRA_TB_TOP_NAME
+  `ifdef UVMF_CALIPTRA_TOP
+    `define CPTRA_TB_TOP_NAME hdl_top
+  `else
+    `define CPTRA_TB_TOP_NAME caliptra_top_tb
+  `endif
 `endif
-`define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`ifndef CPTRA_TOP_PATH
+  `define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`endif
 `define KEYVAULT_PATH       `CPTRA_TOP_PATH.key_vault1
 `define KEYVAULT_REG_PATH   `KEYVAULT_PATH.kv_reg1
 `define PCRVAULT_PATH       `CPTRA_TOP_PATH.pcr_vault1
@@ -363,7 +367,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_KEY_NUM_DWORDS; dword++) begin
         hmac_key_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_KEY[dword].KEY.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC512_KEY[dword].KEY.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 key zeroize mismatch!");
     end
@@ -371,7 +375,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_BLOCK_NUM_DWORDS; dword++) begin
         hmac_block_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC384_BLOCK[dword].BLOCK.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.hwif_out.HMAC512_BLOCK[dword].BLOCK.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 block zeroize mismatch!");
     end
@@ -379,7 +383,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < HMAC_TAG_NUM_DWORDS; dword++) begin
         hmac_tag_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.hwif_out.HMAC384_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.field_storage.HMAC384_TAG[dword].TAG.value == 0)
+                                              `HMAC_PATH.hwif_out.HMAC512_CTRL.ZEROIZE.value |=> (`HMAC_PATH.tag_reg[dword] == 0) & (`HMAC_PATH.i_hmac_reg.field_storage.HMAC512_TAG[dword].TAG.value == 0)
                                               )
                                   else $display("SVA ERROR: HMAC384 tag zeroize mismatch!");                      
     end
@@ -545,7 +549,7 @@ module caliptra_top_sva
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `ECC_PATH.dsa_valid_reg |-> `ECC_PATH.dsa_ready_reg 
+                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");      
 

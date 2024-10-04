@@ -66,8 +66,9 @@ class HMAC_predictor #(
 
 
   // pragma uvmf custom class_item_additional begin
-  reg [383:0] expected;
-  reg [383:0] tmp;
+  reg [511:0] expected;
+  reg [383:0] hmac384_tmp;
+  reg [511:0] hmac512_tmp;
 
   int line_skip;
   int cnt_tmp;
@@ -111,13 +112,13 @@ class HMAC_predictor #(
     //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The HMAC_predictor::write_HMAC_in_agent_ae function needs to be completed with DUT prediction model",UVM_NONE)
     //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
  
-    //$display("**HMAC_predictor** t.op= %d",t.op);
+    $display("**HMAC_predictor** t.op= %d",t.op);
 
-    if (t.op== 2'b00 || t.op == 2'b10) HMAC_sb_ap_output_transaction.result = 0;
-    else begin
+    if (t.op== 2'b00 || t.op == 2'b11) HMAC_sb_ap_output_transaction.result = 0;
+    else if (t.op== 2'b01) begin
       $system("python ./test_gen.py");
 
-      file_name = "expected_tag.txt";
+      file_name = "expected_hmac384_tag.txt";
 
       cnt_tmp = 0;      
       fd_r = $fopen(file_name, "r");
@@ -125,14 +126,39 @@ class HMAC_predictor #(
 
       //Get tag:
       $fgets(line_read, fd_r);
-      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac384_tmp);
 
       while (tmp_str1 != "TAG") begin
         $fgets(line_read, fd_r);
-        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, tmp);
+        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac384_tmp);
       end
 
-      expected = tmp;
+      expected = {hmac384_tmp, 128'b0};
+      $fclose(fd_r);
+
+      HMAC_sb_ap_output_transaction.result = expected;
+      `uvm_info("PREDICT",{"HMAC_OUT: ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+
+    end
+    else if (t.op== 2'b10) begin
+      $system("python ./test_gen.py");
+
+      file_name = "expected_hmac512_tag.txt";
+
+      cnt_tmp = 0;      
+      fd_r = $fopen(file_name, "r");
+      if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
+
+      //Get tag:
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
+
+      while (tmp_str1 != "TAG") begin
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
+      end
+
+      expected = hmac512_tmp;
       $fclose(fd_r);
 
       HMAC_sb_ap_output_transaction.result = expected;

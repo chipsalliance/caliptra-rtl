@@ -40,8 +40,8 @@
         end
     endfunction
 
-    /*----------------------- MBOX_CSR__MBOX_USER SAMPLE FUNCTIONS -----------------------*/
-    function void mbox_csr__mbox_user::sample(uvm_reg_data_t  data,
+    /*----------------------- MBOX_CSR__MBOX_ID SAMPLE FUNCTIONS -----------------------*/
+    function void mbox_csr__mbox_id::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -49,19 +49,19 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(data[0 + bt]);
+            foreach(id_bit_cg[bt]) this.id_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*user*/   );
+            this.fld_cg.sample( data[31:0]/*id*/   );
         end
     endfunction
 
-    function void mbox_csr__mbox_user::sample_values();
+    function void mbox_csr__mbox_id::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(user.get_mirrored_value() >> bt);
+            foreach(id_bit_cg[bt]) this.id_bit_cg[bt].sample(id.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( user.get_mirrored_value()   );
+            this.fld_cg.sample( id.get_mirrored_value()   );
         end
     endfunction
 
@@ -204,9 +204,10 @@
             foreach(ecc_double_error_bit_cg[bt]) this.ecc_double_error_bit_cg[bt].sample(data[5 + bt]);
             foreach(mbox_fsm_ps_bit_cg[bt]) this.mbox_fsm_ps_bit_cg[bt].sample(data[6 + bt]);
             foreach(soc_has_lock_bit_cg[bt]) this.soc_has_lock_bit_cg[bt].sample(data[9 + bt]);
+            foreach(mbox_rdptr_bit_cg[bt]) this.mbox_rdptr_bit_cg[bt].sample(data[10 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[3:0]/*status*/  ,  data[4:4]/*ecc_single_error*/  ,  data[5:5]/*ecc_double_error*/  ,  data[8:6]/*mbox_fsm_ps*/  ,  data[9:9]/*soc_has_lock*/   );
+            this.fld_cg.sample( data[3:0]/*status*/  ,  data[4:4]/*ecc_single_error*/  ,  data[5:5]/*ecc_double_error*/  ,  data[8:6]/*mbox_fsm_ps*/  ,  data[9:9]/*soc_has_lock*/  ,  data[24:10]/*mbox_rdptr*/   );
         end
     endfunction
 
@@ -217,9 +218,10 @@
             foreach(ecc_double_error_bit_cg[bt]) this.ecc_double_error_bit_cg[bt].sample(ecc_double_error.get_mirrored_value() >> bt);
             foreach(mbox_fsm_ps_bit_cg[bt]) this.mbox_fsm_ps_bit_cg[bt].sample(mbox_fsm_ps.get_mirrored_value() >> bt);
             foreach(soc_has_lock_bit_cg[bt]) this.soc_has_lock_bit_cg[bt].sample(soc_has_lock.get_mirrored_value() >> bt);
+            foreach(mbox_rdptr_bit_cg[bt]) this.mbox_rdptr_bit_cg[bt].sample(mbox_rdptr.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( status.get_mirrored_value()  ,  ecc_single_error.get_mirrored_value()  ,  ecc_double_error.get_mirrored_value()  ,  mbox_fsm_ps.get_mirrored_value()  ,  soc_has_lock.get_mirrored_value()   );
+            this.fld_cg.sample( status.get_mirrored_value()  ,  ecc_single_error.get_mirrored_value()  ,  ecc_double_error.get_mirrored_value()  ,  mbox_fsm_ps.get_mirrored_value()  ,  soc_has_lock.get_mirrored_value()  ,  mbox_rdptr.get_mirrored_value()   );
         end
     endfunction
 

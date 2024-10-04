@@ -84,35 +84,35 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__in_t;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__AXI_ID__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__AXI_ID__in_t AXI_ID;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__in_t;
+    } soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__LOCK__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t;
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__in_t;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__AXI_ID__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__AXI_ID__in_t AXI_ID;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__in_t;
 
     typedef struct packed{
         logic swwe;
@@ -217,19 +217,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__in_t;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__AXI_ID__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__in_t PAUSER;
-    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__in_t;
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__AXI_ID__in_t AXI_ID;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__in_t;
 
     typedef struct packed{
         logic swwel;
-    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__in_t;
+    } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__LOCK__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__in_t LOCK;
-    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__in_t;
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__LOCK__in_t LOCK;
+    } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__in_t;
 
     typedef struct packed{
         logic swwel;
@@ -439,10 +439,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_FLOW_STATUS__in_t CPTRA_FLOW_STATUS;
         soc_ifc_reg__CPTRA_RESET_REASON__in_t CPTRA_RESET_REASON;
         soc_ifc_reg__CPTRA_SECURITY_STATE__in_t CPTRA_SECURITY_STATE;
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__in_t [5-1:0]CPTRA_MBOX_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__in_t [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__in_t CPTRA_TRNG_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__in_t CPTRA_TRNG_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__in_t [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__in_t [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__in_t CPTRA_TRNG_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__in_t CPTRA_TRNG_AXI_ID_LOCK;
         soc_ifc_reg__CPTRA_TRNG_DATA__in_t [12-1:0]CPTRA_TRNG_DATA;
         soc_ifc_reg__CPTRA_TRNG_STATUS__in_t CPTRA_TRNG_STATUS;
         soc_ifc_reg__CPTRA_FUSE_WR_DONE__in_t CPTRA_FUSE_WR_DONE;
@@ -452,8 +452,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_HW_REV_ID__in_t CPTRA_HW_REV_ID;
         soc_ifc_reg__CPTRA_HW_CONFIG__in_t CPTRA_HW_CONFIG;
         soc_ifc_reg__CPTRA_WDT_STATUS__in_t CPTRA_WDT_STATUS;
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__in_t CPTRA_FUSE_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__in_t CPTRA_FUSE_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__in_t CPTRA_FUSE_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__in_t CPTRA_FUSE_AXI_ID_LOCK;
         soc_ifc_reg__fuse_uds_seed__in_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__in_t [12-1:0]fuse_key_manifest_pk_hash;
@@ -575,35 +575,35 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__out_t;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__AXI_ID__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__out_t;
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__AXI_ID__out_t AXI_ID;
+    } soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__out_t;
+    } soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__LOCK__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__out_t;
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__out_t;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__AXI_ID__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t;
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__AXI_ID__out_t AXI_ID;
+    } soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__out_t;
+    } soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__LOCK__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t;
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__out_t;
 
     typedef struct packed{
         logic swacc;
@@ -749,19 +749,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__out_t;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__AXI_ID__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__PAUSER__out_t PAUSER;
-    } soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__out_t;
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__AXI_ID__out_t AXI_ID;
+    } soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__out_t;
+    } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__LOCK__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__LOCK__out_t LOCK;
-    } soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__out_t;
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__LOCK__out_t LOCK;
+    } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -980,10 +980,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_BOOT_STATUS__out_t CPTRA_BOOT_STATUS;
         soc_ifc_reg__CPTRA_FLOW_STATUS__out_t CPTRA_FLOW_STATUS;
         soc_ifc_reg__CPTRA_RESET_REASON__out_t CPTRA_RESET_REASON;
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER__out_t [5-1:0]CPTRA_MBOX_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK__out_t [5-1:0]CPTRA_MBOX_PAUSER_LOCK;
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER__out_t CPTRA_TRNG_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK__out_t CPTRA_TRNG_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID__out_t [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK__out_t [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID__out_t CPTRA_TRNG_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK__out_t CPTRA_TRNG_AXI_ID_LOCK;
         soc_ifc_reg__CPTRA_TRNG_DATA__out_t [12-1:0]CPTRA_TRNG_DATA;
         soc_ifc_reg__CPTRA_TRNG_CTRL__out_t CPTRA_TRNG_CTRL;
         soc_ifc_reg__CPTRA_TRNG_STATUS__out_t CPTRA_TRNG_STATUS;
@@ -1001,8 +1001,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL__out_t CPTRA_WDT_TIMER2_CTRL;
         soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD__out_t [2-1:0]CPTRA_WDT_TIMER2_TIMEOUT_PERIOD;
         soc_ifc_reg__CPTRA_WDT_STATUS__out_t CPTRA_WDT_STATUS;
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER__out_t CPTRA_FUSE_VALID_PAUSER;
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK__out_t CPTRA_FUSE_PAUSER_LOCK;
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__out_t CPTRA_FUSE_VALID_AXI_ID;
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__out_t CPTRA_FUSE_AXI_ID_LOCK;
         soc_ifc_reg__fuse_uds_seed__out_t [12-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__out_t [12-1:0]fuse_key_manifest_pk_hash;

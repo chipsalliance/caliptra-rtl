@@ -409,17 +409,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_SECURITY_STATE
 
-    // Reg - soc_ifc_reg::CPTRA_MBOX_VALID_PAUSER
-    class soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_MBOX_VALID_AXI_ID
+    class soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
-        soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER_fld_cg fld_cg;
-        rand uvm_reg_field PAUSER;
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID_bit_cg AXI_ID_bit_cg[32];
+        soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID_fld_cg fld_cg;
+        rand uvm_reg_field AXI_ID;
 
-        function new(string name = "soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER");
+        function new(string name = "soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -429,27 +429,27 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            this.AXI_ID = new("AXI_ID");
+            this.AXI_ID.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+                foreach(AXI_ID_bit_cg[bt]) AXI_ID_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER
+    endclass : soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID
 
-    // Reg - soc_ifc_reg::CPTRA_MBOX_PAUSER_LOCK
-    class soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_MBOX_AXI_ID_LOCK
+    class soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
-        soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK_fld_cg fld_cg;
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK_fld_cg fld_cg;
         rand uvm_reg_field LOCK;
 
-        function new(string name = "soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK");
+        function new(string name = "soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -467,19 +467,19 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK
+    endclass : soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_VALID_PAUSER
-    class soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_TRNG_VALID_AXI_ID
+    class soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
-        soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER_fld_cg fld_cg;
-        rand uvm_reg_field PAUSER;
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID_bit_cg AXI_ID_bit_cg[32];
+        soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID_fld_cg fld_cg;
+        rand uvm_reg_field AXI_ID;
 
-        function new(string name = "soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER");
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -489,27 +489,27 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            this.AXI_ID = new("AXI_ID");
+            this.AXI_ID.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+                foreach(AXI_ID_bit_cg[bt]) AXI_ID_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER
+    endclass : soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_PAUSER_LOCK
-    class soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_TRNG_AXI_ID_LOCK
+    class soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
-        soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK_fld_cg fld_cg;
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK_fld_cg fld_cg;
         rand uvm_reg_field LOCK;
 
-        function new(string name = "soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK");
+        function new(string name = "soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -527,7 +527,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK
+    endclass : soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK
 
     // Reg - soc_ifc_reg::CPTRA_TRNG_DATA
     class soc_ifc_reg__CPTRA_TRNG_DATA extends uvm_reg;
@@ -1164,17 +1164,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_STATUS
 
-    // Reg - soc_ifc_reg::CPTRA_FUSE_VALID_PAUSER
-    class soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_FUSE_VALID_AXI_ID
+    class soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER_bit_cg PAUSER_bit_cg[32];
-        soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER_fld_cg fld_cg;
-        rand uvm_reg_field PAUSER;
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID_bit_cg AXI_ID_bit_cg[32];
+        soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID_fld_cg fld_cg;
+        rand uvm_reg_field AXI_ID;
 
-        function new(string name = "soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER");
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1184,27 +1184,27 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.PAUSER = new("PAUSER");
-            this.PAUSER.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
+            this.AXI_ID = new("AXI_ID");
+            this.AXI_ID.configure(this, 32, 0, "RW", 0, 'hffffffff, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(PAUSER_bit_cg[bt]) PAUSER_bit_cg[bt] = new();
+                foreach(AXI_ID_bit_cg[bt]) AXI_ID_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER
+    endclass : soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID
 
-    // Reg - soc_ifc_reg::CPTRA_FUSE_PAUSER_LOCK
-    class soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK extends uvm_reg;
+    // Reg - soc_ifc_reg::CPTRA_FUSE_AXI_ID_LOCK
+    class soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK_bit_cg LOCK_bit_cg[1];
-        soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK_fld_cg fld_cg;
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK_bit_cg LOCK_bit_cg[1];
+        soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK_fld_cg fld_cg;
         rand uvm_reg_field LOCK;
 
-        function new(string name = "soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK");
+        function new(string name = "soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1222,7 +1222,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK
+    endclass : soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK
 
     // Reg - soc_ifc_reg::CPTRA_WDT_CFG
     class soc_ifc_reg__CPTRA_WDT_CFG extends uvm_reg;
@@ -3731,10 +3731,10 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_FLOW_STATUS CPTRA_FLOW_STATUS;
         rand soc_ifc_reg__CPTRA_RESET_REASON CPTRA_RESET_REASON;
         rand soc_ifc_reg__CPTRA_SECURITY_STATE CPTRA_SECURITY_STATE;
-        rand soc_ifc_reg__CPTRA_MBOX_VALID_PAUSER CPTRA_MBOX_VALID_PAUSER[5];
-        rand soc_ifc_reg__CPTRA_MBOX_PAUSER_LOCK CPTRA_MBOX_PAUSER_LOCK[5];
-        rand soc_ifc_reg__CPTRA_TRNG_VALID_PAUSER CPTRA_TRNG_VALID_PAUSER;
-        rand soc_ifc_reg__CPTRA_TRNG_PAUSER_LOCK CPTRA_TRNG_PAUSER_LOCK;
+        rand soc_ifc_reg__CPTRA_MBOX_VALID_AXI_ID CPTRA_MBOX_VALID_AXI_ID[5];
+        rand soc_ifc_reg__CPTRA_MBOX_AXI_ID_LOCK CPTRA_MBOX_AXI_ID_LOCK[5];
+        rand soc_ifc_reg__CPTRA_TRNG_VALID_AXI_ID CPTRA_TRNG_VALID_AXI_ID;
+        rand soc_ifc_reg__CPTRA_TRNG_AXI_ID_LOCK CPTRA_TRNG_AXI_ID_LOCK;
         rand soc_ifc_reg__CPTRA_TRNG_DATA CPTRA_TRNG_DATA[12];
         rand soc_ifc_reg__CPTRA_TRNG_CTRL CPTRA_TRNG_CTRL;
         rand soc_ifc_reg__CPTRA_TRNG_STATUS CPTRA_TRNG_STATUS;
@@ -3755,8 +3755,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL CPTRA_WDT_TIMER2_CTRL;
         rand soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[2];
         rand soc_ifc_reg__CPTRA_WDT_STATUS CPTRA_WDT_STATUS;
-        rand soc_ifc_reg__CPTRA_FUSE_VALID_PAUSER CPTRA_FUSE_VALID_PAUSER;
-        rand soc_ifc_reg__CPTRA_FUSE_PAUSER_LOCK CPTRA_FUSE_PAUSER_LOCK;
+        rand soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID CPTRA_FUSE_VALID_AXI_ID;
+        rand soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK CPTRA_FUSE_AXI_ID_LOCK;
         rand soc_ifc_reg__CPTRA_WDT_CFG CPTRA_WDT_CFG[2];
         rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 CPTRA_iTRNG_ENTROPY_CONFIG_0;
         rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 CPTRA_iTRNG_ENTROPY_CONFIG_1;
@@ -3853,30 +3853,30 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_SECURITY_STATE.build();
             this.default_map.add_reg(this.CPTRA_SECURITY_STATE, 'h44);
-            foreach(this.CPTRA_MBOX_VALID_PAUSER[i0]) begin
-                this.CPTRA_MBOX_VALID_PAUSER[i0] = new($sformatf("CPTRA_MBOX_VALID_PAUSER[%0d]", i0));
-                this.CPTRA_MBOX_VALID_PAUSER[i0].configure(this);
+            foreach(this.CPTRA_MBOX_VALID_AXI_ID[i0]) begin
+                this.CPTRA_MBOX_VALID_AXI_ID[i0] = new($sformatf("CPTRA_MBOX_VALID_AXI_ID[%0d]", i0));
+                this.CPTRA_MBOX_VALID_AXI_ID[i0].configure(this);
                 
-                this.CPTRA_MBOX_VALID_PAUSER[i0].build();
-                this.default_map.add_reg(this.CPTRA_MBOX_VALID_PAUSER[i0], 'h48 + i0*'h4);
+                this.CPTRA_MBOX_VALID_AXI_ID[i0].build();
+                this.default_map.add_reg(this.CPTRA_MBOX_VALID_AXI_ID[i0], 'h48 + i0*'h4);
             end
-            foreach(this.CPTRA_MBOX_PAUSER_LOCK[i0]) begin
-                this.CPTRA_MBOX_PAUSER_LOCK[i0] = new($sformatf("CPTRA_MBOX_PAUSER_LOCK[%0d]", i0));
-                this.CPTRA_MBOX_PAUSER_LOCK[i0].configure(this);
+            foreach(this.CPTRA_MBOX_AXI_ID_LOCK[i0]) begin
+                this.CPTRA_MBOX_AXI_ID_LOCK[i0] = new($sformatf("CPTRA_MBOX_AXI_ID_LOCK[%0d]", i0));
+                this.CPTRA_MBOX_AXI_ID_LOCK[i0].configure(this);
                 
-                this.CPTRA_MBOX_PAUSER_LOCK[i0].build();
-                this.default_map.add_reg(this.CPTRA_MBOX_PAUSER_LOCK[i0], 'h5c + i0*'h4);
+                this.CPTRA_MBOX_AXI_ID_LOCK[i0].build();
+                this.default_map.add_reg(this.CPTRA_MBOX_AXI_ID_LOCK[i0], 'h5c + i0*'h4);
             end
-            this.CPTRA_TRNG_VALID_PAUSER = new("CPTRA_TRNG_VALID_PAUSER");
-            this.CPTRA_TRNG_VALID_PAUSER.configure(this);
+            this.CPTRA_TRNG_VALID_AXI_ID = new("CPTRA_TRNG_VALID_AXI_ID");
+            this.CPTRA_TRNG_VALID_AXI_ID.configure(this);
 
-            this.CPTRA_TRNG_VALID_PAUSER.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_VALID_PAUSER, 'h70);
-            this.CPTRA_TRNG_PAUSER_LOCK = new("CPTRA_TRNG_PAUSER_LOCK");
-            this.CPTRA_TRNG_PAUSER_LOCK.configure(this);
+            this.CPTRA_TRNG_VALID_AXI_ID.build();
+            this.default_map.add_reg(this.CPTRA_TRNG_VALID_AXI_ID, 'h70);
+            this.CPTRA_TRNG_AXI_ID_LOCK = new("CPTRA_TRNG_AXI_ID_LOCK");
+            this.CPTRA_TRNG_AXI_ID_LOCK.configure(this);
 
-            this.CPTRA_TRNG_PAUSER_LOCK.build();
-            this.default_map.add_reg(this.CPTRA_TRNG_PAUSER_LOCK, 'h74);
+            this.CPTRA_TRNG_AXI_ID_LOCK.build();
+            this.default_map.add_reg(this.CPTRA_TRNG_AXI_ID_LOCK, 'h74);
             foreach(this.CPTRA_TRNG_DATA[i0]) begin
                 this.CPTRA_TRNG_DATA[i0] = new($sformatf("CPTRA_TRNG_DATA[%0d]", i0));
                 this.CPTRA_TRNG_DATA[i0].configure(this);
@@ -3989,16 +3989,16 @@ package soc_ifc_reg_uvm;
 
             this.CPTRA_WDT_STATUS.build();
             this.default_map.add_reg(this.CPTRA_WDT_STATUS, 'h104);
-            this.CPTRA_FUSE_VALID_PAUSER = new("CPTRA_FUSE_VALID_PAUSER");
-            this.CPTRA_FUSE_VALID_PAUSER.configure(this);
+            this.CPTRA_FUSE_VALID_AXI_ID = new("CPTRA_FUSE_VALID_AXI_ID");
+            this.CPTRA_FUSE_VALID_AXI_ID.configure(this);
 
-            this.CPTRA_FUSE_VALID_PAUSER.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_VALID_PAUSER, 'h108);
-            this.CPTRA_FUSE_PAUSER_LOCK = new("CPTRA_FUSE_PAUSER_LOCK");
-            this.CPTRA_FUSE_PAUSER_LOCK.configure(this);
+            this.CPTRA_FUSE_VALID_AXI_ID.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_VALID_AXI_ID, 'h108);
+            this.CPTRA_FUSE_AXI_ID_LOCK = new("CPTRA_FUSE_AXI_ID_LOCK");
+            this.CPTRA_FUSE_AXI_ID_LOCK.configure(this);
 
-            this.CPTRA_FUSE_PAUSER_LOCK.build();
-            this.default_map.add_reg(this.CPTRA_FUSE_PAUSER_LOCK, 'h10c);
+            this.CPTRA_FUSE_AXI_ID_LOCK.build();
+            this.default_map.add_reg(this.CPTRA_FUSE_AXI_ID_LOCK, 'h10c);
             foreach(this.CPTRA_WDT_CFG[i0]) begin
                 this.CPTRA_WDT_CFG[i0] = new($sformatf("CPTRA_WDT_CFG[%0d]", i0));
                 this.CPTRA_WDT_CFG[i0].configure(this);

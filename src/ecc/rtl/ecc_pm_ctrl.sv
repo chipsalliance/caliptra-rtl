@@ -53,7 +53,7 @@ module ecc_pm_ctrl
     input  wire           zeroize,
 
     // from arith_unit
-    input  wire  [2  :   0]                 ecc_cmd_i,
+    input  wire  [3  :   0]                 ecc_cmd_i,
     input  wire                             sca_en_i,
     input  wire                             digit_i,
     output pm_instr_struct_t                instr_o,
@@ -85,7 +85,7 @@ module ecc_pm_ctrl
     pm_instr_struct_t prog_instr_pipe1;
     pm_instr_struct_t prog_instr_pipe2;
     
-    logic [2 : 0]  ecc_cmd_reg;
+    logic [3 : 0]  ecc_cmd_reg;
 
     logic stalled, stalled_pipe1;
     logic stall_flag;
@@ -193,6 +193,11 @@ module ecc_pm_ctrl
                                 prog_cntr <= CHK_PK_S;
                             end
 
+                            DH_SHARED_CMD : begin  // DH shared key
+                                mont_cntr <= (sca_en_i)? Secp384_SCA_MONT_COUNT : Secp384_MONT_COUNT;
+                                prog_cntr <= PM_INIT_DH_S;
+                            end
+
                             default : 
                                 prog_cntr <= NOP;
                         endcase
@@ -205,7 +210,7 @@ module ecc_pm_ctrl
                     end
 
                     // Montgoemry Ladder
-                    PM_INIT_G_E : begin //End of initilize R0 = G
+                    PM_INIT_G_E : begin //End of initilize R0 = Randomized G
                         prog_cntr <= PM_INIT_S;
                     end
 
@@ -213,7 +218,11 @@ module ecc_pm_ctrl
                         prog_cntr <= PM_INIT_S;
                     end
 
-                    PM_INIT_E : begin // End of initilaze R1 = PD(R0)
+                    PM_INIT_DH_E : begin //End of initilize R0 = Randomized PK
+                        prog_cntr <= PM_INIT_S;
+                    end
+
+                    PM_INIT_E : begin // End of initilaze R1 = 0
                         mont_cntr <= mont_cntr - 1;
                         req_digit_o <= 1;
                         prog_cntr <= PA_S;
@@ -301,7 +310,8 @@ module ecc_pm_ctrl
                     VER0_P0_S,
                     VER0_P1_S,
                     VER1_ST_S,
-                    VER2_PA_S: begin
+                    VER2_PA_S,
+                    PM_INIT_DH_S: begin
                         prog_cntr <= prog_cntr + 1;
                     end
 

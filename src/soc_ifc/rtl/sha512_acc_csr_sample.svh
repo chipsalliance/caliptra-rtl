@@ -40,8 +40,8 @@
         end
     endfunction
 
-    /*----------------------- SHA512_ACC_CSR__USER SAMPLE FUNCTIONS -----------------------*/
-    function void sha512_acc_csr__USER::sample(uvm_reg_data_t  data,
+    /*----------------------- SHA512_ACC_CSR__ID SAMPLE FUNCTIONS -----------------------*/
+    function void sha512_acc_csr__ID::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -49,19 +49,19 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(USER_bit_cg[bt]) this.USER_bit_cg[bt].sample(data[0 + bt]);
+            foreach(ID_bit_cg[bt]) this.ID_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*USER*/   );
+            this.fld_cg.sample( data[31:0]/*ID*/   );
         end
     endfunction
 
-    function void sha512_acc_csr__USER::sample_values();
+    function void sha512_acc_csr__ID::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(USER_bit_cg[bt]) this.USER_bit_cg[bt].sample(USER.get_mirrored_value() >> bt);
+            foreach(ID_bit_cg[bt]) this.ID_bit_cg[bt].sample(ID.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( USER.get_mirrored_value()   );
+            this.fld_cg.sample( ID.get_mirrored_value()   );
         end
     endfunction
 

@@ -36,7 +36,7 @@ import HMAC_out_pkg_hdl::*;
 interface HMAC_out_monitor_bfm #(
   int AHB_DATA_WIDTH = 32,
   int AHB_ADDR_WIDTH = 32,
-  int OUTPUT_TEXT_WIDTH = 384,
+  int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0
   )
 
@@ -128,8 +128,8 @@ end
   endfunction                                                                               
   
   reg transaction_flag;
-  reg [383:0] result_temp;
-  reg [383:0] block_temp;
+  reg [511:0] result_temp;
+  reg [511:0] block_temp;
 
   // ****************************************************************************              
   initial begin  
@@ -204,6 +204,14 @@ end
       while (transaction_flag_in_monitor_i ==0) @(posedge clk_i);
       repeat(4) @(posedge clk_i);
       if (transaction_flag_in_monitor_i == 1 ) transaction_flag = 1;
+      block_temp[511:480] = hrdata_i;
+      repeat (2) @(posedge clk_i);
+      block_temp[479:448] = hrdata_i;
+      repeat (2) @(posedge clk_i);
+      block_temp[447:416] = hrdata_i;
+      repeat (2) @(posedge clk_i);
+      block_temp[415:384] = hrdata_i;
+      repeat (2) @(posedge clk_i);
       block_temp[383:352] = hrdata_i;
       repeat (2) @(posedge clk_i);
       block_temp[351:320] = hrdata_i;

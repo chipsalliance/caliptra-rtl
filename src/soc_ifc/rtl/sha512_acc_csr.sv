@@ -67,7 +67,7 @@ module sha512_acc_csr (
     //--------------------------------------------------------------------------
     typedef struct packed{
         logic LOCK;
-        logic USER;
+        logic ID;
         logic MODE;
         logic START_ADDRESS;
         logic DLEN;
@@ -106,7 +106,7 @@ module sha512_acc_csr (
 
     always_comb begin
         decoded_reg_strb.LOCK = cpuif_req_masked & (cpuif_addr == 12'h0);
-        decoded_reg_strb.USER = cpuif_req_masked & (cpuif_addr == 12'h4);
+        decoded_reg_strb.ID = cpuif_req_masked & (cpuif_addr == 12'h4);
         decoded_reg_strb.MODE = cpuif_req_masked & (cpuif_addr == 12'h8);
         decoded_reg_strb.START_ADDRESS = cpuif_req_masked & (cpuif_addr == 12'hc);
         decoded_reg_strb.DLEN = cpuif_req_masked & (cpuif_addr == 12'h10);
@@ -158,8 +158,8 @@ module sha512_acc_csr (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } USER;
-        } USER;
+            } ID;
+        } ID;
         struct packed{
             struct packed{
                 logic [1:0] next;
@@ -404,8 +404,8 @@ module sha512_acc_csr (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } USER;
-        } USER;
+            } ID;
+        } ID;
         struct packed{
             struct packed{
                 logic [1:0] value;
@@ -591,7 +591,7 @@ module sha512_acc_csr (
         if(decoded_reg_strb.LOCK && !decoded_req_is_wr) begin // SW set on read
             next_c = '1;
             load_next_c = '1;
-        end else if(decoded_reg_strb.LOCK && decoded_req_is_wr && hwif_in.valid_user) begin // SW write 1 clear
+        end else if(decoded_reg_strb.LOCK && decoded_req_is_wr && hwif_in.valid_id) begin // SW write 1 clear
             next_c = field_storage.LOCK.LOCK.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
@@ -607,34 +607,34 @@ module sha512_acc_csr (
     end
     assign hwif_out.LOCK.LOCK.value = field_storage.LOCK.LOCK.value;
     assign hwif_out.LOCK.LOCK.swmod = decoded_reg_strb.LOCK;
-    // Field: sha512_acc_csr.USER.USER
+    // Field: sha512_acc_csr.ID.ID
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.USER.USER.value;
+        next_c = field_storage.ID.ID.value;
         load_next_c = '0;
         if(hwif_in.lock_set) begin // HW Write - we
-            next_c = hwif_in.USER.USER.next;
+            next_c = hwif_in.ID.ID.next;
             load_next_c = '1;
         end
-        field_combo.USER.USER.next = next_c;
-        field_combo.USER.USER.load_next = load_next_c;
+        field_combo.ID.ID.next = next_c;
+        field_combo.ID.ID.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.USER.USER.value <= 32'h0;
-        end else if(field_combo.USER.USER.load_next) begin
-            field_storage.USER.USER.value <= field_combo.USER.USER.next;
+            field_storage.ID.ID.value <= 32'h0;
+        end else if(field_combo.ID.ID.load_next) begin
+            field_storage.ID.ID.value <= field_combo.ID.ID.next;
         end
     end
-    assign hwif_out.USER.USER.value = field_storage.USER.USER.value;
+    assign hwif_out.ID.ID.value = field_storage.ID.ID.value;
     // Field: sha512_acc_csr.MODE.MODE
     always_comb begin
         automatic logic [1:0] next_c;
         automatic logic load_next_c;
         next_c = field_storage.MODE.MODE.value;
         load_next_c = '0;
-        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.MODE.MODE.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
         end
@@ -656,7 +656,7 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.MODE.ENDIAN_TOGGLE.value;
         load_next_c = '0;
-        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.MODE.ENDIAN_TOGGLE.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
         end
@@ -677,7 +677,7 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.START_ADDRESS.ADDR.value;
         load_next_c = '0;
-        if(decoded_reg_strb.START_ADDRESS && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.START_ADDRESS && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.START_ADDRESS.ADDR.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
@@ -698,7 +698,7 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.DLEN.LENGTH.value;
         load_next_c = '0;
-        if(decoded_reg_strb.DLEN && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.DLEN && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.DLEN.LENGTH.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
@@ -719,7 +719,7 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.DATAIN.DATAIN.value;
         load_next_c = '0;
-        if(decoded_reg_strb.DATAIN && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.DATAIN && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.DATAIN.DATAIN.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
@@ -740,7 +740,7 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.EXECUTE.EXECUTE.value;
         load_next_c = '0;
-        if(decoded_reg_strb.EXECUTE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
+        if(decoded_reg_strb.EXECUTE && decoded_req_is_wr && hwif_in.valid_id) begin // SW write
             next_c = (field_storage.EXECUTE.EXECUTE.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.EXECUTE.EXECUTE.hwclr) begin // HW Clear
@@ -1630,7 +1630,7 @@ module sha512_acc_csr (
     logic [44-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.LOCK && !decoded_req_is_wr) ? field_storage.LOCK.LOCK.value : '0;
     assign readback_array[0][31:1] = '0;
-    assign readback_array[1][31:0] = (decoded_reg_strb.USER && !decoded_req_is_wr) ? field_storage.USER.USER.value : '0;
+    assign readback_array[1][31:0] = (decoded_reg_strb.ID && !decoded_req_is_wr) ? field_storage.ID.ID.value : '0;
     assign readback_array[2][1:0] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.MODE.value : '0;
     assign readback_array[2][2:2] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.ENDIAN_TOGGLE.value : '0;
     assign readback_array[2][31:3] = '0;

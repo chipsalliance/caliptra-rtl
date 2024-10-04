@@ -24,7 +24,7 @@ module sha512_acc_top
       input logic         rst_b,
       input logic         cptra_pwrgood,
   
-      // Incoming request from ahb or apb
+      // Incoming request from ahb or axi
       input logic         req_dv,
       output logic        req_hold,
       input soc_ifc_req_t req_data,
@@ -164,19 +164,19 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   end // reg_update
 
   //SHA API
-  //Acquire the lock and store the user
-  always_comb hwif_in.USER.USER.next = req_data.user;
+  //Acquire the lock and store the id
+  always_comb hwif_in.ID.ID.next = 32'(req_data.id);
   //Detect the lock getting set when swmod is asserted and lock is 0 and it's not a write
   //Since this lock is cleared by writing, the swmod asserts on write attempts too, but we only want to set lock on read when value is 0
   always_comb lock_set = ~hwif_out.LOCK.LOCK.value & hwif_out.LOCK.LOCK.swmod & ~req_data.write;
   always_comb hwif_in.lock_set = lock_set;
 
-  //check the requesting user:
+  //check the requesting id:
   //don't update SHA registers if lock hasn't been acquired
   //if uc has the lock, check that this request is from uc
-  //if soc has the lock, check that this request is from soc and user attributes match
-  always_comb hwif_in.valid_user = hwif_out.LOCK.LOCK.value & ((~soc_has_lock & ~req_data.soc_req) |
-                                                                (soc_has_lock & req_data.soc_req & (req_data.user == hwif_out.USER.USER.value)));
+  //if soc has the lock, check that this request is from soc and id attributes match
+  always_comb hwif_in.valid_id = hwif_out.LOCK.LOCK.value & ((~soc_has_lock & ~req_data.soc_req) |
+                                                              (soc_has_lock & req_data.soc_req & (req_data.id == hwif_out.ID.ID.value[SOC_IFC_ID_W-1:0])));
   always_comb hwif_in.soc_req = req_data.soc_req;
   always_comb hwif_in.STATUS.SOC_HAS_LOCK.next = soc_has_lock;
   
@@ -187,7 +187,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb streaming_mode = ~mode[1] | soc_has_lock;
   always_comb mailbox_mode = mode[1] & ~soc_has_lock;
   //Detect writes to datain register
-  always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
+  always_comb datain_write = hwif_in.valid_id & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
 
   //When we reach the end of a block we indicate block full
@@ -400,7 +400,7 @@ sha512_acc_csr i_sha512_acc_csr (
     .s_cpuif_req_is_wr   (req_data.write),
     .s_cpuif_addr        (req_data.addr[SHA512_ACC_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data     (req_data.wdata),
-    .s_cpuif_wr_biten    ('1),
+    .s_cpuif_wr_biten    ('1),// FIXME
     .s_cpuif_req_stall_wr( ),
     .s_cpuif_req_stall_rd( ),
     .s_cpuif_rd_ack      ( ),

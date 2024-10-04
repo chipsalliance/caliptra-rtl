@@ -61,6 +61,13 @@ class HMAC_in_random_sequence #(
       start_item(req);
       // Randomize the transaction
       if(!req.randomize()) `uvm_fatal("SEQ", "HMAC_in_random_sequence::body()-HMAC_in_transaction randomization failed")
+      
+      if ($urandom_range(0, 1) == 0) begin
+        req.op = hmac384_op;
+      end else begin
+          req.op = hmac512_op;
+      end
+
       `uvm_info("SEQ", {"Request:",req.convert2string()},UVM_MEDIUM)
       // Send the transaction to the HMAC_in_driver_bfm via the sequencer and HMAC_in_driver.
       finish_item(req);

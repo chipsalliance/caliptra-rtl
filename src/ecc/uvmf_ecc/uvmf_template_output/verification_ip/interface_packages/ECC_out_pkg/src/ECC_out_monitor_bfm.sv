@@ -79,7 +79,7 @@ end
   tri [AHB_DATA_WIDTH-1:0] hrdata_i;
   tri  transaction_flag_out_monitor_i;
   tri [2:0] test_i;
-  tri [1:0] op_i;
+  tri [2:0] op_i;
   assign clk_i = bus.clk;
   assign rst_n_i = bus.rst_n;
   assign hresp_i = bus.hresp;
@@ -136,9 +136,10 @@ end
   reg [383:0]   R;
   reg [383:0]   S;
   reg [383:0]   verify_R;
+  reg [383:0]   dh_sharedkey;
 
 
-  reg [1:0]     op;
+  reg [2:0]     op;
   reg [1:0]     test;
 
   // ****************************************************************************              
@@ -151,6 +152,7 @@ end
     R = 0;
     S = 0;
     verify_R = 0;
+    dh_sharedkey = 0;
 
 
     @go;                                                                                   
@@ -190,6 +192,7 @@ end
     //     //    ECC_out_monitor_struct.result_R
     //     //    ECC_out_monitor_struct.result_S
     //     //    ECC_out_monitor_struct.result_verify_R
+    //     //    ECC_out_monitor_struct.result_sharedkey
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -220,6 +223,7 @@ end
       ECC_out_monitor_struct.result_R         = 0;
       ECC_out_monitor_struct.result_S         = 0;
       ECC_out_monitor_struct.result_verify_R         = 0;
+      ECC_out_monitor_struct.result_sharedkey        = 0;
 
       op = op_i;
       test = test_i;
@@ -234,6 +238,7 @@ end
       R         = 0;
       S         = 0;
       verify_R  = 0;
+      dh_sharedkey = 0;
 
       
       transaction_flag = 0;
@@ -246,7 +251,7 @@ end
         //$display("***DEBUG*** transaction_flag_out_monitor is 1");
         transaction_flag = 1;
         repeat (2) @(posedge clk_i);
-        if (op == 2'b00) begin // KEY_GEN
+        if (op == 3'b000) begin // KEY_GEN
           @(posedge clk_i);
           privkey[383:352] = hrdata_i;
           //$display("**ECC_out_monitor_bfm: privkey[383:352] = %h, time = %0t", privkey[383:352], $time);
@@ -328,6 +333,7 @@ end
           ECC_out_monitor_struct.result_R = 0;
           ECC_out_monitor_struct.result_S = 0;
           ECC_out_monitor_struct.result_verify_R = 0;
+          ECC_out_monitor_struct.result_sharedkey = 0;
             
           privkey   = 0;
           pubkey_x  = 0;
@@ -335,10 +341,11 @@ end
           R         = 0;
           S         = 0;
           verify_R  = 0;
+          dh_sharedkey = 0;
 
             
         end
-        else if (op == 2'b01) begin // KEY_SIGN
+        else if (op == 3'b001) begin // KEY_SIGN
           @(posedge clk_i);
           R[383:352] = hrdata_i;
           repeat (2) @(posedge clk_i);
@@ -395,6 +402,7 @@ end
           ECC_out_monitor_struct.result_R = R;
           ECC_out_monitor_struct.result_S = S;
           ECC_out_monitor_struct.result_verify_R = 0;
+          ECC_out_monitor_struct.result_sharedkey = 0;
           
 
           privkey   = 0;
@@ -403,9 +411,10 @@ end
           R         = 0;
           S         = 0;
           verify_R  = 0;
+          dh_sharedkey = 0;
 
         end
-        else if (op == 2'b10) begin // KEY_VERIFY
+        else if (op == 3'b010) begin // KEY_VERIFY
           @(posedge clk_i);
           verify_R[383:352] = hrdata_i;      
           repeat (2) @(posedge clk_i);
@@ -438,6 +447,7 @@ end
           ECC_out_monitor_struct.result_R = 0;
           ECC_out_monitor_struct.result_S = 0;
           ECC_out_monitor_struct.result_verify_R = verify_R;
+          ECC_out_monitor_struct.result_sharedkey = 0;
 
           privkey   = 0;
           pubkey_x  = 0;
@@ -445,7 +455,52 @@ end
           R         = 0;
           S         = 0;
           verify_R  = 0;
+          dh_sharedkey = 0;
 
+        end
+        else if (op == 3'b011) begin //ECDH sharedkey
+          @(posedge clk_i);
+          dh_sharedkey[383:352] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[351:320] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[319:288] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[287:256] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[255:224] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[223:192] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[191:160] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[159:128] = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[127:96]  = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[95:64]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[63:32]   = hrdata_i;
+          repeat (2) @(posedge clk_i);
+          dh_sharedkey[31:0]    = hrdata_i;
+
+          @(posedge clk_i);
+          ECC_out_monitor_struct.result_privkey = 0;
+          ECC_out_monitor_struct.result_pubkey_x = 0;
+          ECC_out_monitor_struct.result_pubkey_y = 0;
+          ECC_out_monitor_struct.result_R = 0;
+          ECC_out_monitor_struct.result_S = 0;
+          ECC_out_monitor_struct.result_verify_R = 0;
+          ECC_out_monitor_struct.result_sharedkey = dh_sharedkey;
+          
+
+          privkey   = 0;
+          pubkey_x  = 0;
+          pubkey_y  = 0;
+          R         = 0;
+          S         = 0;
+          verify_R  = 0;
+          dh_sharedkey = 0;
         end
       end
     end

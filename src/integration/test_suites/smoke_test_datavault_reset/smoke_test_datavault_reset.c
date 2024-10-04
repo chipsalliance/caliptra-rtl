@@ -23,10 +23,10 @@
 #include "printf.h"
 #include "datavault.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
-volatile uint32_t err_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t  err_count __attribute__((section(".dccm.persistent"))) = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -57,8 +57,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0
 };
 
 #ifndef MY_RANDOM_SEED

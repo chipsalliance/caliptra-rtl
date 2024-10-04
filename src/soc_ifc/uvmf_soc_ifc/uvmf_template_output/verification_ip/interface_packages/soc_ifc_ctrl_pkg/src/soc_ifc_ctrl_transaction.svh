@@ -41,7 +41,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   rand bit [63:0] generic_input_val ;
 
   //Constraints for the transaction variables:
-  constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
+  constraint wait_cycles_c { wait_cycles dist {[1:9] :/ 80, [10:99] :/ 15, [100:500] :/ 5}; }
   constraint generic_tie_zero_c { generic_input_val == 64'h0; }
   constraint debug_locked_c {security_state.debug_locked == 1'b1;} //reset sequence tied this off, doing it here instead
   constraint device_lifecycle_const_c { if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }

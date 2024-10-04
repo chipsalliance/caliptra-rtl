@@ -1,7 +1,8 @@
 ---
 provides: [soc_ifc_pkg]
 schema_version: 2.4.0
-requires: []
+requires:
+  - caliptra_top_defines
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -33,6 +34,7 @@ provides: [soc_ifc_coverage]
 schema_version: 2.4.0
 requires:
   - libs
+  - axi_pkg
   - soc_ifc_pkg
 targets:
   tb:
@@ -46,11 +48,12 @@ provides: [soc_ifc_top]
 schema_version: 2.4.0
 requires:
   - libs
+  - axi_sub
+  - axi_dma
   # for beh_lib with rvecc_encode/decode
   - el2_veer_pkg
   - soc_ifc_pkg
   - sha512_ctrl
-  - caliptra_top_defines 
 targets:
   rtl:
     directories:
@@ -77,7 +80,6 @@ schema_version: 2.4.0
 requires:
   - soc_ifc_coverage
   - soc_ifc_top
-  - caliptra_top_defines
 targets:
   tb:
     directories:

@@ -25,6 +25,7 @@ interface hmac_ctrl_cov_if
     logic init;
     logic next;
     logic zeroize;
+    logic mode;
     logic ready;
     logic valid;
     
@@ -35,6 +36,7 @@ interface hmac_ctrl_cov_if
     assign init = hmac_ctrl.hmac_inst.init_reg;
     assign next = hmac_ctrl.hmac_inst.next_reg;
     assign zeroize = hmac_ctrl.hmac_inst.zeroize_reg;
+    assign mode = hmac_ctrl.hmac_inst.mode_reg;
     assign ready = hmac_ctrl.hmac_inst.ready_reg;
     assign valid = hmac_ctrl.hmac_inst.tag_valid_reg;
 
@@ -49,6 +51,7 @@ interface hmac_ctrl_cov_if
         init_cp: coverpoint init;
         next_cp: coverpoint next;
         zeroize_cp: coverpoint zeroize;
+        mode_cp: coverpoint mode;
         ready_cp: coverpoint ready;
         valid_cp: coverpoint valid;
 
@@ -58,9 +61,12 @@ interface hmac_ctrl_cov_if
 
         init_ready_cp: cross ready, init;
         next_ready_cp: cross ready, next;
+        mode_ready_cp: cross ready, mode;
         zeroize_ready_cp: cross ready, zeroize;
         zeroize_init_cp: cross zeroize, init;
         zeroize_next_cp: cross zeroize, next;
+        init_mode_cp: cross init, mode;
+        next_mode_cp: cross next, mode;
 
     endgroup
 

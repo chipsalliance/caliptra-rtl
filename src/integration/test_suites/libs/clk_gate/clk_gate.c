@@ -19,7 +19,7 @@
 #include "printf.h"
 
 void set_mit0_and_halt_core(uint32_t mitb0, uint32_t mie_en) {
-    VPRINTF(LOW, "Enabling internal timer0 and halting core\n");
+    VPRINTF(LOW, "En int tmr0, hlt core\n");
     //Enable internal timer0
         __asm__ volatile ("csrwi    %0, %1" \
                         : /* output: none */        \

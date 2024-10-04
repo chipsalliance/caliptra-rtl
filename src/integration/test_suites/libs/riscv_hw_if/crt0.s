@@ -90,7 +90,7 @@ bss_cp_loop:
 _finish:
     li t0, STDOUT
     addi t5, zero, 0xff
-    sb t5, 0(t0)
+    sw t5, 0(t0)
     beq zero, zero, _finish
 .rept 100
     nop
@@ -121,10 +121,10 @@ li t3, STDOUT
 la t4, trap_msg
 trap_print_loop:
    lb t0, 0(t4)
-   sb t0, 0(t3)
+   sw t0, 0(t3)
    addi t4, t4, 1
    bnez t0, trap_print_loop
 addi t5, zero, 0x1
-sb t5, 0(t3)
+sw t5, 0(t3)
 j early_trap_vector
 .cfi_endproc

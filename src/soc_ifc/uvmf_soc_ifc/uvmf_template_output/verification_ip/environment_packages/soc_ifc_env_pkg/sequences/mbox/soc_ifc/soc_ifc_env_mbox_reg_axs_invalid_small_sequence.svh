@@ -36,6 +36,7 @@ class soc_ifc_env_mbox_reg_axs_invalid_small_sequence extends soc_ifc_env_mbox_r
   constraint mbox_resp_dlen_max_small_c { mbox_resp_expected_dlen < 32'h0000_0200; }
   // Valid solution for the custom delay ruleset, to control random delays while
   // waiting to inject random error accesses
-  constraint custom_delay_c { rand_delay > 0; rand_delay < (mbox_op_rand.dlen * 25); }
+  constraint custom_delay_c { rand_delay > 0;
+                              rand_delay < ((mbox_op_rand.dlen+1) * 25); }
 
 endclass

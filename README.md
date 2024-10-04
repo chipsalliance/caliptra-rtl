@@ -14,8 +14,16 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/07/02*_
+_*Last Update: 2024/09/20*_
 
+:warning:**$${\textsf{\color{red}DISCLAIMER:\ This\ repository\ is\ under\ active\ development\ towards\ a\ Gen2\ release\ on\ branch\ main.}}$$**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Functionality\ or\ quality\ is\ not\ guaranteed.}}$$**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Do\ not\ integrate\ this\ into\ a\ production\ design!}}$$**<br>
+
+## **Release Consumption and Integration** ##
+Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
+Releases are published as a tag, and also contain downloadable assets (which should not be used).
+Instead of downloading the assets attached to the published release, integrators should consume Caliptra releases by pulling code from the repository at the associated tag, due to https://github.com/chipsalliance/caliptra-rtl/issues/471.
 
 ## **Tools Used** ##
 
@@ -201,7 +209,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
       - CALIPTRA_INTERNAL_I3C
       - CALIPTRA_INTERNAL_TRNG
 1. Copy the test generator scripts to the run output directory:
-    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+    - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)
         * Necessary for [randomized_pcr_signing](src/integration/test_suites/randomized_pcr_signing)
         * OPTIONAL otherwise
     - [src/doe/tb/doe_test_gen.py](src/doe/tb/doe_test_gen.py)
@@ -304,7 +312,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 1. ALL compilation steps may be completed by using the file-list found at `src/<block>/uvmf_<name>/config/<name>.vf`
 1. NOTE: `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
 1. Copy the test generator scripts to the run output directory:
-    - [src/ecc/tb/ecdsa_secp384r1.exe](src/ecc/tb/ecdsa_secp384r1.exe)
+    - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)
         * Necessary for ECC unittest
     - [src/hmac/tb/test_gen.py](src/hmac/tb/test_gen.py)
         * Required for uvmf_hmac unittest

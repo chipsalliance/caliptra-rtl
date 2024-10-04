@@ -74,6 +74,8 @@ class ECC_predictor #(
   reg [383:0] R;
   reg [383:0] S;
   reg [383:0] verify_R;
+  reg [383:0] privkeyB;
+  reg [383:0] dh_sharedkey;
 
   int line_skip;
   int cnt_tmp;
@@ -127,6 +129,7 @@ class ECC_predictor #(
       ECC_sb_ap_output_transaction.result_R         = 0;
       ECC_sb_ap_output_transaction.result_S         = 0; 
       ECC_sb_ap_output_transaction.result_verify_R  = 0;
+      ECC_sb_ap_output_transaction.result_sharedkey  = 0;
       /*
       $display("**ECC_predictor** privkey = %96x", ECC_sb_ap_output_transaction.result_privkey);
       $display("**ECC_predictor** pubkey_x = %96x", ECC_sb_ap_output_transaction.result_pubkey_x);
@@ -134,6 +137,7 @@ class ECC_predictor #(
       $display("**ECC_predictor** result_R = %96x", ECC_sb_ap_output_transaction.result_R);
       $display("**ECC_predictor** result_S = %96x", ECC_sb_ap_output_transaction.result_S);
       $display("**ECC_predictor** verify_R = %96x", ECC_sb_ap_output_transaction.result_verify_R);
+      $display("**ECC_predictor** verify_R = %96x", ECC_sb_ap_output_transaction.result_sharedkey);
       */
 
     end
@@ -171,6 +175,10 @@ class ECC_predictor #(
       $sscanf(line_read, "%h", S);
       $fgets(line_read, fd_r);
       $sscanf(line_read, "%h", tmp_data); // IV, not used by predictor
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%h", privkeyB);
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%h", dh_sharedkey);
 
       $fclose(fd_r);
 
@@ -181,6 +189,7 @@ class ECC_predictor #(
         ECC_sb_ap_output_transaction.result_R         = 0;
         ECC_sb_ap_output_transaction.result_S         = 0; 
         ECC_sb_ap_output_transaction.result_verify_R  = 0;
+        ECC_sb_ap_output_transaction.result_sharedkey = 0;
       end
       else if (t.op == key_sign) begin
         ECC_sb_ap_output_transaction.result_privkey   = 0;
@@ -189,6 +198,7 @@ class ECC_predictor #(
         ECC_sb_ap_output_transaction.result_R         = R;
         ECC_sb_ap_output_transaction.result_S         = S; 
         ECC_sb_ap_output_transaction.result_verify_R  = 0;
+        ECC_sb_ap_output_transaction.result_sharedkey = 0;
       end
       else if (t.op == key_verify) begin
         ECC_sb_ap_output_transaction.result_privkey   = 0;
@@ -197,6 +207,16 @@ class ECC_predictor #(
         ECC_sb_ap_output_transaction.result_R         = 0;
         ECC_sb_ap_output_transaction.result_S         = 0; 
         ECC_sb_ap_output_transaction.result_verify_R  = R;
+        ECC_sb_ap_output_transaction.result_sharedkey = 0;
+      end
+      else if (t.op == ecdh_sharedkey) begin
+        ECC_sb_ap_output_transaction.result_privkey   = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_x  = 0;
+        ECC_sb_ap_output_transaction.result_pubkey_y  = 0;
+        ECC_sb_ap_output_transaction.result_R         = 0;
+        ECC_sb_ap_output_transaction.result_S         = 0; 
+        ECC_sb_ap_output_transaction.result_verify_R  = 0;
+        ECC_sb_ap_output_transaction.result_sharedkey = dh_sharedkey;
       end
 
       

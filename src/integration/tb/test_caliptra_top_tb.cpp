@@ -57,8 +57,9 @@ int main(int argc, char** argv) {
 #if VM_TRACE
       tfp->dump (main_time);
 #endif
-      main_time += 5;
-      tb->core_clk = !tb->core_clk;
+      main_time += 1;
+      // Toggle every 5ns (timescale precision is 100ps)
+      if (main_time % 50 == 0) tb->core_clk = !tb->core_clk;
       tb->eval();
   }
 

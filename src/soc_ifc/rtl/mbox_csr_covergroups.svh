@@ -41,8 +41,8 @@
 
     endgroup
 
-    /*----------------------- MBOX_CSR__MBOX_USER COVERGROUPS -----------------------*/
-    covergroup mbox_csr__mbox_user_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- MBOX_CSR__MBOX_ID COVERGROUPS -----------------------*/
+    covergroup mbox_csr__mbox_id_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -53,11 +53,11 @@
         }
 
     endgroup
-    covergroup mbox_csr__mbox_user_fld_cg with function sample(
-    input bit [32-1:0] user
+    covergroup mbox_csr__mbox_id_fld_cg with function sample(
+    input bit [32-1:0] id
     );
         option.per_instance = 1;
-        user_cp : coverpoint user {
+        id_cp : coverpoint id {
             bins zero_val = {32'h0};
             bins rand_val[64] = {[1:32'hFFFF_FFFE]};
             bins ones_val = {{32{1'b1}}};
@@ -221,7 +221,8 @@
     input bit [1-1:0] ecc_single_error,
     input bit [1-1:0] ecc_double_error,
     input bit [3-1:0] mbox_fsm_ps,
-    input bit [1-1:0] soc_has_lock
+    input bit [1-1:0] soc_has_lock,
+    input bit [15-1:0] mbox_rdptr
     );
         option.per_instance = 1;
         status_cp : coverpoint status;
@@ -278,6 +279,7 @@
 //            illegal_bins TRANSITION_ERROR_EXECUTE_SOC         = (mbox_fsm_state_e'(MBOX_ERROR)        => mbox_fsm_state_e'(MBOX_EXECUTE_SOC));
         }
         soc_has_lock_cp : coverpoint soc_has_lock;
+        mbox_rdptr_cp : coverpoint mbox_rdptr;
         status_edge_cp : coverpoint status {
             bins rise = (0 => 1);
             bins fall = (1 => 0);

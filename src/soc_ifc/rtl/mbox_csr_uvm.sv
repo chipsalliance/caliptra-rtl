@@ -34,17 +34,17 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_lock
 
-    // Reg - mbox_csr::mbox_user
-    class mbox_csr__mbox_user extends uvm_reg;
+    // Reg - mbox_csr::mbox_id
+    class mbox_csr__mbox_id extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        mbox_csr__mbox_user_bit_cg user_bit_cg[32];
-        mbox_csr__mbox_user_fld_cg fld_cg;
-        rand uvm_reg_field user;
+        mbox_csr__mbox_id_bit_cg id_bit_cg[32];
+        mbox_csr__mbox_id_fld_cg fld_cg;
+        rand uvm_reg_field id;
 
-        function new(string name = "mbox_csr__mbox_user");
+        function new(string name = "mbox_csr__mbox_id");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -54,15 +54,15 @@ package mbox_csr_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.user = new("user");
-            this.user.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.id = new("id");
+            this.id.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(user_bit_cg[bt]) user_bit_cg[bt] = new();
+                foreach(id_bit_cg[bt]) id_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : mbox_csr__mbox_user
+    endclass : mbox_csr__mbox_id
 
     // Reg - mbox_csr::mbox_cmd
     class mbox_csr__mbox_cmd extends uvm_reg;
@@ -302,7 +302,7 @@ package mbox_csr_uvm;
     // Addrmap - mbox_csr
     class mbox_csr extends uvm_reg_block;
         rand mbox_csr__mbox_lock mbox_lock;
-        rand mbox_csr__mbox_user mbox_user;
+        rand mbox_csr__mbox_id mbox_id;
         rand mbox_csr__mbox_cmd mbox_cmd;
         rand mbox_csr__mbox_dlen mbox_dlen;
         rand mbox_csr__mbox_datain mbox_datain;
@@ -322,11 +322,11 @@ package mbox_csr_uvm;
 
             this.mbox_lock.build();
             this.default_map.add_reg(this.mbox_lock, 'h0);
-            this.mbox_user = new("mbox_user");
-            this.mbox_user.configure(this);
+            this.mbox_id = new("mbox_id");
+            this.mbox_id.configure(this);
 
-            this.mbox_user.build();
-            this.default_map.add_reg(this.mbox_user, 'h4);
+            this.mbox_id.build();
+            this.default_map.add_reg(this.mbox_id, 'h4);
             this.mbox_cmd = new("mbox_cmd");
             this.mbox_cmd.configure(this);
 

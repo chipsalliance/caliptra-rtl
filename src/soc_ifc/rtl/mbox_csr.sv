@@ -67,7 +67,7 @@ module mbox_csr (
     //--------------------------------------------------------------------------
     typedef struct packed{
         logic mbox_lock;
-        logic mbox_user;
+        logic mbox_id;
         logic mbox_cmd;
         logic mbox_dlen;
         logic mbox_datain;
@@ -84,7 +84,7 @@ module mbox_csr (
 
     always_comb begin
         decoded_reg_strb.mbox_lock = cpuif_req_masked & (cpuif_addr == 6'h0);
-        decoded_reg_strb.mbox_user = cpuif_req_masked & (cpuif_addr == 6'h4);
+        decoded_reg_strb.mbox_id = cpuif_req_masked & (cpuif_addr == 6'h4);
         decoded_reg_strb.mbox_cmd = cpuif_req_masked & (cpuif_addr == 6'h8);
         decoded_reg_strb.mbox_dlen = cpuif_req_masked & (cpuif_addr == 6'hc);
         decoded_reg_strb.mbox_datain = cpuif_req_masked & (cpuif_addr == 6'h10);
@@ -114,8 +114,8 @@ module mbox_csr (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } user;
-        } mbox_user;
+            } id;
+        } mbox_id;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -190,8 +190,8 @@ module mbox_csr (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } user;
-        } mbox_user;
+            } id;
+        } mbox_id;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -270,27 +270,27 @@ module mbox_csr (
     end
     assign hwif_out.mbox_lock.lock.value = field_storage.mbox_lock.lock.value;
     assign hwif_out.mbox_lock.lock.swmod = decoded_reg_strb.mbox_lock && !decoded_req_is_wr;
-    // Field: mbox_csr.mbox_user.user
+    // Field: mbox_csr.mbox_id.id
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.mbox_user.user.value;
+        next_c = field_storage.mbox_id.id.value;
         load_next_c = '0;
         if(hwif_in.lock_set) begin // HW Write - we
-            next_c = hwif_in.mbox_user.user.next;
+            next_c = hwif_in.mbox_id.id.next;
             load_next_c = '1;
         end
-        field_combo.mbox_user.user.next = next_c;
-        field_combo.mbox_user.user.load_next = load_next_c;
+        field_combo.mbox_id.id.next = next_c;
+        field_combo.mbox_id.id.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.mbox_user.user.value <= 32'h0;
-        end else if(field_combo.mbox_user.user.load_next) begin
-            field_storage.mbox_user.user.value <= field_combo.mbox_user.user.next;
+            field_storage.mbox_id.id.value <= 32'h0;
+        end else if(field_combo.mbox_id.id.load_next) begin
+            field_storage.mbox_id.id.value <= field_combo.mbox_id.id.next;
         end
     end
-    assign hwif_out.mbox_user.user.value = field_storage.mbox_user.user.value;
+    assign hwif_out.mbox_id.id.value = field_storage.mbox_id.id.value;
     // Field: mbox_csr.mbox_cmd.command
     always_comb begin
         automatic logic [31:0] next_c;
@@ -585,7 +585,7 @@ module mbox_csr (
     logic [9-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
-    assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
+    assign readback_array[1][31:0] = (decoded_reg_strb.mbox_id && !decoded_req_is_wr) ? field_storage.mbox_id.id.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.mbox_cmd && !decoded_req_is_wr) ? field_storage.mbox_cmd.command.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.mbox_dlen && !decoded_req_is_wr) ? field_storage.mbox_dlen.length.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.mbox_datain && !decoded_req_is_wr) ? field_storage.mbox_datain.datain.value : '0;
