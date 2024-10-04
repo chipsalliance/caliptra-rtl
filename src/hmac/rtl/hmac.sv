@@ -20,6 +20,7 @@
 //
 //======================================================================
 //`include "kv_defines.svh"
+`include "kv_macros.svh"
 
 module hmac 
        import hmac_param_pkg::*;
