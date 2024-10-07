@@ -3236,9 +3236,9 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
 
-    // mldsa_keygen_signing_flow(seed, sign_rnd, msg, privkey, pubkey, sign);
-    // mldsa_zeroize();
-    // cptra_intr_rcv.mldsa_notif = 0;
+    mldsa_keygen_signing_flow(seed, sign_rnd, msg, privkey, pubkey, sign);
+    mldsa_zeroize();
+    cptra_intr_rcv.mldsa_notif = 0;
 
     printf("%c",0xff); //End the test
     
