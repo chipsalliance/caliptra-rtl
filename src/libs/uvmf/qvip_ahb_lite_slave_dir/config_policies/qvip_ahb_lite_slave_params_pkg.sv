@@ -16,8 +16,8 @@ package qvip_ahb_lite_slave_params_pkg;
         localparam int AHB_NUM_MASTER_BITS = 1;
         localparam int AHB_NUM_SLAVES      = 1;
         localparam int AHB_ADDRESS_WIDTH   = 32;
-        localparam int AHB_WDATA_WIDTH     = 32;//64;
-        localparam int AHB_RDATA_WIDTH     = 32;//64;
+        localparam int AHB_WDATA_WIDTH     = 64;
+        localparam int AHB_RDATA_WIDTH     = 64;
     endclass: ahb_lite_slave_0_params
     
     typedef ahb_vip_config #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,ahb_lite_slave_0_params::AHB_NUM_SLAVES,ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,ahb_lite_slave_0_params::AHB_WDATA_WIDTH,ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_lite_slave_0_cfg_t;
