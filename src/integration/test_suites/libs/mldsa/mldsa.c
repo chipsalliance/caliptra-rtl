@@ -110,7 +110,7 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     // else{
         // Read the data back from MLDSA register
         printf("Load PRIVKEY data from MLDSA\n");
-        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT;
+        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
         offset = 0;
         while (offset <= 1223) {
             mldsa_privkey[offset] = *reg_ptr;
@@ -187,7 +187,7 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
     wait_for_mldsa_intr();
 
     printf("Load PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT;
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset <= 1223) {
         mldsa_privkey[offset] = *reg_ptr;
@@ -272,7 +272,7 @@ void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entro
 //     else{
         // Program MLDSA PRIVKEY
         printf("Writing privkey\n");
-        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN;
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
         offset = 0;
         while (offset <= 1223) {
             // printf("offset = %0d, value = %x, reg ptr = %0d\n", offset++, privkey[offset++], reg_ptr);
