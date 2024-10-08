@@ -67,7 +67,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
     .mldsa_notif      = 0,
-    .axi_dma_notif    = 0,
+    .axi_dma_error    = 0,
     .axi_dma_notif    = 0,
 };
 
