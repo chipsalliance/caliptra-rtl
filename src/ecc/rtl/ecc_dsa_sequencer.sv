@@ -137,6 +137,27 @@ module ecc_dsa_sequencer
                     DSA_VER_S+ 22 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
                     DSA_VER_S+ 23 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
 
+
+                    //DH SHARED_KEY
+                    DH_SHARED_S     : douta <= {DSA_UOP_WR_CORE,        CONST_E_b_MONT_ID,  UOP_OPR_CONST_E_b};
+                    DH_SHARED_S+ 1  : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
+                    DH_SHARED_S+ 2  : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
+                    DH_SHARED_S+ 3  : douta <= {DSA_UOP_PK_CHK,         NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 4  : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 5  : douta <= {DSA_UOP_RD_CORE,        PK_VALID_ID,        UOP_OPR_PK_VALID};
+                    DH_SHARED_S+ 6  : douta <= {DSA_UOP_HMAC_DRBG,      NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 7  : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 8  : douta <= {DSA_UOP_WR_CORE,        PRIVKEY_ID,         UOP_OPR_SCALAR_PK};
+                    DH_SHARED_S+ 9  : douta <= {DSA_UOP_RD_CORE,        SCALAR_G_ID,        UOP_OPR_SCALAR_PK};
+                    DH_SHARED_S+ 10 : douta <= {DSA_UOP_SCALAR_SCA,     SCALAR_G_ID,        UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 11 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 12 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_ID,          UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 13 : douta <= {DSA_UOP_WR_CORE,        LAMBDA_ID,          UOP_OPR_LAMBDA};
+                    DH_SHARED_S+ 14 : douta <= {DH_UOP_SHAREDKEY,       NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 15 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DH_SHARED_S+ 16 : douta <= {DSA_UOP_RD_CORE,        DH_SHAREDKEY_ID,    UOP_OPR_Qx_AFFN};
+                    DH_SHARED_S+ 17 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+
                     default :       douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
                 endcase 
             end

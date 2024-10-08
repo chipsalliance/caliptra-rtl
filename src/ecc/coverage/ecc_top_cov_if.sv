@@ -22,8 +22,8 @@ interface ecc_top_cov_if
 
 );
 
-    logic [1 : 0] ecc_cmd;
-    logic [1 : 0] ecc_sw_cmd;
+    logic [2 : 0] ecc_cmd;
+    logic [2 : 0] ecc_sw_cmd;
     logic zeroize;
     logic pcr_sign_mode;
     logic ready;
@@ -44,6 +44,7 @@ interface ecc_top_cov_if
     logic keygen_process;
     logic signing_process;
     logic verifying_process;
+    logic sharedkey_process;
 
 
     logic mod_p_q;
@@ -77,15 +78,16 @@ interface ecc_top_cov_if
     assign ecc_cmd = ecc_top.ecc_dsa_ctrl_i.cmd_reg;
     assign pcr_sign_mode = ecc_top.ecc_dsa_ctrl_i.pcr_sign_mode;
     assign zeroize = ecc_top.ecc_dsa_ctrl_i.zeroize_reg;
-    assign ready = ecc_top.ecc_dsa_ctrl_i.dsa_ready_reg;
-    assign valid = ecc_top.ecc_dsa_ctrl_i.dsa_valid_reg;
+    assign ready = ecc_top.ecc_dsa_ctrl_i.ecc_ready_reg;
+    assign valid = ecc_top.ecc_dsa_ctrl_i.ecc_valid_reg;
 
     always_ff @(posedge clk) begin
         if (!reset_n) begin
             ecc_sw_cmd <= '0;
         end
         else if (ecc_top.ecc_reg1.decoded_reg_strb.ECC_CTRL && ecc_top.ecc_reg1.decoded_req_is_wr) begin // SW write
-            ecc_sw_cmd <= (ecc_top.ecc_reg1.field_storage.ECC_CTRL.CTRL.value & ~ecc_top.ecc_reg1.decoded_wr_biten[1:0]) | (ecc_top.ecc_reg1.decoded_wr_data[1:0] & ecc_top.ecc_reg1.decoded_wr_biten[1:0]);
+            ecc_sw_cmd[1:0] <= (ecc_top.ecc_reg1.field_storage.ECC_CTRL.CTRL.value & ~ecc_top.ecc_reg1.decoded_wr_biten[1:0]) | (ecc_top.ecc_reg1.decoded_wr_data[1:0] & ecc_top.ecc_reg1.decoded_wr_biten[1:0]);
+            ecc_sw_cmd[2] <= (ecc_top.ecc_reg1.field_storage.ECC_CTRL.DH_SHAREDKEY.value & ~ecc_top.ecc_reg1.decoded_wr_biten[4]) | (ecc_top.ecc_reg1.decoded_wr_data[4] & ecc_top.ecc_reg1.decoded_wr_biten[4]);
         end
     end
 
@@ -104,6 +106,7 @@ interface ecc_top_cov_if
     assign keygen_process = ecc_top.ecc_dsa_ctrl_i.keygen_process;
     assign signing_process = ecc_top.ecc_dsa_ctrl_i.signing_process;
     assign verifying_process = ecc_top.ecc_dsa_ctrl_i.verifying_process;
+    assign sharedkey_process = ecc_top.ecc_dsa_ctrl_i.sharedkey_process;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -140,6 +143,7 @@ interface ecc_top_cov_if
         error_keygen_cp: cross error_flag, keygen_process;
         error_signing_cp: cross error_flag, signing_process;
         error_verifying_cp: cross error_flag, verifying_process;
+        error_sharedkey_cp: cross error_flag, sharedkey_process;
 
         // modular operation
         mult_final_subtraction_cp: coverpoint mult_final_subtraction;

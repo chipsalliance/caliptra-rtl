@@ -20,9 +20,9 @@
 #include "printf.h"
 #include "clk_gate.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count       = 0;
-volatile uint32_t hmac_intr_status = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count       = 0;
+volatile uint32_t  hmac_intr_status = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -54,7 +54,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_notif    = 0,
+    .axi_dma_notif    = 0,
 };
 
 void main() {
@@ -139,9 +141,9 @@ void main() {
                       : /* clobbers: none */);
 
     //------------------------------------------------------
-    //Wake SOC up for APB tx and core using timer int later
+    //Wake SOC up for AXI tx and core using timer int later
     //------------------------------------------------------
-        printf("Wake up SOC clk on APB txns and later wake up core using timer interrupt\n");
+        printf("Wake up SOC clk on AXI txns and later wake up core using timer interrupt\n");
         //Machine intr enable reg (mie) - enable timer int 
         __asm__ volatile ("csrw    %0, %1" \
                       : /* output: none */        \

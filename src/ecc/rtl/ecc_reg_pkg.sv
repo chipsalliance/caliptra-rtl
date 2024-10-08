@@ -31,8 +31,13 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__PCR_SIGN__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } ecc_reg__ECC_CTRL__DH_SHAREDKEY__in_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__in_t CTRL;
         ecc_reg__ECC_CTRL__PCR_SIGN__in_t PCR_SIGN;
+        ecc_reg__ECC_CTRL__DH_SHAREDKEY__in_t DH_SHAREDKEY;
     } ecc_reg__ECC_CTRL__in_t;
 
     typedef struct packed{
@@ -157,6 +162,16 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_PRIVKEY_IN__in_t;
 
     typedef struct packed{
+        logic [31:0] next;
+        logic we;
+        logic hwclr;
+    } ecc_reg__ECC_DH_SHARED_KEY__DH_SHARED_KEY__in_t;
+
+    typedef struct packed{
+        ecc_reg__ECC_DH_SHARED_KEY__DH_SHARED_KEY__in_t DH_SHARED_KEY;
+    } ecc_reg__ECC_DH_SHARED_KEY__in_t;
+
+    typedef struct packed{
         logic hwclr;
     } kv_read_ctrl_reg__read_en__in_t;
 
@@ -231,6 +246,7 @@ package ecc_reg_pkg;
         ecc_reg__ECC_IV__in_t [12-1:0]ECC_IV;
         ecc_reg__ECC_NONCE__in_t [12-1:0]ECC_NONCE;
         ecc_reg__ECC_PRIVKEY_IN__in_t [12-1:0]ECC_PRIVKEY_IN;
+        ecc_reg__ECC_DH_SHARED_KEY__in_t [12-1:0]ECC_DH_SHARED_KEY;
         kv_read_ctrl_reg__in_t ecc_kv_rd_pkey_ctrl;
         kv_status_reg__in_t ecc_kv_rd_pkey_status;
         kv_read_ctrl_reg__in_t ecc_kv_rd_seed_ctrl;
@@ -253,9 +269,14 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_CTRL__PCR_SIGN__out_t;
 
     typedef struct packed{
+        logic value;
+    } ecc_reg__ECC_CTRL__DH_SHAREDKEY__out_t;
+
+    typedef struct packed{
         ecc_reg__ECC_CTRL__CTRL__out_t CTRL;
         ecc_reg__ECC_CTRL__ZEROIZE__out_t ZEROIZE;
         ecc_reg__ECC_CTRL__PCR_SIGN__out_t PCR_SIGN;
+        ecc_reg__ECC_CTRL__DH_SHAREDKEY__out_t DH_SHAREDKEY;
     } ecc_reg__ECC_CTRL__out_t;
 
     typedef struct packed{

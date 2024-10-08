@@ -78,6 +78,8 @@ static void nonstd_veer_isr_soc_ifc_error (void) __attribute__ ((interrupt ("mac
 static void nonstd_veer_isr_soc_ifc_notif (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha512_acc_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_axi_dma_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_axi_dma_notif (void) __attribute__ ((interrupt ("machine")));
 
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
@@ -106,10 +108,10 @@ static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_err
 static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;//        | 
 static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_mldsa_error ;    //        |
 static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_mldsa_notif ;    //-------.|
-static void (* const nonstd_veer_isr_25) (void) = std_rv_nop_machine; // -------'|
-static void (* const nonstd_veer_isr_26) (void) = std_rv_nop_machine; // Unimplemented ISR
+static void (* const nonstd_veer_isr_25) (void) = nonstd_veer_isr_axi_dma_error;   //        |
+static void (* const nonstd_veer_isr_26) (void) = nonstd_veer_isr_axi_dma_notif;   // -------'
 static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; // Unimplemented ISR
 static void (* const nonstd_veer_isr_29) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_veer_isr_30) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_veer_isr_31) (void) = std_rv_nop_machine; // --------'
@@ -180,6 +182,7 @@ void init_interrupts(void) {
     volatile uint32_t * const sha256_reg     = (uint32_t*) CLP_SHA256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_acc_csr = (uint32_t*) CLP_SHA512_ACC_CSR_BASE_ADDR;
     volatile uint32_t * const mldsa_reg      = (uint32_t*) CLP_MLDSA_REG_BASE_ADDR;
+    volatile uint32_t * const axi_dma_reg    = (uint32_t*) CLP_AXI_DMA_REG_BASE_ADDR;
     volatile uint32_t * const mtime_l        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L;
     volatile uint32_t * const mtime_h        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H;
     volatile uint32_t * const mtimecmp_l     = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L;
@@ -245,6 +248,8 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_SHA512_ACC_NOTIF] = VEER_INTR_PRIO_SHA512_ACC_NOTIF; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_MLDSA_ERROR     ] = VEER_INTR_PRIO_MLDSA_ERROR     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_MLDSA_NOTIF     ] = VEER_INTR_PRIO_MLDSA_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_AXI_DMA_ERROR   ] = VEER_INTR_PRIO_AXI_DMA_ERROR   ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_AXI_DMA_NOTIF   ] = VEER_INTR_PRIO_AXI_DMA_NOTIF   ; __asm__ volatile ("fence");
     for (uint8_t undef = VEER_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
@@ -346,6 +351,23 @@ void init_interrupts(void) {
     sha512_acc_csr[SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha512_acc_csr[SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                                      SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+
+    // AXI DMA
+    // TODO
+    axi_dma_reg[AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_CMD_DEC_EN_MASK        |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AXI_RD_EN_MASK         |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AXI_WR_EN_MASK         |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_MBOX_LOCK_EN_MASK      |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_SHA_LOCK_EN_MASK       |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_OFLOW_EN_MASK     |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_MASK;
+    axi_dma_reg[AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK       |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_EMPTY_EN_MASK     |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_EMPTY_EN_MASK |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_FULL_EN_MASK      |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_FULL_EN_MASK;
+    axi_dma_reg[AXI_DMA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = AXI_DMA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                               AXI_DMA_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // Set mtimecmp to max value to avoid spurious timer interrupts
     *mtimecmp_l = 0xFFFFFFFF;
@@ -715,8 +737,10 @@ static void nonstd_veer_isr_0 (void) {
      * service_soc_ifc_notif_intr                                                                     \
      * service_sha512_acc_error_intr                                                                  \
      * service_sha512_acc_notif_intr
-     * service_mldsa_error_intr                                                                         \
-     * service_mldsa_notif_intr                                                                         \
+     * service_mldsa_error_intr                                                                       \
+     * service_mldsa_notif_intr                                                                       \
+     * service_axi_dma_error_intr                                                                     \
+     * service_axi_dma_notif_intr                                                                     \
      */                                                                                               \
     service_##name##_intr();                                                                          \
                                                                                                       \
@@ -787,9 +811,13 @@ nonstd_veer_isr(soc_ifc_notif)
 nonstd_veer_isr(sha512_acc_error)
 // Non-Standard Vectored Interrupt Handler (SHA Notification = vector 22)
 nonstd_veer_isr(sha512_acc_notif)
-// Non-Standard Vectored Interrupt Handler (SHA Error = vector 23)
+// Non-Standard Vectored Interrupt Handler (MLDSA Error = vector 23)
 nonstd_veer_isr(mldsa_error)
-// Non-Standard Vectored Interrupt Handler (SHA Notification = vector 24)
+// Non-Standard Vectored Interrupt Handler (MLDSA Notification = vector 24)
 nonstd_veer_isr(mldsa_notif)
 
+// Non-Standard Vectored Interrupt Handler (AXI DMA Error = vector 25)
+nonstd_veer_isr(axi_dma_error)
+// Non-Standard Vectored Interrupt Handler (AXI DMA Notification = vector 26)
+nonstd_veer_isr(axi_dma_notif)
 

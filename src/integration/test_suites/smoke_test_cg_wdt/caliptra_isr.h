@@ -60,6 +60,8 @@ typedef struct {
     uint32_t sha512_acc_notif;
     uint32_t mldsa_error;
     uint32_t mldsa_notif;
+    uint32_t axi_dma_error;
+    uint32_t axi_dma_notif;
 } caliptra_intr_received_s;
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
@@ -86,7 +88,7 @@ inline void service_hmac_notif_intr  () {
     if (sts == 0) {
         printf("bad hmac_notif_intr sts:%x\n", sts);
     } else {
-        reg = (uint32_t *) (CLP_HMAC_REG_HMAC384_STATUS);
+        reg = (uint32_t *) (CLP_HMAC_REG_HMAC512_STATUS);
         hmac_intr_status = *reg;
     }
 }
@@ -132,6 +134,8 @@ inline void service_sha512_acc_notif_intr() {printf("ERROR");}
 
 inline void service_mldsa_error_intr() {printf("ERROR");}
 inline void service_mldsa_notif_intr() {printf("ERROR");}
+inline void service_axi_dma_error_intr() {printf("ERROR");}
+inline void service_axi_dma_notif_intr() {printf("ERROR");}
 
 
 #endif //CALIPTRA_ISR_H

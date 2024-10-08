@@ -23,8 +23,8 @@
 #include "printf.h"
 #include "hmac.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -56,7 +56,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_notif    = 0,
+    .axi_dma_notif    = 0,
 };
 
 
@@ -128,7 +130,7 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4}; 
 
-    uint32_t expected_tag[12] =   {0xb6a8d563,
+    uint32_t expected384_tag[12] =   {0xb6a8d563,
                                     0x6f5c6a72,
                                     0x24f9977d,
                                     0xcf7ee6c7,
@@ -141,7 +143,7 @@ void main() {
                                     0xfb68dab9,
                                     0xf1b582c2}; 
 
-    uint32_t tag_zerokey_zeroblock[12] =   
+    uint32_t tag384_zerokey_zeroblock[12] =   
                                    {0x6E120BA2,
                                     0x27BF3557,
                                     0x676B0256,
@@ -160,13 +162,13 @@ void main() {
     uint8_t store_to_kv         = 0x1;
     uint8_t tag_kv_id           = 0x0;
 
-    hmac_io hmac_key;
+    hmac_io hmac384_key;
     hmac_io hmac_block;
     hmac_io hmac_lfsr_seed;
-    hmac_io hmac_tag;
+    hmac_io hmac384_tag;
 
-    hmac_key.kv_intf = TRUE;
-    hmac_key.kv_id = hmackey_kv_id;
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = hmackey_kv_id;
 
     hmac_block.kv_intf = FALSE;
     hmac_block.kv_id = hmacblock_kv_id;
@@ -179,18 +181,18 @@ void main() {
     for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = TRUE;
-    hmac_tag.kv_id = tag_kv_id;
-    hmac_tag.data_size = 12;
-    for (int i = 0; i < hmac_tag.data_size; i++)
-        hmac_tag.data[i] = expected_tag[i];
+    hmac384_tag.kv_intf = TRUE;
+    hmac384_tag.kv_id = tag_kv_id;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = expected384_tag[i];
 
 
-    //inject hmac_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
+    //inject hmac384_key to kv key reg (in RTL)
+    uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
     
     printf("KV HMAC flow is completed.\n\n");
 
@@ -203,19 +205,20 @@ void main() {
     */
     printf("Start FW HMAC\n");
     // Enable HMAC core with next command to avoid changing the key
-    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_NEXT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                            (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
     printf("Load TAG from FW HMAC\n");
-    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC384_TAG_0;
+    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_TAG_11) {
-        if (tag_zerokey_zeroblock[offset] != *reg_ptr) {
-            printf("At offset [%d], hmac_tag data mismatch!\n", offset);
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
+        if (tag384_zerokey_zeroblock[offset] != *reg_ptr) {
+            printf("At offset [%d], hmac384_tag data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", tag_zerokey_zeroblock[offset]);
+            printf("Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
             printf("%c", 0x1); //fail_cmd
             while(1);
         }

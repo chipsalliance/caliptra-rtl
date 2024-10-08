@@ -20,9 +20,9 @@
 #include <stdint.h>
 #include "printf.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
@@ -53,7 +53,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_notif    = 0,
+    .axi_dma_notif    = 0,
 };
 
 uint32_t IV_DATA_UDS0 = 0x2eb94297;

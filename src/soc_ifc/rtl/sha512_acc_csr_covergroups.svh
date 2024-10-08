@@ -35,8 +35,8 @@
 
     endgroup
 
-    /*----------------------- SHA512_ACC_CSR__USER COVERGROUPS -----------------------*/
-    covergroup sha512_acc_csr__USER_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SHA512_ACC_CSR__ID COVERGROUPS -----------------------*/
+    covergroup sha512_acc_csr__ID_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -47,11 +47,11 @@
         }
 
     endgroup
-    covergroup sha512_acc_csr__USER_fld_cg with function sample(
-    input bit [32-1:0] USER
+    covergroup sha512_acc_csr__ID_fld_cg with function sample(
+    input bit [32-1:0] ID
     );
         option.per_instance = 1;
-        USER_cp : coverpoint USER;
+        ID_cp : coverpoint ID;
 
     endgroup
 

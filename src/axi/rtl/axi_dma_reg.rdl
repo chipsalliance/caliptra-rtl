@@ -1,0 +1,623 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+addrmap axi_dma_reg {
+    desc="Address map for SoC Interface DMA Hardware Assist block registers";
+
+    signal {activelow; async; cpuif_reset; field_reset; } cptra_rst_b;
+    signal {activelow; async; } cptra_pwrgood;
+
+    // indicate request is coming from soc side
+    signal {} soc_req;
+    // DMA operation parameters are unmodifiable while operation in progress
+    // and also unmodifiable by soc at all times
+    signal {} dma_swwel;
+
+    // Default register configuration
+    addressing = regalign; // This is the default if not specified
+    lsb0 = true; // lsb0 property is implicit/default. See docs for
+                 // SystemRDL 2.0 sections 9.1 and 13.4
+    littleendian = true;
+
+    default regwidth = 32; // reg property
+    default accesswidth = 32; // reg property
+
+    default hw = na;
+
+    ////////////////////////////////////////////////////////////////
+    // DMA Internal Registers
+    reg {
+        name="Caliptra AXI DMA Register Block Identifier";
+        desc="Gives a unique identifier that FW can query to verify block base address";
+        field { desc="Identifier"; sw=r; } id[32] = 32'h67768068; // [ascii] "CLPD = Caliptra DMA"
+    } id;
+
+    reg {
+        name="Caliptra AXI DMA Capabilities";
+        desc="Provides information about configuration and enabled capabilities for the DMA block.";
+        field { desc="FIFO MAX DEPTH. Indicates number of available slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
+        field { desc="Reserved"; sw=r; } rsvd[20] = 20'h00000;
+    } cap;
+
+    reg {
+        name="Caliptra AXI DMA Control";
+        desc="Used to drive command parameters and initiate operations to DMA block.";
+        field { desc="Initiate current configured operation."; sw=rw; swwel=dma_swwel; onwrite=woset; swmod; hw=r; hwclr=true; } go=1'b0;
+        field { desc="Flush active operations, reset state machines, clear FIFO data. Any in-flight AXI transactions will be gracefully completed."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
+        field { desc="RESERVED."; sw=r; } rsvd0[14]=14'h0000;
+        field { desc="Read Route. Configures how the AXI read channel operates for the current operation.";
+                enum rd_route_e {
+                    DISABLE = 2'b00 {
+                        desc = "AXI Read channel is inactive.";
+                    };
+                    MBOX = 2'b01 {
+                        desc = "AXI Read channel data is sent to mailbox.";
+                    };
+                    AHB_FIFO = 2'b10 {
+                        desc = "AXI Read channel data is left in the internal FIFO, firmware is expected to read data via AHB interface.";
+                    };
+                    // This can also be used to route data into the SHA accelerator via AXI intc.
+                    AXI_WR = 2'b11 {
+                        desc = "AXI Read channel data is sent to AXI Write channel to be sent onto SoC fabric.";
+                    };
+//                    SHA_ACC = 3'b100 {
+//                        desc = "AXI Read channel data is routed to the SOC_IFC SHA accelerator.";
+//                    };
+                };
+                sw=rw; swwel=dma_swwel; hw=r; encode = rd_route_e; } rd_route[2]=0;
+        field { desc="RESERVED."; sw=r; } rsvd1[2]=2'h0;
+        field { desc="Read Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=dma_swwel; hw=r; } rd_fixed=1'b0;
+        field { desc="RESERVED."; sw=r; } rsvd2[3]=3'h0;
+        field { desc="Write Route. Configures how the AXI write channel operates for the current operation.";
+                enum wr_route_e {
+                    DISABLE = 2'b00 {
+                        desc = "AXI Write channel is inactive.";
+                    };
+                    MBOX = 2'b01 {
+                        desc = "AXI Write channel data is pulled from mailbox.";
+                    };
+                    AHB_FIFO = 2'b10 {
+                        desc = "AXI Write channel data is pulled from the internal FIFO, firmware is expected to write data via AHB interface.";
+                    };
+                    AXI_RD = 2'b11 {
+                        desc = "AXI Write channel data is received from AXI Read channel, then sent onto SoC fabric.";
+                    };
+                };
+                sw=rw; swwel=dma_swwel; hw=r; encode = wr_route_e; } wr_route[2]=0;
+        field { desc="RESERVED."; sw=r; } rsvd3[2]=2'h0;
+        field { desc="Write Route uses a FIXED burst type for AXI transaction."; sw=rw; swwel=dma_swwel; hw=r; } wr_fixed=1'b0;
+        field { desc="RESERVED."; sw=r; } rsvd4[3]=3'h0;
+    } ctrl;
+
+    // Status 0
+    reg {
+        name="Caliptra AXI DMA Status 0";
+        desc="Reports status and diagnostic information for DMA operations.";
+        field { desc="Indicates if an operation is in progress. When 1, new requests are ignored. When 0, new requests are accepted."; sw=r; hw=w; } busy=1'b0;
+        field { desc="Indicates if an operation has failed due to an error in decoding the command.
+                      When set, this field will prevent any further operations until it is cleared by setting the ctrl.flush field.";
+                sw=r; hw=w; } error=1'b0;
+        field { desc="RESERVED."; sw=r; } rsvd0[2]=2'h0;
+        field { desc="FIFO DEPTH. Indicates number of populated slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
+        field {
+            name = "Caliptra AXI DMA FSM Present State";
+            desc = "Indicates the present state of the Caliptra AXI DMA FSM.";
+
+            enum axi_dma_fsm_e {
+                DMA_IDLE = 2'b00 {
+                    desc = "DMA is idle";
+                };
+                DMA_WAIT_DATA = 2'b01 {
+                    desc = "DMA operation is active";
+                };
+                DMA_DONE = 2'b10 {
+                    desc = "DMA operation is complete, with success";
+                };
+                DMA_ERROR = 2'b11 {
+                    desc = "DMA operation is completed or parsed with an error";
+                };
+            };
+            sw=r; hw=rw; encode = axi_dma_fsm_e;
+        } axi_dma_fsm_ps[2] = 0;
+        field { desc="RESERVED."; sw=r; } rsvd1[14]=14'h0000;
+    } status0;
+
+    // Status 1
+    reg {
+        name="Caliptra AXI DMA Status 1";
+        desc="Reports additional status and diagnostic information for DMA operations.";
+        field { desc="Reports remaining byte count that must be sent to destination."; sw=r; hw=w; } bytes_remaining[32]=32'h00000000;
+    } status1;
+
+    // Source Address
+    reg {
+        name="Caliptra AXI DMA Source Address Low";
+        desc="Contains lower 32-bits of address from which current operation will read data.";
+        field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
+    } src_addr_l;
+    reg {
+        name="Caliptra AXI DMA Source Address High";
+        desc="Contains upper 32-bits of address from which current operation will read data.";
+        field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
+    } src_addr_h;
+
+    // Destination Address
+    reg {
+        name="Caliptra AXI DMA Destination Address Low";
+        desc="Contains lower 32-bits of address to which current operation will write data.";
+        field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
+    } dst_addr_l;
+    reg {
+        name="Caliptra AXI DMA Destination Address High";
+        desc="Contains upper 32-bits of address to which current operation will write data.";
+        field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
+    } dst_addr_h;
+
+    // Byte Count
+    reg {
+        name="Caliptra AXI DMA Byte Count";
+        desc="Contains total number of bytes to be transferred by current operation. Must be a multiple of the AXI Data Width. (Narrow/unaligned transfers are not supported)";
+        field { desc="Byte Count"; sw=rw; swwel=dma_swwel; hw=r; } count[32]=32'h00000000;
+    } byte_count;
+
+    // Block Size
+    reg {
+        name="Caliptra AXI DMA Block Size.";
+        desc="Byte size of individual blocks to send as part of the total
+              Byte Count. This register indicates what granularity of AXI
+              transactions are issued at a time.
+              When non-zero, this field instructs the DMA to wait for the
+              input “WIRE” to pulse high before issuing each transaction.
+              Total burst is done once “Byte_count/block_size” transactions
+              have completed.
+              When zero, DMA issues AXI transactions of maximum size
+              without any stalls in between transactions.
+              Must be a multiple of AXI data width. If block size is not
+              aligned to the AXI data width, it will be rounded down.
+              Must be a power of 2.
+              Value of 4096 or larger is unsupported – AXI native maximum size is 4096.";
+        field { desc="Block Size"; sw=rw; swwel=dma_swwel; hw=r; } size[12]=12'h000;
+        field { desc="RESERVED."; sw=r; } rsvd[20]=20'h00000;
+    } block_size;
+
+    // Write Data
+    reg {
+        name="Caliptra AXI DMA Write Data.";
+        desc="Access point for Caliptra firmware to submit data into the Write
+              FIFO to be sent as AXI Write transfers.";
+        field {sw=w; swwel=soc_req; hw=na; swmod=true;} wdata[32]=0;
+    } write_data;
+
+    // Read Data
+    reg {
+        name="Caliptra AXI DMA Read Data.";
+        desc="Access point for Caliptra firmware to read data from the Read
+              FIFO as it is received via AXI Read transfers.";
+        field {sw=r; hw=w; swacc=true;} rdata[32]=0;
+    } read_data;
+
+    ////////////////////////////////////////////////////////////////
+    // Interrupts
+    /* -----------------------
+     * Register File definitive definition
+     * ----------------------- */
+
+    // Notifications are non-error events that occur during normal operation of the module.
+    // E.g. a completion of a job may produce a notification.
+    // Error and notification events are separated into separate status/trigger registers
+    // to allow effective priority allocation by software
+    regfile intr_block_t {
+
+
+        /* -----------------------
+         * Default properties for Register File
+         * ----------------------- */
+
+        name = "Interrupt Register Block";
+        desc = "Set of registers to implement interrupt functionality
+                for soc interface DMA assist block.
+                All registers have the following access privileges:
+                [br]Caliptra Access: RW
+                [br]SOC Access:      RO";
+
+        default regwidth = 32; // reg property
+        default accesswidth = 32; // reg property
+        default hw = na; // field property
+        default swwel = soc_req;
+
+
+        /* -----------------------
+         * Register definitive definitions
+         * ----------------------- */
+
+        /* ---- Global Interrupt Enable ---- */
+        reg global_intr_en_t {
+            name = "Per-Type Interrupt Enable Register";
+            desc = "Dedicated register with one bit for each event type that may produce an interrupt.";
+
+            default hw = na;
+            default sw = rw;
+
+            // Global enablement (for interrupts of the event types defined for this module)
+            field {desc = "Global enable bit for all events of type 'Error'";       } error_en = 1'b0;
+            field {desc = "Global enable bit for all events of type 'Notification'";} notif_en = 1'b0;
+        };
+
+        /* ---- Error Interrupt Enable ---- */
+        reg error_intr_en_t {
+            name = "Per-Event Interrupt Enable Register";
+            desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+            default hw = na;
+            default sw = rw;
+
+            // Specific enables for the events defined in this
+            // event type in the instantiating peripheral.
+            field {desc = "Enable bit for Command Decode Error";                                                       } error_cmd_dec_en = 1'b0;
+            field {desc = "Enable bit for AXI Read Error";                                                             } error_axi_rd_en = 1'b0;
+            field {desc = "Enable bit for AXI Write Error";                                                            } error_axi_wr_en = 1'b0;
+            field {desc = "Enable bit for Mailbox Not Locked Error";                                                   } error_mbox_lock_en = 1'b0;
+            field {desc = "Enable bit for SHA Accel Not Locked Error";                                                 } error_sha_lock_en = 1'b0;
+            field {desc = "Enable bit for FIFO Overflow";                                                              } error_fifo_oflow_en = 1'b0;
+            field {desc = "Enable bit for FIFO Underflow";                                                             } error_fifo_uflow_en = 1'b0;
+        };
+
+        /* ---- Notification Interrupt Enable ---- */
+        reg notif_intr_en_t {
+            name = "Per-Event Interrupt Enable Register";
+            desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+            default hw = na;
+            default sw = rw;
+
+            // Specific enables for the events defined in this
+            // event type in the instantiating peripheral.
+            field {desc = "Enable bit for Transaction Done"; } notif_txn_done_en = 1'b0;
+            field {desc = "Enable bit for FIFO Empty";       } notif_fifo_empty_en = 1'b0;
+            field {desc = "Enable bit for FIFO Not Empty";   } notif_fifo_not_empty_en = 1'b0;
+            field {desc = "Enable bit for FIFO Full";        } notif_fifo_full_en = 1'b0;
+            field {desc = "Enable bit for FIFO Not Full";    } notif_fifo_not_full_en = 1'b0;
+        };
+
+        /* ---- Error Interrupt Status ---- */
+        reg error_intr_t {
+            name = "Interrupt Status Register type definition";
+            desc = "Single bit indicating occurrence of each interrupt event.
+                    Sticky, level assertion, write-1-to-clear.";
+
+            default precedence = hw;
+            default hw = w;
+            default hwset = true;
+            default sw = rw;
+            default woclr = true;
+            default level intr;
+
+            field {desc = "Command Decode Error status bit";                                                       } error_cmd_dec_sts = 1'b0;
+            field {desc = "AXI Read Error status bit";                                                             } error_axi_rd_sts = 1'b0;
+            field {desc = "AXI Write Error status bit";                                                            } error_axi_wr_sts = 1'b0;
+            field {desc = "Mailbox Not Locked Error status bit";                                                   } error_mbox_lock_sts = 1'b0;
+            field {desc = "SHA Accel Not Locked Error status bit";                                                 } error_sha_lock_sts = 1'b0;
+            field {desc = "FIFO Overflow status bit";                                                              } error_fifo_oflow_sts = 1'b0;
+            field {desc = "FIFO Underflow status bit";                                                             } error_fifo_uflow_sts = 1'b0;
+        };
+
+        /* ---- Notification Interrupt Status ---- */
+        reg notif_intr_t {
+            name = "Interrupt Status Register type definition";
+            desc = "Single bit indicating occurrence of each interrupt event.
+                    Sticky, level assertion, write-1-to-clear.";
+
+            default precedence = hw;
+            default hw = w;
+            default hwset = true;
+            default sw = rw;
+            default woclr = true;
+            default level intr;
+
+            field {desc = "Transaction Done status bit"; } notif_txn_done_sts = 1'b0;
+            field {desc = "FIFO Empty status bit";       } notif_fifo_empty_sts = 1'b0;
+            field {desc = "FIFO Not Empty status bit";   } notif_fifo_not_empty_sts = 1'b0;
+            field {desc = "FIFO Full status bit";        } notif_fifo_full_sts = 1'b0;
+            field {desc = "FIFO Not Full status bit";    } notif_fifo_not_full_sts = 1'b0;
+        };
+
+        /* ---- Aggregated Interrupt Status ---- */
+        reg global_intr_t {
+            name = "Interrupt Status Aggregation Register type definition";
+            desc = "Single bit indicating occurrence of any interrupt event
+                    of a given type. E.g. Notifications and Errors may drive
+                    to two separate interrupt registers. There may be
+                    multiple sources of Notifications or Errors that are
+                    aggregated into a single interrupt pin for that
+                    respective type. That pin feeds through this register
+                    in order to apply a global enablement of that interrupt
+                    event type.
+                    Nonsticky assertion.";
+
+            default hw = w;
+            default sw = r;
+            default nonsticky intr;
+
+            field {desc = "Interrupt Event Aggregation status bit"; swwel = false;} agg_sts = 1'b0;
+        };
+
+        /* ---- Error Interrupt Trigger ---- */
+        reg error_intr_trig_t {
+            name = "Interrupt Trigger Register type definition";
+            desc = "Single bit for each interrupt event allows SW to manually
+                    trigger occurrence of that event. Upon SW write, the trigger bit
+                    will pulse for 1 cycle then clear to 0. The pulse on the
+                    trigger register bit results in the corresponding interrupt
+                    status bit being set to 1.";
+
+            default hw = na;
+            default sw = rw;
+            default woset = true;
+            default singlepulse = true;
+
+            // Instantiate triggers bit-by-bit.
+            field {desc = "Command Decode Error trigger bit";             } error_cmd_dec_trig    = 1'b0;
+            field {desc = "AXI Read Error trigger bit";                   } error_axi_rd_trig     = 1'b0;
+            field {desc = "AXI Write Error trigger bit";                  } error_axi_wr_trig     = 1'b0;
+            field {desc = "Mailbox Not Locked Error trigger bit";         } error_mbox_lock_trig  = 1'b0;
+            field {desc = "SHA Accel Not Locked Error trigger bit";       } error_sha_lock_trig   = 1'b0;
+            field {desc = "FIFO Overflow trigger bit";                    } error_fifo_oflow_trig = 1'b0;
+            field {desc = "FIFO Underflow trigger bit";                   } error_fifo_uflow_trig = 1'b0;
+        };
+
+        /* ---- Notification Interrupt Trigger ---- */
+        reg notif_intr_trig_t {
+            name = "Interrupt Trigger Register type definition";
+            desc = "Single bit for each interrupt event allows SW to manually
+                    trigger occurrence of that event. Upon SW write, the trigger bit
+                    will pulse for 1 cycle then clear to 0. The pulse on the
+                    trigger register bit results in the corresponding interrupt
+                    status bit being set to 1.";
+
+            default hw = na;
+            default sw = rw;
+            default woset = true;
+            default singlepulse = true;
+
+            // Instantiate triggers bit-by-bit.
+            field {desc = "Transaction Done trigger bit";    } notif_txn_done_trig       = 1'b0;
+            field {desc = "FIFO Empty trigger bit";          } notif_fifo_empty_trig     = 1'b0;
+            field {desc = "FIFO Not Empty trigger bit";      } notif_fifo_not_empty_trig = 1'b0;
+            field {desc = "FIFO Full trigger bit";           } notif_fifo_full_trig      = 1'b0;
+            field {desc = "FIFO Not Full trigger bit";       } notif_fifo_not_full_trig  = 1'b0;
+        };
+
+        /* ---- Interrupt Statistics Counter Incrementor ---- */
+        reg intr_count_incr_t {
+            name = "Interrupt Event Count Incrementor";
+            desc = "Trigger the event counter to increment based on observing
+                    the rising edge of an interrupt event input from the
+                    Hardware. The same input signal that causes an interrupt
+                    event to be set (sticky) also causes this signal to pulse
+                    for 1 clock cycle, resulting in the event counter
+                    incrementing by 1 for every interrupt event.
+                    This is implemented as a down-counter (1-bit) that will
+                    decrement immediately on being set - resulting in a pulse";
+
+            default hw = w;
+            default sw = r; // Has to have some access.... ideally SW wouldn't even see this
+            default hwset = true;
+            default decrvalue = 1;
+            default counter;
+
+            field {desc = "Pulse mirrors interrupt event occurrence"; swwel = false;} pulse = 1'b0;
+        };
+
+        /* ---- Interrupt Statistics Counter ---- */
+        reg intr_count_t {
+            name = "Interrupt Event Counter";
+            desc = "Provides statistics about the number of events that have
+                    occurred.
+                    Will not overflow ('incrsaturate').";
+
+            default sw = rw;
+            default hw = na;
+            default incrvalue = 1;
+            default incrsaturate = true;
+            default counter;
+
+            field {desc = "Count field";} cnt[32] = 32'h0;
+        };
+
+
+        /* ------------------------------------------------- Registers ------------------------------------------------- */
+        // First 9 registers are static and always defined                                                               //
+        global_intr_en_t  global_intr_en_r;      /* 1-bit per event type */                                              //
+        error_intr_en_t   error_intr_en_r;       /* 1-bit per error */                                                   //
+        notif_intr_en_t   notif_intr_en_r;       /* 1-bit per notification */                                            //
+        global_intr_t     error_global_intr_r;   /* 1-bit aggregating all error interrupts with global enable */         //
+        global_intr_t     notif_global_intr_r;   /* 1-bit aggregating all notification interrupts with global enable */  //
+        error_intr_t      error_internal_intr_r; /* Error pending, SW write 1 to clear */                                //
+        notif_intr_t      notif_internal_intr_r; /* Notification pending, SW write 1 to clear */                         //
+        error_intr_trig_t error_intr_trig_r;     /* SW sets error bit for interrupt testing */                           //
+        notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
+                                                                                                                         //
+        // Align this set of registers; number of counters is based on peripheral event requirements                     //
+        intr_count_t      error_cmd_dec_intr_count_r @0x100;        /* Per error */                                      //
+        intr_count_t      error_axi_rd_intr_count_r;                /* Per error */                                      //
+        intr_count_t      error_axi_wr_intr_count_r;                /* Per error */                                      //
+        intr_count_t      error_mbox_lock_intr_count_r;             /* Per error */                                      //
+        intr_count_t      error_sha_lock_intr_count_r;              /* Per error */                                      //
+        intr_count_t      error_fifo_oflow_intr_count_r;            /* Per error */                                      //
+        intr_count_t      error_fifo_uflow_intr_count_r;            /* Per error */                                      //
+        intr_count_t      notif_txn_done_intr_count_r @0x180;       /* Per notification */                               //
+        intr_count_t      notif_fifo_empty_intr_count_r;            /* Per notification */                               //
+        intr_count_t      notif_fifo_not_empty_intr_count_r;        /* Per notification */                               //
+        intr_count_t      notif_fifo_full_intr_count_r;             /* Per notification */                               //
+        intr_count_t      notif_fifo_not_full_intr_count_r;         /* Per notification */                               //
+                                                                                                                         //
+        // These registers should be treated by SW as reserved, and ignored.                                             //
+        // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
+        // to be implemented (requiring 2*32 32-bit registers starting at                                                //
+        // offset 0x100), and still allowing the entire regfile to fit                                                   //
+        // inside a 1024-byte space.                                                                                     //
+        intr_count_incr_t error_cmd_dec_intr_count_incr_r @0x200;        /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_axi_rd_intr_count_incr_r;                /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_axi_wr_intr_count_incr_r;                /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_mbox_lock_intr_count_incr_r;             /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_sha_lock_intr_count_incr_r;              /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_fifo_oflow_intr_count_incr_r;            /* Per error count incrementor pulse */         //
+        intr_count_incr_t error_fifo_uflow_intr_count_incr_r;            /* Per error count incrementor pulse */         //
+        intr_count_incr_t notif_txn_done_intr_count_incr_r;              /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_empty_intr_count_incr_r;            /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_not_empty_intr_count_incr_r;        /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_full_intr_count_incr_r;             /* Per notification count incrementor pulse */  //
+        intr_count_incr_t notif_fifo_not_full_intr_count_incr_r;         /* Per notification count incrementor pulse */  //
+        /* ------------------------------------------------------------------------------------------------------------- */
+
+        /* ---- Reset assignment for Error Events ---- */
+        error_internal_intr_r.error_cmd_dec_sts       -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_axi_rd_sts        -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_axi_wr_sts        -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_mbox_lock_sts     -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_sha_lock_sts      -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_fifo_oflow_sts    -> resetsignal = cptra_pwrgood;
+        error_internal_intr_r.error_fifo_uflow_sts    -> resetsignal = cptra_pwrgood;
+        error_cmd_dec_intr_count_r.cnt       -> resetsignal = cptra_pwrgood;
+        error_axi_rd_intr_count_r.cnt        -> resetsignal = cptra_pwrgood;
+        error_axi_wr_intr_count_r.cnt        -> resetsignal = cptra_pwrgood;
+        error_mbox_lock_intr_count_r.cnt     -> resetsignal = cptra_pwrgood;
+        error_sha_lock_intr_count_r.cnt      -> resetsignal = cptra_pwrgood;
+        error_fifo_oflow_intr_count_r.cnt    -> resetsignal = cptra_pwrgood;
+        error_fifo_uflow_intr_count_r.cnt    -> resetsignal = cptra_pwrgood;
+        // TODO: Use this same reset for the error incrementor pulse too?
+
+        /* ---- Interrupt Event Dynamic Assignments ---- */
+        error_internal_intr_r.error_cmd_dec_sts       -> enable = error_intr_en_r.error_cmd_dec_en;
+        error_internal_intr_r.error_axi_rd_sts        -> enable = error_intr_en_r.error_axi_rd_en;
+        error_internal_intr_r.error_axi_wr_sts        -> enable = error_intr_en_r.error_axi_wr_en;
+        error_internal_intr_r.error_mbox_lock_sts     -> enable = error_intr_en_r.error_mbox_lock_en;
+        error_internal_intr_r.error_sha_lock_sts      -> enable = error_intr_en_r.error_sha_lock_en;
+        error_internal_intr_r.error_fifo_oflow_sts    -> enable = error_intr_en_r.error_fifo_oflow_en;
+        error_internal_intr_r.error_fifo_uflow_sts    -> enable = error_intr_en_r.error_fifo_uflow_en;
+        notif_internal_intr_r.notif_txn_done_sts       -> enable = notif_intr_en_r.notif_txn_done_en;
+        notif_internal_intr_r.notif_fifo_empty_sts     -> enable = notif_intr_en_r.notif_fifo_empty_en;
+        notif_internal_intr_r.notif_fifo_not_empty_sts -> enable = notif_intr_en_r.notif_fifo_not_empty_en;
+        notif_internal_intr_r.notif_fifo_full_sts      -> enable = notif_intr_en_r.notif_fifo_full_en;
+        notif_internal_intr_r.notif_fifo_not_full_sts  -> enable = notif_intr_en_r.notif_fifo_not_full_en;
+
+        error_internal_intr_r.error_cmd_dec_sts       -> next   = error_intr_trig_r.error_cmd_dec_trig;
+        error_internal_intr_r.error_axi_rd_sts        -> next   = error_intr_trig_r.error_axi_rd_trig;
+        error_internal_intr_r.error_axi_wr_sts        -> next   = error_intr_trig_r.error_axi_wr_trig;
+        error_internal_intr_r.error_mbox_lock_sts     -> next   = error_intr_trig_r.error_mbox_lock_trig;
+        error_internal_intr_r.error_sha_lock_sts      -> next   = error_intr_trig_r.error_sha_lock_trig;
+        error_internal_intr_r.error_fifo_oflow_sts    -> next   = error_intr_trig_r.error_fifo_oflow_trig;
+        error_internal_intr_r.error_fifo_uflow_sts    -> next   = error_intr_trig_r.error_fifo_uflow_trig;
+        notif_internal_intr_r.notif_txn_done_sts       -> next   = notif_intr_trig_r.notif_txn_done_trig;
+        notif_internal_intr_r.notif_fifo_empty_sts     -> next   = notif_intr_trig_r.notif_fifo_empty_trig;
+        notif_internal_intr_r.notif_fifo_not_empty_sts -> next   = notif_intr_trig_r.notif_fifo_not_empty_trig;
+        notif_internal_intr_r.notif_fifo_full_sts      -> next   = notif_intr_trig_r.notif_fifo_full_trig;
+        notif_internal_intr_r.notif_fifo_not_full_sts  -> next   = notif_intr_trig_r.notif_fifo_not_full_trig;
+
+        // NOTE: hwset for events is implicitly defined as module input
+
+        /* ---- Global Interrupt Dynamic Assignments ---- */
+        error_global_intr_r.agg_sts -> enable = global_intr_en_r.error_en;
+        notif_global_intr_r.agg_sts -> enable = global_intr_en_r.notif_en;
+
+        error_global_intr_r.agg_sts -> next = error_internal_intr_r -> intr;
+        notif_global_intr_r.agg_sts -> next = notif_internal_intr_r -> intr;
+
+        /* ---- Event Statistics Tracker Assignments ---- */
+        // NOTE: This method relies upon a "counter" that is set using the
+        //       same events that trigger an interrupt, then immediately
+        //       self-clearing, which results in a pulse. Must be configured
+        //       to be sensitive to the interrupt trigger events for each event.
+        //       The output pulse is then used to increment the ACTUAL counter
+        error_cmd_dec_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_cmd_dec_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_cmd_dec_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_cmd_dec_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_cmd_dec_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_cmd_dec_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_cmd_dec_intr_count_incr_r.pulse -> decr     = error_cmd_dec_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_cmd_dec_intr_count_r.cnt        -> incr     = error_cmd_dec_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_axi_rd_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_axi_rd_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_axi_rd_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_axi_rd_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_axi_rd_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_axi_rd_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_axi_rd_intr_count_incr_r.pulse -> decr     = error_axi_rd_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_axi_rd_intr_count_r.cnt        -> incr     = error_axi_rd_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_axi_wr_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_axi_wr_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_axi_wr_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_axi_wr_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_axi_wr_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_axi_wr_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_axi_wr_intr_count_incr_r.pulse -> decr     = error_axi_wr_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_axi_wr_intr_count_r.cnt        -> incr     = error_axi_wr_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_mbox_lock_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_mbox_lock_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_mbox_lock_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_mbox_lock_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_mbox_lock_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_mbox_lock_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_mbox_lock_intr_count_incr_r.pulse -> decr     = error_mbox_lock_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_mbox_lock_intr_count_r.cnt        -> incr     = error_mbox_lock_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_sha_lock_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_sha_lock_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_sha_lock_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_sha_lock_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_sha_lock_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_sha_lock_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_sha_lock_intr_count_incr_r.pulse -> decr     = error_sha_lock_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_sha_lock_intr_count_r.cnt        -> incr     = error_sha_lock_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_fifo_oflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_fifo_oflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_fifo_oflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_fifo_oflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_fifo_oflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_fifo_oflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_fifo_oflow_intr_count_incr_r.pulse -> decr     = error_fifo_oflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_fifo_oflow_intr_count_r.cnt        -> incr     = error_fifo_oflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error_fifo_uflow_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error_fifo_uflow_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        error_fifo_uflow_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error_fifo_uflow_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        error_fifo_uflow_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error_fifo_uflow_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error_fifo_uflow_intr_count_incr_r.pulse -> decr     = error_fifo_uflow_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error_fifo_uflow_intr_count_r.cnt        -> incr     = error_fifo_uflow_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_txn_done_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_txn_done_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_txn_done_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_txn_done_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_txn_done_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_txn_done_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_txn_done_intr_count_incr_r.pulse -> decr  = notif_txn_done_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_txn_done_intr_count_r.cnt        -> incr  = notif_txn_done_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_fifo_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_empty_intr_count_incr_r.pulse -> decr  = notif_fifo_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_empty_intr_count_r.cnt        -> incr  = notif_fifo_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_not_empty_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_not_empty_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_not_empty_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_not_empty_intr_count_incr_r.pulse -> decr  = notif_fifo_not_empty_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_not_empty_intr_count_r.cnt        -> incr  = notif_fifo_not_empty_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_fifo_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_full_intr_count_incr_r.pulse -> decr  = notif_fifo_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_full_intr_count_r.cnt        -> incr  = notif_fifo_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_fifo_not_full_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_fifo_not_full_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        notif_fifo_not_full_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_fifo_not_full_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        notif_fifo_not_full_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_fifo_not_full_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_fifo_not_full_intr_count_incr_r.pulse -> decr  = notif_fifo_not_full_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_fifo_not_full_intr_count_r.cnt        -> incr  = notif_fifo_not_full_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+
+    };
+
+    /* -----------------------
+     * Register File instance
+     * ----------------------- */
+    intr_block_t intr_block_rf @0x800;
+
+};

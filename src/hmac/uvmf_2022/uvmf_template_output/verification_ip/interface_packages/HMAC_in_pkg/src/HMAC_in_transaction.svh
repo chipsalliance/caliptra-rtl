@@ -33,7 +33,7 @@ class HMAC_in_transaction #(
   rand bit [15:0] bit_length;
 
   //Constraints for the transaction variables:
-  constraint hmac_valid_op_constraints { op inside {normal_op};}
+  constraint hmac_valid_op_constraints { op inside {hmac384_op, hmac512_op};}
   // constraint hmac_valid_testcasesel_constraints { 
   //   test_case_sel >= 0;
   //   test_case_sel <= 6;
@@ -201,7 +201,8 @@ class HMAC_in_transaction #(
       transaction_view_h = $begin_transaction(transaction_viewing_stream_h,"HMAC_in_transaction",start_time);
     end
     case(op)
-      normal_op: $add_color(transaction_view_h,"green");
+      hmac384_op: $add_color(transaction_view_h,"green");
+      hmac512_op: $add_color(transaction_view_h,"yellow");
       reset_op : $add_color(transaction_view_h,"orange");
       otf_reset_op: $add_color(transaction_view_h, "blue");
     endcase

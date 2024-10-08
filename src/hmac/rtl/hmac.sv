@@ -16,7 +16,7 @@
 //
 // hmac.sv
 // ------
-// HMAC-384 top-level wrapper with 32 bit data access.
+// HMAC-512/384 top-level wrapper with 32 bit data access.
 //
 //======================================================================
 //`include "kv_defines.svh"
@@ -64,12 +64,14 @@ module hmac
 
   reg next_reg;
   reg next_new;
+
+  reg mode_reg;
   
   reg ready_reg;
   reg tag_valid_reg;
 
   localparam BLOCK_SIZE       = 1024;
-  localparam KEY_SIZE         = 384;
+  localparam KEY_SIZE         = 512;
   localparam TAG_SIZE         = KEY_SIZE;
   localparam LFSR_SEED_SIZE   = 384;
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
@@ -94,6 +96,8 @@ module hmac
   wire [LFSR_SEED_SIZE-1 : 0]   core_lfsr_seed;
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
+
+  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] get_mask;
 
   hmac_reg__in_t hwif_in;
   hmac_reg__out_t hwif_out;
@@ -133,7 +137,8 @@ module hmac
                        block_reg[28], block_reg[29], block_reg[30], block_reg[31]};
 
   assign core_key = {key_reg[00], key_reg[01], key_reg[02], key_reg[03], key_reg[04], key_reg[05],
-                     key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11]};
+                     key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11],
+                     key_reg[12], key_reg[13], key_reg[14], key_reg[15]} & get_mask;
 
   assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05],
                            lfsr_seed_reg[06], lfsr_seed_reg[07], lfsr_seed_reg[08], lfsr_seed_reg[09], lfsr_seed_reg[10], lfsr_seed_reg[11]};
@@ -151,6 +156,7 @@ module hmac
 
                  .init_cmd(init_reg),
                  .next_cmd(next_reg),
+                 .mode_cmd(mode_reg),
 
                  .lfsr_seed(core_lfsr_seed),
 
@@ -202,9 +208,9 @@ module hmac
 
           //write to sw register
           if (core_tag_we & ~(dest_keyvault | kv_data_present))
-            tag_reg <= core_tag;
+            tag_reg <= core_tag & get_mask;
           if (core_tag_we & (dest_keyvault | kv_data_present))
-            kv_reg <= core_tag;
+            kv_reg <= core_tag & get_mask;
 
           block_reg_lock <= block_reg_lock_nxt;
           kv_key_data_present <= kv_key_data_present_set ? '1 :
@@ -220,68 +226,76 @@ always_comb begin
   hwif_in.error_reset_b = cptra_pwrgood;
   hwif_in.reset_b = reset_n;
   //drive hardware writeable registers from hmac core
-  hwif_in.HMAC384_NAME[0].NAME.next = HMAC_CORE_NAME[31:0];
-  hwif_in.HMAC384_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
-  hwif_in.HMAC384_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
-  hwif_in.HMAC384_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
+  hwif_in.HMAC512_NAME[0].NAME.next = HMAC_CORE_NAME[31:0];
+  hwif_in.HMAC512_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
+  hwif_in.HMAC512_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
+  hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
-  init_reg = hwif_out.HMAC384_CTRL.INIT.value & kv_key_ready & kv_block_ready;
-  next_reg = hwif_out.HMAC384_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
-  zeroize_reg = hwif_out.HMAC384_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
+  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
+  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
+  zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
+  mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
 
   //drive hardware writeable registers from hmac core
-  hwif_in.HMAC384_STATUS.READY.next = ready_reg;
-  hwif_in.HMAC384_STATUS.VALID.next = tag_valid_reg;
+  hwif_in.HMAC512_STATUS.READY.next = ready_reg;
+  hwif_in.HMAC512_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
-    hwif_in.HMAC384_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
-    hwif_in.HMAC384_TAG[dword].TAG.hwclr = zeroize_reg;
+    hwif_in.HMAC512_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
+    hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.next = kv_block_write_data;
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
-    hwif_in.HMAC384_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
+    hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
+    hwif_in.HMAC512_BLOCK[dword].BLOCK.next = kv_block_write_data;
+    hwif_in.HMAC512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
+    hwif_in.HMAC512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
-    hwif_in.HMAC384_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
-    hwif_in.HMAC384_KEY[dword].KEY.next = kv_key_write_data;
-    hwif_in.HMAC384_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
-    hwif_in.HMAC384_KEY[dword].KEY.swwel = kv_key_data_present;
+    hwif_in.HMAC512_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
+    hwif_in.HMAC512_KEY[dword].KEY.next = kv_key_write_data;
+    hwif_in.HMAC512_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
+    hwif_in.HMAC512_KEY[dword].KEY.swwel = kv_key_data_present;
   end
   //set ready when keyvault isn't busy
-  hwif_in.HMAC384_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
-  hwif_in.HMAC384_KV_RD_BLOCK_STATUS.READY.next = kv_block_ready;
-  hwif_in.HMAC384_KV_WR_STATUS.READY.next = kv_write_ready;
+  hwif_in.HMAC512_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
+  hwif_in.HMAC512_KV_RD_BLOCK_STATUS.READY.next = kv_block_ready;
+  hwif_in.HMAC512_KV_WR_STATUS.READY.next = kv_write_ready;
   //set error code
-  hwif_in.HMAC384_KV_RD_KEY_STATUS.ERROR.next = kv_key_error;
-  hwif_in.HMAC384_KV_RD_BLOCK_STATUS.ERROR.next = kv_block_error;
-  hwif_in.HMAC384_KV_WR_STATUS.ERROR.next = kv_write_error;
+  hwif_in.HMAC512_KV_RD_KEY_STATUS.ERROR.next = kv_key_error;
+  hwif_in.HMAC512_KV_RD_BLOCK_STATUS.ERROR.next = kv_block_error;
+  hwif_in.HMAC512_KV_WR_STATUS.ERROR.next = kv_write_error;
   //set valid when fsm is done
-  hwif_in.HMAC384_KV_RD_KEY_STATUS.VALID.hwset = kv_key_done;
-  hwif_in.HMAC384_KV_RD_BLOCK_STATUS.VALID.hwset = kv_block_done;
-  hwif_in.HMAC384_KV_WR_STATUS.VALID.hwset = kv_write_done;
+  hwif_in.HMAC512_KV_RD_KEY_STATUS.VALID.hwset = kv_key_done;
+  hwif_in.HMAC512_KV_RD_BLOCK_STATUS.VALID.hwset = kv_block_done;
+  hwif_in.HMAC512_KV_WR_STATUS.VALID.hwset = kv_write_done;
   //clear valid when new request is made
-  hwif_in.HMAC384_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
-  hwif_in.HMAC384_KV_RD_BLOCK_STATUS.VALID.hwclr = kv_block_read_ctrl_reg.read_en;
-  hwif_in.HMAC384_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
+  hwif_in.HMAC512_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
+  hwif_in.HMAC512_KV_RD_BLOCK_STATUS.VALID.hwclr = kv_block_read_ctrl_reg.read_en;
+  hwif_in.HMAC512_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
   //clear enable when busy
-  hwif_in.HMAC384_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
-  hwif_in.HMAC384_KV_RD_BLOCK_CTRL.read_en.hwclr = ~kv_block_ready;
-  hwif_in.HMAC384_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
+  hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
+  hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.hwclr = ~kv_block_ready;
+  hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
   //assign hardware readable registers to drive hmac core
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
-    key_reg[dword] = hwif_out.HMAC384_KEY[dword].KEY.value;
+    key_reg[dword] = hwif_out.HMAC512_KEY[dword].KEY.value;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
-    block_reg[dword] = hwif_out.HMAC384_BLOCK[dword].BLOCK.value;
+    block_reg[dword] = hwif_out.HMAC512_BLOCK[dword].BLOCK.value;
   end
 
   for (int dword=0; dword < SEED_NUM_DWORDS; dword++)begin
-    lfsr_seed_reg[dword] = hwif_out.HMAC384_LFSR_SEED[dword].LFSR_SEED.value;
+    lfsr_seed_reg[dword] = hwif_out.HMAC512_LFSR_SEED[dword].LFSR_SEED.value;
   end
+end
+
+always_comb begin
+  unique case (mode_reg)
+    1'b0 :     get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384
+    default :  get_mask = {16{32'hffffffff}};                       //SHA512
+  endcase
 end
 
 //set the lock for the part of the block being written by KV logic
@@ -298,9 +312,9 @@ always_comb begin
 end
 
 //keyvault control reg macros for assigning to struct
-`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC384_KV_RD_KEY_CTRL)
-`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC384_KV_RD_BLOCK_CTRL)
-`CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC384_KV_WR_CTRL)
+`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)
+`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC512_KV_RD_BLOCK_CTRL)
+`CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, HMAC512_KV_WR_CTRL)
 
 //Force result into KV reg whenever source came from KV
 always_comb kv_key_data_present_set = kv_key_read_ctrl_reg.read_en;

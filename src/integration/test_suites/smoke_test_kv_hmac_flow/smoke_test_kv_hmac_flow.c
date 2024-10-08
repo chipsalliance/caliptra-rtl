@@ -23,8 +23,8 @@
 #include "printf.h"
 #include "hmac.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -56,7 +56,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_notif    = 0,
+    .axi_dma_notif    = 0,
 };
 
 
@@ -112,7 +114,7 @@ void main() {
                             0x00000440};
 
     //this is a random lfsr_seed
-    uint32_t lfsr_seed_data[12] =  {0xC8F518D4,
+    uint32_t hmac384_lfsr_seed_data[12] =  {0xC8F518D4,
                                     0xF3AA1BD4,
                                     0x6ED56C1C,
                                     0x3C9E16FB,
@@ -125,7 +127,7 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4}; 
 
-    uint32_t expected_tag[12] =   {0xb6a8d563,
+    uint32_t hmac384_expected_tag[12] =   {0xb6a8d563,
                                     0x6f5c6a72,
                                     0x24f9977d,
                                     0xcf7ee6c7,
@@ -143,37 +145,37 @@ void main() {
     uint8_t store_to_kv         = 0x1;
     uint8_t tag_kv_id           = 0x0;
 
-    hmac_io hmac_key;
-    hmac_io hmac_block;
-    hmac_io hmac_lfsr_seed;
-    hmac_io hmac_tag;
+    hmac_io hmac384_key;
+    hmac_io hmac384_block;
+    hmac_io hmac384_lfsr_seed;
+    hmac_io hmac384_tag;
 
-    hmac_key.kv_intf = TRUE;
-    hmac_key.kv_id = hmackey_kv_id;
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = hmackey_kv_id;
 
-    hmac_block.kv_intf = TRUE;
-    hmac_block.kv_id = hmacblock_kv_id;
-    hmac_block.data_size = 32;
-    for (int i = 0; i < hmac_block.data_size; i++)
-        hmac_block.data[i] = block[i];
+    hmac384_block.kv_intf = TRUE;
+    hmac384_block.kv_id = hmacblock_kv_id;
+    hmac384_block.data_size = 32;
+    for (int i = 0; i < hmac384_block.data_size; i++)
+        hmac384_block.data[i] = block[i];
 
-    hmac_lfsr_seed.kv_intf = FALSE;
-    hmac_lfsr_seed.data_size = 12;
-    for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
-        hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
+    hmac384_lfsr_seed.kv_intf = FALSE;
+    hmac384_lfsr_seed.data_size = 12;
+    for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
+        hmac384_lfsr_seed.data[i] = hmac384_lfsr_seed_data[i];
 
-    hmac_tag.kv_intf = TRUE;
-    hmac_tag.kv_id = tag_kv_id;
-    hmac_tag.data_size = 12;
-    for (int i = 0; i < hmac_tag.data_size; i++)
-        hmac_tag.data[i] = expected_tag[i];
+    hmac384_tag.kv_intf = TRUE;
+    hmac384_tag.kv_id = tag_kv_id;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = hmac384_expected_tag[i];
 
 
-    //inject hmac_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmac_key.kv_id & 0x7);
+    //inject hmac384_key to kv key reg (in RTL)
+    uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
     printf("%c",0xff); //End the test
