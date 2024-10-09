@@ -31,6 +31,7 @@ function gen_pb_file_list {
     pb fe file_list --tb integration_lib::${cpt_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cpt_vf_file};
     # Replace leading portion of Caliptra source paths with ${CALIPTRA_ROOT}
     sed 's,/home.*caliptra-rtl/src,\${CALIPTRA_ROOT}/src,' -i ${cpt_vf_file}
+    sed 's,/home.*adams-bridge/src,\${ADAMSBRIDGE_ROOT}/src,' -i ${cpt_vf_file}
     # Replace leading portion of UVM/installed library paths with appropriate ENV VAR
     sed 's,/home/cad/tools/mentor/questa/[0-9\._]*/questasim/verilog_src/uvm-[^/]\+,\${UVM_HOME},' -i ${cpt_vf_file}
     sed 's,/home/cad/tools/mentor/uvmf/UVMF_[0-9\.]*,\${UVMF_HOME},' -i ${cpt_vf_file}
