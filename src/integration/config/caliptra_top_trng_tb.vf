@@ -390,6 +390,7 @@ ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_butterfly2x2.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_butterfly.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_mult_dsp.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_mult_reduction.sv
+${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_special_adder.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_div2.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_buffer.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_twiddle_lookup.sv
