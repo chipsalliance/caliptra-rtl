@@ -234,7 +234,7 @@ jobs:
       - name: Test core register access
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./dump_and_compare.sh'
@@ -242,7 +242,7 @@ jobs:
       - name: Test memory access
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./mem_access.sh'
@@ -250,7 +250,7 @@ jobs:
       - name: Test peripheral access
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./peripheral_access.sh'
@@ -304,7 +304,7 @@ jobs:
       - name: Build Verilated simulation
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           mkdir run
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 FORCE_CPU_RESET=1 \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -313,7 +313,7 @@ jobs:
       - name: Test peripheral access with core in reset
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator-rst.cfg \
@@ -322,7 +322,7 @@ jobs:
       - name: Build Verilated simulation
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           rm -rf run/*
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -331,7 +331,7 @@ jobs:
       - name: Test JTAG access with clock gating
         run: |
           export CALIPTRA_ROOT=$(pwd)
-          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
