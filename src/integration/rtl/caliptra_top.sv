@@ -213,6 +213,8 @@ module caliptra_top
     wire sha512_notif_intr;
     wire sha256_error_intr;
     wire sha256_notif_intr;
+    wire mldsa_error_intr;
+    wire mldsa_notif_intr;
     wire qspi_error_intr;
     wire qspi_notif_intr;
     wire uart_error_intr;
@@ -356,6 +358,7 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -404,6 +407,8 @@ always_comb begin
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
+    intr[`VEER_INTR_VEC_MLDSA_ERROR  -1]          = mldsa_error_intr;
+    intr[`VEER_INTR_VEC_MLDSA_NOTIF  -1]          = mldsa_notif_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
@@ -925,6 +930,27 @@ hmac_ctrl #(
      .notif_intr(hmac_notif_intr),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 
+);
+
+mldsa_top #(
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
+) mldsa (
+     .clk           (clk_cg),
+     .rst_b         (cptra_noncore_rst_b),
+     //TODO: pwrgood
+     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)-1:0]),
+     .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwdata),
+     .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsel),
+     .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwrite),
+     .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hready),
+     .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].htrans),
+     .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsize),
+     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
+     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
+     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
+     .error_intr    (mldsa_error_intr),
+     .notif_intr    (mldsa_notif_intr)
 );
 
 kv #(
