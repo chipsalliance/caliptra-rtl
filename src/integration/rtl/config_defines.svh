@@ -56,7 +56,7 @@
   `define CALIPTRA_SLAVE_SEL_IMEM        14
   `define CALIPTRA_SLAVE_SEL_CSRNG       15
   `define CALIPTRA_SLAVE_SEL_ENTROPY_SRC 16
-  `define CALIPTRA_SLAVE_SEL_MLDSA    17
+  `define CALIPTRA_SLAVE_SEL_MLDSA       17
 
   // Interrupt Assignments
   // NOTE Vector 0 is reserved by VeeR

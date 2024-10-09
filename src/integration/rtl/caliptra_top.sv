@@ -934,8 +934,7 @@ hmac_ctrl #(
 
 mldsa_top #(
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)),
-    .CLIENT_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE/2) //TODO confirm
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
 ) mldsa (
      .clk           (clk_cg),
      .rst_b         (cptra_noncore_rst_b),
