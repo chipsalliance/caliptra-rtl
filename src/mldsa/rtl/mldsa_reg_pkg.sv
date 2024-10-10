@@ -4,7 +4,7 @@
 package mldsa_reg_pkg;
 
     localparam MLDSA_REG_DATA_WIDTH = 32;
-    localparam MLDSA_REG_MIN_ADDR_WIDTH = 15;
+    localparam MLDSA_REG_MIN_ADDR_WIDTH = 16;
 
     typedef struct packed{
         logic [31:0] next;
@@ -147,8 +147,8 @@ package mldsa_reg_pkg;
         mldsa_reg__MLDSA_SIGN_RND__in_t [8-1:0]MLDSA_SIGN_RND;
         mldsa_reg__MLDSA_MSG__in_t [16-1:0]MLDSA_MSG;
         mldsa_reg__MLDSA_VERIFY_RES__in_t [16-1:0]MLDSA_VERIFY_RES;
-        mldsa_reg__MLDSA_PUBKEY__external__in_t [648-1:0]MLDSA_PUBKEY;
-        mldsa_reg__MLDSA_SIGNATURE__external__in_t [1157-1:0]MLDSA_SIGNATURE;
+        mldsa_reg__MLDSA_PUBKEY__external__in_t MLDSA_PUBKEY;
+        mldsa_reg__MLDSA_SIGNATURE__external__in_t MLDSA_SIGNATURE;
         mldsa_reg__MLDSA_PRIVKEY_OUT__external__in_t MLDSA_PRIVKEY_OUT;
         mldsa_reg__MLDSA_PRIVKEY_IN__external__in_t MLDSA_PRIVKEY_IN;
         mldsa_reg__intr_block_t__in_t intr_block_rf;
@@ -209,6 +209,7 @@ package mldsa_reg_pkg;
 
     typedef struct packed{
         logic req;
+        logic [11:0] addr;
         logic req_is_wr;
         logic [31:0] wr_data;
         logic [31:0] wr_biten;
@@ -216,6 +217,7 @@ package mldsa_reg_pkg;
 
     typedef struct packed{
         logic req;
+        logic [12:0] addr;
         logic req_is_wr;
         logic [31:0] wr_data;
         logic [31:0] wr_biten;
@@ -267,13 +269,13 @@ package mldsa_reg_pkg;
         mldsa_reg__MLDSA_SIGN_RND__out_t [8-1:0]MLDSA_SIGN_RND;
         mldsa_reg__MLDSA_MSG__out_t [16-1:0]MLDSA_MSG;
         mldsa_reg__MLDSA_VERIFY_RES__out_t [16-1:0]MLDSA_VERIFY_RES;
-        mldsa_reg__MLDSA_PUBKEY__external__out_t [648-1:0]MLDSA_PUBKEY;
-        mldsa_reg__MLDSA_SIGNATURE__external__out_t [1157-1:0]MLDSA_SIGNATURE;
+        mldsa_reg__MLDSA_PUBKEY__external__out_t MLDSA_PUBKEY;
+        mldsa_reg__MLDSA_SIGNATURE__external__out_t MLDSA_SIGNATURE;
         mldsa_reg__MLDSA_PRIVKEY_OUT__external__out_t MLDSA_PRIVKEY_OUT;
         mldsa_reg__MLDSA_PRIVKEY_IN__external__out_t MLDSA_PRIVKEY_IN;
         mldsa_reg__intr_block_t__out_t intr_block_rf;
     } mldsa_reg__out_t;
 
-    localparam MLDSA_REG_ADDR_WIDTH = 32'd15;
+    localparam MLDSA_REG_ADDR_WIDTH = 32'd16;
 
 endpackage
