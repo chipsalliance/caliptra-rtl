@@ -19,12 +19,16 @@
 `include "config_defines.svh"
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
-`ifdef UVMF_CALIPTRA_TOP
-`define CPTRA_TB_TOP_NAME hdl_top
-`else
-`define CPTRA_TB_TOP_NAME caliptra_top_tb
+`ifndef CPTRA_TB_TOP_NAME
+  `ifdef UVMF_CALIPTRA_TOP
+    `define CPTRA_TB_TOP_NAME hdl_top
+  `else
+    `define CPTRA_TB_TOP_NAME caliptra_top_tb
+  `endif
 `endif
-`define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`ifndef CPTRA_TOP_PATH
+  `define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`endif
 `define KEYVAULT_PATH       `CPTRA_TOP_PATH.key_vault1
 `define KEYVAULT_REG_PATH   `KEYVAULT_PATH.kv_reg1
 `define PCRVAULT_PATH       `CPTRA_TOP_PATH.pcr_vault1

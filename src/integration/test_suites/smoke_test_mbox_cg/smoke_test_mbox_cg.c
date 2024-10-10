@@ -28,7 +28,7 @@ volatile uint32_t  intr_count       = 0;
     enum printf_verbosity             verbosity_g = LOW;
 #endif
 
-#define MBOX_DLEN_VAL             0x00000020
+#define MBOX_DLEN_VAL             0x00000100
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {
     .doe_error        = 0,
@@ -53,6 +53,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 void main () {
@@ -68,7 +70,63 @@ void main () {
                              0x44444444,
                              0x55555555,
                              0x66666666,
-                             0x77777777 };
+                             0x77777777,
+                             0x88888888,
+                             0x99999999,
+                             0xaaaaaaaa,
+                             0xbbbbbbbb,
+                             0xcccccccc,
+                             0xdddddddd,
+                             0xeeeeeeee,
+                             0xffffffff,
+                             0x00001111,
+                             0x11112222,
+                             0x22223333,
+                             0x33334444,
+                             0x44445555,
+                             0x55556666,
+                             0x66667777,
+                             0x77778888,
+                             0x88889999,
+                             0x9999aaaa,
+                             0xaaaabbbb,
+                             0xbbbbcccc,
+                             0xccccdddd,
+                             0xddddeeee,
+                             0xeeeeffff,
+                             0xffff0000,
+                             0x00001122,
+                             0x11112233,
+                             0x22223344,
+                             0x33334455,
+                             0x44445566,
+                             0x55556677,
+                             0x66667788,
+                             0x77778899,
+                             0x888899aa,
+                             0x9999aabb,
+                             0xaaaabbcc,
+                             0xbbbbccdd,
+                             0xccccddee,
+                             0xddddeeff,
+                             0xeeeeff00,
+                             0xffff0011,
+                             0x00001123,
+                             0x11112234,
+                             0x22223345,
+                             0x33334456,
+                             0x44445567,
+                             0x55556678,
+                             0x66667789,
+                             0x7777889a,
+                             0x888899ab,
+                             0x9999aabc,
+                             0xaaaabbcd,
+                             0xbbbbccde,
+                             0xccccddef,
+                             0xddddeef0,
+                             0xeeeeff01,
+                             0xffff0012 };
     uint32_t read_data;
 
     uint32_t mitb0 = 0x000000F0;
@@ -127,12 +185,14 @@ void main () {
 
     //check FSM state, should be in EXECUTE_SOC
     state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
-    if (state != MBOX_EXECUTE_SOC) {
+    if (state != MBOX_EXECUTE_SOC && ((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1)) {
         VPRINTF(ERROR, "ERROR: mailbox in unexpected state (%x) when expecting MBOX_EXECUTE_SOC (0x%x)\n", state, MBOX_EXECUTE_SOC);
         SEND_STDOUT_CTRL( 0x1);
         while(1);
+    } else if ((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 0) {
+        VPRINTF(LOW, "FW: Mailbox operation has ended, execute cleared to 0. Ending test with success\n");
     } else {
-        VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC, ending test with success\n");
+        VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC. Ending test with success\n");
     }
 
 //--------------------------------------------------------------------------------------------
@@ -140,12 +200,10 @@ void main () {
     VPRINTF(LOW, "FW: Wait for SoC to reset execute register\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1);
 
-    //Force unlock
-    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
     //poll for mbox lock
+    VPRINTF(LOW, "FW: Acquire lock to send mbox cmd\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 1);
 
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);

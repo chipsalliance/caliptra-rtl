@@ -137,9 +137,9 @@ void main() {
                       : /* clobbers: none */);
 
     //------------------------------------------------------
-    //Wake SOC up for APB tx and core using timer int later
+    //Wake SOC up for AXI tx and core using timer int later
     //------------------------------------------------------
-        printf("Wake up SOC clk on APB txns and later wake up core using timer interrupt\n");
+        printf("Wake up SOC clk on AXI txns and later wake up core using timer interrupt\n");
         //Machine intr enable reg (mie) - enable timer int 
         __asm__ volatile ("csrw    %0, %1" \
                       : /* output: none */        \

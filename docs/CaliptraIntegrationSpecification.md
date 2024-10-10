@@ -182,7 +182,7 @@ Control registers and fuses are documented on GitHub.
 
 ## Fuses
 
-Fuses are writable only one time and require a cptra\_pwrgood to be recycled to be written again.
+Fuses may only be written during the BOOT_FUSE state of the Boot FSM and require a cptra\_pwrgood to be recycled to be written again.
 
 After all fuses are written, the fuse done register at the end of the fuse address space must be set to 1 to lock the fuse writes and to proceed with the boot flow.
 

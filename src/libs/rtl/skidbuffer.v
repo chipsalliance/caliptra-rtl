@@ -56,7 +56,11 @@
 //              Gisselquist Technology, LLC
 //
 // Caliptra Modifications:
-//     Revert the default_nettype assignment at file end
+//   * Revert the default_nettype assignment at file end
+//   * Convert i_reset from active-high synchronous reset to
+//     active-low asynchronous reset
+//   * Enable OPT_INITIAL behavior by default using async reset instead of
+//     initial block
 //
 ////////////////////////////////////////////////////////////////////////////////
 // }}}
@@ -88,12 +92,11 @@ module skidbuffer #(
                 parameter       [0:0]   OPT_OUTREG = 1,
                 //
                 parameter       [0:0]   OPT_PASSTHROUGH = 0,
-                parameter               DW = 8,
-                parameter       [0:0]   OPT_INITIAL = 1'b1
+                parameter               DW = 8
                 // }}}
         ) (
                 // {{{
-                input   wire                    i_clk, i_reset, // fixme resetn, async
+                input   wire                    i_clk, i_reset, // Changed to resetn, async
                 input   wire                    i_valid,
                 output  wire                    o_ready,
                 input   wire    [DW-1:0]        i_data,
@@ -134,9 +137,8 @@ module skidbuffer #(
 
                 // r_valid
                 // {{{
-                initial if (OPT_INITIAL) r_valid = 0;
-                always @(posedge i_clk)
-                if (i_reset)
+                always @(posedge i_clk or negedge i_reset)
+                if (!i_reset)
                         r_valid <= 0;
                 else if ((i_valid && o_ready) && (o_valid && !i_ready))
                         // We have incoming data, but the output is stalled
@@ -147,9 +149,8 @@ module skidbuffer #(
 
                 // r_data
                 // {{{
-                initial if (OPT_INITIAL) r_data = 0;
-                always @(posedge i_clk)
-                if (OPT_LOWPOWER && i_reset)
+                always @(posedge i_clk or negedge i_reset)
+                if (!i_reset)
                         r_data <= 0;
                 else if (OPT_LOWPOWER && (!o_valid || i_ready))
                         r_data <= 0;
@@ -173,7 +174,8 @@ module skidbuffer #(
                         // {{{
                         // o_valid
                         // {{{
-                        assign  o_valid = !i_reset && (i_valid || r_valid);
+                        // NOTE: As i_reset is now asynchronous, omit from the equation
+                        assign  o_valid = /*i_reset && */(i_valid || r_valid);
                         // }}}
 
                         // o_data
@@ -194,9 +196,8 @@ module skidbuffer #(
                         // {{{
                         reg     ro_valid;
 
-                        initial if (OPT_INITIAL) ro_valid = 0;
-                        always @(posedge i_clk)
-                        if (i_reset)
+                        always @(posedge i_clk or negedge i_reset)
+                        if (!i_reset)
                                 ro_valid <= 0;
                         else if (!o_valid || i_ready)
                                 ro_valid <= (i_valid || r_valid);
@@ -206,9 +207,8 @@ module skidbuffer #(
 
                         // o_data
                         // {{{
-                        initial if (OPT_INITIAL) o_data = 0;
-                        always @(posedge i_clk)
-                        if (OPT_LOWPOWER && i_reset)
+                        always @(posedge i_clk or negedge i_reset)
+                        if (!i_reset)
                                 o_data <= 0;
                         else if (!o_valid || i_ready)
                         begin
@@ -258,7 +258,7 @@ module skidbuffer #(
 
         always @(*)
         if (!f_past_valid)
-                assume(i_reset);
+                assume(!i_reset);
 
         ////////////////////////////////////////////////////////////////////////
         //
@@ -269,19 +269,19 @@ module skidbuffer #(
         always @(posedge i_clk)
         if (!f_past_valid)
         begin
-                `ASSUME(!i_valid || !OPT_INITIAL);
-        end else if ($past(i_valid && !o_ready && !i_reset) && !i_reset)
+                `ASSUME(!i_valid);
+        end else if ($past(i_valid && !o_ready && i_reset) && i_reset)
                 `ASSUME(i_valid && $stable(i_data));
 
 `ifdef  VERIFIC
 `define FORMAL_VERIFIC
         // Reset properties
         property RESET_CLEARS_IVALID;
-                @(posedge i_clk) i_reset |=> !i_valid;
+                @(posedge i_clk) !i_reset |=> !i_valid;
         endproperty
 
         property IDATA_HELD_WHEN_NOT_READY;
-                @(posedge i_clk) disable iff (i_reset)
+                @(posedge i_clk) disable iff (!i_reset)
                 i_valid && !o_ready |=> i_valid && $stable(i_data);
         endproperty
 
@@ -303,11 +303,11 @@ module skidbuffer #(
         begin
 
                 always @(posedge i_clk)
-                if (!f_past_valid) // || $past(i_reset))
+                if (!f_past_valid) // || $past(!i_reset))
                 begin
                         // Following any reset, valid must be deasserted
-                        assert(!o_valid || !OPT_INITIAL);
-                end else if ($past(o_valid && !i_ready && !i_reset) && !i_reset)
+                        assert(!o_valid);
+                end else if ($past(o_valid && !i_ready && i_reset) && i_reset)
                         // Following any stall, valid must remain high and
                         // data must be preserved
                         assert(o_valid && $stable(o_data));
@@ -328,7 +328,7 @@ module skidbuffer #(
                 //      ready for a new request
                 // {{{
                 always @(posedge i_clk)
-                if (f_past_valid && $past(OPT_OUTREG && i_reset))
+                if (f_past_valid && $past(OPT_OUTREG && !i_reset))
                         assert(o_ready);
                 // }}}
 
@@ -338,12 +338,12 @@ module skidbuffer #(
                 // {{{
 `ifndef VERIFIC
                 always @(posedge i_clk)
-                if (f_past_valid && !$past(i_reset) && $past(i_valid && o_ready
+                if (f_past_valid && !$past(!i_reset) && $past(i_valid && o_ready
                         && (!OPT_OUTREG || o_valid) && !i_ready))
                         assert(!o_ready && w_data == $past(i_data));
 `else
                 assert property (@(posedge i_clk)
-                        disable iff (i_reset)
+                        disable iff (!i_reset)
                         (i_valid && o_ready
                                 && (!OPT_OUTREG || o_valid) && !i_ready)
                                 |=> (!o_ready && w_data == $past(i_data)));
@@ -357,7 +357,7 @@ module skidbuffer #(
                 begin
                         // {{{
                         always @(posedge i_clk)
-                        if (f_past_valid && !$past(i_reset) && !i_reset
+                        if (f_past_valid && !$past(!i_reset) && i_reset
                                         && $past(i_ready))
                         begin
                                 assert(o_valid == i_valid);
@@ -367,7 +367,7 @@ module skidbuffer #(
                 end else begin
                         // {{{
                         always @(posedge i_clk)
-                        if (f_past_valid && !$past(i_reset))
+                        if (f_past_valid && !$past(!i_reset))
                         begin
                                 if ($past(i_valid && o_ready))
                                         assert(o_valid);
@@ -393,7 +393,7 @@ module skidbuffer #(
                 if (OPT_LOWPOWER)
                 begin
                         always @(*)
-                        if ((OPT_OUTREG || !i_reset) && !o_valid)
+                        if ((OPT_OUTREG || i_reset) && !o_valid)
                                 assert(o_data == 0);
 
                         always @(*)
@@ -418,7 +418,7 @@ module skidbuffer #(
 
                 initial f_changed_data = 0;
                 always @(posedge i_clk)
-                if (i_reset)
+                if (!i_reset)
                         f_changed_data <= 1;
                 else if (i_valid && $past(!i_valid || o_ready))
                 begin
@@ -432,7 +432,7 @@ module skidbuffer #(
                 reg     [3:0]   cvr_steps, cvr_hold;
 
                 always @(posedge i_clk)
-                if (i_reset)
+                if (!i_reset)
                 begin
                         cvr_steps <= 0;
                         cvr_hold  <= 0;
@@ -479,7 +479,7 @@ module skidbuffer #(
 `else
                 // Cover test
                 cover property (@(posedge i_clk)
-                        disable iff (i_reset)
+                        disable iff (!i_reset)
                         (!o_valid && !i_valid)
                         ##1 i_valid &&  i_ready [*3]
                         ##1 i_valid && !i_ready
