@@ -76,23 +76,30 @@ module ecc_add_sub_mod_alter #(
     );
 
 
-    assign sub_n = !sub_i;
     assign opb0 = sub_i ? ~opb_i : opb_i;
-    assign opb1 = sub_i ? prime_i : ~prime_i;
 
     always_ff @(posedge clk or negedge reset_n) 
     begin
         if(!reset_n) begin
             r0_reg <= '0;
             carry0_reg <= '0;
+            sub_n <= '0;
+            opb1 <= '0;
         end
         else if (zeroize) begin
             r0_reg <= '0;
             carry0_reg <= '0;
+            sub_n <= '0;
+            opb1 <= '0;
         end
         else if (add_en_i) begin 
             r0_reg <= r0;
             carry0_reg <= carry0;
+            sub_n <= !sub_i;
+            if (sub_i)
+                opb1 <= prime_i;
+            else
+                opb1 <= ~prime_i;
         end
     end
 
@@ -110,6 +117,6 @@ module ecc_add_sub_mod_alter #(
 
     assign ready_o = push_result_reg[0];
 
-    assign res_o = sub_n ? (carry0_reg ^ carry1)? r1 : r0 : (carry0_reg) ? r0 : r1;
+    assign res_o = sub_n ? (carry0_reg ^ carry1)? r1 : r0_reg : (carry0_reg) ? r0_reg : r1;
     
 endmodule

@@ -46,7 +46,6 @@ module ecc_arith_unit
 
     // DATA PORT
     input  wire [3 : 0]                     ecc_cmd_i,
-    input  wire                             sca_en_i,
     input  wire [ADDR_WIDTH-1 : 0]          addr_i,
     input  wire                             wr_op_sel_i,
     input  wire                             wr_en_i,
@@ -101,7 +100,6 @@ module ecc_arith_unit
         .reset_n(reset_n),
         .zeroize(zeroize),
         .ecc_cmd_i(ecc_cmd_i),
-        .sca_en_i(sca_en_i),
         .digit_i(digit_in),
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
