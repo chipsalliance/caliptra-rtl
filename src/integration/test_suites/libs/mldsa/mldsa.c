@@ -128,9 +128,9 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
 
     // Read the data back from MLDSA register
     printf("Load PUBKEY data from MLDSA\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_0;
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_647) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
         mldsa_pubkey[offset] = *reg_ptr;
         if (mldsa_pubkey[offset] != pubkey[offset]) {
             printf("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
@@ -204,9 +204,9 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
 
     // Read the data back from MLDSA register
     printf("Load PUBKEY data from MLDSA\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_0;
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_647) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
         mldsa_pubkey[offset] = *reg_ptr;
         if (mldsa_pubkey[offset] != pubkey[offset]) {
             printf("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
@@ -221,9 +221,9 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
 
     // Read the data back from MLDSA register
     printf("Load SIGN data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_0;
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_1156) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
         mldsa_sign[offset] = *reg_ptr;
         if (mldsa_sign[offset] != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
@@ -306,9 +306,9 @@ void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entro
         
     // // Read the data back from MLDSA register
     printf("Load SIGN data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_0;
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_1156) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
         mldsa_sign[offset] = *reg_ptr;
         if (mldsa_sign[offset] != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
@@ -341,17 +341,17 @@ void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[
     }
 
     // Program MLDSA PUBKEY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_0;
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_647) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
         *reg_ptr++ = pubkey[offset++];
     }
 
 
     // Program MLDSA SIGNATURE
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_0;
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_1156) {
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
         *reg_ptr++ = sign[offset++];
     }
 
