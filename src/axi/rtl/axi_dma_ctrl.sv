@@ -81,7 +81,7 @@ import soc_ifc_pkg::*;
     // Localparams/Typedefs                    //
     // --------------------------------------- //
     
-    localparam FIFO_BC = 128; // depth in bytes
+    localparam FIFO_BC = 512; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
 
     // Smaller of
