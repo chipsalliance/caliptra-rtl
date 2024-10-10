@@ -207,6 +207,7 @@ module ecc_dsa_ctrl
 
     logic error_flag;
     logic error_flag_reg;
+    logic error_flag_edge;
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -457,7 +458,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_reg;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_edge;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
 
 
@@ -658,6 +659,8 @@ module ecc_dsa_ctrl
             error_flag_reg <= 1'b1;
     end // error_detection
     
+    assign error_flag_edge = error_flag & (!error_flag_reg);
+
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
     assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
     assign s_output_outofrange      = signing_process & (hw_s_we & (read_reg == 0));
