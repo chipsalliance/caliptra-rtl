@@ -22,8 +22,7 @@
 
 module hmac_lfsr
 #(
-   parameter                    REG_SIZE  = 32,
-   parameter [REG_SIZE-1 : 0]   INIT_SEED = 32'h3CAB_FFB0 // a random value
+   parameter                    REG_SIZE  = 32
 )
 (
   // Clock and reset.
@@ -46,6 +45,9 @@ module hmac_lfsr
    reg [REG_SIZE-1 : 0]    rnd_next;
 
    logic                   feedback;
+   logic                   lockup;
+   logic [REG_SIZE-1 : 0]  counter_reg;
+   logic [REG_SIZE-1 : 0]  counter_next;
 
   //----------------------------------------------------------------
   // reg_update
@@ -60,14 +62,31 @@ module hmac_lfsr
    always_ff @ (posedge clk or negedge reset_n) 
    begin
       if (!reset_n)
-         rnd_reg <= INIT_SEED;
+         rnd_reg <= '0;
       else if (zeroize)
-         rnd_reg <= INIT_SEED;
+         rnd_reg <= counter_reg;
       else if (en)
          rnd_reg <= seed;
+      else if (lockup)
+         rnd_reg <= counter_reg;
       else
          rnd_reg <= rnd_next;
    end
+
+   always_comb counter_next = counter_reg + 1;
+
+   always_ff @(posedge clk or negedge reset_n) 
+    begin : counter_reg_update
+        if (!reset_n)
+            counter_reg       <= '0;
+        else if (&counter_next)
+            counter_reg       <= '0;
+         else
+            counter_reg       <= counter_next;
+    end // counter_reg_update
+
+   // lockup condition is all-one
+   assign lockup = &rnd_reg;
 
    assign rnd = rnd_reg;
 

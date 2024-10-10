@@ -142,9 +142,7 @@ module ecc_dsa_ctrl
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  r_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  s_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  IV_reg;
-    logic [REG_SIZE-1 : 0]  lambda;
     logic [REG_SIZE-1 : 0]  lambda_reg;
-    logic [REG_SIZE-1 : 0]  masking_rnd;
     logic [REG_SIZE-1 : 0]  masking_rnd_reg;
     logic [REG_SIZE-1 : 0]  pk_chk_reg;
 
@@ -153,7 +151,6 @@ module ecc_dsa_ctrl
 
     logic [REG_SIZE-1 : 0]              scalar_in_reg;
     logic [REG_SIZE-1 : 0]              scalar_rnd_reg;
-    logic [(REG_SIZE+RND_SIZE)-1 : 0]   scalar_out;
     logic [(REG_SIZE+RND_SIZE)-1 : 0]   scalar_out_reg;
     logic                               scalar_sca_en;
     logic                               scalar_sca_busy_o;
@@ -163,10 +160,6 @@ module ecc_dsa_ctrl
     logic                   hmac_ready;
     logic [REG_SIZE-1 : 0]  hmac_drbg_result;
     logic                   hmac_busy;
-
-    logic                   sca_point_rnd_en;
-    logic                   sca_mask_sign_en;
-    logic                   sca_scalar_rnd_en;
 
     //interface with kv client
     logic kv_privkey_write_en;
@@ -247,7 +240,6 @@ module ecc_dsa_ctrl
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
         .ecc_cmd_i(pm_cmd_reg),
-        .sca_en_i(sca_scalar_rnd_en),
         .addr_i(prog_instr.mem_addr),
         .wr_op_sel_i(prog_instr.opcode.op_sel),
 
@@ -274,9 +266,9 @@ module ecc_dsa_ctrl
         .privKey(privkey_reg),
         .hashed_msg(msg_reduced_reg),
         .IV(IV_reg),
-        .lambda(lambda),
+        .lambda(lambda_reg),
         .scalar_rnd(scalar_rnd_reg),
-        .masking_rnd(masking_rnd),
+        .masking_rnd(masking_rnd_reg),
         .drbg(hmac_drbg_result)
         );
 
@@ -293,21 +285,10 @@ module ecc_dsa_ctrl
         .en_i(scalar_sca_en),
         .data_i(scalar_in_reg),
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
-        .data_o(scalar_out),
+        .data_o(scalar_out_reg),
         .busy_o(scalar_sca_busy_o)
         );
 
-    //----------------------------------------------------------------
-    // side-channel config update
-    // Update functionality for SCA registers in the core.
-    //----------------------------------------------------------------
-
-    always_comb 
-    begin : SCA_config
-        scalar_out_reg = (sca_scalar_rnd_en)? scalar_out : (REG_SIZE+RND_SIZE)'(scalar_in_reg << RND_SIZE);
-        lambda_reg = (sca_point_rnd_en)? lambda : ONE_CONST;
-        masking_rnd_reg = (sca_mask_sign_en)? masking_rnd : ZERO_CONST;
-    end // SCA_config
 
     //----------------------------------------------------------------
     // ecc_reg_update
@@ -319,10 +300,6 @@ module ecc_dsa_ctrl
         //Mask the command if KV clients are not idle
         cmd_reg = {hwif_out.ECC_CTRL.DH_SHAREDKEY.value, hwif_out.ECC_CTRL.CTRL.value} & {3{kv_seed_ready}} & {3{kv_privkey_ready}};
         zeroize_reg = hwif_out.ECC_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
-        
-        sca_point_rnd_en  = 1'b1;
-        sca_mask_sign_en  = 1'b1;
-        sca_scalar_rnd_en = 1'b1;
     end
 
     //there is a clk cycle memory read delay between hw_privkey_we and read_reg
@@ -481,7 +458,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
     
     // TODO add other interrupt hwset signals (errors)
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_reg;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_edge;
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ecc_status_done_p;
 
 
@@ -674,19 +651,16 @@ module ecc_dsa_ctrl
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : error_detection
-        if(!reset_n) begin
-            error_flag_reg <= '0;
-        end
-        else if(zeroize_reg) begin
-            error_flag_reg <= '0;
-        end
-        else begin
-            error_flag_reg  <= error_flag;
-        end
+        if(!reset_n)
+            error_flag_reg <= 1'b0;
+        else if(zeroize_reg)
+            error_flag_reg <= 1'b0;
+        else if (error_flag)
+            error_flag_reg <= 1'b1;
     end // error_detection
-
-    assign error_flag_edge = error_flag & (!error_flag_reg);
     
+    assign error_flag_edge = error_flag & (!error_flag_reg);
+
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
     assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
     assign s_output_outofrange      = signing_process & (hw_s_we & (read_reg == 0));
@@ -738,15 +712,22 @@ module ecc_dsa_ctrl
             verifying_process   <= 0;
             sharedkey_process   <= 0;
         end
+        else if (error_flag | error_flag_reg) begin
+            prog_cntr           <= ECC_NOP;
+            cycle_cnt           <= '0;
+            pm_cmd_reg          <= '0;
+            ecc_valid_reg       <= 0;
+            scalar_G_sel        <= 0;
+            hmac_mode           <= '0;
+            hmac_init           <= 0;
+            scalar_sca_en       <= 0;
+            keygen_process      <= 0;
+            signing_process     <= 0;
+            verifying_process   <= 0;
+            sharedkey_process   <= 0;
+        end
         else begin
-            if (error_flag_edge) begin
-                prog_cntr       <= ECC_NOP;
-                cycle_cnt       <= 2'd3;
-                pm_cmd_reg      <= '0;
-                scalar_sca_en   <= 0;
-                hmac_init       <= 0;
-            end
-            else if (subcomponent_busy) begin //Stalled until sub-component is done
+            if (subcomponent_busy) begin //Stalled until sub-component is done
                 prog_cntr       <= prog_cntr;
                 cycle_cnt       <= 2'd3;
                 pm_cmd_reg      <= '0;
