@@ -416,9 +416,16 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
             `uvm_fatal("CALIPTRA_TOP_RAND_TEST", $sformatf("caliptra_top_rand_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
         if (override_mbox_sts_exp_error) begin
             soc_ifc_env_mbox_sequence_base_t mbox_seq;
+            soc_ifc_env_mbox_rand_multi_agent_sequence_t mbox_mult_agent_seq;
             if ($cast(mbox_seq,soc_ifc_env_seq_ii[ii])) begin
                 mbox_seq.mbox_sts_exp_error      = 1'b1;
                 mbox_seq.mbox_sts_exp_error_type = override_mbox_sts_exp_error_type;
+            end
+            else if ($cast(mbox_mult_agent_seq,soc_ifc_env_seq_ii[ii])) begin
+                // Multi-agent sequences are complicated to add 'expected' error logic.
+                // Just wait for uC to start the sanitize operation and then kick off the sequence.
+                while(reg_model.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() == 0)
+                    soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
             end
             // Non-mbox sequences (i.e. reset) also clear the error override condition
             else begin
@@ -437,7 +444,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
             soc_ifc_env_mbox_sram_double_bit_flip_sequence_t mbox_2bit_seq;
             // At the end of the sequence, Caliptra is not sanitizing the mailbox, so
             // expect the next sequence to be interrupted with an unlock
-            if($cast(mbox_2bit_seq,obj) && mbox_2bit_seq.mbox_sts_exp_error) begin
+            if($cast(mbox_2bit_seq,soc_ifc_env_seq_ii[ii]) && mbox_2bit_seq.mbox_sts_exp_error) begin
                 override_mbox_sts_exp_error = 1'b1;
                 override_mbox_sts_exp_error_type = EXP_ERR_PROT;
             end

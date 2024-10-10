@@ -9,6 +9,7 @@ contents:
         #add back for aes
         #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
+        - ../test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read.yml
         - ../test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg.yml
         - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml

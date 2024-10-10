@@ -288,10 +288,11 @@ end
     //TODO knupadhy: make op only reset or normal op (single and multi will be processed in same task)
     case (HMAC_in_initiator_struct.op)
 
-      reset_op    : hmac_init       (HMAC_in_initiator_struct.op);
-      normal_op   : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
-      otf_reset_op: otf_reset_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length);
-      default     : block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
+      reset_op    : hmac_init               (HMAC_in_initiator_struct.op);
+      hmac384_op  : hmac384_block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
+      hmac512_op  : hmac512_block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
+      otf_reset_op: otf_reset_test          (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length);
+      default     : hmac_init               (HMAC_in_initiator_struct.op);
 
     endcase
   
@@ -309,7 +310,9 @@ end
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
   parameter CTRL_INIT_VALUE  = 8'h01;
   parameter CTRL_NEXT_VALUE  = 8'h02;
-  parameter CTRL_MODE_VALUE  = 8'h04;
+  
+  parameter HMAC512_MODE     = 8'h08;
+  parameter HMAC384_MODE     = 8'h00;
 
   parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
@@ -327,6 +330,10 @@ end
   parameter ADDR_KEY9        = BASE_ADDR + 32'h00000064;
   parameter ADDR_KEY10       = BASE_ADDR + 32'h00000068;
   parameter ADDR_KEY11       = BASE_ADDR + 32'h0000006C;
+  parameter ADDR_KEY12       = BASE_ADDR + 32'h00000070;
+  parameter ADDR_KEY13       = BASE_ADDR + 32'h00000074;
+  parameter ADDR_KEY14       = BASE_ADDR + 32'h00000078;
+  parameter ADDR_KEY15       = BASE_ADDR + 32'h0000007C;
 
   parameter ADDR_BLOCK0      = BASE_ADDR + 32'h00000080;
   parameter ADDR_BLOCK1      = BASE_ADDR + 32'h00000084;
@@ -373,12 +380,23 @@ end
   parameter ADDR_TAG9        =  BASE_ADDR + 32'h00000124;
   parameter ADDR_TAG10       =  BASE_ADDR + 32'h00000128;
   parameter ADDR_TAG11       =  BASE_ADDR + 32'h0000012C;
+  parameter ADDR_TAG12       =  BASE_ADDR + 32'h00000130;
+  parameter ADDR_TAG13       =  BASE_ADDR + 32'h00000134;
+  parameter ADDR_TAG14       =  BASE_ADDR + 32'h00000138;
+  parameter ADDR_TAG15       =  BASE_ADDR + 32'h0000013C;
 
   parameter ADDR_SEED0       =  BASE_ADDR + 32'h00000130;
   parameter ADDR_SEED1       =  BASE_ADDR + 32'h00000134;
   parameter ADDR_SEED2       =  BASE_ADDR + 32'h00000138;
   parameter ADDR_SEED3       =  BASE_ADDR + 32'h0000013C;
   parameter ADDR_SEED4       =  BASE_ADDR + 32'h00000140;
+  parameter ADDR_SEED5       =  BASE_ADDR + 32'h00000144;
+  parameter ADDR_SEED6       =  BASE_ADDR + 32'h00000148;
+  parameter ADDR_SEED7       =  BASE_ADDR + 32'h0000014C;
+  parameter ADDR_SEED8       =  BASE_ADDR + 32'h00000150;
+  parameter ADDR_SEED9       =  BASE_ADDR + 32'h00000154;
+  parameter ADDR_SEED10      =  BASE_ADDR + 32'h00000158;
+  parameter ADDR_SEED11      =  BASE_ADDR + 32'h0000015C;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -387,7 +405,7 @@ end
 
   //TODO add cycle ctr later
   reg [63 : 0]  read_data;
-  reg [383 : 0] digest_data;
+  reg [511 : 0] digest_data;
 
 
   //--------------------
@@ -512,33 +530,44 @@ task write_single_word(input [31 : 0]  address,
   //----------------------------------------------------------------
   // Write the given key to the dut.
   //----------------------------------------------------------------
-  task write_key(input [383 : 0] key);
+  task write_key(input [511 : 0] key);
     begin
-      write_single_word(ADDR_KEY0,  key[383: 352]);
-      write_single_word(ADDR_KEY1,  key[351: 320]);
-      write_single_word(ADDR_KEY2,  key[319: 288]);
-      write_single_word(ADDR_KEY3,  key[287: 256]);
-      write_single_word(ADDR_KEY4,  key[255: 224]);
-      write_single_word(ADDR_KEY5,  key[223: 192]);
-      write_single_word(ADDR_KEY6,  key[191: 160]);
-      write_single_word(ADDR_KEY7,  key[159: 128]);
-      write_single_word(ADDR_KEY8,  key[127: 96 ]);
-      write_single_word(ADDR_KEY9,  key[95 : 64 ]);
-      write_single_word(ADDR_KEY10, key[63 : 32 ]);
-      write_single_word(ADDR_KEY11, key[31 : 0  ]);
+      write_single_word(ADDR_KEY0,  key[511: 480]);
+      write_single_word(ADDR_KEY1,  key[479: 448]);
+      write_single_word(ADDR_KEY2,  key[447: 416]);
+      write_single_word(ADDR_KEY3,  key[415: 384]);
+      write_single_word(ADDR_KEY4,  key[383: 352]);
+      write_single_word(ADDR_KEY5,  key[351: 320]);
+      write_single_word(ADDR_KEY6,  key[319: 288]);
+      write_single_word(ADDR_KEY7,  key[287: 256]);
+      write_single_word(ADDR_KEY8,  key[255: 224]);
+      write_single_word(ADDR_KEY9,  key[223: 192]);
+      write_single_word(ADDR_KEY10, key[191: 160]);
+      write_single_word(ADDR_KEY11, key[159: 128]);
+      write_single_word(ADDR_KEY12, key[127: 96 ]);
+      write_single_word(ADDR_KEY13, key[95 : 64 ]);
+      write_single_word(ADDR_KEY14, key[63 : 32 ]);
+      write_single_word(ADDR_KEY15, key[31 : 0  ]);
     end
   endtask // write_key
 
   //----------------------------------------------------------------
   // Write the given seed to the dut.
   //----------------------------------------------------------------
-  task write_seed(input [159 : 0] seed);
+  task write_seed(input [383 : 0] seed); 
     begin
-      write_single_word(ADDR_SEED0, seed[159: 128]);
-      write_single_word(ADDR_SEED1, seed[127: 96 ]);
-      write_single_word(ADDR_SEED2, seed[95 : 64 ]);
-      write_single_word(ADDR_SEED3, seed[63 : 32 ]);
-      write_single_word(ADDR_SEED4, seed[31 : 0  ]);
+      write_single_word(ADDR_SEED0,  seed[383: 352]);
+      write_single_word(ADDR_SEED1,  seed[351: 320]);
+      write_single_word(ADDR_SEED2,  seed[319: 288]);
+      write_single_word(ADDR_SEED3,  seed[287: 256]);
+      write_single_word(ADDR_SEED4,  seed[255: 224]);
+      write_single_word(ADDR_SEED5,  seed[223: 192]);
+      write_single_word(ADDR_SEED6,  seed[191: 160]);
+      write_single_word(ADDR_SEED7,  seed[159: 128]);
+      write_single_word(ADDR_SEED8,  seed[127: 96 ]);
+      write_single_word(ADDR_SEED9,  seed[95 : 64 ]);
+      write_single_word(ADDR_SEED10, seed[63 : 32 ]);
+      write_single_word(ADDR_SEED11, seed[31 : 0  ]);
     end
   endtask // write_seed
 
@@ -571,40 +600,36 @@ task write_single_word(input [31 : 0]  address,
   task read_digest;
     begin
       read_single_word_driverbfm(ADDR_TAG0);
-      //digest_data[383 : 352] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG1);
-      //digest_data[351 : 320] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG2);
-      //digest_data[319 : 288] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG3);
-      //digest_data[287 : 256] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG4);
-      //digest_data[255 : 224] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG5);
-      //digest_data[223 : 192] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG6);
-      //digest_data[191 : 160] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG7);
-      //digest_data[159 : 128] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG8);
-      //digest_data[127 : 96] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG9);
-      //digest_data[95 : 64] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG10);
-      //digest_data[63 :  32] = read_data;
       @(posedge clk_i);
       read_single_word_driverbfm(ADDR_TAG11);
-      //digest_data[31  :   0] = read_data;
+      @(posedge clk_i);
+      read_single_word_driverbfm(ADDR_TAG12);
+      @(posedge clk_i);
+      read_single_word_driverbfm(ADDR_TAG13);
+      @(posedge clk_i);
+      read_single_word_driverbfm(ADDR_TAG14);
+      @(posedge clk_i);
+      read_single_word_driverbfm(ADDR_TAG15);
       @(posedge clk_i);
     end
   endtask // read_digest
@@ -625,7 +650,7 @@ task write_single_word(input [31 : 0]  address,
 //---------------------
 //Generate test vector
 //---------------------
-task gen_test_vector (
+task hmac384_gen_test_vector (
   input bit [3:0] block_length
 );
 
@@ -635,7 +660,7 @@ task gen_test_vector (
 
   reg [383:0]  key;
   reg [1023:0] block;
-  reg [159:0]  seed;
+  reg [383:0]  seed;
   reg [1023:0] last_padding;
   reg [127:0]  msg_size;
 
@@ -643,8 +668,105 @@ task gen_test_vector (
   string file_name, file_name_bak;
 
   //Open files for writing/appending
-  file_name = "hmac_uvm_test_vector.txt";
-  file_name_bak = "hmac_uvm_test_vectors_all.txt"; 
+  file_name = "hmac384_uvm_test_vector.txt";
+  file_name_bak = "hmac384_uvm_test_vectors_all.txt"; 
+  fd_w = $fopen(file_name, "w");
+  fd_all_a = $fopen(file_name_bak, "a");
+  if(!fd_w) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
+  if(!fd_all_a) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name_bak);
+
+
+  //Generate random message of random block length
+  for(i=0; i<block_length; i=i+1) begin
+    std::randomize(rand_block);
+    msg_array[i] = rand_block;
+  end
+  
+  //Calculate padding
+  //Currently all generated messages will be multiples of 1024 bits. So, padding + msg_len will always be in the last block. TODO: other cases
+  msg_size = 'd1024 + (block_length * 'd1024);
+  last_padding = {8'b1000_0000, 888'b0, msg_size};
+  msg_array[block_length] = last_padding;
+
+  //Generate random key and write to DUT
+  std::randomize(key);
+  write_key({key, 128'b0});
+  $fdisplay(fd_w, "KEY = %h", key);
+  $fdisplay(fd_all_a, "KEY = %h", key);
+
+  //Generate random seed and write to DUT
+  std::randomize(seed);
+  write_seed(seed);
+  $fdisplay(fd_w, "SEED = %h", seed);
+  $fdisplay(fd_all_a, "SEED = %h", seed);
+
+  //Write 1st block to DUT
+  block = msg_array[0];
+  $fdisplay(fd_w, "BLOCK = %h", block);
+  $fdisplay(fd_all_a, "BLOCK = %h", block);
+  write_block(block);
+  write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_INIT_VALUE);
+  @(posedge clk_i);
+  hsel_o = 0;
+  @(posedge clk_i);
+
+  repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+    @(posedge clk_i);
+    read_single_word_driverbfm(ADDR_STATUS);
+  end
+
+  //Write rest of the blocks to DUT
+  foreach(msg_array[i]) begin
+    if(i > 0) begin
+      block = msg_array[i];
+      if(i < block_length) begin //Don't write padding to python input file
+        $fdisplay(fd_w, "BLOCK = %h", block);
+        $fdisplay(fd_all_a, "BLOCK = %h", block);
+      end
+      else
+        $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
+
+      write_block(block);
+      write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_NEXT_VALUE);
+      @(posedge clk_i);
+      hsel_o = 0;
+      @(posedge clk_i);
+
+      repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+        @(posedge clk_i);
+        read_single_word_driverbfm(ADDR_STATUS);
+      end
+    end
+  end
+msg_array.delete();
+$fdisplay(fd_all_a, "=======================================");
+
+$fclose(fd_w);
+$fclose(fd_all_a);
+
+
+endtask
+
+task hmac512_gen_test_vector (
+  input bit [3:0] block_length
+);
+
+  int i;
+  reg [1023:0] rand_block;
+  reg [1023:0] msg_array [int];
+
+  reg [511:0]  key;
+  reg [1023:0] block;
+  reg [383:0]  seed;
+  reg [1023:0] last_padding;
+  reg [127:0]  msg_size;
+
+  int fd_w, fd_all_a;
+  string file_name, file_name_bak;
+
+  //Open files for writing/appending
+  file_name = "hmac512_uvm_test_vector.txt";
+  file_name_bak = "hmac512_uvm_test_vectors_all.txt"; 
   fd_w = $fopen(file_name, "w");
   fd_all_a = $fopen(file_name_bak, "a");
   if(!fd_w) $display("**HMAC_in_driver_bfm** Cannot open file %s", file_name);
@@ -680,7 +802,7 @@ task gen_test_vector (
   $fdisplay(fd_w, "BLOCK = %h", block);
   $fdisplay(fd_all_a, "BLOCK = %h", block);
   write_block(block);
-  write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+  write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_INIT_VALUE);
   @(posedge clk_i);
   hsel_o = 0;
   @(posedge clk_i);
@@ -702,7 +824,7 @@ task gen_test_vector (
         $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
 
       write_block(block);
-      write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+      write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_NEXT_VALUE);
       @(posedge clk_i);
       hsel_o = 0;
       @(posedge clk_i);
@@ -721,10 +843,11 @@ $fclose(fd_all_a);
 
 
 endtask
+
 //---------------------
-//Block test 
+//HMAC384 Block test 
 //---------------------
-task block_test (
+task hmac384_block_test (
     input hmac_in_op_transactions op,
     input bit [3:0] block_length,
     input bit [15:0] bit_length
@@ -736,7 +859,8 @@ task block_test (
 transaction_flag_in_monitor_o = 1'b0;
 op_o = op;
 
-gen_test_vector(block_length);
+hmac384_gen_test_vector(block_length);
+//hmac512_gen_test_vector(block_length);
 
 repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
   @(posedge clk_i);
@@ -762,6 +886,46 @@ read_digest();
  endtask
 
 //---------------------
+//HMAC512 Block test 
+//---------------------
+task hmac512_block_test (
+    input hmac_in_op_transactions op,
+    input bit [3:0] block_length,
+    input bit [15:0] bit_length
+  );
+
+ begin
+ 
+//pass op and selection to monitor
+transaction_flag_in_monitor_o = 1'b0;
+op_o = op;
+
+//hmac384_gen_test_vector(block_length);
+hmac512_gen_test_vector(block_length);
+
+repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
+  @(posedge clk_i);
+  read_single_word_driverbfm(ADDR_STATUS);
+end
+
+//wait_ready(); --> this looks at hrdata which is part of out interface. Not sure how to bring that signal in here, so jut waiting for 100 clks for now (similar to AES)
+
+//---------wait for ready--------
+//From addr status to ready, DUT takes 2500 ns. The read_single_word_driverbfm has built-in 1 clk wait every time it's called
+//So, executing this loop for 130 clks to get a total of 130*10*2 = 2600ns (buffer of 100ns)
+
+transaction_flag_in_monitor_o = 1'b1;
+@(posedge clk_i);
+transaction_flag_in_monitor_o = 1'b0;
+@(posedge clk_i);
+//-------------------------------
+
+read_digest();
+
+
+ end
+ endtask
+//---------------------
 //Otf reset test 
 //---------------------
  task otf_reset_test (
@@ -775,7 +939,7 @@ begin
 transaction_flag_in_monitor_o = 1'b0;
 op_o = op;
 
-gen_test_vector(block_length);
+hmac512_gen_test_vector(block_length);
   /*
   repeat(130) begin //TODO knupadhy: need to figure out how to poll for status in the in driver bfm (needs hrdata_i input which is connected to out agent not the in agent)
   @(posedge clk_i);

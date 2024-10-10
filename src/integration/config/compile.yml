@@ -49,6 +49,7 @@ targets:
       - $MSFT_REPO_ROOT/src/integration/config/design_lint/sglint_waivers
     options:
       - '+define+CALIPTRA_INTERNAL_TRNG'
+      - '+define+CALIPTRA_AXI_DMA_ADDR_WIDTH=32'
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
@@ -61,11 +62,12 @@ global:
 #        - '+define+CALIPTRA_INTERNAL_TRNG'
         #- '-v2k_generate'
 ---
-provides: [caliptra_top_tb]
+provides: [caliptra_top_tb_pkg]
 schema_version: 2.4.0
 requires:
   - asserts
   - libs
+  - caliptra_axi_sram
   - spiflash
   - caliptra_top
   - el2_veer_pkg
@@ -103,14 +105,25 @@ targets:
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_soc_bfm.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
+---
+provides: [caliptra_top_tb]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_tb_pkg
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
       - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
-    pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
+    pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
                 && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/test_dilithium5 .
@@ -133,12 +146,16 @@ global:
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
 requires:
-  - caliptra_top_tb
+  - caliptra_top_tb_pkg
 targets:
   tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/caliptra_top_tb.sv
     tops: [caliptra_top_tb]
   sim:
-    pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecdsa_secp384r1.exe . 
+    pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .'
 global:
