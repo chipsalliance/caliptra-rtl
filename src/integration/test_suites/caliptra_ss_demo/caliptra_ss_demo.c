@@ -132,13 +132,13 @@ void enable_recovery_mode() {
     // Enter recovery mode
     VPRINTF(LOW, "CLP: Enable recovery mode\n");
 
-    // Write 1 to "Flashless Boot"
+    // Write 1 to "Flashless Boot" and "FIFO CMS"
     VPRINTF(LOW, "  * CLP: Set PROT_CAP to flashless boot\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0, &data, 4, 0);
     set_field_in_reg(data, 0x3 << 27, 27, 0x3); // Set 'Flashless boot + FIFO CMS'
     soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0,  &data, 4, 0);
 
-    // Write `0x3` to `DEVICE_STATUS`
+    // Write `0x3` to `DEVICE_STATUS` and set RECOVERY STREAMING BOOT
     VPRINTF(LOW, "  * CLP: Set DEVICE STATUS\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0, &data, 4, 0);
     set_field_in_reg(data, I3C_DEVICE_STATUS_MODE_MASK, I3C_DEVICE_STATUS_MODE_LOW, 0x3);
