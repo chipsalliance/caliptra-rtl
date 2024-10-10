@@ -42,16 +42,35 @@
 // Helpers for Recovery Flow CSRs
 #define I3C_DEVICE_ID_LOW 0x0
 #define I3C_DEVICE_ID_MASK 0x1
-#define I3C_DEVICE_STATUS_LOW 0x0
-#define I3C_DEVICE_STATUS_MASK 0x3
+#define I3C_DEVICE_STATUS_MODE_LOW 0
+#define I3C_DEVICE_STATUS_MODE_MASK 0xFF
+#define I3C_DEVICE_STATUS_REASON_LOW 16
+#define I3C_DEVICE_STATUS_REASON_MASK 0xFFFF0000
+enum recovery_reason_e {
+    RCVY_STREAMING_BOOT = 0x12,
+};
+#define I3C_RECOVERY_STATUS_STATUS_LOW 0
+#define I3C_RECOVERY_STATUS_STATUS_MASK 0xF
+#define I3C_RECOVERY_STATUS_INDEX_LOW 4
+#define I3C_RECOVERY_STATUS_INDEX_MASK 0xF0
+enum recovery_status_e {
+    RCVY_STS_NOT_RCVY       = 0x0,
+    RCVY_STS_AWAITING_IMAGE = 0x1,
+    RCVY_STS_BOOTING_IMAGE  = 0x2,
+    RCVY_STS_RCVY_SUCCESS   = 0x3,
+    RCVY_STS_RCVY_FAILED    = 0xC,
+    RCVY_STS_RCVY_AUTH_ERR  = 0xD,
+    RCVY_STS_RCVY_ENTER_ERR = 0xE,
+    RCVY_STS_INV_CMS        = 0xF,
+};
 #define I3C_LOCAL_C_IMAGE_SUPPORT_LOW 0x6
 #define I3C_LOCAL_C_IMAGE_SUPPORT_MASK 0x40
 #define I3C_PUSH_C_IMAGE_SUPPORT_LOW 0x7
 #define I3C_PUSH_C_IMAGE_SUPPORT_MASK 0x80
 #define I3C_INDIRECT_CONTROL_LOW 0x5
 #define I3C_INDIRECT_CONTROL_MASK 0x20
-#define I3C_RECOVERY_STATUS_LOW 0x0
-#define I3C_RECOVERY_STATUS_MASK 0xff
+//#define I3C_RECOVERY_STATUS_LOW 0x0
+//#define I3C_RECOVERY_STATUS_MASK 0xff
 
 
 volatile char* stdout = (char *)STDOUT;
@@ -89,25 +108,54 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .axi_dma_notif    = 0,
 };
 
+inline uint32_t get_field_from_reg(uint32_t reg_data, uint32_t mask, uint32_t lsb) {
+    // Clear field by setting masked bits to 0
+    reg_data &= mask;
+    // Set new field value
+    reg_data >>= lsb;
+
+    // Return updated field value
+    return reg_data;
+}
+inline uint32_t set_field_in_reg(uint32_t reg_data, uint32_t mask, uint32_t lsb, uint32_t field_data) {
+    // Clear field by setting masked bits to 0
+    reg_data &= ~mask;
+    // Set new field value
+    reg_data |= (field_data << lsb) & mask;
+    return reg_data;
+}
+
 void enable_recovery_mode() {
     uint32_t data;
     uint8_t flag = 1;
    
     // Enter recovery mode
-    // Write `0x3` to `DEVICE_STATUS`
     VPRINTF(LOW, "CLP: Enable recovery mode\n");
+
+    // Write 1 to "Flashless Boot"
+    VPRINTF(LOW, "  * CLP: Set PROT_CAP to flashless boot\n");
+    soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0, &data, 4, 0);
+    set_field_in_reg(data, 0x3 << 27, 27, 0x3); // Set 'Flashless boot + FIFO CMS'
+    soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0,  &data, 4, 0);
+
+    // Write `0x3` to `DEVICE_STATUS`
+    VPRINTF(LOW, "  * CLP: Set DEVICE STATUS\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0, &data, 4, 0);
-    // Clear field by setting masked bits to 0
-    data &= ~I3C_DEVICE_STATUS_MASK;
-    // Set new field value
-    data |= (0x3 << I3C_DEVICE_STATUS_LOW) & I3C_DEVICE_STATUS_MASK;
+    set_field_in_reg(data, I3C_DEVICE_STATUS_MODE_MASK, I3C_DEVICE_STATUS_MODE_LOW, 0x3);
+    set_field_in_reg(data, I3C_DEVICE_STATUS_REASON_MASK, I3C_DEVICE_STATUS_REASON_LOW, RCVY_STREAMING_BOOT);
+    soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0,  &data, 4, 0);
+
+    // Set Recovery Mode + Index = 0
+    VPRINTF(LOW, "  * CLP: Set RECOVERY STATUS\n");
+    soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
+    set_field_in_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW, RCVY_STS_AWAITING_IMAGE);
+    set_field_in_reg(data, I3C_RECOVERY_STATUS_INDEX_MASK, I3C_RECOVERY_STATUS_INDEX_LOW, 0);
     soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0,  &data, 4, 0);
 
     // Ensure the recovery handler changed mode and is awaiting recovery image
     // Read `RECOVERY_STATUS` - should be `1`
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
-    data &= I3C_RECOVERY_STATUS_MASK;
-    data >>= I3C_RECOVERY_STATUS_LOW;
+    data = get_field_from_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW);
     // TODO: Add timeout
     while (!data) {
         if (flag) {
@@ -115,8 +163,7 @@ void enable_recovery_mode() {
             flag = 0;
         }
         soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
-        data &= I3C_RECOVERY_STATUS_MASK;
-        data >>= I3C_RECOVERY_STATUS_LOW;
+        data = get_field_from_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW);
     }
     VPRINTF(LOW, "  * CLP: Recovery mode enabled\n\n");
 }
