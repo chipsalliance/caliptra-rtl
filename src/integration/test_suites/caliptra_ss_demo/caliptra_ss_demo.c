@@ -135,22 +135,22 @@ void enable_recovery_mode() {
     // Write 1 to "Flashless Boot" and "FIFO CMS"
     VPRINTF(LOW, "  * CLP: Set PROT_CAP to flashless boot\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0, &data, 4, 0);
-    set_field_in_reg(data, 0x3 << 27, 27, 0x3); // Set 'Flashless boot + FIFO CMS'
+    data = set_field_in_reg(data, 0x3 << 27, 27, 0x3); // Set 'Flashless boot + FIFO CMS'
     soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_PROT_CAP_2, 0,  &data, 4, 0);
 
     // Write `0x3` to `DEVICE_STATUS` and set RECOVERY STREAMING BOOT
     VPRINTF(LOW, "  * CLP: Set DEVICE STATUS\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0, &data, 4, 0);
-    set_field_in_reg(data, I3C_DEVICE_STATUS_MODE_MASK, I3C_DEVICE_STATUS_MODE_LOW, 0x3);
-    set_field_in_reg(data, I3C_DEVICE_STATUS_REASON_MASK, I3C_DEVICE_STATUS_REASON_LOW, RCVY_STREAMING_BOOT);
+    data = set_field_in_reg(data, I3C_DEVICE_STATUS_MODE_MASK, I3C_DEVICE_STATUS_MODE_LOW, 0x3);
+    data = set_field_in_reg(data, I3C_DEVICE_STATUS_REASON_MASK, I3C_DEVICE_STATUS_REASON_LOW, RCVY_STREAMING_BOOT);
     soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0,  &data, 4, 0);
 
     // Set Recovery Mode + Index = 0
     VPRINTF(LOW, "  * CLP: Set RECOVERY STATUS\n");
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
-    set_field_in_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW, RCVY_STS_AWAITING_IMAGE);
-    set_field_in_reg(data, I3C_RECOVERY_STATUS_INDEX_MASK, I3C_RECOVERY_STATUS_INDEX_LOW, 0);
-    soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_DEVICE_STATUS_0, 0,  &data, 4, 0);
+    data = set_field_in_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW, RCVY_STS_AWAITING_IMAGE);
+    data = set_field_in_reg(data, I3C_RECOVERY_STATUS_INDEX_MASK, I3C_RECOVERY_STATUS_INDEX_LOW, 0);
+    soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0,  &data, 4, 0);
 
     // Ensure the recovery handler changed mode and is awaiting recovery image
     // Read `RECOVERY_STATUS` - should be `1`
