@@ -23,9 +23,9 @@
 #include "printf.h"
 #include "sha512.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
+volatile uint32_t  rst_count = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
@@ -56,7 +56,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 
@@ -73,7 +75,7 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    uint32_t expected_digest[] =   {0x38742d18,
+    uint32_t hmac384_expected_digest[] =   {0x38742d18,
                                     0xbfa6e918,
                                     0xb888d68d,
                                     0x1034e61f,
@@ -89,7 +91,7 @@ void main() {
     uint8_t shablock_kv_id = 0x0;
     uint8_t store_to_kv = 0x1;
     uint8_t digest_kv_id = 0x0;
-    sha384_kvflow(shablock_kv_id, store_to_kv, digest_kv_id, expected_digest);
+    sha384_kvflow(shablock_kv_id, store_to_kv, digest_kv_id, hmac384_expected_digest);
 
     sha512_zeroize();
     

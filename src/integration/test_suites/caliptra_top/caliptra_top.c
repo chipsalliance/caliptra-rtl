@@ -32,7 +32,7 @@
 /* --------------- Global symbols/typedefs --------------- */
 
 /* --------------- Global vars --------------- */
-volatile char* stdout = (char *)STDOUT;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else

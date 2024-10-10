@@ -86,7 +86,7 @@ The following table shows the memory map address ranges for each of the IP block
 | :---------------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Cryptographic Initialization Engine | 0         | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
 | ECC Secp384                         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
-| HMAC384                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
+| HMAC512                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
 | Key Vault                           | 3         | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
 | PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
@@ -217,6 +217,8 @@ The integration parameters for Caliptra’s AHB-lite interface are shown in the 
 Each IP component in the Caliptra system uses a native AHB data width of 32-bits (1 dword). The AHB responder logic in each IP component contains width conversion logic that transforms from the fabric data width of 64-bits to this native 32-bit width. The conversion involves calculating the dword offset (either 0 or 1) relative to the native 64-bit width by evaluating bit [2] of the address line. This information is used to extract the correct 32-bits from the native write data line. If there is a data offset, data is shifted down by 32-bits; otherwise, the upper 32-bits are simply truncated. This new dword-address is passed to the internal register interface along with the dword-sized data. A similar conversion works in reverse to correctly place read data in the response data line from the responder.
 
 As a result of this implementation, 64-bit data transfers are not supported on the Caliptra AHB fabric. Firmware running on the internal microprocessor may only access memory and registers using a 32-bit or smaller request size, as 64-bit transfer requests will be corrupted.
+
+All AHB requests internal to Caliptra must be to an address that is aligned to the native data width of 4-bytes. Any AHB read or write by the Caliptra RISC-V processor that is not aligned to this boundary will fail to decode to the targeted register, will fail to write the submitted data, and will return read data of all zeroes. All AHB requests must also use the native size of 4 bytes (encoded in the hsize signal with a value of 2). The only exception to this is when the RISC-V processor performs byte-aligned, single-byte reads to the Mailbox SRAM using the direct-access mechanism described in [SoC Mailbox](#SoC-mailbox). In this case, a byte-aligned address must be accompanied by the correct size indicator for a single-byte access. Read addresses for byte accesses are aligned to the 4-byte boundary in hardware, and will successfully complete with the correct data at the specified byte offset. Direct mode SRAM writes must be 4-bytes in size and must be aligned to the 4-byte boundary. Hardware writes the entire dword of data to the aligned address, so attempts to write a partial word of data may result in data corruption.
 
 ## Cryptographic subsystem
 
@@ -389,6 +391,8 @@ The UART block architecture inputs and outputs are described in the following ta
 ## SoC mailbox
 
 For more information on the mailbox protocol, see [Mailbox](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md#mailbox) in the Caliptra Integration Specification. Mailbox registers accessible to the Caliptra microcontroller are defined in [internal-regs/mbox_csr](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr).
+
+The RISC-V processor is able to access the SoC mailbox SRAM using a direct access mode (which bypasses the defined mailbox protocol). The addresses for performing this access are described in [SoC interface subsystem](#SoC-interface-subsystem) and in [mbox_sram](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_sram). In this mode, firmware must first acquire the mailbox lock. Then, reads and writes to the direct access address region will go directly to the SRAM block. Firmware must release the mailbox lock by writing to the [mbox_unlock](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mbox_csr.mbox_unlock) register after direct access operations are completed.
 
 
 ## Security state
@@ -659,7 +663,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
     * De-obfuscation engine
      * SHA512/384 (based on NIST FIPS 180-4 [2])
      * SHA256 (based on NIST FIPS 180-4 [2])
-     * HMAC384 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
 * Public-key cryptography
      * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4  [11] and RFC 6979 [7])
 * Key vault
@@ -896,13 +900,13 @@ In this architecture, the SHA256 interface and controller are implemented in RIS
 | Double block          | 1355                | 3.39                  | 295,203             |
 | 1 KiB message         | 8761                | 21.90                 | 45,657              |
 
-## HMAC384
+## HMAC512/HMAC384
 
-Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports HMAC-SHA-384-192 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-384-192 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
+Hash-based message authentication code (HMAC) is a cryptographic authentication technique that uses a hash function and a secret key. HMAC involves a cryptographic hash function and a secret cryptographic key. This implementation supports the HMAC512 variants HMAC-SHA-512-256 and HMAC-SHA-384-192 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5]. The implementation is compatible with the HMAC-SHA-512-256 and HMAC-SHA-384-192 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
 
-Caliptra HMAC implementation uses SHA384 as the hash function, accepts a 384-bit key, and generates a 384-bit tag.
+Caliptra HMAC implementation uses SHA512 as the hash function, accepts a 512-bit key, and generates a 512-bit tag.
 
-The implementation also supports PRF-HMAC-SHA-384. The PRF-HMAC-SHA-384 algorithm is identical to HMAC-SHA-384-192, except that variable-length keys are permitted, and the truncation step is not performed.
+The implementation also supports PRF-HMAC-SHA-512. The PRF-HMAC-SHA-512 algorithm is identical to HMAC-SHA-512-256, except that variable-length keys are permitted, and the truncation step is not performed.
 
 The HMAC algorithm is described as follows:
 * The key is fed to the HMAC core to be padded
@@ -949,9 +953,15 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 
 #### Hashing
 
-The HMAC core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-*Figure 28: HMAC-SHA-384-192 data flow*
+*Figure 28: HMAC-SHA-512-256 data flow*
+
+![](./images/HMAC_SHA_512_256.png)
+
+The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+
+*Figure 29: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
 
@@ -959,7 +969,7 @@ The HMAC core performs the sha2-384 function to process the hash value of the gi
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
-*Figure 29: HMAC FSM*
+*Figure 30: HMAC FSM*
 
 ![](./images/HMAC_FSM.png)
 
@@ -974,11 +984,12 @@ The HMAC architecture inputs and outputs are described in the following table.
 | init               | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next               | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
 | zeroize            | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
-| key\[383:0\]       | input           | The input key.                                                                                                                                                              |
+| mode               | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
+| key\[511:0\]       | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]    | input           | The input padded block of message.                                                                                                                                          |
-| LFSR_seed\[159:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
+| LFSR_seed\[383:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready              | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
-| tag\[383:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-384, a 384-bit tag is required. For HMAC-SHA-384-192, the host is responsible for reading 192 bits from the MSB. |
+| tag\[511:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
 | tag_valid          | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
 
 ### Address map
@@ -989,7 +1000,7 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
-*Figure 30: HMAC pseudocode*
+*Figure 31: HMAC pseudocode*
 
 ![](./images/HMAC_pseudo.png)
 
@@ -1001,7 +1012,7 @@ To protect the HMAC algorithm from side-channel attacks, a masking countermeasur
 
 The embedded countermeasures are based on "Differential Power Analysis of HMAC Based on SHA-2, and Countermeasures" by McEvoy et. al. To provide the required random values for masking intermediate values, a lightweight 74-bit LFSR is implemented. Based on “Spin Me Right Round Rotational Symmetry for FPGA-specific AES” by Wegener et. al., LFSR is sufficient for masking statistical randomness.
 
-Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 160-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
+Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 384-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
 
 ### Performance
 
@@ -1103,13 +1114,15 @@ For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
 
 ## ECC
 
-The ECC unit includes the ECDSA (Elliptic Curve Digital Signature Algorithm) engine, offering a variant of the cryptographically secure Digital Signature Algorithm (DSA), which uses elliptic curve (ECC). A digital signature is an authentication method in which a public key pair and a digital certificate are used as a signature to verify the identity of a recipient or sender of information.
+The ECC unit includes the ECDSA (Elliptic Curve Digital Signature Algorithm) engine and the ECDH (Elliptic Curve Diffie-Hellman Key-Exchange) engine, offering a variant of the cryptographically secure Digital Signature Algorithm (DSA) and Diffie-Hellman Key-Exchange (DH), which uses elliptic curve (ECC). A digital signature is an authentication method in which a public key pair and a digital certificate are used as a signature to verify the identity of a recipient or sender of information.
 
 The hardware implementation supports deterministic ECDSA, 384 Bits (Prime Field), also known as NIST-Secp384r1, described in RFC6979.
 
+The hardware implementation also supports ECDH, 384 Bits (Prime Field), also known as NIST-Secp384r1, described in SP800-56A.
+
 Secp384r1 parameters are shown in the following figure.
 
-*Figure 31: Secp384r1 parameters*
+*Figure 32: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
 
@@ -1117,9 +1130,11 @@ Secp384r1 parameters are shown in the following figure.
 
 The ECDSA consists of three operations, shown in the following figure.
 
-*Figure 32: ECDSA operations*
+*Figure 33: ECDSA operations*
 
 ![](./images/ECDSA_ops.png)
+
+The ECDH also consists of the sharedkey generation.
 
 #### KeyGen
 
@@ -1131,7 +1146,7 @@ In the deterministic key generation, the paired key of (privKey, pubKey) is gene
 
 #### Signing
 
-In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA384. The signing algorithm includes:
+In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA512. The signing algorithm includes:
 
 * Generate a random number k in the range [1..n-1], while k = HMAC\_DRBG(privKey, h)
 * Calculate the random point R = k × G
@@ -1141,24 +1156,32 @@ In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), t
 
 #### Verifying
 
-The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the public key pubKey and hash of message m, h=hash(m) using the same cryptographic hash function SHA384. The output is r’ value of verifying a signature. The ECDSA verify algorithm includes:
+The signature (r, s) can be verified by Verify(pubKey ,h ,r, s) considering the public key pubKey and hash of message m, h=hash(m) using the same cryptographic hash function SHA512. The output is r’ value of verifying a signature. The ECDSA verify algorithm includes:
 
 * Calculate s1 = s<sup>−1</sup> mod n
 * Compute R' = (h × s1) × G + (r × s1) × pubKey
 * Take r’ = R'x mod n, while R'x is x coordinate of R’=(R'x, R'y)
 * Verify the signature by comparing whether r' == r
 
+#### ECDH sharedkey
+
+In ECDH sharedkey generation, the shared key is generated by ECDH_sharedkey(privKey_A, pubKey_B), taking an own prikey and other party pubkey. The ECDH sharedkey algorithm is as follows:
+
+* Compute P = sharedkey(privkey_A, pubkey_b) where P(x,y) is a point on ECC.
+* Output sharedkey = Px, where Px is x coordinate of P.
+
+
 ### Architecture
 
 The ECC top-level architecture is shown in the following figure.
 
-*Figure 33: ECDSA architecture*
+*Figure 34: ECC architecture*
 
-![](./images/ECDSA_arch.png)
+![](./images/ECC_arch.png)
 
 ### Signal descriptions
 
-The ECDSA architecture inputs and outputs are described in the following table.
+The ECC architecture inputs and outputs are described in the following table.
 
 
 | Name                       | Input or output | Description  |
@@ -1171,44 +1194,51 @@ The ECDSA architecture inputs and outputs are described in the following table.
 | nonce \[383:0\]            | input           | The deterministic nonce for HMAC_DRBG in the KeyGen operation.                                                             |
 | privKey_in\[383:0\]        | input           | The input private key used in the signing operation.                                                                       |
 | pubKey_in\[1:0\]\[383:0\]  | input           | The input public key(x,y) used in the verifying operation.                                                                 |
-| hashed_msg\[383:0\]        | input           | The hash of message using SHA384.                                                                                          |
+| hashed_msg\[383:0\]        | input           | The hash of message using SHA512.                                                                                          |
 | ready                      | output          | When HIGH, the signal indicates the core is ready.                                                                         |
 | privKey_out\[383:0\]       | output          | The generated private key in the KeyGen operation.                                                                         |
 | pubKey_out\[1:0\]\[383:0\] | output          | The generated public key(x,y) in the KeyGen operation.                                                                     |
 | r\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | s\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | r’\[383:0\]                | Output          | The signature verification result.                                                                                         |
+| DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                         |
 | valid                      | output          | When HIGH, the signal indicates the result is ready.                                                                       |
 
 ### Address map
 
-The ECDSA address map is shown here: [ecc\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg).
+The ECC address map is shown here: [ecc\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg).
 
 ### Pseudocode
 
-The following pseudocode blocks demonstrate example implementations for KeyGen, Signing, and Verifying.
+The following pseudocode blocks demonstrate example implementations for KeyGen, Signing, Verifying, and ECDH sharedkey.
 
 #### KeyGen
 
-*Figure 34: KeyGen pseudocode*
+*Figure 35: KeyGen pseudocode*
 
 ![](./images/keygen_pseudo.png)
 
 #### Signing
 
-*Figure 35: Signing pseudocode*
+*Figure 36: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
 
 #### Verifying
 
-*Figure 36: Verifying pseudocode*
+*Figure 37: Verifying pseudocode*
 
 ![](./images/verify_pseudo.png)
 
+#### ECDH sharedkey
+
+*Figure 38: ECDH sharedkey pseudocode*
+
+![](./images/sharedkey_pseudo.png)
+
 ### SCA countermeasure
 
-The described ECDSA has three main routines: KeyGen, Signing, and Verifying. Since the Verifying routine requires operation with public values rather than a secret value, our side-channel analysis does not cover this routine. Our evaluation covers the KeyGen and Signing routines where the secret values are processed. 
+The described ECC has four main routines: KeyGen, Signing, Verifying, and ECDH sharedkey. Since the Verifying routine requires operation with public values rather than a secret value, our side-channel analysis does not cover this routine. Our evaluation covers the KeyGen, Signing, and ECDH sharedkey routines where the secret values are processed. 
 
 KeyGen consists of HMAC DRBG and scalar multiplication, while Signing first requires a message hashing and then follows the same operations as KeyGen (HMAC DRBG and scalar multiplication). The last step of Signing is generating “S” as the proof of signature. Since HMAC DRBG and hash operations are evaluated separately in our document, this evaluation covers scalar multiplication and modular arithmetic operations. 
 
@@ -1220,7 +1250,7 @@ Implementation of complete unified addition formula for the scalar multiplicatio
 
 To protect the architecture against horizontal power/electromagnetic (EM) and differential power analysis (DPA) attacks, several countermeasures are embedded in the design [9]. Since these countermeasures require random inputs, HMAC-DRBG is fed by IV to generate these random values.
 
-Since HMAC-DRBG generates random value in a deterministic way, firmware MUST feed different IV to ECC engine for EACH keygen and signing operation. 
+Since HMAC-DRBG generates random value in a deterministic way, firmware MUST feed different IV to ECC engine for EACH keygen, signing, and ECDH sharedkey operation. 
 
 #### Base point randomization
 
@@ -1268,7 +1298,7 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 2. KEYGEN PRIVKEY: Running HMAC\_DRBG with seed and nonce to generate the privkey in KEYGEN operation.
 3. SIGNING NONCE: Running HMAC\_DRBG based on RFC6979 in SIGNING operation with privkey and hashed\_msg.
 
-*Figure 37: HMAC\_DRBG utilization*
+*Figure 39: HMAC\_DRBG utilization*
 
 ![](./images/HMAC_DRBG_util.png)
 
@@ -1284,7 +1314,7 @@ In SCA random generator state:
 
 The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in the following figure.
 
-*Figure 38: HMAC\_DRBG data flow*
+*Figure 40: HMAC\_DRBG data flow*
 
 ![](./images/HMAC_DRBG_data.png)
 
@@ -1294,7 +1324,7 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
-*Figure 39: TVLA threshold as a function of the number of samples per trace*
+*Figure 41: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
 
@@ -1304,7 +1334,7 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
 
-*Figure 40: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
+*Figure 42: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
 
@@ -1312,13 +1342,13 @@ The TVLA results for performing seed/nonce-dependent leakage detection using 200
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
 
-*Figure 41: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
+*Figure 43: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
 ![](./images/TVLA_privekey.png)
 
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
-*Figure 42: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+*Figure 44: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
 
 ![](./images/TVLA_msg_dependent.png)
 
@@ -1357,13 +1387,13 @@ LMS cryptography is a type of hash-based digital signature scheme that was stand
 
 Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
 
-*Figure 43: LMS-OTS Verification algorithm*
+*Figure 45: LMS-OTS Verification algorithm*
 
 ![](./images/LMS_verifying_alg.png)
 
 The high-level architecture of LMS is shown in the following figure.
 
-*Figure 44: LMS high-level architecture*
+*Figure 46: LMS high-level architecture*
 
 ![](./images/LMS_high_level.png)
 
@@ -1387,7 +1417,7 @@ LMS parameters are shown in the following table:
 
 The Winternitz hash chain can be accelerated in hardware to enhance the performance of the design. For that, a configurable architecture is proposed that can reuse SHA256 engine. The LMS accelerator architecture is shown in the following figure, while H is SHA256 engine.
 
-*Figure 45: Winternitz chain architecture*
+*Figure 47: Winternitz chain architecture*
 
 ![](./images/LMS_wntz_arch.png)
 
@@ -1419,7 +1449,7 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 ## PCR vault
 
 * Platform Configuration Register (PCR) vault is a register file that stores measurements to be used by the microcontroller.
-* PCR entries are read-only registers of 384 bits each.
+* PCR entries are read-only registers of 512 bits each.
 * Control bits allow for entries to be cleared by FW, which sets their values back to 0.
 * A lock bit can be set by FW to prevent the entry from being cleared. The lock bit is sticky and only resets on a powergood cycle.
 
@@ -1605,6 +1635,7 @@ The following terminology is used in this document.
 | DRBG         | Deterministic Random Bit Generator             |
 | DWORD        | 32-bit (4-byte) data element                   |
 | ECDSA        | Elliptic Curve Digital Signature Algorithm     |
+| ECDH         | Elliptic Curve Deffie-Hellman Key Exchange     |
 | FMC          | FW First Mutable Code                          |
 | FSM          | Finite State Machine                           |
 | GPU          | Graphics Processing Unit                       |
@@ -1658,5 +1689,6 @@ The following terminology is used in this document.
 13. CHIPS Alliance, “RISC-V VeeR EL2 Programmer’s Reference Manual” \[Online\] Available at https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf. 
 14. “The RISC-V Instruction Set Manual, Volume I: User-Level ISA, Document Version 20191213”, Editors Andrew Waterman and Krste Asanovi ́c, RISC-V Foundation, December 2019. Available at https://riscv.org/technical/specifications/. 
 15. “The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Document Version 20211203”, Editors Andrew Waterman, Krste Asanovi ́c, and John Hauser, RISC-V International, December 2021. Available at https://riscv.org/technical/specifications/. 
+16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018, |
 
 <sup>[1]</sup> _Caliptra.**  **Spanish for “root cap” and describes the deepest part of the root_

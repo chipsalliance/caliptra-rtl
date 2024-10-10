@@ -22,9 +22,9 @@
 #include "riscv_hw_if.h"
 #include "wdt.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
-volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -70,7 +70,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 void nmi_handler       (void);
@@ -170,10 +172,14 @@ void main() {
         SEND_STDOUT_CTRL(0xf1);
         configure_wdt_cascade(0x200, 0x00, 0xffffffff, 0xffffffff);
         VPRINTF(LOW, "Cascaded mode with timer2 timeout - NMI - cold rst\n");
+        *wdt_timer1_en = 0x0;
         *wdt_timer2_en = 0x0;
-        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
+//        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
         set_t2_period(0x00000200, 0x00000000);
+
+        *wdt_timer1_en = 0x1;
+        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
         VPRINTF(LOW, "Stall until timer1 times out\n");
         VPRINTF(LOW, "Stall until timer2 times out\n");

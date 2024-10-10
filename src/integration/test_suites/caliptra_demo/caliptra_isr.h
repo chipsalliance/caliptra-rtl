@@ -184,19 +184,6 @@ inline void service_sha512_acc_notif_intr() {
 }
 
 inline void service_mldsa_error_intr() {return;}
-inline void service_mldsa_notif_intr() {
-    uint32_t * reg = (uint32_t *) (CLP_MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
-    uint32_t sts = *reg;
-    /* Write 1 to Clear the pending interrupt */
-    if (sts & MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-        *reg = MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
-        // cptra_intr_rcv.ecc_notif |= ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
-    }
-    if (sts == 0) {
-        VPRINTF(ERROR,"bad mldsa_notif_intr sts:%x\n", sts);
-        SEND_STDOUT_CTRL(0x1);
-        while(1);
-    }
-}
+inline void service_mldsa_notif_intr() {return;}
 
 #endif //CALIPTRA_ISR_H

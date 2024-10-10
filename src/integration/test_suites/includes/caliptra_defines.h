@@ -67,6 +67,11 @@
 #define SHA256_MODE_SHA_224         0x0
 #define SHA256_MODE_SHA_256         0x1
 
+/* ---- HMAC ---- */
+
+#define HMAC384_MODE              0x0
+#define HMAC512_MODE              0x1
+
 /* ---- Mailbox ---- */
 #define MBOX_DIR_BASE_ADDR        0x30000000
 #define MBOX_DIR_SPAN             0x00020000 /* 128 KiB */
@@ -76,6 +81,7 @@
 #define ECC_CMD_KEYGEN            0x1
 #define ECC_CMD_SIGNING           0x2
 #define ECC_CMD_VERIFYING         0x3
+#define ECC_CMD_SHAREDKEY         ECC_REG_ECC_CTRL_DH_SHAREDKEY_MASK
 #define STATUS_READY_BIT          0x0
 #define STATUS_VALID_BIT          0x1
 
@@ -86,6 +92,9 @@
 #define MLDSA_CMD_KEYGEN_SIGN  0x4
 // #define STATUS_READY_BIT          0x0
 // #define STATUS_VALID_BIT          0x1
+/* ---- AXI SRAM ---- */
+#define AXI_SRAM_BASE_ADDR  (uint64_t) 0x000123450000ULL
+#define AXI_SRAM_SIZE_BYTES 65536
 
 /* ---- Interrupts ---- */
 #define VEER_INTR_VEC_DOE_ERROR        1
@@ -112,8 +121,10 @@
 #define VEER_INTR_VEC_SHA512_ACC_NOTIF 22
 #define VEER_INTR_VEC_MLDSA_ERROR      23
 #define VEER_INTR_VEC_MLDSA_NOTIF      24
+#define VEER_INTR_VEC_AXI_DMA_ERROR    25
+#define VEER_INTR_VEC_AXI_DMA_NOTIF    26
 // Used to tie-off unused upper intr bits
-#define VEER_INTR_VEC_MAX_ASSIGNED VEER_INTR_VEC_MLDSA_NOTIF
+#define VEER_INTR_VEC_MAX_ASSIGNED VEER_INTR_VEC_AXI_DMA_NOTIF
 
 #define VEER_INTR_PRIO_DOE_ERROR        8
 #define VEER_INTR_PRIO_DOE_NOTIF        7
@@ -139,6 +150,8 @@
 #define VEER_INTR_PRIO_SOC_IFC_NOTIF    7
 #define VEER_INTR_PRIO_MLDSA_ERROR      8
 #define VEER_INTR_PRIO_MLDSA_NOTIF      7
+#define VEER_INTR_PRIO_AXI_DMA_ERROR    8
+#define VEER_INTR_PRIO_AXI_DMA_NOTIF    7
 
 
 #endif // CALIPTRA_DEFINES_H

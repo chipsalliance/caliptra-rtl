@@ -18,7 +18,7 @@
 class HMAC_out_random_sequence #(
       int AHB_DATA_WIDTH = 32,
       int AHB_ADDR_WIDTH = 32,
-      int OUTPUT_TEXT_WIDTH = 384,
+      int OUTPUT_TEXT_WIDTH = 512,
       bit BYPASS_HSEL = 0
       )
 

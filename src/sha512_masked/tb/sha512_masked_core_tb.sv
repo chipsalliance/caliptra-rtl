@@ -54,7 +54,7 @@ module sha512_masked_core_tb
   reg [1023:0]  block_tb;
   wire [511:0]  digest_tb;
   
-  reg [73:0]    lfsr_seed_tb;
+  reg [191:0]    entropy_tb;
 
   wire          ready_tb;
   wire          valid_tb;
@@ -71,7 +71,7 @@ module sha512_masked_core_tb
                      .next_cmd(next_tb),
                      .mode(mode_tb),
 
-                     .lfsr_seed(lfsr_seed_tb),
+                     .entropy(entropy_tb),
 
                      .block_msg(block_tb),
 
@@ -85,8 +85,8 @@ module sha512_masked_core_tb
   //
   // 
   //----------------------------------------------------------------
-  function logic [73 : 0] random_gen();
-    return { $random & 10'h3FF , $random, $random};
+  function logic [191 : 0] random_gen();
+    return { $random, $random, $random, $random, $random, $random};
   endfunction
 
   //----------------------------------------------------------------
@@ -167,7 +167,7 @@ module sha512_masked_core_tb
       mode_tb     = '0;
       block_tb    = '0;
 
-      lfsr_seed_tb     = '0;
+      entropy_tb     = '0;
     end
   endtask // init_dut
 
@@ -260,8 +260,8 @@ module sha512_masked_core_tb
       start_time = cycle_ctr;
       block_tb = block;
 
-      lfsr_seed_tb = random_gen();
-      $display("   lfsr_seed_tb= %019x", lfsr_seed_tb);
+      entropy_tb = random_gen();
+      $display("   entropy_tb= %019x", entropy_tb);
 
       #CLK_PERIOD;
       mode_tb = mode;
@@ -329,8 +329,8 @@ module sha512_masked_core_tb
 
       // First block
       block_tb = block0;
-      lfsr_seed_tb = random_gen();
-      $display("   lfsr_seed_tb= %019x", lfsr_seed_tb);
+      entropy_tb = random_gen();
+      $display("   entropy_tb= %019x", entropy_tb);
 
       #CLK_PERIOD;
       mode_tb = mode;

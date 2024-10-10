@@ -22,9 +22,13 @@
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr
   `define CALIPTRA_AHB_HDATA_SIZE      64 // bit-width AHB data
-  `define CALIPTRA_APB_ADDR_WIDTH      32 // bit-width APB address
-  `define CALIPTRA_APB_DATA_WIDTH      32 // bit-width APB data
-  `define CALIPTRA_APB_USER_WIDTH      32 // bit-width APB PAUSER field
+  `define CALIPTRA_AXI_DATA_WIDTH      32 // bit-width AXI data
+  `define CALIPTRA_AXI_USER_WIDTH      32 // bit-width AXI USER field
+  `define CALIPTRA_AXI_ID_WIDTH        8  // bit-width AXI ID field
+  // Overrideable for lint checks
+  `ifndef CALIPTRA_AXI_DMA_ADDR_WIDTH
+      `define CALIPTRA_AXI_DMA_ADDR_WIDTH  48
+  `endif
   `define CALIPTRA_QSPI_CS_WIDTH       2
   `define CALIPTRA_QSPI_IO_WIDTH       4
   `define CALIPTRA_SOC_SEC_STATE_WIDTH 3
@@ -52,7 +56,7 @@
   `define CALIPTRA_SLAVE_SEL_IMEM        14
   `define CALIPTRA_SLAVE_SEL_CSRNG       15
   `define CALIPTRA_SLAVE_SEL_ENTROPY_SRC 16
-  `define CALIPTRA_SLAVE_SEL_MLDSA    17
+  `define CALIPTRA_SLAVE_SEL_MLDSA       17
 
   // Interrupt Assignments
   // NOTE Vector 0 is reserved by VeeR
@@ -80,8 +84,10 @@
   `define VEER_INTR_VEC_SHA_NOTIF     22
   `define VEER_INTR_VEC_MLDSA_ERROR   23
   `define VEER_INTR_VEC_MLDSA_NOTIF   24
+  `define VEER_INTR_VEC_AXI_DMA_ERROR 25
+  `define VEER_INTR_VEC_AXI_DMA_NOTIF 26
   // Used to tie-off unused upper intr bits
-  `define VEER_INTR_VEC_MAX_ASSIGNED `VEER_INTR_VEC_MLDSA_NOTIF
+  `define VEER_INTR_VEC_MAX_ASSIGNED `VEER_INTR_VEC_AXI_DMA_NOTIF
 
   //`define CALIPTRA_KV_NUM_READ 6
   //`define CALIPTRA_KV_NUM_WRITE 4

@@ -13,6 +13,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_mini/smoke_test_datavault_mini.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha512/smoke_test_sha512.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256/smoke_test_sha256.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz.yml

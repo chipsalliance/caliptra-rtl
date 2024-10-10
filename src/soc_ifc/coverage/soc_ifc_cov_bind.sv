@@ -15,12 +15,18 @@
 
 module soc_ifc_cov_bind;
     `ifdef FCOV
+    import soc_ifc_pkg::*;
     bind soc_ifc_top soc_ifc_cov_if #(
         .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
         .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-        .APB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
-        .APB_DATA_WIDTH(`CALIPTRA_APB_DATA_WIDTH),
-        .APB_USER_WIDTH(`CALIPTRA_APB_USER_WIDTH)
+        .AXI_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
+        .AXI_DATA_WIDTH(`CALIPTRA_AXI_DATA_WIDTH),
+        .AXI_ID_WIDTH  (`CALIPTRA_AXI_ID_WIDTH  ),
+        .AXI_USER_WIDTH(`CALIPTRA_AXI_USER_WIDTH),
+        .AXIM_ADDR_WIDTH(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
+        .AXIM_DATA_WIDTH(soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH),
+        .AXIM_ID_WIDTH  (soc_ifc_pkg::CPTRA_AXI_DMA_ID_WIDTH),
+        .AXIM_USER_WIDTH(soc_ifc_pkg::CPTRA_AXI_DMA_USER_WIDTH)
         )
         i_soc_ifc_cov_if (.*);
     `endif

@@ -23,8 +23,8 @@
 #include "printf.h"
 #include "hmac.h"
 
-volatile char*    stdout           = (char *)STDOUT;
-volatile uint32_t intr_count = 0;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -56,7 +56,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
     .mldsa_error      = 0,
-    .mldsa_notif      = 0
+    .mldsa_notif      = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 
@@ -151,52 +153,53 @@ void main() {
     printf("%c", key_inject_cmd);
 
     // wait for HMAC to be ready
-    while((lsu_read_32(CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
 
     // Program KEY Read with 12 dwords from key_kv_id
-    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_CTRL, HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_EN_MASK |
-                                                    ((hmackey_kv_id << HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC384_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                    ((hmackey_kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
 
     // Check that HMAC KEY is loaded
-    while((lsu_read_32(CLP_HMAC_REG_HMAC384_KV_RD_KEY_STATUS) & HMAC_REG_HMAC384_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
 
 
-    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_0;
+    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_BLOCK_31) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_31) {
         *reg_ptr++ = block[offset++];
     }
 
 
     // Program LFSR_SEED
-    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_0;
+    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC384_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
         *reg_ptr++ = lfsr_seed_data[offset++];
     }
 
     // if we want to store the results into kv
     // set tag DEST to write
 
-    lsu_write_32(CLP_HMAC_REG_HMAC384_KV_WR_CTRL, HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_EN_MASK |
-                                                HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
-                                                HMAC_REG_HMAC384_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
-                                                HMAC_REG_HMAC384_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
-                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
-                                                HMAC_REG_HMAC384_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
-                                                ((tag_kv_id << HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC384_KV_WR_CTRL_WRITE_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
+                                                HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
+                                                HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
+                                                HMAC_REG_HMAC512_KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK |
+                                                HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
+                                                HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
+                                                ((tag_kv_id << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
 
 
     //inject zeroize command (in RTL)
     SEND_STDOUT_CTRL(0x99);
 
     // Enable HMAC core
-    lsu_write_32(CLP_HMAC_REG_HMAC384_CTRL, HMAC_REG_HMAC384_CTRL_INIT_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                            (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // wait for HMAC to be ready
-    while((lsu_read_32(CLP_HMAC_REG_HMAC384_STATUS) & HMAC_REG_HMAC384_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
     // check that dest valid bits are 0 since the key generation was interrupted
     check_data = lsu_read_32(CLP_KV_REG_KEY_CTRL_0);
