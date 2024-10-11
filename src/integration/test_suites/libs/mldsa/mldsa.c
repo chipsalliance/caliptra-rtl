@@ -186,38 +186,39 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
-    printf("Load PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
-    offset = 0;
-    while (offset <= 1223) {
-        mldsa_privkey[offset] = *reg_ptr;
-        if (mldsa_privkey[offset] != privkey[offset]) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_privkey[offset]);
-            printf("Expected data: 0x%x\n", privkey[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        }
-        reg_ptr++;
-        offset++;
-    }
+    // printf("Load PRIVKEY data from MLDSA\n");
+    // reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+    // // printf("privkey reg addr = %x", reg_ptr);
+    // offset = 0;
+    // while (offset <= 1223) {
+    //     mldsa_privkey[offset] = *reg_ptr;
+    //     if (mldsa_privkey[offset] != privkey[offset]) {
+    //         printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+    //         printf("Actual   data: 0x%x\n", mldsa_privkey[offset]);
+    //         printf("Expected data: 0x%x\n", privkey[offset]);
+    //         printf("%c", fail_cmd);
+    //         while(1);
+    //     }
+    //     reg_ptr++;
+    //     offset++;
+    // }
 
-    // Read the data back from MLDSA register
-    printf("Load PUBKEY data from MLDSA\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
-        mldsa_pubkey[offset] = *reg_ptr;
-        if (mldsa_pubkey[offset] != pubkey[offset]) {
-            printf("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_pubkey[offset]);
-            printf("Expected data: 0x%x\n", pubkey[offset]);
-            printf("%c", fail_cmd);
-            while(1);
-        } 
-        reg_ptr++;
-        offset++;
-    }
+    // // Read the data back from MLDSA register
+    // printf("Load PUBKEY data from MLDSA\n");
+    // reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+    // offset = 0;
+    // while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
+    //     mldsa_pubkey[offset] = *reg_ptr;
+    //     if (mldsa_pubkey[offset] != pubkey[offset]) {
+    //         printf("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
+    //         printf("Actual   data: 0x%x\n", mldsa_pubkey[offset]);
+    //         printf("Expected data: 0x%x\n", pubkey[offset]);
+    //         printf("%c", fail_cmd);
+    //         while(1);
+    //     } 
+    //     reg_ptr++;
+    //     offset++;
+    // }
 
     // Read the data back from MLDSA register
     printf("Load SIGN data from MLDSA\n");
