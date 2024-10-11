@@ -74,7 +74,7 @@ enum recovery_status_e {
 
 #define MCU_RAM_BASE_ADDR 0x90010000
 #define RCVY_IMG_ACTIVATE 0xF
-#define RECOVERY_IMAGE_READY_WR_ADDR 0x9001FFFF
+#define RECOVERY_IMAGE_READY_WR_ADDR 0x9001A000
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
@@ -190,19 +190,18 @@ void wait_for_payload(){
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_STATUS_0, 0, &data, 4, 0);
     data = get_field_from_reg(data, 0x1, 0); // extract byte 0 - Payload Available;
     // check if payload is available, if not wait for sometime
-    while (data == 0) {
+    while (data != 0) {
         if (flag) {
             VPRINTF(LOW, "  * CLP: Polling for payload availability...\n");
             flag = 0;
         }
-        caliptra_sleep(32);
+        caliptra_sleep(1);
         // check if payload is available, if not wait for sometime
         soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_STATUS_0, 0, &data, 4, 0);
         data = get_field_from_reg(data, 0x1, 0); // extract byte 0 - Payload Available;
     }
     flag = 1; // reset flag
     VPRINTF(LOW, "  * CLP: Payload available\n");
-    caliptra_sleep(200); // allowing I3C write to finish -- FIXME
 }
 
 void read_recovery_image() {
@@ -210,72 +209,87 @@ void read_recovery_image() {
     uint32_t data;
     uint32_t image_size;
     uint8_t flag = 1;
+    uint32_t mcu_address_offset = 0;
 
     VPRINTF(LOW, "CLP: Read payload from recovery FIFO\n");
 
 
     // check if payload is available, if not wait for sometime
     // wait for payload_available to be set
+    // for (uint32_t payload_cnt = 0; payload_cnt < 4; payload_cnt++) {
+    //     wait_for_payload(); 
+
     wait_for_payload();
 
     // read from I3C FIFO CTRL to get the payload size
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_CTRL_0, 0, &data, 4, 0);
     // get the payload size from the FIFO_CTRL byte 2 and 3
-    image_size = get_field_from_reg(data, 0x00FF0000, 16) ;
+    VPRINTF(LOW, "  * CLP: FIFO_CTRL data: %0x\n", data);
+    image_size = ( get_field_from_reg(data, 0x00FF0000, 0) >> 16 ) ;
     // soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_CTRL_1, 0, &data, 4, 0);
     // // get the payload size from the FIFO_CTRL byte 2 and 3
     // image_size |= get_field_from_reg(data, 0xFFFF, 0);
     VPRINTF(LOW, "  * CLP: Payload size: %d\n", image_size);
 
     // read the payload from the FIFO and write it to the local image
-    for (uint32_t image_block = 0; image_block < (image_size/64); image_block += 1) {
+    for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
         VPRINTF(LOW, "  * CLP: Fetching image block %d\n", image_block);
-
-        //wait for payload_available to be set
-        wait_for_payload(); 
-
-        for (uint32_t fifo_loc = 0; fifo_loc < 6; fifo_loc++) {
+        wait_for_payload();
+        for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
+            VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
             // read the payload from the FIFO
-            soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_DATA, 0, &data, 4, 0);
+            soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
+            VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
             // write the payload to the local image
-            soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RAM_BASE_ADDR + (image_block*64) + fifo_loc , 0, &data, 4, 0);
+            soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RAM_BASE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
+            VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RAM_BASE_ADDR + 4*fifo_loc);
         }
+        mcu_address_offset += 4;
     }
     
-    for (uint32_t fifo_loc = 0; fifo_loc < (image_size % 64); fifo_loc++) {
+    // for (uint32_t fifo_loc = 0; fifo_loc < (image_size % 64); fifo_loc++) {
+    for (uint32_t fifo_loc = 0; fifo_loc < (image_size%4); fifo_loc++) {
+
+        VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
         // read the payload from the FIFO
-        soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_DATA, 0, &data, 4, 0);
+        soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
+        VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
         // write the payload to the local image
-        soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RAM_BASE_ADDR + (image_size/64)*64 + fifo_loc , 0, &data, 4, 0);
+        soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RAM_BASE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
+        VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RAM_BASE_ADDR + 4*fifo_loc);
     }
     VPRINTF(LOW, "  * CLP: Image read from recovery FIFO and stored at RAM address 0x%x\n", MCU_RAM_BASE_ADDR);
 
     // Wait for image Activation
     // Read `RECOVERY_STATUS` byte 2 should be 0xf
-    soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
-    data = get_field_from_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW);
-    data = get_field_from_reg(data, 0xF0, 4); // extract byte 2 - Actiate Recovery Image
+    soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_CTRL, 0, &data, 4, 0);
+    data = get_field_from_reg(data, 0xFF0000, 0)>>16; // extract byte 2 - Actiate Recovery Image
     while (data != RCVY_IMG_ACTIVATE) {
         if (flag) {
             VPRINTF(LOW, "  * CLP: Poll for recovery image activation...\n");
             flag = 0;
         }
-        soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_STATUS, 0, &data, 4, 0);
-        data = get_field_from_reg(data, I3C_RECOVERY_STATUS_STATUS_MASK, I3C_RECOVERY_STATUS_STATUS_LOW);
-        data = get_field_from_reg(data, 0xF0, 4); // extract byte 2 - Actiate Recovery Image
+        soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_CTRL, 0, &data, 4, 0);
+        data = get_field_from_reg(data, 0xFF0000, 0)>>16; // extract byte 2 - Actiate Recovery Image
     }
     flag = 1; // reset flag
     VPRINTF(LOW, "  * CLP: Recovery image activated\n\n");
 
+    // Clear Image Activated status by writing byte 2 with 0x1 to RECOVERY_CTRL
+    data = 0x10000;
+    soc_ifc_axi_dma_send_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_RECOVERY_CTRL, 0, &data, 4, 0);
+    VPRINTF(LOW, "  * CLP: Recovery image activated status cleared\n\n");
+    
 }
 
 void set_mcu_recovery_image_ready() {
     
     uint32_t data;
     VPRINTF(LOW, "CLP: setting MCU Recovery image ready\n");
-    data = 0x1; 
+    data = 0x00000001; 
     soc_ifc_axi_dma_send_ahb_payload((uint64_t) RECOVERY_IMAGE_READY_WR_ADDR, 0,  &data, 4, 0);
+    VPRINTF(LOW, "CLP: setting MCU Recovery image ready done\n");
 
 }
 
