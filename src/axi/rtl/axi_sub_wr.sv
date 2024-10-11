@@ -32,9 +32,8 @@ module axi_sub_wr import axi_pkg::*; #(
               BW = $clog2(BC), // Byte count Width
     parameter UW = 32,         // User Width
     parameter IW = 1,          // ID Width
-              ID_NUM = 1 << IW, // Don't override
+              ID_NUM = 1 << IW  // Don't override
 
-    parameter EX_EN = 0         // Enable exclusive access tracking w/ AxLOCK
 ) (
     input clk,
     input rst_n,
@@ -43,12 +42,15 @@ module axi_sub_wr import axi_pkg::*; #(
     axi_if.w_sub s_axi_if,
 
     // Exclusive Access Signals
+    // Enable exclusive access tracking w/ AxLOCK if EX_EN is set
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
     output logic            [ID_NUM-1:0] ex_clr,
     input  logic            [ID_NUM-1:0] ex_active,
     input  struct packed {
         logic [AW-1:0] addr;
         logic [AW-1:0] addr_mask;
     } [ID_NUM-1:0] ex_ctx,
+    `endif
 
     //COMPONENT INF
     output logic          dv,
@@ -98,7 +100,9 @@ module axi_sub_wr import axi_pkg::*; #(
     axi_ctx_t            req_ctx;
     logic                req_valid;
     logic                req_ready;
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
     logic                req_matches_ex;
+    `endif
     axi_ctx_t            txn_ctx;
     logic [AW-1:0]       txn_addr_nxt;
     logic                txn_active;
@@ -107,8 +111,10 @@ module axi_sub_wr import axi_pkg::*; #(
     logic                txn_allow; // If an exclusive-write with no match to tracked context, don't complete write to component
     logic                txn_err;
     logic                txn_final_beat;
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
     logic [ID_NUM-1:0]   txn_ex_match; // Current access matches the flagged exclusive context
                                        // Possible for multiple bits to be set -- match of multiple contexts
+    `endif
 
     // Response Pipeline signals
     logic               rp_valid;
@@ -128,7 +134,11 @@ module axi_sub_wr import axi_pkg::*; #(
         s_axi_if_ctx.len   = s_axi_if.awlen  ;
         s_axi_if_ctx.user  = s_axi_if.awuser ;
         s_axi_if_ctx.id    = s_axi_if.awid   ;
-        s_axi_if_ctx.lock  = s_axi_if.awlock && EX_EN;
+        `ifdef CALIPTRA_AXI_SUB_EX_EN
+        s_axi_if_ctx.lock  = s_axi_if.awlock;
+        `else
+        s_axi_if_ctx.lock  = 1'b0;
+        `endif
     end
 
     // skidbuffer instance to pipeline request context from AXI.
@@ -170,12 +180,19 @@ module axi_sub_wr import axi_pkg::*; #(
         end
     end
 
-    always_comb req_matches_ex = (req_ctx.addr & ex_ctx[req_ctx.id].addr_mask) == ex_ctx[req_ctx.id].addr;
+
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+        always_comb req_matches_ex = (req_ctx.addr & ex_ctx[req_ctx.id].addr_mask) == ex_ctx[req_ctx.id].addr;
+    `else
+        always_comb txn_allow = 1'b1;
+    `endif
 
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             txn_ctx   <= '{default:0, burst:AXI_BURST_FIXED};
-            txn_allow <= !EX_EN;
+            `ifdef CALIPTRA_AXI_SUB_EX_EN
+            txn_allow <= 0;
+            `endif
             txn_err   <= 1'b0;
         end
         else if (req_valid && req_ready) begin
@@ -186,7 +203,9 @@ module axi_sub_wr import axi_pkg::*; #(
             txn_ctx.user  <= req_ctx.user;
             txn_ctx.id    <= req_ctx.id  ;
             txn_ctx.lock  <= req_ctx.lock;
-            txn_allow     <= !EX_EN || !req_ctx.lock || (ex_active[req_ctx.id] && req_matches_ex);
+            `ifdef CALIPTRA_AXI_SUB_EX_EN
+            txn_allow     <= !req_ctx.lock || (ex_active[req_ctx.id] && req_matches_ex);
+            `endif
             txn_err       <= 1'b0;
         end
         else if (dv && !hld) begin
@@ -197,12 +216,10 @@ module axi_sub_wr import axi_pkg::*; #(
             txn_ctx.user  <= txn_ctx.user;
             txn_ctx.id    <= txn_ctx.id  ;
             txn_ctx.lock  <= txn_ctx.lock;
-            txn_allow     <= txn_allow;
             txn_err       <= txn_err || err;
         end
         else begin
             txn_ctx       <= txn_ctx;
-            txn_allow     <= txn_allow;
             txn_err       <= txn_err;
         end
     end
@@ -237,31 +254,33 @@ module axi_sub_wr import axi_pkg::*; #(
     // Exclusive Access Tracking               //
     // --------------------------------------- //
     
-    generate
-    for (ex=0; ex < ID_NUM; ex++) begin: EX_AXS_TRACKER
-        logic [AW-1:0] addr_ex_algn;
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+        generate
+        for (ex=0; ex < ID_NUM; ex++) begin: EX_AXS_TRACKER
+            logic [AW-1:0] addr_ex_algn;
 
-        // Component address aligned to exclusive tracking context
-        // Don't use aligned 'addr' signal, because exclusive access alignment may
-        // be smaller than component inf (since single-byte exclusive access is legal)
-        always_comb addr_ex_algn = txn_ctx.addr & ex_ctx[ex].addr_mask;
+            // Component address aligned to exclusive tracking context
+            // Don't use aligned 'addr' signal, because exclusive access alignment may
+            // be smaller than component inf (since single-byte exclusive access is legal)
+            always_comb addr_ex_algn = txn_ctx.addr & ex_ctx[ex].addr_mask;
 
-        // Match on each beat in case a burst transaction only overlaps
-        // the exclusive context partially
-        always_comb txn_ex_match[ex] = (addr_ex_algn == ex_ctx[ex].addr);
+            // Match on each beat in case a burst transaction only overlaps
+            // the exclusive context partially
+            always_comb txn_ex_match[ex] = (addr_ex_algn == ex_ctx[ex].addr);
 
-    end: EX_AXS_TRACKER
-    endgenerate
+        end: EX_AXS_TRACKER
+        endgenerate
 
-    // Only clear the context when a write goes through to dest - meaining dv, not dv_pre
-    always_ff@(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            ex_clr <= ID_NUM'(0);
-        else if (EX_EN && dv && !hld)
-            ex_clr <= ex_active & txn_ex_match; // Could have multiple set bits
-        else
-            ex_clr <= ID_NUM'(0);
-    end
+        // Only clear the context when a write goes through to dest - meaining dv, not dv_pre
+        always_ff@(posedge clk or negedge rst_n) begin
+            if (!rst_n)
+                ex_clr <= ID_NUM'(0);
+            else if (dv && !hld)
+                ex_clr <= ex_active & txn_ex_match; // Could have multiple set bits
+            else
+                ex_clr <= ID_NUM'(0);
+        end
+    `endif
 
 
     // --------------------------------------- //
