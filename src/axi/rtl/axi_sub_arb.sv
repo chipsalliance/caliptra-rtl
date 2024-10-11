@@ -31,7 +31,6 @@ module axi_sub_arb import axi_pkg::*; #(
     parameter IW = 1,          // ID Width
               ID_NUM = 1 << IW, // Don't override
 
-    parameter EX_EN = 0,   // Enable exclusive access tracking w/ AxLOCK
     parameter C_LAT = 0    // Component latency in clock cycles from (dv&&!hld) -> rdata
                            // Must be const per component
                            // For registers, typically 0
