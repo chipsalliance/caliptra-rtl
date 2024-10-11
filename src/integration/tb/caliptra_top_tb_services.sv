@@ -595,7 +595,7 @@ module caliptra_top_tb_services
             $display("In verify branch\n");
         end
     end
-
+/*
     generate
         for (genvar dword = 0; dword < 8; dword++) begin
             always@(negedge clk) begin
@@ -644,7 +644,7 @@ module caliptra_top_tb_services
         //     end
         // end
     endgenerate
-    
+    */
     //Randomized wntz
     generate
         for (genvar dword = 15; dword >= 0; dword--) begin
