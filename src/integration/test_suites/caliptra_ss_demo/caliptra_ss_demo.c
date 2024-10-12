@@ -24,15 +24,11 @@
 //#include "i3c_csr_accessors.h"
 
 #ifdef CALIPTRA_SS_FPGA
-    #define RECOVERY_BASE_ADDR 0x82030000
-    #define RESET_GPIO_ADDR 0x82020030
-    #define MCU_RESET_VECTOR_ADDR 0x82020038
-    #define MCU_LMEM_BASE_ADDR 0x82010000
+    #define RECOVERY_BASE_ADDR SOC_I3CCSR_BASE_ADDR
+    #define MCU_LMEM_BASE_ADDR 0x80010000
 #else
     #include "soc_address_map.h"
     #define RECOVERY_BASE_ADDR SOC_I3CCSR_BASE_ADDR
-    #define RESET_GPIO_ADDR 0x82020030
-    #define MCU_RESET_VECTOR_ADDR 0x82020038
     #define MCU_LMEM_BASE_ADDR 0x90010000
 #endif
 
