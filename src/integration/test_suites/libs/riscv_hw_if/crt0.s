@@ -57,27 +57,27 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
-//    // Copy .data from ROM (imem) to DCCM
-//    la t0, _data_lma_start
-//    la t1, _data_lma_end
-//    la t2, _data_vma_start
-//data_cp_loop:
-//    lw t3, 0(t0)
-//    sw t3, 0(t2)
-//    addi t0, t0, 4
-//    addi t2, t2, 4
-//    bltu t0, t1, data_cp_loop
-//
-//    // Copy .bss from ROM (imem) to DCCM
-//    la t0, _bss_lma_start
-//    la t1, _bss_lma_end
-//    la t2, _bss_vma_start
-//bss_cp_loop:
-//    lw t3, 0(t0)
-//    sw t3, 0(t2)
-//    addi t0, t0, 4
-//    addi t2, t2, 4
-//    bltu t0, t1, bss_cp_loop
+    // Copy .data from ROM (imem) to DCCM
+    la t0, _data_lma_start
+    la t1, _data_lma_end
+    la t2, _data_vma_start
+data_cp_loop:
+    lw t3, 0(t0)
+    sw t3, 0(t2)
+    addi t0, t0, 4
+    addi t2, t2, 4
+    bltu t0, t1, data_cp_loop
+
+    // Copy .bss from ROM (imem) to DCCM
+    la t0, _bss_lma_start
+    la t1, _bss_lma_end
+    la t2, _bss_vma_start
+bss_cp_loop:
+    lw t3, 0(t0)
+    sw t3, 0(t2)
+    addi t0, t0, 4
+    addi t2, t2, 4
+    bltu t0, t1, bss_cp_loop
 
     // Init. the stack and transfer operation to main
     la sp, STACK
