@@ -24,6 +24,7 @@
 //#include "i3c_csr_accessors.h"
 
 #ifdef CALIPTRA_SS_FPGA
+    #include "soc_address_map_fpga.h"
     #define RECOVERY_BASE_ADDR SOC_I3CCSR_BASE_ADDR
     #define MCU_LMEM_BASE_ADDR 0x80010000
 #else

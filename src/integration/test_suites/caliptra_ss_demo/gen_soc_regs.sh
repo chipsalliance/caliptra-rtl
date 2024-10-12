@@ -1,6 +1,9 @@
 python3 $CALIPTRA_ROOT/tools/scripts/reg_doc_gen.py \
 $CALIPTRA_ROOT/src/integration/test_suites/caliptra_ss_demo/soc_address_map.rdl \
 $I3C_ROOT/src/rdl/registers.rdl
+python3 $CALIPTRA_ROOT/tools/scripts/reg_doc_gen.py \
+$CALIPTRA_ROOT/src/integration/test_suites/caliptra_ss_demo/soc_address_map_fpga.rdl \
+$I3C_ROOT/src/rdl/registers.rdl
 
 #../../../../../i3c-core/src/rdl/base_registers.rdl \
 #../../../../../i3c-core/src/rdl/pio_registers.rdl \
