@@ -1,0 +1,4 @@
+
+addrmap soc {
+    I3CCSR I3CCSR @ 0x20004000;
+};
