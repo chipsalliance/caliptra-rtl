@@ -25,11 +25,9 @@
 
 #ifdef CALIPTRA_SS_FPGA
     #include "soc_address_map_fpga.h"
-    #define RECOVERY_BASE_ADDR SOC_I3CCSR_BASE_ADDR
     #define MCU_LMEM_BASE_ADDR 0x80010000
 #else
     #include "soc_address_map.h"
-    #define RECOVERY_BASE_ADDR SOC_I3CCSR_BASE_ADDR
     #define MCU_LMEM_BASE_ADDR 0x90010000
 #endif
 
@@ -333,10 +331,10 @@ void main(void) {
 //        uint32_t read_payload[16];
 //        uint32_t mbox_read_payload[16];
 
-        VPRINTF(LOW, "----------------------------------\nCaliptra Subsystem Recovery Demo!!\n----------------------------------\n");
+        VPRINTF(LOW, "----------------------------------\nCaliptra ROM: Subsystem Recovery Demo\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
-        init_interrupts();
+//        init_interrupts();
         VPRINTF(LOW, "CLP: Interrupts initialized\n");
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
         lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~(AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_EMPTY_EN_MASK |
