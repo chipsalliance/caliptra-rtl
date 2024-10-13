@@ -21,7 +21,8 @@
 .set    mrac, 0x7c0
 .extern _data_lma_start, _data_lma_end
 .extern _bss_lma_start, _bss_lma_end
-.extern _data_vma_start, _bss_vma_start
+.extern _dccm_lma_start, _dccm_lma_end
+.extern _data_vma_start, _bss_vma_start, _dccm_vma_start
 .section .text.init
 .global _start
 _start:
@@ -78,6 +79,17 @@ bss_cp_loop:
     addi t0, t0, 4
     addi t2, t2, 4
     bltu t0, t1, bss_cp_loop
+
+    // Copy .dccm from ROM (imem) to DCCM
+    la t0, _dccm_lma_start
+    la t1, _dccm_lma_end
+    la t2, _dccm_vma_start
+dccm_cp_loop:
+    lw t3, 0(t0)
+    sw t3, 0(t2)
+    addi t0, t0, 4
+    addi t2, t2, 4
+    bltu t0, t1, dccm_cp_loop
 
     // Init. the stack and transfer operation to main
     la sp, STACK

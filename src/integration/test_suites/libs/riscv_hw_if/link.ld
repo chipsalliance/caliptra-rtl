@@ -38,15 +38,18 @@ SECTIONS {
   _bss_lma_end = _bss_lma_start + SIZEOF(.bss);
   _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
 
-  _end = _bss_lma_end;
-  ASSERT( _end < 0x0000C000, "ERROR: ROM size exceeds 48KiB")
-
   /* DCCM as VMA and LMA */
   . = _bss_vma_end;
-  _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
+  _dccm_lma_start = _bss_lma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
   .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
-  iccm_code0_start = .;
+  _dccm_lma_end = _dccm_lma_start + SIZEOF(.dccm);
+  _dccm_vma_end = _dccm_vma_start + SIZEOF(.dccm);
+
+  _end = _dccm_lma_end;
+  ASSERT( _end < 0x0000C000, "ERROR: ROM size exceeds 48KiB")
+
+  iccm_code0_start = _dccm_vma_end;
 
   /* ICCM as VMA */
   /* All of these sections start at the base address of ICCM, and cannot coexist */
