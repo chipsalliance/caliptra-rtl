@@ -174,7 +174,7 @@ void enable_recovery_mode() {
 
 }
 
-void wait_for_payload(){  
+void wait_for_payload(uint8_t en_prints){  
     
     uint32_t data;
     uint8_t flag = 1;
@@ -212,7 +212,7 @@ void read_recovery_image() {
     // for (uint32_t payload_cnt = 0; payload_cnt < 4; payload_cnt++) {
     //     wait_for_payload(); 
 
-    wait_for_payload();
+    wait_for_payload(1);
 
     // read from I3C FIFO CTRL to get the payload size
     soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_I3C_EC_SECFWRECOVERYIF_INDIRECT_FIFO_CTRL_0, 0, &data, 4, 0);
@@ -228,8 +228,9 @@ void read_recovery_image() {
     for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
         VPRINTF(LOW, "  * CLP: Fetching image block %d\n", image_block);
-        wait_for_payload();
+        wait_for_payload(1);
         for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
+            wait_for_payload(0);
             VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
             // read the payload from the FIFO
             soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
@@ -243,6 +244,7 @@ void read_recovery_image() {
     
     // for (uint32_t fifo_loc = 0; fifo_loc < (image_size % 64); fifo_loc++) {
     for (uint32_t fifo_loc = 0; fifo_loc < (image_size%4); fifo_loc++) {
+        wait_for_payload(0);
 
         VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
         // read the payload from the FIFO
