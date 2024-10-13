@@ -37,7 +37,7 @@ typedef uint8_t BOOL;
 void mldsa_zeroize();
 void wait_for_mldsa_intr();
 void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t privkey[1224], uint32_t pubkey[648]);
-void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entropy[16], uint32_t sign[1157]);
+void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t sign[1157]);
 void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[1157], uint32_t verifyres[16]);
-void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t msg[16], uint32_t privkey[1224], uint32_t pubkey[648], uint32_t sign[1157]);
+void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t msg[16], /*uint32_t privkey[1224], uint32_t pubkey[648],*/ uint32_t sign[1157]);
 #endif

@@ -3197,7 +3197,6 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
                     ((mldsa_msg[i]>> 8) & 0x0000ff00) |
                     ((mldsa_msg[i]>>24) & 0x000000ff);
     }
-    
     for (int i = 0; i < 1224; i++){
         privkey[1223-i] = ((mldsa_privkey[i]<<24) & 0xff000000) |
                           ((mldsa_privkey[i]<< 8) & 0x00ff0000) |
@@ -3230,13 +3229,13 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
     // mldsa_zeroize();
     // cptra_intr_rcv.mldsa_notif = 0;
 
-    // mldsa_signing_flow(privkey, msg, entropy, sign);
+    // mldsa_signing_flow(privkey, msg, sign_rnd, entropy, sign);
     // mldsa_zeroize();
     // cptra_intr_rcv.mldsa_notif = 0;
 
-    mldsa_keygen_signing_flow(seed, sign_rnd, msg, privkey, pubkey, sign);
-    mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    // mldsa_keygen_signing_flow(seed, sign_rnd, msg, /*privkey, pubkey,*/ sign);
+    // mldsa_zeroize();
+    // cptra_intr_rcv.mldsa_notif = 0;
 
     mldsa_verifying_flow(msg, pubkey, sign, verifyres);
     mldsa_zeroize();

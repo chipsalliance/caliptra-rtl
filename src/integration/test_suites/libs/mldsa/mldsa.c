@@ -20,6 +20,8 @@
 #include "printf.h"
 #include "mldsa.h"
 #include "caliptra_isr.h"
+#include <string.h>
+#include <stdio.h>
 
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
@@ -37,14 +39,14 @@ void wait_for_mldsa_intr(){
 }
 
 void mldsa_zeroize(){
-    printf("MLDSA zeroize flow.\n");
+    printf("\nMLDSA zeroize flow.\n\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
 }
 
 
 
 void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t privkey[1224], uint32_t pubkey[648]){
-    uint16_t offset;
+    uint16_t offset, idx;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
@@ -52,7 +54,7 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     uint32_t mldsa_pubkey   [648];
     
     // wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready in keygen\n");
+    printf("Waiting for MLDSA STATUS ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //TODO: modify below after KV intf is ready
@@ -73,11 +75,16 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     // else{
     // printf("Writing seed from tb\n");
     // printf("%c", 0xd9);
+    printf("Writing MLDSA SEED: ");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
         offset = 0;
+        idx = 0;
         while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
             *reg_ptr++ = seed[offset++];
+            printf("%x", seed[idx]);
+            idx++;
         }
+        printf("\n");
     // }
 
     // if (privkey.kv_intf){
@@ -88,14 +95,16 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     // }
 
     // Write MLDSA ENTROPY
-    printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    // printf("Writing entropy\n");
+    // reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    // offset = 0;
+    // while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+    //     *reg_ptr++ = entropy[offset++];
+    // }
 
-    printf("\nMLDSA KEYGEN\n");
+    printf("----------------------------------\n");
+    printf("Starting MLDSA KEYGEN flow\n");
+    printf("----------------------------------\n");
     // Enable MLDSA KEYGEN core
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
 
@@ -109,7 +118,7 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     // }
     // else{
         // Read the data back from MLDSA register
-        printf("Load PRIVKEY data from MLDSA\n");
+        printf("Checking PRIVKEY data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
         offset = 0;
         while (offset <= 1223) {
@@ -124,10 +133,11 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
             reg_ptr++;
             offset++;
         }
+        printf("MLDSA Private key matches!\n\n");
     // }
 
     // Read the data back from MLDSA register
-    printf("Load PUBKEY data from MLDSA\n");
+    printf("Checking PUBKEY data from MLDSA\n");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
@@ -142,45 +152,63 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
         reg_ptr++;
         offset++;
     }
+    printf("MLDSA Public key matches!\n");
     
 }
 
-void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t msg[16], uint32_t privkey[1224], uint32_t pubkey[648], uint32_t sign[1157]) {
-    uint16_t offset;
+void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t msg[16], /*uint32_t privkey[1224], uint32_t pubkey[648],*/ uint32_t sign[1157]) {
+    uint16_t offset, idx;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_privkey  [1224];
-    uint32_t mldsa_pubkey   [648];
+    // uint32_t mldsa_privkey  [1224];
+    // uint32_t mldsa_pubkey   [648];
     uint32_t mldsa_sign [1157];
     
     // wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready in keygen\n");
+    printf("Waiting for MLDSA_STATUS ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Program mldsa seed
+    printf("Writing MLDSA SEED: ");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
         *reg_ptr++ = seed[offset++];
+        printf("%x", seed[idx]);
+        idx++;
     }
+    printf("\n");
 
     // Program MLDSA MSG
+    printf("Writing message to MLDSA reg interface: ");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
+        printf("%x", msg[idx]);
+        idx++;
     }
+    printf("\n");
 
     // Program MLDSA Sign Rnd
+    printf("Writing sign rnd to MLDSA reg interface: ");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
         *reg_ptr++ = sign_rnd[offset++];
+        printf("%x", sign_rnd[idx]);
+        idx++;
     }
+    printf("\n");
 
     // Enable MLDSA SIGNING core
-    printf("\nMLDSA KEYGEN + SIGNING\n");
+    printf("----------------------------------\n");
+    printf("Starting MLDSA KEYGEN + SIGNING flow\n");
+    printf("----------------------------------\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
     
     // wait for MLDSA SIGNING process to be done
@@ -221,7 +249,7 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
     // }
 
     // Read the data back from MLDSA register
-    printf("Load SIGN data from MLDSA\n");
+    printf("Checking SIGNATURE data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
@@ -236,20 +264,20 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
         reg_ptr++;
         offset++;
     }
-
+    printf("MLDSA Signature matches!\n");
 
 }
 
 
-void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entropy[16], uint32_t sign[1157]){
-    uint16_t offset;
+void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t sign[1157]){
+    uint16_t offset, idx;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
     uint32_t mldsa_sign [1157];
 
 //  wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready\n");
+    printf("Waiting for MLDSA STATUS ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
 //     if (privkey.kv_intf){
@@ -272,7 +300,7 @@ void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entro
 //     }
 //     else{
         // Program MLDSA PRIVKEY
-        printf("Writing privkey\n");
+        printf("Writing private key to MLDSA reg interface\n");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
         offset = 0;
         while (offset <= 1223) {
@@ -283,30 +311,48 @@ void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entro
     
 
     // Program MLDSA MSG
-    printf("Writing msg\n");
+    printf("Writing message to MLDSA reg interface: ");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
+        printf("%x", msg[idx]);
+        idx++;
     }
+    printf("\n");
+
+    // Program MLDSA Sign Rnd
+    printf("Writing sign rnd to MLDSA reg interface: ");
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
+    offset = 0;
+    idx = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
+        *reg_ptr++ = sign_rnd[offset++];
+        printf("%x", sign_rnd[idx]);
+        idx++;
+    }
+    printf("\n");
 
     // Program MLDSA ENTROPY
-    printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    // printf("Writing entropy\n");
+    // reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    // offset = 0;
+    // while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+    //     *reg_ptr++ = entropy[offset++];
+    // }
 
     // Enable MLDSA SIGNING core
-    printf("\nMLDSA SIGNING\n");
+    printf("----------------------------------\n");
+    printf("Starting MLDSA SIGNING flow\n");
+    printf("----------------------------------\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
     
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
         
     // // Read the data back from MLDSA register
-    printf("Load SIGN data from MLDSA\n");
+    printf("Checking SIGN data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
@@ -321,44 +367,63 @@ void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entro
         reg_ptr++;
         offset++;
     }
+    printf("MLDSA Signature matches!\n");
 
 }
 
 void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[1157],  uint32_t verifyres[16]){
-    uint16_t offset;
+    uint16_t offset, idx;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
     uint32_t mldsa_verifyres [16];
 
     // wait for MLDSA to be ready
+    printf("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
     
     // Program MLDSA MSG
+    printf("Writing message to MLDSA reg interface: ");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
+        printf("%x", msg[idx]);
+        idx++;
     }
+    printf("\n");
 
     // Program MLDSA PUBKEY
+    printf("Writing pubkey to MLDSA reg interface\n");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR) {
         *reg_ptr++ = pubkey[offset++];
+        // printf("%x", pubkey[idx]);
+        // idx++;
     }
+    // printf("\n");
 
 
     // Program MLDSA SIGNATURE
+    printf("Writing signature to MLDSA reg interface\n");
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
+    idx = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_END_ADDR) {
         *reg_ptr++ = sign[offset++];
+        // printf("%x", sign[idx]);
+        // idx++;
     }
+    // printf("\n");
 
 
     // Enable MLDSA VERIFYING core
-    printf("\nMLDSA VERIFYING\n");
+    printf("----------------------------------\n");
+    printf("Starting MLDSA VERIFY flow\n");
+    printf("----------------------------------\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
     
     // wait for MLDSA VERIFYING process to be done
@@ -366,7 +431,7 @@ void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[
     
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
-    printf("Load VERIFY_RES data from MLDSA\n");
+    printf("Checking VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
         mldsa_verifyres[offset] = *reg_ptr;
@@ -380,5 +445,6 @@ void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[
         reg_ptr++;
         offset++;
     }
+    printf("MLDSA verify res matches!\n");
 
 }
