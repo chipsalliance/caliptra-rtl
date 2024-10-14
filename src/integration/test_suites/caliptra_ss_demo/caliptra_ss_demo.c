@@ -353,17 +353,17 @@ void read_recovery_image() {
     // read the payload from the FIFO and write it to the local image
     for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
-        VPRINTF(LOW, "  * CLP: Fetching image block %d\n", image_block);
+        VPRINTF(MEDIUM, "  * CLP: Fetching image block %d\n", image_block);
         wait_for_payload(1);
         for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
             wait_for_payload(0);
-            VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
+            VPRINTF(HIGH, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
             // read the payload from the FIFO
             soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
-            VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
+            VPRINTF(HIGH, "  * CLP: Data Read : 0x%x\n", data);
             // write the payload to the local image
             soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
-            VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
+            VPRINTF(HIGH, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
         }
         mcu_address_offset += 16;
     }
@@ -372,13 +372,13 @@ void read_recovery_image() {
     for (uint32_t fifo_loc = 0; fifo_loc < (image_size%4); fifo_loc++) {
         wait_for_payload(0);
 
-        VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
+        VPRINTF(HIGH, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
         // read the payload from the FIFO
         soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
-        VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
+        VPRINTF(HIGH, "  * CLP: Data Read : 0x%x\n", data);
         // write the payload to the local image
         soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
-        VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
+        VPRINTF(HIGH, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
     }
     VPRINTF(LOW, "  * CLP: Image read from recovery FIFO and stored at RAM address 0x%x\n", MCU_RECOVERY_STORE_ADDR);
 
