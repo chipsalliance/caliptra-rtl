@@ -235,17 +235,21 @@ void read_caliptra_recovery_image(){
     // read the payload from the FIFO and write it to the local image
     for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
-        VPRINTF(LOW, "  * CLP: Fetching image block %d\n", image_block);
+        VPRINTF(HIGH, "  * CLP: Fetching image block %d\n", image_block);
+        VPRINTF(LOW, ">");
+        if ((image_block % 16) == 0) {
+            VPRINTF(LOW, "\n");
+        }
         wait_for_payload(1);
         for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
             wait_for_payload(0);
-            VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
+            VPRINTF(HIGH, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
             // read the payload from the FIFO
             soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
-            VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
+            VPRINTF(HIGH, "  * CLP: Data Read : 0x%x\n", data);
             // write the payload to mailbox memory
             lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc, data);
-            VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc);
+            VPRINTF(HIGH, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc);
 
             // // write the payload to the local image
             // soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
@@ -255,18 +259,22 @@ void read_caliptra_recovery_image(){
     }
     
     // for (uint32_t fifo_loc = 0; fifo_loc < (image_size % 64); fifo_loc++) {
+    if (image_size %4) {
+        VPRINTF(LOW, ">");
+    }
     for (uint32_t fifo_loc = 0; fifo_loc < (image_size%4); fifo_loc++) {
         wait_for_payload(0);
-        VPRINTF(LOW, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
+        VPRINTF(HIGH, "  * CLP: reading from address 0x%0x\n", (uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT);
         // read the payload from the FIFO
         soc_ifc_axi_dma_read_ahb_payload((uint64_t) SOC_I3CCSR_PIOCONTROL_RX_DATA_PORT, 0, &data, 4, 0);
-        VPRINTF(LOW, "  * CLP: Data Read : 0x%x\n", data);
+        VPRINTF(HIGH, "  * CLP: Data Read : 0x%x\n", data);
         lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc, data);
-        VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc);
+        VPRINTF(HIGH, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) CLP_MBOX_SRAM_BASE_ADDR + mbox_address_offset + 4 *fifo_loc);
         // // write the payload to the local image
         // soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
         // VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
     }
+    VPRINTF(LOW,"\n");
     VPRINTF(LOW, "  * CLP: Image read from recovery FIFO and stored at Mailbox address 0x%x\n", CLP_MBOX_CSR_MBOX_DATAIN);
     //Unlock mailbox
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK,MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
@@ -301,14 +309,18 @@ void setup_image_to_iccm(){
     void (* call_exe_cal_img) (void) = (void*) iccm_image_addr;
     
     soc_ifc_mbox_acquire_lock(1);
-    for (uint32_t offset = 0; offset < 160; offset += 4) {    
+    for (uint32_t offset = 0; offset < 1044; offset += 4) {    
         data = lsu_read_32((uint64_t) (CLP_MBOX_SRAM_BASE_ADDR + offset));
-        if(offset < 48){ 
+        if(offset < 256){ 
             lsu_write_32((uint64_t) iccm_image_addr + offset, data);
-            VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (iccm_image_addr + offset));
+            if (data) {
+                VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (iccm_image_addr + offset));
+            }
         } else {
-            lsu_write_32((uint64_t) dccm_image_addr + offset - 48, data);
-            VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (dccm_image_addr + offset - 48));
+            lsu_write_32((uint64_t) dccm_image_addr + offset - 256, data);
+            if (data) {
+                VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (dccm_image_addr + offset - 256));
+            }
         }
     }
 
@@ -354,10 +366,10 @@ void read_recovery_image() {
     for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
         VPRINTF(MEDIUM, "  * CLP: Fetching image block %d\n", image_block);
-        VPRINTF(LOW, ">");
         if ((image_block % 16) == 0) {
             VPRINTF(LOW, "\n");
         }
+        VPRINTF(LOW, ">");
         wait_for_payload(1);
         for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
             wait_for_payload(0);
@@ -495,7 +507,6 @@ void main(void) {
         // CALIPTRA RECOVERY MODE
         } else if ( RECOVERY_MODE == 0x2 ) {
             
-            VPRINTF(LOW, "CLP: Caliptra Recovery mode not enabled\n");
             read_caliptra_recovery_image();
             setup_image_to_iccm();
             // start_executing_from_iccm();
@@ -504,7 +515,7 @@ void main(void) {
             VPRINTF(LOW, "CLP: Invalid Recovery mode\n");
         }
         // Done
-        VPRINTF(LOW, "CLP: Done!\n");
+        VPRINTF(LOW, "Recovery image execution successful\n");
 
         while(1);
 
