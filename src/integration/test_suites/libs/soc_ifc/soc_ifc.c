@@ -378,6 +378,7 @@ uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint3
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
         VPRINTF(FATAL, "FATAL: AXI DMA reports error status for AXI-to-FIFO xfer\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        VPRINTF(ERROR, "       AXI DMA ERROR interrupt reg: 0x%x\n", lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R));
         SEND_STDOUT_CTRL(0x1);
     }
 }
