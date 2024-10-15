@@ -190,7 +190,7 @@ void wait_for_payload(uint8_t en_prints){
     // check if payload is available, if not wait for sometime
     while (data != 0) {
         if (flag) {
-            VPRINTF(LOW, "  * CLP: Polling for payload availability...\n");
+            VPRINTF(HIGH, "  * CLP: Polling for payload availability...\n");
             flag = 0;
         }
 //        caliptra_sleep(1);
@@ -199,7 +199,7 @@ void wait_for_payload(uint8_t en_prints){
         data = get_field_from_reg(data, 0x1, 0); // extract byte 0 - Payload Available;
     }
     flag = 1; // reset flag
-    VPRINTF(LOW, "  * CLP: Payload available\n");
+    VPRINTF(HIGH, "  * CLP: Payload available\n");
 }
 
 void read_caliptra_recovery_image(){
@@ -354,6 +354,10 @@ void read_recovery_image() {
     for (uint32_t image_block = 0; image_block < (image_size/4); image_block += 1) {
 
         VPRINTF(MEDIUM, "  * CLP: Fetching image block %d\n", image_block);
+        VPRINTF(LOW, ">");
+        if ((image_block % 16) == 0) {
+            VPRINTF(LOW, "\n");
+        }
         wait_for_payload(1);
         for (uint32_t fifo_loc = 0; fifo_loc < 4; fifo_loc++) {
             wait_for_payload(0);
@@ -369,6 +373,9 @@ void read_recovery_image() {
     }
     
     // for (uint32_t fifo_loc = 0; fifo_loc < (image_size % 64); fifo_loc++) {
+    if (image_size %4) {
+        VPRINTF(LOW, ">");
+    }
     for (uint32_t fifo_loc = 0; fifo_loc < (image_size%4); fifo_loc++) {
         wait_for_payload(0);
 
@@ -380,6 +387,7 @@ void read_recovery_image() {
         soc_ifc_axi_dma_send_ahb_payload((uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc , 0, &data, 4, 0);
         VPRINTF(HIGH, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) MCU_RECOVERY_STORE_ADDR + mcu_address_offset + 4*fifo_loc);
     }
+    putchar('\n');
     VPRINTF(LOW, "  * CLP: Image read from recovery FIFO and stored at RAM address 0x%x\n", MCU_RECOVERY_STORE_ADDR);
 
     // Wait for image Activation
@@ -463,7 +471,7 @@ void main(void) {
 
         // Setup the interrupt CSR configuration
 //        init_interrupts();
-        VPRINTF(LOW, "CLP: Interrupts initialized\n");
+//        VPRINTF(LOW, "CLP: Interrupts initialized\n");
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
         lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~(AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_EMPTY_EN_MASK |
                                                                             AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_EMPTY_EN_MASK |
