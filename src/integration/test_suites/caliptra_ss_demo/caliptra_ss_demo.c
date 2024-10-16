@@ -314,12 +314,12 @@ void setup_image_to_iccm(){
         if(offset < 256){ 
             lsu_write_32((uint64_t) iccm_image_addr + offset, data);
             if (data) {
-                VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (iccm_image_addr + offset));
+                VPRINTF(MEDIUM, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (iccm_image_addr + offset));
             }
         } else {
             lsu_write_32((uint64_t) dccm_image_addr + offset - 256, data);
             if (data) {
-                VPRINTF(LOW, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (dccm_image_addr + offset - 256));
+                VPRINTF(MEDIUM, "  * CLP: Data Written : 0x%x to address : 0x%x\n", data, (uint64_t) (dccm_image_addr + offset - 256));
             }
         }
     }
