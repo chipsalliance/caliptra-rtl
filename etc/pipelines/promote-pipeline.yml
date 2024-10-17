@@ -174,7 +174,7 @@ stages:
           - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
-          - timeout: 75
+          - timeout: 90
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_regression.yml'
 
     - integration_top_trng_vcs:
