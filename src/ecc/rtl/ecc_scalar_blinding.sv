@@ -60,7 +60,7 @@ module ecc_scalar_blinding #(
     // Equivalent to $ceil(REG_SIZE/RADIX) + 1
     localparam  REG_DIG_NUM  = (((REG_SIZE + RADIX) - 1) / RADIX) + 1;  //13
     localparam  RND_DIG_NUM  = (((RND_SIZE + RADIX) - 1) / RADIX) + 1;  //7
-    localparam  FULL_DIG_NUM = REG_DIG_NUM + RND_DIG_NUM;  //20
+    localparam  FULL_DIG_NUM = REG_DIG_NUM + RND_DIG_NUM - 1;  //19
     
     localparam  FULL_REG_SIZE   = REG_DIG_NUM * RADIX;
     localparam  FULL_RND_SIZE   = RND_DIG_NUM * RADIX;
@@ -225,14 +225,14 @@ module ecc_scalar_blinding #(
     
     always_ff @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0] - 1;
+            product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0];
             operand_idx_reg <= '0;
             shift_state     <= 0;
             add1_cin        <= 0;
             carry_garbage_bits0 <= '0;
         end
         else if (zeroize) begin
-            product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0] - 1;
+            product_idx_reg <= FULL_DIG_NUM[P_ARR_WIDTH-1 : 0];
             operand_idx_reg <= '0;
             shift_state     <= 0;
             add1_cin        <= 0;
@@ -245,7 +245,7 @@ module ecc_scalar_blinding #(
             add1_cin        <= 0;
         end
         else begin
-            if (product_idx < (FULL_DIG_NUM-1)) begin
+            if (product_idx < FULL_DIG_NUM) begin
                 if (shift_state) begin
                     product_idx_reg <= product_idx + 1;
                     if (product_idx < (REG_DIG_NUM-1))
@@ -272,7 +272,7 @@ module ecc_scalar_blinding #(
 
     assign accu_store = (accu_done)? 0 : (!shift_state);
     assign accu_shift = (accu_done)? 0 : shift_state;
-    assign accu_done = (product_idx == (FULL_DIG_NUM-1));
+    assign accu_done = (product_idx == FULL_DIG_NUM);
 
     // Determines which a and b is pushed through the multiplier
     always_comb begin
