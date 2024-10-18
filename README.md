@@ -141,6 +141,8 @@ caliptra-rtl
 |   |-- soc_ifc
 |   |-- spi_host
 |   `-- uart
+|-- submodules
+    |-- adams-bridge
 `-- tools
     |-- README
     |-- scripts

@@ -87,6 +87,19 @@ class HeaderPrintingListener(RDLListener):
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
         self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+    def enter_Mem(self, node):
+        #getting and printing the absolute address and path for each register
+        mem_name = node.get_path("_", '_{index:d}')
+        address = hex(node.absolute_address)
+        if self.tick == "`":
+            address = address.replace("0x", "32'h", 1)
+        self.file.write((self.tick + "define " + mem_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+        #getting and printing the relative address and path for each mem (relative to the addr map it belongs to)
+        mem_name = node.get_rel_path(self.top_node.parent,"^","_",'_{index:d}')
+        address = hex(node.address_offset + self.regfile_offset)
+        if self.tick == "`":
+            address = address.replace("0x", "32'h", 1)
+        self.file.write((self.tick + "define " + mem_name.upper() + "\t(" + address + ")\n").expandtabs(100))
     def enter_Field(self, node):
         field_name = node.get_rel_path(self.top_node.parent,"^","_",'_{index:d}')
         if node.width == 1:
