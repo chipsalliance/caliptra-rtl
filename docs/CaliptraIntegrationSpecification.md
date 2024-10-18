@@ -485,6 +485,33 @@ The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
 referenced in 3 in the preceding list.
 
+## Recommended TRNG self-test thresholds
+
+The default TRNG thresholds should be tuned to match the entropy estimate of the
+noise source (H). For example:
+
+$α = 2^{-40}$ (recommended)\
+$H = 0.5$ (example)\
+$W = 2048$ (constant in ROM/hw)
+
+`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$ [^1]\
+`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(2048, 2^{-H}, 1 - 2^{-40})$\
+`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  1591
+
+`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  W - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
+`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  2048 - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
+`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  457
+
+$$RcThresh = \frac{-log_2(α)}{H} + 1$$
+
+$$RcThresh = \frac{40}{H} + 1$$
+
+$$RcThresh = 81$$
+
+`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = $RcThresh$ = 81
+
+[^1]: The critbinom function is implemented by most spreadsheet applications.
+
 # SRAM implementation
 
 ## Overview
