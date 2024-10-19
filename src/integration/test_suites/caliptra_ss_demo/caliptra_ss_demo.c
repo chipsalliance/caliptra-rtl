@@ -332,6 +332,7 @@ void setup_image_to_iccm(){
     // Call the function to update the image
     VPRINTF(LOW, "  * CLP: Transitioning execution to recovery image...\n");
     VPRINTF(LOW, "  * CLP: Calling image at address 0x%x\n", iccm_image_addr);
+    VPRINTF(LOW, "----------------------------------------\n\n");
     call_exe_cal_img();
 }
 
