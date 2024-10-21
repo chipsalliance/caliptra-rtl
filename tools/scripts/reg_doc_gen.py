@@ -136,16 +136,16 @@ try:
     # Elaborate the design
     root = rdlc.elaborate()
 
-    # checking if the html out directory exists or not.
-    if os.path.exists(html_output_dir):
-        # delete the html directory, the file names aren't always the same
-        shutil.rmtree(html_output_dir)
-    # create it again
-    os.makedirs(html_output_dir)
+#    # checking if the html out directory exists or not.
+#    if os.path.exists(html_output_dir):
+#        # delete the html directory, the file names aren't always the same
+#        shutil.rmtree(html_output_dir)
+#    # create it again
+#    os.makedirs(html_output_dir)
 
-    # Export documentation in HTML
-    exporter = HTMLExporter(extra_doc_properties=["resetsignal"])
-    exporter.export(root, html_output_dir)
+#    # Export documentation in HTML
+#    exporter = HTMLExporter(extra_doc_properties=["resetsignal"])
+#    exporter.export(root, html_output_dir)
 
     # Traverse the register model
     walker = RDLWalker(unroll=True)
@@ -153,10 +153,10 @@ try:
     walker.walk(root, listener)
     listener.file.write("\n\n#endif")
     listener.file.close()
-    listener = HeaderPrintingListener(rtl_output_dir, filename + "_defines", ".svh", "`")
-    walker.walk(root, listener)
-    listener.file.write("\n\n`endif")
-    listener.file.close()
+#    listener = HeaderPrintingListener(rtl_output_dir, filename + "_defines", ".svh", "`")
+#    walker.walk(root, listener)
+#    listener.file.write("\n\n`endif")
+#    listener.file.close()
     # This was going to print a svh file, but need to fix the address output so it looks like svh TODO
     #listener = HeaderPrintingListener(rtl_output_dir, filename, ".svh", "`")
     #walker.walk(root, listener)
