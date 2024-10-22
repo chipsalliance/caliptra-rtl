@@ -15,27 +15,28 @@
 #
 
 python3 tools/scripts/reg_doc_gen.py \
-src/integration/rtl/caliptra_reg.rdl \
-src/keyvault/rtl/kv_reg.rdl \
-src/pcrvault/rtl/pv_reg.rdl \
-src/datavault/rtl/dv_reg.rdl \
-src/ecc/rtl/ecc_reg.rdl \
-src/sha512/rtl/sha512_reg.rdl \
-src/sha256/rtl/sha256_reg.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl \
-src/soc_ifc/rtl/sha512_acc_csr.rdl \
-src/axi/rtl/axi_dma_reg.rdl \
-src/soc_ifc/rtl/soc_ifc_reg.rdl \
-src/hmac/rtl/hmac_reg.rdl \
-src/doe/rtl/doe_reg.rdl \
-src/keyvault/rtl/kv_def.rdl \
-src/entropy_src/data/entropy_src.rdl \
-src/csrng/data/csrng.rdl \
-src/spi_host/data/spi_host.rdl \
-src/uart/data/uart.rdl
+        src/integration/rtl/caliptra_reg.rdl \
+        src/keyvault/rtl/kv_reg.rdl \
+        src/pcrvault/rtl/pv_reg.rdl \
+        src/datavault/rtl/dv_reg.rdl \
+        src/ecc/rtl/ecc_reg.rdl \
+        src/sha512/rtl/sha512_reg.rdl \
+        src/sha256/rtl/sha256_reg.rdl \
+        src/soc_ifc/rtl/mbox_csr.rdl \
+        src/soc_ifc/rtl/sha512_acc_csr.rdl \
+        src/axi/rtl/axi_dma_reg.rdl \
+        src/soc_ifc/rtl/soc_ifc_reg.rdl \
+        src/hmac/rtl/hmac_reg.rdl \
+        src/doe/rtl/doe_reg.rdl \
+        src/entropy_src/data/entropy_src.rdl \
+        src/csrng/data/csrng.rdl \
+        src/spi_host/data/spi_host.rdl \
+        ../adams-bridge/src/mldsa_top/rtl/mldsa_reg.rdl \
+        src/keyvault/rtl/kv_def.rdl \
+        src/uart/data/uart.rdl
 
 python3 tools/scripts/reg_doc_gen.py \
-src/soc_ifc/rtl/caliptra_top_reg.rdl \
-src/soc_ifc/rtl/soc_ifc_doc.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl \
-src/soc_ifc/rtl/sha512_acc_csr_doc.rdl
+        src/soc_ifc/rtl/caliptra_top_reg.rdl \
+        src/soc_ifc/rtl/soc_ifc_doc.rdl \
+        src/soc_ifc/rtl/mbox_csr.rdl \
+        src/soc_ifc/rtl/sha512_acc_csr_doc.rdl

@@ -17,21 +17,21 @@
 
 
 
-`define CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+`define CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(struct_name, ctrl_reg_name, hwif_name = hwif_out)\
 assign struct_name.rsvd = '0;\
-assign struct_name.write_dest_vld[0] = hwif_out.``ctrl_reg_name.hmac_key_dest_valid.value;\
-assign struct_name.write_dest_vld[1] = hwif_out.``ctrl_reg_name.hmac_block_dest_valid.value;\
-assign struct_name.write_dest_vld[2] = hwif_out.``ctrl_reg_name.sha_block_dest_valid.value;\
-assign struct_name.write_dest_vld[3] = hwif_out.``ctrl_reg_name.ecc_pkey_dest_valid.value;\
-assign struct_name.write_dest_vld[4] = hwif_out.``ctrl_reg_name.ecc_seed_dest_valid.value;\
-assign struct_name.write_entry = hwif_out.``ctrl_reg_name.write_entry.value;\
-assign struct_name.write_en = hwif_out.``ctrl_reg_name.write_en.value;
+assign struct_name.write_dest_vld[0] = ``hwif_name.``ctrl_reg_name.hmac_key_dest_valid.value;\
+assign struct_name.write_dest_vld[1] = ``hwif_name.``ctrl_reg_name.hmac_block_dest_valid.value;\
+assign struct_name.write_dest_vld[2] = ``hwif_name.``ctrl_reg_name.sha_block_dest_valid.value;\
+assign struct_name.write_dest_vld[3] = ``hwif_name.``ctrl_reg_name.ecc_pkey_dest_valid.value;\
+assign struct_name.write_dest_vld[4] = ``hwif_name.``ctrl_reg_name.ecc_seed_dest_valid.value;\
+assign struct_name.write_entry = ``hwif_name.``ctrl_reg_name.write_entry.value;\
+assign struct_name.write_en = ``hwif_name.``ctrl_reg_name.write_en.value;
 
-`define CALIPTRA_KV_READ_CTRL_REG2STRUCT(struct_name, ctrl_reg_name)\
+`define CALIPTRA_KV_READ_CTRL_REG2STRUCT(struct_name, ctrl_reg_name, hwif_name = hwif_out)\
 assign struct_name.rsvd = '0;\
-assign struct_name.pcr_hash_extend = hwif_out.``ctrl_reg_name.pcr_hash_extend.value;\
-assign struct_name.read_entry = hwif_out.``ctrl_reg_name.read_entry.value;\
-assign struct_name.read_en = hwif_out.``ctrl_reg_name.read_en.value;
+assign struct_name.pcr_hash_extend = ``hwif_name.``ctrl_reg_name.pcr_hash_extend.value;\
+assign struct_name.read_entry = ``hwif_name.``ctrl_reg_name.read_entry.value;\
+assign struct_name.read_en = ``hwif_name.``ctrl_reg_name.read_en.value;
 
 `endif
 
