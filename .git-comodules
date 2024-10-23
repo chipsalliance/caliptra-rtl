@@ -56,7 +56,7 @@
         "url": "origin://AHA_POC/f625222b-93a4-4f1a-a0d9-716cb938cda9",
         "dest": "chipsalliance",
         "name": "adams-bridge",
-        "version": "promote_adams-bridge-mirror_59"
+        "version": "promote_adams-bridge-mirror_60"
     },
     {
         "description": "caliptra-ss From GitHub",
