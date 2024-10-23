@@ -211,6 +211,8 @@ ${ADAMSBRIDGE_ROOT}/src/mldsa_top/rtl/mldsa_reg_pkg.sv
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_sva.svh
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_macros.svh
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_1r1w_ram.sv
+${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_1r1w_be_ram.sv
+${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_1r1w_512x4_ram.sv
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_ram_regout.sv
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_icg.sv
 ${ADAMSBRIDGE_ROOT}/src/abr_libs/rtl/abr_2ff_sync.sv

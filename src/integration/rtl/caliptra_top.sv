@@ -932,7 +932,6 @@ hmac_ctrl #(
 
 );
 
-/*
 mldsa_top #(
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
@@ -953,7 +952,6 @@ mldsa_top #(
      .error_intr    (mldsa_error_intr),
      .notif_intr    (mldsa_notif_intr)
 );
-*/
 
 kv #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)),

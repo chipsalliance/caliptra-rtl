@@ -178,34 +178,28 @@ addrmap mldsa_reg {
     } MLDSA_VERIFY_RES[16];
 
     /* ---- MLDSA Component Public Key ---- */
-    external reg {
+    external mem {
         name = "MLDSA component public key register type definition";
         desc = "648 32-bit registers storing the public key in big-endian representation. 
                 These registers are read by MLDSA user after keygen operation, 
                 or set before verifying operation.";
 
-        default sw = rw;
-        default hw = rw;
-        default we = true;
-        default resetsignal = reset_b;
-        field {desc = "Public key field"; swwe = mldsa_ready; hwclr;} PUBKEY[32] = 32'b0;
-    
-    } MLDSA_PUBKEY[648];
+        sw = rw;
+        mementries = 648;
+        memwidth = 32;
+    } MLDSA_PUBKEY;
     
     /* ---- MLDSA Component Signature ---- */
-    external reg {
+    external mem {
         name = "MLDSA component signature register type definition";
         desc = "1157 32-bit registers storing the signature of the message in big-endian representation. 
                 These registers are read by MLDSA user after signing operation, 
                 or set before verifying operation.";
 
-        default sw = rw;
-        default hw = rw;
-        default we = true;
-        default resetsignal = reset_b;
-        field {desc = "Signature field"; swwe = mldsa_ready; hwclr;} SIGNATURE[32] = 32'b0;
-    
-    } MLDSA_SIGNATURE[1157];
+        sw = rw;
+        mementries = 1157;
+        memwidth = 32;
+    } MLDSA_SIGNATURE;
 
     /* ---- MLDSA Component Private Key OUT---- */
     external mem {
@@ -496,5 +490,5 @@ addrmap mldsa_reg {
     /* -----------------------
      * Register File instance
      * ----------------------- */
-    intr_block_t intr_block_rf @0x6000;
+    intr_block_t intr_block_rf @0x8000;
 };
