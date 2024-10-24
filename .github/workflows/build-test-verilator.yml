@@ -187,8 +187,9 @@ jobs:
       - name: Run Caliptra Verilator Smoke Test
         run: |
           CALIPTRA_ROOT=$(pwd)
+          ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           cd tools/scripts
-          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT TESTNAME=${{ matrix.test_name  }} | tee output.log
+          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT ADAMSBRIDGE_ROOT=$ADAMSBRIDGE_ROOT TESTNAME=${{ matrix.test_name  }} | tee output.log
           # Search the last 30 lines of the output for "TESTCASE PASSED"
           tail -n 30 output.log | grep "TESTCASE PASSED"
           # grep will return 0 if the search term is found, and 1 otherwise

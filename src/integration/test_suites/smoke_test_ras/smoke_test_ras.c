@@ -209,7 +209,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
-    .axi_dma_notif    = 0,
+    .mldsa_error      = 0,
+    .mldsa_notif      = 0,
+    .axi_dma_error    = 0,
     .axi_dma_notif    = 0,
 };
 volatile rv_exception_struct_s exc_flag __attribute__((section(".dccm.persistent"))); // WARNING: if DCCM ERROR injection is enabled, writes to this may be corrupted
