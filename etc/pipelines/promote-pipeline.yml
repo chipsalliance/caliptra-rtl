@@ -256,7 +256,13 @@ stages:
         - configspec_name: 'integration_lib'
         - dut: 'uvmf_mldsa'
         - timeout: 25
-        #-testsuites: todo
+        - testsuites:
+          - l0_regress:
+            - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
+            - configspec_name: 'integration_lib'
+            - dut: 'uvmf_mldsa'
+            - path: '${ADAMSBRIDGE_ROOT}/src/mldsa_top/stimulus/uvmf_mldsa_top_promote_regression.yml'
+            - timeout: 1440
 
     design_lint_map:
     - caliptra_top_sglint:
