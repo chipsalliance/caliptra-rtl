@@ -32,7 +32,7 @@ wait_for_phrase () {
     fi
 
     # Wait for the phrase
-    DEADLINE=$((${EPOCHSECONDS} + 30))
+    DEADLINE=$((${EPOCHSECONDS} + 60))
     while [ ${EPOCHSECONDS} -lt ${DEADLINE} ]
     do
         # Check for the phrase
