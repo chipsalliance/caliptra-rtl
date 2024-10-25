@@ -10,6 +10,7 @@
 //   values of these signals, and
 // - inverting these signals between the regular FSM and the caliptra_prim_buf synthesis barriers.
 // Synthesis tools will then push the inverters into the actual FSM.
+// ----
 
 module aes_cipher_control_fsm_n 
   import aes_reg_pkg::*;
