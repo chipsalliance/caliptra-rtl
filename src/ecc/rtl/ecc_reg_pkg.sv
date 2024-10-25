@@ -400,7 +400,7 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } kv_write_ctrl_reg__sha_block_dest_valid__out_t;
+    } kv_write_ctrl_reg__mldsa_seed_dest_valid__out_t;
 
     typedef struct packed{
         logic value;
@@ -419,7 +419,7 @@ package ecc_reg_pkg;
         kv_write_ctrl_reg__write_entry__out_t write_entry;
         kv_write_ctrl_reg__hmac_key_dest_valid__out_t hmac_key_dest_valid;
         kv_write_ctrl_reg__hmac_block_dest_valid__out_t hmac_block_dest_valid;
-        kv_write_ctrl_reg__sha_block_dest_valid__out_t sha_block_dest_valid;
+        kv_write_ctrl_reg__mldsa_seed_dest_valid__out_t mldsa_seed_dest_valid;
         kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;

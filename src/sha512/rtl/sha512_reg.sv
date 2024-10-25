@@ -244,7 +244,7 @@ module sha512_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } sha_block_dest_valid;
+            } mldsa_seed_dest_valid;
             struct packed{
                 logic next;
                 logic load_next;
@@ -529,7 +529,7 @@ module sha512_reg (
             } hmac_block_dest_valid;
             struct packed{
                 logic value;
-            } sha_block_dest_valid;
+            } mldsa_seed_dest_valid;
             struct packed{
                 logic value;
             } ecc_pkey_dest_valid;
@@ -1063,27 +1063,27 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value;
-    // Field: sha512_reg.SHA512_KV_WR_CTRL.sha_block_dest_valid
+    // Field: sha512_reg.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value;
+        next_c = field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
         load_next_c = '0;
         if(decoded_reg_strb.SHA512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
+            next_c = (field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
         end
-        field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.next = next_c;
-        field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.load_next = load_next_c;
+        field_combo.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.next = next_c;
+        field_combo.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value <= 1'h0;
-        end else if(field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.load_next) begin
-            field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value <= field_combo.SHA512_KV_WR_CTRL.sha_block_dest_valid.next;
+            field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value <= 1'h0;
+        end else if(field_combo.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.load_next) begin
+            field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value <= field_combo.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.next;
         end
     end
-    assign hwif_out.SHA512_KV_WR_CTRL.sha_block_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value;
+    assign hwif_out.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value = field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
     // Field: sha512_reg.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
@@ -2068,7 +2068,7 @@ module sha512_reg (
     assign readback_array[23][5:1] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.write_entry.value : '0;
     assign readback_array[23][6:6] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
     assign readback_array[23][7:7] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
-    assign readback_array[23][8:8] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.sha_block_dest_valid.value : '0;
+    assign readback_array[23][8:8] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.value : '0;
     assign readback_array[23][9:9] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
     assign readback_array[23][10:10] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
     assign readback_array[23][31:11] = (decoded_reg_strb.SHA512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.SHA512_KV_WR_CTRL.rsvd.value : '0;

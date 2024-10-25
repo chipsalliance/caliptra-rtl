@@ -63,18 +63,12 @@ module sha512
         output wire [DATA_WIDTH-1 : 0] read_data,
         output wire          err,
 
-        // KV interface
-        output kv_read_t kv_read,
-        output kv_write_t kv_write,
-        input kv_rd_resp_t kv_rd_resp,
-        input kv_wr_resp_t kv_wr_resp,
-
         // PV interface
         output pv_read_t pv_read,
         output pv_write_t pv_write,
         input pv_rd_resp_t pv_rd_resp,
         input pv_wr_resp_t pv_wr_resp,
-        output logic [KV_NUM_DWORDS-1:0][DATA_WIDTH-1:0] pcr_signing_hash,
+        output logic [PV_NUM_DWORDS-1:0][DATA_WIDTH-1:0] pcr_signing_hash,
 
         // Interrupts
         output wire error_intr,
@@ -101,10 +95,11 @@ module sha512
 
   reg [DATA_WIDTH-1 : 0][BLOCK_NUM_DWORDS-1 : 0]    block_reg ;
   reg [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]      digest_reg;
-  reg [KV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
+  reg [PV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
   
-  reg [KV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      pcr_sign_reg;
-  logic [KV_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]     pcr_sign;
+  
+  reg [PV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      pcr_sign_reg;
+  logic [PV_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]     pcr_sign;
   logic                                             pcr_sign_we;
   reg                                               digest_valid_reg;
   logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]    get_mask;
@@ -178,8 +173,8 @@ module sha512
   assign err = read_error | write_error;
 
   always_comb begin // ecc_reg_writing
-      for (int dword=0; dword < KV_NUM_DWORDS; dword++)begin
-        pcr_signing_hash[dword] = pcr_sign_reg[(KV_NUM_DWORDS-1)-dword];
+      for (int dword=0; dword < PV_NUM_DWORDS; dword++)begin
+        pcr_signing_hash[dword] = pcr_sign_reg[(PV_NUM_DWORDS-1)-dword];
       end
   end
 
@@ -238,7 +233,7 @@ module sha512
       if (core_digest_valid & ~digest_valid_reg & ~(dest_keyvault | kv_read_data_present))
         digest_reg <= core_digest & get_mask;
       if (core_digest_valid & ~digest_valid_reg & (dest_keyvault | kv_read_data_present))
-        kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
+        kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
       if (pcr_sign_we)
         pcr_sign_reg <= pcr_sign;
 
@@ -263,7 +258,7 @@ module sha512
 
   always_comb begin
     pcr_sign_we = (dest_data_avail & gen_hash_ip);
-    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-KV_NUM_DWORDS];
+    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
   end
 
   //register hw interface
@@ -292,8 +287,8 @@ module sha512
       hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
     //output comes in big endian
-    for (int dword =0; dword < KV_NUM_DWORDS; dword++) begin
-      hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.next = pcr_sign_reg[(KV_NUM_DWORDS-1)-dword];
+    for (int dword =0; dword < PV_NUM_DWORDS; dword++) begin
+      hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.next = pcr_sign_reg[(PV_NUM_DWORDS-1)-dword];
       hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 
@@ -390,7 +385,6 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
-always_comb kv_read = '0;
 always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
 always_comb vault_rd_resp = pv_rd_resp;
@@ -422,8 +416,6 @@ sha512_block_kv_read
     .read_done(kv_src_done)
 );
 
-
-always_comb kv_write = '0;
 always_comb begin
   pv_write.write_data = pcr_hash_extend_ip ? vault_write.write_data : '0;
   pv_write.write_en = pcr_hash_extend_ip ? vault_write.write_en : '0;

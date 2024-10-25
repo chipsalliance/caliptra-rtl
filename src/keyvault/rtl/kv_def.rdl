@@ -63,7 +63,7 @@
         field {desc = "Key Vault entry to store the result";} write_entry[KV_ENTRY_ADDRESS_W] = 0;
         field {desc = "HMAC KEY is a valid destination";} hmac_key_dest_valid = 0;
         field {desc = "HMAC BLOCK is a valid destination";} hmac_block_dest_valid = 0;
-        field {desc = "Reserved field. No SHA key vault interface";} sha_block_dest_valid = 0;
+        field {desc = "MLDSA_SEED is a valid destination";} mldsa_seed_dest_valid = 0;
         field {desc = "ECC PKEY is a valid destination";} ecc_pkey_dest_valid = 0;
         field {desc = "ECC SEED is a valid destination";} ecc_seed_dest_valid = 0;
         field {desc = "Reserved field";} rsvd[21] = 0;

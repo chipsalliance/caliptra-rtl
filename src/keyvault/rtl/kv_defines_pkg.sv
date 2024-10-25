@@ -17,8 +17,8 @@
 
 package kv_defines_pkg;
 
-parameter KV_NUM_DWORDS = 12; //number of dwords per key
-parameter KV_NUM_KEYS = 32;
+parameter KV_NUM_DWORDS = 16; //number of dwords per key
+parameter KV_NUM_KEYS = 24;
 parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);

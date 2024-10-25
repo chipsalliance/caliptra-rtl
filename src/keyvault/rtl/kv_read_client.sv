@@ -74,7 +74,7 @@ kv_read_fsm
 );
 
 always_comb kv_read.read_entry = read_ctrl_reg.read_entry;
-always_comb kv_read.read_offset = read_offset[3:0];
+always_comb kv_read.read_offset = read_offset;
 
 always_comb write_data = write_pad ? pad_data : kv_resp.read_data;
 

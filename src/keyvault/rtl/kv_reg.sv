@@ -66,8 +66,8 @@ module kv_reg (
     // Address Decode
     //--------------------------------------------------------------------------
     typedef struct packed{
-        logic [32-1:0]KEY_CTRL;
-        logic [32-1:0][12-1:0]KEY_ENTRY;
+        logic [24-1:0]KEY_CTRL;
+        logic [24-1:0][16-1:0]KEY_ENTRY;
         logic CLEAR_SECRETS;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
@@ -77,12 +77,12 @@ module kv_reg (
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
-        for(int i0=0; i0<32; i0++) begin
+        for(int i0=0; i0<24; i0++) begin
             decoded_reg_strb.KEY_CTRL[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + i0*12'h4);
         end
-        for(int i0=0; i0<32; i0++) begin
-            for(int i1=0; i1<12; i1++) begin
-                decoded_reg_strb.KEY_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h30 + i1*12'h4);
+        for(int i0=0; i0<24; i0++) begin
+            for(int i1=0; i1<16; i1++) begin
+                decoded_reg_strb.KEY_ENTRY[i0][i1] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h40 + i1*12'h4);
             end
         end
         decoded_reg_strb.CLEAR_SECRETS = cpuif_req_masked & (cpuif_addr == 12'hc00);
@@ -127,13 +127,13 @@ module kv_reg (
                 logic [3:0] next;
                 logic load_next;
             } last_dword;
-        } [32-1:0]KEY_CTRL;
+        } [24-1:0]KEY_CTRL;
         struct packed{
             struct packed{
                 logic [31:0] next;
                 logic load_next;
             } data;
-        } [32-1:0][12-1:0]KEY_ENTRY;
+        } [24-1:0][16-1:0]KEY_ENTRY;
         struct packed{
             struct packed{
                 logic next;
@@ -170,12 +170,12 @@ module kv_reg (
             struct packed{
                 logic [3:0] value;
             } last_dword;
-        } [32-1:0]KEY_CTRL;
+        } [24-1:0]KEY_CTRL;
         struct packed{
             struct packed{
                 logic [31:0] value;
             } data;
-        } [32-1:0][12-1:0]KEY_ENTRY;
+        } [24-1:0][16-1:0]KEY_ENTRY;
         struct packed{
             struct packed{
                 logic value;
@@ -187,7 +187,7 @@ module kv_reg (
     } field_storage_t;
     field_storage_t field_storage;
 
-    for(genvar i0=0; i0<32; i0++) begin
+    for(genvar i0=0; i0<24; i0++) begin
         // Field: kv_reg.KEY_CTRL[].lock_wr
         always_comb begin
             automatic logic [0:0] next_c;
@@ -348,8 +348,8 @@ module kv_reg (
         end
         assign hwif_out.KEY_CTRL[i0].last_dword.value = field_storage.KEY_CTRL[i0].last_dword.value;
     end
-    for(genvar i0=0; i0<32; i0++) begin
-        for(genvar i1=0; i1<12; i1++) begin
+    for(genvar i0=0; i0<24; i0++) begin
+        for(genvar i1=0; i1<16; i1++) begin
             // Field: kv_reg.KEY_ENTRY[][].data
             always_comb begin
                 automatic logic [31:0] next_c;
@@ -441,8 +441,8 @@ module kv_reg (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [33-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<32; i0++) begin
+    logic [25-1:0][31:0] readback_array;
+    for(genvar i0=0; i0<24; i0++) begin
         assign readback_array[i0*1 + 0][0:0] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_wr.value : '0;
         assign readback_array[i0*1 + 0][1:1] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].lock_use.value : '0;
         assign readback_array[i0*1 + 0][2:2] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].clear.value : '0;
@@ -452,9 +452,9 @@ module kv_reg (
         assign readback_array[i0*1 + 0][20:17] = (decoded_reg_strb.KEY_CTRL[i0] && !decoded_req_is_wr) ? field_storage.KEY_CTRL[i0].last_dword.value : '0;
         assign readback_array[i0*1 + 0][31:21] = '0;
     end
-    assign readback_array[32][0:0] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.wr_debug_values.value : '0;
-    assign readback_array[32][1:1] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.sel_debug_value.value : '0;
-    assign readback_array[32][31:2] = '0;
+    assign readback_array[24][0:0] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.wr_debug_values.value : '0;
+    assign readback_array[24][1:1] = (decoded_reg_strb.CLEAR_SECRETS && !decoded_req_is_wr) ? field_storage.CLEAR_SECRETS.sel_debug_value.value : '0;
+    assign readback_array[24][31:2] = '0;
 
     // Reduce the array
     always_comb begin
@@ -462,7 +462,7 @@ module kv_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<33; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<25; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

@@ -53,8 +53,8 @@ package kv_reg_pkg;
         logic reset_b;
         logic core_only_rst_b;
         logic hard_reset_b;
-        kv_reg__kvCtrl__in_t [32-1:0]KEY_CTRL;
-        kv_reg__keyReg__in_t [32-1:0][12-1:0]KEY_ENTRY;
+        kv_reg__kvCtrl__in_t [24-1:0]KEY_CTRL;
+        kv_reg__keyReg__in_t [24-1:0][16-1:0]KEY_ENTRY;
     } kv_reg__in_t;
 
     typedef struct packed{
@@ -117,8 +117,8 @@ package kv_reg_pkg;
     } kv_reg__CLEAR_SECRETS__out_t;
 
     typedef struct packed{
-        kv_reg__kvCtrl__out_t [32-1:0]KEY_CTRL;
-        kv_reg__keyReg__out_t [32-1:0][12-1:0]KEY_ENTRY;
+        kv_reg__kvCtrl__out_t [24-1:0]KEY_CTRL;
+        kv_reg__keyReg__out_t [24-1:0][16-1:0]KEY_ENTRY;
         kv_reg__CLEAR_SECRETS__out_t CLEAR_SECRETS;
     } kv_reg__out_t;
 
