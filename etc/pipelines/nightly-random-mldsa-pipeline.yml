@@ -58,20 +58,6 @@ stages:
 
       # Define UVMF playbook invocations
       build_and_sim_map:
-# TODO: Add this back once aes uvmf project is fixed
-#        - uvmf_aes:
-#          - display_name: 'UVMF_AES'
-#          - enabled: true
-#          - configspec_name: 'integration_lib'
-#          - dut: 'uvmf_cbc_AllKAT'
-#          - args: ''
-#          - testsuites:
-#            - l1_regress:
-#              - enabled: true
-#              - configspec_name: 'integration_lib'
-#              - dut: 'uvmf_cbc_AllKAT'
-#              - path: 'Caliptra/src/aes/stimulus/L1_regression.yml'
-#              - timeout: 15
         - uvmf_mldsa:
           - display_name: 'UVMF_MLDSA'
           - enabled: true
