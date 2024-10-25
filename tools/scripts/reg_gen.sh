@@ -14,15 +14,15 @@
 # limitations under the License.
 #
 
-python3 tools/scripts/reg_gen.py src/mldsa/rtl/mldsa_reg.rdl
-python3 tools/scripts/reg_gen.py src/keyvault/rtl/kv_reg.rdl
-python3 tools/scripts/reg_gen.py src/pcrvault/rtl/pv_reg.rdl
-python3 tools/scripts/reg_gen.py src/datavault/rtl/dv_reg.rdl
-python3 tools/scripts/reg_gen.py src/ecc/rtl/ecc_reg.rdl
-python3 tools/scripts/reg_gen.py src/sha512/rtl/sha512_reg.rdl
-python3 tools/scripts/reg_gen.py src/sha256/rtl/sha256_reg.rdl
-python3 tools/scripts/reg_gen.py src/soc_ifc/rtl/mbox_csr.rdl
-python3 tools/scripts/reg_gen.py src/soc_ifc/rtl/sha512_acc_csr.rdl
-python3 tools/scripts/reg_gen.py src/soc_ifc/rtl/soc_ifc_reg.rdl
-python3 tools/scripts/reg_gen.py src/hmac/rtl/hmac_reg.rdl
-python3 tools/scripts/reg_gen.py src/doe/rtl/doe_reg.rdl
+python3 tools/scripts/reg_gen.py $ADAMSBRIDGE_ROOT/src/mldsa/rtl/mldsa_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/keyvault/rtl/kv_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/pcrvault/rtl/pv_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/datavault/rtl/dv_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/ecc/rtl/ecc_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/sha512/rtl/sha512_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/sha256/rtl/sha256_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/soc_ifc/rtl/mbox_csr.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/soc_ifc/rtl/sha512_acc_csr.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/soc_ifc/rtl/soc_ifc_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/hmac/rtl/hmac_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/doe/rtl/doe_reg.rdl
