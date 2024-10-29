@@ -474,13 +474,13 @@ When the RV core wakes up, all clocks are enabled. However, when the core is hal
 
 Activity on the AXI interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
 
-| Cpu_halt_status | PSEL | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
+| Cpu_halt_status | axi_active | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
 | :-------------- | :--- | :---------- | :-------------- |
 | 0  | X    | X | All gated clocks active                                                                                                   |
 | 1  | 0    | 0 | All gated clocks inactive                                                                                                 |
 | 1  | 0    | 1 | All gated clocks active (as long as condition is true)                                                                    |
-| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as PSEL = 1) <br>All other clks inactive                                                   |
-| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR PSEL = 1) <br>All other clks active (as long as condition is true) |
+| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as axi_active = 1) <br>All other clks inactive                                                   |
+| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR axi_active = 1) <br>All other clks active (as long as condition is true) |
 
 ### Usage
 
