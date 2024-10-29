@@ -472,15 +472,15 @@ When the RV core wakes up, all clocks are enabled. However, when the core is hal
 
 * AXI transactions
 
-Activity on the AXI interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
+Activity on the AXI subordinate interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
 
-| Cpu_halt_status | axi_active | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
+| Cpu_halt_status | s_axi_active | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
 | :-------------- | :--- | :---------- | :-------------- |
 | 0  | X    | X | All gated clocks active                                                                                                   |
 | 1  | 0    | 0 | All gated clocks inactive                                                                                                 |
 | 1  | 0    | 1 | All gated clocks active (as long as condition is true)                                                                    |
-| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as axi_active = 1) <br>All other clks inactive                                                   |
-| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR axi_active = 1) <br>All other clks active (as long as condition is true) |
+| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as s_axi_active = 1) <br>All other clks inactive                                                   |
+| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR s_axi_active = 1) <br>All other clks active (as long as condition is true) |
 
 ### Usage
 
@@ -645,7 +645,7 @@ Caliptra provides a SHA accelerator HW API for SoC and Caliptra internal FW to u
 Using the HW API:
 
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
-* The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI interface are dropped.
+* The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI subordinate interface are dropped.
 * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
 * Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
 * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
