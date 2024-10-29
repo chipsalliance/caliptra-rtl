@@ -72,6 +72,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
+    .mldsa_error      = 0,
+    .mldsa_notif      = 0
 };
 #define CLEAR_INTR_FLAG_SAFELY(flag, mask) \
     csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK); \
