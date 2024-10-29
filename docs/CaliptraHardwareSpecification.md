@@ -2,7 +2,8 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Version 1.1</p>
+<p style="text-align: center;">Version 2.0</p>
+<p style="text-align: center;">Revision 0.8</p>
 
 <div style="page-break-after: always"></div>
 
@@ -17,6 +18,18 @@ This document provides definitions and requirements for a Caliptra cryptographic
 # Caliptra Core
 
 For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
+
+## Key Caliptra Core 2.0 Changes
+* AXI Sub (replaces APB interface of the Caliptra 1.x HW)
+* SHA Accelerator functionality over mailbox (with SHA save/restore)
+* Adams Bridge Dilithium/ML-DSA [Refer to Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx)
+* Subystem mode Support [Refer Subsystem Spec for details](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf)
+    * AXI Manager 
+    * Manuf and Debug Unlock
+    * UDS programming
+    * Read logic for Secret Fuses
+    * Streaming Boot Support
+    * DMA Support
 
 ## Boot FSM
 
@@ -59,6 +72,7 @@ The RISC-V core is highly configurable and has the following settings.
 | Reset Vector            | 0x00000000    |
 | Fast Interrupt Redirect | Enabled       |
 | External Interrupts     | 31            |
+| PMP                     | Enabled       |
 
 ### Embedded memory export
 
@@ -92,6 +106,7 @@ The following table shows the memory map address ranges for each of the IP block
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 13        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
+| ML-DSA                              | 17        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 
 #### Peripherals subsystem
 
@@ -99,8 +114,6 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral | Target \# | Address size | Start address | End address |
 | :------------ | :-------- | :----------- | :------------ | :---------- |
-| QSPI          | 7         | 4 KiB        | 0x2000_0000   | 0x2000_0FFF |
-| UART          | 8         | 4 KiB        | 0x2000_1000   | 0x2000_1FFF |
 | CSRNG         | 15        | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
 | ENTROPY SRC   | 16        | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
 
@@ -112,7 +125,6 @@ The following table shows the memory map address ranges for each of the IP block
 | :------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Mailbox SRAM Direct Access | 10        | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
 | Mailbox CSR                | 10        | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| SHA512 Accelerator CSR     | 10        | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
 | Mailbox                    | 10        | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 
 #### RISC-V core local memory blocks
@@ -457,9 +469,9 @@ When the RV core wakes up, all clocks are enabled. However, when the core is hal
 
 * JTAG accesses
 
-* APB transactions
+* AXI transactions
 
-Activity on the APB interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
+Activity on the AXI interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
 
 | Cpu_halt_status | PSEL | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
 | :-------------- | :--- | :---------- | :-------------- |
@@ -474,7 +486,7 @@ Activity on the APB interface only wakes up the SoC IFC clock. All other clocks 
 The following applies to the clock gating feature:
 
 * The core should only be halted after all pending vault writes are done and cryptographic operations are complete.
-* While the core is halted, any APB transaction wakes up the SoC interface clock and leaves all other clocks disabled. If the core is still halted when the APB transactions are done, the SoC interface clock is returned to a disabled state. .
+* While the core is halted, any AXI transaction wakes up the SoC interface clock and leaves all other clocks disabled. If the core is still halted when the AXI transactions are done, the SoC interface clock is returned to a disabled state. .
 * The RDC clock is similar to an ungated clock and is only disabled when a reset event occurs. This avoids metastability on flops. The RDC clock operates independently of core halt status.
 
 
@@ -627,18 +639,16 @@ The reason to have a separate interface from the SoC mailbox is to ensure that t
 
 ## SoC-SHA accelerator HW API
 
-Caliptra provides a SHA accelerator HW API for SoC and Caliptra internal FW to use. It is atomic in nature in that only one of them can use the SHA accelerator HW API at the same time. Details of the SHA accelerator register block may be found in the GitHub repository in [documentation](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=caliptra_top_reg.sha512_acc_csr) generated from the register definition file.
+Caliptra provides a SHA accelerator HW API for SoC and Caliptra internal FW to use. It is atomic in nature in that only one of them can use the SHA accelerator HW API at the same time.
 
 Using the HW API:
 
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
-* The USER register captures the APB pauser value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing APB register writes. Writes by any other agent on the APB interface are dropped.
-* MODE register is written to set the SHA execution mode.
-     * SHA accelerator supports both SHA384 and SHA512 modes of operation.
-     * SHA supports **streaming** mode: SHA is computed on a stream of incoming data to the DATAIN register. The EXECUTE register, when set, indicates to the accelerator that streaming is complete. The accelerator can then publish the result into the DIGEST register. When the VALID bit of the STATUS register is set, then the result in the DIGEST register is valid.
-     * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
-     * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
-     * See the register definition for the encodings.
+* The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI interface are dropped.
+* SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
+* Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
+* The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
+* See the register definition for the encodings.
 * SHA engine also provides a ‘zeroize’ function through its CONTROL register to clear any of the SHA internal state. This can be used when the user wants to conceal previous state for debug or security reasons.
 
 ## JTAG implementation
@@ -1445,6 +1455,13 @@ The LMS accelerator integrated into SHA256 architecture inputs and outputs are d
 ### Address map
 
 The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
+
+## Adams Bridge - Dilitium (ML-DSA)
+
+Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx) 
+
+### Address map
+Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
 
 ## PCR vault
 
