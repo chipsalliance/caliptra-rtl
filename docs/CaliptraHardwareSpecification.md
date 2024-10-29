@@ -20,17 +20,18 @@ This document provides definitions and requirements for a Caliptra cryptographic
 For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
 ## Key Caliptra Core 2.0 Changes
-* AXI Sub (replaces APB interface of the Caliptra 1.x HW)
-* SHA Accelerator functionality over mailbox (with SHA save/restore)
-* Adams Bridge Dilithium/ML-DSA [Refer to Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx)
-* Subystem mode Support [Refer Subsystem Spec for details](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf)
-    * AXI Manager 
-    * Manuf and Debug Unlock
+* AXI subordinate replaces APB interface of Caliptra 1.x hardware
+* SHA Accelerator functionality now available exclusively over mailbox
+    * SHA Accelerator adds new SHA save/restore functionality
+* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams\ bridge_HardwareSpecs.docx))
+* Subystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
+    * AXI Manager with DMA support
+    * Manufacturing and Debug Unlock
     * UDS programming
     * Read logic for Secret Fuses
     * Streaming Boot Support
-    * DMA Support
-
+* RISC-V core PMP support
+  
 ## Boot FSM
 
 The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is awake and ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by de-asserting the internal reset.
