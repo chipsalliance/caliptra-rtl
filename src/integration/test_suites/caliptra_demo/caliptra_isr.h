@@ -183,5 +183,7 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
+inline void service_mldsa_error_intr() {return;}
+inline void service_mldsa_notif_intr() {return;}
 
 #endif //CALIPTRA_ISR_H
