@@ -22,14 +22,9 @@
 #       cd Cores-VeeR-EL2
 #   2. in the shell, run:
 #       export RV_ROOT=${PWD}
-#   3. edit Cores-VeeR-EL2/configs/veer.config, line 841
-#       change
-#          "reset_vec"             => "0x80000000",                        # Testbench, Overridable
-#       to
-#          "reset_vec"             => "0x00000000",                        # Testbench, Overridable
-#   4. Run this script with 1 argument : name of snapshot to use
+#   3. Run this script with 1 argument : name of snapshot to use
 #        source <path/to/script>/veer_build_command.sh <name_of_snapshot>
-#   5. AFTER this script completes, you can merge contents into Caliptra repo
+#   4. AFTER this script completes, you can merge contents into Caliptra repo
 #      (Output files will be located in $RV_ROOT/snapshots/<name_of_snapshot>)
 ########################################################################
 if [[ -z ${RV_ROOT+"empty"} ]]; then
@@ -89,6 +84,7 @@ $RV_ROOT/configs/veer.config    \
 -set=bitmanip_zbp=0              \
 -set=bitmanip_zbr=0              \
 -set=bitmanip_zbs=1              \
+-set=reset_vec=0x00000000        \
 -fpga_optimize=0                 \
 -snapshot=$1
 #-text_in_iccm=0
