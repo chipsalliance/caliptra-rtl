@@ -685,7 +685,7 @@ The high-level architecture of Caliptra cryptographic subsystem is shown in the 
 
 *Figure 17: Caliptra cryptographic subsystem*
 
-![](./images/crypto_subsystem.png)
+![](./images/Crypto-2p0.png)
 
 ## SHA512/SHA384
 
