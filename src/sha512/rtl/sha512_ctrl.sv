@@ -49,12 +49,6 @@ module sha512_ctrl
     output logic hreadyout_o,
     output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
-    // kv interface
-    output kv_read_t kv_read,
-    output kv_write_t kv_write,
-    input kv_rd_resp_t kv_rd_resp,
-    input kv_wr_resp_t kv_wr_resp,
-
     // pcr vault interface
     output pv_read_t pv_read,
     output pv_write_t pv_write,
@@ -92,10 +86,6 @@ module sha512_ctrl
         .write_data(sha512_write_data),
         .read_data(sha512_read_data),
         .err(sha512_err),
-        .kv_read(kv_read),
-        .kv_write(kv_write),
-        .kv_rd_resp(kv_rd_resp),
-        .kv_wr_resp(kv_wr_resp),
         .pv_read(pv_read),
         .pv_write(pv_write),
         .pv_rd_resp(pv_rd_resp),

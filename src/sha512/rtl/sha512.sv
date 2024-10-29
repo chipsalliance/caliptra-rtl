@@ -63,12 +63,6 @@ module sha512
         output wire [DATA_WIDTH-1 : 0] read_data,
         output wire          err,
 
-        // KV interface
-        output kv_read_t kv_read,
-        output kv_write_t kv_write,
-        input kv_rd_resp_t kv_rd_resp,
-        input kv_wr_resp_t kv_wr_resp,
-
         // PV interface
         output pv_read_t pv_read,
         output pv_write_t pv_write,
@@ -393,7 +387,6 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
-always_comb kv_read = '0;
 always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
 always_comb vault_rd_resp = pv_rd_resp;
@@ -426,7 +419,6 @@ sha512_block_kv_read
 );
 
 
-always_comb kv_write = '0;
 always_comb begin
   pv_write.write_data = pcr_hash_extend_ip ? vault_write.write_data : '0;
   pv_write.write_en = pcr_hash_extend_ip ? vault_write.write_en : '0;

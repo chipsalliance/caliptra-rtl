@@ -158,13 +158,6 @@ module caliptra_top_sva
 
   generate
     for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-      //sha512 block read
-      kv_sha512_block_r_flow:   assert property (
-                                            @(posedge `SVA_RDC_CLK)
-                                            $rose(`SHA512_PATH.kv_src_done & ~`SHA512_PATH.pcr_hash_extend_ip) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`SHA512_PATH.kv_read.read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword].data.value == `SHA512_PATH.block_reg[dword])
-                                            )
-                                else $display("SVA ERROR: SHA384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword].data.value, `SHA512_PATH.block_reg[dword]);
-
       //sha512 digest write
       if (dword < SHA512_DIG_NUM_DWORDS) begin
         kv_sha512_digest_w_flow:  assert property (
