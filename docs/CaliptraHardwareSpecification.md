@@ -23,8 +23,8 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * AXI subordinate replaces APB interface of Caliptra 1.x hardware
 * SHA Accelerator functionality now available exclusively over mailbox
     * SHA Accelerator adds new SHA save/restore functionality
-* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams\ bridge_HardwareSpecs.docx))
-* Subystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
+* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx))
+* Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
     * AXI Manager with DMA support
     * Manufacturing and Debug Unlock
     * UDS programming
