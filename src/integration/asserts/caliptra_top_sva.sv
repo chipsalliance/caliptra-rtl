@@ -552,6 +552,13 @@ module caliptra_top_sva
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");      
 
+  //SVA for SHA512 restore
+  sha512_restore_cmd:   assert property ( 
+                                    @(posedge `SVA_RDC_CLK) 
+                                    `SHA512_PATH.restore_reg |-> (`SHA512_PATH.next_reg && !`SHA512_PATH.init_reg)
+                                    ) 
+                         else $display("SVA ERROR: SHA512 restore is not valid!");
+
   //SVA for modular operations
   ecc_opa_input:        assert property (
                                       @(posedge `SVA_RDC_CLK)
