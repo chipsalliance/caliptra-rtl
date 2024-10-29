@@ -37,7 +37,6 @@ if [[ $# -ne 1 ]]; then
 fi
 $RV_ROOT/configs/veer.config    \
 -target=default_ahb              \
---iccm_region=0x4                \
 -set=ret_stack_size=8            \
 -set=btb_enable=1                \
 -set=btb_fullya=0                \
@@ -52,7 +51,6 @@ $RV_ROOT/configs/veer.config    \
 -set=dccm_size=128               \
 -set=dma_buf_depth=5             \
 -set=fast_interrupt_redirect=1   \
--set=iccm_enable=1               \
 -set=icache_enable=0             \
 -set=icache_waypack=1            \
 -set=icache_ecc=1                \
@@ -63,9 +61,11 @@ $RV_ROOT/configs/veer.config    \
 -set=icache_num_bypass=2         \
 -set=icache_num_tag_bypass=2     \
 -set=icache_tag_bypass_enable=1  \
+-set=iccm_enable=1               \
+-set=iccm_num_banks=4            \
+-set=iccm_region=0x4             \
 -set=iccm_offset=0x0             \
 -set=iccm_size=128               \
--set=iccm_num_banks=4            \
 -set=lsu_stbuf_depth=4           \
 -set=lsu_num_nbload=4            \
 -set=load_to_use_plus1=0         \
