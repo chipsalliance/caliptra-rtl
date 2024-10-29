@@ -31,6 +31,7 @@ jobs:
 
       - name: Generate docs
         run: |
+          export ADAMSBRIDGE_ROOT=$(pwd)/submodules/adams-bridge
           echo Running script
           tools/scripts/reg_doc_gen.sh
 
