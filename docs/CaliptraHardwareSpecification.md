@@ -25,6 +25,8 @@ For information on the Caliptra Core, see the [High level architecture](https://
     * SHA Accelerator adds new SHA save/restore functionality
 * Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx))
 * Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
+    * ECDH hardware support
+    * HMAC512 hardware support
     * AXI Manager with DMA support
     * Manufacturing and Debug Unlock
     * UDS programming
@@ -174,8 +176,8 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | SHA512 (Notifications)                              | 10               | 7                                               |
 | SHA256 (Errors)                                     | 11               | 8                                               |
 | SHA256 (Notifications)                              | 12               | 7                                               |
-| RESERVED                                            | 17               | 4                                               |
-| RESERVED                                            | 18               | 3                                               |
+| RESERVED                                            | 13, 15, 17       | 4                                               |
+| RESERVED                                            | 14, 16, 18       | 3                                               |
 | Mailbox (Errors)                                    | 19               | 8                                               |
 | Mailbox (Notifications)                             | 20               | 7                                               |
 | SHA512 Accelerator (Errors)                         | 23               | 8                                               |
