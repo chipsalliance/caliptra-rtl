@@ -798,10 +798,6 @@ sha512_ctrl #(
     .hresp_o        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hresp),
     .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hreadyout),
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hrdata),
-    .kv_read        (kv_read[2]),
-    .kv_write       (kv_write[1]),
-    .kv_rd_resp     (kv_rd_resp[2]),
-    .kv_wr_resp     (kv_wr_resp[1]),
     .pv_read        (pv_read),
     .pv_write       (pv_write),
     .pv_rd_resp     (pv_rd_resp),
@@ -812,6 +808,9 @@ sha512_ctrl #(
     .notif_intr(sha512_notif_intr),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
+
+always_comb kv_read[2] = '0;
+always_comb kv_write[1] = '0;
 
 sha256_ctrl #(
     .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
