@@ -174,14 +174,16 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | SHA512 (Notifications)                              | 10               | 7                                               |
 | SHA256 (Errors)                                     | 11               | 8                                               |
 | SHA256 (Notifications)                              | 12               | 7                                               |
-| QSPI (Errors)                                       | 13               | 4                                               |
-| QSPI (Notifications)                                | 14               | 3                                               |
-| UART (Errors)                                       | 15               | 4                                               |
-| UART (Notifications)                                | 16               | 3                                               |
 | RESERVED                                            | 17               | 4                                               |
 | RESERVED                                            | 18               | 3                                               |
 | Mailbox (Errors)                                    | 19               | 8                                               |
 | Mailbox (Notifications)                             | 20               | 7                                               |
+| SHA512 Accelerator (Errors)                         | 23               | 8                                               |
+| SHA512 Accelerator (Notifications)                  | 24               | 7                                               |
+| MLDSA (Errors)                                      | 23               | 8                                               |
+| MLDSA (Notifications)                               | 24               | 7                                               |
+| AXI DMA (Errors)                                    | 25               | 8                                               |
+| AXI DMA (Notifications)                             | 26               | 7                                               |
 
 ## Watchdog timer
 
@@ -236,170 +238,6 @@ All AHB requests internal to Caliptra must be to an address that is aligned to t
 ## Cryptographic subsystem
 
 For details, see the [Cryptographic subsystem architecture](#cryptographic-subsystem-architecture) section.
-
-## Peripherals subsystem
-
-Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra does not support enabling the QSPI interface. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
-
-### QSPI Flash Controller
-
-Caliptra implements a QSPI block that can communicate with 2 QSPI devices. This QSPI block is accessible to FW over the AHB-lite Interface.
-
-The QSPI block is composed of the spi\_host implementation. For information, see the [SPI\_HOST HWIP Technical Specification](https://opentitan.org/book/hw/ip/spi_host/index.html). The core code (see [spi\_host](https://github.com/lowRISC/opentitan/tree/master/hw/ip/spi_host)) is reused but the interface to the module is changed to AHB-lite and the number of chip select lines supported is increased to 2. The design provides support for Standard SPI, Dual SPI, or Quad SPI commands. The following figure shows the QSPI flash controller.
-
-*Figure 4: QSPI flash controller*
-
-![](./images/QSPI_flash.png)
-
-#### Operation
-
-Transactions flow through the QSPI block starting with AHB-lite writes to the TXDATA FIFO. Commands are then written and processed by the control FSM, orchestrating transmissions from the TXDATA FIFO and receiving data into the RXDATA FIFO.
-
-The structure of a command depends on the device and the command itself. In the case of a standard SPI device, the host IP always transmits data on qspi\_d\_io[0] and always receives data from the target device on qspi\_d\_io[1]. In Dual or Quad modes, all data lines are bi-directional, thus allowing full bandwidth in transferring data across 4 data lines.
-
-A typical SPI command consists of different segments that are combined as shown in the following example. Each segment can configure the length, speed, and direction. As an example, the following SPI read transaction consists of 2 segments.
-
-*Figure 5: SPI read transaction segments*
-
-![](./images/SPI_read.png)
-
-| Segment \# | Length (Bytes) | Speed    | Direction         | TXDATA FIFO  | RXDATA FIFO        |
-| :--------- | :------------- | :------- | :---------------- | :----------- | :----------------- |
-| 1          | 4  | standard | TX <br>qspi_d_io\[0\] | \[0\] 0x3 (ReadData) <br>\[1\] Addr\[23:16\] <br>\[2\] Addr\[15:8\] <br>\[3\] Addr\[7:0\] |  |
-| 2          | 1  | standard | RX <br>qspi_d_io\[1\] |  | \[0\] Data \[7:0\] |
-
-In this example, the ReadData (0x3) command was written to the TXDATA FIFO, followed by the 3B address. This maps to a total of 4 bytes that are transmitted out across qspi\_d\_io[0] in the first segment. The second segment consists of a read command that receives 1 byte of data from the target device across qspi\_d\_io[1].
-
-QSPI consists of up to four command segments in which the host:
-
-1. Transmits instructions or data at the standard rate
-2. Transmits instructions address or data on 2 or 4 data lines
-3. Holds the bus in a high-impedance state for some number of dummy cycles where neither side transmits
-4. Receives information from the target device at the specified rate (derived from the original command)
-
-The following example shows the QSPI segments.
-
-*Figure 6: QSPI segments*
-
-![](./images/QSPI_segments.png)
-
-| Segment \# | Length (Bytes) | Speed    | Direction           | TXDATA FIFO  | RXDATA FIFO       |
-| :--------- | :------------- | :------- | :------------------ | :----------- | :---------------- |
-| 1          | 1              | standard | TX <br>qspi_d_io\[3:0\] | \[0\] 0x6B (ReadDataQuad) |                   |
-| 2          | 3\*            | quad     | TX <br>qspi_d_io\[3:0\] | \[1\] Addr\[23:16\] <br>\[2\] Addr\[15:8\] <br>\[3\] Addr\[7:0\] |                   |
-| 3          | 2              | N/A      | None (Dummy)        |     |                   |
-| 4          | 1              | quad     | RX <br>qspi_d_io\[3:0\] |       | \[0\] Data\[7:0\] |
-
-Note: In the preceding figure, segment 2 doesn’t show bytes 2 and 3 for brevity.
-
-#### Configuration
-
-The CONFIGOPTS multi-register has one entry per CSB line and holds clock configuration and timing settings that are specific to each peripheral. After the CONFIGOPTS multi-register is programmed for each SPI peripheral device, the values can be left unchanged.
-
-The most common differences between target devices are the requirements for a specific SPI clock phase or polarity, CPOL and CPHA. These clock parameters can be set via the CONFIGOPTS.CPOL or CONFIGOPTS.CPHA register fields.
-
-The SPI clock rate depends on the peripheral clock and a 16b clock divider configured by CONFIGOPTS.CLKDIV. The following equation is used to configure the SPI clock period:
-
-![](./images/Caliptra_eq_SPI_clk_period.png)
-
-By default, CLKDIV is set to 0, which means that the maximum frequency that can be achieved is at most half the frequency of the peripheral clock (Fsck = Fclk/2).
-
-We can rearrange the equation to solve for the CLKDIV:
-
-![](./images/Caliptra_eq_CLKDIV.png)
-
-Assuming a 400MHz target peripheral, and a SPI clock target of 100MHz:
-
-CONFIGOPTS.CLKDIV = (400/(2\*100)) -1 = 1
-
-The following figure shows CONFIGOPTS.
-
-*Figure 7: CONFIGOPTS*
-
-![](./images/CONFIGOPTS.png)
-
-#### Signal descriptions
-
-The QSPI block architecture inputs and outputs are described in the following table.
-
-| Name                | Input or output | Description                                               |
-| :------------------ | :-------------- | :-------------------------------------------------------- |
-| clk_i               | input           | All signal timings are related to the rising edge of clk. |
-| rst_ni              | input           | The reset signal is active LOW and resets the core.       |
-| cio_sck_o           | output          | SPI clock                                                 |
-| cio_sck_en_o        | output          | SPI clock enable                                          |
-| cio_csb_o\[1:0\]    | output          | Chip select \# (one hot, active low)                      |
-| cio_csb_en_o\[1:0\] | output          | Chip select \# enable (one hot, active low)               |
-| cio_csb_sd_o\[3:0\] | output          | SPI data output                                           |
-| cio_csb_sd_en_o     | output          | SPI data output enable                                    |
-| cio_csb_sd_i\[3:0\] | input           | SPI data input                                            |
-
-#### SPI\_HOST IP programming guide
-
-The operation of the SPI\_HOST IP proceeds in seven general steps.
-
-To initialize the IP:
-
-1. Program the CONFIGOPTS multi-register with the appropriate timing and polarity settings for each csb line.
-2. Set the desired interrupt parameters.
-3. Enable the IP.
-
-Then for each command:
-
-4. Load the data to be transmitted into the FIFO using the TXDATA memory window.
-5. Specify the target device by programming the CSID.
-6. Specify the structure of the command by writing each segment into the COMMAND register.
-
-    For multi-segment transactions, assert COMMAND.CSAAT for all but the last command segment.
-
-7. For transactions that expect to receive a reply, the data can then be read back from the RXDATA window.
-
-Steps 4-7 are then repeated for each subsequent command.
-
-### UART
-
-Caliptra implements a UART block that can communicate with a serial device that is accessible to FW over the AHB-lite Interface. This is a configuration that the SoC opts-in by defining CALIPTRA\_INTERNAL\_UART.
-
-The UART block is composed of the uart implementation. For information, see the [UART HWIP Technical Specification](https://opentitan.org/book/hw/ip/uart/). The design provides support for a programmable baud rate. The UART block is shown in the following figure.
-
-*Figure 8: UART block*
-
-![](./images/UART_block.png)
-
-#### Operation
-
-Transactions flow through the UART block starting with an AHB-lite write to WDATA, which triggers the transmit module to start a UART TX serial data transfer. The TX module dequeues the byte from the internal FIFO and shifts it out bit by bit at the baud rate. If TX is not enabled, the output is set high and WDATA in the FIFO is queued up.
-
-The following figure shows the transmit data on the serial lane, starting with the START bit, which is indicated by a high to low transition, followed by the 8 bits of data.
-
-*Figure 9: Serial transmission frame*
-
-![](./images/serial_transmission.png)
-
-On the receive side, after the START bit is detected, the data is sampled at the center of each data bit and stored into a FIFO. A user can monitor the FIFO status and read the data out of RDATA.
-
-#### Configuration
-
-The baud rate can be configured using the CTRL.NCO register field. This should be set using the following equation:
-
-![](./images/Caliptra_eq_NCO.png)
-
-If the desired baud rate is 115,200bps:
-
-![](./images/Caliptra_eq_UART.png)
-
-![](./images/Caliptra_eq_UART2.png)
-
-#### Signal descriptions
-
-The UART block architecture inputs and outputs are described in the following table.
-
-| Name     | Input or output | Description                                               |
-| :------- | :-------------- | :-------------------------------------------------------- |
-| clk_i    | input           | All signal timings are related to the rising edge of clk. |
-| rst_ni   | input           | The reset signal is active LOW and resets the core.       |
-| cio_rx_i | input           | Serial receive bit                                        |
-| cio_tx_o | output          | Serial transmit bit                                       |
 
 ## SoC mailbox
 
@@ -1457,7 +1295,7 @@ The LMS accelerator integrated into SHA256 architecture inputs and outputs are d
 
 The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
 
-## Adams Bridge - Dilitium (ML-DSA)
+## Adams Bridge - Dilithium (ML-DSA)
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx) 
 
