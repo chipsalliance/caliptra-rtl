@@ -62,12 +62,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .sha512_notif     = 0,
     .sha256_error     = 0,
     .sha256_notif     = 0,
-    .qspi_error       = 0,
-    .qspi_notif       = 0,
-    .uart_error       = 0,
-    .uart_notif       = 0,
-    .i3c_error        = 0,
-    .i3c_notif        = 0,
     .soc_ifc_error    = 0,
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
@@ -311,18 +305,6 @@ void caliptra_rt() {
 
         if (cptra_intr_rcv.sha512_acc_error) {
             VPRINTF(ERROR, "Intr received: sha512_acc_error\n");
-        }
-
-        if (cptra_intr_rcv.qspi_error      ) {
-            VPRINTF(ERROR, "Intr received: qspi_error\n");
-        }
-
-        if (cptra_intr_rcv.uart_error      ) {
-            VPRINTF(ERROR, "Intr received: uart_error\n");
-        }
-
-        if (cptra_intr_rcv.i3c_error       ) {
-            VPRINTF(ERROR, "Intr received: i3c_error\n");
         }
 
         if (cptra_intr_rcv.soc_ifc_notif   ) {
@@ -696,18 +678,6 @@ void caliptra_rt() {
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
-        }
-
-        if (cptra_intr_rcv.qspi_notif      ) {
-            VPRINTF(LOW, "Intr received: qspi_notif\n");
-        }
-
-        if (cptra_intr_rcv.uart_notif      ) {
-            VPRINTF(LOW, "Intr received: uart_notif\n");
-        }
-
-        if (cptra_intr_rcv.i3c_notif       ) {
-            VPRINTF(LOW, "Intr received: i3c_notif\n");
         }
     };
 

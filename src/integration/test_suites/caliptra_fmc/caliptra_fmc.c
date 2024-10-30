@@ -44,7 +44,7 @@ volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 #else
     enum printf_verbosity verbosity_g = LOW;
 #endif
-volatile caliptra_intr_received_s cptra_intr_rcv;
+volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 volatile uint32_t                 intr_count       = 0;
 
 
