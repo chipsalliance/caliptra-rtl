@@ -178,8 +178,9 @@ module axi_sub_rd import axi_pkg::*; #(
     // Only make the request to component if we have space in the pipeline to
     // store the result (under worst-case AXI backpressure)
     // To check this, look at the 'ready' output from all stages of the
-    // skidbuffer pipeline
-    always_comb dv = txn_active && &dp_rready;
+    // skidbuffer pipeline (but omit the C_LAT+1 index because that comes from
+    // axi rready)
+    always_comb dv = txn_active && &dp_rready[C_LAT:0];
     always_comb txn_rvalid[0] = dv && !hld;
 
     // Asserts on the final beat of the COMPONENT INF which means it lags the
