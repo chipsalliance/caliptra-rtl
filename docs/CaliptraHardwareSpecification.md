@@ -1393,7 +1393,7 @@ The following tables describe read, write, and status values for key vault block
 | write_entry\[5:1\]         | Key vault entry to store the result.                                                                                                   |
 | hmac_key_dest_valid\[6\]   | HMAC KEY is a valid destination.                                                                                                       |
 | hmac_block_dest_valid\[7\] | HMAC BLOCK is a valid destination.                                                                                                     |
-| mldsa_block_dest_valid\[8\]| MLDSA BLOCK is a valid destination.                                                                                                    |
+| mldsa_seed_dest_valid\[8\] | MLDSA SEED is a valid destination.                                                                                                    |
 | ecc_pkey_dest_valid\[9\]   | ECC PKEY is a valid destination.                                                                                                       |
 | ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination.                                                                                                       |
 | rsvd\[31:11\]              | Reserved field                                                                                                                         |
