@@ -107,7 +107,7 @@ module soc_ifc_reg (
         logic CPTRA_iTRNG_ENTROPY_CONFIG_0;
         logic CPTRA_iTRNG_ENTROPY_CONFIG_1;
         logic [2-1:0]CPTRA_RSVD_REG;
-        logic [12-1:0]fuse_uds_seed;
+        logic [16-1:0]fuse_uds_seed;
         logic [8-1:0]fuse_field_entropy;
         logic [12-1:0]fuse_key_manifest_pk_hash;
         logic fuse_key_manifest_pk_hash_mask;
@@ -244,34 +244,34 @@ module soc_ifc_reg (
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.CPTRA_RSVD_REG[i0] = cpuif_req_masked & (cpuif_addr == 12'h120 + i0*12'h4);
         end
-        for(int i0=0; i0<12; i0++) begin
+        for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.fuse_uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 12'h200 + i0*12'h4);
         end
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.fuse_field_entropy[i0] = cpuif_req_masked & (cpuif_addr == 12'h230 + i0*12'h4);
+            decoded_reg_strb.fuse_field_entropy[i0] = cpuif_req_masked & (cpuif_addr == 12'h240 + i0*12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.fuse_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h250 + i0*12'h4);
+            decoded_reg_strb.fuse_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h260 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 12'h280);
+        decoded_reg_strb.fuse_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 12'h290);
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.fuse_owner_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h284 + i0*12'h4);
+            decoded_reg_strb.fuse_owner_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h294 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2b4);
+        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2c4);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2b8 + i0*12'h4);
+            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2c8 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2c8);
+        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2d8);
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2cc + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2dc + i0*12'h4);
         end
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h32c + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h33c + i0*12'h4);
         end
-        decoded_reg_strb.fuse_life_cycle = cpuif_req_masked & (cpuif_addr == 12'h33c);
-        decoded_reg_strb.fuse_lms_verify = cpuif_req_masked & (cpuif_addr == 12'h340);
-        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h344);
-        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h348);
+        decoded_reg_strb.fuse_life_cycle = cpuif_req_masked & (cpuif_addr == 12'h34c);
+        decoded_reg_strb.fuse_lms_verify = cpuif_req_masked & (cpuif_addr == 12'h350);
+        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h354);
+        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h358);
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h4);
         end
@@ -625,7 +625,7 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } seed;
-        } [12-1:0]fuse_uds_seed;
+        } [16-1:0]fuse_uds_seed;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1470,7 +1470,7 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } seed;
-        } [12-1:0]fuse_uds_seed;
+        } [16-1:0]fuse_uds_seed;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -3076,7 +3076,7 @@ module soc_ifc_reg (
             end
         end
     end
-    for(genvar i0=0; i0<12; i0++) begin
+    for(genvar i0=0; i0<16; i0++) begin
         // Field: soc_ifc_reg.fuse_uds_seed[].seed
         always_comb begin
             automatic logic [31:0] next_c;

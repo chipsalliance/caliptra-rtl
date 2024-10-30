@@ -442,7 +442,7 @@ always_comb begin
 end
 
 kv_write_client #(
-  .DATA_WIDTH(384)
+  .DATA_WIDTH(PV_NUM_DWORDS*PV_DATA_W)
 )
 sha512_result_kv_write
 (
@@ -452,6 +452,7 @@ sha512_result_kv_write
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg_q),
+  .num_dwords(PV_NUM_DWORDS[4:0]),
 
   //interface with kv
   .kv_write(vault_write),

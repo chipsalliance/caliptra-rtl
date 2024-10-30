@@ -496,12 +496,12 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task load_fuses;
     begin
-      for (int i = 0; i < 12; i++)begin
+      for (int i = 0; i < `CLP_OBF_UDS_DWORDS; i++)begin
         write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
       end
       
       $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
-      for (int i = 0; i < 32; i++)begin
+      for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++)begin
           write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
       end
       
@@ -574,13 +574,13 @@ module soc_ifc_tb
       pauser_i_tb     = 0;
 
       //Key for UDS 
-      cptra_uds_tb = 384'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c;
+      cptra_uds_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
+                      256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+                      256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+                      256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
 
       //Key for FE
-      cptra_fe_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
-                     256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                     256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                     256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
+      cptra_fe_tb = 256'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d46;
 
     end
   endtask // init_sim

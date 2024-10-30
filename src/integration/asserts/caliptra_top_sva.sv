@@ -164,9 +164,9 @@ module caliptra_top_sva
       //mldsa seed read
       kv_mldsa_seed_r_flow:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`MLDSA_PATH.kv_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`MLDSA_PATH.kv_read.read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value == `MLDSA_PATH.seed_reg[dword])
+                                            $rose(`MLDSA_PATH.kv_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`MLDSA_PATH.kv_read.read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value == `MLDSA_PATH.seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
                                             )
-                                else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value, `MLDSA_PATH.seed_reg[dword]);
+                                else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value, `MLDSA_PATH.seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword]);
       end
 
       //hmac block read

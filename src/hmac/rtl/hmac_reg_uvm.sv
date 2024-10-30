@@ -1239,7 +1239,7 @@ package hmac_reg_uvm;
                 this.HMAC512_LFSR_SEED[i0].configure(this);
                 
                 this.HMAC512_LFSR_SEED[i0].build();
-                this.default_map.add_reg(this.HMAC512_LFSR_SEED[i0], 'h130 + i0*'h4);
+                this.default_map.add_reg(this.HMAC512_LFSR_SEED[i0], 'h140 + i0*'h4);
             end
             this.HMAC512_KV_RD_KEY_CTRL = new("HMAC512_KV_RD_KEY_CTRL");
             this.HMAC512_KV_RD_KEY_CTRL.configure(this);

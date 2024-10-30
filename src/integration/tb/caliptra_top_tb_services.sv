@@ -413,7 +413,7 @@ module caliptra_top_tb_services
     logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
     logic [0:11][31:0]   ecc_privkey_tb = 384'hF274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
-    logic [0:11][31:0]   mldsa_seed_tb  = 384'h0a00409327d15f67121d0737d5e4ce3f28fe43a2d4f06807858a76469cf85c2d_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b; //fixme padded with junk
+    logic [11:0][31:0]   mldsa_seed_tb  = 384'h_55555555555555555555555555555555_9340000a_675fd127_37071d12_3fcee4d5_a243fe28_0768f0d4_46768a85_2d5cf89c; //fixme padded with junk
 
     genvar dword_i, slot_id;
     generate 
