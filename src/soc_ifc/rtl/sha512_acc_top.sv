@@ -134,9 +134,11 @@ module sha512_acc_top
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
+                   .restore_cmd(1'b0),
                    .mode(sha_mode),
 
                    .block_msg(block_reg),
+                   .restore_digest('0),
 
                    .ready(core_ready),
 

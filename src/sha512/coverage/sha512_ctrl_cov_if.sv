@@ -26,6 +26,7 @@ interface sha512_ctrl_cov_if
     logic next;
     logic [1 : 0] mode;
     logic zeroize;
+    logic restore;
     logic ready;
     logic valid;
     
@@ -39,6 +40,7 @@ interface sha512_ctrl_cov_if
     assign init = sha512_ctrl.sha512_inst.init_reg;
     assign next = sha512_ctrl.sha512_inst.next_reg;
     assign mode = sha512_ctrl.sha512_inst.mode_reg;
+    assign restore = sha512_ctrl.sha512_inst.restore_reg;
     assign zeroize = sha512_ctrl.sha512_inst.zeroize_reg;
     assign ready = sha512_ctrl.sha512_inst.ready_reg;
     assign valid = sha512_ctrl.sha512_inst.digest_valid_reg;
@@ -57,6 +59,7 @@ interface sha512_ctrl_cov_if
         init_cp: coverpoint init;
         next_cp: coverpoint next;
         mode_cp: coverpoint mode;
+        restore_cp: coverpoint restore;
         zeroize_cp: coverpoint zeroize;
         ready_cp: coverpoint ready;
         valid_cp: coverpoint valid;
@@ -78,6 +81,7 @@ interface sha512_ctrl_cov_if
         zeroize_pcr_cp: cross zeroize, gen_hash_start;
         zeroize_init_cp: cross zeroize, init;
         zeroize_next_cp: cross zeroize, next;
+        zeroize_restore_cp: cross zeroize, restore;
 
     endgroup
 

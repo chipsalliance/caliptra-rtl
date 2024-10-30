@@ -407,8 +407,6 @@ always_comb begin
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
-    intr[`VEER_INTR_VEC_MLDSA_ERROR  -1]          = mldsa_error_intr;
-    intr[`VEER_INTR_VEC_MLDSA_NOTIF  -1]          = mldsa_notif_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;

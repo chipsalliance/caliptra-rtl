@@ -3839,6 +3839,8 @@
 #define SHA512_REG_SHA512_CTRL_ZEROIZE_MASK                                                         (0x10)
 #define SHA512_REG_SHA512_CTRL_LAST_LOW                                                             (5)
 #define SHA512_REG_SHA512_CTRL_LAST_MASK                                                            (0x20)
+#define SHA512_REG_SHA512_CTRL_RESTORE_LOW                                                          (6)
+#define SHA512_REG_SHA512_CTRL_RESTORE_MASK                                                         (0x40)
 #define CLP_SHA512_REG_SHA512_STATUS                                                                (0x10020018)
 #define SHA512_REG_SHA512_STATUS                                                                    (0x18)
 #define SHA512_REG_SHA512_STATUS_READY_LOW                                                          (0)

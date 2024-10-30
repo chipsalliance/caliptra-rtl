@@ -21,6 +21,8 @@
 //
 //======================================================================
 
+`include "caliptra_reg_defines.svh"
+
 module sha512_ctrl_32bit_tb 
   import kv_defines_pkg::*;
   import pv_defines_pkg::*;
@@ -34,84 +36,15 @@ module sha512_ctrl_32bit_tb
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
-  // The address map.
-  parameter BASE_ADDR            = 32'h40000000;
-
-  parameter ADDR_NAME0           = BASE_ADDR + 32'h00000000;
-  parameter ADDR_NAME1           = BASE_ADDR + 32'h00000004;
-  parameter ADDR_VERSION0        = BASE_ADDR + 32'h00000008;
-  parameter ADDR_VERSION1        = BASE_ADDR + 32'h0000000c;
-
-  parameter ADDR_CTRL            = BASE_ADDR + 32'h00000010;
-  parameter CTRL_INIT_BIT        = 0;
-  parameter CTRL_NEXT_BIT        = 1;
-  parameter CTRL_MODE_LOW_BIT    = 2;
-  parameter CTRL_MODE_HIGH_BIT   = 3;
-  parameter CTRL_WORK_FACTOR_BIT = 7;
-
-  parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
-  parameter STATUS_READY_BIT     = 0;
-  parameter STATUS_VALID_BIT     = 1;
-
-  parameter ADDR_WORK_FACTOR_NUM = BASE_ADDR + 32'h00000020;
-
-  parameter ADDR_BLOCK0          = BASE_ADDR + 32'h00000080;
-  parameter ADDR_BLOCK1          = BASE_ADDR + 32'h00000084;
-  parameter ADDR_BLOCK2          = BASE_ADDR + 32'h00000088;
-  parameter ADDR_BLOCK3          = BASE_ADDR + 32'h0000008c;
-  parameter ADDR_BLOCK4          = BASE_ADDR + 32'h00000090;
-  parameter ADDR_BLOCK5          = BASE_ADDR + 32'h00000094;
-  parameter ADDR_BLOCK6          = BASE_ADDR + 32'h00000098;
-  parameter ADDR_BLOCK7          = BASE_ADDR + 32'h0000009c;
-  parameter ADDR_BLOCK8          = BASE_ADDR + 32'h000000a0;
-  parameter ADDR_BLOCK9          = BASE_ADDR + 32'h000000a4;
-  parameter ADDR_BLOCK10         = BASE_ADDR + 32'h000000a8;
-  parameter ADDR_BLOCK11         = BASE_ADDR + 32'h000000ac;
-  parameter ADDR_BLOCK12         = BASE_ADDR + 32'h000000b0;
-  parameter ADDR_BLOCK13         = BASE_ADDR + 32'h000000b4;
-  parameter ADDR_BLOCK14         = BASE_ADDR + 32'h000000b8;
-  parameter ADDR_BLOCK15         = BASE_ADDR + 32'h000000bc;
-  parameter ADDR_BLOCK16         = BASE_ADDR + 32'h000000c0;
-  parameter ADDR_BLOCK17         = BASE_ADDR + 32'h000000c4;
-  parameter ADDR_BLOCK18         = BASE_ADDR + 32'h000000c8;
-  parameter ADDR_BLOCK19         = BASE_ADDR + 32'h000000cc;
-  parameter ADDR_BLOCK20         = BASE_ADDR + 32'h000000d0;
-  parameter ADDR_BLOCK21         = BASE_ADDR + 32'h000000d4;
-  parameter ADDR_BLOCK22         = BASE_ADDR + 32'h000000d8;
-  parameter ADDR_BLOCK23         = BASE_ADDR + 32'h000000dc;
-  parameter ADDR_BLOCK24         = BASE_ADDR + 32'h000000e0;
-  parameter ADDR_BLOCK25         = BASE_ADDR + 32'h000000e4;
-  parameter ADDR_BLOCK26         = BASE_ADDR + 32'h000000e8;
-  parameter ADDR_BLOCK27         = BASE_ADDR + 32'h000000ec;
-  parameter ADDR_BLOCK28         = BASE_ADDR + 32'h000000f0;
-  parameter ADDR_BLOCK29         = BASE_ADDR + 32'h000000f4;
-  parameter ADDR_BLOCK30         = BASE_ADDR + 32'h000000f8;
-  parameter ADDR_BLOCK31         = BASE_ADDR + 32'h000000fc;
-
-  parameter ADDR_DIGEST0         = BASE_ADDR + 32'h00000100;
-  parameter ADDR_DIGEST1         = BASE_ADDR + 32'h00000104;
-  parameter ADDR_DIGEST2         = BASE_ADDR + 32'h00000108;
-  parameter ADDR_DIGEST3         = BASE_ADDR + 32'h0000010c;
-  parameter ADDR_DIGEST4         = BASE_ADDR + 32'h00000110;
-  parameter ADDR_DIGEST5         = BASE_ADDR + 32'h00000114;
-  parameter ADDR_DIGEST6         = BASE_ADDR + 32'h00000118;
-  parameter ADDR_DIGEST7         = BASE_ADDR + 32'h0000011c;
-  parameter ADDR_DIGEST8         = BASE_ADDR + 32'h00000120;
-  parameter ADDR_DIGEST9         = BASE_ADDR + 32'h00000124;
-  parameter ADDR_DIGEST10        = BASE_ADDR + 32'h00000128;
-  parameter ADDR_DIGEST11        = BASE_ADDR + 32'h0000012c;
-  parameter ADDR_DIGEST12        = BASE_ADDR + 32'h00000130;
-  parameter ADDR_DIGEST13        = BASE_ADDR + 32'h00000134;
-  parameter ADDR_DIGEST14        = BASE_ADDR + 32'h00000138;
-  parameter ADDR_DIGEST15        = BASE_ADDR + 32'h0000013c;
-
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
   parameter MODE_SHA_384         = 2'h2;
   parameter MODE_SHA_512         = 2'h3;
 
-  parameter CTRL_INIT_VALUE      = 2'h1;
-  parameter CTRL_NEXT_VALUE      = 2'h2;
+  parameter INIT_CMD             = (1 << `SHA512_REG_SHA512_CTRL_INIT_LOW) & (`SHA512_REG_SHA512_CTRL_INIT_MASK);
+  parameter NEXT_CMD             = (1 << `SHA512_REG_SHA512_CTRL_NEXT_LOW) & (`SHA512_REG_SHA512_CTRL_NEXT_MASK);
+  parameter RESTORE_CMD          = (1 << `SHA512_REG_SHA512_CTRL_RESTORE_LOW) & (`SHA512_REG_SHA512_CTRL_RESTORE_MASK);
+  parameter ZEROIZE_CMD          = (1 << `SHA512_REG_SHA512_CTRL_ZEROIZE_LOW) & (`SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
 
   parameter AHB_HTRANS_IDLE      = 0;
   parameter AHB_HTRANS_BUSY      = 1;
@@ -312,7 +245,7 @@ module sha512_ctrl_32bit_tb
 
       while (read_data == 0)
         begin
-          read_single_word(ADDR_STATUS);
+          read_single_word(`SHA512_REG_SHA512_STATUS);
         end
     end
   endtask // wait_ready
@@ -375,41 +308,51 @@ module sha512_ctrl_32bit_tb
   //----------------------------------------------------------------
   task write_block(input [1023 : 0] block);
     begin
-      write_single_word(ADDR_BLOCK0,  block[1023 : 992]);
-      write_single_word(ADDR_BLOCK1,  block[991  : 960]);
-      write_single_word(ADDR_BLOCK2,  block[959  : 928]);
-      write_single_word(ADDR_BLOCK3,  block[927  : 896]);
-      write_single_word(ADDR_BLOCK4,  block[895  : 864]);
-      write_single_word(ADDR_BLOCK5,  block[863  : 832]);
-      write_single_word(ADDR_BLOCK6,  block[831  : 800]);
-      write_single_word(ADDR_BLOCK7,  block[799  : 768]);
-      write_single_word(ADDR_BLOCK8,  block[767  : 736]);
-      write_single_word(ADDR_BLOCK9,  block[735  : 704]);
-      write_single_word(ADDR_BLOCK10, block[703  : 672]);
-      write_single_word(ADDR_BLOCK11, block[671  : 640]);
-      write_single_word(ADDR_BLOCK12, block[639  : 608]);
-      write_single_word(ADDR_BLOCK13, block[607  : 576]);
-      write_single_word(ADDR_BLOCK14, block[575  : 544]);
-      write_single_word(ADDR_BLOCK15, block[543  : 512]);
-      write_single_word(ADDR_BLOCK16, block[511  : 480]);
-      write_single_word(ADDR_BLOCK17, block[479  : 448]);
-      write_single_word(ADDR_BLOCK18, block[447  : 416]);
-      write_single_word(ADDR_BLOCK19, block[415  : 384]);
-      write_single_word(ADDR_BLOCK20, block[383  : 352]);
-      write_single_word(ADDR_BLOCK21, block[351  : 320]);
-      write_single_word(ADDR_BLOCK22, block[319  : 288]);
-      write_single_word(ADDR_BLOCK23, block[287  : 256]);
-      write_single_word(ADDR_BLOCK24, block[255  : 224]);
-      write_single_word(ADDR_BLOCK25, block[223  : 192]);
-      write_single_word(ADDR_BLOCK26, block[191  : 160]);
-      write_single_word(ADDR_BLOCK27, block[159  : 128]);
-      write_single_word(ADDR_BLOCK28, block[127  :  96]);
-      write_single_word(ADDR_BLOCK29, block[95   :  64]);
-      write_single_word(ADDR_BLOCK30, block[63   :  32]);
-      write_single_word(ADDR_BLOCK31, block[31   :   0]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_0,  block[1023 : 992]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_1,  block[991  : 960]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_2,  block[959  : 928]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_3,  block[927  : 896]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_4,  block[895  : 864]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_5,  block[863  : 832]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_6,  block[831  : 800]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_7,  block[799  : 768]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_8,  block[767  : 736]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_9,  block[735  : 704]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_10, block[703  : 672]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_11, block[671  : 640]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_12, block[639  : 608]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_13, block[607  : 576]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_14, block[575  : 544]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_15, block[543  : 512]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_16, block[511  : 480]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_17, block[479  : 448]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_18, block[447  : 416]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_19, block[415  : 384]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_20, block[383  : 352]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_21, block[351  : 320]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_22, block[319  : 288]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_23, block[287  : 256]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_24, block[255  : 224]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_25, block[223  : 192]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_26, block[191  : 160]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_27, block[159  : 128]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_28, block[127  :  96]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_29, block[95   :  64]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_30, block[63   :  32]);
+      write_single_word(`SHA512_REG_SHA512_BLOCK_31, block[31   :   0]);
     end
   endtask // write_block
 
+  //----------------------------------------------------------------
+  // mode_cmd()
+  //
+  // Create the mode_cmd needed for a given mode.
+  //----------------------------------------------------------------
+  function [31 : 0] mode_cmd(input [1:0] mode);
+    begin
+      mode_cmd = (mode << `SHA512_REG_SHA512_CTRL_MODE_LOW) & `SHA512_REG_SHA512_CTRL_MODE_MASK;
+    end
+  endfunction
 
   //----------------------------------------------------------------
   // get_mask()
@@ -466,41 +409,67 @@ module sha512_ctrl_32bit_tb
   //----------------------------------------------------------------
   task read_digest;
     begin
-      read_single_word(ADDR_DIGEST0);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_0);
       digest_data[511 : 480] = read_data;
-      read_single_word(ADDR_DIGEST1);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_1);
       digest_data[479 : 448] = read_data;
-      read_single_word(ADDR_DIGEST2);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_2);
       digest_data[447 : 416] = read_data;
-      read_single_word(ADDR_DIGEST3);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_3);
       digest_data[415 : 384] = read_data;
-      read_single_word(ADDR_DIGEST4);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_4);
       digest_data[383 : 352] = read_data;
-      read_single_word(ADDR_DIGEST5);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_5);
       digest_data[351 : 320] = read_data;
-      read_single_word(ADDR_DIGEST6);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_6);
       digest_data[319 : 288] = read_data;
-      read_single_word(ADDR_DIGEST7);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_7);
       digest_data[287 : 256] = read_data;
-      read_single_word(ADDR_DIGEST8);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_8);
       digest_data[255 : 224] = read_data;
-      read_single_word(ADDR_DIGEST9);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_9);
       digest_data[223 : 192] = read_data;
-      read_single_word(ADDR_DIGEST10);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_10);
       digest_data[191 : 160] = read_data;
-      read_single_word(ADDR_DIGEST11);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_11);
       digest_data[159 : 128] = read_data;
-      read_single_word(ADDR_DIGEST12);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_12);
       digest_data[127 :  96] = read_data;
-      read_single_word(ADDR_DIGEST13);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_13);
       digest_data[95  :  64] = read_data;
-      read_single_word(ADDR_DIGEST14);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_14);
       digest_data[63  :  32] = read_data;
-      read_single_word(ADDR_DIGEST15);
+      read_single_word(`SHA512_REG_SHA512_DIGEST_15);
       digest_data[31  :   0] = read_data;
     end
   endtask // read_digest
 
+
+  //----------------------------------------------------------------
+  // write_digest()
+  //
+  // Write the given digest to the dut.
+  //----------------------------------------------------------------
+  task write_digest(input [511 : 0] digest);
+    begin
+      write_single_word(`SHA512_REG_SHA512_DIGEST_0,  digest[511  : 480]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_1,  digest[479  : 448]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_2,  digest[447  : 416]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_3,  digest[415  : 384]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_4,  digest[383  : 352]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_5,  digest[351  : 320]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_6,  digest[319  : 288]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_7,  digest[287  : 256]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_8,  digest[255  : 224]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_9,  digest[223  : 192]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_10, digest[191  : 160]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_11, digest[159  : 128]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_12, digest[127  :  96]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_13, digest[95   :  64]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_14, digest[63   :  32]);
+      write_single_word(`SHA512_REG_SHA512_DIGEST_15, digest[31   :   0]);
+    end
+  endtask // write_digest
 
   //----------------------------------------------------------------
   // check_name_version()
@@ -514,13 +483,13 @@ module sha512_ctrl_32bit_tb
     reg [31 : 0] version1;
     begin
 
-      read_single_word(ADDR_NAME0);
+      read_single_word(`SHA512_REG_SHA512_NAME_0);
       name0 = read_data;
-      read_single_word(ADDR_NAME1);
+      read_single_word(`SHA512_REG_SHA512_NAME_1);
       name1 = read_data;
-      read_single_word(ADDR_VERSION0);
+      read_single_word(`SHA512_REG_SHA512_VERSION_0);
       version0 = read_data;
-      read_single_word(ADDR_VERSION1);
+      read_single_word(`SHA512_REG_SHA512_VERSION_1);
       version1 = read_data;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
@@ -548,7 +517,6 @@ module sha512_ctrl_32bit_tb
                          input [511 : 0]  expected);
 
     reg [511 : 0] mask;
-    reg [511 : 0] masked_data;
     reg [31  : 0] start_time;
     reg [31 : 0] end_time;
     begin
@@ -556,7 +524,7 @@ module sha512_ctrl_32bit_tb
 
       start_time = cycle_ctr;
       write_block(block);
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
       
 
       #CLK_PERIOD;
@@ -568,17 +536,11 @@ module sha512_ctrl_32bit_tb
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
 
       mask = get_mask(mode);
-      masked_data = digest_data & mask;
 
-      if (DEBUG)
-        begin
-          $display("masked_data = 0x%0128x", masked_data);
-        end
-
-      if (masked_data == expected)
+      if ((digest_data & mask) == (expected & mask))
         begin
           $display("TC%01d: OK.", tc_ctr);
         end
@@ -586,7 +548,7 @@ module sha512_ctrl_32bit_tb
         begin
           $display("TC%01d: ERROR.", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
       $display("*** TC%01d - Single block test done.", tc_ctr);
@@ -610,19 +572,15 @@ module sha512_ctrl_32bit_tb
                          input [511 : 0]  expected1
                         );
     reg [511 : 0] mask;
-    reg [511 : 0] masked_data0;
-    reg [511 : 0] masked_data1;
     reg [31 : 0] start_time;
     reg [31 : 0] end_time;
 
     begin
       $display("*** TC%01d - Double block test started.", tc_ctr);
 
-      mask = get_mask(mode);
-
       // First block
       write_block(block0);
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
       start_time = cycle_ctr;
       #CLK_PERIOD;
       hsel_i_tb       = 0;
@@ -631,8 +589,9 @@ module sha512_ctrl_32bit_tb
       wait_ready();
       read_digest();
 
-      masked_data0 = expected0 & mask;
-      if (digest_data == masked_data0)
+      mask = get_mask(mode);
+
+      if ((digest_data & mask) == (expected0 & mask))
         begin
           $display("TC%01d first block: OK.", tc_ctr);
         end
@@ -647,7 +606,7 @@ module sha512_ctrl_32bit_tb
 
       // Final block
       write_block(block1);
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_NEXT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -657,11 +616,9 @@ module sha512_ctrl_32bit_tb
       $display("*** Double block test processing time = %01d cycles", end_time);
       read_digest();
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
 
-      masked_data1 = digest_data & mask;
-
-      if (masked_data1 == expected1)
+      if ((digest_data & mask) == (expected1 & mask))
         begin
           $display("TC%01d final block: OK.", tc_ctr);
         end
@@ -669,7 +626,7 @@ module sha512_ctrl_32bit_tb
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected1);
-          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data1);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -693,7 +650,6 @@ module sha512_ctrl_32bit_tb
                          input [511 : 0]  expected
                         );
     reg [511 : 0] mask;
-    reg [511 : 0] masked_data;
     reg [31 : 0] start_time;
     reg [31 : 0] end_time;
 
@@ -702,7 +658,7 @@ module sha512_ctrl_32bit_tb
 
       // First block
       write_block(block0);
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
       start_time = cycle_ctr;
       #CLK_PERIOD;
       hsel_i_tb       = 0;
@@ -712,7 +668,7 @@ module sha512_ctrl_32bit_tb
       wait_ready();
 
       // Final block
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_NEXT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -723,9 +679,8 @@ module sha512_ctrl_32bit_tb
       read_digest();
 
       mask = get_mask(mode);
-      masked_data = digest_data & mask;
 
-      if (masked_data == expected)
+      if ((digest_data & mask) == (expected & mask))
         begin
           $display("TC%01d final block: OK.", tc_ctr);
         end
@@ -733,7 +688,7 @@ module sha512_ctrl_32bit_tb
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -742,7 +697,84 @@ module sha512_ctrl_32bit_tb
     end
   endtask // double_block_test
 
+  //----------------------------------------------------------------
+  // restore_test()
+  //
+  //
+  // Perform test of a double block digest with restore feature. 
+  //----------------------------------------------------------------
+  task restore_test(input [7 : 0]    tc_number,
+                         input [1 : 0]    mode,
+                         input [1023 : 0] block0,
+                         input [1023 : 0] block1,
+                         input [511 : 0]  expected0,
+                         input [511 : 0]  expected1
+                        );
+    reg [511 : 0] mask;
 
+    begin
+      $display("*** TC%01d - Restore block test started.", tc_ctr);
+
+      // First block
+      write_block(block0);
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      wait_ready();
+      read_digest();
+
+      mask = get_mask(mode);
+
+      if ((digest_data & mask) == (expected0 & mask))
+        begin
+          $display("TC%01d first block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in first digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      
+
+      //zeroize core to test restore
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD);
+
+
+      // Final block
+      write_block(block1);
+      write_digest(digest_data);
+      write_single_word(`SHA512_REG_SHA512_CTRL, RESTORE_CMD | NEXT_CMD | mode_cmd(mode));
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      wait_ready();
+
+      read_digest();
+
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
+
+      if ((digest_data & mask) == (expected1 & mask))
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected1);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Double block test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // double_block_test
+  
   //----------------------------------------------------------------
   // continuous_cmd_test()
   //
@@ -756,7 +788,6 @@ module sha512_ctrl_32bit_tb
                          input [511 : 0]  expected
                         );
     reg [511 : 0] mask;
-    reg [511 : 0] masked_data;
     reg [31 : 0] start_time;
     reg [31 : 0] end_time;
 
@@ -765,7 +796,7 @@ module sha512_ctrl_32bit_tb
 
       // First block
       write_block(block0);
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
       start_time = cycle_ctr;
       #CLK_PERIOD;
       hsel_i_tb       = 0;
@@ -774,9 +805,9 @@ module sha512_ctrl_32bit_tb
 
       for (int i=0; i<10; i++)
         begin
-          write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+          write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
-          write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_NEXT_VALUE});
+          write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
         end
 
@@ -785,7 +816,7 @@ module sha512_ctrl_32bit_tb
       write_block(block1);
 
       // Final block
-      write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_NEXT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -793,9 +824,9 @@ module sha512_ctrl_32bit_tb
 
       for (int i=0; i<10; i++)
         begin
-          write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_INIT_VALUE});
+          write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
-          write_single_word(ADDR_CTRL, {28'h0, mode, CTRL_NEXT_VALUE});
+          write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
         end
 
@@ -806,9 +837,8 @@ module sha512_ctrl_32bit_tb
       read_digest();
 
       mask = get_mask(mode);
-      masked_data = digest_data & mask;
 
-      if (masked_data == expected)
+      if ((digest_data & mask) == (expected & mask))
         begin
           $display("TC%01d final block: OK.", tc_ctr);
         end
@@ -816,7 +846,7 @@ module sha512_ctrl_32bit_tb
         begin
           $display("TC%01d: ERROR in final digest", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
-          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
         end
 
@@ -843,10 +873,10 @@ module sha512_ctrl_32bit_tb
       // First test: assert zeroize when engine is working 
       write_block(block0);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b0, mode, CTRL_INIT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
       #(10 * CLK_PERIOD);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -868,7 +898,7 @@ module sha512_ctrl_32bit_tb
       // Second test: assert zeroize with INIT
       write_block(block0);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, mode, CTRL_INIT_VALUE}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode) | ZEROIZE_CMD); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
@@ -891,7 +921,7 @@ module sha512_ctrl_32bit_tb
       // Third test: assert zeroize with NEXT      
       write_block(block0);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, mode, CTRL_NEXT_VALUE}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode) | ZEROIZE_CMD); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
@@ -914,10 +944,10 @@ module sha512_ctrl_32bit_tb
       // Forth test: assert zeroize after NEXT      
       write_block(block0);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b0, mode, CTRL_NEXT_VALUE});
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
       #(10 * CLK_PERIOD);
 
-      write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -1023,6 +1053,15 @@ module sha512_ctrl_32bit_tb
 
       zeroize_test(8'h0b, MODE_SHA_384, double_block_one, double_block_two, tc12_expected);
 
+      // SHA-512 restore test.
+      restore_test(8'h0c, MODE_SHA_512, double_block_one, double_block_two, tc5_expected, tc6_expected);
+      
+      restore_test(8'h0d, MODE_SHA_512_224, double_block_one, double_block_two, tc7_expected, tc8_expected);
+
+      restore_test(8'h0e, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected, tc10_expected);
+
+      restore_test(8'h0f, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
+      
       display_test_result();
       
       $display("   -- Testbench for sha512 done. --");

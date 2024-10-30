@@ -81,6 +81,7 @@ module sha512
   //----------------------------------------------------------------
   reg init_reg;
   reg next_reg;
+  reg restore_reg;
   reg ready_reg;
   reg [1 : 0] mode_reg;
   logic zeroize_reg;
@@ -102,7 +103,7 @@ module sha512
   logic [PV_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]     pcr_sign;
   logic                                             pcr_sign_we;
   reg                                               digest_valid_reg;
-  logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]    get_mask;
+  logic                                             digest_we;
   
   sha512_reg__in_t hwif_in;
   sha512_reg__out_t hwif_out;
@@ -157,6 +158,7 @@ module sha512
   wire [BLOCK_SIZE-1 : 0]                       core_block;
   wire [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] core_digest;
   wire                                          core_digest_valid;
+  logic [DIG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] restore_digest;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -188,9 +190,11 @@ module sha512
 
                    .init_cmd(init_reg),
                    .next_cmd(next_reg),
+                   .restore_cmd(restore_reg),
                    .mode(mode_reg),
 
                    .block_msg(core_block),
+                   .restore_digest(restore_digest),
 
                    .ready(core_ready),
 
@@ -217,6 +221,7 @@ module sha512
       pcr_hash_extend_ip   <= '0;
       hash_extend_entry    <= '0;
       kv_read_data_present <= '0;
+      digest_we            <= '0;
     end
     else if (zeroize_reg) begin
       ready_reg            <= '0;
@@ -225,15 +230,20 @@ module sha512
       kv_reg               <= '0;
       pcr_sign_reg         <= '0;
       kv_read_data_present <= '0;
+      digest_we            <= '0;
     end
     else begin
       ready_reg        <= core_ready;
       digest_valid_reg <= core_digest_valid;
 
-      if (core_digest_valid & ~digest_valid_reg & ~(dest_keyvault | kv_read_data_present))
-        digest_reg <= core_digest & get_mask;
+      if (core_digest_valid & ~digest_valid_reg & ~(dest_keyvault | kv_read_data_present)) begin
+        digest_reg <= core_digest;
+        digest_we <= 1'b1;
+      end
+      else
+        digest_we <= '0;
       if (core_digest_valid & ~digest_valid_reg & (dest_keyvault | kv_read_data_present))
-        kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
+        kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
       if (pcr_sign_we)
         pcr_sign_reg <= pcr_sign;
 
@@ -247,18 +257,8 @@ module sha512
   end // reg_update
 
   always_comb begin
-    unique case (mode_reg)
-      2'b00 :    get_mask = {{7{32'hffffffff}}, {9{32'h00000000}}};   //SHA512/224
-      2'b01 :    get_mask = {{8{32'hffffffff}}, {8{32'h00000000}}};   //SHA512/256
-      2'b10 :    get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384
-      default :  get_mask = {16{32'hffffffff}};                       //SHA512
-    endcase
-  end
-
-
-  always_comb begin
     pcr_sign_we = (dest_data_avail & gen_hash_ip);
-    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS] & get_mask[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
+    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
   end
 
   //register hw interface
@@ -273,6 +273,7 @@ module sha512
     //Mask commands when keyvault is busy to prevent runs with partial keys.
     init_reg = gen_hash_ip ? gen_hash_init_reg : (hwif_out.SHA512_CTRL.INIT.value & kv_src_ready);
     next_reg = gen_hash_ip ? gen_hash_next_reg : (hwif_out.SHA512_CTRL.NEXT.value & kv_src_ready);
+    restore_reg = gen_hash_ip ? '0 : (hwif_out.SHA512_CTRL.RESTORE.value & kv_src_ready);
     mode_reg = gen_hash_ip ? 2'b10 : hwif_out.SHA512_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
@@ -283,6 +284,8 @@ module sha512
 
     //output comes in big endian
     for (int dword =0; dword < DIG_NUM_DWORDS; dword++) begin
+      restore_digest[dword] = hwif_out.SHA512_DIGEST[(DIG_NUM_DWORDS-1)-dword].DIGEST.value;
+      hwif_in.SHA512_DIGEST[dword].DIGEST.we = zeroize_reg? 0 : digest_we;
       hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[(DIG_NUM_DWORDS-1)-dword];
       hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
@@ -385,6 +388,7 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
+always_comb kv_read = '0;
 always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
 always_comb vault_rd_resp = pv_rd_resp;

@@ -3182,7 +3182,6 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
                     ((mldsa_seed[i]>> 8) & 0x0000ff00) |
                     ((mldsa_seed[i]>>24) & 0x000000ff); //mldsa_seed[i];
 
-
     for (int i = 0; i < 8; i++)
         sign_rnd[7-i] = mldsa_sign_rnd[i]; //TODO: add byte swap - not doing now to save sim time
 

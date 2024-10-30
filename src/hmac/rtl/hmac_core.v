@@ -22,9 +22,6 @@
 //======================================================================
 
 module hmac_core
-#(
-      parameter [383 : 0]   LFSR_INIT_SEED  = 384'hc48555929cd58779f4819c1e6570c2ef20bccd503284e2d366f3273a66e9719b07ac999c80740d6277af88ceb4c3029c // a random value
-)
 (
       // Clock and reset.
       input wire            clk,
@@ -154,8 +151,7 @@ module hmac_core
   generate 
       for (i=0; i < 12; i++) begin : gen_lfsr
           hmac_lfsr #(
-              .REG_SIZE(32),
-              .INIT_SEED(LFSR_INIT_SEED[i*32 +: 32])
+              .REG_SIZE(32)
               )
               lfsr_inst_i
               (

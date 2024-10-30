@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
 
       - name: Install peakrdl
         run: |
@@ -31,6 +33,7 @@ jobs:
 
       - name: Generate docs
         run: |
+          export ADAMSBRIDGE_ROOT=./submodules/adams-bridge
           echo Running script
           tools/scripts/reg_doc_gen.sh
 

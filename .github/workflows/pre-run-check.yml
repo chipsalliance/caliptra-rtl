@@ -201,4 +201,5 @@ jobs:
             TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
         run: |
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
             $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"

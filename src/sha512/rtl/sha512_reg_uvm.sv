@@ -75,12 +75,14 @@ package sha512_reg_uvm;
         sha512_reg__SHA512_CTRL_bit_cg MODE_bit_cg[2];
         sha512_reg__SHA512_CTRL_bit_cg ZEROIZE_bit_cg[1];
         sha512_reg__SHA512_CTRL_bit_cg LAST_bit_cg[1];
+        sha512_reg__SHA512_CTRL_bit_cg RESTORE_bit_cg[1];
         sha512_reg__SHA512_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field MODE;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field LAST;
+        rand uvm_reg_field RESTORE;
 
         function new(string name = "sha512_reg__SHA512_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -102,12 +104,15 @@ package sha512_reg_uvm;
             this.ZEROIZE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             this.LAST = new("LAST");
             this.LAST.configure(this, 1, 5, "WO", 1, 'h0, 1, 1, 0);
+            this.RESTORE = new("RESTORE");
+            this.RESTORE.configure(this, 1, 6, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(LAST_bit_cg[bt]) LAST_bit_cg[bt] = new();
+                foreach(RESTORE_bit_cg[bt]) RESTORE_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -200,7 +205,7 @@ package sha512_reg_uvm;
 
         virtual function void build();
             this.DIGEST = new("DIGEST");
-            this.DIGEST.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.DIGEST.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(DIGEST_bit_cg[bt]) DIGEST_bit_cg[bt] = new();
             end

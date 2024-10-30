@@ -45,10 +45,12 @@ module sha512_core(
                    // Control.
                    input wire            init_cmd,
                    input wire            next_cmd,
+                   input wire            restore_cmd,
                    input wire [1 : 0]    mode,
                    
                    // Data port.
                    input wire [1023 : 0] block_msg,
+                   input wire [511  : 0] restore_digest,
 
                    output wire           ready,
                    output wire [511 : 0] digest,
@@ -134,6 +136,7 @@ module sha512_core(
   reg state_update;
 
   reg first_block;
+  reg restore;
 
   reg [63 : 0] t1;
   reg [63 : 0] t2;
@@ -327,6 +330,18 @@ module sha512_core(
           H7_new = H0_7;
           H_we = 1;
         end
+      else if (restore)
+        begin
+          H0_new  = restore_digest[511 : 448];
+          H1_new  = restore_digest[447 : 384];
+          H2_new  = restore_digest[383 : 320];
+          H3_new  = restore_digest[319 : 256];
+          H4_new  = restore_digest[255 : 192];
+          H5_new  = restore_digest[191 : 128];
+          H6_new  = restore_digest[127 :  64];
+          H7_new  = restore_digest[63  :   0];
+          H_we = 1;
+        end
 
       if (digest_update)
         begin
@@ -415,6 +430,18 @@ module sha512_core(
               h_new  = H0_7;
               a_h_we = 1;
             end
+          else if (restore)
+            begin
+              a_new  = restore_digest[511 : 448];
+              b_new  = restore_digest[447 : 384];
+              c_new  = restore_digest[383 : 320];
+              d_new  = restore_digest[319 : 256];
+              e_new  = restore_digest[255 : 192];
+              f_new  = restore_digest[191 : 128];
+              g_new  = restore_digest[127 :  64];
+              h_new  = restore_digest[63  :   0];
+              a_h_we = 1;
+            end
           else
             begin
               a_new  = H0_reg;
@@ -491,6 +518,7 @@ module sha512_core(
       ready_we            = 1'b0;
       sha512_ctrl_new     = CTRL_IDLE;
       sha512_ctrl_we      = 1'b0;
+      restore             = 1'b0;
 
       unique case (sha512_ctrl_reg)
         CTRL_IDLE:
@@ -521,6 +549,7 @@ module sha512_core(
                 digest_valid_we     = 1;
                 sha512_ctrl_new     = CTRL_ROUNDS;
                 sha512_ctrl_we      = 1;
+                restore             = restore_cmd;
               end
           end
 

@@ -40,7 +40,6 @@
 `define DOE_REG_PATH        `DOE_INST_PATH.i_doe_reg
 `define SERVICES_PATH       `CPTRA_TB_TOP_NAME.tb_services_i
 `define SHA512_PATH         `CPTRA_TOP_PATH.sha512.sha512_inst
-`define MLDSA_PATH          `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst
 `define HMAC_PATH           `CPTRA_TOP_PATH.hmac.hmac_inst
 `define HMAC_REG_PATH       `HMAC_PATH.i_hmac_reg
 `define ECC_PATH            `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
@@ -49,6 +48,7 @@
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
+`define MLDSA_PATH          `CPTRA_TOP_PATH.mldsa
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -358,14 +358,6 @@ module caliptra_top_sva
                                   else $display("SVA ERROR: SHA512 digest zeroize mismatch!");                                
     end
 
-    for(genvar dword = 0; dword < MLDSA_SEED_NUM_DWORDS; dword++) begin
-        mldsa_seed_zeroize:       assert property (
-                                              @(posedge `SVA_RDC_CLK)
-                                              `MLDSA_PATH.mldsa_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value |=> (`MLDSA_PATH.mldsa_reg_hwif_out.MLDSA_SEED[dword].SEED.value == 0)
-                                              )
-                                  else $display("SVA ERROR: MLDSA seed zeroize mismatch!");
-    end
-
     for(genvar dword = 0; dword < HMAC_KEY_NUM_DWORDS; dword++) begin
         hmac_key_zeroize:       assert property (
                                               @(posedge `SVA_RDC_CLK)
@@ -555,6 +547,13 @@ module caliptra_top_sva
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");      
 
+  //SVA for SHA512 restore
+  sha512_restore_cmd:   assert property ( 
+                                    @(posedge `SVA_RDC_CLK) 
+                                    `SHA512_PATH.restore_reg |-> (`SHA512_PATH.next_reg && !`SHA512_PATH.init_reg)
+                                    ) 
+                         else $display("SVA ERROR: SHA512 restore is not valid!");
+
   //SVA for modular operations
   ecc_opa_input:        assert property (
                                       @(posedge `SVA_RDC_CLK)
@@ -604,8 +603,6 @@ module caliptra_top_sva
                            else $display("SVA ERROR: SHA256 bus not idle after Firmware Update Reset!");
   fw_upd_rst_sha512_idle:  assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SHA512_PATH.i_sha512_reg.s_cpuif_req)
                            else $display("SVA ERROR: SHA512 bus not idle after Firmware Update Reset!");
-  fw_upd_rst_mldsa_idle:   assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.s_cpuif_req)
-                           else $display("SVA ERROR: MLDSA bus not idle after Firmware Update Reset!");
   fw_upd_rst_soc_ifc_idle: assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SOC_IFC_TOP_PATH.i_ahb_slv_sif_soc_ifc.dv)
                            else $display("SVA ERROR: SOC_IFC bus not idle after Firmware Update Reset!");
 

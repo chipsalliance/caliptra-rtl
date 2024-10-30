@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-python3 tools/scripts/reg_gen.py $ADAMSBRIDGE_ROOT/src/mldsa/rtl/mldsa_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/keyvault/rtl/kv_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/pcrvault/rtl/pv_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/datavault/rtl/dv_reg.rdl
