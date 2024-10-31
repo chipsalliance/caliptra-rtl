@@ -84,6 +84,10 @@ addrmap sha512_reg {
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Indicates last iteration for keyvault or hash extend function. 
                        Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
+        field {desc = "Control restore command bit: Restore SHA512 core to use the given digest to continue the 
+                                processing for the remining padded message block. 
+                                [br] Software write generates only a single-cycle pulse on the 
+                                hardware interface and then will be erased"; singlepulse;} RESTORE = 1'b0;
     
     } SHA512_CTRL @0x00000010;
 
@@ -122,8 +126,9 @@ addrmap sha512_reg {
         desc = "SHA512 component digest register type definition
                 16 32-bit registers storing the 512-bit digest output in big-endian representation.";
 
-        default sw = r;
-        default hw = w;
+        default sw = rw;
+        default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
         field {desc = "Output digest field"; hwclr;} DIGEST[32] = 32'b0;
     

@@ -187,6 +187,10 @@ module sha512_reg (
                 logic next;
                 logic load_next;
             } LAST;
+            struct packed{
+                logic next;
+                logic load_next;
+            } RESTORE;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -484,6 +488,9 @@ module sha512_reg (
             struct packed{
                 logic value;
             } LAST;
+            struct packed{
+                logic value;
+            } RESTORE;
         } SHA512_CTRL;
         struct packed{
             struct packed{
@@ -812,6 +819,30 @@ module sha512_reg (
         end
     end
     assign hwif_out.SHA512_CTRL.LAST.value = field_storage.SHA512_CTRL.LAST.value;
+    // Field: sha512_reg.SHA512_CTRL.RESTORE
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SHA512_CTRL.RESTORE.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SHA512_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.SHA512_CTRL.RESTORE.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA512_CTRL.RESTORE.next = next_c;
+        field_combo.SHA512_CTRL.RESTORE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA512_CTRL.RESTORE.value <= 1'h0;
+        end else if(field_combo.SHA512_CTRL.RESTORE.load_next) begin
+            field_storage.SHA512_CTRL.RESTORE.value <= field_combo.SHA512_CTRL.RESTORE.next;
+        end
+    end
+    assign hwif_out.SHA512_CTRL.RESTORE.value = field_storage.SHA512_CTRL.RESTORE.value;
     for(genvar i0=0; i0<32; i0++) begin
         // Field: sha512_reg.SHA512_BLOCK[].BLOCK
         always_comb begin
@@ -848,11 +879,14 @@ module sha512_reg (
             automatic logic load_next_c;
             next_c = field_storage.SHA512_DIGEST[i0].DIGEST.value;
             load_next_c = '0;
-            if(hwif_in.SHA512_DIGEST[i0].DIGEST.hwclr) begin // HW Clear
-                next_c = '0;
+            if(decoded_reg_strb.SHA512_DIGEST[i0] && decoded_req_is_wr) begin // SW write
+                next_c = (field_storage.SHA512_DIGEST[i0].DIGEST.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else begin // HW Write
+            end else if(hwif_in.SHA512_DIGEST[i0].DIGEST.we) begin // HW Write - we
                 next_c = hwif_in.SHA512_DIGEST[i0].DIGEST.next;
+                load_next_c = '1;
+            end else if(hwif_in.SHA512_DIGEST[i0].DIGEST.hwclr) begin // HW Clear
+                next_c = '0;
                 load_next_c = '1;
             end
             field_combo.SHA512_DIGEST[i0].DIGEST.next = next_c;
@@ -865,6 +899,7 @@ module sha512_reg (
                 field_storage.SHA512_DIGEST[i0].DIGEST.value <= field_combo.SHA512_DIGEST[i0].DIGEST.next;
             end
         end
+        assign hwif_out.SHA512_DIGEST[i0].DIGEST.value = field_storage.SHA512_DIGEST[i0].DIGEST.value;
     end
     // Field: sha512_reg.SHA512_VAULT_RD_CTRL.read_en
     always_comb begin

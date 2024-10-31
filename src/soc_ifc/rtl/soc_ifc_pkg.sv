@@ -15,13 +15,15 @@
 `ifndef SOC_IFC_PKG
 `define SOC_IFC_PKG
 
-`include "caliptra_top_reg_defines.svh"
+`include "config_defines.svh"
+`include "caliptra_reg_defines.svh"
 
 package soc_ifc_pkg;
     
     parameter SOC_IFC_ADDR_W = 18;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
+    parameter SOC_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
     
     parameter MBOX_SIZE_KB = 128;
     parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
@@ -32,6 +34,10 @@ package soc_ifc_pkg;
     parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
     parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
 
+    parameter CPTRA_AXI_DMA_DATA_WIDTH = 32;
+    parameter CPTRA_AXI_DMA_ID_WIDTH   = 5; // FIXME related to CALIPTRA_AXI_ID_WIDTH?
+    parameter CPTRA_AXI_DMA_USER_WIDTH = 32;
+
     parameter WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
     parameter WDT_TIMEOUT_PERIOD_W = WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
@@ -40,23 +46,25 @@ package soc_ifc_pkg;
     //memory map
     parameter MBOX_DIR_START_ADDR     = 32'h0000_0000;
     parameter MBOX_DIR_END_ADDR       = 32'h0001_FFFF;
-    parameter MBOX_REG_START_ADDR     = `CALIPTRA_TOP_REG_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_REG_START_ADDR     = `CLP_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_REG_END_ADDR       = MBOX_REG_START_ADDR + 32'h0000_0FFF;
-    parameter SHA_REG_START_ADDR      = `CALIPTRA_TOP_REG_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter SHA_REG_START_ADDR      = `CLP_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter SHA_REG_END_ADDR        = SHA_REG_START_ADDR + 32'h0000_0FFF;
-    parameter SOC_IFC_REG_START_ADDR  = `CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter DMA_REG_START_ADDR      = `CLP_AXI_DMA_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter DMA_REG_END_ADDR        = DMA_REG_START_ADDR + 32'h0000_0FFF;
+    parameter SOC_IFC_REG_START_ADDR  = `CLP_SOC_IFC_REG_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
 
-    //Valid PAUSER
-    //Lock the PAUSER values from integration time
-    parameter [4:0] CPTRA_SET_MBOX_PAUSER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-    parameter [4:0][31:0] CPTRA_MBOX_VALID_PAUSER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-    parameter [31:0] CPTRA_DEF_MBOX_VALID_PAUSER  = 32'hFFFF_FFFF;
+    //Valid AXI_ID
+    //Lock the AXI_ID values from integration time
+    parameter [4:0] CPTRA_SET_MBOX_AXI_ID_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CPTRA_MBOX_VALID_AXI_ID = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+    parameter [31:0] CPTRA_DEF_MBOX_VALID_AXI_ID  = 32'hFFFF_FFFF;
 
-    parameter CPTRA_SET_FUSE_PAUSER_INTEG = 1'b0;
-    parameter [31:0] CPTRA_FUSE_VALID_PAUSER = 32'h0000_0000;
+    parameter CPTRA_SET_FUSE_AXI_ID_INTEG = 1'b0;
+    parameter [31:0] CPTRA_FUSE_VALID_AXI_ID = 32'h0000_0000;
 
     //DMI Register encodings
     //Read only registers
@@ -118,11 +126,13 @@ package soc_ifc_pkg;
 
     //Any request into soc ifc block
     typedef struct packed {
-        logic   [SOC_IFC_ADDR_W-1:0] addr;
-        logic   [SOC_IFC_DATA_W-1:0] wdata;
-        logic   [SOC_IFC_USER_W-1:0] user;
-        logic                        write;
-        logic                        soc_req;
+        logic   [SOC_IFC_ADDR_W-1:0]   addr;
+        logic   [SOC_IFC_DATA_W-1:0]   wdata;
+        logic   [SOC_IFC_DATA_W/8-1:0] wstrb;
+//        logic   [SOC_IFC_USER_W-1:0] user;
+        logic   [SOC_IFC_ID_W  -1:0]   id;
+        logic                          write;
+        logic                          soc_req;
     } soc_ifc_req_t;
     // ECC protected data
     typedef struct packed {

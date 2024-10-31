@@ -32,6 +32,8 @@ addrmap clp {
 
     sha256_reg sha256_reg @ 0x1002_8000;
 
+    mldsa_reg mldsa_reg @ 0x1003_0000;
+
     spi_host spi_host_reg @ 0x2000_0000;
 
     uart uart @ 0x2000_1000;
@@ -52,6 +54,8 @@ addrmap clp {
     mbox_csr mbox_csr @ 0x3002_0000;
 
     sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
+
+    axi_dma_reg axi_dma_reg @ 0x3002_2000;
 
     soc_ifc_reg soc_ifc_reg @ 0x3003_0000;
 

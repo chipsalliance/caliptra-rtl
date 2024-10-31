@@ -19,12 +19,16 @@
 `include "config_defines.svh"
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
-`ifdef UVMF_CALIPTRA_TOP
-`define CPTRA_TB_TOP_NAME hdl_top
-`else
-`define CPTRA_TB_TOP_NAME caliptra_top_tb
+`ifndef CPTRA_TB_TOP_NAME
+  `ifdef UVMF_CALIPTRA_TOP
+    `define CPTRA_TB_TOP_NAME hdl_top
+  `else
+    `define CPTRA_TB_TOP_NAME caliptra_top_tb
+  `endif
 `endif
-`define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`ifndef CPTRA_TOP_PATH
+  `define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
+`endif
 `define KEYVAULT_PATH       `CPTRA_TOP_PATH.key_vault1
 `define KEYVAULT_REG_PATH   `KEYVAULT_PATH.kv_reg1
 `define PCRVAULT_PATH       `CPTRA_TOP_PATH.pcr_vault1
@@ -44,6 +48,7 @@
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
+`define MLDSA_PATH          `CPTRA_TOP_PATH.mldsa
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -154,13 +159,6 @@ module caliptra_top_sva
 
   generate
     for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-      //sha512 block read
-      kv_sha512_block_r_flow:   assert property (
-                                            @(posedge `SVA_RDC_CLK)
-                                            $rose(`SHA512_PATH.kv_src_done & ~`SHA512_PATH.pcr_hash_extend_ip) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`SHA512_PATH.kv_read.read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword].data.value == `SHA512_PATH.block_reg[dword])
-                                            )
-                                else $display("SVA ERROR: SHA384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_read.read_entry][dword].data.value, `SHA512_PATH.block_reg[dword]);
-
       //sha512 digest write
       if (dword < SHA512_DIG_NUM_DWORDS) begin
         kv_sha512_digest_w_flow:  assert property (
@@ -547,6 +545,13 @@ module caliptra_top_sva
                                     `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");      
+
+  //SVA for SHA512 restore
+  sha512_restore_cmd:   assert property ( 
+                                    @(posedge `SVA_RDC_CLK) 
+                                    `SHA512_PATH.restore_reg |-> (`SHA512_PATH.next_reg && !`SHA512_PATH.init_reg)
+                                    ) 
+                         else $display("SVA ERROR: SHA512 restore is not valid!");
 
   //SVA for modular operations
   ecc_opa_input:        assert property (

@@ -44,18 +44,13 @@ module caliptra_top
     output logic                       jtag_tdo,    // JTAG TDO
     output logic                       jtag_tdoEn,  // JTAG TDO enable
 
-    //APB Interface
-    input  logic [`CALIPTRA_APB_ADDR_WIDTH-1:0] PADDR,
-    input  logic [2:0]                          PPROT,
-    input  logic                                PSEL,
-    input  logic                                PENABLE,
-    input  logic                                PWRITE,
-    input  logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PWDATA,
-    input  logic [`CALIPTRA_APB_USER_WIDTH-1:0] PAUSER,
+    //SoC AXI Interface
+    axi_if.w_sub s_axi_w_if,
+    axi_if.r_sub s_axi_r_if,
 
-    output logic                                PREADY,
-    output logic                                PSLVERR,
-    output logic [`CALIPTRA_APB_DATA_WIDTH-1:0] PRDATA,
+    // AXI Manager INF
+    axi_if.w_mgr m_axi_w_if,
+    axi_if.r_mgr m_axi_r_if,
 
     //QSPI Interface
     output logic                                qspi_clk_o,
@@ -91,6 +86,8 @@ module caliptra_top
 
     output logic                       mailbox_data_avail,
     output logic                       mailbox_flow_done,
+
+    input  logic                       recovery_data_avail,
 
     input logic                        BootFSM_BrkPoint,
 
@@ -128,6 +125,8 @@ module caliptra_top
     logic                       soc_ifc_clk_cg  ;
     logic                       rdc_clk_cg      ;
     logic                       uc_clk_cg       ;
+
+    logic        [2:0]          s_axi_active    ;
 
     logic        [31:0]         ic_haddr        ;
     logic        [2:0]          ic_hburst       ;
@@ -214,6 +213,8 @@ module caliptra_top
     wire sha512_notif_intr;
     wire sha256_error_intr;
     wire sha256_notif_intr;
+    wire mldsa_error_intr;
+    wire mldsa_notif_intr;
     wire qspi_error_intr;
     wire qspi_notif_intr;
     wire uart_error_intr;
@@ -224,7 +225,8 @@ module caliptra_top
     wire soc_ifc_notif_intr;
     wire sha_error_intr;
     wire sha_notif_intr;
-
+    wire dma_error_intr;
+    wire dma_notif_intr;
     logic [NUM_INTR-1:0] intr;
 
     kv_read_t [KV_NUM_READ-1:0]  kv_read;
@@ -356,6 +358,7 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -404,6 +407,10 @@ always_comb begin
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
+    intr[`VEER_INTR_VEC_MLDSA_ERROR  -1]          = mldsa_error_intr;
+    intr[`VEER_INTR_VEC_MLDSA_NOTIF  -1]          = mldsa_notif_intr;
+    intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
+    intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
@@ -646,10 +653,39 @@ el2_veer_wrapper rvtop (
 //=========================================================================-
 // Clock gating instance
 //=========================================================================-
+always_ff@(posedge clk or negedge cptra_rst_b) begin
+    if (!cptra_rst_b) begin
+        s_axi_active <= 2'd0;
+    end
+    else begin
+        case ({s_axi_r_if.rvalid && s_axi_r_if.rready && s_axi_r_if.rlast,
+               s_axi_r_if.arvalid && s_axi_r_if.arready,
+               s_axi_w_if.bvalid && s_axi_w_if.bready,
+               s_axi_w_if.awvalid && s_axi_w_if.awready}) inside
+            4'b0000: s_axi_active <= s_axi_active       ;
+            4'b0001: s_axi_active <= s_axi_active + 3'd1;
+            4'b0010: s_axi_active <= s_axi_active - 3'd1;
+            4'b0011: s_axi_active <= s_axi_active       ;
+            4'b0100: s_axi_active <= s_axi_active + 3'd1;
+            4'b0101: s_axi_active <= s_axi_active + 3'd2;
+            4'b0110: s_axi_active <= s_axi_active       ;
+            4'b0111: s_axi_active <= s_axi_active + 3'd1;
+            4'b1000: s_axi_active <= s_axi_active - 3'd1;
+            4'b1001: s_axi_active <= s_axi_active       ;
+            4'b1010: s_axi_active <= s_axi_active - 3'd2;
+            4'b1011: s_axi_active <= s_axi_active - 3'd1;
+            4'b1100: s_axi_active <= s_axi_active       ;
+            4'b1101: s_axi_active <= s_axi_active + 3'd1;
+            4'b1110: s_axi_active <= s_axi_active - 3'd1;
+            4'b1111: s_axi_active <= s_axi_active       ;
+        endcase
+    end
+end
+
 clk_gate cg (
     .clk(clk),
     .cptra_rst_b(cptra_noncore_rst_b),
-    .psel(PSEL),
+    .psel(|s_axi_active || s_axi_r_if.arvalid || s_axi_w_if.awvalid),
     .clk_gate_en(clk_gating_en),
     .cpu_halt_status(o_cpu_halt_status),
     .rdc_clk_dis(rdc_clk_dis),
@@ -762,10 +798,6 @@ sha512_ctrl #(
     .hresp_o        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hresp),
     .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hreadyout),
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hrdata),
-    .kv_read        (kv_read[2]),
-    .kv_write       (kv_write[1]),
-    .kv_rd_resp     (kv_rd_resp[2]),
-    .kv_wr_resp     (kv_wr_resp[1]),
     .pv_read        (pv_read),
     .pv_write       (pv_write),
     .pv_rd_resp     (pv_rd_resp),
@@ -776,6 +808,9 @@ sha512_ctrl #(
     .notif_intr(sha512_notif_intr),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
+
+always_comb kv_read[2] = '0;
+always_comb kv_write[1] = '0;
 
 sha256_ctrl #(
     .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
@@ -894,6 +929,27 @@ hmac_ctrl #(
      .notif_intr(hmac_notif_intr),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 
+);
+
+mldsa_top #(
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
+) mldsa (
+     .clk           (clk_cg),
+     .rst_b         (cptra_noncore_rst_b),
+     //TODO: pwrgood
+     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)-1:0]),
+     .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwdata),
+     .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsel),
+     .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwrite),
+     .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hready),
+     .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].htrans),
+     .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsize),
+     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
+     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
+     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
+     .error_intr    (mldsa_error_intr),
+     .notif_intr    (mldsa_notif_intr)
 );
 
 kv #(
@@ -1171,23 +1227,32 @@ uart #(
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-    .APB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
-    .APB_DATA_WIDTH(`CALIPTRA_APB_DATA_WIDTH),
-    .APB_USER_WIDTH(`CALIPTRA_APB_USER_WIDTH)
+    .AXI_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
+    .AXI_DATA_WIDTH(`CALIPTRA_AXI_DATA_WIDTH),
+    .AXI_ID_WIDTH  (`CALIPTRA_AXI_ID_WIDTH  ),
+    .AXI_USER_WIDTH(`CALIPTRA_AXI_USER_WIDTH),
+    .AXIM_ADDR_WIDTH(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
+    .AXIM_DATA_WIDTH(CPTRA_AXI_DMA_DATA_WIDTH),
+    .AXIM_ID_WIDTH  (CPTRA_AXI_DMA_ID_WIDTH),
+    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH)
     )
 soc_ifc_top1 
     (
-    .clk(clk),
-    .clk_cg(clk_cg),
+    .clk           (clk           ),
+    .clk_cg        (clk_cg        ),
     .soc_ifc_clk_cg(soc_ifc_clk_cg),
-    .rdc_clk_cg(rdc_clk_cg),
-    .cptra_pwrgood(cptra_pwrgood), 
-    .cptra_rst_b(cptra_rst_b),
+    .rdc_clk_cg    (rdc_clk_cg    ),
+
+    .cptra_pwrgood(cptra_pwrgood),
+    .cptra_rst_b  (cptra_rst_b  ),
+
     .ready_for_fuses(ready_for_fuses),
     .ready_for_fw_push(ready_for_fw_push),
     .ready_for_runtime(ready_for_runtime),
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
+
+    .recovery_data_avail(recovery_data_avail),
 
     .security_state(cptra_security_state_Latched),
     
@@ -1203,16 +1268,10 @@ soc_ifc_top1
     // RV ECC Status Interface
     .rv_ecc_sts(rv_ecc_sts),
 
-    //APB Interface with SoC
-    .paddr_i(PADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]),
-    .psel_i(PSEL),
-    .penable_i(PENABLE),
-    .pwrite_i(PWRITE),
-    .pwdata_i(PWDATA),
-    .pauser_i(PAUSER),
-    .pready_o(PREADY),
-    .prdata_o(PRDATA),
-    .pslverr_o(PSLVERR),
+    //SoC AXI Interface
+    .s_axi_w_if(s_axi_w_if),
+    .s_axi_r_if(s_axi_r_if),
+
     //AHB Interface with uC
     .haddr_i    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]), 
     .hwdata_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwdata), 
@@ -1224,6 +1283,11 @@ soc_ifc_top1
     .hresp_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hresp),
     .hreadyout_o(responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hreadyout),
     .hrdata_o   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hrdata),
+
+    // AXI Manager INF
+    .m_axi_w_if(m_axi_w_if),
+    .m_axi_r_if(m_axi_r_if),
+
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
@@ -1237,6 +1301,8 @@ soc_ifc_top1
     .soc_ifc_notif_intr(soc_ifc_notif_intr),
     .sha_error_intr(sha_error_intr),
     .sha_notif_intr(sha_notif_intr),
+    .dma_error_intr(dma_error_intr),
+    .dma_notif_intr(dma_notif_intr),
     .timer_intr(timer_int),
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
@@ -1320,18 +1386,5 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
-
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PADDR_X,        PADDR,                clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWDATA_X,       PWDATA,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PWRITE_X,       PWRITE,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PREADY_X,       PREADY,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PENABLE_X,      PENABLE,              clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSEL_X,         PSEL,                 clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PPROT_X,        PPROT,                clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PAUSER_X,       PAUSER,               clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PSLVERR_X,      PSLVERR,              clk, !cptra_rst_b)
-`CALIPTRA_ASSERT_KNOWN(APB_MASTER_PRDATA_X,       PREADY ? PRDATA : '0, clk, !cptra_rst_b)
-
-`CALIPTRA_ASSERT_NEVER(APB_MASTER_PPROT_ACTIVE,   PPROT !== 3'b000, clk, !cptra_rst_b)
 
 endmodule

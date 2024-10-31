@@ -12,6 +12,7 @@ contents:
         - ../test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read.yml
         - ../test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg.yml
         - ../test_suites/smoke_test_sha512/smoke_test_sha512.yml
+        - ../test_suites/smoke_test_sha512_restore/smoke_test_sha512_restore.yml
         - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml
         - ../test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz.yml
         - ../test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand.yml

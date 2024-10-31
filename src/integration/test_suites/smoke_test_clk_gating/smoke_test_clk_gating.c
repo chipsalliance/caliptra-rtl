@@ -53,6 +53,10 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
+    .mldsa_error      = 0,
+    .mldsa_notif      = 0,
+    .axi_dma_error    = 0,
+    .axi_dma_notif    = 0,
 };
 
 void main() {
@@ -137,9 +141,9 @@ void main() {
                       : /* clobbers: none */);
 
     //------------------------------------------------------
-    //Wake SOC up for APB tx and core using timer int later
+    //Wake SOC up for AXI tx and core using timer int later
     //------------------------------------------------------
-        printf("Wake up SOC clk on APB txns and later wake up core using timer interrupt\n");
+        printf("Wake up SOC clk on AXI txns and later wake up core using timer interrupt\n");
         //Machine intr enable reg (mie) - enable timer int 
         __asm__ volatile ("csrw    %0, %1" \
                       : /* output: none */        \

@@ -48,7 +48,7 @@
 // from Secworks. 
 // 
 // For providing the required random values to mask intermediate values,
-// we use a lightweight 74-bit LFSR. Based on 
+// we use a lightweight LFSR. Based on 
 // "Spin Me Right Round Rotational Symmetry for FPGA-specific AES" by
 // Wegener et. al., LFSR is sufficient for masking statistical randomness.
 //======================================================================

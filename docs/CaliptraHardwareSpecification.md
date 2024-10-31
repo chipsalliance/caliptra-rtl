@@ -2,7 +2,8 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Version 1.1</p>
+<p style="text-align: center;">Version 2.0</p>
+<p style="text-align: center;">Revision 0.8</p>
 
 <div style="page-break-after: always"></div>
 
@@ -18,6 +19,21 @@ This document provides definitions and requirements for a Caliptra cryptographic
 
 For information on the Caliptra Core, see the [High level architecture](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html#high-level-architecture) section of [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
+## Key Caliptra Core 2.0 Changes
+* AXI subordinate replaces APB interface of Caliptra 1.x hardware
+* SHA Accelerator functionality now available exclusively over mailbox
+    * SHA Accelerator adds new SHA save/restore functionality
+* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx))
+* Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
+    * ECDH hardware support
+    * HMAC512 hardware support
+    * AXI Manager with DMA support
+    * Manufacturing and Debug Unlock
+    * UDS programming
+    * Read logic for Secret Fuses
+    * Streaming Boot Support
+* RISC-V core PMP support
+  
 ## Boot FSM
 
 The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is awake and ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by de-asserting the internal reset.
@@ -59,6 +75,7 @@ The RISC-V core is highly configurable and has the following settings.
 | Reset Vector            | 0x00000000    |
 | Fast Interrupt Redirect | Enabled       |
 | External Interrupts     | 31            |
+| PMP                     | Enabled       |
 
 ### Embedded memory export
 
@@ -92,6 +109,7 @@ The following table shows the memory map address ranges for each of the IP block
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 13        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
+| ML-DSA                              | 17        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 
 #### Peripherals subsystem
 
@@ -99,8 +117,6 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral | Target \# | Address size | Start address | End address |
 | :------------ | :-------- | :----------- | :------------ | :---------- |
-| QSPI          | 7         | 4 KiB        | 0x2000_0000   | 0x2000_0FFF |
-| UART          | 8         | 4 KiB        | 0x2000_1000   | 0x2000_1FFF |
 | CSRNG         | 15        | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
 | ENTROPY SRC   | 16        | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
 
@@ -112,7 +128,6 @@ The following table shows the memory map address ranges for each of the IP block
 | :------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Mailbox SRAM Direct Access | 10        | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
 | Mailbox CSR                | 10        | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| SHA512 Accelerator CSR     | 10        | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
 | Mailbox                    | 10        | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 
 #### RISC-V core local memory blocks
@@ -161,14 +176,16 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | SHA512 (Notifications)                              | 10               | 7                                               |
 | SHA256 (Errors)                                     | 11               | 8                                               |
 | SHA256 (Notifications)                              | 12               | 7                                               |
-| QSPI (Errors)                                       | 13               | 4                                               |
-| QSPI (Notifications)                                | 14               | 3                                               |
-| UART (Errors)                                       | 15               | 4                                               |
-| UART (Notifications)                                | 16               | 3                                               |
-| RESERVED                                            | 17               | 4                                               |
-| RESERVED                                            | 18               | 3                                               |
+| RESERVED                                            | 13, 15, 17       | 4                                               |
+| RESERVED                                            | 14, 16, 18       | 3                                               |
 | Mailbox (Errors)                                    | 19               | 8                                               |
 | Mailbox (Notifications)                             | 20               | 7                                               |
+| SHA512 Accelerator (Errors)                         | 23               | 8                                               |
+| SHA512 Accelerator (Notifications)                  | 24               | 7                                               |
+| MLDSA (Errors)                                      | 23               | 8                                               |
+| MLDSA (Notifications)                               | 24               | 7                                               |
+| AXI DMA (Errors)                                    | 25               | 8                                               |
+| AXI DMA (Notifications)                             | 26               | 7                                               |
 
 ## Watchdog timer
 
@@ -223,170 +240,6 @@ All AHB requests internal to Caliptra must be to an address that is aligned to t
 ## Cryptographic subsystem
 
 For details, see the [Cryptographic subsystem architecture](#cryptographic-subsystem-architecture) section.
-
-## Peripherals subsystem
-
-Caliptra includes QSPI and UART peripherals that are used to facilitate alternative operating modes and debug. In the first generation, Caliptra does not support enabling the QSPI interface. Similarly, the UART interface exists to facilitate firmware debug in an FPGA prototype, but should be disabled in final silicon. SystemVerilog defines used to disable these peripherals are described in the [Caliptra Integration Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md). Operation of these peripherals is described in the following sections.
-
-### QSPI Flash Controller
-
-Caliptra implements a QSPI block that can communicate with 2 QSPI devices. This QSPI block is accessible to FW over the AHB-lite Interface.
-
-The QSPI block is composed of the spi\_host implementation. For information, see the [SPI\_HOST HWIP Technical Specification](https://opentitan.org/book/hw/ip/spi_host/index.html). The core code (see [spi\_host](https://github.com/lowRISC/opentitan/tree/master/hw/ip/spi_host)) is reused but the interface to the module is changed to AHB-lite and the number of chip select lines supported is increased to 2. The design provides support for Standard SPI, Dual SPI, or Quad SPI commands. The following figure shows the QSPI flash controller.
-
-*Figure 4: QSPI flash controller*
-
-![](./images/QSPI_flash.png)
-
-#### Operation
-
-Transactions flow through the QSPI block starting with AHB-lite writes to the TXDATA FIFO. Commands are then written and processed by the control FSM, orchestrating transmissions from the TXDATA FIFO and receiving data into the RXDATA FIFO.
-
-The structure of a command depends on the device and the command itself. In the case of a standard SPI device, the host IP always transmits data on qspi\_d\_io[0] and always receives data from the target device on qspi\_d\_io[1]. In Dual or Quad modes, all data lines are bi-directional, thus allowing full bandwidth in transferring data across 4 data lines.
-
-A typical SPI command consists of different segments that are combined as shown in the following example. Each segment can configure the length, speed, and direction. As an example, the following SPI read transaction consists of 2 segments.
-
-*Figure 5: SPI read transaction segments*
-
-![](./images/SPI_read.png)
-
-| Segment \# | Length (Bytes) | Speed    | Direction         | TXDATA FIFO  | RXDATA FIFO        |
-| :--------- | :------------- | :------- | :---------------- | :----------- | :----------------- |
-| 1          | 4  | standard | TX <br>qspi_d_io\[0\] | \[0\] 0x3 (ReadData) <br>\[1\] Addr\[23:16\] <br>\[2\] Addr\[15:8\] <br>\[3\] Addr\[7:0\] |  |
-| 2          | 1  | standard | RX <br>qspi_d_io\[1\] |  | \[0\] Data \[7:0\] |
-
-In this example, the ReadData (0x3) command was written to the TXDATA FIFO, followed by the 3B address. This maps to a total of 4 bytes that are transmitted out across qspi\_d\_io[0] in the first segment. The second segment consists of a read command that receives 1 byte of data from the target device across qspi\_d\_io[1].
-
-QSPI consists of up to four command segments in which the host:
-
-1. Transmits instructions or data at the standard rate
-2. Transmits instructions address or data on 2 or 4 data lines
-3. Holds the bus in a high-impedance state for some number of dummy cycles where neither side transmits
-4. Receives information from the target device at the specified rate (derived from the original command)
-
-The following example shows the QSPI segments.
-
-*Figure 6: QSPI segments*
-
-![](./images/QSPI_segments.png)
-
-| Segment \# | Length (Bytes) | Speed    | Direction           | TXDATA FIFO  | RXDATA FIFO       |
-| :--------- | :------------- | :------- | :------------------ | :----------- | :---------------- |
-| 1          | 1              | standard | TX <br>qspi_d_io\[3:0\] | \[0\] 0x6B (ReadDataQuad) |                   |
-| 2          | 3\*            | quad     | TX <br>qspi_d_io\[3:0\] | \[1\] Addr\[23:16\] <br>\[2\] Addr\[15:8\] <br>\[3\] Addr\[7:0\] |                   |
-| 3          | 2              | N/A      | None (Dummy)        |     |                   |
-| 4          | 1              | quad     | RX <br>qspi_d_io\[3:0\] |       | \[0\] Data\[7:0\] |
-
-Note: In the preceding figure, segment 2 doesn’t show bytes 2 and 3 for brevity.
-
-#### Configuration
-
-The CONFIGOPTS multi-register has one entry per CSB line and holds clock configuration and timing settings that are specific to each peripheral. After the CONFIGOPTS multi-register is programmed for each SPI peripheral device, the values can be left unchanged.
-
-The most common differences between target devices are the requirements for a specific SPI clock phase or polarity, CPOL and CPHA. These clock parameters can be set via the CONFIGOPTS.CPOL or CONFIGOPTS.CPHA register fields.
-
-The SPI clock rate depends on the peripheral clock and a 16b clock divider configured by CONFIGOPTS.CLKDIV. The following equation is used to configure the SPI clock period:
-
-![](./images/Caliptra_eq_SPI_clk_period.png)
-
-By default, CLKDIV is set to 0, which means that the maximum frequency that can be achieved is at most half the frequency of the peripheral clock (Fsck = Fclk/2).
-
-We can rearrange the equation to solve for the CLKDIV:
-
-![](./images/Caliptra_eq_CLKDIV.png)
-
-Assuming a 400MHz target peripheral, and a SPI clock target of 100MHz:
-
-CONFIGOPTS.CLKDIV = (400/(2\*100)) -1 = 1
-
-The following figure shows CONFIGOPTS.
-
-*Figure 7: CONFIGOPTS*
-
-![](./images/CONFIGOPTS.png)
-
-#### Signal descriptions
-
-The QSPI block architecture inputs and outputs are described in the following table.
-
-| Name                | Input or output | Description                                               |
-| :------------------ | :-------------- | :-------------------------------------------------------- |
-| clk_i               | input           | All signal timings are related to the rising edge of clk. |
-| rst_ni              | input           | The reset signal is active LOW and resets the core.       |
-| cio_sck_o           | output          | SPI clock                                                 |
-| cio_sck_en_o        | output          | SPI clock enable                                          |
-| cio_csb_o\[1:0\]    | output          | Chip select \# (one hot, active low)                      |
-| cio_csb_en_o\[1:0\] | output          | Chip select \# enable (one hot, active low)               |
-| cio_csb_sd_o\[3:0\] | output          | SPI data output                                           |
-| cio_csb_sd_en_o     | output          | SPI data output enable                                    |
-| cio_csb_sd_i\[3:0\] | input           | SPI data input                                            |
-
-#### SPI\_HOST IP programming guide
-
-The operation of the SPI\_HOST IP proceeds in seven general steps.
-
-To initialize the IP:
-
-1. Program the CONFIGOPTS multi-register with the appropriate timing and polarity settings for each csb line.
-2. Set the desired interrupt parameters.
-3. Enable the IP.
-
-Then for each command:
-
-4. Load the data to be transmitted into the FIFO using the TXDATA memory window.
-5. Specify the target device by programming the CSID.
-6. Specify the structure of the command by writing each segment into the COMMAND register.
-
-    For multi-segment transactions, assert COMMAND.CSAAT for all but the last command segment.
-
-7. For transactions that expect to receive a reply, the data can then be read back from the RXDATA window.
-
-Steps 4-7 are then repeated for each subsequent command.
-
-### UART
-
-Caliptra implements a UART block that can communicate with a serial device that is accessible to FW over the AHB-lite Interface. This is a configuration that the SoC opts-in by defining CALIPTRA\_INTERNAL\_UART.
-
-The UART block is composed of the uart implementation. For information, see the [UART HWIP Technical Specification](https://opentitan.org/book/hw/ip/uart/). The design provides support for a programmable baud rate. The UART block is shown in the following figure.
-
-*Figure 8: UART block*
-
-![](./images/UART_block.png)
-
-#### Operation
-
-Transactions flow through the UART block starting with an AHB-lite write to WDATA, which triggers the transmit module to start a UART TX serial data transfer. The TX module dequeues the byte from the internal FIFO and shifts it out bit by bit at the baud rate. If TX is not enabled, the output is set high and WDATA in the FIFO is queued up.
-
-The following figure shows the transmit data on the serial lane, starting with the START bit, which is indicated by a high to low transition, followed by the 8 bits of data.
-
-*Figure 9: Serial transmission frame*
-
-![](./images/serial_transmission.png)
-
-On the receive side, after the START bit is detected, the data is sampled at the center of each data bit and stored into a FIFO. A user can monitor the FIFO status and read the data out of RDATA.
-
-#### Configuration
-
-The baud rate can be configured using the CTRL.NCO register field. This should be set using the following equation:
-
-![](./images/Caliptra_eq_NCO.png)
-
-If the desired baud rate is 115,200bps:
-
-![](./images/Caliptra_eq_UART.png)
-
-![](./images/Caliptra_eq_UART2.png)
-
-#### Signal descriptions
-
-The UART block architecture inputs and outputs are described in the following table.
-
-| Name     | Input or output | Description                                               |
-| :------- | :-------------- | :-------------------------------------------------------- |
-| clk_i    | input           | All signal timings are related to the rising edge of clk. |
-| rst_ni   | input           | The reset signal is active LOW and resets the core.       |
-| cio_rx_i | input           | Serial receive bit                                        |
-| cio_tx_o | output          | Serial transmit bit                                       |
 
 ## SoC mailbox
 
@@ -457,24 +310,24 @@ When the RV core wakes up, all clocks are enabled. However, when the core is hal
 
 * JTAG accesses
 
-* APB transactions
+* AXI transactions
 
-Activity on the APB interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
+Activity on the AXI subordinate interface only wakes up the SoC IFC clock. All other clocks remain off until any other condition is met or the core exits the halt state.
 
-| Cpu_halt_status | PSEL | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
+| Cpu_halt_status | s_axi_active | Generic input wires <br>\|\| fatal error <br>\|\| debug/scan mode  <br> \|\|JTAG access | Expected behavior |
 | :-------------- | :--- | :---------- | :-------------- |
 | 0  | X    | X | All gated clocks active                                                                                                   |
 | 1  | 0    | 0 | All gated clocks inactive                                                                                                 |
 | 1  | 0    | 1 | All gated clocks active (as long as condition is true)                                                                    |
-| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as PSEL = 1) <br>All other clks inactive                                                   |
-| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR PSEL = 1) <br>All other clks active (as long as condition is true) |
+| 1  | 1    | 0 | Soc_ifc_clk_cg active (as long as s_axi_active = 1) <br>All other clks inactive                                                   |
+| 1  | 1    | 1 | Soc_ifc_clk_cg active (as long as condition is true OR s_axi_active = 1) <br>All other clks active (as long as condition is true) |
 
 ### Usage
 
 The following applies to the clock gating feature:
 
 * The core should only be halted after all pending vault writes are done and cryptographic operations are complete.
-* While the core is halted, any APB transaction wakes up the SoC interface clock and leaves all other clocks disabled. If the core is still halted when the APB transactions are done, the SoC interface clock is returned to a disabled state. .
+* While the core is halted, any AXI transaction wakes up the SoC interface clock and leaves all other clocks disabled. If the core is still halted when the AXI transactions are done, the SoC interface clock is returned to a disabled state. .
 * The RDC clock is similar to an ungated clock and is only disabled when a reset event occurs. This avoids metastability on flops. The RDC clock operates independently of core halt status.
 
 
@@ -627,18 +480,16 @@ The reason to have a separate interface from the SoC mailbox is to ensure that t
 
 ## SoC-SHA accelerator HW API
 
-Caliptra provides a SHA accelerator HW API for SoC and Caliptra internal FW to use. It is atomic in nature in that only one of them can use the SHA accelerator HW API at the same time. Details of the SHA accelerator register block may be found in the GitHub repository in [documentation](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=caliptra_top_reg.sha512_acc_csr) generated from the register definition file.
+Caliptra provides a SHA accelerator HW API for SoC and Caliptra internal FW to use. It is atomic in nature in that only one of them can use the SHA accelerator HW API at the same time.
 
 Using the HW API:
 
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
-* The USER register captures the APB pauser value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing APB register writes. Writes by any other agent on the APB interface are dropped.
-* MODE register is written to set the SHA execution mode.
-     * SHA accelerator supports both SHA384 and SHA512 modes of operation.
-     * SHA supports **streaming** mode: SHA is computed on a stream of incoming data to the DATAIN register. The EXECUTE register, when set, indicates to the accelerator that streaming is complete. The accelerator can then publish the result into the DIGEST register. When the VALID bit of the STATUS register is set, then the result in the DIGEST register is valid.
-     * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
-     * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
-     * See the register definition for the encodings.
+* The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI subordinate interface are dropped.
+* SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
+* Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
+* The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
+* See the register definition for the encodings.
 * SHA engine also provides a ‘zeroize’ function through its CONTROL register to clear any of the SHA internal state. This can be used when the user wants to conceal previous state for debug or security reasons.
 
 ## JTAG implementation
@@ -674,7 +525,7 @@ The high-level architecture of Caliptra cryptographic subsystem is shown in the 
 
 *Figure 17: Caliptra cryptographic subsystem*
 
-![](./images/crypto_subsystem.png)
+![](./images/Crypto-2p0.png)
 
 ## SHA512/SHA384
 
@@ -954,6 +805,7 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 #### Hashing
 
 The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+<<<<<<< HEAD
 
 *Figure 28: HMAC-SHA-512-256 data flow*
 
@@ -961,6 +813,15 @@ The HMAC512 core performs the sha2-512 function to process the hash value of the
 
 The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
+=======
+
+*Figure 28: HMAC-SHA-512-256 data flow*
+
+![](./images/HMAC_SHA_512_256.png)
+
+The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
+
+>>>>>>> main
 *Figure 29: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
@@ -1446,6 +1307,13 @@ The LMS accelerator integrated into SHA256 architecture inputs and outputs are d
 
 The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
 
+## Adams Bridge - Dilithium (ML-DSA)
+
+Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx) 
+
+### Address map
+Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
+
 ## PCR vault
 
 * Platform Configuration Register (PCR) vault is a register file that stores measurements to be used by the microcontroller.
@@ -1537,7 +1405,7 @@ The following tables describe read, write, and status values for key vault block
 | write_entry\[5:1\]         | Key vault entry to store the result.                                                                                                   |
 | hmac_key_dest_valid\[6\]   | HMAC KEY is a valid destination.                                                                                                       |
 | hmac_block_dest_valid\[7\] | HMAC BLOCK is a valid destination.                                                                                                     |
-| sha_block_dest_valid\[8\]  | SHA BLOCK is a valid destination.                                                                                                      |
+| mldsa_seed_dest_valid\[8\] | MLDSA SEED is a valid destination.                                                                                                    |
 | ecc_pkey_dest_valid\[9\]   | ECC PKEY is a valid destination.                                                                                                       |
 | ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination.                                                                                                       |
 | rsvd\[31:11\]              | Reserved field                                                                                                                         |

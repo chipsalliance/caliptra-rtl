@@ -191,3 +191,53 @@ void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest){
     }
 
 }
+
+void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest, sha512_io digest){
+    volatile uint32_t * reg_ptr;
+    uint8_t offset;
+    uint8_t fail_cmd = 0x1;
+    uint32_t sha512_digest [16];
+
+    // wait for SHA to be ready
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
+
+    // Write SHA512 block
+    reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_BLOCK_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_BLOCK_31) {
+        *reg_ptr++ = block.data[offset++];
+    }
+
+    // Write SHA512 restore DIGEST
+    reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
+        *reg_ptr++ = restore_digest.data[offset++];
+    }
+
+    // Enable SHA512 core 
+    VPRINTF(LOW, "Enable SHA512\n");
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_NEXT_MASK | 
+                                             SHA512_REG_SHA512_CTRL_RESTORE_MASK |
+                                            (mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK);
+    
+    // wait for SHA to be valid
+    wait_for_sha512_intr();
+
+    reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;
+    printf("Load DIGEST data from SHA512\n");
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
+        sha512_digest[offset] = *reg_ptr;
+        if (sha512_digest[offset] != digest.data[offset]) {
+            printf("At offset [%d], sha_digest data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", sha512_digest[offset]);
+            printf("Expected data: 0x%x\n", digest.data[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+}
