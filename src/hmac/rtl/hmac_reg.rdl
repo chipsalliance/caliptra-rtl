@@ -164,7 +164,7 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h3CAB_FFB0; // a random value
     
-    } HMAC512_LFSR_SEED[12] @0x00000130;
+    } HMAC512_LFSR_SEED[12] @0x00000140;
 
     /* ---- HMAC Key Vault Control Reg ---- */
     kv_read_ctrl_reg HMAC512_KV_RD_KEY_CTRL @0x00000600;
