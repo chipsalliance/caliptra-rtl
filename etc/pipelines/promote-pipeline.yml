@@ -194,14 +194,14 @@ stages:
 
     - caliptra_ss_top_vcs:
       - display_name: 'Build caliptra_ss_top with VCS'
-      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_ss_top'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_regress:
-          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_ss_top'
           - timeout: 75
