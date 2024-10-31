@@ -108,8 +108,8 @@ The following table shows the memory map address ranges for each of the IP block
 | PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
-| SHA256                              | 13        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
-| ML-DSA                              | 17        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
+| SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
+| ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 
 #### Peripherals subsystem
 
@@ -117,8 +117,8 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral | Target \# | Address size | Start address | End address |
 | :------------ | :-------- | :----------- | :------------ | :---------- |
-| CSRNG         | 15        | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
-| ENTROPY SRC   | 16        | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
+| CSRNG         | 12        | 4 KiB        | 0x2000_2000   | 0x2000_2FFF |
+| ENTROPY SRC   | 13        | 4 KiB        | 0x2000_3000   | 0x2000_3FFF |
 
 #### SoC interface subsystem
 
@@ -126,9 +126,9 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral              | Target \# | Address size | Start address | End address |
 | :------------------------- | :-------- | :----------- | :------------ | :---------- |
-| Mailbox SRAM Direct Access | 10        | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
-| Mailbox CSR                | 10        | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| Mailbox                    | 10        | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| Mailbox SRAM Direct Access | 7         | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
+| Mailbox CSR                | 7         | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
+| Mailbox                    | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 
 #### RISC-V core local memory blocks
 
@@ -136,8 +136,8 @@ The following table shows the memory map address ranges for each of the local me
 
 | IP/Peripheral   | Target \# | Address size | Start address | End address |
 | :-------------- | :-------- | :----------- | :------------ | :---------- |
-| ICCM0 (via DMA) | 12        | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| DCCM            | 11        | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| ICCM0 (via DMA) | 9         | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
+| DCCM            | 8         | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
 
 ### Interrupts
 
