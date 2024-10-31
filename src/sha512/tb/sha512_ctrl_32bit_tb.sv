@@ -77,10 +77,6 @@ module sha512_ctrl_32bit_tb
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  kv_read_t kv_read_tb;
-  kv_write_t kv_write_tb;
-  kv_rd_resp_t kv_rd_resp_tb;
-  kv_wr_resp_t kv_wr_resp_tb;
   pv_read_t pv_read_tb;
   pv_write_t pv_write_tb;
   pv_rd_resp_t pv_rd_resp_tb;
@@ -120,10 +116,6 @@ module sha512_ctrl_32bit_tb
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
 
-             .kv_read(kv_read_tb),
-             .kv_write(kv_write_tb),
-             .kv_rd_resp(kv_rd_resp_tb),
-             .kv_wr_resp(kv_wr_resp_tb),
              .pcr_signing_hash(pcr_signing_hash_tb),
              .pv_read(pv_read_tb),
              .pv_rd_resp(pv_rd_resp_tb),
@@ -200,8 +192,6 @@ module sha512_ctrl_32bit_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
 
-      kv_rd_resp_tb   = '0;
-      kv_wr_resp_tb   = '0;
       pv_wr_resp_tb   = '0;
       pv_rd_resp_tb   = '0;
     end

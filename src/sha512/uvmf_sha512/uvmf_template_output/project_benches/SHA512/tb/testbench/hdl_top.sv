@@ -86,13 +86,9 @@ import pv_defines_pkg::*;
   // Instantiate your DUT here
   // These DUT's instantiated to show verilog and vhdl instantiation
 
-var kv_rd_resp_t kv_rd_resp;
-var kv_wr_resp_t kv_wr_resp;
 var pv_rd_resp_t pv_rd_resp;
 var pv_wr_resp_t pv_wr_resp;
 initial begin
-    kv_rd_resp = '{default:0};
-    kv_wr_resp = '{default:0};
     pv_rd_resp = '{default:0};
     pv_wr_resp = '{default:0};
 end
@@ -117,10 +113,6 @@ end
              .hresp_o(SHA512_out_agent_bus.hresp),
              .hreadyout_o(SHA512_out_agent_bus.hreadyout),
              .hrdata_o(SHA512_out_agent_bus.hrdata),
-             .kv_read   (),
-             .kv_write  (),
-             .kv_rd_resp(kv_rd_resp),
-             .kv_wr_resp(kv_wr_resp),
              .pv_read   (),
              .pv_write  (),
              .pv_rd_resp(pv_rd_resp),
