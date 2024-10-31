@@ -388,7 +388,6 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //Read Block
-always_comb kv_read = '0;
 always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
 always_comb vault_rd_resp = pv_rd_resp;
