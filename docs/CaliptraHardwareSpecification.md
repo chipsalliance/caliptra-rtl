@@ -805,7 +805,6 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 #### Hashing
 
 The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
-<<<<<<< HEAD
 
 *Figure 28: HMAC-SHA-512-256 data flow*
 
@@ -813,15 +812,6 @@ The HMAC512 core performs the sha2-512 function to process the hash value of the
 
 The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-=======
-
-*Figure 28: HMAC-SHA-512-256 data flow*
-
-![](./images/HMAC_SHA_512_256.png)
-
-The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
-
->>>>>>> main
 *Figure 29: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
