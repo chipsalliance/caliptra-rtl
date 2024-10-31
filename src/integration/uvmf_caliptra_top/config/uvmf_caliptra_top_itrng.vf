@@ -512,6 +512,7 @@ ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_mult_reduction.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_special_adder.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_div2.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_buffer.sv
+${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_shuffle_buffer.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_twiddle_lookup.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_ctrl.sv
 ${ADAMSBRIDGE_ROOT}/src/ntt_top/rtl/ntt_top.sv
@@ -532,7 +533,6 @@ ${ADAMSBRIDGE_ROOT}/src/sk_decode/rtl/skdecode_t0_unpack.sv
 ${ADAMSBRIDGE_ROOT}/src/makehint/rtl/makehint_defines_pkg.sv
 ${ADAMSBRIDGE_ROOT}/src/makehint/rtl/hintgen.sv
 ${ADAMSBRIDGE_ROOT}/src/makehint/rtl/makehint.sv
-${ADAMSBRIDGE_ROOT}/src/makehint/rtl/makehint_sample_buffer.sv
 ${ADAMSBRIDGE_ROOT}/src/norm_check/rtl/norm_check.sv
 ${ADAMSBRIDGE_ROOT}/src/norm_check/rtl/norm_check_ctrl.sv
 ${ADAMSBRIDGE_ROOT}/src/norm_check/rtl/norm_check_top.sv
