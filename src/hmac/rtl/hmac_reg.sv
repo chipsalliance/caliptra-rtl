@@ -127,7 +127,7 @@ module hmac_reg (
             decoded_reg_strb.HMAC512_TAG[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + i0*12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.HMAC512_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'h130 + i0*12'h4);
+            decoded_reg_strb.HMAC512_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'h140 + i0*12'h4);
         end
         decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 12'h600);
         decoded_reg_strb.HMAC512_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 12'h604);
