@@ -34,7 +34,6 @@ module axi_sub_rd import axi_pkg::*; #(
     parameter IW = 1,          // ID Width
               ID_NUM = 1 << IW, // Don't override
 
-    parameter EX_EN = 0,   // Enable exclusive access tracking w/ AxLOCK
     parameter C_LAT = 0    // Component latency in clock cycles from (dv&&!hld) -> rdata
                            // Must be const per component
                            // For registers, typically 0
@@ -47,12 +46,15 @@ module axi_sub_rd import axi_pkg::*; #(
     axi_if.r_sub s_axi_if,
 
     // Exclusive Access Signals
+    // Enable exclusive access tracking w/ AxLOCK if EX_EN is set
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
     input  logic            [ID_NUM-1:0] ex_clr,
     output logic            [ID_NUM-1:0] ex_active,
     output struct packed {
         logic [AW-1:0] addr;
         logic [AW-1:0] addr_mask;
     } [ID_NUM-1:0] ex_ctx,
+    `endif
 
     //COMPONENT INF
     output logic          dv,
@@ -100,7 +102,9 @@ module axi_sub_rd import axi_pkg::*; #(
 
     genvar cp; // Context pipeline
     genvar dp; // Data pipeline
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
     genvar ex; // Exclusive contexts
+    `endif
 
     // Active transaction signals
     // track requests as they are sent to component
@@ -174,8 +178,9 @@ module axi_sub_rd import axi_pkg::*; #(
     // Only make the request to component if we have space in the pipeline to
     // store the result (under worst-case AXI backpressure)
     // To check this, look at the 'ready' output from all stages of the
-    // skidbuffer pipeline
-    always_comb dv = txn_active && &dp_rready;
+    // skidbuffer pipeline (but omit the C_LAT+1 index because that comes from
+    // axi rready)
+    always_comb dv = txn_active && &dp_rready[C_LAT:0];
     always_comb txn_rvalid[0] = dv && !hld;
 
     // Asserts on the final beat of the COMPONENT INF which means it lags the
@@ -212,7 +217,11 @@ module axi_sub_rd import axi_pkg::*; #(
         txn_xfer_ctx[0].id   = txn_ctx.id;
         txn_xfer_ctx[0].user = txn_ctx.user;
         txn_xfer_ctx[0].last = txn_cnt == 0;
-        txn_xfer_ctx[0].resp = (EX_EN && txn_ctx.lock) ? AXI_RESP_EXOKAY : AXI_RESP_OKAY;
+        txn_xfer_ctx[0].resp =
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+                               txn_ctx.lock ? AXI_RESP_EXOKAY :
+    `endif
+                               AXI_RESP_OKAY;
     end
 
     // Shift Register to track requests made to component
@@ -243,69 +252,59 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Exclusive Access Tracking               //
     // --------------------------------------- //
-    generate
-        if (EX_EN) begin: EX_AXS_TRACKER
-            // Exclusive access requires transaction LENGTH to be a power of 2,
-            // so an address mask may be prepared by assuming the AxLEN value has
-            // all consecutive LSB set to 1, then all 0's in higher order bits. After
-            // shifting by the width of the transaction (AxSIZE), this mask can be applied
-            // to AxADDR to give the aligned address relative to an exclusive access.
-            // 
-            logic [AW-1:0] addr_ex_algn_mask;
-            always_comb begin
-                case (BC) inside
-                    1:       addr_ex_algn_mask =  ~(AW'(txn_ctx.len));
-                    2:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[0];
-                    4:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
-                    8:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
-                    default: addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size;
-                endcase
-            end
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+        // Exclusive access requires transaction LENGTH to be a power of 2,
+        // so an address mask may be prepared by assuming the AxLEN value has
+        // all consecutive LSB set to 1, then all 0's in higher order bits. After
+        // shifting by the width of the transaction (AxSIZE), this mask can be applied
+        // to AxADDR to give the aligned address relative to an exclusive access.
+        // 
+        logic [AW-1:0] addr_ex_algn_mask;
+        always_comb begin
+            case (BC) inside
+                1:       addr_ex_algn_mask =  ~(AW'(txn_ctx.len));
+                2:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[0];
+                4:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
+                8:       addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size[1:0];
+                default: addr_ex_algn_mask = (~(AW'(txn_ctx.len))) << txn_ctx.size;
+            endcase
+        end
 
-            always_ff@(posedge clk or negedge rst_n) begin
-                if (!rst_n) begin
-                    ex_active <= '0;
+        always_ff@(posedge clk or negedge rst_n) begin
+            if (!rst_n) begin
+                ex_active <= '0;
+            end
+            // give 'set' precedence over 'clr' in case of same ID
+            else if ((txn_rvalid[0] && txn_ctx.lock) && |ex_clr) begin
+                ex_active <= (ex_active & ~ex_clr) | (1 << txn_ctx.id);
+            end
+            else if (txn_rvalid[0] && txn_ctx.lock) begin
+                ex_active <= ex_active | (1 << txn_ctx.id);
+            end
+            else if (|ex_clr) begin
+                ex_active <= ex_active & ~ex_clr;
+            end
+            else begin
+                ex_active <= ex_active;
+            end
+        end
+
+        for (ex = 0; ex < ID_NUM; ex++) begin: EX_CTX_TRACKER
+            // TODO: reset?
+            always_ff@(posedge clk) begin
+                if (txn_rvalid[0] && txn_ctx.lock && (txn_ctx.id == ex)) begin
+                    ex_ctx[ex].addr      <= txn_ctx.addr;
+                    ex_ctx[ex].addr_mask <= addr_ex_algn_mask;
                 end
-                // give 'set' precedence over 'clr' in case of same ID
-                else if ((txn_rvalid[0] && txn_ctx.lock) && |ex_clr) begin
-                    ex_active <= (ex_active & ~ex_clr) | (1 << txn_ctx.id);
-                end
-                else if (txn_rvalid[0] && txn_ctx.lock) begin
-                    ex_active <= ex_active | (1 << txn_ctx.id);
-                end
-                else if (|ex_clr) begin
-                    ex_active <= ex_active & ~ex_clr;
-                end
+                // Ignore the clear case, as ex_active is the ctrl path
+                //else if (ex_clr[ex]) begin
+                //end
                 else begin
-                    ex_active <= ex_active;
+                    ex_ctx[ex] <= ex_ctx[ex];
                 end
             end
-
-            for (ex = 0; ex < ID_NUM; ex++) begin: EX_CTX_TRACKER
-                // TODO: reset?
-                always_ff@(posedge clk) begin
-                    if (txn_rvalid[0] && txn_ctx.lock && (txn_ctx.id == ex)) begin
-                        ex_ctx[ex].addr      <= txn_ctx.addr;
-                        ex_ctx[ex].addr_mask <= addr_ex_algn_mask;
-                    end
-                    // Ignore the clear case, as ex_active is the ctrl path
-                    //else if (ex_clr[ex]) begin
-                    //end
-                    else begin
-                        ex_ctx[ex] <= ex_ctx[ex];
-                    end
-                end
-            end
-        end: EX_AXS_TRACKER
-        else begin: EX_UNSUPPORTED
-            for (ex = 0; ex < ID_NUM; ex++) begin: EX_SIG_0
-                always_comb begin
-                    ex_active[ex] = 1'b0;
-                    ex_ctx[ex]    = '{default:0};
-                end
-            end: EX_SIG_0
-        end: EX_UNSUPPORTED
-    endgenerate
+        end
+    `endif
 
 
     // --------------------------------------- //
@@ -317,8 +316,11 @@ module axi_sub_rd import axi_pkg::*; #(
         dp_xfer_ctx[0].id   = txn_xfer_ctx[C_LAT].id;
         dp_xfer_ctx[0].user = txn_xfer_ctx[C_LAT].user; // NOTE: Unused after it enters data pipeline
         dp_xfer_ctx[0].resp = err   ? AXI_RESP_SLVERR :
-                              EX_EN ? txn_xfer_ctx[C_LAT].resp :
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+                                      txn_xfer_ctx[C_LAT].resp;
+    `else
                                       AXI_RESP_OKAY;
+    `endif
         dp_xfer_ctx[0].last = txn_xfer_ctx[C_LAT].last;
     end
 

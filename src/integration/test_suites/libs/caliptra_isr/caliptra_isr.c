@@ -68,12 +68,6 @@ static void nonstd_veer_isr_sha256_error  (void) __attribute__ ((interrupt ("mac
 static void nonstd_veer_isr_sha256_notif  (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_mldsa_error   (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_mldsa_notif   (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_qspi_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_qspi_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_uart_error    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_uart_notif    (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_i3c_error     (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_i3c_notif     (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_soc_ifc_error (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_soc_ifc_notif (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("machine")));
@@ -92,27 +86,27 @@ static void (* const nonstd_veer_isr_5 ) (void) = nonstd_veer_isr_hmac_error  ; 
 static void (* const nonstd_veer_isr_6 ) (void) = nonstd_veer_isr_hmac_notif  ;    //        |
 static void (* const nonstd_veer_isr_7 ) (void) = nonstd_veer_isr_kv_error    ;    //        |
 static void (* const nonstd_veer_isr_8 ) (void) = nonstd_veer_isr_kv_notif    ;    //        |
-static void (* const nonstd_veer_isr_9 ) (void) = nonstd_veer_isr_sha512_error;    // Definitions come
-static void (* const nonstd_veer_isr_10) (void) = nonstd_veer_isr_sha512_notif;    // from the param'd
-static void (* const nonstd_veer_isr_11) (void) = nonstd_veer_isr_sha256_error;    // macro "nonstd_veer_isr"
-static void (* const nonstd_veer_isr_12) (void) = nonstd_veer_isr_sha256_notif;    // below
-static void (* const nonstd_veer_isr_13) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_qspi_error ---.
-static void (* const nonstd_veer_isr_14) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_qspi_notif    |
-static void (* const nonstd_veer_isr_15) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_uart_error    | Unimplemented to
-static void (* const nonstd_veer_isr_16) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_uart_notif    | save code space
-static void (* const nonstd_veer_isr_17) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_i3c_error     |
-static void (* const nonstd_veer_isr_18) (void) = std_rv_nop_machine          ;    //        |    nonstd_veer_isr_i3c_notif  ---'
+static void (* const nonstd_veer_isr_9 ) (void) = nonstd_veer_isr_sha512_error;    //        |
+static void (* const nonstd_veer_isr_10) (void) = nonstd_veer_isr_sha512_notif;    //        |
+static void (* const nonstd_veer_isr_11) (void) = nonstd_veer_isr_sha256_error;    //        |
+static void (* const nonstd_veer_isr_12) (void) = nonstd_veer_isr_sha256_notif;    //        |
+static void (* const nonstd_veer_isr_13) (void) = std_rv_nop_machine          ;    // Definitions come
+static void (* const nonstd_veer_isr_14) (void) = std_rv_nop_machine          ;    // from the param'd
+static void (* const nonstd_veer_isr_15) (void) = std_rv_nop_machine          ;    // macro "nonstd_veer_isr"
+static void (* const nonstd_veer_isr_16) (void) = std_rv_nop_machine          ;    // below
+static void (* const nonstd_veer_isr_17) (void) = std_rv_nop_machine          ;    //        |
+static void (* const nonstd_veer_isr_18) (void) = std_rv_nop_machine          ;    //        |
 static void (* const nonstd_veer_isr_19) (void) = nonstd_veer_isr_soc_ifc_error;   //        |
 static void (* const nonstd_veer_isr_20) (void) = nonstd_veer_isr_soc_ifc_notif;   //        |
 static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_error;//        |
 static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;//        | 
 static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_mldsa_error ;    //        |
-static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_mldsa_notif ;    //-------.|
+static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_mldsa_notif ;    //        |
 static void (* const nonstd_veer_isr_25) (void) = nonstd_veer_isr_axi_dma_error;   //        |
 static void (* const nonstd_veer_isr_26) (void) = nonstd_veer_isr_axi_dma_notif;   // -------'
-static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; //         |
-static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; // Unimplemented ISR
-static void (* const nonstd_veer_isr_29) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; // --------.
+static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_29) (void) = std_rv_nop_machine; // Unimplemented ISR
 static void (* const nonstd_veer_isr_30) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_veer_isr_31) (void) = std_rv_nop_machine; // --------'
 
@@ -236,12 +230,12 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_SHA512_NOTIF    ] = VEER_INTR_PRIO_SHA512_NOTIF    ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA256_ERROR    ] = VEER_INTR_PRIO_SHA256_ERROR    ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA256_NOTIF    ] = VEER_INTR_PRIO_SHA256_NOTIF    ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_QSPI_ERROR      ] = VEER_INTR_PRIO_QSPI_ERROR      ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_QSPI_NOTIF      ] = VEER_INTR_PRIO_QSPI_NOTIF      ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_UART_ERROR      ] = VEER_INTR_PRIO_UART_ERROR      ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_UART_NOTIF      ] = VEER_INTR_PRIO_UART_NOTIF      ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_I3C_ERROR       ] = VEER_INTR_PRIO_I3C_ERROR       ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_I3C_NOTIF       ] = VEER_INTR_PRIO_I3C_NOTIF       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD0_ERROR     ] = VEER_INTR_PRIO_RSVD0_ERROR     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD0_NOTIF     ] = VEER_INTR_PRIO_RSVD0_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD1_ERROR     ] = VEER_INTR_PRIO_RSVD1_ERROR     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD1_NOTIF     ] = VEER_INTR_PRIO_RSVD1_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD2_ERROR     ] = VEER_INTR_PRIO_RSVD2_ERROR     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_RSVD2_NOTIF     ] = VEER_INTR_PRIO_RSVD2_NOTIF     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SOC_IFC_ERROR   ] = VEER_INTR_PRIO_SOC_IFC_ERROR   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SOC_IFC_NOTIF   ] = VEER_INTR_PRIO_SOC_IFC_NOTIF   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA512_ACC_ERROR] = VEER_INTR_PRIO_SHA512_ACC_ERROR; __asm__ volatile ("fence");
@@ -727,12 +721,6 @@ static void nonstd_veer_isr_0 (void) {
      * service_sha512_notif_intr                                                                      \
      * service_sha256_error_intr                                                                      \
      * service_sha256_notif_intr                                                                      \
-     * service_qspi_error_intr                                                                        \
-     * service_qspi_notif_intr                                                                        \
-     * service_uart_error_intr                                                                        \
-     * service_uart_notif_intr                                                                        \
-     * service_i3c_error_intr                                                                         \
-     * service_i3c_notif_intr                                                                         \
      * service_soc_ifc_error_intr                                                                     \
      * service_soc_ifc_notif_intr                                                                     \
      * service_sha512_acc_error_intr                                                                  \
@@ -789,20 +777,6 @@ nonstd_veer_isr(sha512_notif)
 nonstd_veer_isr(sha256_error)
 // Non-Standard Vectored Interrupt Handler (SHA256 Notification = vector 12)
 nonstd_veer_isr(sha256_notif)
-/********************** Save FW image space by omitting these unused ISR ******
- * // Non-Standard Vectored Interrupt Handler (QSPI Error = vector 13)          //
- * nonstd_veer_isr(qspi_error)                                                  //
- * // Non-Standard Vectored Interrupt Handler (QSPI Notification = vector 14)   //
- * nonstd_veer_isr(qspi_notif)                                                  //
- * // Non-Standard Vectored Interrupt Handler (UART Error = vector 15)          //
- * nonstd_veer_isr(uart_error)                                                  //
- * // Non-Standard Vectored Interrupt Handler (UART Notification = vector 16)   //
- * nonstd_veer_isr(uart_notif)                                                  //
- * // Non-Standard Vectored Interrupt Handler (I3C Error = vector 17)           //
- * nonstd_veer_isr(i3c_error)                                                   //
- * // Non-Standard Vectored Interrupt Handler (I3C Notification = vector 18)    //
- * nonstd_veer_isr(i3c_notif)                                                   //
-******************************************************************************/
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Error = vector 19)
 nonstd_veer_isr(soc_ifc_error)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Notification = vector 20)

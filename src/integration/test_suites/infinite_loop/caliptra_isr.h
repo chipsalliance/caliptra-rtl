@@ -39,12 +39,6 @@ typedef struct {
     uint32_t sha512_notif;
     uint32_t sha256_error;
     uint32_t sha256_notif;
-    uint32_t qspi_error;
-    uint32_t qspi_notif;
-    uint32_t uart_error;
-    uint32_t uart_notif;
-    uint32_t i3c_error;
-    uint32_t i3c_notif;
     uint32_t soc_ifc_error;
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
@@ -75,15 +69,6 @@ inline void service_sha512_notif_intr() {return;}
 
 inline void service_sha256_error_intr() {return;}
 inline void service_sha256_notif_intr() {return;}
-
-inline void service_qspi_error_intr() {return;}
-inline void service_qspi_notif_intr() {return;}
-
-inline void service_uart_error_intr() {return;}
-inline void service_uart_notif_intr() {return;}
-
-inline void service_i3c_error_intr() {return;}
-inline void service_i3c_notif_intr() {return;}
 
 inline void service_soc_ifc_error_intr() {return;}
 inline void service_soc_ifc_notif_intr () {return;}

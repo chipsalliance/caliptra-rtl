@@ -138,11 +138,9 @@ caliptra-rtl
 |   |-- sha256
 |   |-- sha512
 |   |-- sha512_masked
-|   |-- soc_ifc
-|   |-- spi_host
-|   `-- uart
+|   `-- soc_ifc
 |-- submodules
-    |-- adams-bridge
+    `-- adams-bridge
 `-- tools
     |-- README
     |-- scripts
@@ -188,27 +186,18 @@ Verilog file lists are generated via VCS and included in the config directory fo
     - NOTE: Users may wish to produce a run log by piping the make command to a tee command, e.g.:
         `make ... <args> ... | tee <path/to/run/folder>/vcs.log`
     - NOTE: The following macro values may be overridden to define the hardware configuration that is built. Default values in the Makefile are shown with each macro:
-      - CALIPTRA_INTERNAL_QSPI=1
-      - CALIPTRA_INTERNAL_UART=1
-      - CALIPTRA_INTERNAL_I3C=0
       - CALIPTRA_INTERNAL_TRNG=1
-      - E.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0 CALIPTRA_INTERNAL_TRNG=1 vcs`
+      - E.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile CALIPTRA_INTERNAL_TRNG=1 vcs`
 1. Remaining steps describe how to manually run the individual steps for a VCS simulation
 1. [OPTIONAL] By default, this run flow will use the RISC-V toolchain to compile test firmware (according to TESTNAME) into program.hex, iccm.hex, dccm.hex, and mailbox.hex. As a first pass, integrators may alternatively use the pre-built hexfiles for convenience (available for [iccm_lock](src/integration/test_suites/iccm_lock) test). To do this, copy [iccm_lock.hex](src/integration/test_suites/iccm_lock/iccm_lock.hex) to the run directory and rename to `program.hex`. [dccm.hex](src/integration/test_suites/iccm_lock/iccm_lock.hex) should also be copied to the run directory, as-is. Use `touch iccm.hex mailbox.hex` to create empty hex files, as these are unnecessary for `iccm_lock` test.
 1. Invoke `${CALIPTRA_ROOT}/tools/scripts/Makefile` with target 'program.hex' to produce SRAM initialization files from the firmware found in `src/integration/test_suites/${TESTNAME}`
     - E.g.: `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex`
     - NOTE: TESTNAME may also be overridden in the makefile command line invocation, e.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=iccm_lock program.hex`
     - NOTE: The following macro values must be overridden to match the value provided (later) during hardware compilation. The full L0 regression suite includes tests that will fail if the firmware and hardware configuration has a discrepancy. Default values in the Makefile are shown with each macro:
-      - CALIPTRA_INTERNAL_QSPI=1
-      - CALIPTRA_INTERNAL_UART=1
-      - CALIPTRA_INTERNAL_I3C=0
       - CALIPTRA_INTERNAL_TRNG=1
-      - E.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile CALIPTRA_INTERNAL_QSPI=0 CALIPTRA_INTERNAL_UART=0 CALIPTRA_INTERNAL_I3C=0 CALIPTRA_INTERNAL_TRNG=1 program.hex`
+      - E.g. `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile CALIPTRA_INTERNAL_TRNG=1 program.hex`
 1. Compile complete project using `src/integration/config/caliptra_top_tb.vf` as a compilation target in VCS. When running the `vcs` command to generate simv, users should ensure that `caliptra_top_tb` is explicitly specified as the top-level component in their command to ensure this is the sole "top" that gets simulated.
     - NOTE: The following macro values must be defined (or omitted) to match the value provided during firmware compilation. The full L0 regression suite includes tests that will fail if the firmware and hardware configuration has a discrepancy.
-      - CALIPTRA_INTERNAL_QSPI
-      - CALIPTRA_INTERNAL_UART
-      - CALIPTRA_INTERNAL_I3C
       - CALIPTRA_INTERNAL_TRNG
 1. Copy the test generator scripts to the run output directory:
     - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)

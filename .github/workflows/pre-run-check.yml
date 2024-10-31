@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
+            submodules: 'true'
       - name: Compare against target
         env:
             PR_OPENER:   ${{ github.event.pull_request.user.login }}
@@ -76,6 +77,7 @@ jobs:
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
+            submodules: 'true'
 
       - name: Gen File List
         run: |
@@ -167,6 +169,9 @@ jobs:
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+            submodules: 'true'
 
       - name: Run Script
         run: |
@@ -183,6 +188,7 @@ jobs:
         uses: actions/checkout@v4
         with:
             fetch-depth: 0
+            submodules: 'true'
 
       - name: Install peakrdl
         run: |

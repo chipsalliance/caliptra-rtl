@@ -87,17 +87,6 @@ module caliptra_top_tb (
         .UW(CPTRA_AXI_DMA_USER_WIDTH)
     ) axi_sram_if (.clk(core_clk), .rst_n(cptra_rst_b));
 
-    // QSPI Interface
-    logic                                qspi_clk;
-    logic [`CALIPTRA_QSPI_CS_WIDTH-1:0]  qspi_cs_n;
-    wire  [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data;
-    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device, qspi_data_device_to_host;
-    logic [`CALIPTRA_QSPI_IO_WIDTH-1:0]  qspi_data_host_to_device_en;
-
-`ifdef CALIPTRA_INTERNAL_UART
-    logic uart_loopback;
-`endif
-
     logic ready_for_fuses;
     logic ready_for_fw_push;
     logic mailbox_data_avail;
@@ -222,17 +211,6 @@ caliptra_top caliptra_top_dut (
     .m_axi_w_if(m_axi_if.w_mgr),
     .m_axi_r_if(m_axi_if.r_mgr),
 
-    .qspi_clk_o (qspi_clk),
-    .qspi_cs_no (qspi_cs_n),
-    .qspi_d_i   (qspi_data_device_to_host),
-    .qspi_d_o   (qspi_data_host_to_device),
-    .qspi_d_en_o(qspi_data_host_to_device_en),
-
-`ifdef CALIPTRA_INTERNAL_UART
-    .uart_tx(uart_loopback),
-    .uart_rx(uart_loopback),
-`endif
-
     .el2_mem_export(el2_mem_export.veer_sram_src),
 
     .ready_for_fuses(ready_for_fuses),
@@ -287,42 +265,6 @@ physical_rng physical_rng (
     .data   (itrng_data),
     .valid  (itrng_valid)
 );
-`endif
-
-`ifdef CALIPTRA_INTERNAL_QSPI
-    //=========================================================================-
-    // SPI Flash
-    //=========================================================================-
-for (genvar ii = 0; ii < `CALIPTRA_QSPI_IO_WIDTH; ii += 1) begin: gen_qspi_io
-  assign qspi_data[ii] = qspi_data_host_to_device_en[ii]
-      ? qspi_data_host_to_device[ii]
-      : 1'bz;
-  assign qspi_data_device_to_host[ii] = qspi_data_host_to_device_en[ii]
-      ? 1'bz
-      : qspi_data[ii];
-end
-
-localparam logic [15:0] DeviceId0 = 16'hF10A;
-localparam logic [15:0] DeviceId1 = 16'hF10B;
-
-spiflash #(
-  .DeviceId(DeviceId0),
-  .SpiFlashRandomData(0) // fixed pattern for smoke test
-) spiflash0 (
-  .sck (qspi_clk),
-  .csb (qspi_cs_n[0]),
-  .sd  (qspi_data)
-);
-
-spiflash #(
-  .DeviceId(DeviceId1),
-  .SpiFlashRandomData(0) // fixed pattern for smoke test
-) spiflash1 (
-  .sck (qspi_clk),
-  .csb (qspi_cs_n[1]),
-  .sd  (qspi_data)
-);
-
 `endif
 
    //=========================================================================-
