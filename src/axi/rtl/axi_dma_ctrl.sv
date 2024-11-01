@@ -673,7 +673,8 @@ import soc_ifc_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth            (FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
-      .Secure           (1'b0)  // use prim count for pointers TODO review if this is needed
+      .Secure           (1'b0), // use prim count for pointers TODO review if this is needed
+      .RstStorage       (1'b1)  // Use rst_ni to reset internal storage array
     ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
