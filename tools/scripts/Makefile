@@ -84,7 +84,7 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py \
 	          $(CALIPTRA_ROOT)/src/sha256/tb/sha256_wntz_test_gen.py \
-	          $(CALIPTRA_ROOT)/src/mldsa/tb/test_dilithium5
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/mldsa_top/uvmf/uvmf_template_output/verification_ip/environment_packages/mldsa_env_pkg/src/test_dilithium5
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
