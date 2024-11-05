@@ -123,7 +123,8 @@ targets:
     pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
-                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .'
 global:
   tool:
@@ -155,7 +156,8 @@ targets:
     pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
-                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .'
 global:
   tool:

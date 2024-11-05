@@ -20,7 +20,7 @@ src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \
 src/datavault/rtl/dv_reg.rdl \
 src/ecc/rtl/ecc_reg.rdl \
-$ADAMSBRIDGE_ROOT/src/mldsa_top/rtl/mldsa_reg.rdl \
+submodules/adams-bridge/src/mldsa_top/rtl/mldsa_reg.rdl \
 src/sha512/rtl/sha512_reg.rdl \
 src/sha256/rtl/sha256_reg.rdl \
 src/soc_ifc/rtl/mbox_csr.rdl \
