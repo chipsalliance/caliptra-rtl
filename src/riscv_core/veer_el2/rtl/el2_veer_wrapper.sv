@@ -33,7 +33,6 @@ import el2_pkg::*;
    input logic [31:1]                      rst_vec,
    input logic                             nmi_int,
    input logic [31:1]                      nmi_vec,
-   input logic [31:1]                      jtag_id,
 
 
    output logic [31:0]                     trace_rv_i_insn_ip,
@@ -896,7 +895,6 @@ import el2_pkg::*;
     // Processor Signals
     .core_rst_n  (dbg_rst_l),       // Debug reset, active low
     .core_clk    (clk),             // Core clock
-    .jtag_id     (jtag_id),         // JTAG ID
     .rd_data     (dmi_rdata),       // Read data from  Processor
     .reg_wr_data (dmi_wdata),       // Write data to Processor
     .reg_wr_addr (dmi_addr),        // Write address to Processor
