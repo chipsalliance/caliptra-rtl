@@ -481,8 +481,8 @@ el2_veer_wrapper rvtop (
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
 
-    .ic_data_ext_in_pkt     (0),
-    .ic_tag_ext_in_pkt      (0),
+    .ic_data_ext_in_pkt     (48'h0),
+    .ic_tag_ext_in_pkt      (24'h0),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
