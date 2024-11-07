@@ -1,6 +1,7 @@
 //********************************************************************************
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2020 Western Digital Corporation or its affiliates.
+// Copyright (c) 2023 Antmicro <www.antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +38,7 @@ import el2_pkg::*;
    input logic [2:0]                                  iccm_wr_size,                        // ICCM write size
    input logic [77:0]                                 iccm_wr_data,                        // ICCM write data
 
-   el2_mem_if.veer_iccm iccm_mem_export, // RAM repositioned in testbench and connected by this interface
+   el2_mem_if.veer_iccm                               iccm_mem_export,                     // RAM repositioned in testbench and connected by this interface
 
    output logic [63:0]                                iccm_rd_data,                        // ICCM read data
    output logic [77:0]                                iccm_rd_data_ecc,                    // ICCM read ecc
@@ -108,19 +109,22 @@ import el2_pkg::*;
                                                                                       ((addr_bank_inc[pt.ICCM_BANK_HI:2] == i) ?
                                                                                                     addr_bank_inc[pt.ICCM_BITS-1 : pt.ICCM_BANK_INDEX_LO] :
                                                                                                     iccm_rw_addr[pt.ICCM_BITS-1 : pt.ICCM_BANK_INDEX_LO]);
-        always_comb begin
-            iccm_mem_export.iccm_clken[i]              = iccm_clken[i];
-            iccm_mem_export.iccm_wren_bank [i]         = wren_bank [i];
-            iccm_mem_export.iccm_addr_bank [i]         = addr_bank [i];
-            iccm_mem_export.iccm_bank_wr_data[i][38:0] = iccm_bank_wr_data[i][38:0];
-            iccm_bank_dout[i][38:0]                    = iccm_mem_export.iccm_bank_dout[i][38:0];
-        end
 
-   // match the redundant rows
-   assign sel_red1[i]  = (redundant_valid[1]  & (((iccm_rw_addr[pt.ICCM_BITS-1:2] == redundant_address[1][pt.ICCM_BITS-1:2]) & (iccm_rw_addr[3:2] == i)) |
+    always_comb begin
+      iccm_mem_export.iccm_clken[i]        = iccm_clken[i];
+      iccm_mem_export.iccm_wren_bank[i]    = wren_bank[i];
+      iccm_mem_export.iccm_addr_bank[i]    = addr_bank[i];
+      iccm_mem_export.iccm_bank_wr_data[i] = iccm_bank_wr_data[i][31:0];
+      iccm_mem_export.iccm_bank_wr_ecc[i]  = iccm_bank_wr_data[i][32+pt.ICCM_ECC_WIDTH-1:32];
+      iccm_bank_dout[i][31:0]              = iccm_mem_export.iccm_bank_dout[i];
+      iccm_bank_dout[i][32+pt.ICCM_ECC_WIDTH-1:32] = iccm_mem_export.iccm_bank_ecc[i];
+    end
+
+    // match the redundant rows
+    assign sel_red1[i]  = (redundant_valid[1]  & (((iccm_rw_addr[pt.ICCM_BITS-1:2] == redundant_address[1][pt.ICCM_BITS-1:2]) & (iccm_rw_addr[3:2] == i)) |
                                                  ((addr_bank_inc[pt.ICCM_BITS-1:2]== redundant_address[1][pt.ICCM_BITS-1:2]) & (addr_bank_inc[3:2] == i))));
 
-   assign sel_red0[i]  = (redundant_valid[0]  & (((iccm_rw_addr[pt.ICCM_BITS-1:2] == redundant_address[0][pt.ICCM_BITS-1:2]) & (iccm_rw_addr[3:2] == i)) |
+    assign sel_red0[i]  = (redundant_valid[0]  & (((iccm_rw_addr[pt.ICCM_BITS-1:2] == redundant_address[0][pt.ICCM_BITS-1:2]) & (iccm_rw_addr[3:2] == i)) |
                                                  ((addr_bank_inc[pt.ICCM_BITS-1:2]== redundant_address[0][pt.ICCM_BITS-1:2]) & (addr_bank_inc[3:2] == i))));
 
    rvdff #(1) selred0  (.*,

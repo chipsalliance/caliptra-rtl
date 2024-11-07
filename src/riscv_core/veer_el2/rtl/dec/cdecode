@@ -1,20 +1,3 @@
-#********************************************************************************
-# SPDX-License-Identifier: Apache-2.0
-# Copyright 2020 Western Digital Corporation or its affiliates.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#********************************************************************************
-
 
 .definition
 
@@ -116,7 +99,12 @@ c.lui29 =               [011.....1....101]
 c.lw =          [010...........00]
 
 
-c.lwsp =        [010...........10]
+# invalid if rd=x0
+c.lwsp0 =       [010.....1.....10]
+c.lwsp1 =       [010....1......10]
+c.lwsp2 =       [010...1.......10]
+c.lwsp3 =       [010..1........10]
+c.lwsp4 =       [010.1.........10]
 
 c.or =          [100011...10...01]
 
@@ -251,7 +239,7 @@ rv32c[c.li] =                   { rdrd simm5_0                                  
 
 rv32c[c.lui{0-29}] =            { rdrd sluimm17_12                                                o[5] o[4]      o[2] o[1] o[0] }
 rv32c[c.lw] =                   { rs2prd rdprs1 ulwimm6_2                    o[13]                                 o[1] o[0] }
-rv32c[c.lwsp] =                 { rdrd rs1eq2 ulwspimm7_2                    o[13]                                 o[1] o[0] }
+rv32c[c.lwsp{0-4}] =            { rdrd rs1eq2 ulwspimm7_2                    o[13]                                 o[1] o[0] }
 
 
 rv32c[c.or] =                   { rdprd rdprs1 rs2prs2               o[14] o[13]             o[5] o[4] o[1] o[0] }

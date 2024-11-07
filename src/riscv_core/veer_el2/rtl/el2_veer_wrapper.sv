@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2020 Western Digital Corporation or its affiliates.
+// Copyright (c) 2023 Antmicro <www.antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +23,6 @@
 //********************************************************************************
 module el2_veer_wrapper
 import el2_pkg::*;
-import soc_ifc_pkg::*;
  #(
 `include "el2_param.vh"
 )
@@ -33,6 +33,7 @@ import soc_ifc_pkg::*;
    input logic [31:1]                      rst_vec,
    input logic                             nmi_int,
    input logic [31:1]                      nmi_vec,
+   input logic [31:1]                      jtag_id,
 
 
    output logic [31:0]                     trace_rv_i_insn_ip,
@@ -52,13 +53,22 @@ import soc_ifc_pkg::*;
    output logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_awid,
    output logic [31:0]                     lsu_axi_awaddr,
    output logic [3:0]                      lsu_axi_awregion,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      lsu_axi_awlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      lsu_axi_awsize,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      lsu_axi_awburst,
    output logic                            lsu_axi_awlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      lsu_axi_awcache,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      lsu_axi_awprot,
    output logic [3:0]                      lsu_axi_awqos,
+   /*verilator coverage_on*/
 
    output logic                            lsu_axi_wvalid,
    input  logic                            lsu_axi_wready,
@@ -67,7 +77,10 @@ import soc_ifc_pkg::*;
    output logic                            lsu_axi_wlast,
 
    input  logic                            lsu_axi_bvalid,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic                            lsu_axi_bready,
+   /*verilator coverage_on*/
    input  logic [1:0]                      lsu_axi_bresp,
    input  logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_bid,
 
@@ -77,16 +90,28 @@ import soc_ifc_pkg::*;
    output logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_arid,
    output logic [31:0]                     lsu_axi_araddr,
    output logic [3:0]                      lsu_axi_arregion,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      lsu_axi_arlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      lsu_axi_arsize,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      lsu_axi_arburst,
    output logic                            lsu_axi_arlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      lsu_axi_arcache,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      lsu_axi_arprot,
    output logic [3:0]                      lsu_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            lsu_axi_rvalid,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic                            lsu_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_rid,
    input  logic [63:0]                     lsu_axi_rdata,
    input  logic [1:0]                      lsu_axi_rresp,
@@ -94,8 +119,13 @@ import soc_ifc_pkg::*;
 
    //-------------------------- IFU AXI signals--------------------------
    // AXI Write Channels
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_awvalid,
+   /*verilator coverage_on*/
    input  logic                            ifu_axi_awready,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_awid,
    output logic [31:0]                     ifu_axi_awaddr,
    output logic [3:0]                      ifu_axi_awregion,
@@ -108,13 +138,20 @@ import soc_ifc_pkg::*;
    output logic [3:0]                      ifu_axi_awqos,
 
    output logic                            ifu_axi_wvalid,
+   /*verilator coverage_on*/
    input  logic                            ifu_axi_wready,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic [63:0]                     ifu_axi_wdata,
    output logic [7:0]                      ifu_axi_wstrb,
    output logic                            ifu_axi_wlast,
+   /*verilator coverage_on*/
 
    input  logic                            ifu_axi_bvalid,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_bready,
+   /*verilator coverage_on*/
    input  logic [1:0]                      ifu_axi_bresp,
    input  logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_bid,
 
@@ -124,6 +161,8 @@ import soc_ifc_pkg::*;
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_arid,
    output logic [31:0]                     ifu_axi_araddr,
    output logic [3:0]                      ifu_axi_arregion,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      ifu_axi_arlen,
    output logic [2:0]                      ifu_axi_arsize,
    output logic [1:0]                      ifu_axi_arburst,
@@ -131,9 +170,13 @@ import soc_ifc_pkg::*;
    output logic [3:0]                      ifu_axi_arcache,
    output logic [2:0]                      ifu_axi_arprot,
    output logic [3:0]                      ifu_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            ifu_axi_rvalid,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_rid,
    input  logic [63:0]                     ifu_axi_rdata,
    input  logic [1:0]                      ifu_axi_rresp,
@@ -143,16 +186,25 @@ import soc_ifc_pkg::*;
    // AXI Write Channels
    output logic                            sb_axi_awvalid,
    input  logic                            sb_axi_awready,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [pt.SB_BUS_TAG-1:0]        sb_axi_awid,
+   /*verilator coverage_on*/
    output logic [31:0]                     sb_axi_awaddr,
    output logic [3:0]                      sb_axi_awregion,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      sb_axi_awlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      sb_axi_awsize,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      sb_axi_awburst,
    output logic                            sb_axi_awlock,
    output logic [3:0]                      sb_axi_awcache,
    output logic [2:0]                      sb_axi_awprot,
    output logic [3:0]                      sb_axi_awqos,
+   /*verilator coverage_on*/
 
    output logic                            sb_axi_wvalid,
    input  logic                            sb_axi_wready,
@@ -168,19 +220,31 @@ import soc_ifc_pkg::*;
    // AXI Read Channels
    output logic                            sb_axi_arvalid,
    input  logic                            sb_axi_arready,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [pt.SB_BUS_TAG-1:0]        sb_axi_arid,
+   /*verilator coverage_on*/
    output logic [31:0]                     sb_axi_araddr,
    output logic [3:0]                      sb_axi_arregion,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      sb_axi_arlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      sb_axi_arsize,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      sb_axi_arburst,
    output logic                            sb_axi_arlock,
    output logic [3:0]                      sb_axi_arcache,
    output logic [2:0]                      sb_axi_arprot,
    output logic [3:0]                      sb_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            sb_axi_rvalid,
+   /* exclude signals that are tied to constant value in dbg/el2_dbg.sv */
+   /*verilator coverage_off*/
    output logic                            sb_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.SB_BUS_TAG-1:0]        sb_axi_rid,
    input  logic [63:0]                     sb_axi_rdata,
    input  logic [1:0]                      sb_axi_rresp,
@@ -190,7 +254,10 @@ import soc_ifc_pkg::*;
    // AXI Write Channels
    input  logic                            dma_axi_awvalid,
    output logic                            dma_axi_awready,
+   /* exclude signals that are tied to constant value in tb_top.sv */
+   /*verilator coverage_off*/
    input  logic [pt.DMA_BUS_TAG-1:0]       dma_axi_awid,
+   /*verilator coverage_on*/
    input  logic [31:0]                     dma_axi_awaddr,
    input  logic [2:0]                      dma_axi_awsize,
    input  logic [2:0]                      dma_axi_awprot,
@@ -212,7 +279,10 @@ import soc_ifc_pkg::*;
    // AXI Read Channels
    input  logic                            dma_axi_arvalid,
    output logic                            dma_axi_arready,
+   /* exclude signals that are tied to constant value in tb_top.sv */
+   /*verilator coverage_off*/
    input  logic [pt.DMA_BUS_TAG-1:0]       dma_axi_arid,
+   /*verilator coverage_on*/
    input  logic [31:0]                     dma_axi_araddr,
    input  logic [2:0]                      dma_axi_arsize,
    input  logic [2:0]                      dma_axi_arprot,
@@ -230,45 +300,65 @@ import soc_ifc_pkg::*;
 `ifdef RV_BUILD_AHB_LITE
  //// AHB LITE BUS
    output logic [31:0]                     haddr,
+   /* exclude signals that are tied to constant value in axi4_to_ahb.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      hburst,
    output logic                            hmastlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      hprot,
    output logic [2:0]                      hsize,
    output logic [1:0]                      htrans,
    output logic                            hwrite,
 
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    input logic [63:0]                      hrdata,
    input logic                             hready,
    input logic                             hresp,
+   /*verilator coverage_on*/
 
    // LSU AHB Master
    output logic [31:0]                     lsu_haddr,
+   /* exclude signals that are tied to constant value in axi4_to_ahb.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      lsu_hburst,
    output logic                            lsu_hmastlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      lsu_hprot,
    output logic [2:0]                      lsu_hsize,
    output logic [1:0]                      lsu_htrans,
    output logic                            lsu_hwrite,
    output logic [63:0]                     lsu_hwdata,
 
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    input logic [63:0]                      lsu_hrdata,
    input logic                             lsu_hready,
    input logic                             lsu_hresp,
+   /*verilator coverage_on*/
    // Debug Syster Bus AHB
    output logic [31:0]                     sb_haddr,
+   /* exclude signals that are tied to constant value in axi4_to_ahb.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      sb_hburst,
    output logic                            sb_hmastlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      sb_hprot,
    output logic [2:0]                      sb_hsize,
    output logic [1:0]                      sb_htrans,
    output logic                            sb_hwrite,
    output logic [63:0]                     sb_hwdata,
 
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    input  logic [63:0]                     sb_hrdata,
    input  logic                            sb_hready,
    input  logic                            sb_hresp,
+   /*verilator coverage_on*/
 
    // DMA Slave
+   /* exclude signals that are tied to constant value in tb_top.sv */
+   /*verilator coverage_off*/
    input logic                             dma_hsel,
    input logic [31:0]                      dma_haddr,
    input logic [2:0]                       dma_hburst,
@@ -278,6 +368,7 @@ import soc_ifc_pkg::*;
    input logic [1:0]                       dma_htrans,
    input logic                             dma_hwrite,
    input logic [63:0]                      dma_hwdata,
+   /*verilator coverage_on*/
    input logic                             dma_hreadyin,
 
    output logic [63:0]                     dma_hrdata,
@@ -289,6 +380,17 @@ import soc_ifc_pkg::*;
    input logic                             ifu_bus_clk_en, // Clock ratio b/w cpu core clk & AHB master interface
    input logic                             dbg_bus_clk_en, // Clock ratio b/w cpu core clk & AHB master interface
    input logic                             dma_bus_clk_en, // Clock ratio b/w cpu core clk & AHB slave interface
+
+   // ICCM/DCCM ECC status
+   output logic                            iccm_ecc_single_error,
+   output logic                            iccm_ecc_double_error,
+   output logic                            dccm_ecc_single_error,
+   output logic                            dccm_ecc_double_error,
+
+ // all of these test inputs are brought to top-level; must be tied off based on usage by physical design (ie. icache or not, iccm or not, dccm or not)
+
+   input                                   el2_ic_data_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] ic_data_ext_in_pkt,
+   input                                   el2_ic_tag_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0] ic_tag_ext_in_pkt,
 
    input logic                             timer_int,
    input logic                             soft_int,
@@ -307,25 +409,10 @@ import soc_ifc_pkg::*;
    output logic                            jtag_tdo,    // JTAG TDO
    output logic                            jtag_tdoEn,  // JTAG Test Data Output enable
 
-   //caliptra uncore jtag ports
-   output logic                            cptra_uncore_dmi_reg_en,
-   output logic                            cptra_uncore_dmi_reg_wr_en,
-   input  logic [31:0]                     cptra_uncore_dmi_reg_rdata,
-   output logic [6:0]                      cptra_uncore_dmi_reg_addr,
-   output logic [31:0]                     cptra_uncore_dmi_reg_wdata,
-   input  security_state_t                 cptra_security_state_Latched,
-   output logic                            cptra_dmi_reg_en_preQ,
-
    input logic [31:4] core_id,
 
-   // Caliptra Memory Export Interface
+   // Memory Export Interface
    el2_mem_if.veer_sram_src                el2_mem_export,
-
-   // Caliptra ECC status signals
-   output logic                            cptra_iccm_ecc_single_error,
-   output logic                            cptra_iccm_ecc_double_error,
-   output logic                            cptra_dccm_ecc_single_error,
-   output logic                            cptra_dccm_ecc_double_error,
 
    // external MPC halt/run interface
    input logic                             mpc_debug_halt_req, // Async halt request
@@ -341,8 +428,20 @@ import soc_ifc_pkg::*;
    output logic                            o_debug_mode_status, // Core to the PMU that core is in debug mode. When core is in debug mode, the PMU should refrain from sendng a halt or run request
    input logic                             i_cpu_run_req, // Async restart req to CPU
    output logic                            o_cpu_run_ack, // Core response to run req
+
+   /* exclude signals that are tied to constant value or left unconnected in tb_top.sv */
+   /* verilator coverage_off */
    input logic                             scan_mode,     // To enable scan mode
-   input logic                             mbist_mode     // to enable mbist
+   input logic                             mbist_mode,    // to enable mbist
+
+   // DMI port for uncore
+   input logic                             dmi_uncore_enable,
+   output logic                            dmi_uncore_en,
+   output logic                            dmi_uncore_wr_en,
+   output logic                     [ 6:0] dmi_uncore_addr,
+   output logic                     [31:0] dmi_uncore_wdata,
+   input logic                      [31:0] dmi_uncore_rdata
+   /* verilator coverage_on */
 );
 
    logic                             active_l2clk;
@@ -413,6 +512,8 @@ import soc_ifc_pkg::*;
 
    // zero out the signals not presented at the wrapper instantiation level
 `ifdef RV_BUILD_AXI4
+   // Since all the signals in this block are tied to constant, we exclude this from coverage analysis
+   /*verilator coverage_off*/
 
  //// AHB LITE BUS
    logic [31:0]              haddr;
@@ -497,10 +598,14 @@ import soc_ifc_pkg::*;
    assign  dma_hwdata[63:0]                       = '0;
    assign  dma_hreadyin                           = '0;
 
+   /*verilator coverage_on*/
+
 `endif //  `ifdef RV_BUILD_AXI4
 
 
 `ifdef RV_BUILD_AHB_LITE
+   // Since all the signals in this block are tied to constant, we exclude this from coverage analysis
+   /*verilator coverage_off*/
    wire                            lsu_axi_awvalid;
    wire                            lsu_axi_awready;
    wire [pt.LSU_BUS_TAG-1:0]       lsu_axi_awid;
@@ -745,15 +850,24 @@ import soc_ifc_pkg::*;
    assign ifu_axi_bvalid = '0;
    assign ifu_axi_bresp[1:0] = '0;
    assign ifu_axi_bid[pt.IFU_BUS_TAG-1:0] = '0;
+ 
+   /*verilator coverage_on*/
 
 `endif //  `ifdef RV_BUILD_AHB_LITE
 
-   logic                   dmi_reg_en, dmi_reg_en_preQ;
+   // DMI (core)
+   logic                   dmi_en;
+   logic [6:0]             dmi_addr;
+   logic                   dmi_wr_en;
+   logic [31:0]            dmi_wdata;
+   logic [31:0]            dmi_rdata;
+
+   // DMI (core)
+   logic                   dmi_reg_en;
    logic [6:0]             dmi_reg_addr;
-   logic                   dmi_reg_wr_en, dmi_reg_wr_en_preQ;
+   logic                   dmi_reg_wr_en;
    logic [31:0]            dmi_reg_wdata;
-   logic [31:0]            dmi_reg_rdata, dmi_reg_rdata_PostQ;
-   logic                   cptra_uncore_tap_aperture;
+   logic [31:0]            dmi_reg_rdata;
 
    // Instantiate the el2_veer core
    el2_veer #(.pt(pt)) veer (
@@ -782,57 +896,44 @@ import soc_ifc_pkg::*;
     // Processor Signals
     .core_rst_n  (dbg_rst_l),       // Debug reset, active low
     .core_clk    (clk),             // Core clock
-    .rd_data     (dmi_reg_rdata_PostQ),   // Read data from  Processor
-    .reg_wr_data (dmi_reg_wdata),   // Write data to Processor
-    .reg_wr_addr (dmi_reg_addr),    // Write address to Processor
-    .reg_en      (dmi_reg_en_preQ),      // Write interface bit to Processor
-    .reg_wr_en   (dmi_reg_wr_en_preQ),   // Write enable to Processor
+    .jtag_id     (jtag_id),         // JTAG ID
+    .rd_data     (dmi_rdata),       // Read data from  Processor
+    .reg_wr_data (dmi_wdata),       // Write data to Processor
+    .reg_wr_addr (dmi_addr),        // Write address to Processor
+    .reg_en      (dmi_en),          // Write interface bit to Processor
+    .reg_wr_en   (dmi_wr_en),       // Write enable to Processor
     .dmi_hard_reset   ()
    );
 
-   logic cptra_dmi_reg_en_jtag_acccess_allowed, cptra_dmi_reg_wr_en_jtag_acccess_allowed, cptra_jtag_access_allowed;
-   logic veer_dmi_reg_en_jtag_acccess_allowed, veer_dmi_reg_wr_en_jtag_acccess_allowed, veer_jtag_access_allowed;
+   // DMI core/uncore mux
+   dmi_mux dmi_mux (
+    .uncore_enable      (dmi_uncore_enable),
 
-   // reg enable towards core is not enabled unless it is equal to or less than 0x4F - as in 0x50 to 0x7F are not routed
-   // Core tap reg aperture is 0x0 to 0x4F and uncore is 0x50 to 0x7F
-   assign cptra_uncore_tap_aperture = (dmi_reg_addr[6] & (dmi_reg_addr[5] | dmi_reg_addr[4]));
+    .dmi_en             (dmi_en),
+    .dmi_wr_en          (dmi_wr_en),
+    .dmi_addr           (dmi_addr),
+    .dmi_wdata          (dmi_wdata),
+    .dmi_rdata          (dmi_rdata),
 
-   // JTAG Accesses are permissable to VeeR aperture only when debug is unlocked
-   assign veer_jtag_access_allowed = ~(cptra_security_state_Latched.debug_locked); 
+    .dmi_core_en        (dmi_reg_en),
+    .dmi_core_wr_en     (dmi_reg_wr_en),
+    .dmi_core_addr      (dmi_reg_addr),
+    .dmi_core_wdata     (dmi_reg_wdata),
+    .dmi_core_rdata     (dmi_reg_rdata),
 
-   // Cptra JTAG accesses are blocked unless debug mode or manufacturing mode is enabled
-   // JTAG access is allowed if Caliptra is in debug or manuf mode (driven by SOC security_state inputs) when caliptra reset is deasserted
-   // Any change to debug or manuf mode bits after Caliptra reset is deasserted will keep JTAG locked.
-   assign cptra_jtag_access_allowed = ~(cptra_security_state_Latched.debug_locked) | 
-                                      ((cptra_security_state_Latched.debug_locked) & (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING)); 
-
-   assign cptra_dmi_reg_en_jtag_acccess_allowed    = dmi_reg_en_preQ & cptra_jtag_access_allowed;
-   assign cptra_dmi_reg_wr_en_jtag_acccess_allowed = dmi_reg_wr_en_preQ & cptra_jtag_access_allowed;
-
-   assign veer_dmi_reg_en_jtag_acccess_allowed     = dmi_reg_en_preQ & veer_jtag_access_allowed;
-   assign veer_dmi_reg_wr_en_jtag_acccess_allowed  = dmi_reg_wr_en_preQ & veer_jtag_access_allowed;
-
-   assign cptra_dmi_reg_en_preQ                    = dmi_reg_en_preQ;
-
-   // Driving core vs uncore enables based on the right aperture
-   assign dmi_reg_en                 = cptra_uncore_tap_aperture ? '0                                       : veer_dmi_reg_en_jtag_acccess_allowed;
-   assign cptra_uncore_dmi_reg_en    = cptra_uncore_tap_aperture ? cptra_dmi_reg_en_jtag_acccess_allowed    : '0;
-   assign dmi_reg_wr_en              = cptra_uncore_tap_aperture ? '0                                       : veer_dmi_reg_wr_en_jtag_acccess_allowed;
-   assign cptra_uncore_dmi_reg_wr_en = cptra_uncore_tap_aperture ? cptra_dmi_reg_wr_en_jtag_acccess_allowed : '0;
-
-   // Qualified read data from core vs uncore
-   assign dmi_reg_rdata_PostQ        = cptra_uncore_tap_aperture ? cptra_uncore_dmi_reg_rdata : dmi_reg_rdata;
-
-   // Passing the address and data without qualification is fine because the enables are qualified with JTAG allowed bits
-   assign cptra_uncore_dmi_reg_wdata = dmi_reg_wdata;
-   assign cptra_uncore_dmi_reg_addr  = dmi_reg_addr;
+    .dmi_uncore_en      (dmi_uncore_en),
+    .dmi_uncore_wr_en   (dmi_uncore_wr_en),
+    .dmi_uncore_addr    (dmi_uncore_addr),
+    .dmi_uncore_wdata   (dmi_uncore_wdata),
+    .dmi_uncore_rdata   (dmi_uncore_rdata)
+   );
 
 `ifdef RV_ASSERT_ON
-// to avoid internal assertions failure at time 0
-initial begin
+  // to avoid internal assertions failure at time 0
+  initial begin
     $assertoff(0, veer);
-    @ (negedge clk) $asserton(0, veer);
-end
+    @(negedge clk) $asserton(0, veer);
+  end
 `endif
 
 endmodule

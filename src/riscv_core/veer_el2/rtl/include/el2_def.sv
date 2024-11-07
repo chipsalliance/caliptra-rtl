@@ -1,21 +1,3 @@
-//********************************************************************************
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Western Digital Corporation or its affiliates.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//********************************************************************************
-
-
 // performance monitor stuff
 //`ifndef EL2_DEF_SV
 //`define EL2_DEF_SV
@@ -124,7 +106,7 @@ typedef struct packed {
                        logic i0div;
                        logic csrwen;
                        logic csrwonly;
-                       logic [11:0] csrwaddr;
+                       logic [11:0] csraddr;
                        // likely to change
                        logic [4:0] i0rd;
                        logic i0load;
@@ -422,6 +404,39 @@ typedef struct packed {
                         logic         icache_rd_valid;
                         logic         icache_wr_valid;
             } el2_cache_debug_pkt_t;
+
+
+  typedef enum logic [2:0] {
+    NONE  = 3'b000,
+    READ  = 3'b001,
+    WRITE = 3'b010,
+    EXEC  = 3'b100
+  } el2_pmp_type_pkt_t;
+
+
+  typedef enum logic [1:0] {
+    OFF   = 2'b00,
+    TOR   = 2'b01,
+    NA4   = 2'b10,
+    NAPOT = 2'b11
+  } el2_pmp_mode_pkt_t;
+
+
+  typedef struct packed {
+    logic lock;
+    logic [1:0] reserved;
+    el2_pmp_mode_pkt_t mode;
+    logic execute;
+    logic write;
+    logic read;
+  } el2_pmp_cfg_pkt_t;
+
+  typedef struct packed {
+    logic RLB;
+    logic MMWP;
+    logic MML;
+  } el2_mseccfg_pkt_t;
+
 //`endif
 
 endpackage // el2_pkg
