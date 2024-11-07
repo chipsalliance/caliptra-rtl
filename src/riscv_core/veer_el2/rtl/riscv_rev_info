@@ -1,0 +1,8 @@
+commit ad30bae95f921c7356abebaf9f1f65230c5c7b9f
+Merge: d4e359372f8 0ec4c4d5db0
+Author: Tomasz Michalak <tmichalak@antmicro.com>
+Date:   Thu Oct 24 13:13:26 2024 +0200
+
+    Merge pull request #253 from chipsalliance/wsip/ci_fix
+    
+    CI fix: use docker image
