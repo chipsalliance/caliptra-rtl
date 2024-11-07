@@ -84,6 +84,9 @@ $RV_ROOT/configs/veer.config    \
 -set=bitmanip_zbp=0              \
 -set=bitmanip_zbr=0              \
 -set=bitmanip_zbs=1              \
+-set=user_mode=1                 \
+-set=pmp_entries=64              \
+-set=smepmp=1                    \
 -set=reset_vec=0x00000000        \
 -fpga_optimize=0                 \
 -snapshot=$1
