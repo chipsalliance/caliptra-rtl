@@ -1,10 +1,11 @@
 ---
 provides: [el2_veer_pkg]
 schema_version: 2.4.0
-requires: [soc_ifc_pkg]
 targets:
   rtl:
-    directories: [$COMPILE_ROOT/rtl]
+    directories:
+      - $COMPILE_ROOT/rtl
+      - $COMPILE_ROOT/rtl/include
     files:
       - $COMPILE_ROOT/rtl/el2_pdef.vh
       - $COMPILE_ROOT/rtl/include/el2_def.sv
