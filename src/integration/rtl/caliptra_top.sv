@@ -169,6 +169,8 @@ module caliptra_top
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
 
     //caliptra uncore jtag ports & pertinent logic
+    logic                       cptra_core_dmi_enable;
+    logic                       cptra_uncore_dmi_enable;
     logic                       cptra_uncore_dmi_reg_en;
     logic                       cptra_uncore_dmi_reg_wr_en;
     logic [31:0]                cptra_uncore_dmi_reg_rdata;
@@ -386,6 +388,10 @@ always_comb begin
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
+always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked); 
+always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
+                                      ((cptra_security_state_Latched.debug_locked) & (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -461,12 +467,22 @@ el2_veer_wrapper rvtop (
     .dma_hreadyout          ( responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hreadyout  ),
 
     .timer_int              ( timer_int),
+    .soft_int               ( soft_int ),
     .extintsrc_req          ( intr     ),
 
     .lsu_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB master interface
     .ifu_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB master interface
     .dbg_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB Debug master interface
     .dma_bus_clk_en         ( 1'b1  ),// Clock ratio b/w cpu core clk & AHB slave interface
+
+    // ICCM/DCCM ECC status
+    .iccm_ecc_single_error  (rv_ecc_sts.cptra_iccm_ecc_single_error),
+    .iccm_ecc_double_error  (rv_ecc_sts.cptra_iccm_ecc_double_error),
+    .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
+    .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
+
+    .ic_data_ext_in_pkt     (0),
+    .ic_tag_ext_in_pkt      (0),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
@@ -483,14 +499,15 @@ el2_veer_wrapper rvtop (
     .jtag_tdo               ( jtag_tdo ),
     .jtag_tdoEn             ( jtag_tdoEn ),
 
-    //caliptra uncore jtag ports
-   .cptra_uncore_dmi_reg_en      ( cptra_uncore_dmi_reg_en ),
-   .cptra_uncore_dmi_reg_wr_en   ( cptra_uncore_dmi_reg_wr_en ),
-   .cptra_uncore_dmi_reg_rdata   ( cptra_uncore_dmi_reg_rdata ),
-   .cptra_uncore_dmi_reg_addr    ( cptra_uncore_dmi_reg_addr ),
-   .cptra_uncore_dmi_reg_wdata   ( cptra_uncore_dmi_reg_wdata ),
-   .cptra_security_state_Latched ( cptra_security_state_Latched),
-   .cptra_dmi_reg_en_preQ        ( cptra_dmi_reg_en_preQ ),
+    .dmi_core_enable  ( cptra_core_dmi_enable   ),
+    // DMI port for uncore
+    .dmi_uncore_enable( cptra_uncore_dmi_enable ),
+    .dmi_uncore_en    ( cptra_uncore_dmi_reg_en ),
+    .dmi_uncore_wr_en ( cptra_uncore_dmi_reg_wr_en ),
+    .dmi_uncore_addr  ( cptra_uncore_dmi_reg_addr ),
+    .dmi_uncore_wdata ( cptra_uncore_dmi_reg_wdata ),
+    .dmi_uncore_rdata ( cptra_uncore_dmi_reg_rdata ),
+    .dmi_active       ( cptra_dmi_reg_en_preQ ),
 
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
@@ -514,13 +531,6 @@ el2_veer_wrapper rvtop (
     // Caliptra Memory Export Interface
     .el2_mem_export         (el2_mem_export),
 
-    // Caliptra ECC status signals
-    .cptra_iccm_ecc_single_error(rv_ecc_sts.cptra_iccm_ecc_single_error),
-    .cptra_iccm_ecc_double_error(rv_ecc_sts.cptra_iccm_ecc_double_error),
-    .cptra_dccm_ecc_single_error(rv_ecc_sts.cptra_dccm_ecc_single_error),
-    .cptra_dccm_ecc_double_error(rv_ecc_sts.cptra_dccm_ecc_double_error),
-
-    .soft_int               (soft_int),
     .core_id                ('0),
     .scan_mode              ( scan_mode ), // To enable scan mode
     .mbist_mode             ( 1'b0 )        // to enable mbist
