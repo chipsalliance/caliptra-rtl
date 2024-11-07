@@ -434,6 +434,7 @@ import el2_pkg::*;
    input logic                             mbist_mode,    // to enable mbist
 
    // DMI port for uncore
+   input logic                             dmi_core_enable,
    input logic                             dmi_uncore_enable,
    output logic                            dmi_uncore_en,
    output logic                            dmi_uncore_wr_en,
@@ -905,6 +906,7 @@ import el2_pkg::*;
 
    // DMI core/uncore mux
    dmi_mux dmi_mux (
+    .core_enable        (dmi_core_enable),
     .uncore_enable      (dmi_uncore_enable),
 
     .dmi_en             (dmi_en),
