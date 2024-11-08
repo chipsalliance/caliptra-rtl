@@ -333,6 +333,7 @@ reg {
     field {sw=r; hw=w;} I3C_en;
     field {sw=r; hw=w;} UART_en;
     field {sw=r; hw=w;} LMS_acc_en;
+    field {sw=r; hw=w;} ACTIVE_MODE_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1
