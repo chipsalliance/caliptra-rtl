@@ -210,12 +210,6 @@ import uvmf_base_pkg_hdl::*;
         .PWDATA (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATA     ),
         .PWRITE (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
 
-        .qspi_clk_o  (/*TODO*/),
-        .qspi_cs_no  (/*TODO*/),
-        .qspi_d_i    (/*TODO*/),
-        .qspi_d_o    (/*TODO*/),
-        .qspi_d_en_o (/*TODO*/),
-
         .el2_mem_export(el2_mem_export.veer_sram_src),
 
         .ready_for_fuses  (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fuses   ),

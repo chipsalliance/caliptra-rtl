@@ -23,10 +23,7 @@ CALIPTRA_HW_REV_ID=0x0011
 # After 1.1, LMS accelerator is always available
 HWCFG_CFLAGS ?= -DCALIPTRA_HWCONFIG_LMS_EN -DCALIPTRA_HW_REV_ID=$(CALIPTRA_HW_REV_ID)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
-CALIPTRA_INTERNAL_QSPI ?= 1
 CALIPTRA_INTERNAL_TRNG ?= 1
-CALIPTRA_INTERNAL_UART ?= 1
-CALIPTRA_INTERNAL_I3C  ?= 0
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
@@ -87,7 +84,8 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py \
 	          $(CALIPTRA_ROOT)/src/sha256/tb/sha256_wntz_test_gen.py \
-			  $(ADAMSBRIDGE_ROOT)/sec/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 \
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
@@ -197,21 +195,9 @@ TB_VERILATOR_SRCS = $(TBDIR)/test_caliptra_top_tb.cpp $(TB_DPI_SRCS)
 
 # Testbench defs
 TB_DEFS = 
-ifeq ($(CALIPTRA_INTERNAL_QSPI), 1)
-TB_DEFS += +define+CALIPTRA_INTERNAL_QSPI
-HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_QSPI_EN
-endif
 ifeq ($(CALIPTRA_INTERNAL_TRNG), 1)
 TB_DEFS += +define+CALIPTRA_INTERNAL_TRNG
 HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_TRNG_EN
-endif
-ifeq ($(CALIPTRA_INTERNAL_UART), 1)
-TB_DEFS += +define+CALIPTRA_INTERNAL_UART
-HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_UART_EN
-endif
-ifeq ($(CALIPTRA_INTERNAL_I3C) , 1)
-TB_DEFS += +define+CALIPTRA_INTERNAL_I3C
-HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_I3C_EN
 endif
 
 # By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to

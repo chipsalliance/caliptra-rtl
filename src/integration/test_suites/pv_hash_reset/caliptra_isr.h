@@ -55,12 +55,6 @@ inline void service_sha512_error_intr() {printf("ERROR");}
 inline void service_sha512_notif_intr() {printf("ERROR");}
 inline void service_sha256_error_intr() {printf("ERROR");}
 inline void service_sha256_notif_intr() {printf("ERROR");}
-inline void service_qspi_error_intr  () {printf("ERROR");}
-inline void service_qspi_notif_intr  () {printf("ERROR");}
-inline void service_uart_error_intr  () {printf("ERROR");}
-inline void service_uart_notif_intr  () {printf("ERROR");}
-inline void service_i3c_error_intr   () {printf("ERROR");}
-inline void service_i3c_notif_intr   () {printf("ERROR");}
 inline void service_soc_ifc_error_intr  () {printf("ERROR");}
 inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
 inline void service_sha512_acc_error_intr() {printf("ERROR");}

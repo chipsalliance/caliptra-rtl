@@ -34,34 +34,7 @@ volatile uint32_t  intr_count;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
-volatile caliptra_intr_received_s cptra_intr_rcv = {
-    .doe_error        = 0,
-    .doe_notif        = 0,
-    .ecc_error        = 0,
-    .ecc_notif        = 0,
-    .hmac_error       = 0,
-    .hmac_notif       = 0,
-    .kv_error         = 0,
-    .kv_notif         = 0,
-    .sha512_error     = 0,
-    .sha512_notif     = 0,
-    .sha256_error     = 0,
-    .sha256_notif     = 0,
-    .qspi_error       = 0,
-    .qspi_notif       = 0,
-    .uart_error       = 0,
-    .uart_notif       = 0,
-    .i3c_error        = 0,
-    .i3c_notif        = 0,
-    .soc_ifc_error    = 0,
-    .soc_ifc_notif    = 0,
-    .sha512_acc_error = 0,
-    .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0,
-    .axi_dma_error    = 0,
-    .axi_dma_notif    = 0,
-};
+volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(void) {
         int argc=0;
@@ -102,33 +75,6 @@ void main(void) {
         #endif
         if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK) != data_exp) {
             VPRINTF(FATAL, "HW Config register reports [%d] for ITRNG EN, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK), data_exp);
-            fail = 1;
-        }
-        #ifdef CALIPTRA_HWCONFIG_QSPI_EN
-        data_exp = SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK;
-        #else
-        data_exp = 0;
-        #endif
-        if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK) != data_exp) {
-            VPRINTF(FATAL, "HW Config register reports [%d] for QSPI EN, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_QSPI_EN_MASK), data_exp);
-            fail = 1;
-        }
-        #ifdef CALIPTRA_HWCONFIG_I3C_EN
-        data_exp = SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK;
-        #else
-        data_exp = 0;
-        #endif
-        if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK) != data_exp) {
-            VPRINTF(FATAL, "HW Config register reports [%d] for I3C EN, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_I3C_EN_MASK), data_exp);
-            fail = 1;
-        }
-        #ifdef CALIPTRA_HWCONFIG_UART_EN
-        data_exp = SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK;
-        #else
-        data_exp = 0;
-        #endif
-        if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK) != data_exp) {
-            VPRINTF(FATAL, "HW Config register reports [%d] for UART EN, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK), data_exp);
             fail = 1;
         }
         #ifdef CALIPTRA_HWCONFIG_LMS_EN

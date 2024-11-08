@@ -186,34 +186,7 @@ volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 #endif
 
 volatile uint32_t intr_count;
-volatile caliptra_intr_received_s cptra_intr_rcv = {
-    .doe_error        = 0,
-    .doe_notif        = 0,
-    .ecc_error        = 0,
-    .ecc_notif        = 0,
-    .hmac_error       = 0,
-    .hmac_notif       = 0,
-    .kv_error         = 0,
-    .kv_notif         = 0,
-    .sha512_error     = 0,
-    .sha512_notif     = 0,
-    .sha256_error     = 0,
-    .sha256_notif     = 0,
-    .qspi_error       = 0,
-    .qspi_notif       = 0,
-    .uart_error       = 0,
-    .uart_notif       = 0,
-    .i3c_error        = 0,
-    .i3c_notif        = 0,
-    .soc_ifc_error    = 0,
-    .soc_ifc_notif    = 0,
-    .sha512_acc_error = 0,
-    .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0,
-    .axi_dma_error    = 0,
-    .axi_dma_notif    = 0,
-};
+volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 volatile rv_exception_struct_s exc_flag __attribute__((section(".dccm.persistent"))); // WARNING: if DCCM ERROR injection is enabled, writes to this may be corrupted
 volatile uint32_t boot_count __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t generic_input_wires_0_before_rst __attribute__((section(".dccm.persistent")));

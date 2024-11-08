@@ -46,12 +46,6 @@ typedef struct {
     uint32_t sha512_notif;
     uint32_t sha256_error;
     uint32_t sha256_notif;
-    uint32_t qspi_error;
-    uint32_t qspi_notif;
-    uint32_t uart_error;
-    uint32_t uart_notif;
-    uint32_t i3c_error;
-    uint32_t i3c_notif;
     uint32_t soc_ifc_error;
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
