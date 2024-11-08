@@ -121,6 +121,8 @@ end
   reg [3:0] block_length_o = 'bz;
   tri [15:0] bit_length_i;
   reg [15:0] bit_length_o = 'bz;
+  tri [15:0][31:0] csr_key_i;
+  reg [15:0][31:0] csr_key_o = 'bz;
 
   // Bi-directional signals
   
@@ -158,6 +160,8 @@ end
   assign block_length_i = bus.block_length;
   assign bus.bit_length = (initiator_responder == INITIATOR) ? bit_length_o : 'bz;
   assign bit_length_i = bus.bit_length;
+  assign bus.csr_key = (initiator_responder == INITIATOR) ? csr_key_o : 'bz;
+  assign csr_key_i = bus.csr_key;
 
   // Proxy handle to UVM driver
   HMAC_in_pkg::HMAC_in_driver #(
@@ -206,6 +210,7 @@ end
        op_o <= 'bz;
        block_length_o <= 'b0;
        bit_length_o <= 'b0;
+       csr_key_o <= 'b0;
        // Bi-directional signals
  
      end    
@@ -313,6 +318,8 @@ end
   
   parameter HMAC512_MODE     = 8'h08;
   parameter HMAC384_MODE     = 8'h00;
+
+  parameter HMAC512_CSR_MODE = 8'h10;
 
   parameter ADDR_STATUS      = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
@@ -551,6 +558,14 @@ task write_single_word(input [31 : 0]  address,
     end
   endtask // write_key
 
+  task drive_csr_key(input [15:0][31:0] key);
+    begin
+      for (int i = 0; i < 16; i++) begin
+        csr_key_o[i] = key[15-i];
+      end
+    end
+  endtask
+
   //----------------------------------------------------------------
   // Write the given seed to the dut.
   //----------------------------------------------------------------
@@ -752,6 +767,7 @@ task hmac512_gen_test_vector (
 );
 
   int i;
+  reg csr_mode_rand;
   reg [1023:0] rand_block;
   reg [1023:0] msg_array [int];
 
@@ -763,6 +779,8 @@ task hmac512_gen_test_vector (
 
   int fd_w, fd_all_a;
   string file_name, file_name_bak;
+
+  std::randomize(csr_mode_rand);
 
   //Open files for writing/appending
   file_name = "hmac512_uvm_test_vector.txt";
@@ -787,7 +805,9 @@ task hmac512_gen_test_vector (
 
   //Generate random key and write to DUT
   std::randomize(key);
-  write_key(key);
+  if (csr_mode_rand) drive_csr_key(key);
+  else write_key(key);
+
   $fdisplay(fd_w, "KEY = %h", key);
   $fdisplay(fd_all_a, "KEY = %h", key);
 
@@ -802,7 +822,9 @@ task hmac512_gen_test_vector (
   $fdisplay(fd_w, "BLOCK = %h", block);
   $fdisplay(fd_all_a, "BLOCK = %h", block);
   write_block(block);
-  write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_INIT_VALUE);
+  if (csr_mode_rand) write_single_word(ADDR_CTRL,  HMAC512_CSR_MODE | HMAC512_MODE | CTRL_INIT_VALUE);
+  else write_single_word(ADDR_CTRL,  HMAC512_MODE | CTRL_INIT_VALUE);
+
   @(posedge clk_i);
   hsel_o = 0;
   @(posedge clk_i);
@@ -824,7 +846,9 @@ task hmac512_gen_test_vector (
         $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
 
       write_block(block);
-      write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_NEXT_VALUE);
+      if (csr_mode_rand) write_single_word(ADDR_CTRL, HMAC512_CSR_MODE | HMAC512_MODE | CTRL_NEXT_VALUE);
+      else write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_NEXT_VALUE);
+      
       @(posedge clk_i);
       hsel_o = 0;
       @(posedge clk_i);

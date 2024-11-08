@@ -23,6 +23,14 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC512_VERSION__in_t;
 
     typedef struct packed{
+        logic swwe;
+    } hmac_reg__HMAC512_CTRL__CSR_MODE__in_t;
+
+    typedef struct packed{
+        hmac_reg__HMAC512_CTRL__CSR_MODE__in_t CSR_MODE;
+    } hmac_reg__HMAC512_CTRL__in_t;
+
+    typedef struct packed{
         logic next;
     } hmac_reg__HMAC512_STATUS__READY__in_t;
 
@@ -142,6 +150,7 @@ package hmac_reg_pkg;
         logic error_reset_b;
         hmac_reg__HMAC512_NAME__in_t [2-1:0]HMAC512_NAME;
         hmac_reg__HMAC512_VERSION__in_t [2-1:0]HMAC512_VERSION;
+        hmac_reg__HMAC512_CTRL__in_t HMAC512_CTRL;
         hmac_reg__HMAC512_STATUS__in_t HMAC512_STATUS;
         hmac_reg__HMAC512_KEY__in_t [16-1:0]HMAC512_KEY;
         hmac_reg__HMAC512_BLOCK__in_t [32-1:0]HMAC512_BLOCK;
@@ -173,6 +182,10 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } hmac_reg__HMAC512_CTRL__CSR_MODE__out_t;
+
+    typedef struct packed{
+        logic value;
     } hmac_reg__HMAC512_CTRL__Reserved__out_t;
 
     typedef struct packed{
@@ -180,6 +193,7 @@ package hmac_reg_pkg;
         hmac_reg__HMAC512_CTRL__NEXT__out_t NEXT;
         hmac_reg__HMAC512_CTRL__ZEROIZE__out_t ZEROIZE;
         hmac_reg__HMAC512_CTRL__MODE__out_t MODE;
+        hmac_reg__HMAC512_CTRL__CSR_MODE__out_t CSR_MODE;
         hmac_reg__HMAC512_CTRL__Reserved__out_t Reserved;
     } hmac_reg__HMAC512_CTRL__out_t;
 

@@ -34,7 +34,8 @@ module caliptra_top
     input logic                        cptra_pwrgood,
     input logic                        cptra_rst_b,
 
-    input logic [255:0]                cptra_obf_key,
+    input logic [255:0]                              cptra_obf_key,
+    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
 
     //JTAG Interface
     input logic                        jtag_tck,    // JTAG clk
@@ -167,6 +168,7 @@ module caliptra_top
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
+    logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_reg;
 
     //caliptra uncore jtag ports & pertinent logic
     logic                       cptra_uncore_dmi_reg_en;
@@ -234,10 +236,11 @@ module caliptra_top
     logic debug_lock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, debug_lock_switch;
     logic cptra_scan_mode_Latched, cptra_scan_mode_Latched_d, cptra_scan_mode_Latched_f;
 
-    logic [TOTAL_OBF_KEY_BITS-1:0]        cptra_obf_key_dbg;
+    logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_dbg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy_dbg;
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
-    logic                                 cptra_in_debug_scan_mode;
+    logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_dbg;
+    logic                                      cptra_in_debug_scan_mode;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -622,6 +625,18 @@ el2_veer_wrapper rvtop (
 
     assign clear_obf_secrets_debugScanQ = clear_obf_secrets | cptra_in_debug_scan_mode | cptra_error_fatal;
 
+
+    //capture incoming CSR HMAC key
+    always_ff @(posedge clk or negedge cptra_pwrgood) begin
+        if (~cptra_pwrgood) begin
+            cptra_csr_hmac_key_reg <= '0;
+        end
+        //Only latch the value during device manufacturing
+        else if (cptra_security_state_Latched_f.device_lifecycle == DEVICE_MANUFACTURING) begin
+            cptra_csr_hmac_key_reg <= cptra_csr_hmac_key;
+        end
+    end
+
 //=========================================================================-
 // Clock gating instance
 //=========================================================================-
@@ -809,9 +824,10 @@ sha256_ctrl #(
 
 //override device secrets with debug values in Debug or Scan Mode
 always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched;
-always_comb cptra_obf_key_dbg     = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
-always_comb obf_uds_seed_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
-always_comb obf_field_entropy_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
+always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
+always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
+always_comb obf_field_entropy_dbg  = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
+always_comb cptra_csr_hmac_key_dbg = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_CSR_HMAC_KEY : cptra_csr_hmac_key_reg;
 
 doe_ctrl #(
     .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
@@ -882,6 +898,7 @@ hmac_ctrl #(
      .clk(clk_cg),
      .reset_n       (cptra_noncore_rst_b),
      .cptra_pwrgood (cptra_pwrgood),
+     .cptra_csr_hmac_key(cptra_csr_hmac_key_dbg),
      .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_HMAC)-1:0]),
      .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hwdata),
      .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hsel),

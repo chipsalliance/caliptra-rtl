@@ -31,6 +31,7 @@ import caliptra_top_tb_pkg::*; #(
     input int                          cycleCnt,
 
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key,
+    output logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key,
 
     input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
     input  logic [0:`CLP_OBF_FE_DWORDS-1] [31:0]          cptra_fe_rand,
@@ -168,6 +169,10 @@ import caliptra_top_tb_pkg::*; #(
                 //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
                 cptra_obf_key[dword] = cptra_obf_key_fe[dword];
             end
+        end
+
+        for (int dword = 0; dword < `CLP_CSR_HMAC_KEY_DWORDS; dword++) begin
+            cptra_csr_hmac_key[dword] = '1; //FIXME
         end
 
         // Run the test stimulus

@@ -84,6 +84,7 @@ addrmap hmac_reg {
                                  the type of hashing algorithm. This can be:
                                  0 for HMAC384
                                  1 for HMAC512";} MODE = 1'b1;
+        field {desc = "CSR Mode: Indicates to the HMAC512 core to use the CSR HMAC key"; swwe;} CSR_MODE = 1'b0;
         field {desc = "Reserved";} Reserved = 1'b0;                                 
     
     } HMAC512_CTRL @0x00000010;

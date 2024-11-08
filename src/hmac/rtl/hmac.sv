@@ -34,6 +34,9 @@ module hmac
         input wire           reset_n,
         input wire           cptra_pwrgood,
 
+        //csr key
+        input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
+
         // Control.
         input wire           cs,
         input wire           we,
@@ -230,6 +233,8 @@ always_comb begin
   hwif_in.HMAC512_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
   hwif_in.HMAC512_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
   hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
+  //Only allow setting CSR MODE when ready is set
+  hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
@@ -280,7 +285,7 @@ always_comb begin
   hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
   //assign hardware readable registers to drive hmac core
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
-    key_reg[dword] = hwif_out.HMAC512_KEY[dword].KEY.value;
+    key_reg[dword] = hwif_out.HMAC512_CTRL.CSR_MODE.value ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     block_reg[dword] = hwif_out.HMAC512_BLOCK[dword].BLOCK.value;
@@ -293,8 +298,8 @@ end
 
 always_comb begin
   unique case (mode_reg)
-    1'b0 :     get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //SHA384
-    default :  get_mask = {16{32'hffffffff}};                       //SHA512
+    1'b0 :     get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //HMAC384
+    default :  get_mask = {16{32'hffffffff}};                       //HMAC512
   endcase
 end
 

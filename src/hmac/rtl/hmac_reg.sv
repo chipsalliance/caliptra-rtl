@@ -186,6 +186,10 @@ module hmac_reg (
             struct packed{
                 logic next;
                 logic load_next;
+            } CSR_MODE;
+            struct packed{
+                logic next;
+                logic load_next;
             } Reserved;
         } HMAC512_CTRL;
         struct packed{
@@ -493,6 +497,9 @@ module hmac_reg (
             struct packed{
                 logic value;
             } MODE;
+            struct packed{
+                logic value;
+            } CSR_MODE;
             struct packed{
                 logic value;
             } Reserved;
@@ -809,6 +816,27 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC512_CTRL.MODE.value = field_storage.HMAC512_CTRL.MODE.value;
+    // Field: hmac_reg.HMAC512_CTRL.CSR_MODE
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.CSR_MODE.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.CSR_MODE.swwe) begin // SW write
+            next_c = (field_storage.HMAC512_CTRL.CSR_MODE.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            load_next_c = '1;
+        end
+        field_combo.HMAC512_CTRL.CSR_MODE.next = next_c;
+        field_combo.HMAC512_CTRL.CSR_MODE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HMAC512_CTRL.CSR_MODE.value <= 1'h0;
+        end else if(field_combo.HMAC512_CTRL.CSR_MODE.load_next) begin
+            field_storage.HMAC512_CTRL.CSR_MODE.value <= field_combo.HMAC512_CTRL.CSR_MODE.next;
+        end
+    end
+    assign hwif_out.HMAC512_CTRL.CSR_MODE.value = field_storage.HMAC512_CTRL.CSR_MODE.value;
     // Field: hmac_reg.HMAC512_CTRL.Reserved
     always_comb begin
         automatic logic [0:0] next_c;
@@ -816,7 +844,7 @@ module hmac_reg (
         next_c = field_storage.HMAC512_CTRL.Reserved.value;
         load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.HMAC512_CTRL.Reserved.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            next_c = (field_storage.HMAC512_CTRL.Reserved.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
         end
         field_combo.HMAC512_CTRL.Reserved.next = next_c;
