@@ -28,7 +28,7 @@ function gen_pb_file_list {
     # lists aren't useful to external integrators
     if [[ $abr_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${abr_lib}] in [${abr_vf_file}]";
-    pb fe file_list --tb integration_lib::${abr_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${abr_vf_file};
+    pb fe file_list --tb adams-bridge_lib::${abr_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${abr_vf_file};
     # Replace leading portion of Adamsbridge source paths with ${ADAMSBRIDGE_ROOT}
     sed 's,/home.*adams-bridge/src,\${ADAMSBRIDGE_ROOT}/src,' -i ${abr_vf_file}
     # Replace leading portion of UVM/installed library paths with appropriate ENV VAR
@@ -47,11 +47,12 @@ if [[ -z ${ADAMSBRIDGE_ROOT:+"empty"} ]]; then
     echo "Must run script from within Adamsbridge Playbook context"
     exit 1
 fi
-abr_ymls=$(grep '^\s*\- ../chipsalliance/adams-bridge/src' ${MSFT_REPO_ROOT}/config/compilespecs.yml | sed 's/^\s*- \(..\/chipsalliance\/adams-bridge\/src.*\)/\1/')
+# Get all of the compile.yml from adams-bridge COMODULE, ignoring the submodule flavors
+abr_ymls=$(grep '^\s*\- src' ${ADAMSBRIDGE_ROOT}/config/compilespecs.yml | sed 's/^\s*- \(src.*\)/\1/')
 declare -A procs;
 for i in ${abr_ymls}; do
-    abr_dir=$(realpath $(sed 's,\(..\/chipsalliance\/adams-bridge\/src/.\+/config\)/.*,\1,' <<< ${i}))
-    abr_libs=$(grep '^\s*provides' ${i} | sed 's/.*\[\(\w\+\)\].*/\1/')
+    abr_dir=$(realpath ${ADAMSBRIDGE_ROOT}/$(sed 's,\(src/.\+/config\)/.*,\1,' <<< ${i}))
+    abr_libs=$(grep '^\s*provides' ${abr_dir}/compile.yml | sed 's/.*\[\(\w\+\)\].*/\1/')
     for j in ${abr_libs}; do
         gen_pb_file_list ${abr_dir} ${j} &
         procs["$i_$j"]=$!

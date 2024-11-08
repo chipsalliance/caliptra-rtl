@@ -49,20 +49,22 @@
         "url": "origin://AHA_POC/58dea2a3-6b98-4cac-9b7d-c500aa351324",
         "dest": "chipsalliance",
         "name": "caliptra-rtl",
-        "version": "promote_caliptra-rtl-mirror_81"
+        "version": "promote_caliptra-rtl-mirror_84",
+        "has_submodules": "True"
     },
     {
         "description": "Adams Bridge RTL From GitHub",
         "url": "origin://AHA_POC/f625222b-93a4-4f1a-a0d9-716cb938cda9",
         "dest": "chipsalliance",
         "name": "adams-bridge",
-        "version": "promote_adams-bridge-mirror_61"
+        "version": "promote_adams-bridge-mirror_63"
     },
     {
         "description": "caliptra-ss From GitHub",
         "url": "origin://AHA_POC/3193ca95-e7ef-47c2-babf-f2be4f0a2532",
         "dest": "chipsalliance",
         "name": "caliptra-ss",
-        "version": "promote_caliptra-ss-mirror_4"
+        "version": "promote_caliptra-ss-mirror_9",
+        "has_submodules": "True"
     }
 ]

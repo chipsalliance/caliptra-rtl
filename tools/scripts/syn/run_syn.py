@@ -53,7 +53,11 @@ if not os.path.exists(output_dir):
 os.chdir(output_dir)
 os.system(f"ln -snf {output_dir} ../latest")
 os.system(f"cp {workspace}/Caliptra/tools/scripts/syn/fc.tcl .")
-gen_file_list_cmd = f"pb fe file_list --tb integration_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
+if unit == "mldsa_top":
+    gen_file_list_cmd = f"pb fe file_list --tb adams-bridge_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
+else:
+    gen_file_list_cmd = f"pb fe file_list --tb integration_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
+
 exec_print(gen_file_list_cmd)
 run_syn_cmd = f"fc_shell -output_log_file {unit}.cmd -f fc.tcl {fc_cmds}"
 exec_print(run_syn_cmd)

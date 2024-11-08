@@ -80,3 +80,6 @@ if [[ ${sts} -ne 0 ]]; then
     git status -s
     exit 1
 fi
+
+# Update submodules
+git submodule update -- submodules

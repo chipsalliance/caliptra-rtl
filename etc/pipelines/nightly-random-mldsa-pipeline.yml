@@ -61,6 +61,7 @@ stages:
         - uvmf_mldsa:
           - display_name: 'UVMF_MLDSA'
           - enabled: true
+          #- configspec_name: 'adams-bridge_lib' FIXME
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_mldsa'
           - args: '+COVERAGE +CM_HIER=${ADAMSBRIDGE_ROOT}/src/mldsa_top/uvmf/coverage/config/uvmf_mldsa_cm_hier.cfg --submit-resource-args RAM/2000'
@@ -68,6 +69,7 @@ stages:
           - testsuites:
             - l1_regress:
               - enabled: true
+              #- configspec_name: 'adams-bridge_lib' FIXME
               - configspec_name: 'integration_lib'
               - dut: 'uvmf_mldsa'
               - sim_args: '+COVERAGE ${{ variables.coverage_root_args }}'
