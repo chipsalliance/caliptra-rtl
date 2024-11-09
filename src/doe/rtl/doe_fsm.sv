@@ -173,7 +173,7 @@ always_comb begin : kv_doe_fsm
             dest_write_en = '1;
             //increment dest offset each clock, clear when done
             dest_write_offset_en = '1;
-            dest_write_offset_nxt = (dest_write_offset == 'hb) ? 'h0 : dest_write_offset + 'd1;
+            dest_write_offset_nxt = dest_write_offset + 'd1;
 
             //go back to idle if dest done, and done with blocks
             if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;

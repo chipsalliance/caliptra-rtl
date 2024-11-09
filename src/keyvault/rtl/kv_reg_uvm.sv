@@ -131,8 +131,8 @@ package kv_reg_uvm;
 
     // Addrmap - kv_reg
     class kv_reg extends uvm_reg_block;
-        rand kv_reg__kvCtrl KEY_CTRL[32];
-        rand kv_reg__keyReg KEY_ENTRY[32][12];
+        rand kv_reg__kvCtrl KEY_CTRL[24];
+        rand kv_reg__keyReg KEY_ENTRY[24][16];
         rand kv_reg__CLEAR_SECRETS CLEAR_SECRETS;
 
         function new(string name = "kv_reg");
@@ -153,7 +153,7 @@ package kv_reg_uvm;
                 this.KEY_ENTRY[i0][i1].configure(this);
                 
                 this.KEY_ENTRY[i0][i1].build();
-                this.default_map.add_reg(this.KEY_ENTRY[i0][i1], 'h600 + i0*'h30 + i1*'h4);
+                this.default_map.add_reg(this.KEY_ENTRY[i0][i1], 'h600 + i0*'h40 + i1*'h4);
             end
             this.CLEAR_SECRETS = new("CLEAR_SECRETS");
             this.CLEAR_SECRETS.configure(this);

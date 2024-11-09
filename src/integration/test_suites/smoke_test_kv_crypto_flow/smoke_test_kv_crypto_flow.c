@@ -88,7 +88,7 @@ void kv_doe(uint8_t doe_fe_dest_id){
 //******************************************************************
 // HMAC(OBF_KEY , FE)
 //****************************************************************** 
-void kv_hmac384(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
+void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     
     hmac_io hmac384_key;
     hmac_io hmac_block;
@@ -96,7 +96,8 @@ void kv_hmac384(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     hmac_io hmac_tag;
 
         
-    uint32_t key_data[]     = {0xdff9f002,0x1e1ab0bd,0xa2781e1a,0x709cafdb,0x341953bd,0xbd6836d9,0xc1ea520a,0x6043041d,0xaf7218b1,0x9ce98302,0xa5f8f95a,0x6b51f5c1};
+    uint32_t key_data[]     = {0xdff9f002,0x1e1ab0bd,0xa2781e1a,0x709cafdb,0x341953bd,0xbd6836d9,0xc1ea520a,0x6043041d,0xaf7218b1,0x9ce98302,0xa5f8f95a,0x6b51f5c1,
+                               0x219a09d7,0x3819e2ba,0x0d2c4b93,0x2489c586};
     uint32_t block[]        = {0xcfc155a3,0x967de347,0xf58fa2e8,0xbbeb4183,0xd6d32f74,0x27155e6a,0xb39cddf2,0xe627c572,0x80000000,0x00000000,0x00000000,0x00000000,
                                0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,
                                0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000500};    
@@ -128,7 +129,7 @@ void kv_hmac384(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     //uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x1f);
     //printf("%c", key_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
+    hmac512_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac_tag, TRUE);
     //printf("%c", 0x1);
 }
 
@@ -146,12 +147,12 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
 
     uint32_t ecc_msg[]      = {0xBEB06525,0x1497FCE1,0xD4C43092,0x8BC09E14,0x7B250CF3,0x25A40258,0x784262F6,0x858B8056,0xD68C6A23,0xD4CC5CBD,0xCEAD7EBF,0x8F6A97E6};
     uint32_t ecc_privkey[]  = {0x11F76A67,0xB9855B59,0x969D52CE,0xA8A8FC50,0xE5B3593C,0x21521060,0xCBA024FE,0xAD80735A,0xB825F393,0x3B345483,0x5755AB52,0x535F5DDD};
-    uint32_t ecc_pubkey_x[] = {0xFD7AF45F,0x67D9C371,0xB75E8AB6,0xDEC6E5B5,0xD7394102,0xB27C4461,0xDEC50209,0xF06DE791,0xF90E0587,0xED93DA62,0x03D37971,0x92DA0C21};
-    uint32_t ecc_pubkey_y[] = {0x4EEA9748,0x93331874,0x2AC8A06E,0xE3557B91,0x89E15FCC,0x1DB75754,0xF26CA763,0x711440B7,0xAD9A08F9,0xC1578887,0x5D39B31A,0xD0CD2D83};
-    uint32_t ecc_seed[]     = {0xAF2799D0,0x1F135A1E,0xF963DFD0,0x59F99604,0xB0E33BE1,0xCA38E70C,0x9B2C1073,0x1F17173A,0xD8F2681C,0xA64AEAC5,0xF5A4B368,0x457460DC};
+    uint32_t ecc_pubkey_x[] = {0x996A59E7,0x7C02E050,0xBB81CD53,0x7E92D513,0x57E8BCE6,0xDC19B1E0,0x738795FC,0x024C77D6,0x4CA885D5,0x1A4DB378,0x4D4F8ECC,0x55C07A18};
+    uint32_t ecc_pubkey_y[] = {0x3934295D,0x1CC973F9,0xB7EA6769,0xEE052D2E,0x1EF3E1AE,0x5BB663FD,0x2F7B04A9,0xA2DD0050,0xDED3E4FA,0xDE861A63,0x510598DF,0xAAA19FD7};
+    uint32_t ecc_seed[]     = {0x32CD8A75,0xB5E515BD,0x7B0FE37A,0x6DE14469,0x6AEEDB1F,0x5E03225A,0x71FC690F,0x5B004FF5,0x93794DB7,0xA99CED97,0xC3763851,0x49CFECAF};
     uint32_t ecc_nonce[]    = {0x1B7EC5E5,0x48E8AAA9,0x2EC77097,0xCA9551C9,0x783CE682,0xCA18FB1E,0xDBD9F1E5,0x0BC382DB,0x8AB39496,0xC8EE423F,0x8CA105CB,0xBA7B6588};
-    uint32_t ecc_sign_r[]   = {0x2F404A52,0xA35A4BE8,0x5059D38B,0xE429D222,0x1A4D57EB,0xCA4D2680,0x54691CB4,0xEB9845CB,0x62D94F1F,0xBE2C3EDF,0xCCD79C1F,0xD10505B1};
-    uint32_t ecc_sign_s[]   = {0x09FD9A77,0x0EA13FB5,0x7150DFB7,0x539715B6,0x6C14A6F5,0x58346A4C,0xD303950F,0x7D171A58,0x0C1212BD,0xA7DF30C5,0x6269A5A1,0x3A6A32A7};
+    uint32_t ecc_sign_r[]   = {0x324de80e,0x4fe11f91,0xc862e15f,0x70d40a41,0xd615bb37,0x9d4ea1b6,0xa72f5e3a,0x344b6f2d,0x87dec365,0x83cdcf41,0x4cfd8ccc,0x804c1089};
+    uint32_t ecc_sign_s[]   = {0xbeaf76e2,0xdc81fcc5,0xed8e44d1,0x7727b1ff,0x330c1834,0x7b402707,0xaf0af5fd,0x4a8265e8,0x2a177bf3,0x527428ac,0xb9df6c01,0x6b5b4276};
     uint32_t ecc_iv[]       = {0xBD372F61,0xCBEC31CD,0x5F07A738,0x0B0CC2D1,0x0E53A51B,0x1B9D36AE,0x2B437C65,0xD5ACAC1E,0x4B7ABC20,0x4A25E423,0x033CA6C9,0x6E9C6BC1};
 
     //******************************************************************
@@ -218,19 +219,19 @@ void random_generator(uint8_t *fe_id, uint8_t *uds_id, uint8_t *privkey_id, uint
     srand(time);
 
     do {
-        *fe_id = rand() & 0x1f;   // FE kv id
+        *fe_id = rand() % 0x17;   // FE kv id
     } while(*fe_id == 0);
 
     do {
-        *uds_id = rand() & 0x1f; 
+        *uds_id = rand() % 0x17; 
     } while((*uds_id == 0) | (*uds_id == *fe_id));
     
     do {
-        *cdi_id = rand() & 0x1f;
+        *cdi_id = rand() % 0x17;
     } while((*cdi_id == 0) | (*cdi_id == *fe_id) | (*cdi_id == *uds_id));
 
     do {
-        *privkey_id = rand() & 0x1f;
+        *privkey_id = rand() % 0x17;
     } while((*privkey_id == 0) | (*privkey_id == *fe_id) | (*privkey_id == *uds_id) | (*privkey_id == *cdi_id));
 }
 
@@ -285,11 +286,11 @@ void main(){
 
         kv_doe(doe_fe_dest_id);
 
-        kv_hmac384(0, doe_fe_dest_id, uds_key_id);
+        kv_hmac512(0, doe_fe_dest_id, uds_key_id);
 
         kv_ecc(uds_key_id, idevid_privkey_id);
 
-        kv_hmac384(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
+        kv_hmac512(uds_key_id, doe_fe_dest_id, cdi_ldevid_id);
 
         //issue zeroize
         ecc_zeroize();

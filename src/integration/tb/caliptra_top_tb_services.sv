@@ -148,7 +148,7 @@ module caliptra_top_tb_services
     logic                       inject_hmac_key;
     logic                       inject_ecc_seed;
     logic                       inject_ecc_privkey;
-    logic                       inject_sha_block;
+    logic                       inject_mldsa_seed;
     logic                       inject_random_data;
     logic                       check_pcr_signing;
 
@@ -263,7 +263,7 @@ module caliptra_top_tb_services
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
     //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
-    //         8'hc0: 8'hc7 - Inject SHA_BLOCK to kv_key register
+    //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
     //         8'hdb        - Perform mldsa verify
@@ -413,7 +413,8 @@ module caliptra_top_tb_services
     logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
     logic [0:11][31:0]   ecc_privkey_tb = 384'hF274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
     logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
-    logic [0:11][31:0]   sha_block_tb   = 384'hb1eeef324b499f19eba322215fe3ce19c9f000b698d2b2dab7145015046cc86d049ee15ad59dcd1564f30112e06444cb;
+    logic [11:0][31:0]   mldsa_seed_tb  = 384'h_55555555555555555555555555555555_9340000a_675fd127_37071d12_3fcee4d5_a243fe28_0768f0d4_46768a85_2d5cf89c; //fixme padded with junk
+
     genvar dword_i, slot_id;
     generate 
         for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
@@ -463,18 +464,6 @@ module caliptra_top_tb_services
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac_key_tb[dword_i][31 : 0];
                         end
                     end
-                    //inject valid sha dest and sha_block value to key reg
-                    else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
-                        inject_sha_block <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = sha_block_tb[dword_i][31 : 0];
-                        end
-                    end
                     else if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
                         inject_random_data <= '1;
                         if (slot_id == 0) begin
@@ -486,11 +475,23 @@ module caliptra_top_tb_services
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
                     end
+                    //inject valid mldsa seed dest and mldsa_seed value to key reg
+                    else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
+                        inject_mldsa_seed <= 1'b1;
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
+                        end
+                    end
                     else begin
                         inject_ecc_seed <= '0;
                         inject_ecc_privkey <= '0;
                         inject_hmac_key <= '0;
-                        inject_sha_block <= '0;
+                        inject_mldsa_seed <= '0;
                         inject_random_data <= '0;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
                         release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;

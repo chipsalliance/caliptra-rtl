@@ -410,6 +410,10 @@ hmac_block_kv_read
     .read_done(kv_block_done)
 );
 
+//write 512 or 384 result based on mode bit
+logic [$clog2(TAG_SIZE/32):0] num_dwords;
+always_comb num_dwords = mode_reg ? 'd16 : 'd12;
+
 //Write to keyvault
 kv_write_client #(
   .DATA_WIDTH(TAG_SIZE)
@@ -422,6 +426,7 @@ hmac_result_kv_write
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),
+  .num_dwords(num_dwords), 
 
   //interface with kv
   .kv_write(kv_write),

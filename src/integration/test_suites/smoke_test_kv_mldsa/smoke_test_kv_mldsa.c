@@ -28,7 +28,34 @@ volatile uint32_t intr_count = 0;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
-volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+volatile caliptra_intr_received_s cptra_intr_rcv = {
+    .doe_error        = 0,
+    .doe_notif        = 0,
+    .ecc_error        = 0,
+    .ecc_notif        = 0,
+    .hmac_error       = 0,
+    .hmac_notif       = 0,
+    .kv_error         = 0,
+    .kv_notif         = 0,
+    .sha512_error     = 0,
+    .sha512_notif     = 0,
+    .sha256_error     = 0,
+    .sha256_notif     = 0,
+    .qspi_error       = 0,
+    .qspi_notif       = 0,
+    .uart_error       = 0,
+    .uart_notif       = 0,
+    .i3c_error        = 0,
+    .i3c_notif        = 0,
+    .soc_ifc_error    = 0,
+    .soc_ifc_notif    = 0,
+    .sha512_acc_error = 0,
+    .sha512_acc_notif = 0,
+    .mldsa_error      = 0,
+    .mldsa_notif      = 0,
+    .axi_dma_notif    = 0,
+    .axi_dma_error    = 0,
+};
 
 
 void main() {
@@ -3148,12 +3175,14 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
     mldsa_io seed;
     uint32_t sign_rnd[8], entropy[16], privkey[1224], pubkey[648], msg[16], sign[1157], verifyres[16];
 
-    seed.kv_intf = FALSE;
+    seed.kv_intf = TRUE;
+    seed.kv_id = 6;
     for (int i = 0; i < 8; i++)
         seed.data[7-i] = ((mldsa_seed[i]<<24) & 0xff000000) |
-                    ((mldsa_seed[i]<< 8) & 0x00ff0000) |
-                    ((mldsa_seed[i]>> 8) & 0x0000ff00) |
-                    ((mldsa_seed[i]>>24) & 0x000000ff); //mldsa_seed[i];
+                         ((mldsa_seed[i]<< 8) & 0x00ff0000) |
+                         ((mldsa_seed[i]>> 8) & 0x0000ff00) |
+                         ((mldsa_seed[i]>>24) & 0x000000ff); //mldsa_seed[i];
+
 
     for (int i = 0; i < 8; i++)
         sign_rnd[7-i] = mldsa_sign_rnd[i]; //TODO: add byte swap - not doing now to save sim time
@@ -3207,6 +3236,10 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
     // mldsa_signing_flow(privkey, msg, entropy, sign);
     // mldsa_zeroize();
     // cptra_intr_rcv.mldsa_notif = 0;
+
+    //inject mldsa seed to kv key reg (in RTL)
+    uint8_t key_inject_cmd = 0xc0 + (seed.kv_id & 0x7);
+    printf("%c", key_inject_cmd);
 
     mldsa_keygen_signing_flow(seed, sign_rnd, msg, privkey, pubkey, sign);
     mldsa_zeroize();

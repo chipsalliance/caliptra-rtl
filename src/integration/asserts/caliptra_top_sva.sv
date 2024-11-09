@@ -40,6 +40,7 @@
 `define DOE_REG_PATH        `DOE_INST_PATH.i_doe_reg
 `define SERVICES_PATH       `CPTRA_TB_TOP_NAME.tb_services_i
 `define SHA512_PATH         `CPTRA_TOP_PATH.sha512.sha512_inst
+`define MLDSA_PATH          `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst
 `define HMAC_PATH           `CPTRA_TOP_PATH.hmac.hmac_inst
 `define HMAC_REG_PATH       `HMAC_PATH.i_hmac_reg
 `define ECC_PATH            `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
@@ -48,7 +49,6 @@
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
-`define MLDSA_PATH          `CPTRA_TOP_PATH.mldsa
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -68,6 +68,7 @@ module caliptra_top_sva
   //TODO: pass these parameters from their architecture into here
   localparam SHA512_DIG_NUM_DWORDS    = 16;   //`SHA512_PATH.DIG_NUM_DWORDS;
   localparam SHA512_BLOCK_NUM_DWORDS  = 32;   //`SHA512_PATH.BLOCK_NUM_DWORDS;
+  localparam MLDSA_SEED_NUM_DWORDS    = 8;   //`MLDSA_PATH.SEED_NUM_DWORDS;
   localparam HMAC_KEY_NUM_DWORDS      = 12;   //`HMAC_PATH.KEY_NUM_DWORDS
   localparam HMAC_TAG_NUM_DWORDS      = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
   localparam HMAC_BLOCK_NUM_DWORDS    = 32;   //`HMAC_PATH.BLOCK_NUM_DWORDS
@@ -159,13 +160,13 @@ module caliptra_top_sva
 
   generate
     for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-      //sha512 digest write
-      if (dword < SHA512_DIG_NUM_DWORDS) begin
-        kv_sha512_digest_w_flow:  assert property (
-                                              @(posedge `SVA_RDC_CLK)
-                                              `SHA512_PATH.kv_dest_done & ~`SHA512_PATH.pcr_hash_extend_ip |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword])
-                                              )
-                                  else $display("SVA ERROR: SHA384 digest mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`SHA512_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `SHA512_PATH.kv_reg[(KV_NUM_DWORDS-1) - dword]);
+      if (dword < MLDSA_SEED_NUM_DWORDS) begin
+      //mldsa seed read
+      kv_mldsa_seed_r_flow:   assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            $rose(`MLDSA_PATH.kv_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`MLDSA_PATH.kv_read.read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value == `MLDSA_PATH.seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
+                                            )
+                                else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`MLDSA_PATH.kv_read.read_entry][dword].data.value, `MLDSA_PATH.seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword]);
       end
 
       //hmac block read
