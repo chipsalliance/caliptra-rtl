@@ -912,6 +912,7 @@ module ecc_dsa_ctrl
 
         //client control register
         .write_ctrl_reg(kv_write_ctrl_reg),
+        .num_dwords(REG_NUM_DWORDS[4:0]),
 
         //interface with kv
         .kv_write(kv_write),

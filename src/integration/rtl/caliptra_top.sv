@@ -796,7 +796,6 @@ sha512_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
-always_comb kv_read[2] = '0;
 always_comb kv_write[1] = '0;
 
 sha256_ctrl #(
@@ -937,6 +936,8 @@ mldsa_top #(
      .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
      .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
      .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
+     .kv_read       (kv_read[2]),
+     .kv_rd_resp    (kv_rd_resp[2]),
      .error_intr    (mldsa_error_intr),
      .notif_intr    (mldsa_notif_intr)
 );

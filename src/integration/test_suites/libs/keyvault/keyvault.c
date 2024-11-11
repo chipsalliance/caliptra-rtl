@@ -47,7 +47,7 @@ void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_va
               ((write_entry << KV_WR_CTRL_WRITE_ENTRY_LOW) & KV_WR_CTRL_WRITE_ENTRY_MASK) |
               ((dest_valid.hmac_key << KV_WR_CTRL_HMAC_KEY_DEST_VALID_LOW) & KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK) |
               ((dest_valid.hmac_block << KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_LOW) & KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK) |
-              ((dest_valid.sha_block << KV_WR_CTRL_SHA_BLOCK_DEST_VALID_LOW) & KV_WR_CTRL_SHA_BLOCK_DEST_VALID_MASK) |
+              ((dest_valid.mldsa_seed << KV_WR_CTRL_MLDSA_SEED_DEST_VALID_LOW) & KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK) |
               ((dest_valid.ecc_pkey << KV_WR_CTRL_ECC_PKEY_DEST_VALID_LOW) & KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK) |
               ((dest_valid.ecc_seed << KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW) & KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK);
 

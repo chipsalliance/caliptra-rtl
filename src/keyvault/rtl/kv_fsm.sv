@@ -31,8 +31,9 @@ module kv_fsm
     input logic last,
 
     input logic pcr_hash_extend,
+    input logic [OFFSET_W:0] num_dwords,
 
-    output logic [OFFSET_W-1:0] read_offset,
+    output logic [KV_ENTRY_SIZE_W-1:0] read_offset,
 
     output logic write_en,
     output logic [OFFSET_W-1:0] write_offset,
@@ -78,7 +79,7 @@ logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
 
 //data width is in bits, divide by 32 to get dwords
 assign num_dwords_total = pcr_hash_extend ? 'd12 :
-                          ((PAD == 1) ? KV_MAX_DWORDS : DATA_WIDTH/32);
+                          ((PAD == 1) ? KV_MAX_DWORDS : $bits(num_dwords_total)'(num_dwords));
 
 always_comb ready = (kv_fsm_ps == KV_IDLE);
 
@@ -186,7 +187,7 @@ generate
     end
 endgenerate
 
-always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[OFFSET_W-1:0] : '0;
+always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[KV_ENTRY_SIZE_W-1:0] : '0;
 always_comb write_offset = offset[OFFSET_W-1:0];
 
 endmodule

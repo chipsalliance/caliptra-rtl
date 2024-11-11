@@ -17,8 +17,7 @@
 module kv_write_client 
     import kv_defines_pkg::*;
     #(
-    parameter DATA_WIDTH = 384
-
+    parameter DATA_WIDTH = 512
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
    ,localparam DATA_NUM_DWORDS = (DATA_WIDTH/32)
 
@@ -27,6 +26,8 @@ module kv_write_client
     input logic clk,
     input logic rst_b,
     input logic zeroize,
+
+    input logic [DATA_OFFSET_W:0] num_dwords,
 
     //client control register
     input kv_write_ctrl_reg_t write_ctrl_reg,
@@ -65,6 +66,7 @@ kv_dest_write_fsm
     .start(dest_data_avail & write_ctrl_reg.write_en),
     .last('0),
     .pcr_hash_extend(1'b0),
+    .num_dwords(num_dwords),
     .read_offset(dest_read_offset),
     .write_en(dest_write_en),
     .write_offset(dest_write_offset),

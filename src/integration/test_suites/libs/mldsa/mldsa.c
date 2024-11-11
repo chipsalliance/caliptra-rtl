@@ -43,7 +43,7 @@ void mldsa_zeroize(){
 
 
 
-void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t privkey[1224], uint32_t pubkey[648]){
+void mldsa_keygen_flow(mldsa_io seed, uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t privkey[1224], uint32_t pubkey[648]){
     uint16_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -55,37 +55,27 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     printf("Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    //TODO: modify below after KV intf is ready
-    // if(seed.kv_intf){
-    //     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
-    //     lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
-    //                                                 ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
 
-    //     // Try to overwrite MLDSA SEED from keyvault
-    //     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
-    //     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_11) {
-    //         *reg_ptr++ = 0;
-    //     }
+        // Try to overwrite MLDSA SEED from keyvault
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+             *reg_ptr++ = 0;
+        }
 
-    //     // Check that MLDSA SEED is loaded
-    //     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
-    // }
-    // else{
-    // printf("Writing seed from tb\n");
-    // printf("%c", 0xd9);
+         // Check that MLDSA SEED is loaded
+         while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+     }
+     else{
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
-            *reg_ptr++ = seed[offset++];
+            *reg_ptr++ = seed.data[offset++];
         }
-    // }
-
-    // if (privkey.kv_intf){
-    //     // set privkey DEST to write
-    //     lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_WR_PKEY_CTRL, (MLDSA_REG_MLDSA_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
-    //                                                 MLDSA_REG_MLDSA_KV_WR_PKEY_CTRL_MLDSA_PKEY_DEST_VALID_MASK |
-    //                                                 ((privkey.kv_id << MLDSA_REG_MLDSA_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
-    // }
+    }
 
     // Write MLDSA ENTROPY
     printf("Writing entropy\n");
@@ -102,12 +92,6 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
     
-    // if (privkey.kv_intf){
-    //     printf("Wait for KV write\n");
-    //     // check dest done
-    //     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_WR_PKEY_STATUS) & MLDSA_REG_MLDSA_KV_WR_PKEY_STATUS_VALID_MASK) == 0);
-    // }
-    // else{
         // Read the data back from MLDSA register
         printf("Load PRIVKEY data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
@@ -124,7 +108,6 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
             reg_ptr++;
             offset++;
         }
-    // }
 
     // Read the data back from MLDSA register
     printf("Load PUBKEY data from MLDSA\n");
@@ -145,7 +128,7 @@ void mldsa_keygen_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t entropy[
     
 }
 
-void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t msg[16], uint32_t privkey[1224], uint32_t pubkey[648], uint32_t sign[1157]) {
+void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t sign_rnd[8], uint32_t msg[16], uint32_t privkey[1224], uint32_t pubkey[648], uint32_t sign[1157]) {
     uint16_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -159,10 +142,27 @@ void mldsa_keygen_signing_flow(uint32_t seed[8], uint32_t sign_rnd[8], uint32_t 
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Program mldsa seed
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
-        *reg_ptr++ = seed[offset++];
+
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+
+        // Try to overwrite MLDSA SEED from keyvault
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+             *reg_ptr++ = 0;
+        }
+
+         // Check that MLDSA SEED is loaded
+         while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+     }
+     else{
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+            *reg_ptr++ = seed.data[offset++];
+        }
     }
 
     // Program MLDSA MSG

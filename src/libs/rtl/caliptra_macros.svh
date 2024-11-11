@@ -17,7 +17,7 @@
 
   //Debug values for obfuscated secrets when we unlock debug mode through security state
   `define CLP_DEBUG_MODE_OBF_KEY {256{1'b1}}
-  `define CLP_DEBUG_MODE_UDS_SEED {384{1'b1}}
+  `define CLP_DEBUG_MODE_UDS_SEED {512{1'b1}}
   `define CLP_DEBUG_MODE_FIELD_ENTROPY {256{1'b1}}
   `define CLP_DEBUG_MODE_CSR_HMAC_KEY {512{1'b1}}
   //Dword values to write into all KV entries during debug mode
@@ -26,7 +26,7 @@
 
   `define CLP_OBF_KEY_DWORDS 8
   `define CLP_OBF_FE_DWORDS  8
-  `define CLP_OBF_UDS_DWORDS 12
+  `define CLP_OBF_UDS_DWORDS 16
   `define CLP_CSR_HMAC_KEY_DWORDS 16
 
 `endif

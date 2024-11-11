@@ -38,7 +38,7 @@ addrmap kv_reg {
        field {desc="Destination valid bits stored as an array for ease of use in RTL.
               [br]dest_valid[0] = hmac_key_dest_valid
               [br]dest_valid[1] = hmac_block_dest_valid
-              [br]dest_valid[2] = sha_block_dest_valid
+              [br]dest_valid[2] = mldsa_seed_dest_valid
               [br]dest_valid[3] = ecc_pkey_dest_valid
               [br]dest_valid[4] = ecc_seed_dest_valid
               [br]dest_valid[5] = rsvd
@@ -49,10 +49,9 @@ addrmap kv_reg {
               sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} last_dword[4]=0;
     };
 
-    // Implies we have KV_NUM_KEYS entries of each 64B of width
-    kvCtrl KEY_CTRL[32] @0x00000000;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
+    kvCtrl KEY_CTRL[24] @0x00000000;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
     //stick these at the end since sw won't actually address them ever
-    keyReg KEY_ENTRY[32][12] @0x00000600;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
+    keyReg KEY_ENTRY[24][16] @0x00000600;//Shoud reflect KV_NUM_KEYS from kv_defines_pkg.sv
 
     reg {
         field {desc="Fill the keyvault with debug values"; sw=rw; hw=r; singlepulse;} wr_debug_values=0;

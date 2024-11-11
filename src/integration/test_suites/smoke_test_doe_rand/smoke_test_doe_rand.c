@@ -79,9 +79,9 @@ void main() {
     //Clear doe_status_int
     doe_status_int = 0;
 
-    //Start FE and store in KV15
+    //Start FE and store in KV23
     SEND_STDOUT_CTRL(0xed);
-    *doe_ctrl = 0x00000062; //30;
+    *doe_ctrl = 0x0000005e; //Entry 23, FE flow;
 
     // //Poll for DOE status
     while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {

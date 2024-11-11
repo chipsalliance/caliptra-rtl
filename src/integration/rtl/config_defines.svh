@@ -15,6 +15,8 @@
 `ifndef CALIPTRA_CFG_SV
 `define CALIPTRA_CFG_SV
 
+  `define CALIPTRA
+
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 

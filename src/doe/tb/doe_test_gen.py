@@ -73,10 +73,10 @@ def generate_doe_testvector():
     p = open("uds", "w")
     c = open("ciphertext", "w")
 
-    #key_str, iv_str, plain_str = generate_rand_bytes(32, 16, 48)
+    #key_str, iv_str, plain_str = generate_rand_bytes(32, 16, 64)
     key_str     = generate_rand_bytes(32)
     iv_str      = generate_rand_bytes(16)
-    plain_str   = generate_rand_bytes(48)
+    plain_str   = generate_rand_bytes(64)
     # key_str = "002ec695b21f27581a745c72e5b9f484865bc95eb10a13d584f57062166838d6"
     # iv_str = "a07b6cf2c26e78194b698f30ed0f5bdb"
     # plain_str = "754e68e5bdb5df41fca420e77655c76fe8ac8e4bc55727b2132bfdf9419a3b21b0dcc413c6f3f64a9b2d6cc1d861065b"

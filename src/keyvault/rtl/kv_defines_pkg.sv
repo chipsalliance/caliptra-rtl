@@ -17,8 +17,8 @@
 
 package kv_defines_pkg;
 
-parameter KV_NUM_DWORDS = 12; //number of dwords per key
-parameter KV_NUM_KEYS = 32;
+parameter KV_NUM_DWORDS = 16; //number of dwords per key
+parameter KV_NUM_KEYS = 24;
 parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
@@ -27,6 +27,7 @@ parameter KV_NUM_READ=5;
 parameter KV_NUM_WRITE=4;
 
 parameter KV_ENTRY_FOR_SIGNING = 7;
+parameter PCR_HASH_NUM_DWORDS = 12;
 
 typedef struct packed {
     logic   [KV_ADDR_W-1:0] addr;
@@ -82,7 +83,7 @@ typedef enum logic [7:0] {
 } kv_error_code_e;
 
 typedef struct packed {
-    logic [KV_NUM_DWORDS-1:0][31:0] pcr_hash;
+    logic [PCR_HASH_NUM_DWORDS-1:0][31:0] pcr_hash;
     logic [KV_NUM_DWORDS-1:0][31:0] pcr_signing_privkey;
 } pcr_signing_t;
 
