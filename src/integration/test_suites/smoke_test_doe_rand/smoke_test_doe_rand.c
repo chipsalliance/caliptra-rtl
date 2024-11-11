@@ -66,9 +66,10 @@ void main() {
     
     VPRINTF(LOW,"Rand UDS\n");
 
-    //Start UDS and store in KV3
-    SEND_STDOUT_CTRL(0xec);
-    *doe_ctrl = 0x0000000D;
+    //Inject random FE
+    SEND_STDOUT_CTRL(0xed);
+    //Start FE and store in KV23
+    *doe_ctrl = 0x0000005e; //Entry 23, FE flow;
 
     // //Poll for DOE status
     while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
@@ -79,9 +80,10 @@ void main() {
     //Clear doe_status_int
     doe_status_int = 0;
 
-    //Start FE and store in KV23
-    SEND_STDOUT_CTRL(0xed);
-    *doe_ctrl = 0x0000005e; //Entry 23, FE flow;
+    //Inject random UDS
+    SEND_STDOUT_CTRL(0xec);
+    //Start UDS and store in KV3
+    *doe_ctrl = 0x0000000D;
 
     // //Poll for DOE status
     while(doe_status_int != (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK)) {
