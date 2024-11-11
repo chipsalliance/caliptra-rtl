@@ -191,7 +191,7 @@ always_comb begin : kv_doe_fsm
             //clear block and write offsets when we go back to idle
             block_offset_en = '1;
             block_offset_nxt = '0;
-            dest_write_offset_en = '0;
+            dest_write_offset_en = '1;
             dest_write_offset_nxt = '0;
         end
         default: begin
