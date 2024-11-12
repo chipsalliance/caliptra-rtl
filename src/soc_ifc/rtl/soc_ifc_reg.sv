@@ -118,8 +118,8 @@ module soc_ifc_reg (
         logic [24-1:0]fuse_idevid_cert_attr;
         logic [4-1:0]fuse_idevid_manuf_hsm_id;
         logic fuse_life_cycle;
-        logic fuse_lms_verify;
         logic fuse_lms_revocation;
+        logic fuse_mldsa_revocation;
         logic fuse_soc_stepping_id;
         logic [8-1:0]internal_obf_key;
         logic internal_iccm_lock;
@@ -269,8 +269,8 @@ module soc_ifc_reg (
             decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h33c + i0*12'h4);
         end
         decoded_reg_strb.fuse_life_cycle = cpuif_req_masked & (cpuif_addr == 12'h34c);
-        decoded_reg_strb.fuse_lms_verify = cpuif_req_masked & (cpuif_addr == 12'h350);
-        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h354);
+        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h350);
+        decoded_reg_strb.fuse_mldsa_revocation = cpuif_req_masked & (cpuif_addr == 12'h354);
         decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h358);
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h4);
@@ -688,16 +688,16 @@ module soc_ifc_reg (
         } fuse_life_cycle;
         struct packed{
             struct packed{
-                logic next;
-                logic load_next;
-            } lms_verify;
-        } fuse_lms_verify;
-        struct packed{
-            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } lms_revocation;
         } fuse_lms_revocation;
+        struct packed{
+            struct packed{
+                logic [3:0] next;
+                logic load_next;
+            } mldsa_revocation;
+        } fuse_mldsa_revocation;
         struct packed{
             struct packed{
                 logic [15:0] next;
@@ -1523,14 +1523,14 @@ module soc_ifc_reg (
         } fuse_life_cycle;
         struct packed{
             struct packed{
-                logic value;
-            } lms_verify;
-        } fuse_lms_verify;
-        struct packed{
-            struct packed{
                 logic [31:0] value;
             } lms_revocation;
         } fuse_lms_revocation;
+        struct packed{
+            struct packed{
+                logic [3:0] value;
+            } mldsa_revocation;
+        } fuse_mldsa_revocation;
         struct packed{
             struct packed{
                 logic [15:0] value;
@@ -3327,27 +3327,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fuse_life_cycle.life_cycle.value = field_storage.fuse_life_cycle.life_cycle.value;
-    // Field: soc_ifc_reg.fuse_lms_verify.lms_verify
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_lms_verify.lms_verify.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.fuse_lms_verify && decoded_req_is_wr && !(hwif_in.fuse_lms_verify.lms_verify.swwel)) begin // SW write
-            next_c = (field_storage.fuse_lms_verify.lms_verify.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-            load_next_c = '1;
-        end
-        field_combo.fuse_lms_verify.lms_verify.next = next_c;
-        field_combo.fuse_lms_verify.lms_verify.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.fuse_lms_verify.lms_verify.value <= 1'h0;
-        end else if(field_combo.fuse_lms_verify.lms_verify.load_next) begin
-            field_storage.fuse_lms_verify.lms_verify.value <= field_combo.fuse_lms_verify.lms_verify.next;
-        end
-    end
-    assign hwif_out.fuse_lms_verify.lms_verify.value = field_storage.fuse_lms_verify.lms_verify.value;
     // Field: soc_ifc_reg.fuse_lms_revocation.lms_revocation
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3369,6 +3348,27 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fuse_lms_revocation.lms_revocation.value = field_storage.fuse_lms_revocation.lms_revocation.value;
+    // Field: soc_ifc_reg.fuse_mldsa_revocation.mldsa_revocation
+    always_comb begin
+        automatic logic [3:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.fuse_mldsa_revocation.mldsa_revocation.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.fuse_mldsa_revocation && decoded_req_is_wr && !(hwif_in.fuse_mldsa_revocation.mldsa_revocation.swwel)) begin // SW write
+            next_c = (field_storage.fuse_mldsa_revocation.mldsa_revocation.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
+            load_next_c = '1;
+        end
+        field_combo.fuse_mldsa_revocation.mldsa_revocation.next = next_c;
+        field_combo.fuse_mldsa_revocation.mldsa_revocation.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.fuse_mldsa_revocation.mldsa_revocation.value <= 4'h0;
+        end else if(field_combo.fuse_mldsa_revocation.mldsa_revocation.load_next) begin
+            field_storage.fuse_mldsa_revocation.mldsa_revocation.value <= field_combo.fuse_mldsa_revocation.mldsa_revocation.next;
+        end
+    end
+    assign hwif_out.fuse_mldsa_revocation.mldsa_revocation.value = field_storage.fuse_mldsa_revocation.mldsa_revocation.value;
     // Field: soc_ifc_reg.fuse_soc_stepping_id.soc_stepping_id
     always_comb begin
         automatic logic [15:0] next_c;
@@ -5846,7 +5846,8 @@ module soc_ifc_reg (
     assign readback_array[56][2:2] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.I3C_en.next : '0;
     assign readback_array[56][3:3] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.UART_en.next : '0;
     assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
-    assign readback_array[56][31:5] = '0;
+    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next : '0;
+    assign readback_array[56][31:6] = '0;
     assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
     assign readback_array[57][31:1] = '0;
     assign readback_array[58][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value : '0;
@@ -5899,9 +5900,9 @@ module soc_ifc_reg (
     end
     assign readback_array[133][1:0] = (decoded_reg_strb.fuse_life_cycle && !decoded_req_is_wr) ? field_storage.fuse_life_cycle.life_cycle.value : '0;
     assign readback_array[133][31:2] = '0;
-    assign readback_array[134][0:0] = (decoded_reg_strb.fuse_lms_verify && !decoded_req_is_wr) ? field_storage.fuse_lms_verify.lms_verify.value : '0;
-    assign readback_array[134][31:1] = '0;
-    assign readback_array[135][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
+    assign readback_array[134][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
+    assign readback_array[135][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
+    assign readback_array[135][31:4] = '0;
     assign readback_array[136][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
     assign readback_array[136][31:16] = '0;
     assign readback_array[137][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;

@@ -195,11 +195,16 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__ACTIVE_MODE_en__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__QSPI_en__in_t QSPI_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__I3C_en__in_t I3C_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__UART_en__in_t UART_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__ACTIVE_MODE_en__in_t ACTIVE_MODE_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{
@@ -297,12 +302,12 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_life_cycle__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__Fuse__in_t lms_verify;
-    } soc_ifc_reg__fuse_lms_verify__in_t;
-
-    typedef struct packed{
         soc_ifc_reg__Fuse_w32__in_t lms_revocation;
     } soc_ifc_reg__fuse_lms_revocation__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w4__in_t mldsa_revocation;
+    } soc_ifc_reg__fuse_mldsa_revocation__in_t;
 
     typedef struct packed{
         logic swwel;
@@ -465,8 +470,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_idevid_cert_attr__in_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__in_t [4-1:0]fuse_idevid_manuf_hsm_id;
         soc_ifc_reg__fuse_life_cycle__in_t fuse_life_cycle;
-        soc_ifc_reg__fuse_lms_verify__in_t fuse_lms_verify;
         soc_ifc_reg__fuse_lms_revocation__in_t fuse_lms_revocation;
+        soc_ifc_reg__fuse_mldsa_revocation__in_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__in_t fuse_soc_stepping_id;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
@@ -828,12 +833,12 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_life_cycle__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__Fuse__out_t lms_verify;
-    } soc_ifc_reg__fuse_lms_verify__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__Fuse_w32__out_t lms_revocation;
     } soc_ifc_reg__fuse_lms_revocation__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w4__out_t mldsa_revocation;
+    } soc_ifc_reg__fuse_mldsa_revocation__out_t;
 
     typedef struct packed{
         logic [15:0] value;
@@ -1014,8 +1019,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_idevid_cert_attr__out_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__out_t [4-1:0]fuse_idevid_manuf_hsm_id;
         soc_ifc_reg__fuse_life_cycle__out_t fuse_life_cycle;
-        soc_ifc_reg__fuse_lms_verify__out_t fuse_lms_verify;
         soc_ifc_reg__fuse_lms_revocation__out_t fuse_lms_revocation;
+        soc_ifc_reg__fuse_mldsa_revocation__out_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;

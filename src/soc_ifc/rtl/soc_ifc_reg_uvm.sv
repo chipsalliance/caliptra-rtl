@@ -910,12 +910,14 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg I3C_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg UART_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg LMS_acc_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg ACTIVE_MODE_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field QSPI_en;
         rand uvm_reg_field I3C_en;
         rand uvm_reg_field UART_en;
         rand uvm_reg_field LMS_acc_en;
+        rand uvm_reg_field ACTIVE_MODE_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -937,12 +939,15 @@ package soc_ifc_reg_uvm;
             this.UART_en.configure(this, 1, 3, "RO", 1, 'h0, 0, 1, 0);
             this.LMS_acc_en = new("LMS_acc_en");
             this.LMS_acc_en.configure(this, 1, 4, "RO", 1, 'h0, 0, 1, 0);
+            this.ACTIVE_MODE_en = new("ACTIVE_MODE_en");
+            this.ACTIVE_MODE_en.configure(this, 1, 5, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
                 foreach(QSPI_en_bit_cg[bt]) QSPI_en_bit_cg[bt] = new();
                 foreach(I3C_en_bit_cg[bt]) I3C_en_bit_cg[bt] = new();
                 foreach(UART_en_bit_cg[bt]) UART_en_bit_cg[bt] = new();
                 foreach(LMS_acc_en_bit_cg[bt]) LMS_acc_en_bit_cg[bt] = new();
+                foreach(ACTIVE_MODE_en_bit_cg[bt]) ACTIVE_MODE_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1684,36 +1689,6 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_life_cycle
 
-    // Reg - soc_ifc_reg::fuse_lms_verify
-    class soc_ifc_reg__fuse_lms_verify extends uvm_reg;
-        protected uvm_reg_data_t m_current;
-        protected uvm_reg_data_t m_data;
-        protected bit            m_is_read;
-
-        soc_ifc_reg__fuse_lms_verify_bit_cg lms_verify_bit_cg[1];
-        soc_ifc_reg__fuse_lms_verify_fld_cg fld_cg;
-        rand uvm_reg_field lms_verify;
-
-        function new(string name = "soc_ifc_reg__fuse_lms_verify");
-            super.new(name, 32, build_coverage(UVM_CVR_ALL));
-        endfunction : new
-        extern virtual function void sample_values();
-        extern protected virtual function void sample(uvm_reg_data_t  data,
-                                                      uvm_reg_data_t  byte_en,
-                                                      bit             is_read,
-                                                      uvm_reg_map     map);
-
-        virtual function void build();
-            this.lms_verify = new("lms_verify");
-            this.lms_verify.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-            if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(lms_verify_bit_cg[bt]) lms_verify_bit_cg[bt] = new();
-            end
-            if (has_coverage(UVM_CVR_FIELD_VALS))
-                fld_cg = new();
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_lms_verify
-
     // Reg - soc_ifc_reg::fuse_lms_revocation
     class soc_ifc_reg__fuse_lms_revocation extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -1743,6 +1718,36 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_lms_revocation
+
+    // Reg - soc_ifc_reg::fuse_mldsa_revocation
+    class soc_ifc_reg__fuse_mldsa_revocation extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_mldsa_revocation_bit_cg mldsa_revocation_bit_cg[4];
+        soc_ifc_reg__fuse_mldsa_revocation_fld_cg fld_cg;
+        rand uvm_reg_field mldsa_revocation;
+
+        function new(string name = "soc_ifc_reg__fuse_mldsa_revocation");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.mldsa_revocation = new("mldsa_revocation");
+            this.mldsa_revocation.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(mldsa_revocation_bit_cg[bt]) mldsa_revocation_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_mldsa_revocation
 
     // Reg - soc_ifc_reg::fuse_soc_stepping_id
     class soc_ifc_reg__fuse_soc_stepping_id extends uvm_reg;
@@ -3772,8 +3777,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_idevid_cert_attr fuse_idevid_cert_attr[24];
         rand soc_ifc_reg__fuse_idevid_manuf_hsm_id fuse_idevid_manuf_hsm_id[4];
         rand soc_ifc_reg__fuse_life_cycle fuse_life_cycle;
-        rand soc_ifc_reg__fuse_lms_verify fuse_lms_verify;
         rand soc_ifc_reg__fuse_lms_revocation fuse_lms_revocation;
+        rand soc_ifc_reg__fuse_mldsa_revocation fuse_mldsa_revocation;
         rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
@@ -4092,16 +4097,16 @@ package soc_ifc_reg_uvm;
 
             this.fuse_life_cycle.build();
             this.default_map.add_reg(this.fuse_life_cycle, 'h34c);
-            this.fuse_lms_verify = new("fuse_lms_verify");
-            this.fuse_lms_verify.configure(this);
-
-            this.fuse_lms_verify.build();
-            this.default_map.add_reg(this.fuse_lms_verify, 'h350);
             this.fuse_lms_revocation = new("fuse_lms_revocation");
             this.fuse_lms_revocation.configure(this);
 
             this.fuse_lms_revocation.build();
-            this.default_map.add_reg(this.fuse_lms_revocation, 'h354);
+            this.default_map.add_reg(this.fuse_lms_revocation, 'h350);
+            this.fuse_mldsa_revocation = new("fuse_mldsa_revocation");
+            this.fuse_mldsa_revocation.configure(this);
+
+            this.fuse_mldsa_revocation.build();
+            this.default_map.add_reg(this.fuse_mldsa_revocation, 'h354);
             this.fuse_soc_stepping_id = new("fuse_soc_stepping_id");
             this.fuse_soc_stepping_id.configure(this);
 
