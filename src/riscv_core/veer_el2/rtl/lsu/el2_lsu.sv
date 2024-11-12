@@ -118,13 +118,22 @@ import el2_pkg::*;
    output logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_awid,
    output logic [31:0]                     lsu_axi_awaddr,
    output logic [3:0]                      lsu_axi_awregion,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      lsu_axi_awlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      lsu_axi_awsize,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      lsu_axi_awburst,
    output logic                            lsu_axi_awlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      lsu_axi_awcache,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      lsu_axi_awprot,
    output logic [3:0]                      lsu_axi_awqos,
+   /*verilator coverage_on*/
 
    output logic                            lsu_axi_wvalid,
    input  logic                            lsu_axi_wready,
@@ -133,7 +142,10 @@ import el2_pkg::*;
    output logic                            lsu_axi_wlast,
 
    input  logic                            lsu_axi_bvalid,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic                            lsu_axi_bready,
+   /*verilator coverage_on*/
    input  logic [1:0]                      lsu_axi_bresp,
    input  logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_bid,
 
@@ -143,16 +155,28 @@ import el2_pkg::*;
    output logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_arid,
    output logic [31:0]                     lsu_axi_araddr,
    output logic [3:0]                      lsu_axi_arregion,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      lsu_axi_arlen,
+   /*verilator coverage_on*/
    output logic [2:0]                      lsu_axi_arsize,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [1:0]                      lsu_axi_arburst,
    output logic                            lsu_axi_arlock,
+   /*verilator coverage_on*/
    output logic [3:0]                      lsu_axi_arcache,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic [2:0]                      lsu_axi_arprot,
    output logic [3:0]                      lsu_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            lsu_axi_rvalid,
+   /* exclude signals that are tied to constant value in el2_lsu_bus_buffer.sv */
+   /*verilator coverage_off*/
    output logic                            lsu_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.LSU_BUS_TAG-1:0]       lsu_axi_rid,
    input  logic [63:0]                     lsu_axi_rdata,
    input  logic [1:0]                      lsu_axi_rresp,
@@ -174,14 +198,21 @@ import el2_pkg::*;
    output logic [63:0]                     dccm_dma_rdata,      // lsu data for DMA dccm read
    output logic                            dccm_ready,          // lsu ready for DMA access
 
-   // Caliptra ECC status signals
-   output logic                            cptra_dccm_ecc_single_error,
-   output logic                            cptra_dccm_ecc_double_error,
+   // DCCM ECC status
+   output logic                            lsu_dccm_rd_ecc_single_err,
+   output logic                            lsu_dccm_rd_ecc_double_err,
 
    input logic                             scan_mode,           // scan mode
    input logic                             clk,                 // Clock only while core active.  Through one clock header.  For flops with    second clock header built in.  Connected to ACTIVE_L2CLK.
    input logic                             active_clk,          // Clock only while core active.  Through two clock headers. For flops without second clock header built in.
-   input logic                             rst_l                // reset, active low
+    input logic                             rst_l,               // reset, active low
+
+    output logic [31:0] lsu_pmp_addr_start,
+    output logic [31:0] lsu_pmp_addr_end,
+    input  logic        lsu_pmp_error_start,
+    input  logic        lsu_pmp_error_end,
+    output logic        lsu_pmp_we,
+    output logic        lsu_pmp_re
 
    );
 
@@ -208,14 +239,20 @@ import el2_pkg::*;
    logic        lsu_single_ecc_error_r;
    logic        lsu_double_ecc_error_r;
    logic        ld_single_ecc_error_r, ld_single_ecc_error_r_ff;
+   assign lsu_dccm_rd_ecc_single_err = lsu_single_ecc_error_r;
+   assign lsu_dccm_rd_ecc_double_err = lsu_double_ecc_error_r;
 
    logic [31:0] picm_mask_data_m;
 
    logic [31:0] lsu_addr_d, lsu_addr_m, lsu_addr_r;
    logic [31:0] end_addr_d, end_addr_m, end_addr_r;
+  assign lsu_pmp_addr_start = lsu_addr_d;
+  assign lsu_pmp_addr_end   = end_addr_d;
 
    el2_lsu_pkt_t    lsu_pkt_d, lsu_pkt_m, lsu_pkt_r;
    logic        lsu_i0_valid_d, lsu_i0_valid_m, lsu_i0_valid_r;
+  assign lsu_pmp_we = lsu_pkt_d.store & lsu_pkt_d.valid;
+  assign lsu_pmp_re = lsu_pkt_d.load & lsu_pkt_d.valid;
 
    // Store Buffer signals
    logic        store_stbuf_reqvld_r;
@@ -310,8 +347,8 @@ import el2_pkg::*;
    // Store buffer now have only non-dma dccm stores
    // stbuf_empty not needed since it has only dccm stores
    assign lsu_idle_any = ~((lsu_pkt_m.valid & ~lsu_pkt_m.dma) |
-                           (lsu_pkt_r.valid & ~lsu_pkt_r.dma)) &
-                           lsu_bus_buffer_empty_any;
+                                                      (lsu_pkt_r.valid & ~lsu_pkt_r.dma)) &
+                                                      lsu_bus_buffer_empty_any;
 
    assign lsu_active = (lsu_pkt_m.valid | lsu_pkt_r.valid | ld_single_ecc_error_r_ff) | ~lsu_bus_buffer_empty_any;  // This includes DMA. Used for gating top clock
 
@@ -360,9 +397,6 @@ import el2_pkg::*;
       .end_addr_m(end_addr_m[pt.DCCM_BITS-1:0]),
       .*
    );
-
-   assign cptra_dccm_ecc_single_error = lsu_single_ecc_error_r;
-   assign cptra_dccm_ecc_double_error = lsu_double_ecc_error_r;
 
    el2_lsu_trigger #(.pt(pt)) trigger (
       .store_data_m(store_data_m[31:0]),

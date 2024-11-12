@@ -64,6 +64,8 @@ import el2_pkg::*;
 
   //-------------------------- IFU AXI signals--------------------------
    // AXI Write Channels
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_awvalid,
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_awid,
    output logic [31:0]                     ifu_axi_awaddr,
@@ -82,6 +84,7 @@ import el2_pkg::*;
    output logic                            ifu_axi_wlast,
 
    output logic                            ifu_axi_bready,
+   /*verilator coverage_on*/
 
    // AXI Read Channels
    output logic                            ifu_axi_arvalid,
@@ -89,6 +92,8 @@ import el2_pkg::*;
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_arid,
    output logic [31:0]                     ifu_axi_araddr,
    output logic [3:0]                      ifu_axi_arregion,
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    output logic [7:0]                      ifu_axi_arlen,
    output logic [2:0]                      ifu_axi_arsize,
    output logic [1:0]                      ifu_axi_arburst,
@@ -96,9 +101,13 @@ import el2_pkg::*;
    output logic [3:0]                      ifu_axi_arcache,
    output logic [2:0]                      ifu_axi_arprot,
    output logic [3:0]                      ifu_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            ifu_axi_rvalid,
+   /* exclude signals that are tied to constant value in this file */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_rid,
    input  logic [63:0]                     ifu_axi_rdata,
    input  logic [1:0]                      ifu_axi_rresp,
@@ -162,10 +171,10 @@ import el2_pkg::*;
    output logic                      ic_hit_f,               // Hit in Icache(if Icache access) or ICCM access( ICCM always has ic_hit_f)
    output logic [1:0]                ic_access_fault_f,      // Access fault (bus error or ICCM access in region but out of offset range).
    output logic [1:0]                ic_access_fault_type_f, // Access fault types
-   output logic                      iccm_rd_ecc_single_err, // This fetch has a single ICCM ecc  error.
-   output logic [1:0]                iccm_rd_ecc_double_err, // This fetch has a double ICCM ecc  error.
-   output logic                      iccm_dma_rd_ecc_single_err, // Active DMA access has a single ICCM ecc  error.
-   output logic                      iccm_dma_rd_ecc_double_err, // Active DMA access has a double ICCM ecc  error.
+   output logic                      iccm_rd_ecc_single_err, // This fetch has a single ICCM ECC error.
+   output logic [1:0]                iccm_rd_ecc_double_err, // This fetch has a double ICCM ECC error.
+   output logic                      iccm_dma_rd_ecc_single_err, // This fetch has a single ICCM DMA ECC error.
+   output logic                      iccm_dma_rd_ecc_double_err, // This fetch has a double ICCM DMA ECC error.
    output logic                      ic_error_start,         // This has any I$ errors ( data/tag/ecc/parity )
 
    output logic                      ifu_async_error_start,  // Or of the sb iccm, and all the icache errors sent to aligner to stop
@@ -181,6 +190,8 @@ import el2_pkg::*;
    output logic                      ifu_ic_debug_rd_data_valid, // debug data valid.
    output logic                      iccm_buf_correct_ecc,
    output logic                      iccm_correction_state,
+
+   input  logic                      ifu_pmp_error,
 
 
    input  logic         scan_mode
@@ -280,11 +291,6 @@ import el2_pkg::*;
    logic           sel_mb_addr_ff ;
    logic           sel_mb_status_addr ;
    logic [63:0]    ic_final_data;
-
-   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_ic_rw_int_addr_ff ;
-   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_status_wr_addr_ff ;
-   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_ic_rw_int_addr_w_debug ;
-   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_status_wr_addr_w_debug ;
 
    logic [pt.ICACHE_STATUS_BITS-1:0]                              way_status_new_ff ;
    logic                                    way_status_wr_en_ff ;
@@ -529,10 +535,12 @@ import el2_pkg::*;
                                      exu_flush_final ?  ((bus_ifu_wr_en_ff & last_beat) ? IDLE : HIT_U_MISS) : IDLE;
                   miss_state_en   = (bus_ifu_wr_en_ff & last_beat) | exu_flush_final | dec_tlu_force_halt;
          end
+         /*verilator coverage_off*/
          default: begin : def_case
                   miss_nxtstate   = IDLE;
                   miss_state_en   = 1'b0;
          end
+         /*verilator coverage_on*/
       endcase
    end
    rvdffs #(($bits(miss_state_t))) miss_state_ff (.clk(active_clk), .din(miss_nxtstate), .dout({miss_state}), .en(miss_state_en),   .*);
@@ -914,13 +922,13 @@ assign ic_miss_buff_half[63:0]    = {ic_miss_buff_data[{other_tag,1'b1}],ic_miss
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-assign ic_rd_parity_final_err = ic_tag_perr & ~exu_flush_final & sel_ic_data & ~(ifc_region_acc_fault_final_f | (|ifc_bus_acc_fault_f)) &
+  assign ic_rd_parity_final_err = ic_tag_perr & ~exu_flush_final & sel_ic_data & ~(ifc_region_acc_fault_final_f | (|ifc_bus_acc_fault_f)) &
                                       (fetch_req_icache_f & ~reset_all_tags & (~miss_pending | (miss_state==HIT_U_MISS)) & ~sel_mb_addr_ff);
 
-logic [pt.ICACHE_NUM_WAYS-1:0]                   perr_err_inv_way;
-logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO]   perr_ic_index_ff;
-logic                                         perr_sel_invalidate;
-logic                                         perr_sb_write_status   ;
+  logic [pt.ICACHE_NUM_WAYS-1:0]                    perr_err_inv_way;
+  logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] perr_ic_index_ff;
+  logic                                             perr_sel_invalidate;
+  logic                                             perr_sb_write_status;
 
 
    assign perr_err_inv_way[pt.ICACHE_NUM_WAYS-1:0]   =  {pt.ICACHE_NUM_WAYS{perr_sel_invalidate}} ;
@@ -941,39 +949,39 @@ logic                                         perr_sb_write_status   ;
    always_comb begin  : ERROR_SM
       perr_nxtstate            = ERR_IDLE;
       perr_state_en            = 1'b0;
-      perr_sb_write_status     = 1'b0;
       perr_sel_invalidate      = 1'b0;
+      perr_sb_write_status     = 1'b0;
 
-      case (perr_state)
-         ERR_IDLE: begin : err_idle
-                  perr_nxtstate         =  iccm_dma_sb_error ? DMA_SB_ERR : (ic_error_start & ~exu_flush_final) ? IC_WFF : ECC_WFF;
-                  perr_state_en         =  (((iccm_error_start | ic_error_start) & ~dec_tlu_flush_lower_wb) | iccm_dma_sb_error) & ~dec_tlu_force_halt;
-                  perr_sb_write_status  =  perr_state_en;
-         end
-         IC_WFF: begin : icache_wff    // All the I$ data and/or Tag errors ( parity/ECC ) will come to this state
-                  perr_nxtstate       =  ERR_IDLE ;
-                  perr_state_en       =   dec_tlu_flush_lower_wb | dec_tlu_force_halt ;
-                  perr_sel_invalidate =  (dec_tlu_flush_err_wb &  dec_tlu_flush_lower_wb);
-         end
-         ECC_WFF: begin : ecc_wff
-                  perr_nxtstate       =  ((~dec_tlu_flush_err_wb &  dec_tlu_flush_lower_wb ) | dec_tlu_force_halt) ? ERR_IDLE : ECC_CORR ;
-                  perr_state_en       =   dec_tlu_flush_lower_wb | dec_tlu_force_halt  ;
-         end
-         DMA_SB_ERR : begin : dma_sb_ecc
-                 perr_nxtstate       = dec_tlu_force_halt ? ERR_IDLE : ECC_CORR;
-                 perr_state_en       = 1'b1;
-         end
-         ECC_CORR: begin : ecc_corr
-                  perr_nxtstate       =  ERR_IDLE  ;
-                  perr_state_en       =   1'b1   ;
-         end
-         default: begin : def_case
-                  perr_nxtstate            = ERR_IDLE;
-                  perr_state_en            = 1'b0;
-                  perr_sb_write_status     = 1'b0;
-                  perr_sel_invalidate      = 1'b0;
-         end
-      endcase
+    case (perr_state)
+      ERR_IDLE: begin : err_idle
+        perr_nxtstate        = iccm_dma_sb_error ? DMA_SB_ERR : (ic_error_start & ~exu_flush_final) ? IC_WFF : ECC_WFF;
+        perr_state_en        = (((iccm_error_start | ic_error_start) & ~dec_tlu_flush_lower_wb) | iccm_dma_sb_error) & ~dec_tlu_force_halt;
+        perr_sb_write_status = perr_state_en;
+      end
+      IC_WFF: begin : icache_wff    // All the I$ data and/or Tag errors ( parity/ECC ) will come to this state
+        perr_nxtstate       = ERR_IDLE;
+        perr_state_en       = dec_tlu_flush_lower_wb | dec_tlu_force_halt;
+        perr_sel_invalidate = (dec_tlu_flush_err_wb & dec_tlu_flush_lower_wb);
+      end
+      ECC_WFF: begin : ecc_wff
+        perr_nxtstate = ((~dec_tlu_flush_err_wb &  dec_tlu_flush_lower_wb ) | dec_tlu_force_halt) ? ERR_IDLE : ECC_CORR;
+        perr_state_en = dec_tlu_flush_lower_wb | dec_tlu_force_halt;
+      end
+      DMA_SB_ERR: begin : dma_sb_ecc
+        perr_nxtstate = dec_tlu_force_halt ? ERR_IDLE : ECC_CORR;
+        perr_state_en = 1'b1;
+      end
+      ECC_CORR: begin : ecc_corr
+        perr_nxtstate = ERR_IDLE;
+        perr_state_en = 1'b1;
+      end
+      default: begin : def_case
+        perr_nxtstate        = ERR_IDLE;
+        perr_state_en        = 1'b0;
+        perr_sel_invalidate  = 1'b0;
+        perr_sb_write_status = 1'b0;
+      end
+    endcase
    end
 
    rvdffs #(($bits(perr_state_t))) perr_state_ff (.clk(active_clk), .din(perr_nxtstate), .dout({perr_state}), .en(perr_state_en),   .*);
@@ -1015,6 +1023,7 @@ logic                                         perr_sb_write_status   ;
                   iccm_correction_state   = 1'b1;
 
          end
+         /*verilator coverage_off*/
          default: begin : def_case
                   err_stop_nxtstate            = ERR_STOP_IDLE;
                   err_stop_state_en            = 1'b0;
@@ -1022,6 +1031,7 @@ logic                                         perr_sb_write_status   ;
                   iccm_correction_state   = 1'b1;
 
          end
+         /*verilator coverage_on*/
       endcase
    end
    rvdffs #(($bits(err_stop_state_t))) err_stop_state_ff (.clk(active_clk), .din(err_stop_nxtstate), .dout({err_stop_state}), .en(err_stop_state_en),   .*);
@@ -1274,8 +1284,9 @@ ifc_dma_access_ok_prev,dma_iccm_req_f})
          assign iccm_rw_addr[pt.ICCM_BITS-1:1]    = (  ifc_dma_access_q_ok & dma_iccm_req  & ~iccm_correct_ecc) ? dma_mem_addr[pt.ICCM_BITS-1:1] :
                                                  (~(ifc_dma_access_q_ok & dma_iccm_req) &  iccm_correct_ecc) ? {iccm_ecc_corr_index_ff[pt.ICCM_BITS-1:2],1'b0} : ifc_fetch_addr_bf[pt.ICCM_BITS-1:1] ;
 
-         assign iccm_dma_rd_ecc_single_err = iccm_dma_sb_error;
-         assign iccm_dma_rd_ecc_double_err = iccm_dma_rvalid && iccm_dma_ecc_error;
+
+    assign iccm_dma_rd_ecc_single_err = iccm_dma_sb_error;
+    assign iccm_dma_rd_ecc_double_err = iccm_dma_rvalid && iccm_dma_ecc_error;
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1391,9 +1402,15 @@ assign ic_write_stall                =  write_ic_16_bytes &  ~((((miss_state== C
 ///////////////////////////////////////////////////////////////
 logic [pt.ICACHE_NUM_WAYS-1:0] ic_tag_valid_unq;
 if (pt.ICACHE_ENABLE == 1 ) begin: icache_enabled
-   assign  ic_valid  = ~ifu_wr_cumulative_err_data & ~(reset_ic_in | reset_ic_ff) & ~reset_tag_valid_for_miss;
+   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_status_wr_addr_w_debug;
+   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_status_wr_addr_ff ;
+   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_ic_rw_int_addr_w_debug;
+   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] ifu_ic_rw_int_addr_ff;
+   logic [pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] perr_ic_index_ff;
 
-   assign ifu_status_wr_addr_w_debug[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] = ((ic_debug_rd_en | ic_debug_wr_en ) & ic_debug_tag_array) ?
+    assign ic_valid = ~ifu_wr_cumulative_err_data & ~(reset_ic_in | reset_ic_ff) & ~reset_tag_valid_for_miss;
+
+    assign ifu_status_wr_addr_w_debug[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] = ((ic_debug_rd_en | ic_debug_wr_en ) & ic_debug_tag_array) ?
                                                                            ic_debug_addr[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO] :
                                                                            ifu_status_wr_addr[pt.ICACHE_INDEX_HI:pt.ICACHE_TAG_INDEX_LO];
 
@@ -1628,8 +1645,9 @@ assign ic_debug_rd_en           = dec_tlu_ic_diag_pkt.icache_rd_valid ;
 assign ic_debug_wr_en           = dec_tlu_ic_diag_pkt.icache_wr_valid ;
 
 
-assign ic_debug_way[pt.ICACHE_NUM_WAYS-1:0]        = {(ic_debug_way_enc[0] == 1'b1),
-                                                      (ic_debug_way_enc[0] == 1'b0) };
+for (genvar i = 0; i < pt.ICACHE_NUM_WAYS; i = i + 1) begin : ic_debug_way_loop
+   assign ic_debug_way[i] = (ic_debug_way_enc == i[1:0]);
+end
 
 assign ic_debug_tag_wr_en[pt.ICACHE_NUM_WAYS-1:0] = {pt.ICACHE_NUM_WAYS{ic_debug_wr_en & ic_debug_tag_array}} & ic_debug_way[pt.ICACHE_NUM_WAYS-1:0] ;
 
@@ -1670,7 +1688,12 @@ assign ACCESS7_okay = pt.INST_ACCESS_ENABLE7 & ((({ifc_fetch_addr_bf[31:1],1'b0}
 
 
 // memory protection  - equation to look identical to the LSU equation
-   assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7}))
+   if (pt.PMP_ENTRIES != 0) begin : g_ifc_access_check_pmp
+      assign ifc_region_acc_okay = ~ifu_pmp_error;
+      assign ifc_region_acc_fault_memory_bf = ~ifc_region_acc_okay & ifc_fetch_req_bf;
+   end
+   else begin : g_ifc_access_check
+      assign ifc_region_acc_okay = (~(|{pt.INST_ACCESS_ENABLE0,pt.INST_ACCESS_ENABLE1,pt.INST_ACCESS_ENABLE2,pt.INST_ACCESS_ENABLE3,pt.INST_ACCESS_ENABLE4,pt.INST_ACCESS_ENABLE5,pt.INST_ACCESS_ENABLE6,pt.INST_ACCESS_ENABLE7}))
                                  | ACCESS0_okay
                                  | ACCESS1_okay
                                  | ACCESS2_okay
@@ -1681,11 +1704,9 @@ assign ACCESS7_okay = pt.INST_ACCESS_ENABLE7 & ((({ifc_fetch_addr_bf[31:1],1'b0}
                                  | ACCESS7_okay
                                ;
 
-   assign ifc_region_acc_fault_memory_bf   =  ~ifc_iccm_access_bf & ~ifc_region_acc_okay & ifc_fetch_req_bf;
+      assign ifc_region_acc_fault_memory_bf = ~ifc_iccm_access_bf & ~ifc_region_acc_okay & ifc_fetch_req_bf;
+   end
 
    assign ifc_region_acc_fault_final_bf = ifc_region_acc_fault_bf | ifc_region_acc_fault_memory_bf;
-
-
-
 
 endmodule  // el2_ifu_mem_ctl
