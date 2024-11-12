@@ -921,6 +921,52 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__CPTRA_OWNER_PK_HASH COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_OWNER_PK_HASH_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_OWNER_PK_HASH_fld_cg with function sample(
+    input bit [32-1:0] hash
+    );
+        option.per_instance = 1;
+        hash_cp : coverpoint hash {
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
+        }
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_OWNER_PK_HASH_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK_fld_cg with function sample(
+    input bit [1-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__FUSE_UDS_SEED COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__fuse_uds_seed_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
@@ -1021,32 +1067,6 @@
             bins ones_val = {{4{1'b1}}};
             wildcard bins set = (0 => 4'h?);
             wildcard bins clr = (4'h? => 0);
-        }
-
-    endgroup
-
-    /*----------------------- SOC_IFC_REG__FUSE_OWNER_PK_HASH COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__fuse_owner_pk_hash_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-
-    endgroup
-    covergroup soc_ifc_reg__fuse_owner_pk_hash_fld_cg with function sample(
-    input bit [32-1:0] hash
-    );
-        option.per_instance = 1;
-        hash_cp : coverpoint hash {
-            bins zero_val = {32'h0};
-            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
-            bins ones_val = {{32{1'b1}}};
-            wildcard bins set = (0 => 32'h????_????);
-            wildcard bins clr = (32'h????_???? => 0);
         }
 
     endgroup

@@ -451,3 +451,18 @@ reg {
             [br]SOC Access:      RW";
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
  } CPTRA_RSVD_REG[2];
+
+reg {
+    desc = "Owner PK hash lockable register.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    field {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;} hash[32]=0;
+} CPTRA_OWNER_PK_HASH[12] @0x140;
+
+reg {
+    name = "Owner PK hash register lock";
+    desc = "Owner PK hash register lock. Locks further writes to Owner PK hash register. Reset only by power cycle.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RW1-S";
+    field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} lock[1]=0;
+} CPTRA_OWNER_PK_HASH_LOCK;

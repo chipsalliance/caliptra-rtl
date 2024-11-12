@@ -238,6 +238,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic swwel;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH__hash__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH__hash__in_t hash;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__lock__in_t lock;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwel;
         logic hwclr;
     } soc_ifc_reg__secret_w32__in_t;
 
@@ -264,10 +280,6 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__Fuse_w4__in_t mask;
     } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w32__in_t hash;
-    } soc_ifc_reg__fuse_owner_pk_hash__in_t;
 
     typedef struct packed{
         soc_ifc_reg__Fuse_w32__in_t svn;
@@ -459,11 +471,12 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_STATUS__in_t CPTRA_WDT_STATUS;
         soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__in_t CPTRA_FUSE_VALID_AXI_ID;
         soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__in_t CPTRA_FUSE_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH__in_t [12-1:0]CPTRA_OWNER_PK_HASH;
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t CPTRA_OWNER_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__in_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__in_t [12-1:0]fuse_key_manifest_pk_hash;
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t fuse_key_manifest_pk_hash_mask;
-        soc_ifc_reg__fuse_owner_pk_hash__in_t [12-1:0]fuse_owner_pk_hash;
         soc_ifc_reg__fuse_fmc_key_manifest_svn__in_t fuse_fmc_key_manifest_svn;
         soc_ifc_reg__fuse_runtime_svn__in_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__in_t fuse_anti_rollback_disable;
@@ -770,6 +783,23 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH__hash__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH__hash__out_t hash;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH__out_t;
+
+    typedef struct packed{
+        logic value;
+        logic swmod;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__lock__out_t lock;
+    } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__secret_w32__out_t;
 
     typedef struct packed{
@@ -795,10 +825,6 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__Fuse_w4__out_t mask;
     } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w32__out_t hash;
-    } soc_ifc_reg__fuse_owner_pk_hash__out_t;
 
     typedef struct packed{
         soc_ifc_reg__Fuse_w32__out_t svn;
@@ -1008,11 +1034,12 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_STATUS__out_t CPTRA_WDT_STATUS;
         soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__out_t CPTRA_FUSE_VALID_AXI_ID;
         soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__out_t CPTRA_FUSE_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH__out_t [12-1:0]CPTRA_OWNER_PK_HASH;
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__out_t CPTRA_OWNER_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__out_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__out_t [12-1:0]fuse_key_manifest_pk_hash;
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t fuse_key_manifest_pk_hash_mask;
-        soc_ifc_reg__fuse_owner_pk_hash__out_t [12-1:0]fuse_owner_pk_hash;
         soc_ifc_reg__fuse_fmc_key_manifest_svn__out_t fuse_fmc_key_manifest_svn;
         soc_ifc_reg__fuse_runtime_svn__out_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__out_t fuse_anti_rollback_disable;

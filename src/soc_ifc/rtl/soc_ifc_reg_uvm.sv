@@ -1359,6 +1359,66 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RSVD_REG
 
+    // Reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH
+    class soc_ifc_reg__CPTRA_OWNER_PK_HASH extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_bit_cg hash_bit_cg[32];
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_fld_cg fld_cg;
+        rand uvm_reg_field hash;
+
+        function new(string name = "soc_ifc_reg__CPTRA_OWNER_PK_HASH");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.hash = new("hash");
+            this.hash.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(hash_bit_cg[bt]) hash_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_OWNER_PK_HASH
+
+    // Reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH_LOCK
+    class soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK_bit_cg lock_bit_cg[1];
+        soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK_fld_cg fld_cg;
+        rand uvm_reg_field lock;
+
+        function new(string name = "soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lock = new("lock");
+            this.lock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK
+
     // Reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -1478,36 +1538,6 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_mask
-
-    // Reg - soc_ifc_reg::fuse_owner_pk_hash
-    class soc_ifc_reg__fuse_owner_pk_hash extends uvm_reg;
-        protected uvm_reg_data_t m_current;
-        protected uvm_reg_data_t m_data;
-        protected bit            m_is_read;
-
-        soc_ifc_reg__fuse_owner_pk_hash_bit_cg hash_bit_cg[32];
-        soc_ifc_reg__fuse_owner_pk_hash_fld_cg fld_cg;
-        rand uvm_reg_field hash;
-
-        function new(string name = "soc_ifc_reg__fuse_owner_pk_hash");
-            super.new(name, 32, build_coverage(UVM_CVR_ALL));
-        endfunction : new
-        extern virtual function void sample_values();
-        extern protected virtual function void sample(uvm_reg_data_t  data,
-                                                      uvm_reg_data_t  byte_en,
-                                                      bit             is_read,
-                                                      uvm_reg_map     map);
-
-        virtual function void build();
-            this.hash = new("hash");
-            this.hash.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
-            if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(hash_bit_cg[bt]) hash_bit_cg[bt] = new();
-            end
-            if (has_coverage(UVM_CVR_FIELD_VALS))
-                fld_cg = new();
-        endfunction : build
-    endclass : soc_ifc_reg__fuse_owner_pk_hash
 
     // Reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
     class soc_ifc_reg__fuse_fmc_key_manifest_svn extends uvm_reg;
@@ -3766,11 +3796,12 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 CPTRA_iTRNG_ENTROPY_CONFIG_0;
         rand soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 CPTRA_iTRNG_ENTROPY_CONFIG_1;
         rand soc_ifc_reg__CPTRA_RSVD_REG CPTRA_RSVD_REG[2];
+        rand soc_ifc_reg__CPTRA_OWNER_PK_HASH CPTRA_OWNER_PK_HASH[12];
+        rand soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK CPTRA_OWNER_PK_HASH_LOCK;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[16];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
-        rand soc_ifc_reg__fuse_owner_pk_hash fuse_owner_pk_hash[12];
         rand soc_ifc_reg__fuse_fmc_key_manifest_svn fuse_fmc_key_manifest_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
@@ -4028,6 +4059,18 @@ package soc_ifc_reg_uvm;
                 this.CPTRA_RSVD_REG[i0].build();
                 this.default_map.add_reg(this.CPTRA_RSVD_REG[i0], 'h120 + i0*'h4);
             end
+            foreach(this.CPTRA_OWNER_PK_HASH[i0]) begin
+                this.CPTRA_OWNER_PK_HASH[i0] = new($sformatf("CPTRA_OWNER_PK_HASH[%0d]", i0));
+                this.CPTRA_OWNER_PK_HASH[i0].configure(this);
+                
+                this.CPTRA_OWNER_PK_HASH[i0].build();
+                this.default_map.add_reg(this.CPTRA_OWNER_PK_HASH[i0], 'h140 + i0*'h4);
+            end
+            this.CPTRA_OWNER_PK_HASH_LOCK = new("CPTRA_OWNER_PK_HASH_LOCK");
+            this.CPTRA_OWNER_PK_HASH_LOCK.configure(this);
+
+            this.CPTRA_OWNER_PK_HASH_LOCK.build();
+            this.default_map.add_reg(this.CPTRA_OWNER_PK_HASH_LOCK, 'h170);
             foreach(this.fuse_uds_seed[i0]) begin
                 this.fuse_uds_seed[i0] = new($sformatf("fuse_uds_seed[%0d]", i0));
                 this.fuse_uds_seed[i0].configure(this);
@@ -4054,13 +4097,6 @@ package soc_ifc_reg_uvm;
 
             this.fuse_key_manifest_pk_hash_mask.build();
             this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h290);
-            foreach(this.fuse_owner_pk_hash[i0]) begin
-                this.fuse_owner_pk_hash[i0] = new($sformatf("fuse_owner_pk_hash[%0d]", i0));
-                this.fuse_owner_pk_hash[i0].configure(this);
-                
-                this.fuse_owner_pk_hash[i0].build();
-                this.default_map.add_reg(this.fuse_owner_pk_hash[i0], 'h294 + i0*'h4);
-            end
             this.fuse_fmc_key_manifest_svn = new("fuse_fmc_key_manifest_svn");
             this.fuse_fmc_key_manifest_svn.configure(this);
 

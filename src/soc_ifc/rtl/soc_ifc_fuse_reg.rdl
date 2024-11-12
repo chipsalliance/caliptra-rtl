@@ -46,18 +46,13 @@ reg {
              [br]SOC Access:      RWL-S";
      Fuse mask[4]=0;
 } fuse_key_manifest_pk_hash_mask;
-reg {
-    desc = "Owner PK hash Fuse.
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-    Fuse hash[32]=0;
-} fuse_owner_pk_hash[12];
+
 reg {
     desc = "FMC Security Version Number.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
-} fuse_fmc_key_manifest_svn;
+} fuse_fmc_key_manifest_svn @0x2c4;
 reg {
     desc = "Runtime SVN Fuse.
              [br]Caliptra Access: RO

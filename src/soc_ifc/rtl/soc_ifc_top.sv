@@ -620,7 +620,6 @@ always_comb begin
     end
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-        soc_ifc_reg_hwif_in.fuse_owner_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
     for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
@@ -639,7 +638,12 @@ always_comb begin
     for (int i=0; i<4; i++) begin
         soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
-     
+end
+// Lockable registers
+always_comb begin
+    for (int i=0; i<12; i++) begin
+        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~soc_ifc_reg_req_data.soc_req;
+    end
 end
 
 always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -652,6 +656,8 @@ always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel   = s
 
 // Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+// OWNER PK HASH LOCK is a lockable register. lock can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
+always_comb soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //When TRNG_AXI_ID_LOCK is one only allow valid ids to write to TRNG

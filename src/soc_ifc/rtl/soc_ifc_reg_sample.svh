@@ -1090,6 +1090,56 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__CPTRA_OWNER_PK_HASH SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_OWNER_PK_HASH::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(hash_bit_cg[bt]) this.hash_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*hash*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_OWNER_PK_HASH::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(hash_bit_cg[bt]) this.hash_bit_cg[bt].sample(hash.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( hash.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__CPTRA_OWNER_PK_HASH_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( lock.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__FUSE_UDS_SEED SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__fuse_uds_seed::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
@@ -1187,31 +1237,6 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( mask.get_mirrored_value()   );
-        end
-    endfunction
-
-    /*----------------------- SOC_IFC_REG__FUSE_OWNER_PK_HASH SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__fuse_owner_pk_hash::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(hash_bit_cg[bt]) this.hash_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*hash*/   );
-        end
-    endfunction
-
-    function void soc_ifc_reg__fuse_owner_pk_hash::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(hash_bit_cg[bt]) this.hash_bit_cg[bt].sample(hash.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( hash.get_mirrored_value()   );
         end
     endfunction
 
