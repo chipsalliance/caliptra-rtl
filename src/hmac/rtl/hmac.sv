@@ -235,6 +235,9 @@ always_comb begin
   hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
   //Only allow setting CSR MODE when ready is set
   hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle

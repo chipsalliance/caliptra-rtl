@@ -24,9 +24,24 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic swwe;
+    } hmac_reg__HMAC512_CTRL__INIT__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } hmac_reg__HMAC512_CTRL__NEXT__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } hmac_reg__HMAC512_CTRL__MODE__in_t;
+
+    typedef struct packed{
+        logic swwe;
     } hmac_reg__HMAC512_CTRL__CSR_MODE__in_t;
 
     typedef struct packed{
+        hmac_reg__HMAC512_CTRL__INIT__in_t INIT;
+        hmac_reg__HMAC512_CTRL__NEXT__in_t NEXT;
+        hmac_reg__HMAC512_CTRL__MODE__in_t MODE;
         hmac_reg__HMAC512_CTRL__CSR_MODE__in_t CSR_MODE;
     } hmac_reg__HMAC512_CTRL__in_t;
 
