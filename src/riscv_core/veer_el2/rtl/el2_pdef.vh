@@ -131,6 +131,7 @@ typedef struct packed {
 	logic [8:0]      ICCM_BANK_HI;
 	logic [8:0]      ICCM_BANK_INDEX_LO;
 	logic [8:0]      ICCM_BITS;
+	logic [6:0]      ICCM_ECC_WIDTH;
 	logic [4:0]      ICCM_ENABLE;
 	logic [4:0]      ICCM_ICACHE;
 	logic [7:0]      ICCM_INDEX_BITS;
@@ -184,10 +185,13 @@ typedef struct packed {
 	logic [12:0]     PIC_SIZE;
 	logic [11:0]     PIC_TOTAL_INT;
 	logic [12:0]     PIC_TOTAL_INT_PLUS1;
+	logic [10:0]     PMP_ENTRIES;
 	logic [7:0]      RET_STACK_SIZE;
 	logic [4:0]      SB_BUS_ID;
 	logic [5:0]      SB_BUS_PRTY;
 	logic [7:0]      SB_BUS_TAG;
+	logic            SMEPMP;
 	logic [4:0]      TIMER_LEGAL_EN;
+	logic            USER_MODE;
 } el2_param_t;
 

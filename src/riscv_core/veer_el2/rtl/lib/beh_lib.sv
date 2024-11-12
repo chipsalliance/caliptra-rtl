@@ -15,7 +15,6 @@
 
 // all flops call the rvdff flop
 
-`include "common_defines.sv"
 
 module rvdff #( parameter WIDTH=1, SHORT=0 )
    (

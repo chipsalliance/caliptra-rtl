@@ -48,6 +48,8 @@ import el2_pkg::*;
 
   //-------------------------- IFU AXI signals--------------------------
    // AXI Write Channels
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_awvalid,
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_awid,
    output logic [31:0]                     ifu_axi_awaddr,
@@ -66,6 +68,7 @@ import el2_pkg::*;
    output logic                            ifu_axi_wlast,
 
    output logic                            ifu_axi_bready,
+   /*verilator coverage_on*/
 
    // AXI Read Channels
    output logic                            ifu_axi_arvalid,
@@ -73,6 +76,8 @@ import el2_pkg::*;
    output logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_arid,
    output logic [31:0]                     ifu_axi_araddr,
    output logic [3:0]                      ifu_axi_arregion,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic [7:0]                      ifu_axi_arlen,
    output logic [2:0]                      ifu_axi_arsize,
    output logic [1:0]                      ifu_axi_arburst,
@@ -80,9 +85,13 @@ import el2_pkg::*;
    output logic [3:0]                      ifu_axi_arcache,
    output logic [2:0]                      ifu_axi_arprot,
    output logic [3:0]                      ifu_axi_arqos,
+   /*verilator coverage_on*/
 
    input  logic                            ifu_axi_rvalid,
+   /* exclude signals that are tied to constant value in el2_ifu_mem_ctl.sv */
+   /*verilator coverage_off*/
    output logic                            ifu_axi_rready,
+   /*verilator coverage_on*/
    input  logic [pt.IFU_BUS_TAG-1:0]       ifu_axi_rid,
    input  logic [63:0]                     ifu_axi_rdata,
    input  logic [1:0]                      ifu_axi_rresp,
@@ -149,9 +158,10 @@ import el2_pkg::*;
    input  logic [63:0]               iccm_rd_data,       // Data read from ICCM.
    input  logic [77:0]               iccm_rd_data_ecc,   // Data + ECC read from ICCM.
 
-   output logic                      ifu_iccm_rd_ecc_single_err, // This fetch has a single ICCM ecc  error.
-   output logic                      cptra_iccm_dma_rd_ecc_single_err, // Active DMA access has a single ICCM ecc  error.
-   output logic                      cptra_iccm_rd_ecc_double_err, // Output added for Caliptra reporting
+   // ICCM ECC status
+   output logic                      ifu_iccm_dma_rd_ecc_single_err, // This fetch has a single ICCM DMA ECC error.
+   output logic                      ifu_iccm_rd_ecc_single_err,     // This fetch has a single ICCM ECC error.
+   output logic                      ifu_iccm_rd_ecc_double_err,     // This fetch has a double ICCM ECC error.
 
 // Perf counter sigs
    output logic       ifu_pmu_ic_miss, // ic miss
@@ -195,6 +205,8 @@ import el2_pkg::*;
 
    output logic [15:0] ifu_i0_cinst,
 
+    output logic [31:1] ifu_pmp_addr,
+    input  logic        ifu_pmp_error,
 
 /// Icache debug
    input  el2_cache_debug_pkt_t        dec_tlu_ic_diag_pkt ,
@@ -211,11 +223,13 @@ import el2_pkg::*;
    logic                   ifu_fb_consume1, ifu_fb_consume2;
    logic [31:1]            ifc_fetch_addr_f;
    logic [31:1]            ifc_fetch_addr_bf;
+  assign ifu_pmp_addr = ifc_fetch_addr_bf;
 
    logic [1:0]   ifu_fetch_val;  // valids on a 2B boundary, left justified [7] implies valid fetch
    logic [31:1]  ifu_fetch_pc;   // starting pc of fetch
 
-   logic iccm_rd_ecc_single_err, ic_error_start;
+   logic iccm_rd_ecc_single_err, iccm_dma_rd_ecc_single_err, ic_error_start;
+   assign ifu_iccm_dma_rd_ecc_single_err = iccm_dma_rd_ecc_single_err;
    assign ifu_iccm_rd_ecc_single_err = iccm_rd_ecc_single_err;
    assign ifu_ic_error_start = ic_error_start;
 
@@ -248,9 +262,9 @@ import el2_pkg::*;
    logic [31:0] ifu_fetch_data_f;
    logic ifc_fetch_req_f;
    logic ifc_fetch_req_f_raw;
+   logic iccm_dma_rd_ecc_double_err;
    logic [1:0] iccm_rd_ecc_double_err;  // This fetch has an iccm double error.
-   logic                      iccm_dma_rd_ecc_single_err; // Active DMA access has a single ICCM ecc  error.
-   logic                      iccm_dma_rd_ecc_double_err; // Active DMA access has a double ICCM ecc  error.
+   assign ifu_iccm_rd_ecc_double_err = |iccm_rd_ecc_double_err || |iccm_dma_rd_ecc_double_err;
 
    logic ifu_async_error_start;
 
@@ -285,8 +299,7 @@ import el2_pkg::*;
       assign ifu_bp_inst_mask_f = 1'b1;
    end
 
-   assign cptra_iccm_dma_rd_ecc_single_err = iccm_dma_rd_ecc_single_err;
-   assign cptra_iccm_rd_ecc_double_err = |iccm_rd_ecc_double_err || |iccm_dma_rd_ecc_double_err;
+
 
    // aligner
 

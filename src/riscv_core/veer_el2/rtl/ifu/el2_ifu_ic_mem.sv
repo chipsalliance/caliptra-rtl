@@ -49,7 +49,8 @@ import el2_pkg::*;
       output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_eccerr,          // ecc error per bank
       output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_parerr,          // ecc error per bank
       input logic [pt.ICACHE_NUM_WAYS-1:0]          ic_tag_valid,       // Valid from the I$ tag valid outside (in flops).
-
+      input el2_ic_data_ext_in_pkt_t [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] ic_data_ext_in_pkt,   // this is being driven by the top level for soc testing/etc
+      input el2_ic_tag_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0]                          ic_tag_ext_in_pkt,    // this is being driven by the top level for soc testing/etc
 
       output logic [pt.ICACHE_NUM_WAYS-1:0]         ic_rd_hit,          // ic_rd_hit[3:0]
       output logic                                  ic_tag_perr,        // Tag Parity error
@@ -111,6 +112,7 @@ import el2_pkg::*;
       input logic                            ic_sel_premux_data,  // Select the pre_muxed data
 
       input logic [pt.ICACHE_NUM_WAYS-1:0]ic_rd_hit,
+      input el2_ic_data_ext_in_pkt_t  [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] ic_data_ext_in_pkt,   // this is being driven by the top level for soc testing/etc
       input  logic                         scan_mode
 
       ) ;
@@ -256,17 +258,17 @@ import el2_pkg::*;
                                      .Q  (wb_dout_pre_up[i][k]),                                                     \
                                      .CLK (clk),                                                                     \
                                      .ROP ( ),                                                                       \
-                                     .TEST1(1'b0),                                                                   \
-                                     .RME(1'b0),                                                                     \
-                                     .RM(4'b0000),                                                                   \
+                                     .TEST1(ic_data_ext_in_pkt[i][k].TEST1),                                         \
+                                     .RME(ic_data_ext_in_pkt[i][k].RME),                                             \
+                                     .RM(ic_data_ext_in_pkt[i][k].RM),                                               \
                                                                                                                      \
-                                     .LS(1'b0),                                                                      \
-                                     .DS(1'b0),                                                                      \
-                                     .SD(1'b0),                                                                      \
+                                     .LS(ic_data_ext_in_pkt[i][k].LS),                                               \
+                                     .DS(ic_data_ext_in_pkt[i][k].DS),                                               \
+                                     .SD(ic_data_ext_in_pkt[i][k].SD),                                               \
                                                                                                                      \
-                                     .TEST_RNM(1'b0),                                                                \
-                                     .BC1(1'b0),                                                                     \
-                                     .BC2(1'b0)                                                                      \
+                                     .TEST_RNM(ic_data_ext_in_pkt[i][k].TEST_RNM),                                   \
+                                     .BC1(ic_data_ext_in_pkt[i][k].BC1),                                             \
+                                     .BC2(ic_data_ext_in_pkt[i][k].BC2)                                              \
                                     );  \
 if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
                  assign wrptr_in_up[i][k] = (wrptr_up[i][k] == (pt.ICACHE_NUM_BYPASS-1)) ? '0 : (wrptr_up[i][k] + 1'd1);                                    \
@@ -408,17 +410,17 @@ if (pt.ICACHE_BYPASS_ENABLE == 1) begin \
                             .Q     (wb_packeddout_pre[k]),                                                                                            \
                             .ME    (|ic_bank_way_clken_final[k]),                                                                                     \
                             .ROP   ( ),                                                                                                               \
-                            .TEST1    (1'b0                        ),                                                                                 \
-                            .RME      (1'b0                        ),                                                                                 \
-                            .RM       (4'b0000                     ),                                                                                 \
+                            .TEST1  (ic_data_ext_in_pkt[0][k].TEST1),                                                                                 \
+                            .RME   (ic_data_ext_in_pkt[0][k].RME),                                                                                    \
+                            .RM    (ic_data_ext_in_pkt[0][k].RM),                                                                                     \
                                                                                                                                                       \
-                            .LS       (1'b0                        ),                                                                                 \
-                            .DS       (1'b0                        ),                                                                                 \
-                            .SD       (1'b0                        ),                                                                                 \
+                            .LS    (ic_data_ext_in_pkt[0][k].LS),                                                                                     \
+                            .DS    (ic_data_ext_in_pkt[0][k].DS),                                                                                     \
+                            .SD    (ic_data_ext_in_pkt[0][k].SD),                                                                                     \
                                                                                                                                                       \
-                            .TEST_RNM (1'b0                        ),                                                                                 \
-                            .BC1      (1'b0                        ),                                                                                 \
-                            .BC2      (1'b0                        )                                                                                  \
+                            .TEST_RNM (ic_data_ext_in_pkt[0][k].TEST_RNM),                                                                            \
+                            .BC1      (ic_data_ext_in_pkt[0][k].BC1),                                                                                 \
+                            .BC2      (ic_data_ext_in_pkt[0][k].BC2)                                                                                  \
                            );                                                                                                                         \
                                                                                                                                                       \
               if (pt.ICACHE_BYPASS_ENABLE == 1) begin                                                                                                                                                 \
@@ -815,7 +817,7 @@ import el2_pkg::*;
       input logic                                                  ic_debug_wr_en,       // Icache debug wr
       input logic                                                  ic_debug_tag_array,   // Debug tag array
       input logic [pt.ICACHE_NUM_WAYS-1:0]                         ic_debug_way,         // Debug way. Rd or Wr.
-
+      input el2_ic_tag_ext_in_pkt_t   [pt.ICACHE_NUM_WAYS-1:0]    ic_tag_ext_in_pkt,
 
       output logic [25:0]                                          ictag_debug_rd_data,
       input  logic [70:0]                                          ic_debug_wr_data,     // Debug wr cache.
@@ -966,17 +968,17 @@ end // block: OTHERS
                                 .CLK (clk),                                                                                                     \
                                 .ROP ( ),                                                                                                       \
                                                                                                                                                 \
-                                .TEST1   (1'b0                         ),                                                                       \
-                                .RME     (1'b0                         ),                                                                       \
-                                .RM      (4'b0000                      ),                                                                       \
+                                .TEST1(ic_tag_ext_in_pkt[i].TEST1),                                                                             \
+                                .RME(ic_tag_ext_in_pkt[i].RME),                                                                                 \
+                                .RM(ic_tag_ext_in_pkt[i].RM),                                                                                   \
                                                                                                                                                 \
-                                .LS      (1'b0                         ),                                                                       \
-                                .DS      (1'b0                         ),                                                                       \
-                                .SD      (1'b0                         ),                                                                       \
+                                .LS(ic_tag_ext_in_pkt[i].LS),                                                                                   \
+                                .DS(ic_tag_ext_in_pkt[i].DS),                                                                                   \
+                                .SD(ic_tag_ext_in_pkt[i].SD),                                                                                   \
                                                                                                                                                 \
-                                .TEST_RNM(1'b0                         ),                                                                       \
-                                .BC1     (1'b0                         ),                                                                       \
-                                .BC2     (1'b0                         )                                                                        \
+                                .TEST_RNM(ic_tag_ext_in_pkt[i].TEST_RNM),                                                                       \
+                                .BC1(ic_tag_ext_in_pkt[i].BC1),                                                                                 \
+                                .BC2(ic_tag_ext_in_pkt[i].BC2)                                                                                  \
                                                                                                                                                 \
                                );                                                                                                               \
                                                                                                                                                 \
@@ -1170,17 +1172,17 @@ end // block: OTHERS
                                 .CLK (clk),                                                                \
                                 .ROP ( ),                                                                  \
                                                                                                            \
-                                .TEST1    (1'b0                                  ),                        \
-                                .RME      (1'b0                                  ),                        \
-                                .RM       (4'b0000                               ),                        \
+                                .TEST1     (ic_tag_ext_in_pkt[0].TEST1),                                   \
+                                .RME      (ic_tag_ext_in_pkt[0].RME),                                      \
+                                .RM       (ic_tag_ext_in_pkt[0].RM),                                       \
                                                                                                            \
-                                .LS       (1'b0                                  ),                        \
-                                .DS       (1'b0                                  ),                        \
-                                .SD       (1'b0                                  ),                        \
+                                .LS       (ic_tag_ext_in_pkt[0].LS),                                       \
+                                .DS       (ic_tag_ext_in_pkt[0].DS),                                       \
+                                .SD       (ic_tag_ext_in_pkt[0].SD),                                       \
                                                                                                            \
-                                .TEST_RNM (1'b0                                  ),                        \
-                                .BC1      (1'b0                                  ),                        \
-                                .BC2      (1'b0                                  )                         \
+                                .TEST_RNM (ic_tag_ext_in_pkt[0].TEST_RNM),                                 \
+                                .BC1      (ic_tag_ext_in_pkt[0].BC1),                                      \
+                                .BC2      (ic_tag_ext_in_pkt[0].BC2)                                       \
                                                                                                            \
                                );                                                                          \
                                                                                                            \

@@ -50,6 +50,9 @@ import el2_pkg::*;
    output logic         fir_dccm_access_error_d,   // Fast interrupt dccm access error
    output logic         fir_nondccm_access_error_d,// Fast interrupt dccm access error
 
+    input logic lsu_pmp_error_start,
+    input logic lsu_pmp_error_end,
+
    input  logic         scan_mode                  // Scan mode
 );
 
@@ -124,8 +127,8 @@ import el2_pkg::*;
    assign csr_idx[4:0]       = {start_addr_d[31:28], 1'b1};
    assign is_sideeffects_d = dec_tlu_mrac_ff[csr_idx] & ~(start_addr_in_dccm_region_d | start_addr_in_pic_region_d | addr_in_iccm) & lsu_pkt_d.valid & (lsu_pkt_d.store | lsu_pkt_d.load);  //every region has the 2 LSB indicating ( 1: sideeffects/no_side effects, and 0: cacheable ). Ignored in internal regions
    assign is_aligned_d    = (lsu_pkt_d.word & (start_addr_d[1:0] == 2'b0)) |
-                              (lsu_pkt_d.half & (start_addr_d[0] == 1'b0)) |
-                              lsu_pkt_d.by;
+                                                            (lsu_pkt_d.half & (start_addr_d[0] == 1'b0)) |
+                                                            lsu_pkt_d.by;
 
    logic ACCESS0_STARTOK;
    logic ACCESS1_STARTOK;
@@ -161,6 +164,7 @@ import el2_pkg::*;
    assign ACCESS6_ENDOK   = pt.DATA_ACCESS_ENABLE6 & ((end_addr_d[31:0]   | pt.DATA_ACCESS_MASK6)) == (pt.DATA_ACCESS_ADDR6 | pt.DATA_ACCESS_MASK6);
    assign ACCESS7_ENDOK   = pt.DATA_ACCESS_ENABLE7 & ((end_addr_d[31:0]   | pt.DATA_ACCESS_MASK7)) == (pt.DATA_ACCESS_ADDR7 | pt.DATA_ACCESS_MASK7);
 
+  if (pt.PMP_ENTRIES == 0) begin
    assign non_dccm_access_ok = (~(|{pt.DATA_ACCESS_ENABLE0,pt.DATA_ACCESS_ENABLE1,pt.DATA_ACCESS_ENABLE2,pt.DATA_ACCESS_ENABLE3,pt.DATA_ACCESS_ENABLE4,pt.DATA_ACCESS_ENABLE5,pt.DATA_ACCESS_ENABLE6,pt.DATA_ACCESS_ENABLE7})) |
                                (( ACCESS0_STARTOK|
                                   ACCESS1_STARTOK|
@@ -178,6 +182,7 @@ import el2_pkg::*;
                                   ACCESS5_ENDOK|
                                   ACCESS6_ENDOK|
                                  ACCESS7_ENDOK));
+  end
 
    // Access fault logic
    // 0. Unmapped local memory : Addr in dccm region but not in dccm offset OR Addr in picm region but not in picm offset OR DCCM -> PIC cross when DCCM/PIC in same region
@@ -193,13 +198,21 @@ import el2_pkg::*;
                                         (end_addr_in_dccm_region_d & ~(end_addr_in_dccm_d | end_addr_in_pic_d))       |   // 0. Addr in dccm/pic region but not in dccm/pic offset
                                         (start_addr_in_dccm_d & end_addr_in_pic_d)                                    |   // 0. DCCM -> PIC cross when DCCM/PIC in same region
                                         (start_addr_in_pic_d  & end_addr_in_dccm_d));                                     // 0. DCCM -> PIC cross when DCCM/PIC in same region
-      assign mpu_access_fault_d      = (~start_addr_in_dccm_region_d & ~non_dccm_access_ok);                              // 3. Address is not in a populated non-dccm region
+    if (pt.PMP_ENTRIES > 0) begin
+      assign mpu_access_fault_d   = (lsu_pmp_error_start | lsu_pmp_error_end);                                         // X. Address is in blocked region
+    end else begin
+      assign mpu_access_fault_d   = (~start_addr_in_dccm_region_d & ~non_dccm_access_ok);                              // 3. Address is not in a populated non-dccm region
+    end
    end else begin
       assign unmapped_access_fault_d = ((start_addr_in_dccm_region_d & ~start_addr_in_dccm_d)                              |   // 0. Addr in dccm region but not in dccm offset
                                         (end_addr_in_dccm_region_d & ~end_addr_in_dccm_d)                                  |   // 0. Addr in dccm region but not in dccm offset
                                         (start_addr_in_pic_region_d & ~start_addr_in_pic_d)                                |   // 0. Addr in picm region but not in picm offset
                                         (end_addr_in_pic_region_d & ~end_addr_in_pic_d));                                      // 0. Addr in picm region but not in picm offset
-      assign mpu_access_fault_d      = (~start_addr_in_pic_region_d & ~start_addr_in_dccm_region_d & ~non_dccm_access_ok);     // 3. Address is not in a populated non-dccm region
+    if (pt.PMP_ENTRIES > 0) begin
+      assign mpu_access_fault_d   = (lsu_pmp_error_start | lsu_pmp_error_end);                                              // X. Address is in blocked region
+    end else begin
+      assign mpu_access_fault_d   = (~start_addr_in_pic_region_d & ~start_addr_in_dccm_region_d & ~non_dccm_access_ok);     // 3. Address is not in a populated non-dccm region
+    end
    end
 
    assign access_fault_d = (unmapped_access_fault_d | mpu_access_fault_d | picm_access_fault_d | regpred_access_fault_d) & lsu_pkt_d.valid & ~lsu_pkt_d.dma;
@@ -217,7 +230,7 @@ import el2_pkg::*;
 
    // Fast interrupt error logic
    assign fir_dccm_access_error_d    = ((start_addr_in_dccm_region_d & ~start_addr_in_dccm_d) |
-                                        (end_addr_in_dccm_region_d   & ~end_addr_in_dccm_d)) & lsu_pkt_d.valid & lsu_pkt_d.fast_int;
+                                                                                (end_addr_in_dccm_region_d   & ~end_addr_in_dccm_d)) & lsu_pkt_d.valid & lsu_pkt_d.fast_int;
    assign fir_nondccm_access_error_d = ~(start_addr_in_dccm_region_d & end_addr_in_dccm_region_d) & lsu_pkt_d.valid & lsu_pkt_d.fast_int;
 
    rvdff #(.WIDTH(1))   is_sideeffects_mff (.din(is_sideeffects_d), .dout(is_sideeffects_m), .clk(lsu_c2_m_clk), .*);

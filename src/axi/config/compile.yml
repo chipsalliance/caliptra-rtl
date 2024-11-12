@@ -47,6 +47,7 @@ requires:
   - libs
   - caliptra_prim
   - axi_pkg
+  - soc_ifc_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
