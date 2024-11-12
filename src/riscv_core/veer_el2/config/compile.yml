@@ -1,10 +1,11 @@
 ---
 provides: [el2_veer_pkg]
 schema_version: 2.4.0
-requires: [soc_ifc_pkg]
 targets:
   rtl:
-    directories: [$COMPILE_ROOT/rtl]
+    directories:
+      - $COMPILE_ROOT/rtl
+      - $COMPILE_ROOT/rtl/include
     files:
       - $COMPILE_ROOT/rtl/el2_pdef.vh
       - $COMPILE_ROOT/rtl/include/el2_def.sv
@@ -24,11 +25,6 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/el2_mem.sv
-      - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
-      - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
-      - $COMPILE_ROOT/rtl/el2_veer.sv
-      - $COMPILE_ROOT/rtl/el2_veer_wrapper.sv
       - $COMPILE_ROOT/rtl/dbg/el2_dbg.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_decode_ctl.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_gpr_ctl.sv
@@ -36,6 +32,8 @@ targets:
       - $COMPILE_ROOT/rtl/dec/el2_dec.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_tlu_ctl.sv
       - $COMPILE_ROOT/rtl/dec/el2_dec_trigger.sv
+      - $COMPILE_ROOT/rtl/dec/el2_dec_pmp_ctl.sv
+      - $COMPILE_ROOT/rtl/dmi/dmi_mux.v
       - $COMPILE_ROOT/rtl/dmi/dmi_jtag_to_core_sync.v
       - $COMPILE_ROOT/rtl/dmi/dmi_wrapper.v
       - $COMPILE_ROOT/rtl/dmi/rvjtag_tap.v
@@ -67,6 +65,12 @@ targets:
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_stbuf.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_trigger.sv
+      - $COMPILE_ROOT/rtl/el2_mem.sv
+      - $COMPILE_ROOT/rtl/el2_dma_ctrl.sv
+      - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
+      - $COMPILE_ROOT/rtl/el2_pmp.sv
+      - $COMPILE_ROOT/rtl/el2_veer.sv
+      - $COMPILE_ROOT/rtl/el2_veer_wrapper.sv
     tops: [el2_veer_wrapper]
   rtl_lint:
     directories: []

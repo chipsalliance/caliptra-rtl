@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2020 Western Digital Corporation or its affiliates.
+// Copyright (c) 2023 Antmicro <www.antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,10 +27,8 @@
 //
 // //********************************************************************************
 
-
-
 module el2_lsu_dccm_mem
-import el2_pkg::*;
+  import el2_pkg::*;
 #(
 `include "el2_param.vh"
  )(
@@ -46,8 +45,7 @@ import el2_pkg::*;
    input logic [pt.DCCM_BITS-1:0]  dccm_rd_addr_hi,                     // read address for the upper bank in case of a misaligned access
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_lo,              // write data
    input logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_data_hi,              // write data
-
-   el2_mem_if.veer_dccm dccm_mem_export, // RAM repositioned in testbench and connected by this interface
+   el2_mem_if.veer_dccm                   dccm_mem_export,              // RAM repositioned in testbench and connected by this interface
 
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_lo,              // read data from the lo bank
    output logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_rd_data_hi,              // read data from the hi bank
@@ -99,22 +97,23 @@ import el2_pkg::*;
       // clock gating section
       assign  dccm_clken[i] = (wren_bank[i] | rden_bank[i] | clk_override) ;
       // end clock gating section
-        
-        // Connect to exported RAM Banks
-        always_comb begin
-            dccm_mem_export.dccm_clken[i]              = dccm_clken[i];
-            dccm_mem_export.dccm_wren_bank[i]          = wren_bank[i];
-            dccm_mem_export.dccm_addr_bank[i]          = addr_bank[i];
-            dccm_mem_export.dccm_wr_data_bank[i]       = wr_data_bank[i];
-            dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0] = dccm_mem_export.dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:0];
-        end
+
+      // Connect to exported RAM Banks
+      always_comb begin
+         dccm_mem_export.dccm_clken[i]                               = dccm_clken[i];
+         dccm_mem_export.dccm_wren_bank[i]                           = wren_bank[i];
+         dccm_mem_export.dccm_addr_bank[i]                           = addr_bank[i];
+         dccm_mem_export.dccm_wr_data_bank[i]                        = wr_data_bank[i][pt.DCCM_DATA_WIDTH-1:0];
+         dccm_mem_export.dccm_wr_ecc_bank[i]                         = wr_data_bank[i][pt.DCCM_FDATA_WIDTH-1:pt.DCCM_DATA_WIDTH];
+         dccm_bank_dout[i][pt.DCCM_DATA_WIDTH-1:0]                   = dccm_mem_export.dccm_bank_dout[i];
+         dccm_bank_dout[i][pt.DCCM_FDATA_WIDTH-1:pt.DCCM_DATA_WIDTH] = dccm_mem_export.dccm_bank_ecc[i];
+      end
 
    end : mem_bank
 
    // Flops
    rvdff  #(pt.DCCM_BANK_BITS) rd_addr_lo_ff (.*, .din(dccm_rd_addr_lo[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .dout(dccm_rd_addr_lo_q[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .clk(active_clk));
    rvdff  #(pt.DCCM_BANK_BITS) rd_addr_hi_ff (.*, .din(dccm_rd_addr_hi[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .dout(dccm_rd_addr_hi_q[DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]), .clk(active_clk));
-
 
 endmodule // el2_lsu_dccm_mem
 

@@ -22,14 +22,9 @@
 #       cd Cores-VeeR-EL2
 #   2. in the shell, run:
 #       export RV_ROOT=${PWD}
-#   3. edit Cores-VeeR-EL2/configs/veer.config, line 841
-#       change
-#          "reset_vec"             => "0x80000000",                        # Testbench, Overridable
-#       to
-#          "reset_vec"             => "0x00000000",                        # Testbench, Overridable
-#   4. Run this script with 1 argument : name of snapshot to use
+#   3. Run this script with 1 argument : name of snapshot to use
 #        source <path/to/script>/veer_build_command.sh <name_of_snapshot>
-#   5. AFTER this script completes, you can merge contents into Caliptra repo
+#   4. AFTER this script completes, you can merge contents into Caliptra repo
 #      (Output files will be located in $RV_ROOT/snapshots/<name_of_snapshot>)
 ########################################################################
 if [[ -z ${RV_ROOT+"empty"} ]]; then
@@ -42,7 +37,6 @@ if [[ $# -ne 1 ]]; then
 fi
 $RV_ROOT/configs/veer.config    \
 -target=default_ahb              \
---iccm_region=0x4                \
 -set=ret_stack_size=8            \
 -set=btb_enable=1                \
 -set=btb_fullya=0                \
@@ -57,7 +51,6 @@ $RV_ROOT/configs/veer.config    \
 -set=dccm_size=128               \
 -set=dma_buf_depth=5             \
 -set=fast_interrupt_redirect=1   \
--set=iccm_enable=1               \
 -set=icache_enable=0             \
 -set=icache_waypack=1            \
 -set=icache_ecc=1                \
@@ -68,9 +61,11 @@ $RV_ROOT/configs/veer.config    \
 -set=icache_num_bypass=2         \
 -set=icache_num_tag_bypass=2     \
 -set=icache_tag_bypass_enable=1  \
+-set=iccm_enable=1               \
+-set=iccm_num_banks=4            \
+-set=iccm_region=0x4             \
 -set=iccm_offset=0x0             \
 -set=iccm_size=128               \
--set=iccm_num_banks=4            \
 -set=lsu_stbuf_depth=4           \
 -set=lsu_num_nbload=4            \
 -set=load_to_use_plus1=0         \
@@ -89,6 +84,10 @@ $RV_ROOT/configs/veer.config    \
 -set=bitmanip_zbp=0              \
 -set=bitmanip_zbr=0              \
 -set=bitmanip_zbs=1              \
+-set=user_mode=1                 \
+-set=pmp_entries=64              \
+-set=smepmp=1                    \
+-set=reset_vec=0x00000000        \
 -fpga_optimize=0                 \
 -snapshot=$1
 #-text_in_iccm=0

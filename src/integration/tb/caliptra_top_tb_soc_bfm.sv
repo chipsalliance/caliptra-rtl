@@ -193,7 +193,7 @@ import caliptra_top_tb_pkg::*; #(
                     wait(ready_for_fuses == 1);
                     $display ("CLP: Ready for fuse download\n");
 
-                    repeat(5) @(posedge core_clk);
+                    for (int rpt=0; rpt < 5; rpt++) @(posedge core_clk);
 
                     $display ("SoC: Writing obfuscated UDS to fuse bank\n");
                     for (int dw=0; dw < `CLP_OBF_UDS_DWORDS; dw++) begin
@@ -239,7 +239,7 @@ import caliptra_top_tb_pkg::*; #(
 
                     // Mailbox flow
                     if (ready_for_fw_push) begin
-                        repeat(5) @(posedge core_clk);
+                        for (int rpt=0; rpt<5; rpt++) @(posedge core_clk);
 
                         $display ("CLP: Ready for firmware push\n");
                         $write ("SoC: Requesting mailbox lock...");
@@ -443,32 +443,35 @@ import caliptra_top_tb_pkg::*; #(
                 end: BOOT_AND_CMD_FLOW
                 begin: CLK_GATE_FLOW
                     wait(cycleCnt_smpl_en);
-                    repeat(2000) @(negedge core_clk);
+                    for (int rpt=0; rpt<2000; rpt++) @(negedge core_clk);
 
-                    if (int_flag)
+                    if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
                         force caliptra_top_dut.soft_int = 1'b1;
-                    repeat(2) @(negedge core_clk);
+                        for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
                         release caliptra_top_dut.soft_int;
+                    end
 
-                    repeat(5000) @(negedge core_clk);
+                    for (int rpt=0; rpt<5000; rpt++) @(negedge core_clk);
 
-                    if (int_flag)
+                    if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing timer_int = 1. cycleCnt [%d]\n", cycleCnt);
                         force caliptra_top_dut.timer_int = 1'b1;
-                    repeat(2) @(negedge core_clk);
+                        for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing timer_int = 1. cycleCnt [%d]\n", cycleCnt);
                         release caliptra_top_dut.timer_int;
+                    end
 
-                    repeat(8000) @(negedge core_clk);
+                    for (int rpt=0; rpt<8000; rpt++) @(negedge core_clk);
 
-                    if (int_flag)
+                    if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
                         force caliptra_top_dut.soft_int = 1'b1;
-                    repeat(2) @(negedge core_clk);
+                        for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
                         release caliptra_top_dut.soft_int;
+                    end
 
                     wait(cptra_rst_b == 0);
                 end: CLK_GATE_FLOW
