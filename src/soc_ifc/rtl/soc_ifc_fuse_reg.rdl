@@ -41,7 +41,7 @@ reg {
     Fuse hash[32]=0;
 } fuse_key_manifest_pk_hash[12];
 reg {
-    desc = "Key Manifest Mask Fuse.
+    desc = "Key Manifest Mask Fuse (ECC Revocation).
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
      Fuse mask[4]=0;
@@ -89,17 +89,17 @@ reg {
     Fuse life_cycle[2]=0;
 } fuse_life_cycle;
 reg {
-    desc = "0 - Verify Caliptra firmware images with ECDSA-only; 1 - Verify Caliptra firmware images with both ECDSA and LMS 
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-    Fuse lms_verify[1]=0;
-} fuse_lms_verify;
-reg {
-    desc = "Bits for revoking LMS public keys in the key manifest
+    desc = "One-hot encoded list of revoked Vendor LMS Public Keys (up to 32 keys)
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse lms_revocation[32]=0;
 } fuse_lms_revocation;
+reg {
+    desc = "One-hot encoded list of revoked Vendor MLDSA Public Keys (up to 4 keys)
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse mldsa_revocation[4]=0;
+} fuse_mldsa_revocation;
 reg {
     desc = "SOC stepping ID
              [br]Caliptra Access: RO

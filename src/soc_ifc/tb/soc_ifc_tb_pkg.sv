@@ -176,8 +176,8 @@ package soc_ifc_tb_pkg;
     "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,                              // 0x2cc [24] - 
     "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,                           // 0x32c [4]  - 
     "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                                      // 0x33c      - 
-    "FUSE_LMS_VERIFY"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_VERIFY,                                      // 0x340      -
-    "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x344      -
+    "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x340      -
+    "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
     // 0x34c..0x5fc           
     "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,                                   // 0x600 [8]  De-Obfuscation Key 
@@ -298,8 +298,8 @@ package soc_ifc_tb_pkg;
     "FUSE_IDEVID_CERT_ATTR"                            : 32'hffff_ffff, 
     "FUSE_IDEVID_MANUF_HSM_ID"                         : 32'hffff_ffff, 
     "FUSE_LIFE_CYCLE"                                  : 32'h3,          // field 1:0
-    "FUSE_LMS_VERIFY"                                  : 32'h1,          // field 0
     "FUSE_LMS_REVOCATION"                              : 32'hffff_ffff,
+    "FUSE_MLDSA_REVOCATION"                            : 32'hf,
     "FUSE_SOC_STEPPING_ID"                             : 32'hffff,       // field 15:0
     "CPTRA_HW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          

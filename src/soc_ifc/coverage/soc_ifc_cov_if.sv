@@ -701,13 +701,13 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_fuse_life_cycle;
   logic [31:0]   full_addr_fuse_life_cycle = `CLP_SOC_IFC_REG_FUSE_LIFE_CYCLE;
 
-  logic          hit_fuse_lms_verify;
-  logic [3:0]    bus_fuse_lms_verify;
-  logic [31:0]   full_addr_fuse_lms_verify = `CLP_SOC_IFC_REG_FUSE_LMS_VERIFY;
-
   logic          hit_fuse_lms_revocation;
   logic [3:0]    bus_fuse_lms_revocation;
   logic [31:0]   full_addr_fuse_lms_revocation = `CLP_SOC_IFC_REG_FUSE_LMS_REVOCATION;
+
+  logic          hit_fuse_mldsa_revocation;
+  logic [3:0]    bus_fuse_mldsa_revocation;
+  logic [31:0]   full_addr_fuse_mldsa_revocation = `CLP_SOC_IFC_REG_FUSE_MLDSA_REVOCATION;
 
   logic          hit_fuse_soc_stepping_id;
   logic [3:0]    bus_fuse_soc_stepping_id;
@@ -1376,11 +1376,11 @@ interface soc_ifc_cov_if
   assign hit_fuse_life_cycle = (soc_ifc_reg_req_data.addr == full_addr_fuse_life_cycle[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_life_cycle = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_life_cycle}};
 
-  assign hit_fuse_lms_verify = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_verify[AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_lms_verify = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_verify}};
-
   assign hit_fuse_lms_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_revocation[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_lms_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_revocation}};
+
+  assign hit_fuse_mldsa_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_mldsa_revocation[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_mldsa_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_mldsa_revocation}};
 
   assign hit_fuse_soc_stepping_id = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_stepping_id[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_soc_stepping_id = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_stepping_id}};
@@ -2528,19 +2528,19 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_lms_verify -----------------------
-  covergroup soc_ifc_fuse_lms_verify_cg (ref logic [3:0] bus_event) @(posedge clk);
-    fuse_lms_verify_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_verify;
-    bus_fuse_lms_verify_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP fuse_lms_revocation -----------------------
+  covergroup soc_ifc_fuse_lms_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_lms_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_revocation;
+    bus_fuse_lms_revocation_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_lms_revocation -----------------------
-  covergroup soc_ifc_fuse_lms_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
-    fuse_lms_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_revocation;
-    bus_fuse_lms_revocation_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP fuse_mldsa_revocation -----------------------
+  covergroup soc_ifc_fuse_mldsa_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_mldsa_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_mldsa_revocation;
+    bus_fuse_mldsa_revocation_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -3077,8 +3077,8 @@ interface soc_ifc_cov_if
   soc_ifc_fuse_idevid_cert_attr_cg fuse_idevid_cert_attr_cg = new(bus_fuse_idevid_cert_attr);
   soc_ifc_fuse_idevid_manuf_hsm_id_cg fuse_idevid_manuf_hsm_id_cg = new(bus_fuse_idevid_manuf_hsm_id);
   soc_ifc_fuse_life_cycle_cg fuse_life_cycle_cg = new(bus_fuse_life_cycle);
-  soc_ifc_fuse_lms_verify_cg fuse_lms_verify_cg = new(bus_fuse_lms_verify);
   soc_ifc_fuse_lms_revocation_cg fuse_lms_revocation_cg = new(bus_fuse_lms_revocation);
+  soc_ifc_fuse_mldsa_revocation_cg fuse_mldsa_revocation_cg = new(bus_fuse_mldsa_revocation);
   soc_ifc_fuse_soc_stepping_id_cg fuse_soc_stepping_id_cg = new(bus_fuse_soc_stepping_id);
   soc_ifc_internal_obf_key_cg internal_obf_key_cg = new(bus_internal_obf_key);
   soc_ifc_internal_iccm_lock_cg internal_iccm_lock_cg = new(bus_internal_iccm_lock);

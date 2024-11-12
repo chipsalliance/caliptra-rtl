@@ -28,8 +28,8 @@ logic        fuse_anti_rollback_disable;
 logic [31:0] fuse_idevid_cert_attr [0:23]; 
 logic [31:0] fuse_idevid_manuf_hsm_id [0:3]; 
 logic [1:0]  fuse_life_cycle ; 
-logic        fuse_lms_verify ; 
 logic [31:0] fuse_lms_revocation; 
+logic [31:0] fuse_mldsa_revocation; 
 
 
 `FORLOOP_COMB( 12 ) fuse_uds_seed[j]                  = `REG_HIER_PFX.fuse_uds_seed[j].seed.value;
@@ -43,8 +43,8 @@ logic [31:0] fuse_lms_revocation;
 `FORLOOP_COMB( 24 ) fuse_idevid_cert_attr[j]          = `REG_HIER_PFX.fuse_idevid_cert_attr[j].cert.value;
 `FORLOOP_COMB( 4 )  fuse_idevid_manuf_hsm_id[j]       = `REG_HIER_PFX.fuse_idevid_manuf_hsm_id[j].hsm_id.value;
   always_comb       fuse_life_cycle                   = `REG_HIER_PFX.fuse_life_cycle.life_cycle.value;
-  always_comb       fuse_lms_verify                   = `REG_HIER_PFX.fuse_lms_verify.lms_verify.value;
   always_comb       fuse_lms_revocation               = `REG_HIER_PFX.fuse_lms_revocation.lms_revocation.value;
+  always_comb       fuse_mldsa_revocation             = `REG_HIER_PFX.fuse_mldsa_revocation.mldsa_revocation.value;
 
 
 //----------------------------------------------------------------
@@ -265,7 +265,7 @@ endtask // fuse_reg_pauser_test
 //----------------------------------------------------------------
 // function get_fuse_regval()
 //
-// Probes to get the intenral fuse register value inside dut 
+// Probes to get the internal fuse register value inside dut 
 //----------------------------------------------------------------
 function dword_t get_fuse_regval(string rname);
 
@@ -282,8 +282,8 @@ function dword_t get_fuse_regval(string rname);
       "FUSE_FMC_KEY_MANIFEST_SVN"           :  regval = fuse_fmc_key_manifest_svn; 
       "FUSE_ANTI_ROLLBACK_DISABLE"          :  regval = fuse_anti_rollback_disable; 
       "FUSE_LIFE_CYCLE"                     :  regval = fuse_life_cycle ; 
-      "FUSE_LMS_VERIFY"                     :  regval = fuse_lms_verify ; 
       "FUSE_LMS_REVOCATION"                 :  regval = fuse_lms_revocation; 
+      "FUSE_MLDSA_REVOCATION"               :  regval = fuse_mldsa_revocation; 
 
       default: begin
         foreach (prefixes[i]) begin
