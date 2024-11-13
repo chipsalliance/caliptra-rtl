@@ -44,6 +44,9 @@ import rdl_post_process
 
 #output directory for dumping files
 rtl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
+build_cov = 0
+if len(sys.argv) >= 2 and sys.argv[2] == "--cov":
+    build_cov = 1
 repo_root = os.environ.get('CALIPTRA_ROOT')
 
 # Listener to retrieve the address width at the CPU IF and write as a param to the pkg
@@ -103,11 +106,12 @@ try:
     exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_uvm.sv")
     # The below lines are used to generate a baseline/starting point for the include files "<reg_name>_covergroups.svh" and "<reg_name>_sample.svh"
     # The generated files will need to be hand-edited to provide the desired functionality.
-    # Uncomment these lines and run this script directly on the target RDL file to generate the files.
-#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/cov"))
-#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_covergroups.svh")
-#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/smp"))
-#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_sample.svh")
+    # Run this script directly on the target RDL file, with the second argument "--cov" to generate the files.
+    if build_cov == 1:
+        exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/cov"))
+        exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_covergroups.svh")
+        exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/smp"))
+        exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_sample.svh")
 
     # Traverse the register model!
     walker = RDLWalker(unroll=True)
