@@ -453,6 +453,22 @@ reg {
  } CPTRA_RSVD_REG[2];
 
 reg {
+    name = "Caliptra HW Capabilities";
+    desc = "Caliptra HW Capabilities. Initialized with reset values, rewritable by Caliptra firmware.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {sw=rw; swwel=soc_req; resetsignal=cptra_pwrgood;} cap[32]=32'h0;
+} CPTRA_HW_CAPABILITIES;
+
+reg {
+    name = "Caliptra FW Capabilities";
+    desc = "Caliptra FW Capabilities. Initialized with reset values, rewritable by Caliptra firmware.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {sw=rw; swwel=soc_req; resetsignal=cptra_pwrgood;} cap[32]=32'h0;
+} CPTRA_FW_CAPABILITIES;
+
+reg {
     desc = "Owner PK hash lockable register.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
@@ -466,3 +482,13 @@ reg {
              [br]SOC Access:      RW1-S";
     field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} lock[1]=0;
 } CPTRA_OWNER_PK_HASH_LOCK;
+
+// TODO
+reg {
+    field {sw=rw;} offset[32]=32'h0;
+} CPTRA_DEBUG_AUTH_PK_HASH_REG_BANK_OFFSET;
+
+// TODO
+reg {
+    field {sw=rw;} num[32]=32'h0;
+} CPTRA_NUM_OF_DEBUG_AUTH_PK_HASHES;

@@ -52,7 +52,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
-} fuse_fmc_key_manifest_svn @0x2c4;
+} fuse_fmc_key_manifest_svn @0x2b4;
 reg {
     desc = "Runtime SVN Fuse.
              [br]Caliptra Access: RO
@@ -77,18 +77,13 @@ reg {
              [br]SOC Access:      RWL-S";
     Fuse hsm_id[32]=0;
 } fuse_idevid_manuf_hsm_id[4];
-reg {
-    desc = " Caliptra Boot Media Integrated mode usage only. SOCs that build with a Boot Media Independent profile don’t have to account for these fuses.
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-    Fuse life_cycle[2]=0;
-} fuse_life_cycle;
+
 reg {
     desc = "One-hot encoded list of revoked Vendor LMS Public Keys (up to 32 keys)
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse lms_revocation[32]=0;
-} fuse_lms_revocation;
+} fuse_lms_revocation @0x340;
 reg {
     desc = "One-hot encoded list of revoked Vendor MLDSA Public Keys (up to 4 keys)
              [br]Caliptra Access: RO
@@ -101,4 +96,16 @@ reg {
              [br]SOC Access:      RWL-S";
     Fuse soc_stepping_id[16]=0;
 } fuse_soc_stepping_id;
+reg {
+    desc = "Manufacturing debug unlock token
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse token[32]=0;
+} fuse_manuf_dbg_unlock_token[4];
+reg {
+    desc = "Production debug unlock token
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    Fuse token[32]=0;
+} fuse_prod_dbg_unlock_token[4];
 

@@ -14,474 +14,130 @@
 //
 ////////////////////////////////////////////////////////////////
 // Subsystem Straps and Registers
+
+field strap { sw=r; hw=w; };
 reg {
-} SS_SOC_IFC_BASE_ADDR @0x180;
+    name = "Subsystem SoC Interface Base Address (Low)";
+    desc = "Subsystem SoC Interface Base Address Lower 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_l[32];
+} SS_SOC_IFC_BASE_ADDR_L @0x500;
 
 reg {
-} SS_RECOVERY_IFC_BASE_ADDR;
+    name = "Subsystem SoC Interface Base Address (High)";
+    desc = "Subsystem SoC Interface Base Address Upper 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_h[32];
+} SS_SOC_IFC_BASE_ADDR_H;
 
 reg {
-} SS_OTP_FC_BASE_ADDR;
+    name = "Subsystem Recovery Interface Base Address (Low)";
+    desc = "Subsystem Recovery Interface Base Address Lower 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_l[32];
+} SS_RECOVERY_IFC_BASE_ADDR_L;
 
 reg {
-} SS_UDS_SEED_WRITE_ADDR;
+    name = "Subsystem Recovery Interface Base Address (High)";
+    desc = "Subsystem Recovery Interface Base Address Upper 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_h[32];
+} SS_RECOVERY_IFC_BASE_ADDR_H;
 
 reg {
+    name = "Subsystem Fuse Controller Base Address (Low)";
+    desc = "Subsystem Fuse Controller Base Address Lower 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_l[32];
+} SS_OTP_FC_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem Fuse Controller Base Address (High)";
+    desc = "Subsystem Fuse Controller Base Address Upper 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_h[32];
+} SS_OTP_FC_BASE_ADDR_H;
+
+reg {
+    name = "Subsystem UDS Seed Destination Base Address (Low)";
+    desc = "Subsystem UDS Seed Destination Base Address Lower 32 bits (from AXI). Used as the write address when programming the UDS seed during manufacturing.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_l[32];
+} SS_UDS_SEED_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem UDS Seed Destination Base Address (High)";
+    desc = "Subsystem UDS Seed Destination Base Address Upper 32 bits (from AXI). Used as the write address when programming the UDS seed during manufacturing.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_h[32];
+} SS_UDS_SEED_BASE_ADDR_H;
+
+reg {
+    name = "SoC Nonce";
+    desc = "TODO Need a register that needs a fixed NONCE (this is a register (not a fuse from Caliptra POV) that MCU can write)"; // TODO
+    field { sw=rw; hw=r; resetsignal = cptra_rst_b; } nonce[32]=0;
+} CPTRA_SOC_NONCE[16] @0x540;
+
+reg {
+    name = "DEBUG INTENT";
+    desc = "Strap from SoC in Subsystem configuration that indicates if this boot cycle will be used for debug.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap debug_intent;
 } SS_DEBUG_INTENT;
 
 reg {
-} SS_STRAP_RSVD0 @0x1e0;
+    name = "RESERVED STRAP";
+    desc = "Straps reserved for late-binding features for survivability.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap rsvd[32];
+} SS_STRAP_RSVD[4] @0x5c0;
 
 reg {
-} SS_STRAP_RSVD1;
+    name = "SUBSYSTEM DEBUG & MANUF SERVICE REG REQUEST";
+    desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services.
+            [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RW
+            [br]TAP Access [in debug/manuf mode]: RW";
+    field {desc="Manufacturing debug unlock request. Only writable when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_REQ = 1'b0;
+    field {desc="Production debug unlock request. Only writable when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."      ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_REQ = 1'b0;
+    field {desc="UDS programming request. Only writable when lifecycle state is MANUFACTURING."                                              ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_REQ = 1'b0;
+} SS_DBG_MANUF_SERVICE_REG_REQ @0x5e0;
 
 reg {
-} SS_STRAP_RSVD2;
+    name = "SUBSYSTEM DEBUG & MANUF SERVICE REG RESPONSE";
+    desc = "JTAG in debug/manuf mode or SOC can read from this register for ROM/FW defined skips or services.
+            [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            [br]TAP Access [in debug/manuf mode]: RO";
+    field {desc="Manufacturing debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_SUCCESS     = 1'b0;
+    field {desc="Manufacturing debug unlock failed. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                           ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_FAIL        = 1'b0;
+    field {desc="Manufacturing debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                   ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_IN_PROGRESS = 1'b0;
+    field {desc="Production debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."      ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_SUCCESS      = 1'b0;
+    field {desc="Production debug unlock failed. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                                 ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_FAIL         = 1'b0;
+    field {desc="Production debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                         ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_IN_PROGRESS  = 1'b0;
+    field {desc="UDS Programming was successful. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING. Sticky once set, until warm reset."                                              ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_SUCCESS          = 1'b0;
+    field {desc="UDS Programming failed. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING."                                                                                         ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_FAIL             = 1'b0;
+    field {desc="UDS Programming is in progress. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING."                                                                                 ; sw=rw; hw=rw; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_IN_PROGRESS      = 1'b0;
+} SS_DBG_MANUF_SERVICE_REG_RSP;
 
 reg {
-} SS_STRAP_RSVD3;
-
-
-
-
-
-
-
-
-
-//reg {
-//    name = "Hardware Error Fatal";
-//    desc = "Indicates fatal hardware error. Assertion of any bit in this
-//            register results in the assertion of the SoC interrupt pin,
-//            cptra_error_fatal, unless that bit is masked using the internal
-//            mask register. After the output interrupt is asserted, clearing
-//            the bit in this register will not cause the interrupt to deassert.
-//            Only a Caliptra reset will clear the fatal error interrupt.
-//            [br]Caliptra Access: RW1C
-//            [br]SOC Access:      RW1C";
-//    rw_rw_sticky_hw iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
-//    rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
-//    rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
-//    rw_rw_sticky_hw crypto_err=0;       /* Crypto parallel operation error No Mask */ 
-//} CPTRA_HW_ERROR_FATAL;
-//reg {
-//    name = "Hardware Error Non-Fatal";
-//    desc = "Indicates non-fatal hardware error. Assertion of any bit in this
-//            register results in the assertion of the SoC interrupt pin,
-//            cptra_error_non_fatal, unless that bit is masked using the internal
-//            mask register. After the output interrupt is asserted, any
-//            change by firmware that results in all set non-fatal errors
-//            being masked will immediately deassert the interrupt output. This means
-//            that firmware may cause the cptra_error_non_fatal signal to deassert by
-//            writing to any of these registers, if the write results in all error
-//            bits being cleared or masked:
-//            [br][list]
-//            [br] [*] CPTRA_HW_ERROR_NON_FATAL
-//            [br] [*] CPTRA_FW_ERROR_NON_FATAL
-//            [br] [*] internal_hw_error_non_fatal_mask
-//            [br] [*] internal_fw_error_non_fatal_mask 
-//            [/list]
-//            [br]Caliptra Access: RW1C
-//            [br]SOC Access:      RW1C";
-//    rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
-//    rw_rw_sticky_hw mbox_prot_ooo=0;     /* Register access out-of-order */
-//    rw_rw_sticky_hw mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
-//} CPTRA_HW_ERROR_NON_FATAL;
-//reg {
-//    name = "Firmware Error Fatal";
-//    desc = "Indicates fatal firmware error. Assertion of any bit in this
-//            register results in the assertion of the SoC interrupt pin,
-//            cptra_error_fatal, unless that bit is masked using the internal
-//            mask register. After the output interrupt is asserted, clearing
-//            the bit in this register will not cause the interrupt to deassert.
-//            Only a Caliptra reset will clear the fatal error interrupt.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    rw_rw_sticky error_code[32]=0; 
-//} CPTRA_FW_ERROR_FATAL;
-//reg {
-//    name = "Firmware Error Non-Fatal";
-//    desc = "Indicates non-fatal firmware error. Assertion of any bit in this
-//            register results in the assertion of the SoC interrupt pin,
-//            cptra_error_non_fatal, unless that bit is masked using the internal
-//            mask register. After the output interrupt is asserted, any
-//            change by firmware that results in all set non-fatal errors
-//            being masked will immediately deassert the interrupt output. This means
-//            that firmware may cause the cptra_error_non_fatal signal to deassert by
-//            writing to any of these registers, if the write results in all error
-//            bits being cleared or masked:
-//            [br][list]
-//            [br] [*] CPTRA_HW_ERROR_NON_FATAL
-//            [br] [*] CPTRA_FW_ERROR_NON_FATAL
-//            [br] [*] internal_hw_error_non_fatal_mask
-//            [br] [*] internal_fw_error_non_fatal_mask
-//            [/list]
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    rw_rw_sticky error_code[32]=0; 
-//} CPTRA_FW_ERROR_NON_FATAL;
-//reg {
-//    name = "Hardware Error Encoding";
-//    desc = "Encoded error value for hardware errors.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]TAP Access [in debug/manuf mode]: RO";
-//     field {resetsignal = cptra_pwrgood; hw=r;}error_code[32]=0; 
-//} CPTRA_HW_ERROR_ENC;
-//reg {
-//    name = "Firmware Error Encoding";
-//    desc = "Encoded error value for firmware errors.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]TAP Access [in debug/manuf mode]: RO";
-//    field {resetsignal = cptra_pwrgood; hw=r;} error_code[32]=0; 
-//} CPTRA_FW_ERROR_ENC;
-//reg {
-//    name = "Firmware Extended Error Information";
-//    desc = "Firmware Extended Error information for firmware errors.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {resetsignal = cptra_pwrgood; hw=r;} error_info[32]=0; 
-//} CPTRA_FW_EXTENDED_ERROR_INFO[8];
-//reg {
-//    name = "Boot Status";
-//    desc = "Reports the boot status.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO
-//            [br]TAP Access [in debug/manuf mode]: RO";
-//    field {swwel = soc_req; hw=r; resetsignal = cptra_rst_b;} status[32]=0;
-//} CPTRA_BOOT_STATUS;
-//reg {
-//    name = "Flow Status";
-//    desc = "Reports the status of the firmware flows.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    rw_ro status[24]=0;
-//    field {desc="DEV ID CSR ready";                                          sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} idevid_csr_ready[1]=0;
-//    field {desc="Boot FSM State";                                            sw=r;                   hw=w ; /* no storage, no reset */} boot_fsm_ps[3];
-//    field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
-//    field {desc="Indicates Caliptra is ready for RT flows";                  sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
-//    field {desc="Indicates Caliptra is ready for Fuses to be programmed.
-//                 Read-only to both Caliptra and SOC.";                       sw=r;                   hw=w ; /* no storage, no reset */} ready_for_fuses[1];
-//    field {desc="Indicates Caliptra is has completed Mailbox Flow.";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} mailbox_flow_done[1]=0;
-//} CPTRA_FLOW_STATUS;
-//reg {
-//    name = "Reset Reason";
-//    desc = "Indicates to ROM the originating cause for the PC to be reset to 0.
-//            Only reset during cold-boot (sticky).
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RO";
-//    field {desc = "FW update reset has been executed"; sw=r; hw=rw; we=true; resetsignal = cptra_rst_b;}      FW_UPD_RESET=0;
-//    field {desc = "warm reset has been executed";      sw=r; hw=rw; resetsignal = cptra_pwrgood;} WARM_RESET=0;
-//} CPTRA_RESET_REASON;
-//
-//reg {
-//    name = "Security State";
-//    desc = "Indicates current hardware security state.
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RO";
-//    enum device_lifecycle_e {
-//        DEVICE_UNPROVISIONED = 2'b00 {
-//            desc = "Unprovisioned";
-//        };
-//        DEVICE_MANUFACTURING = 2'b01 {
-//            desc = "Manufacturing";
-//        };
-//        DEVICE_PRODUCTION    = 2'b11 {
-//            desc = "Production";
-//        };
-//    };
-//    field {desc = "Device Lifecycle"; sw=r; hw=w; encode = device_lifecycle_e; resetsignal = cptra_rst_b;} device_lifecycle[2]=0;
-//    field {desc = "Debug Locked"    ; sw=r; hw=w;                              resetsignal = cptra_rst_b;} debug_locked=0;
-//    field {desc = "scan mode signal observed at caliptra interface - only for debug mode as its used to flush assets - 
-//                   when truly in scan mode, everything will be BROKEN for functional reads!"; 
-//                                      sw=r; hw=w;                              resetsignal = cptra_rst_b;} scan_mode=0;
-//    field {desc = "Reserved field"  ; sw=r;                                    resetsignal = cptra_rst_b;} rsvd[28] = 0;
-//} CPTRA_SECURITY_STATE;
-//
-//reg {
-//    name = "Valid ID Registers";
-//     desc = "Valid AXI ID attributes for requests from SoC AXI Interface. Only valid once LOCK is set.
-//             [br]Caliptra Access: RW
-//             [br]SOC Access:      RW
-//             Read-Only once locked by AXI_ID_LOCK.";
-//     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} AXI_ID[32]=0xFFFF_FFFF;
-// } CPTRA_MBOX_VALID_AXI_ID[5];
-//
-////FIXME: Should LOCK be W1 here?
-//reg {
-//    name = "Valid ID Register Lock";
-//     desc = "Valid AXI_ID attributes for requests from SoC AXI Interface.
-//             [br]Each bit corresponds to locking the associated MBOX_VALID_AXI_ID register.
-//             [br]Associated MBOX_VALID_AXI_ID register is only valid once locked by this bit.
-//             [br]Caliptra Access: RW
-//             [br]SOC Access:      RW
-//             [br]Read-Only once locked.";
-//     field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} LOCK=0;
-// } CPTRA_MBOX_AXI_ID_LOCK[5];
-//
-//reg {
-//    name = "Valid ID for TRNG";
-//    desc = "Valid AXI ID attributes for TRNG on SoC AXI Interface. Only valid once LOCK is set.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]Read-Only once locked by TRNG_AXI_ID_LOCK.";
-//    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} AXI_ID[32]=0xFFFF_FFFF;
-// } CPTRA_TRNG_VALID_AXI_ID;
-//
-//reg {
-//    name = "Valid ID for TRNG AXI_ID Lock";
-//    desc = "Valid AXI ID attributes for requests from SoC AXI Interface.
-//            [br]Each bit corresponds to locking the associated TRNG_VALID_AXI_ID register.
-//            [br]Associated TRNG_VALID_AXI_ID register is only valid once locked by this bit.
-//            [br]Caliptra FW RW access for survivability but cannot unlock once locked
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]Read-Only once locked.";
-//    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
-// } CPTRA_TRNG_AXI_ID_LOCK;
-//
-//reg {
-//    name = "TRNG Data";
-//    desc = "Storage for the requested TRNG Data.
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RW";
-//    field {sw=rw; hw=na; swwe; swacc; hwclr; resetsignal=cptra_rst_b;} DATA[32]=0;
-// } CPTRA_TRNG_DATA[12];
-//
-// reg {
-//    name = "TRNG Ctrl";
-//    desc = "TRNG Control register to clear data registers";
-//    field {desc = "Indicates that TRNG Data can be cleared
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";  sw=rw; hw=r; singlepulse; swwel=soc_req; resetsignal=cptra_rst_b;} clear=0;
-//} CPTRA_TRNG_CTRL;
-//
-//reg {
-//    name = "TRNG Status";
-//    desc = "TRNG Status register to indicate request and done";
-//    field {desc = "Indicates that there is a request for TRNG Data.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";  sw=rw; hw=r; swwel=soc_req; resetsignal=cptra_rst_b;} DATA_REQ=0;
-//
-//    field {desc = "Indicates that the requests TRNG Data is done and stored in the TRNG Data register.
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RW
-//            [br]When DATA_REQ is 0 DATA_WR_DONE will also be 0";  sw=rw; hw=na; swwe; hwclr; resetsignal=cptra_rst_b;} DATA_WR_DONE=0;
-// } CPTRA_TRNG_STATUS;
-//
-//reg {
-//    name = "Fuse Write Done";
-//    desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
-//             [br]Caliptra Access: RO
-//             [br]SOC Access:      RW1-S";
-//     field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} done[1]=0;
-//} CPTRA_FUSE_WR_DONE;
-//
-//reg {
-//    name = "Timer Config";
-//    desc = "Provides the clock period of the system clock.
-//            Used to standardize the RISC-V Standard MTIME count register.
-//            Clock Period is indicated as an integer number of picoseconds.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {desc = "Period in (ps)"; sw=rw; hw=na; resetsignal = cptra_pwrgood;} clk_period[32] = 32'h0;
-//} CPTRA_TIMER_CONFIG;
-//
-//reg {
-//    name = "BOOTFSM GO";
-//    desc = "Indicates that the BootFSM can continue to execute to bring the uController out of reset
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RW
-//            [br]TAP Access [in debug/manuf mode]: RW";
-//    field {sw=rw; hw=rw; we=true; swwe=soc_req; resetsignal = cptra_rst_b;} GO[1]=0;
-//} CPTRA_BOOTFSM_GO;
-//
-//reg {
-//    name = "DEBUG & MANUF SERVICE REG";
-//    desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services; ROM/FW maintains the defintion of these bits.
-//            [br]
-//            [br]Field decode:
-//            [br] [lb]0[rb]     MFG_FLAG_GEN_IDEV_CSR: Enable bit for Caliptra to generate an IDEV CSR
-//            [br] [lb]1[rb]     MFG_FLAG_RNG_UNAVAIL: Random Number Generator Unavailable
-//            [br] [lb]15:2[rb]  MFG_FLAG_RSVD
-//            [br] [lb]29:16[rb] FAKE_ROM_RSVD
-//            [br] [lb]30[rb]    FAKE_ROM_PROD_MODE_EN: Enable bit to allow the fake-rom to run in the production lifecycle mode
-//            [br] [lb]31[rb]    FAKE_ROM_IMAGE_VERIFY_EN: Enable bit to perform image verification within the fake-rom feature
-//            [br]
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]TAP Access [in debug/manuf mode]: RW";
-//    field {sw=rw; hw=rw; we=true;resetsignal = cptra_rst_b;} DATA[32] = 32'h0;
-//} CPTRA_DBG_MANUF_SERVICE_REG;
-//
-//reg {
-//    name = "Global Caliptra Clk gating enable";
-//    desc = "Control register to enable or disable all of the caliptra clk gating. Default is 0 (disabled).
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RW";
-//    field {desc = "Clk gating enable"; hw = r; sw = rw; swwe = soc_req; resetsignal = cptra_rst_b;} clk_gating_en = 1'b0;
-//} CPTRA_CLK_GATING_EN;
-//
-//reg {
-//    name = "Generic Input Wires";
-//    desc = "Generic input wires connected to SoC interface.
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RO";
-//    field {sw=r; hw=rw; resetsignal = cptra_rst_b;} generic_wires[32]=0;
-//} CPTRA_GENERIC_INPUT_WIRES[2];
-//reg {
-//    name = "Generic Output Wires";
-//    desc = "Generic output wires connected to SoC interface.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} generic_wires[32]=0;
-//} CPTRA_GENERIC_OUTPUT_WIRES[2];
-//reg {
-//    name = "Caliptra HW RevID";
-//    desc = "Caliptra HW revision ID that matches the official final release milestone
-//            SoC stepping ID is repopulated with the value in the fuse register on every warm reset
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RO";
-//    field {desc = "Caliptra official release version. Bit field encoding is:
-//                   [br][lb]15:8[rb] Patch version
-//                   [br][lb] 7:4[rb] Minor version
-//                   [br][lb] 3:0[rb] Major version";
-//           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0011;
-//    field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
-//} CPTRA_HW_REV_ID;
-//reg {
-//    name = "Caliptra FW RevID";
-//    desc = "Caliptra FW revision ID
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=0;
-//} CPTRA_FW_REV_ID[2];
-//reg {
-//    name = "Caliptra HW Config";
-//    desc = "Caliptra HW Configuration
-//            [br]Caliptra Access: RO
-//            [br]SOC Access:      RO";
-//    // No storage, i.e. no resetsignal
-//    field {sw=r; hw=w;} iTRNG_en;
-//    field {sw=r; hw=w;} QSPI_en;
-//    field {sw=r; hw=w;} I3C_en;
-//    field {sw=r; hw=w;} UART_en;
-//    field {sw=r; hw=w;} LMS_acc_en;
-//} CPTRA_HW_CONFIG;
-//
-////Timer1
-//reg {
-//    name = "Caliptra WDT Timer1 EN register";
-//    desc = "Caliptra watchdog timer1 enable register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "WDT timer1 enable"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer1_en = 1'b0;
-//} CPTRA_WDT_TIMER1_EN;
-//
-//reg {
-//    name = "Caliptra WDT Timer1 CTRL register";
-//    desc = "Caliptra watchdog timer1 control register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "WDT timer1 restart"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b; singlepulse;} timer1_restart = 1'b0;
-//} CPTRA_WDT_TIMER1_CTRL;
-//
-//reg {
-//    name = "Caliptra WDT Timer1 Timeout Period register";
-//    desc = "Caliptra watchdog timer1 timeout register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "WDT timer1 timeout period"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer1_timeout_period[32] = 32'hFFFFFFFF;
-//} CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[2]; //This reflects WDT_TIMEOUT_PERIOD_NUM_DWORDS in soc_ifc_pkg
-//
-////Timer2
-//reg {
-//    name = "Caliptra WDT Timer2 EN register";
-//    desc = "Caliptra watchdog timer2 enable register. Note: Setting this to 1 will disable the default cascaded mode and will have both timers count independently.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO
-//            ";
-//    field {desc = "WDT timer2 enable"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer2_en = 1'b0;
-//} CPTRA_WDT_TIMER2_EN;
-//
-//reg {
-//    name = "Caliptra WDT Timer2 CTRL register";
-//    desc = "Caliptra watchdog timer2 control register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "WDT timer2 restart"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b; singlepulse;} timer2_restart = 1'b0;
-//} CPTRA_WDT_TIMER2_CTRL;
-//
-//reg {
-//    name = "Caliptra WDT Timer2 Timeout Period register";
-//    desc = "Caliptra watchdog timer2 timeout register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "WDT timer2 timeout period"; hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} timer2_timeout_period[32] = 32'hFFFFFFFF;
-//} CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[2]; //This reflects WDT_TIMEOUT_PERIOD_NUM_DWORDS in soc_ifc_pkg
-//
-////Status
-//reg {
-//    name = "Caliptra WDT STATUS register";
-//    desc = "Caliptra watchdog timer status register
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RO";
-//    field {desc = "Timer1 timed out, timer2 enabled"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t1_timeout = 1'b0;
-//    field {desc = "Timer2 timed out"; hw = rw; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;} t2_timeout = 1'b0;
-//} CPTRA_WDT_STATUS;
-//
-//reg {
-//    name = "Valid ID for FUSE";
-//    desc = "Valid AXI ID attributes for FUSE on SoC AXI Interface. Only valid once LOCK is set.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]Read-Only once locked by FUSE_AXI_ID_LOCK.";
-//    field {sw=rw; hw=r; swwel; resetsignal = cptra_pwrgood;} AXI_ID[32]=0xFFFF_FFFF;
-// } CPTRA_FUSE_VALID_AXI_ID;
-//
-//reg {
-//    name = "Valid ID for FUSE AXI_ID Lock";
-//    desc = "Valid AXI_ID attributes for requests from SoC AXI Interface.
-//            [br]Each bit corresponds to locking the associated FUSE_VALID_AXI_ID register.
-//            [br]Associated FUSE_VALID_AXI_ID register is only valid once locked by this bit.
-//            [br]Caliptra FW RW access for survivability but cannot unlock once locked
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW
-//            [br]Read-Only once locked.";
-//    field {sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} LOCK=0;
-// } CPTRA_FUSE_AXI_ID_LOCK;
-//
-//reg {
-//    name = "Caliptra WDT1 Config";
-//    desc = "SOC provided count in cycles for WDT1 timeout.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {sw=rw; hw=na; resetsignal = cptra_pwrgood;} TIMEOUT[32]=0;
-// } CPTRA_WDT_CFG[2];
-//
-//reg {
-//    name = "Caliptra iTRNG Entropy Configuration 0";
-//    desc = "Adaptive threshold values for entropy source health tests.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
-//    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
-// } CPTRA_iTRNG_ENTROPY_CONFIG_0;
-//
-//reg {
-//    name = "Caliptra iTRNG Entropy Configuration 1";
-//    desc = "Repetition count value for entropy source health tests.
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
-//    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
-// } CPTRA_iTRNG_ENTROPY_CONFIG_1;
-//
-//reg {
-//    name = "Caliptra Reserved Registers";
-//    desc = "Set of reserved registers for survivability
-//            [br]Caliptra Access: RW
-//            [br]SOC Access:      RW";
-//    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
-// } CPTRA_RSVD_REG[2];
+    name = "SUBSYSTEM SOC DEBUG UNLOCK LEVEL";
+    desc = "Individual bits indicating debug unlock level to multiple SoC endpoints.
+            [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            [br]TAP Access [in debug/manuf mode]: RO";
+    field {desc="Debug unlock level"; sw=rw; } LEVEL[32] = 32'h0;
+} SS_SOC_DBG_UNLOCK_LEVEL;

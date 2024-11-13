@@ -68,7 +68,7 @@ module caliptra_top
     input  logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata,
 
     output logic                       ready_for_fuses,
-    output logic                       ready_for_fw_push,
+    output logic                       ready_for_mb_processing,
     output logic                       ready_for_runtime,
 
     output logic                       mailbox_data_avail,
@@ -1131,7 +1131,7 @@ soc_ifc_top1
     .cptra_rst_b  (cptra_rst_b  ),
 
     .ready_for_fuses(ready_for_fuses),
-    .ready_for_fw_push(ready_for_fw_push),
+    .ready_for_mb_processing(ready_for_mb_processing),
     .ready_for_runtime(ready_for_runtime),
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),

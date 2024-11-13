@@ -306,14 +306,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_idevid_manuf_hsm_id__in_t;
 
     typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__Fuse_w2__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w2__in_t life_cycle;
-    } soc_ifc_reg__fuse_life_cycle__in_t;
-
-    typedef struct packed{
         soc_ifc_reg__Fuse_w32__in_t lms_revocation;
     } soc_ifc_reg__fuse_lms_revocation__in_t;
 
@@ -328,6 +320,143 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__Fuse_w16__in_t soc_stepping_id;
     } soc_ifc_reg__fuse_soc_stepping_id__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__in_t token;
+    } soc_ifc_reg__fuse_manuf_dbg_unlock_token__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__in_t token;
+    } soc_ifc_reg__fuse_prod_dbg_unlock_token__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+    } soc_ifc_reg__strap_w32__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__strap__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap__in_t debug_intent;
+    } soc_ifc_reg__SS_DEBUG_INTENT__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t rsvd;
+    } soc_ifc_reg__SS_STRAP_RSVD__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic we;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic we;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic we;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t MANUF_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t PROD_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t UDS_PROGRAM_REQ;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t;
+
+    typedef struct packed{
+        logic next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__in_t MANUF_DBG_UNLOCK_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__in_t MANUF_DBG_UNLOCK_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__in_t MANUF_DBG_UNLOCK_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__in_t PROD_DBG_UNLOCK_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__in_t PROD_DBG_UNLOCK_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__in_t PROD_DBG_UNLOCK_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t UDS_PROGRAM_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t UDS_PROGRAM_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t UDS_PROGRAM_IN_PROGRESS;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -482,10 +611,23 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_anti_rollback_disable__in_t fuse_anti_rollback_disable;
         soc_ifc_reg__fuse_idevid_cert_attr__in_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__in_t [4-1:0]fuse_idevid_manuf_hsm_id;
-        soc_ifc_reg__fuse_life_cycle__in_t fuse_life_cycle;
         soc_ifc_reg__fuse_lms_revocation__in_t fuse_lms_revocation;
         soc_ifc_reg__fuse_mldsa_revocation__in_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__in_t fuse_soc_stepping_id;
+        soc_ifc_reg__fuse_manuf_dbg_unlock_token__in_t [4-1:0]fuse_manuf_dbg_unlock_token;
+        soc_ifc_reg__fuse_prod_dbg_unlock_token__in_t [4-1:0]fuse_prod_dbg_unlock_token;
+        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t SS_SOC_IFC_BASE_ADDR_L;
+        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t SS_SOC_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__in_t SS_RECOVERY_IFC_BASE_ADDR_L;
+        soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H__in_t SS_RECOVERY_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L__in_t SS_OTP_FC_BASE_ADDR_L;
+        soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__in_t SS_OTP_FC_BASE_ADDR_H;
+        soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__in_t SS_UDS_SEED_BASE_ADDR_L;
+        soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t SS_UDS_SEED_BASE_ADDR_H;
+        soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
+        soc_ifc_reg__SS_STRAP_RSVD__in_t [4-1:0]SS_STRAP_RSVD;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
@@ -851,14 +993,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_idevid_manuf_hsm_id__out_t;
 
     typedef struct packed{
-        logic [1:0] value;
-    } soc_ifc_reg__Fuse_w2__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w2__out_t life_cycle;
-    } soc_ifc_reg__fuse_life_cycle__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__Fuse_w32__out_t lms_revocation;
     } soc_ifc_reg__fuse_lms_revocation__out_t;
 
@@ -873,6 +1007,88 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__Fuse_w16__out_t soc_stepping_id;
     } soc_ifc_reg__fuse_soc_stepping_id__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__out_t token;
+    } soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__Fuse_w32__out_t token;
+    } soc_ifc_reg__fuse_prod_dbg_unlock_token__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__CPTRA_SOC_NONCE__nonce__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_SOC_NONCE__nonce__out_t nonce;
+    } soc_ifc_reg__CPTRA_SOC_NONCE__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t MANUF_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t PROD_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t UDS_PROGRAM_REQ;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__out_t MANUF_DBG_UNLOCK_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__out_t MANUF_DBG_UNLOCK_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__out_t MANUF_DBG_UNLOCK_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__out_t PROD_DBG_UNLOCK_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__out_t PROD_DBG_UNLOCK_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__out_t PROD_DBG_UNLOCK_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__out_t UDS_PROGRAM_SUCCESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__out_t UDS_PROGRAM_FAIL;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t UDS_PROGRAM_IN_PROGRESS;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -1045,10 +1261,14 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_anti_rollback_disable__out_t fuse_anti_rollback_disable;
         soc_ifc_reg__fuse_idevid_cert_attr__out_t [24-1:0]fuse_idevid_cert_attr;
         soc_ifc_reg__fuse_idevid_manuf_hsm_id__out_t [4-1:0]fuse_idevid_manuf_hsm_id;
-        soc_ifc_reg__fuse_life_cycle__out_t fuse_life_cycle;
         soc_ifc_reg__fuse_lms_revocation__out_t fuse_lms_revocation;
         soc_ifc_reg__fuse_mldsa_revocation__out_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
+        soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t [4-1:0]fuse_manuf_dbg_unlock_token;
+        soc_ifc_reg__fuse_prod_dbg_unlock_token__out_t [4-1:0]fuse_prod_dbg_unlock_token;
+        soc_ifc_reg__CPTRA_SOC_NONCE__out_t [16-1:0]CPTRA_SOC_NONCE;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

@@ -42,7 +42,7 @@ module soc_ifc_top
     input logic cptra_rst_b,
 
     output logic ready_for_fuses,
-    output logic ready_for_fw_push,
+    output logic ready_for_mb_processing,
     output logic ready_for_runtime,
 
     output logic mailbox_data_avail,
@@ -471,9 +471,9 @@ always_comb begin
     end
 
     //flow status
-    mailbox_flow_done = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
-    ready_for_fw_push = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value;
-    ready_for_runtime = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
+    mailbox_flow_done       = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.mailbox_flow_done.value;
+    ready_for_mb_processing = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_mb_processing.value;
+    ready_for_runtime       = soc_ifc_reg_hwif_out.CPTRA_FLOW_STATUS.ready_for_runtime.value;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next = boot_fsm_ps;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
@@ -649,7 +649,6 @@ end
 always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_fmc_key_manifest_svn.svn.swwel          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.fuse_life_cycle.life_cycle.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_lms_revocation.lms_revocation.swwel     = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_mldsa_revocation.mldsa_revocation.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
