@@ -33,6 +33,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
     * Read logic for Secret Fuses
     * Streaming Boot Support
 * RISC-V core PMP support
+* CSR HMAC key for manufacturing flow
   
 ## Boot FSM
 
@@ -258,7 +259,7 @@ When Caliptra is in debug mode:
 
 * Caliptra JTAG is opened for the microcontroller and HW debug.
 
-* Device secrets (UDS, FE, key vault, and obfuscation key) are programmed to debug values.
+* Device secrets (UDS, FE, key vault, csr hmac key and obfuscation key) are programmed to debug values.
 
 If a transition to debug mode happens during ROM operation, any values computed from the use of device secrets may not match expected values.
 
@@ -269,6 +270,7 @@ Debug mode values may be set by integrators in the Caliptra configuration files.
 | Name                        | Default value |
 | :-------------------------- | :------------ |
 | Obfuscation Key Debug Value | All 0x1       |
+| CSR HMAC Key Debug Value    | All 0x1       |
 | UDS Debug Value             | All 0x1       |
 | Field Entropy Debug Value   | All 0x1       |
 | Key Vault Debug Value 0     | All 0xA       |
@@ -828,20 +830,22 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 The HMAC architecture inputs and outputs are described in the following table.
 
-| Name               | Input or output | Description  |
-| :----------------- | :-------------- | :----------- |
-| clk                | input           | All signal timings are related to the rising edge of clk.                                                                                                                   |
-| reset_n            | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                                                                     |
-| init               | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
-| next               | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
-| zeroize            | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
-| mode               | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
-| key\[511:0\]       | input           | The input key.                                                                                                                                                              |
-| block\[1023:0\]    | input           | The input padded block of message.                                                                                                                                          |
-| LFSR_seed\[383:0\] | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
-| ready              | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
-| tag\[511:0\]       | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
-| tag_valid          | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
+| Name                        | Input or output | Description  |
+| :-------------------------- | :-------------- | :----------- |
+| clk                         | input           | All signal timings are related to the rising edge of clk.                                                                                                                   |
+| reset_n                     | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                                                                     |
+| init                        | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
+| next                        | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
+| zeroize                     | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
+| csr_mode                    | input           | When set, the key comes from the cptra_csr_hmac_key interface pins. This key is valid only during MANUFACTURING mode.                                                       |
+| mode                        | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
+| cptra_csr_hmac_key\[511:0\] | input           | The key to be used during csr mode.                                                                                                                                         |
+| key\[511:0\]                | input           | The input key.                                                                                                                                                              |
+| block\[1023:0\]             | input           | The input padded block of message.                                                                                                                                          |
+| LFSR_seed\[383:0\]          | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
+| ready                       | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
+| tag\[511:0\]                | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
+| tag_valid                   | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
 
 ### Address map
 
@@ -1341,8 +1345,8 @@ Key Vault (KV) is a register file that stores the keys to be used by the microco
 
 | KV register                       | Description                                               |
 | :-------------------------------- | :-------------------------------------------------------- |
-| Key Control\[31:0\]               | 32 Control registers, 32 bits each                        |
-| Key Entry\[31:0\]\[11:0\]\[31:0\] | 32 Key entries, 384 bits each <br>No read or write access |
+| Key Control\[23:0\]               | 24 Control registers, 32 bits each                        |
+| Key Entry\[23:0\]\[15:0\]\[31:0\] | 24 Key entries, 512 bits each <br>No read or write access |
 
 ### Key vault functional block
 
