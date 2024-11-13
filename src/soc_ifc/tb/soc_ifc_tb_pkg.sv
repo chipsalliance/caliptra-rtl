@@ -176,7 +176,6 @@ package soc_ifc_tb_pkg;
     "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                           // 0x2c8      - 
     "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,                              // 0x2cc [24] - 
     "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,                           // 0x32c [4]  - 
-    "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                                      // 0x33c      - 
     "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x340      -
     "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
@@ -297,7 +296,6 @@ package soc_ifc_tb_pkg;
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : 32'h1,          // field 0
     "FUSE_IDEVID_CERT_ATTR"                            : 32'hffff_ffff, 
     "FUSE_IDEVID_MANUF_HSM_ID"                         : 32'hffff_ffff, 
-    "FUSE_LIFE_CYCLE"                                  : 32'h3,          // field 1:0
     "FUSE_LMS_REVOCATION"                              : 32'hffff_ffff,
     "FUSE_MLDSA_REVOCATION"                            : 32'hf,
     "FUSE_SOC_STEPPING_ID"                             : 32'hffff,       // field 15:0
@@ -361,7 +359,6 @@ package soc_ifc_tb_pkg;
     "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_MASK_MASK,
-    "FUSE_LIFE_CYCLE"                                  : `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK, 
     "FUSE_LMS_VERIFY"                                  : `SOC_IFC_REG_FUSE_LMS_VERIFY_LMS_VERIFY_MASK,
     "FUSE_SOC_STEPPING_ID"                             : `SOC_IFC_REG_FUSE_SOC_STEPPING_ID_SOC_STEPPING_ID_MASK,
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
