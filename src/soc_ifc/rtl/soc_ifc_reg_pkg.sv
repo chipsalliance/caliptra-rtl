@@ -343,6 +343,14 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_MCI_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_MCI_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
     } soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__in_t;
 
     typedef struct packed{
@@ -618,6 +626,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_prod_dbg_unlock_token__in_t [4-1:0]fuse_prod_dbg_unlock_token;
         soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t SS_SOC_IFC_BASE_ADDR_L;
         soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t SS_SOC_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_MCI_BASE_ADDR_L__in_t SS_MCI_BASE_ADDR_L;
+        soc_ifc_reg__SS_MCI_BASE_ADDR_H__in_t SS_MCI_BASE_ADDR_H;
         soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__in_t SS_RECOVERY_IFC_BASE_ADDR_L;
         soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H__in_t SS_RECOVERY_IFC_BASE_ADDR_H;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L__in_t SS_OTP_FC_BASE_ADDR_L;
@@ -1018,11 +1028,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } soc_ifc_reg__CPTRA_SOC_NONCE__nonce__out_t;
+    } soc_ifc_reg__SS_SOC_NONCE__nonce__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__CPTRA_SOC_NONCE__nonce__out_t nonce;
-    } soc_ifc_reg__CPTRA_SOC_NONCE__out_t;
+        soc_ifc_reg__SS_SOC_NONCE__nonce__out_t nonce;
+    } soc_ifc_reg__SS_SOC_NONCE__out_t;
 
     typedef struct packed{
         logic value;
@@ -1266,7 +1276,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t [4-1:0]fuse_manuf_dbg_unlock_token;
         soc_ifc_reg__fuse_prod_dbg_unlock_token__out_t [4-1:0]fuse_prod_dbg_unlock_token;
-        soc_ifc_reg__CPTRA_SOC_NONCE__out_t [16-1:0]CPTRA_SOC_NONCE;
+        soc_ifc_reg__SS_SOC_NONCE__out_t [16-1:0]SS_SOC_NONCE;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;

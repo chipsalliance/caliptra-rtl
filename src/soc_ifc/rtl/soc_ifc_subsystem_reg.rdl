@@ -16,6 +16,7 @@
 // Subsystem Straps and Registers
 
 field strap { sw=r; hw=w; };
+
 reg {
     name = "Subsystem SoC Interface Base Address (Low)";
     desc = "Subsystem SoC Interface Base Address Lower 32 bits (from AXI)
@@ -31,6 +32,22 @@ reg {
             [br]SOC Access:      RO";
     strap addr_h[32];
 } SS_SOC_IFC_BASE_ADDR_H;
+
+reg {
+    name = "Subsystem MCI Base Address (Low)";
+    desc = "Subsystem MCI Base Address Lower 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_l[32];
+} SS_MCI_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem MCI Base Address (High)";
+    desc = "Subsystem MCI Base Address Upper 32 bits (from AXI)
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    strap addr_h[32];
+} SS_MCI_BASE_ADDR_H;
 
 reg {
     name = "Subsystem Recovery Interface Base Address (Low)";
@@ -81,10 +98,10 @@ reg {
 } SS_UDS_SEED_BASE_ADDR_H;
 
 reg {
-    name = "SoC Nonce";
+    name = "Subsystem SoC Nonce";
     desc = "TODO Need a register that needs a fixed NONCE (this is a register (not a fuse from Caliptra POV) that MCU can write)"; // TODO
     field { sw=rw; hw=r; resetsignal = cptra_rst_b; } nonce[32]=0;
-} CPTRA_SOC_NONCE[16] @0x540;
+} SS_SOC_NONCE[16] @0x560;
 
 reg {
     name = "DEBUG INTENT";

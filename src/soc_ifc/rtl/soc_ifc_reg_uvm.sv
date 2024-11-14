@@ -2019,6 +2019,66 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H
 
+    // Reg - soc_ifc_reg::SS_MCI_BASE_ADDR_L
+    class soc_ifc_reg__SS_MCI_BASE_ADDR_L extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_MCI_BASE_ADDR_L_bit_cg addr_l_bit_cg[32];
+        soc_ifc_reg__SS_MCI_BASE_ADDR_L_fld_cg fld_cg;
+        rand uvm_reg_field addr_l;
+
+        function new(string name = "soc_ifc_reg__SS_MCI_BASE_ADDR_L");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.addr_l = new("addr_l");
+            this.addr_l.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(addr_l_bit_cg[bt]) addr_l_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_MCI_BASE_ADDR_L
+
+    // Reg - soc_ifc_reg::SS_MCI_BASE_ADDR_H
+    class soc_ifc_reg__SS_MCI_BASE_ADDR_H extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_MCI_BASE_ADDR_H_bit_cg addr_h_bit_cg[32];
+        soc_ifc_reg__SS_MCI_BASE_ADDR_H_fld_cg fld_cg;
+        rand uvm_reg_field addr_h;
+
+        function new(string name = "soc_ifc_reg__SS_MCI_BASE_ADDR_H");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.addr_h = new("addr_h");
+            this.addr_h.configure(this, 32, 0, "RO", 1, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(addr_h_bit_cg[bt]) addr_h_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_MCI_BASE_ADDR_H
+
     // Reg - soc_ifc_reg::SS_RECOVERY_IFC_BASE_ADDR_L
     class soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -2199,17 +2259,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::CPTRA_SOC_NONCE
-    class soc_ifc_reg__CPTRA_SOC_NONCE extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_SOC_NONCE
+    class soc_ifc_reg__SS_SOC_NONCE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__CPTRA_SOC_NONCE_bit_cg nonce_bit_cg[32];
-        soc_ifc_reg__CPTRA_SOC_NONCE_fld_cg fld_cg;
+        soc_ifc_reg__SS_SOC_NONCE_bit_cg nonce_bit_cg[32];
+        soc_ifc_reg__SS_SOC_NONCE_fld_cg fld_cg;
         rand uvm_reg_field nonce;
 
-        function new(string name = "soc_ifc_reg__CPTRA_SOC_NONCE");
+        function new(string name = "soc_ifc_reg__SS_SOC_NONCE");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2227,7 +2287,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__CPTRA_SOC_NONCE
+    endclass : soc_ifc_reg__SS_SOC_NONCE
 
     // Reg - soc_ifc_reg::SS_DEBUG_INTENT
     class soc_ifc_reg__SS_DEBUG_INTENT extends uvm_reg;
@@ -4438,13 +4498,15 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_prod_dbg_unlock_token fuse_prod_dbg_unlock_token[4];
         rand soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L SS_SOC_IFC_BASE_ADDR_L;
         rand soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H SS_SOC_IFC_BASE_ADDR_H;
+        rand soc_ifc_reg__SS_MCI_BASE_ADDR_L SS_MCI_BASE_ADDR_L;
+        rand soc_ifc_reg__SS_MCI_BASE_ADDR_H SS_MCI_BASE_ADDR_H;
         rand soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L SS_RECOVERY_IFC_BASE_ADDR_L;
         rand soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H SS_RECOVERY_IFC_BASE_ADDR_H;
         rand soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L SS_OTP_FC_BASE_ADDR_L;
         rand soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H SS_OTP_FC_BASE_ADDR_H;
         rand soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L SS_UDS_SEED_BASE_ADDR_L;
         rand soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H SS_UDS_SEED_BASE_ADDR_H;
-        rand soc_ifc_reg__CPTRA_SOC_NONCE CPTRA_SOC_NONCE[16];
+        rand soc_ifc_reg__SS_SOC_NONCE SS_SOC_NONCE[16];
         rand soc_ifc_reg__SS_DEBUG_INTENT SS_DEBUG_INTENT;
         rand soc_ifc_reg__SS_STRAP_RSVD SS_STRAP_RSVD[4];
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ SS_DBG_MANUF_SERVICE_REG_REQ;
@@ -4826,48 +4888,58 @@ package soc_ifc_reg_uvm;
 
             this.SS_SOC_IFC_BASE_ADDR_H.build();
             this.default_map.add_reg(this.SS_SOC_IFC_BASE_ADDR_H, 'h504);
+            this.SS_MCI_BASE_ADDR_L = new("SS_MCI_BASE_ADDR_L");
+            this.SS_MCI_BASE_ADDR_L.configure(this);
+
+            this.SS_MCI_BASE_ADDR_L.build();
+            this.default_map.add_reg(this.SS_MCI_BASE_ADDR_L, 'h508);
+            this.SS_MCI_BASE_ADDR_H = new("SS_MCI_BASE_ADDR_H");
+            this.SS_MCI_BASE_ADDR_H.configure(this);
+
+            this.SS_MCI_BASE_ADDR_H.build();
+            this.default_map.add_reg(this.SS_MCI_BASE_ADDR_H, 'h50c);
             this.SS_RECOVERY_IFC_BASE_ADDR_L = new("SS_RECOVERY_IFC_BASE_ADDR_L");
             this.SS_RECOVERY_IFC_BASE_ADDR_L.configure(this);
 
             this.SS_RECOVERY_IFC_BASE_ADDR_L.build();
-            this.default_map.add_reg(this.SS_RECOVERY_IFC_BASE_ADDR_L, 'h508);
+            this.default_map.add_reg(this.SS_RECOVERY_IFC_BASE_ADDR_L, 'h510);
             this.SS_RECOVERY_IFC_BASE_ADDR_H = new("SS_RECOVERY_IFC_BASE_ADDR_H");
             this.SS_RECOVERY_IFC_BASE_ADDR_H.configure(this);
 
             this.SS_RECOVERY_IFC_BASE_ADDR_H.build();
-            this.default_map.add_reg(this.SS_RECOVERY_IFC_BASE_ADDR_H, 'h50c);
+            this.default_map.add_reg(this.SS_RECOVERY_IFC_BASE_ADDR_H, 'h514);
             this.SS_OTP_FC_BASE_ADDR_L = new("SS_OTP_FC_BASE_ADDR_L");
             this.SS_OTP_FC_BASE_ADDR_L.configure(this);
 
             this.SS_OTP_FC_BASE_ADDR_L.build();
-            this.default_map.add_reg(this.SS_OTP_FC_BASE_ADDR_L, 'h510);
+            this.default_map.add_reg(this.SS_OTP_FC_BASE_ADDR_L, 'h518);
             this.SS_OTP_FC_BASE_ADDR_H = new("SS_OTP_FC_BASE_ADDR_H");
             this.SS_OTP_FC_BASE_ADDR_H.configure(this);
 
             this.SS_OTP_FC_BASE_ADDR_H.build();
-            this.default_map.add_reg(this.SS_OTP_FC_BASE_ADDR_H, 'h514);
+            this.default_map.add_reg(this.SS_OTP_FC_BASE_ADDR_H, 'h51c);
             this.SS_UDS_SEED_BASE_ADDR_L = new("SS_UDS_SEED_BASE_ADDR_L");
             this.SS_UDS_SEED_BASE_ADDR_L.configure(this);
 
             this.SS_UDS_SEED_BASE_ADDR_L.build();
-            this.default_map.add_reg(this.SS_UDS_SEED_BASE_ADDR_L, 'h518);
+            this.default_map.add_reg(this.SS_UDS_SEED_BASE_ADDR_L, 'h520);
             this.SS_UDS_SEED_BASE_ADDR_H = new("SS_UDS_SEED_BASE_ADDR_H");
             this.SS_UDS_SEED_BASE_ADDR_H.configure(this);
 
             this.SS_UDS_SEED_BASE_ADDR_H.build();
-            this.default_map.add_reg(this.SS_UDS_SEED_BASE_ADDR_H, 'h51c);
-            foreach(this.CPTRA_SOC_NONCE[i0]) begin
-                this.CPTRA_SOC_NONCE[i0] = new($sformatf("CPTRA_SOC_NONCE[%0d]", i0));
-                this.CPTRA_SOC_NONCE[i0].configure(this);
+            this.default_map.add_reg(this.SS_UDS_SEED_BASE_ADDR_H, 'h524);
+            foreach(this.SS_SOC_NONCE[i0]) begin
+                this.SS_SOC_NONCE[i0] = new($sformatf("SS_SOC_NONCE[%0d]", i0));
+                this.SS_SOC_NONCE[i0].configure(this);
                 
-                this.CPTRA_SOC_NONCE[i0].build();
-                this.default_map.add_reg(this.CPTRA_SOC_NONCE[i0], 'h540 + i0*'h4);
+                this.SS_SOC_NONCE[i0].build();
+                this.default_map.add_reg(this.SS_SOC_NONCE[i0], 'h560 + i0*'h4);
             end
             this.SS_DEBUG_INTENT = new("SS_DEBUG_INTENT");
             this.SS_DEBUG_INTENT.configure(this);
 
             this.SS_DEBUG_INTENT.build();
-            this.default_map.add_reg(this.SS_DEBUG_INTENT, 'h580);
+            this.default_map.add_reg(this.SS_DEBUG_INTENT, 'h5a0);
             foreach(this.SS_STRAP_RSVD[i0]) begin
                 this.SS_STRAP_RSVD[i0] = new($sformatf("SS_STRAP_RSVD[%0d]", i0));
                 this.SS_STRAP_RSVD[i0].configure(this);

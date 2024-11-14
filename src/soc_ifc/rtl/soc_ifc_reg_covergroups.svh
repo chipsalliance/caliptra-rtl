@@ -1415,6 +1415,46 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__SS_MCI_BASE_ADDR_L COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_MCI_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_MCI_BASE_ADDR_L_fld_cg with function sample(
+    input bit [32-1:0] addr_l
+    );
+        option.per_instance = 1;
+        addr_l_cp : coverpoint addr_l;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_MCI_BASE_ADDR_H COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_MCI_BASE_ADDR_H_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_MCI_BASE_ADDR_H_fld_cg with function sample(
+    input bit [32-1:0] addr_h
+    );
+        option.per_instance = 1;
+        addr_h_cp : coverpoint addr_h;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__SS_RECOVERY_IFC_BASE_ADDR_L COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
@@ -1535,8 +1575,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__CPTRA_SOC_NONCE COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__CPTRA_SOC_NONCE_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_SOC_NONCE COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_SOC_NONCE_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1547,7 +1587,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__CPTRA_SOC_NONCE_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_SOC_NONCE_fld_cg with function sample(
     input bit [32-1:0] nonce
     );
         option.per_instance = 1;
