@@ -37,6 +37,9 @@ module hmac_ctrl
     input wire           reset_n,
     input wire           cptra_pwrgood,
 
+    //csr key
+    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
+
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
     input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
@@ -81,6 +84,7 @@ module hmac_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .cptra_pwrgood(cptra_pwrgood),
+        .cptra_csr_hmac_key(cptra_csr_hmac_key),
         .cs(hmac_cs),
         .we(hmac_we),
         .address(hmac_address),
