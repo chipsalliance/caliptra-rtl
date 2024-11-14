@@ -54,6 +54,7 @@ interface  HMAC_in_if #(
   inout tri [2:0] hsize,
   inout tri  transaction_flag_in_monitor,
   inout tri [1:0] op,
+  inout tri [15:0][31:0] csr_key,
   inout tri [3:0] block_length,
   inout tri [15:0] bit_length
   );
@@ -72,6 +73,7 @@ modport monitor_port
   input hsize,
   input transaction_flag_in_monitor,
   input op,
+  input csr_key,
   input block_length,
   input bit_length
   );
@@ -90,6 +92,7 @@ modport initiator_port
   output hsize,
   output transaction_flag_in_monitor,
   output op,
+  output csr_key,
   output block_length,
   output bit_length
   );
@@ -108,6 +111,7 @@ modport responder_port
   input hsize,
   input transaction_flag_in_monitor,
   input op,
+  input csr_key,
   input block_length,
   input bit_length
   );

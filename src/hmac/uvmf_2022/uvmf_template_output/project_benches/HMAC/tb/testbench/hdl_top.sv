@@ -104,6 +104,7 @@ hmac_ctrl #(
      .clk           (HMAC_in_agent_bus.clk),
      .reset_n       (HMAC_in_agent_bus.hmac_rst),
      .cptra_pwrgood (cptra_pwrgood),
+     .cptra_csr_hmac_key (HMAC_in_agent_bus.csr_key),
      .haddr_i       (HMAC_in_agent_bus.haddr),
      .hwdata_i      (HMAC_in_agent_bus.hwdata),
      .hsel_i        (HMAC_in_agent_bus.hsel),
