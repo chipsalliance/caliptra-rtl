@@ -1,8 +1,8 @@
-commit ad30bae95f921c7356abebaf9f1f65230c5c7b9f
-Merge: d4e359372f8 0ec4c4d5db0
+commit fe63594a775c1258a6fec06e574c4fe03f629cd4
+Merge: 78cac32bfcc 2d868166ce3
 Author: Tomasz Michalak <tmichalak@antmicro.com>
-Date:   Thu Oct 24 13:13:26 2024 +0200
+Date:   Fri Nov 8 15:57:47 2024 +0100
 
-    Merge pull request #253 from chipsalliance/wsip/ci_fix
+    Merge pull request #259 from chipsalliance/wsip/export_dmi
     
-    CI fix: use docker image
+    export DMI signals
