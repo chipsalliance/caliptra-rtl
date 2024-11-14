@@ -62,8 +62,8 @@ rand kv_env_sequence_base_t kv_env_seq;
   kv_hmac_key_read_agent_random_seq_t kv_hmac_key_read_agent_random_seq;
   typedef kv_read_random_sequence  kv_hmac_block_read_agent_random_seq_t;
   kv_hmac_block_read_agent_random_seq_t kv_hmac_block_read_agent_random_seq;
-  typedef kv_read_random_sequence  kv_sha512_block_read_agent_random_seq_t;
-  kv_sha512_block_read_agent_random_seq_t kv_sha512_block_read_agent_random_seq;
+  typedef kv_read_random_sequence  kv_mldsa_key_read_agent_random_seq_t;
+  kv_mldsa_key_read_agent_random_seq_t kv_mldsa_key_read_agent_random_seq;
   typedef kv_read_random_sequence  kv_ecc_privkey_read_agent_random_seq_t;
   kv_ecc_privkey_read_agent_random_seq_t kv_ecc_privkey_read_agent_random_seq;
   typedef kv_read_random_sequence  kv_ecc_seed_read_agent_random_seq_t;
@@ -85,8 +85,8 @@ rand kv_env_sequence_base_t kv_env_seq;
   uvm_sequencer #(kv_hmac_key_read_agent_transaction_t)  kv_hmac_key_read_agent_sequencer; 
   typedef kv_read_transaction  kv_hmac_block_read_agent_transaction_t;
   uvm_sequencer #(kv_hmac_block_read_agent_transaction_t)  kv_hmac_block_read_agent_sequencer; 
-  typedef kv_read_transaction  kv_sha512_block_read_agent_transaction_t;
-  uvm_sequencer #(kv_sha512_block_read_agent_transaction_t)  kv_sha512_block_read_agent_sequencer; 
+  typedef kv_read_transaction  kv_mldsa_key_read_agent_transaction_t;
+  uvm_sequencer #(kv_mldsa_key_read_agent_transaction_t)  kv_mldsa_key_read_agent_sequencer; 
   typedef kv_read_transaction  kv_ecc_privkey_read_agent_transaction_t;
   uvm_sequencer #(kv_ecc_privkey_read_agent_transaction_t)  kv_ecc_privkey_read_agent_sequencer; 
   typedef kv_read_transaction  kv_ecc_seed_read_agent_transaction_t;
@@ -106,7 +106,7 @@ rand kv_env_sequence_base_t kv_env_seq;
   kv_write_configuration  kv_doe_write_agent_config;
   kv_read_configuration  kv_hmac_key_read_agent_config;
   kv_read_configuration  kv_hmac_block_read_agent_config;
-  kv_read_configuration  kv_sha512_block_read_agent_config;
+  kv_read_configuration  kv_mldsa_key_read_agent_config;
   kv_read_configuration  kv_ecc_privkey_read_agent_config;
   kv_read_configuration  kv_ecc_seed_read_agent_config;
   // Local handle to register model for convenience
@@ -142,8 +142,8 @@ rand kv_env_sequence_base_t kv_env_seq;
       `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_hmac_key_read_agent_BFM" )
     if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_hmac_block_read_agent_BFM , kv_hmac_block_read_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_hmac_block_read_agent_BFM" )
-    if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_sha512_block_read_agent_BFM , kv_sha512_block_read_agent_config ) ) 
-      `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_sha512_block_read_agent_BFM" )
+    if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_mldsa_key_read_agent_BFM , kv_mldsa_key_read_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_mldsa_key_read_agent_BFM" )
     if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_ecc_privkey_read_agent_BFM , kv_ecc_privkey_read_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_ecc_privkey_read_agent_BFM" )
     if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_config ) ) 
@@ -157,7 +157,7 @@ rand kv_env_sequence_base_t kv_env_seq;
     kv_doe_write_agent_sequencer = kv_doe_write_agent_config.get_sequencer();
     kv_hmac_key_read_agent_sequencer = kv_hmac_key_read_agent_config.get_sequencer();
     kv_hmac_block_read_agent_sequencer = kv_hmac_block_read_agent_config.get_sequencer();
-    kv_sha512_block_read_agent_sequencer = kv_sha512_block_read_agent_config.get_sequencer();
+    kv_mldsa_key_read_agent_sequencer = kv_mldsa_key_read_agent_config.get_sequencer();
     kv_ecc_privkey_read_agent_sequencer = kv_ecc_privkey_read_agent_config.get_sequencer();
     kv_ecc_seed_read_agent_sequencer = kv_ecc_seed_read_agent_config.get_sequencer();
 
@@ -187,7 +187,7 @@ rand kv_env_sequence_base_t kv_env_seq;
     kv_doe_write_agent_random_seq     = kv_doe_write_agent_random_seq_t::type_id::create("kv_doe_write_agent_random_seq");
     kv_hmac_key_read_agent_random_seq     = kv_hmac_key_read_agent_random_seq_t::type_id::create("kv_hmac_key_read_agent_random_seq");
     kv_hmac_block_read_agent_random_seq     = kv_hmac_block_read_agent_random_seq_t::type_id::create("kv_hmac_block_read_agent_random_seq");
-    kv_sha512_block_read_agent_random_seq     = kv_sha512_block_read_agent_random_seq_t::type_id::create("kv_sha512_block_read_agent_random_seq");
+    kv_mldsa_key_read_agent_random_seq     = kv_mldsa_key_read_agent_random_seq_t::type_id::create("kv_mldsa_key_read_agent_random_seq");
     kv_ecc_privkey_read_agent_random_seq     = kv_ecc_privkey_read_agent_random_seq_t::type_id::create("kv_ecc_privkey_read_agent_random_seq");
     kv_ecc_seed_read_agent_random_seq     = kv_ecc_seed_read_agent_random_seq_t::type_id::create("kv_ecc_seed_read_agent_random_seq");
 
@@ -199,7 +199,7 @@ rand kv_env_sequence_base_t kv_env_seq;
       kv_doe_write_agent_config.wait_for_reset();
       kv_hmac_key_read_agent_config.wait_for_reset();
       kv_hmac_block_read_agent_config.wait_for_reset();
-      kv_sha512_block_read_agent_config.wait_for_reset();
+      kv_mldsa_key_read_agent_config.wait_for_reset();
       kv_ecc_privkey_read_agent_config.wait_for_reset();
       kv_ecc_seed_read_agent_config.wait_for_reset();
     join
@@ -216,7 +216,7 @@ rand kv_env_sequence_base_t kv_env_seq;
       repeat (25) kv_doe_write_agent_random_seq.start(kv_doe_write_agent_sequencer);
       repeat (25) kv_hmac_key_read_agent_random_seq.start(kv_hmac_key_read_agent_sequencer);
       repeat (25) kv_hmac_block_read_agent_random_seq.start(kv_hmac_block_read_agent_sequencer);
-      repeat (25) kv_sha512_block_read_agent_random_seq.start(kv_sha512_block_read_agent_sequencer);
+      repeat (25) kv_mldsa_key_read_agent_random_seq.start(kv_mldsa_key_read_agent_sequencer);
       repeat (25) kv_ecc_privkey_read_agent_random_seq.start(kv_ecc_privkey_read_agent_sequencer);
       repeat (25) kv_ecc_seed_read_agent_random_seq.start(kv_ecc_seed_read_agent_sequencer);
     join
@@ -234,7 +234,7 @@ kv_env_seq.start(top_configuration.vsqr);
       kv_doe_write_agent_config.wait_for_num_clocks(400);
       kv_hmac_key_read_agent_config.wait_for_num_clocks(400);
       kv_hmac_block_read_agent_config.wait_for_num_clocks(400);
-      kv_sha512_block_read_agent_config.wait_for_num_clocks(400);
+      kv_mldsa_key_read_agent_config.wait_for_num_clocks(400);
       kv_ecc_privkey_read_agent_config.wait_for_num_clocks(400);
       kv_ecc_seed_read_agent_config.wait_for_num_clocks(400);
     join

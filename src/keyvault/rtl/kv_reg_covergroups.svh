@@ -45,9 +45,7 @@
         dest_valid_cp : coverpoint dest_valid {
             illegal_bins dest_valid_bit5to7 = {['d32:'d255]};
         }
-        last_dword_cp : coverpoint last_dword {
-            illegal_bins last_dword_12to15 = {['d12:'d15]};
-        }
+        last_dword_cp : coverpoint last_dword;
         wrXuseXclear: cross lock_wr_cp, lock_use_cp, clear_cp;
 
     endgroup

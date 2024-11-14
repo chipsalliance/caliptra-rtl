@@ -45,7 +45,7 @@ class kv_wr_rd_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -70,7 +70,7 @@ class kv_wr_rd_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
@@ -150,10 +150,10 @@ class kv_wr_rd_sequence #(
                     `uvm_error("KV WR RD", "kv_hmac_write_agent_config.sequencer is null!");
             end
             begin
-                if(configuration.kv_sha512_block_read_agent_config.sequencer != null)
-                    repeat(10) sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+                if(configuration.kv_mldsa_key_read_agent_config.sequencer != null)
+                    repeat(10) mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
                 else
-                    `uvm_error("KV WR RD", "kv_sha512_block_read_agent_config.sequencer is null!");
+                    `uvm_error("KV WR RD", "kv_mldsa_key_read_agent_config.sequencer is null!");
             end
             begin
                 if(configuration.kv_hmac_key_read_agent_config.sequencer != null)

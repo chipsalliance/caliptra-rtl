@@ -48,7 +48,7 @@ class kv_wr_rd_cold_rst_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -56,8 +56,8 @@ class kv_wr_rd_cold_rst_sequence #(
     //constraint valid_entry {hmac_write_entry != sha512_write_entry != ecc_write_entry != doe_write_entry;}
     rand reg [1:0] write_id;
     rand reg [2:0] read_id;
-    typedef enum {HMAC, SHA512, ECC, DOE} write_agents;
-    typedef enum {HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED} read_agents;
+    typedef enum {HMAC, MLDSA, ECC, DOE} write_agents;
+    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED} read_agents;
 
     uvm_event active_phase;
     uvm_event write_event;
@@ -85,7 +85,7 @@ class kv_wr_rd_cold_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
@@ -106,24 +106,28 @@ class kv_wr_rd_cold_rst_sequence #(
         read_event = new();
 
         std::randomize(hmac_write_entry) with {
+            hmac_write_entry < KV_NUM_KEYS;
             hmac_write_entry != sha512_write_entry;
             hmac_write_entry != ecc_write_entry;
             hmac_write_entry != doe_write_entry;
         };
 
         std::randomize(sha512_write_entry) with {
+            sha512_write_entry < KV_NUM_KEYS;
             sha512_write_entry != hmac_write_entry;
             sha512_write_entry != ecc_write_entry;
             sha512_write_entry != doe_write_entry;
         };
 
         std::randomize(ecc_write_entry) with {
+            ecc_write_entry < KV_NUM_KEYS;
             ecc_write_entry != hmac_write_entry;
             ecc_write_entry != sha512_write_entry;
             ecc_write_entry != doe_write_entry;
         };
 
         std::randomize(doe_write_entry) with {
+            doe_write_entry < KV_NUM_KEYS;
             doe_write_entry != hmac_write_entry;
             doe_write_entry != sha512_write_entry;
             doe_write_entry != ecc_write_entry;
@@ -197,14 +201,14 @@ class kv_wr_rd_cold_rst_sequence #(
         join
         fork
         begin
-            // if(write_id != SHA512)
+            // if(write_id != MLDSA)
                 active_phase.wait_ptrigger;
 
             repeat(10) begin
                 uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
                 sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
             end
-            // if(write_id == SHA512)
+            // if(write_id == MLDSA)
                 write_event.trigger;
             
         // end
@@ -242,13 +246,13 @@ class kv_wr_rd_cold_rst_sequence #(
             
         // end
         // begin
-            // if(read_id != SHA512_BLOCK)
+            // if(read_id != MLDSA_KEY)
                 // active_phase.wait_ptrigger;
 
             repeat(10) begin
-                sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+                mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
             end
-            // if(read_id == SHA512_BLOCK)
+            // if(read_id == MLDSA_KEY)
                 read_event.trigger;
 
         end
@@ -301,7 +305,7 @@ class kv_wr_rd_cold_rst_sequence #(
         configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_block_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_block_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mldsa_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
     endtask

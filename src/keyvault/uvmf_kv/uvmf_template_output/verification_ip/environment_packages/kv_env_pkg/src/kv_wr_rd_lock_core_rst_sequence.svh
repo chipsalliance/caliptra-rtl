@@ -49,7 +49,7 @@ class kv_wr_rd_lock_core_rst_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -58,8 +58,8 @@ class kv_wr_rd_lock_core_rst_sequence #(
 
     rand reg [1:0] write_id;
     rand reg [2:0] read_id;
-    typedef enum {HMAC, SHA512, ECC, DOE} write_agents;
-    typedef enum {HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED} read_agents;
+    typedef enum {HMAC, MLDSA, ECC, DOE} write_agents;
+    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED} read_agents;
 
     uvm_event reset_phase;
     uvm_event active_phase;
@@ -86,7 +86,7 @@ class kv_wr_rd_lock_core_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
@@ -134,7 +134,7 @@ class kv_wr_rd_lock_core_rst_sequence #(
                         hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
                     end
                 end
-                SHA512: begin
+                MLDSA: begin
                     repeat(10) begin
                         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",write_entry);
                         sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
@@ -173,10 +173,10 @@ class kv_wr_rd_lock_core_rst_sequence #(
                         uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_block_read_agent.sequencer.hmac_block_read_seq", "local_read_offset",read_offset);
                         hmac_block_read_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
                     end
-                    SHA512_BLOCK: begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_block_read_agent.sequencer.sha512_block_read_seq", "local_read_entry",read_entry);
-                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_block_read_agent.sequencer.sha512_block_read_seq", "local_read_offset",read_offset);
-                        sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+                    MLDSA_KEY: begin
+                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mldsa_key_read_agent.sequencer.mldsa_key_read_seq", "local_read_entry",read_entry);
+                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_mldsa_key_read_agent.sequencer.mldsa_key_read_seq", "local_read_offset",read_offset);
+                        mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
                     end
                     ECC_PRIVKEY: begin
                         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_ecc_privkey_read_agent.sequencer.ecc_privkey_read_seq", "local_read_entry",read_entry);

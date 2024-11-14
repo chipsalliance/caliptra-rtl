@@ -53,7 +53,7 @@ package kv_reg_model_top_pkg;
       //Read Interface
       uvm_reg_map kv_reg_hmac_key_read_map;
       uvm_reg_map kv_reg_hmac_block_read_map;
-      uvm_reg_map kv_reg_sha512_block_read_map;
+      uvm_reg_map kv_reg_mldsa_key_read_map;
       uvm_reg_map kv_reg_ecc_privkey_read_map;
       uvm_reg_map kv_reg_ecc_seed_read_map;
 
@@ -77,7 +77,7 @@ package kv_reg_model_top_pkg;
          //Read Interface
          this.kv_reg_hmac_key_read_map       = create_map("keyvault_reg_hmac_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_hmac_block_read_map     = create_map("keyvault_reg_hmac_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
-         this.kv_reg_sha512_block_read_map   = create_map("keyvault_reg_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+         this.kv_reg_mldsa_key_read_map   = create_map("keyvault_reg_mldsa_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_ecc_privkey_read_map    = create_map("keyvault_reg_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_ecc_seed_read_map       = create_map("keyvault_reg_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       endfunction
@@ -101,7 +101,7 @@ package kv_reg_model_top_pkg;
             //Read Interface
             this.kv_reg_hmac_key_read_map.add_reg       (regs[c_reg], regs[c_reg].get_offset(this.default_map));
             this.kv_reg_hmac_block_read_map.add_reg     (regs[c_reg], regs[c_reg].get_offset(this.default_map));
-            this.kv_reg_sha512_block_read_map.add_reg   (regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            this.kv_reg_mldsa_key_read_map.add_reg   (regs[c_reg], regs[c_reg].get_offset(this.default_map));
             this.kv_reg_ecc_privkey_read_map.add_reg    (regs[c_reg], regs[c_reg].get_offset(this.default_map));
             this.kv_reg_ecc_seed_read_map.add_reg       (regs[c_reg], regs[c_reg].get_offset(this.default_map));
          end
@@ -317,7 +317,7 @@ package kv_reg_model_top_pkg;
       //Read Interface
       uvm_reg_map kv_hmac_key_read_map;
       uvm_reg_map kv_hmac_block_read_map;
-      uvm_reg_map kv_sha512_block_read_map;
+      uvm_reg_map kv_mldsa_key_read_map;
       uvm_reg_map kv_ecc_privkey_read_map;
       uvm_reg_map kv_ecc_seed_read_map;
 
@@ -409,7 +409,7 @@ package kv_reg_model_top_pkg;
       //Read Interface
       this.kv_hmac_key_read_map     = create_map("kv_hmac_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.kv_hmac_block_read_map   = create_map("kv_hmac_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
-      this.kv_sha512_block_read_map = create_map("kv_sha512_block_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+      this.kv_mldsa_key_read_map = create_map("kv_mldsa_key_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.kv_ecc_privkey_read_map  = create_map("kv_ecc_privkey_read_map", 0, 4, UVM_LITTLE_ENDIAN);
       this.kv_ecc_seed_read_map     = create_map("kv_ecc_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
 
@@ -439,19 +439,19 @@ package kv_reg_model_top_pkg;
       
       kv_hmac_key_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_hmac_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
-      kv_sha512_block_read_map.add_reg(val_reg, 'h1_0000, "RW");
+      kv_mldsa_key_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_privkey_read_map.add_reg(val_reg, 'h1_0000, "RW");
       kv_ecc_seed_read_map.add_reg(val_reg, 'h1_0000, "RW");
 
       kv_hmac_key_read_map.add_reg    (val_ctrl, 'h1_0004, "RW");
       kv_hmac_block_read_map.add_reg  (val_ctrl, 'h1_0004, "RW");
-      kv_sha512_block_read_map.add_reg(val_ctrl, 'h1_0004, "RW");
+      kv_mldsa_key_read_map.add_reg(val_ctrl, 'h1_0004, "RW");
       kv_ecc_privkey_read_map.add_reg (val_ctrl, 'h1_0004, "RW");
       kv_ecc_seed_read_map.add_reg    (val_ctrl, 'h1_0004, "RW");
 
       kv_hmac_key_read_map.add_reg    (val_ctrl_derived, 'h1_0008, "RW");
       kv_hmac_block_read_map.add_reg  (val_ctrl_derived, 'h1_0008, "RW");
-      kv_sha512_block_read_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
+      kv_mldsa_key_read_map.add_reg(val_ctrl_derived, 'h1_0008, "RW");
       kv_ecc_privkey_read_map.add_reg (val_ctrl_derived, 'h1_0008, "RW");
       kv_ecc_seed_read_map.add_reg    (val_ctrl_derived, 'h1_0008, "RW");
  
@@ -474,7 +474,7 @@ package kv_reg_model_top_pkg;
          //Read
          this.kv_hmac_key_read_map.add_submap      (this.kv_reg_rm.kv_reg_hmac_key_read_map, 'h0);
          this.kv_hmac_block_read_map.add_submap    (this.kv_reg_rm.kv_reg_hmac_block_read_map, 'h0);
-         this.kv_sha512_block_read_map.add_submap  (this.kv_reg_rm.kv_reg_sha512_block_read_map, 'h0);
+         this.kv_mldsa_key_read_map.add_submap  (this.kv_reg_rm.kv_reg_mldsa_key_read_map, 'h0);
          this.kv_ecc_privkey_read_map.add_submap   (this.kv_reg_rm.kv_reg_ecc_privkey_read_map, 'h0);
          this.kv_ecc_seed_read_map.add_submap      (this.kv_reg_rm.kv_reg_ecc_seed_read_map, 'h0);
 

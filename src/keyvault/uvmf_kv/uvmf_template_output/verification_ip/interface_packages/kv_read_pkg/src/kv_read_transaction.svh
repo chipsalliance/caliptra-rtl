@@ -43,7 +43,8 @@ class kv_read_transaction #(
   logic [KV_DATA_W-1:0] read_data ;
 
   //Constraints for the transaction variables:
-  constraint read_offset_c {read_offset >= 0; read_offset < 12;}
+  constraint read_entry_c {read_entry >= 0; read_entry < KV_NUM_KEYS;}
+  constraint read_offset_c {read_offset >= 0; read_offset < KV_NUM_DWORDS;}
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
