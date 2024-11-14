@@ -826,6 +826,10 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 ![](./images/HMAC_FSM.png)
 
+### CSR Mode
+
+When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
+
 ### Signal descriptions
 
 The HMAC architecture inputs and outputs are described in the following table.
