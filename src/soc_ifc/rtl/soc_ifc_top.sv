@@ -222,7 +222,9 @@ logic BootFSM_BrkPoint_valid;
 logic BootFSM_BrkPoint_Flag;
 
 logic dmi_inc_rdptr;
+logic dmi_inc_wrptr;
 logic cptra_uncore_dmi_reg_dout_access_f;
+logic cptra_uncore_dmi_reg_din_access_f;
 mbox_dmi_reg_t mbox_dmi_reg;
 logic [31:0] cptra_uncore_dmi_reg_rdata_in;
 
@@ -884,6 +886,10 @@ i_mbox (
     .mbox_protocol_error(mbox_protocol_error),
     .mbox_inv_axi_id_axs(mbox_inv_id_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
+    .dmi_inc_wrptr(dmi_inc_wrptr),
+    .dmi_reg_wen(cptra_uncore_dmi_reg_en & cptra_uncore_dmi_reg_wr_en),
+    .dmi_reg_addr(cptra_uncore_dmi_reg_addr),
+    .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
 );
 
@@ -1065,15 +1071,18 @@ always_comb cptra_uncore_dmi_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == D
 //Increment the read pointer when we had a dmi read to data out and no access this clock
 //This assumes that reg_en goes low between read accesses
 always_comb dmi_inc_rdptr = cptra_uncore_dmi_reg_dout_access_f & ~cptra_uncore_dmi_reg_en;
+always_comb dmi_inc_wrptr = cptra_uncore_dmi_reg_din_access_f & ~cptra_uncore_dmi_reg_en;
 
 always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
         cptra_uncore_dmi_reg_rdata <= '0;
         cptra_uncore_dmi_reg_dout_access_f <= '0;
+        cptra_uncore_dmi_reg_din_access_f  <= '0;
     end
     else begin
         cptra_uncore_dmi_reg_rdata <= cptra_uncore_dmi_reg_en ? cptra_uncore_dmi_reg_rdata_in : cptra_uncore_dmi_reg_rdata;
         cptra_uncore_dmi_reg_dout_access_f <= cptra_uncore_dmi_reg_en & ~cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT);
+        cptra_uncore_dmi_reg_din_access_f  <= cptra_uncore_dmi_reg_en &  cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DIN);
     end
 end
 

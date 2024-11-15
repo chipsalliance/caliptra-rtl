@@ -334,6 +334,9 @@ module mbox_csr (
         if(decoded_reg_strb.mbox_dlen && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = (field_storage.mbox_dlen.length.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
+        end else if(hwif_in.mbox_dlen.length.we) begin // HW Write - we
+            next_c = hwif_in.mbox_dlen.length.next;
+            load_next_c = '1;
         end
         field_combo.mbox_dlen.length.next = next_c;
         field_combo.mbox_dlen.length.load_next = load_next_c;

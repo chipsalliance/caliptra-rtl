@@ -74,6 +74,7 @@ package soc_ifc_pkg;
     parameter DMI_REG_BOOT_STATUS = 7'h53;
     parameter DMI_REG_CPTRA_HW_ERRROR_ENC = 7'h54;
     parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
+    parameter DMI_REG_MBOX_DIN = 7'h56;
     //RW registers
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;

@@ -115,7 +115,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.length = new("length");
-            this.length.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.length.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(length_bit_cg[bt]) length_bit_cg[bt] = new();
             end
