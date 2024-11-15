@@ -75,6 +75,7 @@ module mbox_csr (
         logic mbox_execute;
         logic mbox_status;
         logic mbox_unlock;
+        logic tap_mode;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -92,6 +93,7 @@ module mbox_csr (
         decoded_reg_strb.mbox_execute = cpuif_req_masked & (cpuif_addr == 6'h18);
         decoded_reg_strb.mbox_status = cpuif_req_masked & (cpuif_addr == 6'h1c);
         decoded_reg_strb.mbox_unlock = cpuif_req_masked & (cpuif_addr == 6'h20);
+        decoded_reg_strb.tap_mode = cpuif_req_masked & (cpuif_addr == 6'h24);
     end
 
     // Pass down signals to next stage
@@ -178,6 +180,12 @@ module mbox_csr (
                 logic load_next;
             } unlock;
         } mbox_unlock;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } enabled;
+        } tap_mode;
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -242,6 +250,11 @@ module mbox_csr (
                 logic value;
             } unlock;
         } mbox_unlock;
+        struct packed{
+            struct packed{
+                logic value;
+            } enabled;
+        } tap_mode;
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -565,6 +578,27 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_unlock.unlock.value = field_storage.mbox_unlock.unlock.value;
+    // Field: mbox_csr.tap_mode.enabled
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.tap_mode.enabled.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.tap_mode && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = (field_storage.tap_mode.enabled.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.tap_mode.enabled.next = next_c;
+        field_combo.tap_mode.enabled.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.tap_mode.enabled.value <= 1'h0;
+        end else if(field_combo.tap_mode.enabled.load_next) begin
+            field_storage.tap_mode.enabled.value <= field_combo.tap_mode.enabled.next;
+        end
+    end
+    assign hwif_out.tap_mode.enabled.value = field_storage.tap_mode.enabled.value;
 
     //--------------------------------------------------------------------------
     // Write response
@@ -582,7 +616,7 @@ module mbox_csr (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [9-1:0][31:0] readback_array;
+    logic [10-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
     assign readback_array[1][31:0] = (decoded_reg_strb.mbox_id && !decoded_req_is_wr) ? field_storage.mbox_id.id.value : '0;
@@ -601,6 +635,8 @@ module mbox_csr (
     assign readback_array[7][31:25] = '0;
     assign readback_array[8][0:0] = (decoded_reg_strb.mbox_unlock && !decoded_req_is_wr) ? field_storage.mbox_unlock.unlock.value : '0;
     assign readback_array[8][31:1] = '0;
+    assign readback_array[9][0:0] = (decoded_reg_strb.tap_mode && !decoded_req_is_wr) ? field_storage.tap_mode.enabled.value : '0;
+    assign readback_array[9][31:1] = '0;
 
     // Reduce the array
     always_comb begin
@@ -608,7 +644,7 @@ module mbox_csr (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<9; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<10; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

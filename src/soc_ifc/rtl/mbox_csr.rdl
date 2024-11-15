@@ -194,6 +194,14 @@ addrmap mbox_csr {
         field {sw=rw; hw=r; singlepulse; swwel = soc_req;} unlock=0;
     } mbox_unlock;
 
+    reg {
+        name="Mailbox TAP Mode";
+        desc="Capability for uC to enable TAP logic to respond to mailbox commands.
+              [br]Caliptra Access: RW
+              [br]SOC Access:      RO";
+        field {sw=rw; hw=r; swwel = soc_req;} enabled=0;
+    } tap_mode;
+
     // This will auto clear the status register whenever a mailbox transfer
     // is not in progress. 1-cycle delayed from when the Receiver clears
     // the execute field.

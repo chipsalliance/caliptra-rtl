@@ -144,6 +144,8 @@ logic wrptr_inc_valid;
 
 mbox_protocol_error_t mbox_protocol_error_nxt;
 
+logic tap_mode;
+
 //csr
 logic [DATA_W-1:0] csr_rdata;
 logic read_error;
@@ -153,6 +155,8 @@ mbox_csr__in_t hwif_in;
 mbox_csr__out_t hwif_out;
 
 assign mbox_error = read_error | write_error;
+
+assign tap_mode = hwif_out.tap_mode.enabled.value;
 
 //Determine if this is a valid request from the requester side
 //1) uC requests are valid if uc has lock
@@ -189,6 +193,7 @@ always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FO
 //move from rdy to execute to idle when uc resets execute
 always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_UC) & ~hwif_out.mbox_execute.execute.value;
 always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_EXECUTE_UC) & soc_has_lock & (hwif_out.mbox_status.status.value != CMD_BUSY);
+always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP = (mbox_fsm_ps == MBOX_EXECUTE_UC) & soc_has_lock & (hwif_out.mbox_status.status.value != CMD_BUSY);
 //move from rdy to execute to idle when SoC resets execute
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~hwif_out.mbox_execute.execute.value;
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~soc_has_lock & (hwif_out.mbox_status.status.value != CMD_BUSY);

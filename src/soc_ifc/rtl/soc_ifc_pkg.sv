@@ -103,6 +103,7 @@ package soc_ifc_pkg;
         MBOX_RDY_FOR_DATA = 3'b010,
         MBOX_EXECUTE_UC   = 3'b110,
         MBOX_EXECUTE_SOC  = 3'b100,
+        MBOX_EXECUTE_TAP  = 3'b101,
         MBOX_ERROR        = 3'b111
     } mbox_fsm_state_e;
 
