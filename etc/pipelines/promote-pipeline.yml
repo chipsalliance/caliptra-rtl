@@ -196,23 +196,22 @@ stages:
           - timeout: 45
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
 
-# FIXME
-#    - caliptra_ss_top_vcs:
-#      - display_name: 'Build caliptra_ss_top with VCS'
-#      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-#      #- configspec_name: 'caliptra-ss_lib' FIXME
-#      - configspec_name: 'integration_lib'
-#      - dut: 'caliptra_ss_top'
-#      - args: ''
-#      - timeout: 30
-#      - testsuites:
-#        - l0_regress:
-#          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-#          #- configspec_name: 'caliptra-ss_lib' FIXME
-#          - configspec_name: 'integration_lib'
-#          - dut: 'caliptra_ss_top'
-#          - timeout: 75
-#          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
+    - caliptra_ss_top_vcs:
+      - display_name: 'Build caliptra_ss_top with VCS'
+      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
+      #- configspec_name: 'caliptra-ss_lib' FIXME
+      - configspec_name: 'integration_lib'
+      - dut: 'comod_caliptra_ss_top'
+      - args: ''
+      - timeout: 30
+      - testsuites:
+        - l0_regress:
+          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
+          #- configspec_name: 'caliptra-ss_lib' FIXME
+          - configspec_name: 'integration_lib'
+          - dut: 'comod_caliptra_ss_top'
+          - timeout: 75
+          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 
 # ===================================== AXI FIXME =====================================
 # == Reenable these checks once UVM env is updated to AXI
@@ -260,16 +259,16 @@ stages:
     - uvmf_mldsa:
         - display_name: 'UVMF_MLDSA'
         - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-        #- configspec_name: 'adams-bridge_lib' FIXME 
+        #- configspec_name: 'adams-bridge_lib' FIXME
         - configspec_name: 'integration_lib'
-        - dut: 'uvmf_mldsa'
+        - dut: 'comod_uvmf_mldsa'
         - timeout: 25
         - testsuites:
           - l0_regress:
             - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-            #- configspec_name: 'adams-bridge_lib' FIXME 
+            #- configspec_name: 'adams-bridge_lib' FIXME
             - configspec_name: 'integration_lib'
-            - dut: 'uvmf_mldsa'
+            - dut: 'comod_uvmf_mldsa'
             - path: '${ADAMSBRIDGE_ROOT}/src/mldsa_top/stimulus/uvmf_mldsa_top_promote_regression.yml'
             - timeout: 1440
 
@@ -287,7 +286,7 @@ stages:
       - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
       #- configspec_name: 'adams-bridge_lib' FIXME
       - configspec_name: 'integration_lib'
-      - dut: 'mldsa_top'
+      - dut: 'comod_mldsa_top'
       - top: 'mldsa_top'
       - lint_tool: 'sglint'
       - timeout: 45
@@ -309,7 +308,7 @@ stages:
         - display_name: 'Verilator Smoke Test'
         - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
         - run_in_workspace: True
-        - timeout: 120
+        - timeout: 240
         - commands:
             - 'set -e'
             - 'module load tools/python/python3/3.9.2'
@@ -330,19 +329,18 @@ stages:
           # Run synthesis on top level and exit after elaborate stage
           - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py caliptra_top 1'
 
-# FIXME
-#      - adamsbridge_synthesis_elab_check:
-#        - display_name: 'Adamsbridge Synthesis Elab Check'
-#        - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-#        - run_in_workspace: True
-#        - timeout: 25
-#        - commands:
-#          - 'set -e'
-#          - 'module load tools/python/python3/3.9.2'
-#          - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
-#
-#          # Run synthesis on top level and exit after elaborate stage
-#          - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py mldsa_top 1'
+      - adamsbridge_synthesis_elab_check:
+        - display_name: 'Adamsbridge Synthesis Elab Check'
+        - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
+        - run_in_workspace: True
+        - timeout: 25
+        - commands:
+          - 'set -e'
+          - 'module load tools/python/python3/3.9.2'
+          - 'module load tools/synopsys/fusion_compiler/2022.12-SP3'
+
+          # Run synthesis on top level and exit after elaborate stage
+          - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py mldsa_top 1'
 
     post_test_steps:
       # If this pipeline was run to validate a CLP GitHub Pull Request, finalize by

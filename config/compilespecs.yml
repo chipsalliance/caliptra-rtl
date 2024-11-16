@@ -64,12 +64,9 @@ files:
   # UVMF TBs
   - ../chipsalliance/caliptra-rtl/submodules/adams-bridge/src/mldsa_top/uvmf/config/compile.yml
 
-  # Subsystem FIXME remove this once the sim-tools/spec parser issue is resolved
-  - ../chipsalliance/caliptra-ss/src/mcu/config/compile.yml
-  - ../chipsalliance/caliptra-ss/src/riscv_core/veer_el2/config/compile.yml
-  - ../chipsalliance/caliptra-ss/src/i3c-core/config/compile.yml
+  # Comodule dereference files FIXME
+  - src/adamsbridge_top/config/compile.yml
+  - src/caliptra-ss/config/compile.yml
 
   # Please add your next file/folder above not below the line
   - ../chipsalliance/caliptra-rtl/src/integration/config/compile.yml
-  # Subsystem FIXME remove this once the sim-tools/spec parser issue is resolved
-  - ../chipsalliance/caliptra-ss/src/integration/config/compile.yml

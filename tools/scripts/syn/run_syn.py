@@ -54,7 +54,8 @@ os.chdir(output_dir)
 os.system(f"ln -snf {output_dir} ../latest")
 os.system(f"cp {workspace}/Caliptra/tools/scripts/syn/fc.tcl .")
 if unit == "mldsa_top":
-    gen_file_list_cmd = f"pb fe file_list --tb adams-bridge_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
+    #gen_file_list_cmd = f"pb fe file_list --tb adams-bridge_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf" FIXME
+    gen_file_list_cmd = f"pb fe file_list --tb integration_lib::comod_mldsa_top --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
 else:
     gen_file_list_cmd = f"pb fe file_list --tb integration_lib::{unit} --flat --dir-fmt=+incdir+{{directory}} --file {unit}.vf"
 
