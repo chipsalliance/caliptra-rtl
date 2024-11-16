@@ -14,8 +14,19 @@
 //
 
 #include "caliptra_defines.h"
+#include "caliptra_reg.h"
 #include "soc_ifc.h"
 #include "printf.h"
+
+uint32_t soc_ifc_mbox_read_dataout_single() {
+    return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
+}
+uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr) {
+    return lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + rdptr);
+}
+uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
+    lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + wrptr, wrdata);
+}
 
 void soc_ifc_clear_execute_reg() {
     VPRINTF(MEDIUM,"SOC_IFC: Clear execute reg");
@@ -283,6 +294,10 @@ void soc_ifc_set_fw_update_reset(uint8_t wait_cycles) {
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,reg);
 }
 
+void soc_ifc_set_iccm_lock() {
+    lsu_write_32((CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
+}
+
 //SHA Accelerator
 void soc_ifc_sha_accel_acquire_lock() {
     while((lsu_read_32(CLP_SHA512_ACC_CSR_LOCK) & SHA512_ACC_CSR_LOCK_LOCK_MASK) == 1);
@@ -293,6 +308,10 @@ void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode) {
     reg = ((mode << SHA512_ACC_CSR_MODE_MODE_LOW) & SHA512_ACC_CSR_MODE_MODE_MASK) | 
             SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_MASK; //set endian toggle so we read from the mailbox as is
     lsu_write_32(CLP_SHA512_ACC_CSR_MODE,reg);
+}
+
+void soc_ifc_sha_accel_execute() {
+    lsu_write_32((CLP_SHA512_ACC_CSR_EXECUTE), SHA512_ACC_CSR_EXECUTE_EXECUTE_MASK);
 }
 
 void soc_ifc_sha_accel_poll_status() {
