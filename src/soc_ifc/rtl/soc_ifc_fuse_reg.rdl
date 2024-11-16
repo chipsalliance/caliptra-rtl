@@ -102,10 +102,3 @@ reg {
              [br]SOC Access:      RWL-S";
     Fuse token[32]=0;
 } fuse_manuf_dbg_unlock_token[4];
-reg {
-    desc = "Production debug unlock token
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-    Fuse token[32]=0;
-} fuse_prod_dbg_unlock_token[4];
-

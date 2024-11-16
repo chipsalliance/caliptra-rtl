@@ -39,7 +39,7 @@ import caliptra_top_tb_pkg::*; #(
     axi_if m_axi_bfm_if,
 
     input logic ready_for_fuses,
-    input logic ready_for_fw_push,
+    input logic ready_for_mb_processing,
     input logic mailbox_data_avail,
 
     input  var  ras_test_ctrl_t ras_test_ctrl,
@@ -235,10 +235,10 @@ import caliptra_top_tb_pkg::*; #(
                     $display ("CLP: ROM Flow in progress...\n");
 
                     // Test sequence (Mailbox or error handling)
-                    wait(ready_for_fw_push || ras_test_ctrl.error_injection_seen);
+                    wait(ready_for_mb_processing || ras_test_ctrl.error_injection_seen);
 
                     // Mailbox flow
-                    if (ready_for_fw_push) begin
+                    if (ready_for_mb_processing) begin
                         repeat(5) @(posedge core_clk);
 
                         $display ("CLP: Ready for firmware push\n");

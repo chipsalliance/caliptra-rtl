@@ -89,6 +89,28 @@ module caliptra_top
     input  logic [3:0]       itrng_data,
     input  logic             itrng_valid,
 
+    // Subsystem mode straps
+    input logic [63:0] strap_ss_soc_ifc_base_addr,
+    input logic [63:0] strap_ss_mci_base_addr,
+    input logic [63:0] strap_ss_recovery_ifc_base_addr,
+    input logic [63:0] strap_ss_otp_fc_base_addr,
+    input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
+    input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
+    input logic [63:0] strap_ss_strap_rsvd_0,
+    input logic [63:0] strap_ss_strap_rsvd_1,
+    input logic [63:0] strap_ss_strap_rsvd_2,
+    input logic [63:0] strap_ss_strap_rsvd_3,
+    input logic        ss_debug_intent,
+
+    // Subsystem mode debug outputs
+    output logic        ss_dbg_manuf_enable,
+    output logic        ss_dbg_prod_enable,
+    output logic [63:0] ss_soc_dbg_unlock_level,
+
+    // Subsystem mode firmware execution control
+    output logic [63:0] ss_generic_fw_exec_ctrl,
+
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
@@ -1195,6 +1217,29 @@ soc_ifc_top1
     .cptra_obf_key_reg(cptra_obf_key_reg),
     .obf_field_entropy(obf_field_entropy),
     .obf_uds_seed(obf_uds_seed),
+
+    // Subsystem mode straps
+    .strap_ss_soc_ifc_base_addr                             (strap_ss_soc_ifc_base_addr                             ),
+    .strap_ss_mci_base_addr                                 (strap_ss_mci_base_addr                                 ),
+    .strap_ss_recovery_ifc_base_addr                        (strap_ss_recovery_ifc_base_addr                        ),
+    .strap_ss_otp_fc_base_addr                              (strap_ss_otp_fc_base_addr                              ),
+    .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
+    .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
+    .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
+    .strap_ss_strap_rsvd_0                                  (strap_ss_strap_rsvd_0                                  ),
+    .strap_ss_strap_rsvd_1                                  (strap_ss_strap_rsvd_1                                  ),
+    .strap_ss_strap_rsvd_2                                  (strap_ss_strap_rsvd_2                                  ),
+    .strap_ss_strap_rsvd_3                                  (strap_ss_strap_rsvd_3                                  ),
+    .ss_debug_intent                                        (ss_debug_intent                                        ),
+
+    // Subsystem mode debug outputs
+    .ss_dbg_manuf_enable    (ss_dbg_manuf_enable    ),
+    .ss_dbg_prod_enable     (ss_dbg_prod_enable     ),
+    .ss_soc_dbg_unlock_level(ss_soc_dbg_unlock_level),
+
+    // Subsystem mode firmware execution control
+    .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
+
     // NMI Vector 
     .nmi_vector(nmi_vector),
     .nmi_intr(nmi_int),

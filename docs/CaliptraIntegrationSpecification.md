@@ -63,8 +63,7 @@ The following table describes integration parameters.
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
-| CALIPTRA_INTERNAL_UART  | config_defines.svh | Defining this enables the internal UART.        |
-| CALIPTRA_INTERNAL_QSPI  | config_defines.svh | Defining this enables the internal QSPI.        |
+| CALIPTRA_MODE_SUBSYSTEM | config_defines.svh | Defining this enables Caliptra to operate in subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), subsystem level straps, among other capabilites. See [FIXME](FIXME) for more details |
 | USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
 | TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
 | USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
@@ -150,12 +149,26 @@ The following tables describe the interface signals.
 | jtag_trst_n | 1 | input | Asynchronous assertion<br>Synchronous deassertion to jtag_tck | |
 | jtag_tdo | 1 | output | Synchronous to jtag_tck | |
 
-*Table 10: UART interface*
+*Table 10: Subsystem Straps and Control*
 
-| Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
-| :--------- | :--------- | :--------- | :--------- | :--------- |
-| uart_tx | 1 | output | | UART transmit pin |
-| uart_rx | 1 | input  | | UART receive pin  |
+| Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
+| :---------- | :--------- | :--------- | :----------------------------------------------- | :--------- |
+|  strap_ss_soc_ifc_base_addr                               | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_rsvd_0                                    | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_rsvd_1                                    | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_rsvd_2                                    | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_rsvd_3                                    | 32  | Input Strap | Synchronous to clk | |
+|  ss_debug_intent                                          | 1   | Input Strap | Synchronous to clk | |
+|  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
+|  ss_dbg_prod_enable                                       | 1   | Output      | Synchronous to clk | |
+|  ss_soc_dbg_unlock_level                                  | 32  | Output      | Synchronous to clk | |
+|  ss_generic_fw_exec_ctrl                                  | 64  | Output      | Synchronous to clk | |
 
 *Table 11: Security and miscellaneous*
 
@@ -227,6 +240,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 ### Straps
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either caliptra pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on reset exit to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set.
 
 ### Obfuscation key
 
@@ -505,7 +519,7 @@ The following memories are exported:
 * Instruction Closely-Coupled Memory (ICCM)
 * Data Closely Coupled Memory (DCCM)
 
-Table 4 indicates the signals contained in the memory interface. Direction is relative to the exported memory wrapper that is instantiated outside of the Caliptra subsystem (that is, from the testbench perspective).
+Table 8 indicates the signals contained in the memory interface. Direction is relative to the exported memory wrapper that is instantiated outside of the Caliptra subsystem (that is, from the testbench perspective).
 
 ## SRAM timing behavior
 * [Writes] Input wren signal is asserted simultaneously with input data and address. Input data is stored at the input address 1 clock cycle later.
