@@ -341,6 +341,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
+        logic we;
         logic swwel;
     } soc_ifc_reg__strap_w32__in_t;
 
@@ -394,6 +395,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic next;
+        logic we;
     } soc_ifc_reg__SS_DEBUG_INTENT__strap__in_t;
 
     typedef struct packed{
@@ -429,38 +431,56 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t;
 
@@ -477,6 +497,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t;
 
     typedef struct packed{
+        logic [31:0] next;
+        logic we;
         logic swwel;
     } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__in_t;
 
@@ -604,7 +626,6 @@ package soc_ifc_reg_pkg;
         logic cptra_rst_b;
         logic cptra_pwrgood;
         logic soc_req;
-        logic strap_we;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t CPTRA_HW_ERROR_FATAL;
         soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__in_t CPTRA_HW_ERROR_NON_FATAL;
         soc_ifc_reg__CPTRA_FW_ERROR_FATAL__in_t CPTRA_FW_ERROR_FATAL;
@@ -1054,12 +1075,68 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__strap_w32__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_MCI_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_MCI_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t offset;
+    } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t num;
+    } soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__out_t;
+
+    typedef struct packed{
         logic value;
     } soc_ifc_reg__SS_DEBUG_INTENT__strap__out_t;
 
     typedef struct packed{
         soc_ifc_reg__SS_DEBUG_INTENT__strap__out_t debug_intent;
     } soc_ifc_reg__SS_DEBUG_INTENT__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t rsvd;
+    } soc_ifc_reg__SS_STRAP_RSVD__out_t;
 
     typedef struct packed{
         logic value;
@@ -1319,7 +1396,20 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_mldsa_revocation__out_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t [4-1:0]fuse_manuf_dbg_unlock_token;
+        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__out_t SS_SOC_IFC_BASE_ADDR_L;
+        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__out_t SS_SOC_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_MCI_BASE_ADDR_L__out_t SS_MCI_BASE_ADDR_L;
+        soc_ifc_reg__SS_MCI_BASE_ADDR_H__out_t SS_MCI_BASE_ADDR_H;
+        soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__out_t SS_RECOVERY_IFC_BASE_ADDR_L;
+        soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H__out_t SS_RECOVERY_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L__out_t SS_OTP_FC_BASE_ADDR_L;
+        soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__out_t SS_OTP_FC_BASE_ADDR_H;
+        soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__out_t SS_UDS_SEED_BASE_ADDR_L;
+        soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t SS_UDS_SEED_BASE_ADDR_H;
+        soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
+        soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__out_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
+        soc_ifc_reg__SS_STRAP_RSVD__out_t [4-1:0]SS_STRAP_RSVD;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;

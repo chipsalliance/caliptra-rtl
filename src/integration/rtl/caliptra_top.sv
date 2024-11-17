@@ -195,7 +195,10 @@ module caliptra_top
     //caliptra uncore jtag ports & pertinent logic
     logic                       cptra_core_dmi_enable;
     logic                       cptra_uncore_dmi_enable;
+    logic                       cptra_mbox_dmi_enable;
     logic                       cptra_uncore_dmi_reg_en;
+    logic                       cptra_uncore_dmi_unlocked_reg_en;
+    logic                       cptra_uncore_dmi_locked_reg_en;
     logic                       cptra_uncore_dmi_reg_wr_en;
     logic [31:0]                cptra_uncore_dmi_reg_rdata;
     logic [6:0]                 cptra_uncore_dmi_reg_addr;
@@ -413,9 +416,19 @@ always_comb begin
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
-always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked); 
+//Open Core TAP only for debug unlocked
+always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked);
+//Open Uncore TAP for debug unlocked, or DEVICE_MANUFACTURING, or debug intent set
 always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
-                                      ((cptra_security_state_Latched.debug_locked) & (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
+                                       (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
+                                       ss_debug_intent;
+
+//Uncore registers only open for debug unlock or manufacturing
+always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
+                                               (~(cptra_security_state_Latched.debug_locked) | 
+                                                 (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
+//Uncore registers open for all cases
+always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
 
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
@@ -1283,7 +1296,8 @@ soc_ifc_top1
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
     //caliptra uncore jtag ports
-    .cptra_uncore_dmi_reg_en   ( cptra_uncore_dmi_reg_en ),
+    .cptra_uncore_dmi_unlocked_reg_en( cptra_uncore_dmi_unlocked_reg_en ),
+    .cptra_uncore_dmi_locked_reg_en( cptra_uncore_dmi_locked_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
     .cptra_uncore_dmi_reg_rdata( cptra_uncore_dmi_reg_rdata ),
     .cptra_uncore_dmi_reg_addr ( cptra_uncore_dmi_reg_addr ),

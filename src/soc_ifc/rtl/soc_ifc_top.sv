@@ -148,7 +148,8 @@ module soc_ifc_top
     input logic crypto_error,
 
     //caliptra uncore jtag ports
-    input  logic                            cptra_uncore_dmi_reg_en,
+    input  logic                            cptra_uncore_dmi_unlocked_reg_en,
+    input  logic                            cptra_uncore_dmi_locked_reg_en,
     input  logic                            cptra_uncore_dmi_reg_wr_en,
     output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
     input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
@@ -248,7 +249,11 @@ logic dmi_inc_wrptr;
 logic cptra_uncore_dmi_reg_dout_access_f;
 logic cptra_uncore_dmi_reg_din_access_f;
 mbox_dmi_reg_t mbox_dmi_reg;
-logic [31:0] cptra_uncore_dmi_reg_rdata_in;
+logic [31:0] cptra_uncore_dmi_locked_reg_rdata_in;
+logic [31:0] cptra_uncore_dmi_unlocked_reg_rdata_in;
+
+logic strap_we;
+logic cptra_uncore_dmi_unlocked_reg_wr_en;
 
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
@@ -681,30 +686,115 @@ end
 // Subsystem straps capture the initial value from input port on rising edge of cptra_pwrgood
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
      if(~cptra_pwrgood) begin
-        soc_ifc_reg_hwif_in.strap_we <= 1'b1;
+        strap_we <= 1'b1;
     end
     else begin
-        soc_ifc_reg_hwif_in.strap_we <= 1'b0;
+        strap_we <= 1'b0;
     end
 end
-always_comb begin
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.next                            = strap_ss_soc_ifc_base_addr[31:0];
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.next                            = strap_ss_soc_ifc_base_addr[63:0];
-    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next                                = strap_ss_mci_base_addr[31:0];
-    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next                                = strap_ss_mci_base_addr[63:0];
-    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next                       = strap_ss_recovery_ifc_base_addr[31:0];
-    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next                       = strap_ss_recovery_ifc_base_addr[63:0];
-    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next                             = strap_ss_otp_fc_base_addr[31:0];
-    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next                             = strap_ss_otp_fc_base_addr[63:0];
+
+always_comb cptra_uncore_dmi_unlocked_reg_wr_en = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_unlocked_reg_en);
+
+always_comb begin : ss_reg_hwwe
+    //SS STRAPS WITH TAP WRITE ACCESS
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.we      = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.we      = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.we          = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.we          = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.we = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.we = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[0].rsvd.we              = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_0));
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.we              = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_1));
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.we              = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_2));
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.we              = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_3));
+    soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT));
+    //SS REGISTERS WITH TAP WRITE ACCESS
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                               (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.we  = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                               (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.we      = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                               (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.we        = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.we = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.we     = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.we         = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.we  = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.we      = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.we             = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.we      = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.we          = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                              (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL0));
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                              (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL1));
+    //STRAPS WITH RO or NO TAP ACCESS
+    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.we                           = strap_we; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.we                           = strap_we; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.we = strap_we; //No TAP access
+    soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.we           = strap_we; //No TAP access
+end
+
+always_comb begin : ss_reg_next_vals
+    //SS STRAPS WITH TAP WRITE ACCESS    
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.next                            = strap_we ? strap_ss_soc_ifc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.next                            = strap_we ? strap_ss_soc_ifc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next                                = strap_we ? strap_ss_mci_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next                                = strap_we ? strap_ss_mci_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next                       = strap_we ? strap_ss_recovery_ifc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next                       = strap_we ? strap_ss_recovery_ifc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next                             = strap_we ? strap_ss_otp_fc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next                             = strap_we ? strap_ss_otp_fc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[0].rsvd.next                                    = strap_we ? strap_ss_strap_rsvd_0 : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.next                                    = strap_we ? strap_ss_strap_rsvd_1 : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.next                                    = strap_we ? strap_ss_strap_rsvd_2 : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.next                                    = strap_we ? strap_ss_strap_rsvd_3 : cptra_uncore_dmi_reg_wdata;
+    //SS REGISTERS WITH TAP WRITE ACCESS
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.next        = cptra_uncore_dmi_reg_wdata[0];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.next         = cptra_uncore_dmi_reg_wdata[1];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.next             = cptra_uncore_dmi_reg_wdata[2];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next     = cptra_uncore_dmi_reg_wdata[0];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next        = cptra_uncore_dmi_reg_wdata[1];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next = cptra_uncore_dmi_reg_wdata[2];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next      = cptra_uncore_dmi_reg_wdata[3];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next         = cptra_uncore_dmi_reg_wdata[4];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next  = cptra_uncore_dmi_reg_wdata[5];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next          = cptra_uncore_dmi_reg_wdata[6];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next             = cptra_uncore_dmi_reg_wdata[7];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next      = cptra_uncore_dmi_reg_wdata[8];
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.next                         = cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.next                         = cptra_uncore_dmi_reg_wdata;
+    //STRAPS WITH RO or NO TAP ACCESS
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.next                           = strap_ss_uds_seed_base_addr[31:0];
-    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next                           = strap_ss_uds_seed_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next                           = strap_ss_uds_seed_base_addr[63:32];
     soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
     soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next           = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
-    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[0].rsvd.next                                    = strap_ss_strap_rsvd_0;
-    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.next                                    = strap_ss_strap_rsvd_1;
-    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.next                                    = strap_ss_strap_rsvd_2;
-    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.next                                    = strap_ss_strap_rsvd_3;
+
+    // Debug intent is latched on rising edge of cptra_pwrgood and may not be modified until cold reset
+    // Debug intent register is only populated in Subsystem mode. Passive mode uses
+    // legacy debug unlock flow
+    `ifdef CALIPTRA_MODE_SUBSYSTEM
+    soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next = strap_we ? ss_debug_intent : cptra_uncore_dmi_reg_wdata[0];
+    `else
+    soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next = 1'b0;
+    `endif
 end
+
 // Also RW-able by SW until CPTRA_FUSE_WR_DONE
 always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -723,18 +813,10 @@ always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.swwel                     
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
-// Debug intent is latched on rising edge of cptra_pwrgood and may not be modified until cold reset
-// Debug intent register is only populated in Subsystem mode. Passive mode uses
-// legacy debug unlock flow
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-always_comb soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next <= ss_debug_intent;
-`else
-always_comb soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next <= 1'b0;
-`endif
-
 // DEBUG service request signals are writable based on lifecycle state
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.swwe = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.swwe  = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.swwe      = '0; //FIXME
 
 // DEBUG service response signals are writable based on lifecycle state; success bits are also sticky until reset
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
@@ -743,6 +825,9 @@ always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
 
 always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
 always_comb ss_dbg_prod_enable  = soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
@@ -996,7 +1081,7 @@ i_mbox (
     .mbox_inv_axi_id_axs(mbox_inv_id_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_inc_wrptr(dmi_inc_wrptr),
-    .dmi_reg_wen(cptra_uncore_dmi_reg_en & cptra_uncore_dmi_reg_wr_en),
+    .dmi_reg_wen(cptra_uncore_dmi_locked_reg_en & cptra_uncore_dmi_reg_wr_en),
     .dmi_reg_addr(cptra_uncore_dmi_reg_addr),
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
@@ -1160,27 +1245,86 @@ always_comb begin
 end
 
 //DMI register writes
-always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
+always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en & 
                                                          (cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO);
 always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.next = cptra_uncore_dmi_reg_wdata[0];
-always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_reg_en & 
+always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en & 
                                                                       (cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG);
 always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = cptra_uncore_dmi_reg_wdata;
 
-//DMI register read mux
-always_comb cptra_uncore_dmi_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
-                                            ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) ;
+//DMI locked register read mux
+always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {29'b0,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {23'b0,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS}) ;
+
+//DMI unlocked register read mux
+always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT)}} & {31'b0, soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value}) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_SOC_IFC_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_SOC_IFC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_MCI_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_MCI_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_0)}} & soc_ifc_reg_hwif_out.SS_STRAP_RSVD[0].rsvd.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_1)}} & soc_ifc_reg_hwif_out.SS_STRAP_RSVD[1].rsvd.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_2)}} & soc_ifc_reg_hwif_out.SS_STRAP_RSVD[2].rsvd.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_RSVD_3)}} & soc_ifc_reg_hwif_out.SS_STRAP_RSVD[3].rsvd.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {29'b0,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {23'b0,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS}) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL0)}} & soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL1)}} & soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value ) ;
+
+
+
+
 
 //Increment the read pointer when we had a dmi read to data out and no access this clock
 //This assumes that reg_en goes low between read accesses
-always_comb dmi_inc_rdptr = cptra_uncore_dmi_reg_dout_access_f & ~cptra_uncore_dmi_reg_en;
-always_comb dmi_inc_wrptr = cptra_uncore_dmi_reg_din_access_f & ~cptra_uncore_dmi_reg_en;
+always_comb dmi_inc_rdptr = cptra_uncore_dmi_reg_dout_access_f & ~cptra_uncore_dmi_locked_reg_en;
+always_comb dmi_inc_wrptr = cptra_uncore_dmi_reg_din_access_f & ~cptra_uncore_dmi_locked_reg_en;
 
 always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
@@ -1189,9 +1333,11 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
         cptra_uncore_dmi_reg_din_access_f  <= '0;
     end
     else begin
-        cptra_uncore_dmi_reg_rdata <= cptra_uncore_dmi_reg_en ? cptra_uncore_dmi_reg_rdata_in : cptra_uncore_dmi_reg_rdata;
-        cptra_uncore_dmi_reg_dout_access_f <= cptra_uncore_dmi_reg_en & ~cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT);
-        cptra_uncore_dmi_reg_din_access_f  <= cptra_uncore_dmi_reg_en &  cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DIN);
+        cptra_uncore_dmi_reg_rdata <= cptra_uncore_dmi_unlocked_reg_en ? cptra_uncore_dmi_unlocked_reg_rdata_in : 
+                                      cptra_uncore_dmi_locked_reg_en   ? cptra_uncore_dmi_locked_reg_rdata_in : cptra_uncore_dmi_reg_rdata;
+
+        cptra_uncore_dmi_reg_dout_access_f <= cptra_uncore_dmi_locked_reg_en & ~cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT);
+        cptra_uncore_dmi_reg_din_access_f  <= cptra_uncore_dmi_locked_reg_en &  cptra_uncore_dmi_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DIN);
     end
 end
 

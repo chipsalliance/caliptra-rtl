@@ -74,10 +74,30 @@ package soc_ifc_pkg;
     parameter DMI_REG_BOOT_STATUS = 7'h53;
     parameter DMI_REG_CPTRA_HW_ERRROR_ENC = 7'h54;
     parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
-    parameter DMI_REG_MBOX_DIN = 7'h56;
+    parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_L = 7'h56;
+    parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_H = 7'h57;
     //RW registers
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
+    parameter DMI_REG_MBOX_DIN = 7'h62;
+    parameter DMI_REG_SS_DEBUG_INTENT = 7'h63;
+    parameter DMI_REG_SS_SOC_IFC_BASE_ADDR_L = 7'h64;
+    parameter DMI_REG_SS_SOC_IFC_BASE_ADDR_H = 7'h65;
+    parameter DMI_REG_SS_MCI_BASE_ADDR_L = 7'h66;
+    parameter DMI_REG_SS_MCI_BASE_ADDR_H = 7'h67;
+    parameter DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L = 7'h68;
+    parameter DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H = 7'h69;
+    parameter DMI_REG_SS_OTP_FC_BASE_ADDR_L = 7'h6A;
+    parameter DMI_REG_SS_OTP_FC_BASE_ADDR_H = 7'h6B;
+    parameter DMI_REG_SS_STRAP_RSVD_0 = 7'h6C;
+    parameter DMI_REG_SS_STRAP_RSVD_1 = 7'h6D;
+    parameter DMI_REG_SS_STRAP_RSVD_2 = 7'h6E;
+    parameter DMI_REG_SS_STRAP_RSVD_3 = 7'h6F;
+    parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ = 7'h70;
+    parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP = 7'h71;
+    parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
+    parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;
+
     
     // This parameter describes the hard-coded implementation in the BOOT FSM
     // that results in noncore reset assertion being delayed from the soft reset

@@ -3847,7 +3847,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_SOC_IFC_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.swwel)) begin // SW write
             next_c = (field_storage.SS_SOC_IFC_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.we) begin // HW Write - we
             next_c = hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.next;
             load_next_c = '1;
         end
@@ -3861,6 +3861,7 @@ module soc_ifc_reg (
             field_storage.SS_SOC_IFC_BASE_ADDR_L.addr_l.value <= field_combo.SS_SOC_IFC_BASE_ADDR_L.addr_l.next;
         end
     end
+    assign hwif_out.SS_SOC_IFC_BASE_ADDR_L.addr_l.value = field_storage.SS_SOC_IFC_BASE_ADDR_L.addr_l.value;
     // Field: soc_ifc_reg.SS_SOC_IFC_BASE_ADDR_H.addr_h
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3870,7 +3871,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_SOC_IFC_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.swwel)) begin // SW write
             next_c = (field_storage.SS_SOC_IFC_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.we) begin // HW Write - we
             next_c = hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.next;
             load_next_c = '1;
         end
@@ -3884,6 +3885,7 @@ module soc_ifc_reg (
             field_storage.SS_SOC_IFC_BASE_ADDR_H.addr_h.value <= field_combo.SS_SOC_IFC_BASE_ADDR_H.addr_h.next;
         end
     end
+    assign hwif_out.SS_SOC_IFC_BASE_ADDR_H.addr_h.value = field_storage.SS_SOC_IFC_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_MCI_BASE_ADDR_L.addr_l
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3893,7 +3895,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_MCI_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_MCI_BASE_ADDR_L.addr_l.swwel)) begin // SW write
             next_c = (field_storage.SS_MCI_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_MCI_BASE_ADDR_L.addr_l.we) begin // HW Write - we
             next_c = hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next;
             load_next_c = '1;
         end
@@ -3907,6 +3909,7 @@ module soc_ifc_reg (
             field_storage.SS_MCI_BASE_ADDR_L.addr_l.value <= field_combo.SS_MCI_BASE_ADDR_L.addr_l.next;
         end
     end
+    assign hwif_out.SS_MCI_BASE_ADDR_L.addr_l.value = field_storage.SS_MCI_BASE_ADDR_L.addr_l.value;
     // Field: soc_ifc_reg.SS_MCI_BASE_ADDR_H.addr_h
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3916,7 +3919,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_MCI_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_MCI_BASE_ADDR_H.addr_h.swwel)) begin // SW write
             next_c = (field_storage.SS_MCI_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_MCI_BASE_ADDR_H.addr_h.we) begin // HW Write - we
             next_c = hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next;
             load_next_c = '1;
         end
@@ -3930,6 +3933,7 @@ module soc_ifc_reg (
             field_storage.SS_MCI_BASE_ADDR_H.addr_h.value <= field_combo.SS_MCI_BASE_ADDR_H.addr_h.next;
         end
     end
+    assign hwif_out.SS_MCI_BASE_ADDR_H.addr_h.value = field_storage.SS_MCI_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3939,7 +3943,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.swwel)) begin // SW write
             next_c = (field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.we) begin // HW Write - we
             next_c = hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next;
             load_next_c = '1;
         end
@@ -3953,6 +3957,7 @@ module soc_ifc_reg (
             field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value <= field_combo.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next;
         end
     end
+    assign hwif_out.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value = field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value;
     // Field: soc_ifc_reg.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3962,7 +3967,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.swwel)) begin // SW write
             next_c = (field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.we) begin // HW Write - we
             next_c = hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next;
             load_next_c = '1;
         end
@@ -3976,6 +3981,7 @@ module soc_ifc_reg (
             field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value <= field_combo.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next;
         end
     end
+    assign hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value = field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_OTP_FC_BASE_ADDR_L.addr_l
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3985,7 +3991,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.swwel)) begin // SW write
             next_c = (field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.we) begin // HW Write - we
             next_c = hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next;
             load_next_c = '1;
         end
@@ -3999,6 +4005,7 @@ module soc_ifc_reg (
             field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value <= field_combo.SS_OTP_FC_BASE_ADDR_L.addr_l.next;
         end
     end
+    assign hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value = field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value;
     // Field: soc_ifc_reg.SS_OTP_FC_BASE_ADDR_H.addr_h
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4008,7 +4015,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.swwel)) begin // SW write
             next_c = (field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.we) begin // HW Write - we
             next_c = hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next;
             load_next_c = '1;
         end
@@ -4022,6 +4029,7 @@ module soc_ifc_reg (
             field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value <= field_combo.SS_OTP_FC_BASE_ADDR_H.addr_h.next;
         end
     end
+    assign hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value = field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_UDS_SEED_BASE_ADDR_L.addr_l
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4031,7 +4039,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.swwel)) begin // SW write
             next_c = (field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.we) begin // HW Write - we
             next_c = hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.next;
             load_next_c = '1;
         end
@@ -4045,6 +4053,7 @@ module soc_ifc_reg (
             field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value <= field_combo.SS_UDS_SEED_BASE_ADDR_L.addr_l.next;
         end
     end
+    assign hwif_out.SS_UDS_SEED_BASE_ADDR_L.addr_l.value = field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value;
     // Field: soc_ifc_reg.SS_UDS_SEED_BASE_ADDR_H.addr_h
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4054,7 +4063,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.swwel)) begin // SW write
             next_c = (field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.we) begin // HW Write - we
             next_c = hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next;
             load_next_c = '1;
         end
@@ -4068,6 +4077,7 @@ module soc_ifc_reg (
             field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value <= field_combo.SS_UDS_SEED_BASE_ADDR_H.addr_h.next;
         end
     end
+    assign hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value = field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4077,7 +4087,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && decoded_req_is_wr && !(hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.swwel)) begin // SW write
             next_c = (field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.we) begin // HW Write - we
             next_c = hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next;
             load_next_c = '1;
         end
@@ -4091,6 +4101,7 @@ module soc_ifc_reg (
             field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value <= field_combo.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next;
         end
     end
+    assign hwif_out.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value = field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value;
     // Field: soc_ifc_reg.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4100,7 +4111,7 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && decoded_req_is_wr && !(hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.swwel)) begin // SW write
             next_c = (field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
-        end else if(hwif_in.strap_we) begin // HW Write - we
+        end else if(hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.we) begin // HW Write - we
             next_c = hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next;
             load_next_c = '1;
         end
@@ -4114,13 +4125,14 @@ module soc_ifc_reg (
             field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value <= field_combo.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next;
         end
     end
+    assign hwif_out.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value = field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value;
     // Field: soc_ifc_reg.SS_DEBUG_INTENT.debug_intent
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
         next_c = field_storage.SS_DEBUG_INTENT.debug_intent.value;
         load_next_c = '0;
-        if(hwif_in.strap_we) begin // HW Write - we
+        if(hwif_in.SS_DEBUG_INTENT.debug_intent.we) begin // HW Write - we
             next_c = hwif_in.SS_DEBUG_INTENT.debug_intent.next;
             load_next_c = '1;
         end
@@ -4145,7 +4157,7 @@ module soc_ifc_reg (
             if(decoded_reg_strb.SS_STRAP_RSVD[i0] && decoded_req_is_wr && !(hwif_in.SS_STRAP_RSVD[i0].rsvd.swwel)) begin // SW write
                 next_c = (field_storage.SS_STRAP_RSVD[i0].rsvd.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else if(hwif_in.strap_we) begin // HW Write - we
+            end else if(hwif_in.SS_STRAP_RSVD[i0].rsvd.we) begin // HW Write - we
                 next_c = hwif_in.SS_STRAP_RSVD[i0].rsvd.next;
                 load_next_c = '1;
             end
@@ -4159,6 +4171,7 @@ module soc_ifc_reg (
                 field_storage.SS_STRAP_RSVD[i0].rsvd.value <= field_combo.SS_STRAP_RSVD[i0].rsvd.next;
             end
         end
+        assign hwif_out.SS_STRAP_RSVD[i0].rsvd.value = field_storage.SS_STRAP_RSVD[i0].rsvd.value;
     end
     // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ
     always_comb begin
@@ -4241,6 +4254,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next;
+            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.load_next = load_next_c;
@@ -4261,6 +4277,9 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next = next_c;
@@ -4283,6 +4302,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next;
+            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.load_next = load_next_c;
@@ -4303,6 +4325,9 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next = next_c;
@@ -4325,6 +4350,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next;
+            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.load_next = load_next_c;
@@ -4345,6 +4373,9 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next = next_c;
@@ -4367,6 +4398,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next;
+            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.load_next = load_next_c;
@@ -4387,6 +4421,9 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next = next_c;
@@ -4409,6 +4446,9 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next;
+            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.load_next = load_next_c;
@@ -4430,6 +4470,9 @@ module soc_ifc_reg (
             load_next_c = '0;
             if(decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && decoded_req_is_wr && !(hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.swwel)) begin // SW write
                 next_c = (field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end else if(hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.we) begin // HW Write - we
+                next_c = hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next;
                 load_next_c = '1;
             end
             field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next = next_c;

@@ -2386,23 +2386,23 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.MANUF_DBG_UNLOCK_SUCCESS = new("MANUF_DBG_UNLOCK_SUCCESS");
-            this.MANUF_DBG_UNLOCK_SUCCESS.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.MANUF_DBG_UNLOCK_SUCCESS.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.MANUF_DBG_UNLOCK_FAIL = new("MANUF_DBG_UNLOCK_FAIL");
-            this.MANUF_DBG_UNLOCK_FAIL.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.MANUF_DBG_UNLOCK_FAIL.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
             this.MANUF_DBG_UNLOCK_IN_PROGRESS = new("MANUF_DBG_UNLOCK_IN_PROGRESS");
-            this.MANUF_DBG_UNLOCK_IN_PROGRESS.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.MANUF_DBG_UNLOCK_IN_PROGRESS.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.PROD_DBG_UNLOCK_SUCCESS = new("PROD_DBG_UNLOCK_SUCCESS");
-            this.PROD_DBG_UNLOCK_SUCCESS.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            this.PROD_DBG_UNLOCK_SUCCESS.configure(this, 1, 3, "RW", 1, 'h0, 1, 1, 0);
             this.PROD_DBG_UNLOCK_FAIL = new("PROD_DBG_UNLOCK_FAIL");
-            this.PROD_DBG_UNLOCK_FAIL.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
+            this.PROD_DBG_UNLOCK_FAIL.configure(this, 1, 4, "RW", 1, 'h0, 1, 1, 0);
             this.PROD_DBG_UNLOCK_IN_PROGRESS = new("PROD_DBG_UNLOCK_IN_PROGRESS");
-            this.PROD_DBG_UNLOCK_IN_PROGRESS.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
+            this.PROD_DBG_UNLOCK_IN_PROGRESS.configure(this, 1, 5, "RW", 1, 'h0, 1, 1, 0);
             this.UDS_PROGRAM_SUCCESS = new("UDS_PROGRAM_SUCCESS");
-            this.UDS_PROGRAM_SUCCESS.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.UDS_PROGRAM_SUCCESS.configure(this, 1, 6, "RW", 1, 'h0, 1, 1, 0);
             this.UDS_PROGRAM_FAIL = new("UDS_PROGRAM_FAIL");
-            this.UDS_PROGRAM_FAIL.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
+            this.UDS_PROGRAM_FAIL.configure(this, 1, 7, "RW", 1, 'h0, 1, 1, 0);
             this.UDS_PROGRAM_IN_PROGRESS = new("UDS_PROGRAM_IN_PROGRESS");
-            this.UDS_PROGRAM_IN_PROGRESS.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
+            this.UDS_PROGRAM_IN_PROGRESS.configure(this, 1, 8, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(MANUF_DBG_UNLOCK_SUCCESS_bit_cg[bt]) MANUF_DBG_UNLOCK_SUCCESS_bit_cg[bt] = new();
                 foreach(MANUF_DBG_UNLOCK_FAIL_bit_cg[bt]) MANUF_DBG_UNLOCK_FAIL_bit_cg[bt] = new();
@@ -2440,7 +2440,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.LEVEL = new("LEVEL");
-            this.LEVEL.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.LEVEL.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(LEVEL_bit_cg[bt]) LEVEL_bit_cg[bt] = new();
             end
