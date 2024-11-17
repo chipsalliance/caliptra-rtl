@@ -97,10 +97,10 @@ module caliptra_top
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
-    input logic [63:0] strap_ss_strap_rsvd_0,
-    input logic [63:0] strap_ss_strap_rsvd_1,
-    input logic [63:0] strap_ss_strap_rsvd_2,
-    input logic [63:0] strap_ss_strap_rsvd_3,
+    input logic [31:0] strap_ss_strap_rsvd_0,
+    input logic [31:0] strap_ss_strap_rsvd_1,
+    input logic [31:0] strap_ss_strap_rsvd_2,
+    input logic [31:0] strap_ss_strap_rsvd_3,
     input logic        ss_debug_intent,
 
     // Subsystem mode debug outputs

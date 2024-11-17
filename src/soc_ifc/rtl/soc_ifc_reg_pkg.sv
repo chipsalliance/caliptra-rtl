@@ -737,7 +737,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_mb_processing__out_t;
 
     typedef struct packed{
         logic value;
@@ -749,7 +749,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t idevid_csr_ready;
-        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_mb_processing__out_t ready_for_mb_processing;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__out_t;
@@ -1129,6 +1129,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__out_t LEVEL;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__go__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__go__out_t go;
+    } soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__key_w32__out_t;
 
     typedef struct packed{
@@ -1306,6 +1322,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
+        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [2-1:0]SS_GENERIC_FW_EXEC_CTRL;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

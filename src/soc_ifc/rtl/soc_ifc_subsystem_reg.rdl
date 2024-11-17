@@ -181,7 +181,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; } LEVEL[32] = 32'h0;
+    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; hw=r; } LEVEL[32] = 32'h0;
 } SS_SOC_DBG_UNLOCK_LEVEL[2];
 
 reg {
@@ -193,5 +193,5 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {sw=rw; swwel=soc_req; } go[32] = 32'h0;
+    field {sw=rw; swwel=soc_req; hw=r; } go[32] = 32'h0;
 } SS_GENERIC_FW_EXEC_CTRL[2];

@@ -237,13 +237,13 @@
             foreach(status_bit_cg[bt]) this.status_bit_cg[bt].sample(data[0 + bt]);
             foreach(idevid_csr_ready_bit_cg[bt]) this.idevid_csr_ready_bit_cg[bt].sample(data[24 + bt]);
             foreach(boot_fsm_ps_bit_cg[bt]) this.boot_fsm_ps_bit_cg[bt].sample(data[25 + bt]);
-            foreach(ready_for_fw_bit_cg[bt]) this.ready_for_fw_bit_cg[bt].sample(data[28 + bt]);
+            foreach(ready_for_mb_processing_bit_cg[bt]) this.ready_for_mb_processing_bit_cg[bt].sample(data[28 + bt]);
             foreach(ready_for_runtime_bit_cg[bt]) this.ready_for_runtime_bit_cg[bt].sample(data[29 + bt]);
             foreach(ready_for_fuses_bit_cg[bt]) this.ready_for_fuses_bit_cg[bt].sample(data[30 + bt]);
             foreach(mailbox_flow_done_bit_cg[bt]) this.mailbox_flow_done_bit_cg[bt].sample(data[31 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[23:0]/*status*/  ,  data[24:24]/*idevid_csr_ready*/  ,  data[27:25]/*boot_fsm_ps*/  ,  data[28:28]/*ready_for_fw*/  ,  data[29:29]/*ready_for_runtime*/  ,  data[30:30]/*ready_for_fuses*/  ,  data[31:31]/*mailbox_flow_done*/   );
+            this.fld_cg.sample( data[23:0]/*status*/  ,  data[24:24]/*idevid_csr_ready*/  ,  data[27:25]/*boot_fsm_ps*/  ,  data[28:28]/*ready_for_mb_processing*/  ,  data[29:29]/*ready_for_runtime*/  ,  data[30:30]/*ready_for_fuses*/  ,  data[31:31]/*mailbox_flow_done*/   );
         end
     endfunction
 
@@ -252,13 +252,13 @@
             foreach(status_bit_cg[bt]) this.status_bit_cg[bt].sample(status.get_mirrored_value() >> bt);
             foreach(idevid_csr_ready_bit_cg[bt]) this.idevid_csr_ready_bit_cg[bt].sample(idevid_csr_ready.get_mirrored_value() >> bt);
             foreach(boot_fsm_ps_bit_cg[bt]) this.boot_fsm_ps_bit_cg[bt].sample(boot_fsm_ps.get_mirrored_value() >> bt);
-            foreach(ready_for_fw_bit_cg[bt]) this.ready_for_fw_bit_cg[bt].sample(ready_for_fw.get_mirrored_value() >> bt);
+            foreach(ready_for_mb_processing_bit_cg[bt]) this.ready_for_mb_processing_bit_cg[bt].sample(ready_for_mb_processing.get_mirrored_value() >> bt);
             foreach(ready_for_runtime_bit_cg[bt]) this.ready_for_runtime_bit_cg[bt].sample(ready_for_runtime.get_mirrored_value() >> bt);
             foreach(ready_for_fuses_bit_cg[bt]) this.ready_for_fuses_bit_cg[bt].sample(ready_for_fuses.get_mirrored_value() >> bt);
             foreach(mailbox_flow_done_bit_cg[bt]) this.mailbox_flow_done_bit_cg[bt].sample(mailbox_flow_done.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( status.get_mirrored_value()  ,  idevid_csr_ready.get_mirrored_value()  ,  boot_fsm_ps.get_mirrored_value()  ,  ready_for_fw.get_mirrored_value()  ,  ready_for_runtime.get_mirrored_value()  ,  ready_for_fuses.get_mirrored_value()  ,  mailbox_flow_done.get_mirrored_value()   );
+            this.fld_cg.sample( status.get_mirrored_value()  ,  idevid_csr_ready.get_mirrored_value()  ,  boot_fsm_ps.get_mirrored_value()  ,  ready_for_mb_processing.get_mirrored_value()  ,  ready_for_runtime.get_mirrored_value()  ,  ready_for_fuses.get_mirrored_value()  ,  mailbox_flow_done.get_mirrored_value()   );
         end
     endfunction
 
@@ -734,28 +734,24 @@
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(data[0 + bt]);
-            foreach(QSPI_en_bit_cg[bt]) this.QSPI_en_bit_cg[bt].sample(data[1 + bt]);
-            foreach(I3C_en_bit_cg[bt]) this.I3C_en_bit_cg[bt].sample(data[2 + bt]);
-            foreach(UART_en_bit_cg[bt]) this.UART_en_bit_cg[bt].sample(data[3 + bt]);
+            foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(data[1 + bt]);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(data[4 + bt]);
             foreach(ACTIVE_MODE_en_bit_cg[bt]) this.ACTIVE_MODE_en_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[1:1]/*QSPI_en*/  ,  data[2:2]/*I3C_en*/  ,  data[3:3]/*UART_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*ACTIVE_MODE_en*/   );
+            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[3:1]/*RSVD_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*ACTIVE_MODE_en*/   );
         end
     endfunction
 
     function void soc_ifc_reg__CPTRA_HW_CONFIG::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(iTRNG_en.get_mirrored_value() >> bt);
-            foreach(QSPI_en_bit_cg[bt]) this.QSPI_en_bit_cg[bt].sample(QSPI_en.get_mirrored_value() >> bt);
-            foreach(I3C_en_bit_cg[bt]) this.I3C_en_bit_cg[bt].sample(I3C_en.get_mirrored_value() >> bt);
-            foreach(UART_en_bit_cg[bt]) this.UART_en_bit_cg[bt].sample(UART_en.get_mirrored_value() >> bt);
+            foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(RSVD_en.get_mirrored_value() >> bt);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(LMS_acc_en.get_mirrored_value() >> bt);
             foreach(ACTIVE_MODE_en_bit_cg[bt]) this.ACTIVE_MODE_en_bit_cg[bt].sample(ACTIVE_MODE_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  QSPI_en.get_mirrored_value()  ,  I3C_en.get_mirrored_value()  ,  UART_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  ACTIVE_MODE_en.get_mirrored_value()   );
+            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  RSVD_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  ACTIVE_MODE_en.get_mirrored_value()   );
         end
     endfunction
 
@@ -1140,6 +1136,31 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__CPTRA_CAP_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_CAP_LOCK::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_CAP_LOCK::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( lock.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__CPTRA_OWNER_PK_HASH SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__CPTRA_OWNER_PK_HASH::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
@@ -1187,56 +1208,6 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( lock.get_mirrored_value()   );
-        end
-    endfunction
-
-    /*----------------------- SOC_IFC_REG__CPTRA_DEBUG_AUTH_PK_HASH_REG_BANK_OFFSET SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__CPTRA_DEBUG_AUTH_PK_HASH_REG_BANK_OFFSET::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(offset_bit_cg[bt]) this.offset_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*offset*/   );
-        end
-    endfunction
-
-    function void soc_ifc_reg__CPTRA_DEBUG_AUTH_PK_HASH_REG_BANK_OFFSET::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(offset_bit_cg[bt]) this.offset_bit_cg[bt].sample(offset.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( offset.get_mirrored_value()   );
-        end
-    endfunction
-
-    /*----------------------- SOC_IFC_REG__CPTRA_NUM_OF_DEBUG_AUTH_PK_HASHES SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__CPTRA_NUM_OF_DEBUG_AUTH_PK_HASHES::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(num_bit_cg[bt]) this.num_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*num*/   );
-        end
-    endfunction
-
-    function void soc_ifc_reg__CPTRA_NUM_OF_DEBUG_AUTH_PK_HASHES::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(num_bit_cg[bt]) this.num_bit_cg[bt].sample(num.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( num.get_mirrored_value()   );
         end
     endfunction
 
@@ -1565,31 +1536,6 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__FUSE_PROD_DBG_UNLOCK_TOKEN SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__fuse_prod_dbg_unlock_token::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(token_bit_cg[bt]) this.token_bit_cg[bt].sample(data[0 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*token*/   );
-        end
-    endfunction
-
-    function void soc_ifc_reg__fuse_prod_dbg_unlock_token::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(token_bit_cg[bt]) this.token_bit_cg[bt].sample(token.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( token.get_mirrored_value()   );
-        end
-    endfunction
-
     /*----------------------- SOC_IFC_REG__SS_SOC_IFC_BASE_ADDR_L SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
@@ -1840,8 +1786,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__SS_SOC_NONCE SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__SS_SOC_NONCE::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1849,19 +1795,44 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(nonce_bit_cg[bt]) this.nonce_bit_cg[bt].sample(data[0 + bt]);
+            foreach(offset_bit_cg[bt]) this.offset_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*nonce*/   );
+            this.fld_cg.sample( data[31:0]/*offset*/   );
         end
     endfunction
 
-    function void soc_ifc_reg__SS_SOC_NONCE::sample_values();
+    function void soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(nonce_bit_cg[bt]) this.nonce_bit_cg[bt].sample(nonce.get_mirrored_value() >> bt);
+            foreach(offset_bit_cg[bt]) this.offset_bit_cg[bt].sample(offset.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( nonce.get_mirrored_value()   );
+            this.fld_cg.sample( offset.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(num_bit_cg[bt]) this.num_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*num*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(num_bit_cg[bt]) this.num_bit_cg[bt].sample(num.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( num.get_mirrored_value()   );
         end
     endfunction
 
@@ -2007,6 +1978,31 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( LEVEL.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__SS_GENERIC_FW_EXEC_CTRL SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(go_bit_cg[bt]) this.go_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*go*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(go_bit_cg[bt]) this.go_bit_cg[bt].sample(go.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( go.get_mirrored_value()   );
         end
     endfunction
 
