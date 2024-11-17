@@ -179,16 +179,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t;
 
     typedef struct packed{
-        logic next;
-    } soc_ifc_reg__CPTRA_HW_CONFIG__QSPI_en__in_t;
-
-    typedef struct packed{
-        logic next;
-    } soc_ifc_reg__CPTRA_HW_CONFIG__I3C_en__in_t;
-
-    typedef struct packed{
-        logic next;
-    } soc_ifc_reg__CPTRA_HW_CONFIG__UART_en__in_t;
+        logic [2:0] next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t;
 
     typedef struct packed{
         logic next;
@@ -200,9 +192,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
-        soc_ifc_reg__CPTRA_HW_CONFIG__QSPI_en__in_t QSPI_en;
-        soc_ifc_reg__CPTRA_HW_CONFIG__I3C_en__in_t I3C_en;
-        soc_ifc_reg__CPTRA_HW_CONFIG__UART_en__in_t UART_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__ACTIVE_MODE_en__in_t ACTIVE_MODE_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
@@ -235,6 +225,30 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__LOCK__in_t LOCK;
     } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_HW_CAPABILITIES__cap__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_HW_CAPABILITIES__cap__in_t cap;
+    } soc_ifc_reg__CPTRA_HW_CAPABILITIES__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_FW_CAPABILITIES__cap__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_FW_CAPABILITIES__cap__in_t cap;
+    } soc_ifc_reg__CPTRA_FW_CAPABILITIES__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_CAP_LOCK__lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_CAP_LOCK__lock__in_t lock;
+    } soc_ifc_reg__CPTRA_CAP_LOCK__in_t;
 
     typedef struct packed{
         logic swwel;
@@ -326,11 +340,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_manuf_dbg_unlock_token__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__Fuse_w32__in_t token;
-    } soc_ifc_reg__fuse_prod_dbg_unlock_token__in_t;
-
-    typedef struct packed{
         logic [31:0] next;
+        logic swwel;
     } soc_ifc_reg__strap_w32__in_t;
 
     typedef struct packed{
@@ -374,11 +385,19 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t;
 
     typedef struct packed{
-        logic next;
-    } soc_ifc_reg__strap__in_t;
+        soc_ifc_reg__strap_w32__in_t offset;
+    } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__strap__in_t debug_intent;
+        soc_ifc_reg__strap_w32__in_t num;
+    } soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__SS_DEBUG_INTENT__strap__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_DEBUG_INTENT__strap__in_t debug_intent;
     } soc_ifc_reg__SS_DEBUG_INTENT__in_t;
 
     typedef struct packed{
@@ -410,47 +429,38 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t;
 
@@ -465,6 +475,14 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t UDS_PROGRAM_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t UDS_PROGRAM_IN_PROGRESS;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__in_t LEVEL;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -586,6 +604,7 @@ package soc_ifc_reg_pkg;
         logic cptra_rst_b;
         logic cptra_pwrgood;
         logic soc_req;
+        logic strap_we;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t CPTRA_HW_ERROR_FATAL;
         soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__in_t CPTRA_HW_ERROR_NON_FATAL;
         soc_ifc_reg__CPTRA_FW_ERROR_FATAL__in_t CPTRA_FW_ERROR_FATAL;
@@ -608,6 +627,9 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_STATUS__in_t CPTRA_WDT_STATUS;
         soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__in_t CPTRA_FUSE_VALID_AXI_ID;
         soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__in_t CPTRA_FUSE_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_HW_CAPABILITIES__in_t CPTRA_HW_CAPABILITIES;
+        soc_ifc_reg__CPTRA_FW_CAPABILITIES__in_t CPTRA_FW_CAPABILITIES;
+        soc_ifc_reg__CPTRA_CAP_LOCK__in_t CPTRA_CAP_LOCK;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH__in_t [12-1:0]CPTRA_OWNER_PK_HASH;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t CPTRA_OWNER_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__in_t [16-1:0]fuse_uds_seed;
@@ -623,7 +645,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_mldsa_revocation__in_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__in_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__in_t [4-1:0]fuse_manuf_dbg_unlock_token;
-        soc_ifc_reg__fuse_prod_dbg_unlock_token__in_t [4-1:0]fuse_prod_dbg_unlock_token;
         soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t SS_SOC_IFC_BASE_ADDR_L;
         soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t SS_SOC_IFC_BASE_ADDR_H;
         soc_ifc_reg__SS_MCI_BASE_ADDR_L__in_t SS_MCI_BASE_ADDR_L;
@@ -634,10 +655,13 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__in_t SS_OTP_FC_BASE_ADDR_H;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__in_t SS_UDS_SEED_BASE_ADDR_L;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t SS_UDS_SEED_BASE_ADDR_H;
+        soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
+        soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__in_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_STRAP_RSVD__in_t [4-1:0]SS_STRAP_RSVD;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
@@ -713,7 +737,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t;
+    } soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_mb_processing__out_t;
 
     typedef struct packed{
         logic value;
@@ -725,7 +749,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_FLOW_STATUS__idevid_csr_ready__out_t idevid_csr_ready;
-        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_fw__out_t ready_for_fw;
+        soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_mb_processing__out_t ready_for_mb_processing;
         soc_ifc_reg__CPTRA_FLOW_STATUS__ready_for_runtime__out_t ready_for_runtime;
         soc_ifc_reg__CPTRA_FLOW_STATUS__mailbox_flow_done__out_t mailbox_flow_done;
     } soc_ifc_reg__CPTRA_FLOW_STATUS__out_t;
@@ -934,6 +958,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_CAP_LOCK__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_CAP_LOCK__lock__out_t lock;
+    } soc_ifc_reg__CPTRA_CAP_LOCK__out_t;
+
+    typedef struct packed{
         logic [31:0] value;
     } soc_ifc_reg__CPTRA_OWNER_PK_HASH__hash__out_t;
 
@@ -943,7 +975,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
-        logic swmod;
     } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__lock__out_t;
 
     typedef struct packed{
@@ -1023,16 +1054,12 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__Fuse_w32__out_t token;
-    } soc_ifc_reg__fuse_prod_dbg_unlock_token__out_t;
+        logic value;
+    } soc_ifc_reg__SS_DEBUG_INTENT__strap__out_t;
 
     typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__SS_SOC_NONCE__nonce__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_SOC_NONCE__nonce__out_t nonce;
-    } soc_ifc_reg__SS_SOC_NONCE__out_t;
+        soc_ifc_reg__SS_DEBUG_INTENT__strap__out_t debug_intent;
+    } soc_ifc_reg__SS_DEBUG_INTENT__out_t;
 
     typedef struct packed{
         logic value;
@@ -1099,6 +1126,22 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__out_t UDS_PROGRAM_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t UDS_PROGRAM_IN_PROGRESS;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__out_t LEVEL;
+    } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__go__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__go__out_t go;
+    } soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -1260,6 +1303,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_WDT_STATUS__out_t CPTRA_WDT_STATUS;
         soc_ifc_reg__CPTRA_FUSE_VALID_AXI_ID__out_t CPTRA_FUSE_VALID_AXI_ID;
         soc_ifc_reg__CPTRA_FUSE_AXI_ID_LOCK__out_t CPTRA_FUSE_AXI_ID_LOCK;
+        soc_ifc_reg__CPTRA_CAP_LOCK__out_t CPTRA_CAP_LOCK;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH__out_t [12-1:0]CPTRA_OWNER_PK_HASH;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__out_t CPTRA_OWNER_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__out_t [16-1:0]fuse_uds_seed;
@@ -1275,10 +1319,11 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_mldsa_revocation__out_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t [4-1:0]fuse_manuf_dbg_unlock_token;
-        soc_ifc_reg__fuse_prod_dbg_unlock_token__out_t [4-1:0]fuse_prod_dbg_unlock_token;
-        soc_ifc_reg__SS_SOC_NONCE__out_t [16-1:0]SS_SOC_NONCE;
+        soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
+        soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
+        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [2-1:0]SS_GENERIC_FW_EXEC_CTRL;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

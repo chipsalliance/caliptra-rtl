@@ -106,6 +106,28 @@ module soc_ifc_top
     output logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
     output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
+    // Subsystem mode straps
+    input logic [63:0] strap_ss_soc_ifc_base_addr,
+    input logic [63:0] strap_ss_mci_base_addr,
+    input logic [63:0] strap_ss_recovery_ifc_base_addr,
+    input logic [63:0] strap_ss_otp_fc_base_addr,
+    input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
+    input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
+    input logic [31:0] strap_ss_strap_rsvd_0,
+    input logic [31:0] strap_ss_strap_rsvd_1,
+    input logic [31:0] strap_ss_strap_rsvd_2,
+    input logic [31:0] strap_ss_strap_rsvd_3,
+    input logic        ss_debug_intent,
+
+    // Subsystem mode debug outputs
+    output logic        ss_dbg_manuf_enable,
+    output logic        ss_dbg_prod_enable,
+    output logic [63:0] ss_soc_dbg_unlock_level,
+
+    // Subsystem mode firmware execution control
+    output logic [63:0] ss_generic_fw_exec_ctrl,
+
     // NMI Vector 
     output logic [31:0] nmi_vector,
     output logic nmi_intr,
@@ -435,19 +457,14 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b1;
 `else
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b0;
 `endif
-`ifdef CALIPTRA_INTERNAL_QSPI
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b1;
-`else
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.QSPI_en.next = 1'b0;
-`endif
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.I3C_en.next = 1'b0;
-`ifdef CALIPTRA_INTERNAL_UART
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b1;
-`else
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.UART_en.next = 1'b0;
-`endif
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.RSVD_en.next = 3'b0;
 // Hardcoded because all future revs will have LMS accelerator available
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+`else
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+`endif
 
 //SOC Stepping ID update
 always_comb begin
@@ -636,15 +653,12 @@ always_comb begin
       soc_ifc_reg_hwif_in.fuse_idevid_manuf_hsm_id[i].hsm_id.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
-    // Run-time SVN can be unlocked whenever fuse_wr_done is 'reset' which happens on a warm reset
     for (int i=0; i<4; i++) begin
         soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
-end
-// Lockable registers
-always_comb begin
-    for (int i=0; i<12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~soc_ifc_reg_req_data.soc_req;
+
+    for (int i=0; i<4; i++) begin
+        soc_ifc_reg_hwif_in.fuse_manuf_dbg_unlock_token[i].token.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 end
 
@@ -655,9 +669,104 @@ always_comb soc_ifc_reg_hwif_in.fuse_lms_revocation.lms_revocation.swwel     = s
 always_comb soc_ifc_reg_hwif_in.fuse_mldsa_revocation.mldsa_revocation.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
-// Fuse write done can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
+// Lockable registers
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_HW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
+    soc_ifc_reg_hwif_in.CPTRA_FW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
+    for (int i=0; i<12; i++) begin
+        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~soc_ifc_reg_req_data.soc_req;
+    end
+end
+
+// Subsystem straps capture the initial value from input port on rising edge of cptra_pwrgood
+always_ff @(posedge clk or negedge cptra_pwrgood) begin
+     if(~cptra_pwrgood) begin
+        soc_ifc_reg_hwif_in.strap_we <= 1'b1;
+    end
+    else begin
+        soc_ifc_reg_hwif_in.strap_we <= 1'b0;
+    end
+end
+always_comb begin
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.next                            = strap_ss_soc_ifc_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.next                            = strap_ss_soc_ifc_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next                                = strap_ss_mci_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next                                = strap_ss_mci_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next                       = strap_ss_recovery_ifc_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next                       = strap_ss_recovery_ifc_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next                             = strap_ss_otp_fc_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next                             = strap_ss_otp_fc_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.next                           = strap_ss_uds_seed_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next                           = strap_ss_uds_seed_base_addr[63:0];
+    soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
+    soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next           = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[0].rsvd.next                                    = strap_ss_strap_rsvd_0;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.next                                    = strap_ss_strap_rsvd_1;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.next                                    = strap_ss_strap_rsvd_2;
+    soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.next                                    = strap_ss_strap_rsvd_3;
+end
+// Also RW-able by SW until CPTRA_FUSE_WR_DONE
+always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.swwel                                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.swwel                                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.swwel                               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.swwel                               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[0].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[1].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[2].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_STRAP_RSVD[3].rsvd.swwel                                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+
+// Debug intent is latched on rising edge of cptra_pwrgood and may not be modified until cold reset
+// Debug intent register is only populated in Subsystem mode. Passive mode uses
+// legacy debug unlock flow
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+always_comb soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next <= ss_debug_intent;
+`else
+always_comb soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next <= 1'b0;
+`endif
+
+// DEBUG service request signals are writable based on lifecycle state
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.swwe = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.swwe  = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+
+// DEBUG service response signals are writable based on lifecycle state; success bits are also sticky until reset
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+
+always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+always_comb ss_dbg_prod_enable  = soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
+
+// DEBUG unlock level signal is only writable by Caliptra, and only when DEBUG_INTENT is 1
+always_comb begin
+    for (int i=0; i<2; i++) begin
+        soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
+    end
+end
+always_comb ss_soc_dbg_unlock_level = {soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value,
+                                       soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value};
+
+always_comb ss_generic_fw_exec_ctrl = {soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[1].go.value,
+                                       soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[0].go.value};
+
+// Fuse write done can be written by SOC if it is already NOT '1.
+// uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-// OWNER PK HASH LOCK is a lockable register. lock can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
+// CPTRA_CAP_LOCK is a lockable register.
+// "lock" can be written by Caliptra if it is already NOT '1. SoC can only read this bit. The bit gets reset on warm reset
+always_comb soc_ifc_reg_hwif_in.CPTRA_CAP_LOCK.lock.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
+// OWNER PK HASH LOCK is a lockable register.
+// "lock" can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
