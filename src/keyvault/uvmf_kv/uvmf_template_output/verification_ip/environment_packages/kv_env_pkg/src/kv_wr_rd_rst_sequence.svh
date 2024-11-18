@@ -47,7 +47,7 @@ class kv_wr_rd_rst_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -81,7 +81,7 @@ class kv_wr_rd_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
@@ -101,24 +101,28 @@ class kv_wr_rd_rst_sequence #(
         active_phase = new();
 
         std::randomize(hmac_write_entry) with {
+            hmac_write_entry < KV_NUM_KEYS;
             hmac_write_entry != sha512_write_entry;
             hmac_write_entry != ecc_write_entry;
             hmac_write_entry != doe_write_entry;
         };
 
         std::randomize(sha512_write_entry) with {
+            sha512_write_entry < KV_NUM_KEYS;
             sha512_write_entry != hmac_write_entry;
             sha512_write_entry != ecc_write_entry;
             sha512_write_entry != doe_write_entry;
         };
 
         std::randomize(ecc_write_entry) with {
+            ecc_write_entry < KV_NUM_KEYS;
             ecc_write_entry != hmac_write_entry;
             ecc_write_entry != sha512_write_entry;
             ecc_write_entry != doe_write_entry;
         };
 
         std::randomize(doe_write_entry) with {
+            doe_write_entry < KV_NUM_KEYS;
             doe_write_entry != hmac_write_entry;
             doe_write_entry != sha512_write_entry;
             doe_write_entry != ecc_write_entry;
@@ -177,7 +181,7 @@ class kv_wr_rd_rst_sequence #(
                 end
             end
             begin
-                repeat(10) sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+                repeat(10) mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
             end
             begin
                 repeat(10) hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
@@ -203,7 +207,7 @@ class kv_wr_rd_rst_sequence #(
         configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_block_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_block_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mldsa_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
         

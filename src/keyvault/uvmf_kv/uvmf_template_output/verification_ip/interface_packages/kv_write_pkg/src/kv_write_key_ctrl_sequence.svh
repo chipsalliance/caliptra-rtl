@@ -57,7 +57,7 @@ class kv_write_key_ctrl_sequence #(
       int entry;
   
       // Construct the transaction
-      for(entry=0; entry<32; entry++) begin
+      for(entry=0; entry<KV_NUM_KEYS; entry++) begin
         req=kv_write_transaction#(
               .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
               )::type_id::create("req");

@@ -44,9 +44,10 @@ class kv_write_transaction #(
   logic error;
 
   //Constraints for the transaction variables:
-  constraint dest_valid_c {0 <= write_dest_valid <= 31;} //{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 31; }
+  constraint dest_valid_c {0 <= write_dest_valid <= 31;} //{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "MLDSA"}) write_dest_valid == 31; }
   constraint write_en_c {write_en == 1'b1;}
-  constraint write_offset_c {write_offset >= 0; write_offset < 12;}
+  constraint write_entry_c {write_entry >= 0; write_entry < KV_NUM_KEYS;}
+  constraint write_offset_c {write_offset >= 0; write_offset < KV_NUM_DWORDS;}
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 

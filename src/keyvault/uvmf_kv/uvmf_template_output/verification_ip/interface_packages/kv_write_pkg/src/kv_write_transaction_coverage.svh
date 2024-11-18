@@ -67,10 +67,10 @@ class kv_write_transaction_coverage #(
     option.auto_bin_max=1024;
     option.per_instance=1;
     write_en: coverpoint coverage_trans.write_en;
-    write_entry: coverpoint coverage_trans.write_entry;
-    write_offset: coverpoint coverage_trans.write_offset {
-      illegal_bins wr_offset_12_15 = {['d12:'d15]};
+    write_entry: coverpoint coverage_trans.write_entry {
+      illegal_bins wr_entry_24_31 = {['d24:'d31]};
     }
+    write_offset: coverpoint coverage_trans.write_offset;
     error: coverpoint coverage_trans.error;
     // pragma uvmf custom covergroup end
   endgroup

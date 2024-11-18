@@ -80,7 +80,7 @@ uvmf:
       parameters:
       - name: "KV_WRITE_REQUESTOR"
         type: "string"
-        # Can be HMAC, ECC, DOE, SHA512
+        # Can be HMAC, ECC, DOE, MLDSA
         value: '"HMAC"'
 
       ports:
@@ -94,7 +94,7 @@ uvmf:
       transaction_constraints:
       - name: dest_valid_c
         # TODO correlate the actual values
-        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 63; }'
+        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "MLDSA"}) write_dest_valid == 63; }'
 
       transaction_vars:
       # KV Write
@@ -141,7 +141,7 @@ uvmf:
       parameters:
       - name: "KV_READ_REQUESTOR"
         type: "string"
-        # Can be HMAC_KEY, HMAC_BLOCK, SHA512_BLOCK, ECC_PRIVKEY, ECC_SEED
+        # Can be HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED
         value: '"HMAC_KEY"'
 
       ports:

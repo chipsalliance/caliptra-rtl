@@ -47,7 +47,7 @@ package kv_parameters_pkg;
   parameter string kv_doe_write_agent_BFM  = "kv_doe_write_agent_BFM"; /* [5] */
   parameter string kv_hmac_key_read_agent_BFM  = "kv_hmac_key_read_agent_BFM"; /* [6] */
   parameter string kv_hmac_block_read_agent_BFM  = "kv_hmac_block_read_agent_BFM"; /* [7] */
-  parameter string kv_sha512_block_read_agent_BFM  = "kv_sha512_block_read_agent_BFM"; /* [8] */
+  parameter string kv_mldsa_key_read_agent_BFM  = "kv_mldsa_key_read_agent_BFM"; /* [8] */
   parameter string kv_ecc_privkey_read_agent_BFM  = "kv_ecc_privkey_read_agent_BFM"; /* [9] */
   parameter string kv_ecc_seed_read_agent_BFM  = "kv_ecc_seed_read_agent_BFM"; /* [10] */
   parameter string kv_ecc_msg_read_agent_BFM  = "kv_ecc_msg_read_agent_BFM"; /* [11] */
