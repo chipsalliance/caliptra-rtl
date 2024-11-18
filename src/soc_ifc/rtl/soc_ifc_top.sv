@@ -689,8 +689,8 @@ end
 
 //Uncore registers only open for debug unlock or manufacturing
 always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
-                                               (~(cptra_security_state_Latched.debug_locked) | 
-                                                 (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
+                                               (~(security_state.debug_locked) | 
+                                                 (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 //Uncore registers open for all cases
 always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
 

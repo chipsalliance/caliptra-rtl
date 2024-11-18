@@ -1289,8 +1289,7 @@ soc_ifc_top1
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
     //caliptra uncore jtag ports
-    .cptra_uncore_dmi_unlocked_reg_en( cptra_uncore_dmi_unlocked_reg_en ),
-    .cptra_uncore_dmi_locked_reg_en( cptra_uncore_dmi_locked_reg_en ),
+    .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
     .cptra_uncore_dmi_reg_rdata( cptra_uncore_dmi_reg_rdata ),
     .cptra_uncore_dmi_reg_addr ( cptra_uncore_dmi_reg_addr ),
