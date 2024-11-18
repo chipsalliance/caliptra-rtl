@@ -119,6 +119,7 @@ module soc_ifc_top
     input logic [31:0] strap_ss_strap_rsvd_2,
     input logic [31:0] strap_ss_strap_rsvd_3,
     input logic        ss_debug_intent,
+    output logic       cptra_ss_debug_intent,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -148,8 +149,7 @@ module soc_ifc_top
     input logic crypto_error,
 
     //caliptra uncore jtag ports
-    input  logic                            cptra_uncore_dmi_unlocked_reg_en,
-    input  logic                            cptra_uncore_dmi_locked_reg_en,
+    input  logic                            cptra_uncore_dmi_reg_en,
     input  logic                            cptra_uncore_dmi_reg_wr_en,
     output logic [31:0]                     cptra_uncore_dmi_reg_rdata,
     input  logic [6:0]                      cptra_uncore_dmi_reg_addr,
@@ -244,6 +244,8 @@ logic BootFSM_BrkPoint_Latched;
 logic BootFSM_BrkPoint_valid;
 logic BootFSM_BrkPoint_Flag;
 
+logic cptra_uncore_dmi_locked_reg_en;
+logic cptra_uncore_dmi_unlocked_reg_en;
 logic dmi_inc_rdptr;
 logic dmi_inc_wrptr;
 logic cptra_uncore_dmi_reg_dout_access_f;
@@ -254,6 +256,7 @@ logic [31:0] cptra_uncore_dmi_unlocked_reg_rdata_in;
 
 logic strap_we;
 logic cptra_uncore_dmi_unlocked_reg_wr_en;
+logic cptra_uncore_dmi_locked_reg_wr_en;
 
 soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
@@ -683,6 +686,17 @@ always_comb begin
     end
 end
 
+
+//Uncore registers only open for debug unlock or manufacturing
+always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
+                                               (~(cptra_security_state_Latched.debug_locked) | 
+                                                 (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
+//Uncore registers open for all cases
+always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
+
+always_comb cptra_uncore_dmi_unlocked_reg_wr_en = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_unlocked_reg_en);
+always_comb cptra_uncore_dmi_locked_reg_wr_en   = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en);
+
 // Subsystem straps capture the initial value from input port on rising edge of cptra_pwrgood
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
      if(~cptra_pwrgood) begin
@@ -692,8 +706,6 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         strap_we <= 1'b0;
     end
 end
-
-always_comb cptra_uncore_dmi_unlocked_reg_wr_en = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_unlocked_reg_en);
 
 always_comb begin : ss_reg_hwwe
     //SS STRAPS WITH TAP WRITE ACCESS
@@ -724,11 +736,11 @@ always_comb begin : ss_reg_hwwe
     soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT));
     //SS REGISTERS WITH TAP WRITE ACCESS
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.we = (cptra_uncore_dmi_locked_reg_wr_en & 
                                                                                (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.we  = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.we  = (cptra_uncore_dmi_locked_reg_wr_en & 
                                                                                (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.we      = (cptra_uncore_dmi_unlocked_reg_wr_en & 
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.we      = (cptra_uncore_dmi_locked_reg_wr_en & 
                                                                                (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.we        = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.we = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
@@ -794,6 +806,8 @@ always_comb begin : ss_reg_next_vals
     soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next = 1'b0;
     `endif
 end
+
+always_comb cptra_ss_debug_intent = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
 
 // Also RW-able by SW until CPTRA_FUSE_WR_DONE
 always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;

@@ -210,6 +210,8 @@ module caliptra_top
     
     logic                       fw_update_rst_window;
 
+    logic cptra_ss_debug_intent; //qualified debug intent
+
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
 
@@ -256,11 +258,10 @@ module caliptra_top
     mbox_sram_resp_t mbox_sram_resp;
 
     logic clear_obf_secrets;
-    logic clear_secrets;
-    
-    logic cptra_security_state_captured;
     logic scan_mode_switch;
-    logic debug_lock_or_scan_mode_switch, clear_obf_secrets_debugScanQ, debug_lock_switch;
+    logic debug_lock_switch;
+    logic device_lifecycle_switch;
+    logic debug_lock_or_scan_mode_switch, clear_obf_secrets_debugScanQ;
     logic cptra_scan_mode_Latched, cptra_scan_mode_Latched_d, cptra_scan_mode_Latched_f;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_dbg;
@@ -421,15 +422,7 @@ always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked)
 //Open Uncore TAP for debug unlocked, or DEVICE_MANUFACTURING, or debug intent set
 always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
-                                       ss_debug_intent;
-
-//Uncore registers only open for debug unlock or manufacturing
-always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
-                                               (~(cptra_security_state_Latched.debug_locked) | 
-                                                 (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING));
-//Uncore registers open for all cases
-always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
-
+                                       cptra_ss_debug_intent;
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -630,14 +623,9 @@ el2_veer_wrapper rvtop (
         if (~cptra_noncore_rst_b) begin
             cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
-
-            cptra_security_state_captured <= 0;
         end
-        else if(!cptra_security_state_captured) begin
+        else begin 
             cptra_security_state_Latched_d <= security_state;
-            cptra_security_state_captured <= 1;
-        end
-        else begin
             cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
         end
     end
@@ -654,19 +642,23 @@ el2_veer_wrapper rvtop (
     end
 
     //Lock debug unless both flops are unlocked
-    assign cptra_security_state_Latched.debug_locked = cptra_security_state_Latched_d.debug_locked | cptra_security_state_Latched_f.debug_locked;
+    always_comb cptra_security_state_Latched.debug_locked = cptra_security_state_Latched_d.debug_locked | cptra_security_state_Latched_f.debug_locked;
     //Pass on the latched value of device lifecycle
-    assign cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_d.device_lifecycle;
+    always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
     //Only assert scan mode once both flops have set
-    assign cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
+    always_comb cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
     
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
-    assign scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
+    always_comb scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
     // Detect transition of debug mode
-    assign debug_lock_switch = cptra_security_state_Latched_d.debug_locked ^ cptra_security_state_Latched_f.debug_locked;
-    assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | cptra_error_fatal;
+    always_comb debug_lock_switch = cptra_security_state_Latched_d.debug_locked ^ cptra_security_state_Latched_f.debug_locked;
+    // Detect transition from valid lifecycle state to invalid
+    always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
+                                         ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
+
+    assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | device_lifecycle_switch | cptra_error_fatal;
 
     assign clear_obf_secrets_debugScanQ = clear_obf_secrets | cptra_in_debug_scan_mode | cptra_error_fatal;
 
@@ -677,7 +669,7 @@ el2_veer_wrapper rvtop (
             cptra_csr_hmac_key_reg <= '0;
         end
         //Only latch the value during device manufacturing
-        else if (cptra_security_state_Latched_f.device_lifecycle == DEVICE_MANUFACTURING) begin
+        else if (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) begin
             cptra_csr_hmac_key_reg <= cptra_csr_hmac_key;
         end
     end
@@ -866,8 +858,9 @@ sha256_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
-//override device secrets with debug values in Debug or Scan Mode
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched;
+//override device secrets with debug values in Debug or Scan Mode or any device lifecycle other than PROD and MANUF
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | 
+                                       ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
 always_comb obf_field_entropy_dbg  = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_FIELD_ENTROPY : obf_field_entropy;
@@ -1271,7 +1264,7 @@ soc_ifc_top1
     .strap_ss_strap_rsvd_2                                  (strap_ss_strap_rsvd_2                                  ),
     .strap_ss_strap_rsvd_3                                  (strap_ss_strap_rsvd_3                                  ),
     .ss_debug_intent                                        (ss_debug_intent                                        ),
-
+    .cptra_ss_debug_intent                                  (cptra_ss_debug_intent                                  ),
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (ss_dbg_manuf_enable    ),
     .ss_dbg_prod_enable     (ss_dbg_prod_enable     ),
