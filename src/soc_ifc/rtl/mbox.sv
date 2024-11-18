@@ -272,6 +272,7 @@ always_comb begin : mbox_fsm_combo
     inc_wrptr = 0;
     uc_mbox_data_avail = 0;
     soc_mbox_data_avail = 0;
+    tap_mbox_data_avail = 0;
     mbox_protocol_error_nxt = '{default: 0};
     mbox_fsm_ns = mbox_fsm_ps;
 
