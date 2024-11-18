@@ -621,8 +621,8 @@ el2_veer_wrapper rvtop (
     // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (~cptra_noncore_rst_b) begin
-            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_UNPROVISIONED, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
-            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_UNPROVISIONED, debug_locked: 1'b1};
+            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
         end
         else begin 
             cptra_security_state_Latched_d <= security_state;
