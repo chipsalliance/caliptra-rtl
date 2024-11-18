@@ -246,7 +246,8 @@ always_comb arc_MBOX_EXECUTE_TAP_MBOX_ERROR  = 1'b0;
 //capture the dlen when we change to execute states, this ensures that only the dlen programmed
 //by the client filling the mailbox is used for masking the data
 //Store the dlen as a ptr to the last entry
-always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
+always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC |
+                                arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP | arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
 always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW[DEPTH_LOG2:0] :
                                (hwif_out.mbox_dlen.length.value[DEPTH_LOG2+2:2]) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
