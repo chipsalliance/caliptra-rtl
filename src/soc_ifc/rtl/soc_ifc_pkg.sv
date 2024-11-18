@@ -76,6 +76,10 @@ package soc_ifc_pkg;
     parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
     parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_L = 7'h56;
     parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_H = 7'h57;
+    parameter DMI_REG_HW_FATAL_ERROR = 7'h58;
+    parameter DMI_REG_FW_FATAL_ERROR = 7'h59;
+    parameter DMI_REG_HW_NON_FATAL_ERROR = 7'h5a;
+    parameter DMI_REG_FW_NON_FATAL_ERROR = 7'h5b;
     //RW registers
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
