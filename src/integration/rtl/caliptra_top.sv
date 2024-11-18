@@ -110,7 +110,7 @@ module caliptra_top
     output logic [63:0] ss_soc_dbg_unlock_level,
 
     // Subsystem mode firmware execution control
-    output logic [63:0] ss_generic_fw_exec_ctrl,
+    output logic [127:0] ss_generic_fw_exec_ctrl,
 
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,

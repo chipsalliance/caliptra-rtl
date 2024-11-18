@@ -127,7 +127,7 @@ module soc_ifc_top
     output logic [63:0] ss_soc_dbg_unlock_level,
 
     // Subsystem mode firmware execution control
-    output logic [63:0] ss_generic_fw_exec_ctrl,
+    output logic [127:0] ss_generic_fw_exec_ctrl,
 
     // NMI Vector 
     output logic [31:0] nmi_vector,
@@ -857,7 +857,9 @@ end
 always_comb ss_soc_dbg_unlock_level = {soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value,
                                        soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value};
 
-always_comb ss_generic_fw_exec_ctrl = {soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[1].go.value,
+always_comb ss_generic_fw_exec_ctrl = {soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[3].go.value,
+                                       soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[2].go.value,
+                                       soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[1].go.value,
                                        soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[0].go.value};
 
 // Fuse write done can be written by SOC if it is already NOT '1.
