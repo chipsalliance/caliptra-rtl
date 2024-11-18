@@ -1281,11 +1281,11 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.value) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} {29'b0,
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {29'b0,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value}) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_NON_FATAL_ERROR)}} soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_NON_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {29'b0,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
@@ -1316,11 +1316,11 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.value) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} {29'b0,
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {29'b0,
                                                                                                                        soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value,
                                                                                                                        soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value,
                                                                                                                        soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value}) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_NON_FATAL_ERROR)}} soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_NON_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT)}} & {31'b0, soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value}) |
