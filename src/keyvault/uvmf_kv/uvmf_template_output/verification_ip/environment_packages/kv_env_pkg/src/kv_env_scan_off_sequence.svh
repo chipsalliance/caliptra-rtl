@@ -53,7 +53,7 @@ class kv_env_scan_off_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -91,7 +91,7 @@ class kv_env_scan_off_sequence #(
         if(!this.randomize()) `uvm_error("KV_ENV_scan_off", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_scan_off", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_scan_off", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_scan_off", "Failed to randomize KV READ seq");

@@ -58,7 +58,7 @@ class kv_wr_rd_debug_sequence #(
     typedef kv_read_key_entry_sequence kv_read_agent_key_entry_sequence_t;
     kv_read_agent_key_entry_sequence_t hmac_key_read_seq;
     kv_read_agent_key_entry_sequence_t hmac_block_read_seq;
-    kv_read_agent_key_entry_sequence_t sha512_block_read_seq;
+    kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
 
@@ -101,7 +101,7 @@ class kv_wr_rd_debug_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         hmac_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("hmac_block_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
-        sha512_block_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("sha512_block_read_seq");
+        mldsa_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mldsa_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
@@ -159,15 +159,15 @@ class kv_wr_rd_debug_sequence #(
                 //Read all entries
                 for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin
                     for (read_offset = 0; read_offset < KV_NUM_DWORDS; read_offset++) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_block_read_agent.sequencer.sha512_block_read_seq", "local_read_entry",read_entry);
-                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_block_read_agent.sequencer.sha512_block_read_seq", "local_read_offset",read_offset);
-                        sha512_block_read_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mldsa_key_read_agent.sequencer.mldsa_key_read_seq", "local_read_entry",read_entry);
+                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_mldsa_key_read_agent.sequencer.mldsa_key_read_seq", "local_read_offset",read_offset);
+                        mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
                     end
                 end
             end
             join
         
-        `uvm_info("DEBUG_WR_RD", "Waiting for sha512 write/read to finish", UVM_MEDIUM)
+        `uvm_info("DEBUG_WR_RD", "Waiting for mldsa write/read to finish", UVM_MEDIUM)
         configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_sha512_write_agent_config.wait_for_num_clocks(1000);
@@ -175,7 +175,7 @@ class kv_wr_rd_debug_sequence #(
         configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_block_read_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_block_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mldsa_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
 

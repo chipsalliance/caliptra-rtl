@@ -64,10 +64,10 @@ class kv_read_transaction_coverage #(
     // UVMF_CHANGE_ME : Add coverage bins, crosses, exclusions, etc. according to coverage needs.
     option.auto_bin_max=1024;
     option.per_instance=1;
-    read_entry: coverpoint coverage_trans.read_entry;
-    read_offset: coverpoint coverage_trans.read_offset {
-      illegal_bins offset_12_15 = {['d12:'d15]};
+    read_entry: coverpoint coverage_trans.read_entry {
+      illegal_bins entry_24_31 = {['d24:'d31]};
     }
+    read_offset: coverpoint coverage_trans.read_offset;
     error: coverpoint coverage_trans.error;
     last: coverpoint coverage_trans.last;
     //read_data: coverpoint coverage_trans.read_data; --> tgl coverage here

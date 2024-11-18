@@ -60,8 +60,8 @@ class kv_environment  extends uvmf_environment_base #(
   typedef kv_read_agent  kv_hmac_block_read_agent_t;
   kv_hmac_block_read_agent_t kv_hmac_block_read_agent;
 
-  typedef kv_read_agent  kv_sha512_block_read_agent_t;
-  kv_sha512_block_read_agent_t kv_sha512_block_read_agent;
+  typedef kv_read_agent  kv_mldsa_key_read_agent_t;
+  kv_mldsa_key_read_agent_t kv_mldsa_key_read_agent;
 
   typedef kv_read_agent  kv_ecc_privkey_read_agent_t;
   kv_ecc_privkey_read_agent_t kv_ecc_privkey_read_agent;
@@ -106,7 +106,7 @@ class kv_environment  extends uvmf_environment_base #(
    typedef kv_reg_predictor #(kv_read_transaction) read_reg_predictor_t;
    read_reg_predictor_t    hmac_key_read_reg_predictor;
    read_reg_predictor_t    hmac_block_read_reg_predictor;
-   read_reg_predictor_t    sha512_block_read_reg_predictor;
+   read_reg_predictor_t    mldsa_key_read_reg_predictor;
    read_reg_predictor_t    ecc_privkey_read_reg_predictor;
    read_reg_predictor_t    ecc_seed_read_reg_predictor;
 
@@ -149,7 +149,7 @@ class kv_environment  extends uvmf_environment_base #(
     typedef kv_read2reg_adapter read_reg_adapter_t;
     read_reg_adapter_t kv_hmac_key_read_reg_adapter;
     read_reg_adapter_t kv_hmac_block_read_reg_adapter;
-    read_reg_adapter_t kv_sha512_block_read_reg_adapter;
+    read_reg_adapter_t kv_mldsa_key_read_reg_adapter;
     read_reg_adapter_t kv_ecc_privkey_read_reg_adapter;
     read_reg_adapter_t kv_ecc_seed_read_reg_adapter;
 
@@ -193,8 +193,8 @@ class kv_environment  extends uvmf_environment_base #(
     kv_hmac_key_read_agent.set_config(configuration.kv_hmac_key_read_agent_config);
     kv_hmac_block_read_agent = kv_hmac_block_read_agent_t::type_id::create("kv_hmac_block_read_agent",this);
     kv_hmac_block_read_agent.set_config(configuration.kv_hmac_block_read_agent_config);
-    kv_sha512_block_read_agent = kv_sha512_block_read_agent_t::type_id::create("kv_sha512_block_read_agent",this);
-    kv_sha512_block_read_agent.set_config(configuration.kv_sha512_block_read_agent_config);
+    kv_mldsa_key_read_agent = kv_mldsa_key_read_agent_t::type_id::create("kv_mldsa_key_read_agent",this);
+    kv_mldsa_key_read_agent.set_config(configuration.kv_mldsa_key_read_agent_config);
     kv_ecc_privkey_read_agent = kv_ecc_privkey_read_agent_t::type_id::create("kv_ecc_privkey_read_agent",this);
     kv_ecc_privkey_read_agent.set_config(configuration.kv_ecc_privkey_read_agent_config);
     kv_ecc_seed_read_agent = kv_ecc_seed_read_agent_t::type_id::create("kv_ecc_seed_read_agent",this);
@@ -213,7 +213,7 @@ class kv_environment  extends uvmf_environment_base #(
 
     hmac_key_read_reg_predictor     = read_reg_predictor_t::type_id::create("hmac_key_read_reg_predictor", this);
     hmac_block_read_reg_predictor   = read_reg_predictor_t::type_id::create("hmac_block_read_reg_predictor", this);
-    sha512_block_read_reg_predictor = read_reg_predictor_t::type_id::create("sha512_block_read_reg_predictor", this);
+    mldsa_key_read_reg_predictor = read_reg_predictor_t::type_id::create("mldsa_key_read_reg_predictor", this);
     ecc_privkey_read_reg_predictor  = read_reg_predictor_t::type_id::create("ecc_privkey_read_reg_predictor", this);
     ecc_seed_read_reg_predictor     = read_reg_predictor_t::type_id::create("ecc_seed_read_reg_predictor", this);
 
@@ -248,7 +248,7 @@ class kv_environment  extends uvmf_environment_base #(
     
     kv_hmac_key_read_agent.monitored_ap.connect(kv_pred.kv_hmac_key_read_agent_ae);
     kv_hmac_block_read_agent.monitored_ap.connect(kv_pred.kv_hmac_block_read_agent_ae);
-    kv_sha512_block_read_agent.monitored_ap.connect(kv_pred.kv_sha512_block_read_agent_ae);
+    kv_mldsa_key_read_agent.monitored_ap.connect(kv_pred.kv_mldsa_key_read_agent_ae);
     kv_ecc_privkey_read_agent.monitored_ap.connect(kv_pred.kv_ecc_privkey_read_agent_ae);
     kv_ecc_seed_read_agent.monitored_ap.connect(kv_pred.kv_ecc_seed_read_agent_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
@@ -262,7 +262,7 @@ class kv_environment  extends uvmf_environment_base #(
 
     kv_pred.kv_hmac_key_read_sb_ap.connect(kv_sb.expected_hmac_key_read_analysis_export);
     kv_pred.kv_hmac_block_read_sb_ap.connect(kv_sb.expected_hmac_block_read_analysis_export);
-    kv_pred.kv_sha512_block_read_sb_ap.connect(kv_sb.expected_sha512_block_read_analysis_export);
+    kv_pred.kv_mldsa_key_read_sb_ap.connect(kv_sb.expected_mldsa_key_read_analysis_export);
     kv_pred.kv_ecc_privkey_read_sb_ap.connect(kv_sb.expected_ecc_privkey_read_analysis_export);
     kv_pred.kv_ecc_seed_read_sb_ap.connect(kv_sb.expected_ecc_seed_read_analysis_export);
     kv_pred.kv_sb_ahb_ap.connect(kv_sb.expected_ahb_analysis_export);
@@ -274,7 +274,7 @@ class kv_environment  extends uvmf_environment_base #(
 
     kv_hmac_key_read_agent.monitored_ap.connect(kv_sb.actual_hmac_key_read_analysis_export);
     kv_hmac_block_read_agent.monitored_ap.connect(kv_sb.actual_hmac_block_read_analysis_export);
-    kv_sha512_block_read_agent.monitored_ap.connect(kv_sb.actual_sha512_block_read_analysis_export);
+    kv_mldsa_key_read_agent.monitored_ap.connect(kv_sb.actual_mldsa_key_read_analysis_export);
     kv_ecc_privkey_read_agent.monitored_ap.connect(kv_sb.actual_ecc_privkey_read_analysis_export);
     kv_ecc_seed_read_agent.monitored_ap.connect(kv_sb.actual_ecc_seed_read_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(kv_sb.actual_ahb_analysis_export);
@@ -297,7 +297,7 @@ class kv_environment  extends uvmf_environment_base #(
 
         kv_hmac_key_read_reg_adapter      = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
         kv_hmac_block_read_reg_adapter    = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
-        kv_sha512_block_read_reg_adapter  = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
+        kv_mldsa_key_read_reg_adapter  = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
         kv_ecc_privkey_read_reg_adapter   = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
         kv_ecc_seed_read_reg_adapter      = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
 
@@ -341,8 +341,8 @@ class kv_environment  extends uvmf_environment_base #(
       if (kv_hmac_block_read_agent.sequencer != null)
         configuration.kv_rm.kv_hmac_block_read_map.set_sequencer(kv_hmac_block_read_agent.sequencer, kv_hmac_block_read_reg_adapter);
 
-      if (kv_sha512_block_read_agent.sequencer != null)
-        configuration.kv_rm.kv_sha512_block_read_map.set_sequencer(kv_sha512_block_read_agent.sequencer, kv_sha512_block_read_reg_adapter);
+      if (kv_mldsa_key_read_agent.sequencer != null)
+        configuration.kv_rm.kv_mldsa_key_read_map.set_sequencer(kv_mldsa_key_read_agent.sequencer, kv_mldsa_key_read_reg_adapter);
 
       if (kv_ecc_privkey_read_agent.sequencer != null)
         configuration.kv_rm.kv_ecc_privkey_read_map.set_sequencer(kv_ecc_privkey_read_agent.sequencer, kv_ecc_privkey_read_reg_adapter);
@@ -386,9 +386,9 @@ class kv_environment  extends uvmf_environment_base #(
       hmac_block_read_reg_predictor.adapter = kv_hmac_block_read_reg_adapter;
       //configuration.kv_rm.kv_hmac_block_read_map.set_auto_predict(1);
 
-      sha512_block_read_reg_predictor.map = configuration.kv_rm.kv_sha512_block_read_map;
-      sha512_block_read_reg_predictor.adapter = kv_sha512_block_read_reg_adapter;
-      //configuration.kv_rm.kv_sha512_block_read_map.set_auto_predict(1);
+      mldsa_key_read_reg_predictor.map = configuration.kv_rm.kv_mldsa_key_read_map;
+      mldsa_key_read_reg_predictor.adapter = kv_mldsa_key_read_reg_adapter;
+      //configuration.kv_rm.kv_mldsa_key_read_map.set_auto_predict(1);
 
       ecc_privkey_read_reg_predictor.map = configuration.kv_rm.kv_ecc_privkey_read_map;
       ecc_privkey_read_reg_predictor.adapter = kv_ecc_privkey_read_reg_adapter;
@@ -422,7 +422,7 @@ class kv_environment  extends uvmf_environment_base #(
       //Read connections:
       kv_hmac_key_read_agent.monitored_ap.connect(hmac_key_read_reg_predictor.bus_in);
       kv_hmac_block_read_agent.monitored_ap.connect(hmac_block_read_reg_predictor.bus_in);
-      kv_sha512_block_read_agent.monitored_ap.connect(sha512_block_read_reg_predictor.bus_in);
+      kv_mldsa_key_read_agent.monitored_ap.connect(mldsa_key_read_reg_predictor.bus_in);
       kv_ecc_privkey_read_agent.monitored_ap.connect(ecc_privkey_read_reg_predictor.bus_in);
       kv_ecc_seed_read_agent.monitored_ap.connect(ecc_seed_read_reg_predictor.bus_in);
     end
