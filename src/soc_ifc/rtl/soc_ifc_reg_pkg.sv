@@ -288,11 +288,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_key_manifest_pk_hash__in_t;
 
     typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__Fuse_w4__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w4__in_t mask;
+        soc_ifc_reg__Fuse_w32__in_t mask;
     } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t;
 
     typedef struct packed{
@@ -324,6 +320,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_lms_revocation__in_t;
 
     typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__Fuse_w4__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__Fuse_w4__in_t mldsa_revocation;
     } soc_ifc_reg__fuse_mldsa_revocation__in_t;
 
@@ -347,11 +347,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t addr_l;
-    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t;
+    } soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__in_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t addr_h;
-    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t;
+    } soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__in_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t addr_l;
@@ -656,7 +656,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_uds_seed__in_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__in_t [12-1:0]fuse_key_manifest_pk_hash;
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t fuse_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__in_t [8-1:0]fuse_key_manifest_pk_hash_mask;
         soc_ifc_reg__fuse_fmc_key_manifest_svn__in_t fuse_fmc_key_manifest_svn;
         soc_ifc_reg__fuse_runtime_svn__in_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__in_t fuse_anti_rollback_disable;
@@ -666,8 +666,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_mldsa_revocation__in_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__in_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__in_t [4-1:0]fuse_manuf_dbg_unlock_token;
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__in_t SS_SOC_IFC_BASE_ADDR_L;
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__in_t SS_SOC_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__in_t SS_CALIPTRA_BASE_ADDR_L;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__in_t SS_CALIPTRA_BASE_ADDR_H;
         soc_ifc_reg__SS_MCI_BASE_ADDR_L__in_t SS_MCI_BASE_ADDR_L;
         soc_ifc_reg__SS_MCI_BASE_ADDR_H__in_t SS_MCI_BASE_ADDR_H;
         soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__in_t SS_RECOVERY_IFC_BASE_ADDR_L;
@@ -1023,11 +1023,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_key_manifest_pk_hash__out_t;
 
     typedef struct packed{
-        logic [3:0] value;
-    } soc_ifc_reg__Fuse_w4__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__Fuse_w4__out_t mask;
+        soc_ifc_reg__Fuse_w32__out_t mask;
     } soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t;
 
     typedef struct packed{
@@ -1059,6 +1055,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_lms_revocation__out_t;
 
     typedef struct packed{
+        logic [3:0] value;
+    } soc_ifc_reg__Fuse_w4__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__Fuse_w4__out_t mldsa_revocation;
     } soc_ifc_reg__fuse_mldsa_revocation__out_t;
 
@@ -1080,11 +1080,11 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t addr_l;
-    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__out_t;
+    } soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__out_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t addr_h;
-    } soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__out_t;
+    } soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__out_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t addr_l;
@@ -1386,7 +1386,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_uds_seed__out_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_key_manifest_pk_hash__out_t [12-1:0]fuse_key_manifest_pk_hash;
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t fuse_key_manifest_pk_hash_mask;
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask__out_t [8-1:0]fuse_key_manifest_pk_hash_mask;
         soc_ifc_reg__fuse_fmc_key_manifest_svn__out_t fuse_fmc_key_manifest_svn;
         soc_ifc_reg__fuse_runtime_svn__out_t [4-1:0]fuse_runtime_svn;
         soc_ifc_reg__fuse_anti_rollback_disable__out_t fuse_anti_rollback_disable;
@@ -1396,8 +1396,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_mldsa_revocation__out_t fuse_mldsa_revocation;
         soc_ifc_reg__fuse_soc_stepping_id__out_t fuse_soc_stepping_id;
         soc_ifc_reg__fuse_manuf_dbg_unlock_token__out_t [4-1:0]fuse_manuf_dbg_unlock_token;
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L__out_t SS_SOC_IFC_BASE_ADDR_L;
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H__out_t SS_SOC_IFC_BASE_ADDR_H;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__out_t SS_CALIPTRA_BASE_ADDR_L;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__out_t SS_CALIPTRA_BASE_ADDR_H;
         soc_ifc_reg__SS_MCI_BASE_ADDR_L__out_t SS_MCI_BASE_ADDR_L;
         soc_ifc_reg__SS_MCI_BASE_ADDR_H__out_t SS_MCI_BASE_ADDR_H;
         soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L__out_t SS_RECOVERY_IFC_BASE_ADDR_L;
@@ -1413,7 +1413,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
-        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [2-1:0]SS_GENERIC_FW_EXEC_CTRL;
+        soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;

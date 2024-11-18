@@ -91,7 +91,7 @@ module caliptra_top
     input  logic             itrng_valid,
 
     // Subsystem mode straps
-    input logic [63:0] strap_ss_soc_ifc_base_addr,
+    input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
     input logic [63:0] strap_ss_recovery_ifc_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
@@ -1252,7 +1252,7 @@ soc_ifc_top1
     .obf_uds_seed(obf_uds_seed),
 
     // Subsystem mode straps
-    .strap_ss_soc_ifc_base_addr                             (strap_ss_soc_ifc_base_addr                             ),
+    .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
     .strap_ss_mci_base_addr                                 (strap_ss_mci_base_addr                                 ),
     .strap_ss_recovery_ifc_base_addr                        (strap_ss_recovery_ifc_base_addr                        ),
     .strap_ss_otp_fc_base_addr                              (strap_ss_otp_fc_base_addr                              ),
