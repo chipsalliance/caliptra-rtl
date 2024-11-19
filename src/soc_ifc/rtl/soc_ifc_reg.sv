@@ -285,22 +285,22 @@ module soc_ifc_reg (
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] = cpuif_req_masked & (cpuif_addr == 12'h290 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2b4);
+        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2c4);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2b8 + i0*12'h4);
+            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2c8 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2c8);
+        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2d8);
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2cc + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2dc + i0*12'h4);
         end
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h32c + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h33c + i0*12'h4);
         end
-        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h340);
-        decoded_reg_strb.fuse_mldsa_revocation = cpuif_req_masked & (cpuif_addr == 12'h344);
-        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h348);
+        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h350);
+        decoded_reg_strb.fuse_mldsa_revocation = cpuif_req_masked & (cpuif_addr == 12'h354);
+        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h358);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] = cpuif_req_masked & (cpuif_addr == 12'h34c + i0*12'h4);
+            decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] = cpuif_req_masked & (cpuif_addr == 12'h35c + i0*12'h4);
         end
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h500);
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h504);

@@ -4809,54 +4809,54 @@ package soc_ifc_reg_uvm;
             this.fuse_fmc_key_manifest_svn.configure(this);
 
             this.fuse_fmc_key_manifest_svn.build();
-            this.default_map.add_reg(this.fuse_fmc_key_manifest_svn, 'h2b4);
+            this.default_map.add_reg(this.fuse_fmc_key_manifest_svn, 'h2c4);
             foreach(this.fuse_runtime_svn[i0]) begin
                 this.fuse_runtime_svn[i0] = new($sformatf("fuse_runtime_svn[%0d]", i0));
                 this.fuse_runtime_svn[i0].configure(this);
                 
                 this.fuse_runtime_svn[i0].build();
-                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2b8 + i0*'h4);
+                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2c8 + i0*'h4);
             end
             this.fuse_anti_rollback_disable = new("fuse_anti_rollback_disable");
             this.fuse_anti_rollback_disable.configure(this);
 
             this.fuse_anti_rollback_disable.build();
-            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2c8);
+            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2d8);
             foreach(this.fuse_idevid_cert_attr[i0]) begin
                 this.fuse_idevid_cert_attr[i0] = new($sformatf("fuse_idevid_cert_attr[%0d]", i0));
                 this.fuse_idevid_cert_attr[i0].configure(this);
                 
                 this.fuse_idevid_cert_attr[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2cc + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2dc + i0*'h4);
             end
             foreach(this.fuse_idevid_manuf_hsm_id[i0]) begin
                 this.fuse_idevid_manuf_hsm_id[i0] = new($sformatf("fuse_idevid_manuf_hsm_id[%0d]", i0));
                 this.fuse_idevid_manuf_hsm_id[i0].configure(this);
                 
                 this.fuse_idevid_manuf_hsm_id[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h32c + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h33c + i0*'h4);
             end
             this.fuse_lms_revocation = new("fuse_lms_revocation");
             this.fuse_lms_revocation.configure(this);
 
             this.fuse_lms_revocation.build();
-            this.default_map.add_reg(this.fuse_lms_revocation, 'h340);
+            this.default_map.add_reg(this.fuse_lms_revocation, 'h350);
             this.fuse_mldsa_revocation = new("fuse_mldsa_revocation");
             this.fuse_mldsa_revocation.configure(this);
 
             this.fuse_mldsa_revocation.build();
-            this.default_map.add_reg(this.fuse_mldsa_revocation, 'h344);
+            this.default_map.add_reg(this.fuse_mldsa_revocation, 'h354);
             this.fuse_soc_stepping_id = new("fuse_soc_stepping_id");
             this.fuse_soc_stepping_id.configure(this);
 
             this.fuse_soc_stepping_id.build();
-            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h348);
+            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h358);
             foreach(this.fuse_manuf_dbg_unlock_token[i0]) begin
                 this.fuse_manuf_dbg_unlock_token[i0] = new($sformatf("fuse_manuf_dbg_unlock_token[%0d]", i0));
                 this.fuse_manuf_dbg_unlock_token[i0].configure(this);
                 
                 this.fuse_manuf_dbg_unlock_token[i0].build();
-                this.default_map.add_reg(this.fuse_manuf_dbg_unlock_token[i0], 'h34c + i0*'h4);
+                this.default_map.add_reg(this.fuse_manuf_dbg_unlock_token[i0], 'h35c + i0*'h4);
             end
             this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
             this.SS_CALIPTRA_BASE_ADDR_L.configure(this);

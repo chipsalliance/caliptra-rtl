@@ -52,7 +52,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
-} fuse_fmc_key_manifest_svn @0x2b4;
+} fuse_fmc_key_manifest_svn @0x2c4;
 reg {
     desc = "Runtime SVN Fuse.
              [br]Caliptra Access: RO
@@ -83,7 +83,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse lms_revocation[32]=0;
-} fuse_lms_revocation @0x340;
+} fuse_lms_revocation @0x350;
 reg {
     desc = "One-hot encoded list of revoked Vendor MLDSA Public Keys (up to 4 keys)
              [br]Caliptra Access: RO
