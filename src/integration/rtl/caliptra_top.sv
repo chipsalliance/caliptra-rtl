@@ -199,6 +199,7 @@ module caliptra_top
     logic [31:0]                cptra_uncore_dmi_reg_rdata;
     logic [6:0]                 cptra_uncore_dmi_reg_addr;
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
+    logic                       unlock_caliptra_security_state;
     security_state_t            cptra_security_state_Latched;
     security_state_t            cptra_security_state_Latched_d;
     security_state_t            cptra_security_state_Latched_f;
@@ -614,14 +615,26 @@ el2_veer_wrapper rvtop (
         .hrdata_i            (initiator_inst.hrdata)
     );
 
-    // Security State value captured on a Caliptra reset deassertion (0->1 signal transition)
+    // Security State value captured on a Caliptra reset deassertion
+    // Security State can be unlocked by setting ss_dbg_manuf_enable or ss_soc_dbg_unlock_level[0]
+    always_ff  @(posedge clk or negedge cptra_noncore_rst_b) begin
+        if (~cptra_noncore_rst_b) begin
+            unlock_caliptra_security_state <= 0;
+        end
+        else begin
+            unlock_caliptra_security_state <= ss_dbg_manuf_enable || ss_soc_dbg_unlock_level[0];
+        end
+    end
+
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (~cptra_noncore_rst_b) begin
             cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
         end
-        else begin 
+        else if (unlock_caliptra_security_state) begin 
             cptra_security_state_Latched_d <= security_state;
+        end 
+        else begin
             cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
         end
     end
