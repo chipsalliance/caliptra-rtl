@@ -175,7 +175,7 @@ reg {
 
 //FIXME: Should LOCK be W1 here?
 reg {
-    name = "Valid ID Register Lock";
+    name = "Valid USER Register Lock";
      desc = "Valid AXI_USER attributes for requests from SoC AXI Interface.
              [br]Each bit corresponds to locking the associated MBOX_VALID_AXI_USER register.
              [br]Associated MBOX_VALID_AXI_USER register is only valid once locked by this bit.
@@ -195,7 +195,7 @@ reg {
  } CPTRA_TRNG_VALID_AXI_USER;
 
 reg {
-    name = "Valid ID for TRNG AXI_USER Lock";
+    name = "Valid USER for TRNG AXI_USER Lock";
     desc = "Valid AXI USER attributes for requests from SoC AXI Interface.
             [br]Each bit corresponds to locking the associated TRNG_VALID_AXI_USER register.
             [br]Associated TRNG_VALID_AXI_USER register is only valid once locked by this bit.

@@ -602,12 +602,12 @@ end
 
 always_comb scan_mode_p = scan_mode & ~scan_mode_f;
 
-//Filtering by ID
+//Filtering by AXI_USER
 always_comb begin
     for (int i=0; i<5; i++) begin
         //once locked, can't be cleared until reset
         soc_ifc_reg_hwif_in.CPTRA_MBOX_AXI_USER_LOCK[i].LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_AXI_USER_LOCK[i].LOCK.value;
-        //lock the writes to valid id field once lock is set
+        //lock the writes to valid user field once lock is set
         soc_ifc_reg_hwif_in.CPTRA_MBOX_VALID_AXI_USER[i].AXI_USER.swwel = soc_ifc_reg_hwif_out.CPTRA_MBOX_AXI_USER_LOCK[i].LOCK.value;
         //If integrator set AXI_USER values at integration time, pick it up from the define
         valid_mbox_users[i] = CPTRA_SET_MBOX_AXI_USER_INTEG[i] ? CPTRA_MBOX_VALID_AXI_USER[i][AXI_USER_WIDTH-1:0] : 
@@ -616,7 +616,7 @@ always_comb begin
     end
 end
 
-//can't write to trng valid id after it is locked
+//can't write to trng valid user after it is locked
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
 always_comb soc_ifc_reg_hwif_in.CPTRA_TRNG_AXI_USER_LOCK.LOCK.swwel = soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
 
@@ -872,7 +872,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe = soc_ifc_reg
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //When TRNG_AXI_USER_LOCK is one only allow valid users to write to TRNG
-//If TRNG_AXI_USER_LOCK is zero allow any id to write to TRNG
+//If TRNG_AXI_USER_LOCK is zero allow any user to write to TRNG
 always_comb valid_trng_user = soc_ifc_reg_req_data.soc_req & (~soc_ifc_reg_hwif_out.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value | 
                              (soc_ifc_reg_req_data.user == soc_ifc_reg_hwif_out.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value[AXI_USER_WIDTH-1:0]));
 
