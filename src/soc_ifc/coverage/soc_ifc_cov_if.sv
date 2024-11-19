@@ -425,31 +425,31 @@ interface soc_ifc_cov_if
   // logic [3:0]    bus_CPTRA_SECURITY_STATE;
   // logic [31:0]   full_addr_CPTRA_SECURITY_STATE = `CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE;
 
-  logic          hit_CPTRA_MBOX_VALID_AXI_ID[0:4];
-  logic [3:0]    bus_CPTRA_MBOX_VALID_AXI_ID[0:4];
-  logic [31:0]   full_addr_CPTRA_MBOX_VALID_AXI_ID[0:4];
-  assign         full_addr_CPTRA_MBOX_VALID_AXI_ID[0] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_ID_0;
-  assign         full_addr_CPTRA_MBOX_VALID_AXI_ID[1] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_ID_1;
-  assign         full_addr_CPTRA_MBOX_VALID_AXI_ID[2] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_ID_2;
-  assign         full_addr_CPTRA_MBOX_VALID_AXI_ID[3] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_ID_3;
-  assign         full_addr_CPTRA_MBOX_VALID_AXI_ID[4] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_ID_4;
+  logic          hit_CPTRA_MBOX_VALID_AXI_USER[0:4];
+  logic [3:0]    bus_CPTRA_MBOX_VALID_AXI_USER[0:4];
+  logic [31:0]   full_addr_CPTRA_MBOX_VALID_AXI_USER[0:4];
+  assign         full_addr_CPTRA_MBOX_VALID_AXI_USER[0] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_USER_0;
+  assign         full_addr_CPTRA_MBOX_VALID_AXI_USER[1] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_USER_1;
+  assign         full_addr_CPTRA_MBOX_VALID_AXI_USER[2] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_USER_2;
+  assign         full_addr_CPTRA_MBOX_VALID_AXI_USER[3] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_USER_3;
+  assign         full_addr_CPTRA_MBOX_VALID_AXI_USER[4] = `CLP_SOC_IFC_REG_CPTRA_MBOX_VALID_AXI_USER_4;
 
-  logic          hit_CPTRA_MBOX_AXI_ID_LOCK[0:4];
-  logic [3:0]    bus_CPTRA_MBOX_AXI_ID_LOCK[0:4];
-  logic [31:0]   full_addr_CPTRA_MBOX_AXI_ID_LOCK[0:4];
-  assign         full_addr_CPTRA_MBOX_AXI_ID_LOCK[0] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_ID_LOCK_0;
-  assign         full_addr_CPTRA_MBOX_AXI_ID_LOCK[1] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_ID_LOCK_1;
-  assign         full_addr_CPTRA_MBOX_AXI_ID_LOCK[2] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_ID_LOCK_2;
-  assign         full_addr_CPTRA_MBOX_AXI_ID_LOCK[3] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_ID_LOCK_3;
-  assign         full_addr_CPTRA_MBOX_AXI_ID_LOCK[4] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_ID_LOCK_4;
+  logic          hit_CPTRA_MBOX_AXI_USER_LOCK[0:4];
+  logic [3:0]    bus_CPTRA_MBOX_AXI_USER_LOCK[0:4];
+  logic [31:0]   full_addr_CPTRA_MBOX_AXI_USER_LOCK[0:4];
+  assign         full_addr_CPTRA_MBOX_AXI_USER_LOCK[0] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_0;
+  assign         full_addr_CPTRA_MBOX_AXI_USER_LOCK[1] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_1;
+  assign         full_addr_CPTRA_MBOX_AXI_USER_LOCK[2] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_2;
+  assign         full_addr_CPTRA_MBOX_AXI_USER_LOCK[3] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_3;
+  assign         full_addr_CPTRA_MBOX_AXI_USER_LOCK[4] = `CLP_SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_4;
 
-  logic          hit_CPTRA_TRNG_VALID_AXI_ID;
-  logic [3:0]    bus_CPTRA_TRNG_VALID_AXI_ID;
-  logic [31:0]   full_addr_CPTRA_TRNG_VALID_AXI_ID = `CLP_SOC_IFC_REG_CPTRA_TRNG_VALID_AXI_ID;
+  logic          hit_CPTRA_TRNG_VALID_AXI_USER;
+  logic [3:0]    bus_CPTRA_TRNG_VALID_AXI_USER;
+  logic [31:0]   full_addr_CPTRA_TRNG_VALID_AXI_USER = `CLP_SOC_IFC_REG_CPTRA_TRNG_VALID_AXI_USER;
 
-  logic          hit_CPTRA_TRNG_AXI_ID_LOCK;
-  logic [3:0]    bus_CPTRA_TRNG_AXI_ID_LOCK;
-  logic [31:0]   full_addr_CPTRA_TRNG_AXI_ID_LOCK = `CLP_SOC_IFC_REG_CPTRA_TRNG_AXI_ID_LOCK;
+  logic          hit_CPTRA_TRNG_AXI_USER_LOCK;
+  logic [3:0]    bus_CPTRA_TRNG_AXI_USER_LOCK;
+  logic [31:0]   full_addr_CPTRA_TRNG_AXI_USER_LOCK = `CLP_SOC_IFC_REG_CPTRA_TRNG_AXI_USER_LOCK;
 
   logic          hit_CPTRA_TRNG_DATA[0:11];
   logic [3:0]    bus_CPTRA_TRNG_DATA[0:11];
@@ -553,13 +553,13 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_CPTRA_WDT_STATUS;
   logic [31:0]   full_addr_CPTRA_WDT_STATUS = `CLP_SOC_IFC_REG_CPTRA_WDT_STATUS;
 
-  logic          hit_CPTRA_FUSE_VALID_AXI_ID;
-  logic [3:0]    bus_CPTRA_FUSE_VALID_AXI_ID;
-  logic [31:0]   full_addr_CPTRA_FUSE_VALID_AXI_ID = `CLP_SOC_IFC_REG_CPTRA_FUSE_VALID_AXI_ID;
+  logic          hit_CPTRA_FUSE_VALID_AXI_USER;
+  logic [3:0]    bus_CPTRA_FUSE_VALID_AXI_USER;
+  logic [31:0]   full_addr_CPTRA_FUSE_VALID_AXI_USER = `CLP_SOC_IFC_REG_CPTRA_FUSE_VALID_AXI_USER;
 
-  logic          hit_CPTRA_FUSE_AXI_ID_LOCK;
-  logic [3:0]    bus_CPTRA_FUSE_AXI_ID_LOCK;
-  logic [31:0]   full_addr_CPTRA_FUSE_AXI_ID_LOCK = `CLP_SOC_IFC_REG_CPTRA_FUSE_AXI_ID_LOCK;
+  logic          hit_CPTRA_FUSE_AXI_USER_LOCK;
+  logic [3:0]    bus_CPTRA_FUSE_AXI_USER_LOCK;
+  logic [31:0]   full_addr_CPTRA_FUSE_AXI_USER_LOCK = `CLP_SOC_IFC_REG_CPTRA_FUSE_AXI_USER_LOCK;
 
   logic          hit_CPTRA_WDT_CFG[0:1];
   logic [3:0]    bus_CPTRA_WDT_CFG[0:1];
@@ -988,41 +988,41 @@ interface soc_ifc_cov_if
   // assign hit_CPTRA_SECURITY_STATE = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_SECURITY_STATE[AXI_ADDR_WIDTH-1:0]);
   // assign bus_CPTRA_SECURITY_STATE = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_SECURITY_STATE}};
 
-  assign hit_CPTRA_MBOX_VALID_AXI_ID[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_ID[0][18-1:0]);
-  assign bus_CPTRA_MBOX_VALID_AXI_ID[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_ID[0]}};
+  assign hit_CPTRA_MBOX_VALID_AXI_USER[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_USER[0][18-1:0]);
+  assign bus_CPTRA_MBOX_VALID_AXI_USER[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_USER[0]}};
 
-  assign hit_CPTRA_MBOX_VALID_AXI_ID[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_ID[1][18-1:0]);
-  assign bus_CPTRA_MBOX_VALID_AXI_ID[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_ID[1]}};
+  assign hit_CPTRA_MBOX_VALID_AXI_USER[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_USER[1][18-1:0]);
+  assign bus_CPTRA_MBOX_VALID_AXI_USER[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_USER[1]}};
 
-  assign hit_CPTRA_MBOX_VALID_AXI_ID[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_ID[2][18-1:0]);
-  assign bus_CPTRA_MBOX_VALID_AXI_ID[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_ID[2]}};
+  assign hit_CPTRA_MBOX_VALID_AXI_USER[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_USER[2][18-1:0]);
+  assign bus_CPTRA_MBOX_VALID_AXI_USER[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_USER[2]}};
 
-  assign hit_CPTRA_MBOX_VALID_AXI_ID[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_ID[3][18-1:0]);
-  assign bus_CPTRA_MBOX_VALID_AXI_ID[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_ID[3]}};
+  assign hit_CPTRA_MBOX_VALID_AXI_USER[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_USER[3][18-1:0]);
+  assign bus_CPTRA_MBOX_VALID_AXI_USER[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_USER[3]}};
 
-  assign hit_CPTRA_MBOX_VALID_AXI_ID[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_ID[4][18-1:0]);
-  assign bus_CPTRA_MBOX_VALID_AXI_ID[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_ID[4]}};
+  assign hit_CPTRA_MBOX_VALID_AXI_USER[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_VALID_AXI_USER[4][18-1:0]);
+  assign bus_CPTRA_MBOX_VALID_AXI_USER[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_VALID_AXI_USER[4]}};
 
-  assign hit_CPTRA_MBOX_AXI_ID_LOCK[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_ID_LOCK[0][18-1:0]);
-  assign bus_CPTRA_MBOX_AXI_ID_LOCK[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_ID_LOCK[0]}};
+  assign hit_CPTRA_MBOX_AXI_USER_LOCK[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_USER_LOCK[0][18-1:0]);
+  assign bus_CPTRA_MBOX_AXI_USER_LOCK[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_USER_LOCK[0]}};
 
-  assign hit_CPTRA_MBOX_AXI_ID_LOCK[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_ID_LOCK[1][18-1:0]);
-  assign bus_CPTRA_MBOX_AXI_ID_LOCK[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_ID_LOCK[1]}};
+  assign hit_CPTRA_MBOX_AXI_USER_LOCK[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_USER_LOCK[1][18-1:0]);
+  assign bus_CPTRA_MBOX_AXI_USER_LOCK[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_USER_LOCK[1]}};
 
-  assign hit_CPTRA_MBOX_AXI_ID_LOCK[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_ID_LOCK[2][18-1:0]);
-  assign bus_CPTRA_MBOX_AXI_ID_LOCK[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_ID_LOCK[2]}};
+  assign hit_CPTRA_MBOX_AXI_USER_LOCK[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_USER_LOCK[2][18-1:0]);
+  assign bus_CPTRA_MBOX_AXI_USER_LOCK[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_USER_LOCK[2]}};
 
-  assign hit_CPTRA_MBOX_AXI_ID_LOCK[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_ID_LOCK[3][18-1:0]);
-  assign bus_CPTRA_MBOX_AXI_ID_LOCK[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_ID_LOCK[3]}};
+  assign hit_CPTRA_MBOX_AXI_USER_LOCK[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_USER_LOCK[3][18-1:0]);
+  assign bus_CPTRA_MBOX_AXI_USER_LOCK[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_USER_LOCK[3]}};
 
-  assign hit_CPTRA_MBOX_AXI_ID_LOCK[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_ID_LOCK[4][18-1:0]);
-  assign bus_CPTRA_MBOX_AXI_ID_LOCK[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_ID_LOCK[4]}};
+  assign hit_CPTRA_MBOX_AXI_USER_LOCK[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_MBOX_AXI_USER_LOCK[4][18-1:0]);
+  assign bus_CPTRA_MBOX_AXI_USER_LOCK[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_MBOX_AXI_USER_LOCK[4]}};
 
-  assign hit_CPTRA_TRNG_VALID_AXI_ID = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_VALID_AXI_ID[AXI_ADDR_WIDTH-1:0]);
-  assign bus_CPTRA_TRNG_VALID_AXI_ID = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_VALID_AXI_ID}};
+  assign hit_CPTRA_TRNG_VALID_AXI_USER = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_VALID_AXI_USER[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_TRNG_VALID_AXI_USER = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_VALID_AXI_USER}};
 
-  assign hit_CPTRA_TRNG_AXI_ID_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_AXI_ID_LOCK[AXI_ADDR_WIDTH-1:0]);
-  assign bus_CPTRA_TRNG_AXI_ID_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_AXI_ID_LOCK}};
+  assign hit_CPTRA_TRNG_AXI_USER_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_AXI_USER_LOCK[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_TRNG_AXI_USER_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_AXI_USER_LOCK}};
 
   assign hit_CPTRA_TRNG_DATA[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_TRNG_DATA[0][18-1:0]);
   assign bus_CPTRA_TRNG_DATA[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_TRNG_DATA[0]}};
@@ -1132,11 +1132,11 @@ interface soc_ifc_cov_if
   assign hit_CPTRA_WDT_STATUS = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_WDT_STATUS[AXI_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_WDT_STATUS = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_WDT_STATUS}};
 
-  assign hit_CPTRA_FUSE_VALID_AXI_ID = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FUSE_VALID_AXI_ID[AXI_ADDR_WIDTH-1:0]);
-  assign bus_CPTRA_FUSE_VALID_AXI_ID = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FUSE_VALID_AXI_ID}};
+  assign hit_CPTRA_FUSE_VALID_AXI_USER = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FUSE_VALID_AXI_USER[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_FUSE_VALID_AXI_USER = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FUSE_VALID_AXI_USER}};
 
-  assign hit_CPTRA_FUSE_AXI_ID_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FUSE_AXI_ID_LOCK[AXI_ADDR_WIDTH-1:0]);
-  assign bus_CPTRA_FUSE_AXI_ID_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FUSE_AXI_ID_LOCK}};
+  assign hit_CPTRA_FUSE_AXI_USER_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FUSE_AXI_USER_LOCK[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_FUSE_AXI_USER_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FUSE_AXI_USER_LOCK}};
 
   assign hit_CPTRA_WDT_CFG[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_WDT_CFG[0][18-1:0]);
   assign bus_CPTRA_WDT_CFG[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_WDT_CFG[0]}};
@@ -1734,77 +1734,77 @@ interface soc_ifc_cov_if
   //   }
   // endgroup
 
-  // ----------------------- COVERGROUP CPTRA_MBOX_VALID_AXI_ID [0:4] -----------------------
-  covergroup soc_ifc_CPTRA_MBOX_VALID_AXI_ID_cg (ref logic [3:0] bus_event[0:4]) @(posedge clk);
-    CPTRA_MBOX_VALID_AXI_ID0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_ID[0];
-    bus_CPTRA_MBOX_VALID_AXI_ID0_cp : coverpoint bus_event[0] {
+  // ----------------------- COVERGROUP CPTRA_MBOX_VALID_AXI_USER [0:4] -----------------------
+  covergroup soc_ifc_CPTRA_MBOX_VALID_AXI_USER_cg (ref logic [3:0] bus_event[0:4]) @(posedge clk);
+    CPTRA_MBOX_VALID_AXI_USER0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_USER[0];
+    bus_CPTRA_MBOX_VALID_AXI_USER0_cp : coverpoint bus_event[0] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    CPTRA_MBOX_VALID_AXI_ID1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_ID[1];
-    bus_CPTRA_MBOX_VALID_AXI_ID1_cp : coverpoint bus_event[1] {
+    CPTRA_MBOX_VALID_AXI_USER1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_USER[1];
+    bus_CPTRA_MBOX_VALID_AXI_USER1_cp : coverpoint bus_event[1] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    CPTRA_MBOX_VALID_AXI_ID2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_ID[2];
-    bus_CPTRA_MBOX_VALID_AXI_ID2_cp : coverpoint bus_event[2] {
+    CPTRA_MBOX_VALID_AXI_USER2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_USER[2];
+    bus_CPTRA_MBOX_VALID_AXI_USER2_cp : coverpoint bus_event[2] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    CPTRA_MBOX_VALID_AXI_ID3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_ID[3];
-    bus_CPTRA_MBOX_VALID_AXI_ID3_cp : coverpoint bus_event[3] {
+    CPTRA_MBOX_VALID_AXI_USER3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_USER[3];
+    bus_CPTRA_MBOX_VALID_AXI_USER3_cp : coverpoint bus_event[3] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    CPTRA_MBOX_VALID_AXI_ID4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_ID[4];
-    bus_CPTRA_MBOX_VALID_AXI_ID4_cp : coverpoint bus_event[4] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-  endgroup
-
-  // ----------------------- COVERGROUP CPTRA_MBOX_AXI_ID_LOCK [0:4] -----------------------
-  covergroup soc_ifc_CPTRA_MBOX_AXI_ID_LOCK_cg (ref logic [3:0] bus_event[0:4]) @(posedge clk);
-    CPTRA_MBOX_AXI_ID_LOCK0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_ID_LOCK[0];
-    bus_CPTRA_MBOX_AXI_ID_LOCK0_cp : coverpoint bus_event[0] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    CPTRA_MBOX_AXI_ID_LOCK1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_ID_LOCK[1];
-    bus_CPTRA_MBOX_AXI_ID_LOCK1_cp : coverpoint bus_event[1] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    CPTRA_MBOX_AXI_ID_LOCK2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_ID_LOCK[2];
-    bus_CPTRA_MBOX_AXI_ID_LOCK2_cp : coverpoint bus_event[2] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    CPTRA_MBOX_AXI_ID_LOCK3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_ID_LOCK[3];
-    bus_CPTRA_MBOX_AXI_ID_LOCK3_cp : coverpoint bus_event[3] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    CPTRA_MBOX_AXI_ID_LOCK4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_ID_LOCK[4];
-    bus_CPTRA_MBOX_AXI_ID_LOCK4_cp : coverpoint bus_event[4] {
+    CPTRA_MBOX_VALID_AXI_USER4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_VALID_AXI_USER[4];
+    bus_CPTRA_MBOX_VALID_AXI_USER4_cp : coverpoint bus_event[4] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
   endgroup
 
-  // ----------------------- COVERGROUP CPTRA_TRNG_VALID_AXI_ID -----------------------
-  covergroup soc_ifc_CPTRA_TRNG_VALID_AXI_ID_cg (ref logic [3:0] bus_event) @(posedge clk);
-    CPTRA_TRNG_VALID_AXI_ID_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_VALID_AXI_ID;
-    bus_CPTRA_TRNG_VALID_AXI_ID_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP CPTRA_MBOX_AXI_USER_LOCK [0:4] -----------------------
+  covergroup soc_ifc_CPTRA_MBOX_AXI_USER_LOCK_cg (ref logic [3:0] bus_event[0:4]) @(posedge clk);
+    CPTRA_MBOX_AXI_USER_LOCK0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_USER_LOCK[0];
+    bus_CPTRA_MBOX_AXI_USER_LOCK0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_MBOX_AXI_USER_LOCK1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_USER_LOCK[1];
+    bus_CPTRA_MBOX_AXI_USER_LOCK1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_MBOX_AXI_USER_LOCK2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_USER_LOCK[2];
+    bus_CPTRA_MBOX_AXI_USER_LOCK2_cp : coverpoint bus_event[2] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_MBOX_AXI_USER_LOCK3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_USER_LOCK[3];
+    bus_CPTRA_MBOX_AXI_USER_LOCK3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_MBOX_AXI_USER_LOCK4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_MBOX_AXI_USER_LOCK[4];
+    bus_CPTRA_MBOX_AXI_USER_LOCK4_cp : coverpoint bus_event[4] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
   endgroup
 
-  // ----------------------- COVERGROUP CPTRA_TRNG_AXI_ID_LOCK -----------------------
-  covergroup soc_ifc_CPTRA_TRNG_AXI_ID_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
-    CPTRA_TRNG_AXI_ID_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_AXI_ID_LOCK;
-    bus_CPTRA_TRNG_AXI_ID_LOCK_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP CPTRA_TRNG_VALID_AXI_USER -----------------------
+  covergroup soc_ifc_CPTRA_TRNG_VALID_AXI_USER_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_TRNG_VALID_AXI_USER_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_VALID_AXI_USER;
+    bus_CPTRA_TRNG_VALID_AXI_USER_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_TRNG_AXI_USER_LOCK -----------------------
+  covergroup soc_ifc_CPTRA_TRNG_AXI_USER_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_TRNG_AXI_USER_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_TRNG_AXI_USER_LOCK;
+    bus_CPTRA_TRNG_AXI_USER_LOCK_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -2070,19 +2070,19 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP CPTRA_FUSE_VALID_AXI_ID -----------------------
-  covergroup soc_ifc_CPTRA_FUSE_VALID_AXI_ID_cg (ref logic [3:0] bus_event) @(posedge clk);
-    CPTRA_FUSE_VALID_AXI_ID_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FUSE_VALID_AXI_ID;
-    bus_CPTRA_FUSE_VALID_AXI_ID_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP CPTRA_FUSE_VALID_AXI_USER -----------------------
+  covergroup soc_ifc_CPTRA_FUSE_VALID_AXI_USER_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_FUSE_VALID_AXI_USER_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FUSE_VALID_AXI_USER;
+    bus_CPTRA_FUSE_VALID_AXI_USER_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
   endgroup
 
-  // ----------------------- COVERGROUP CPTRA_FUSE_AXI_ID_LOCK -----------------------
-  covergroup soc_ifc_CPTRA_FUSE_AXI_ID_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
-    CPTRA_FUSE_AXI_ID_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FUSE_AXI_ID_LOCK;
-    bus_CPTRA_FUSE_AXI_ID_LOCK_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP CPTRA_FUSE_AXI_USER_LOCK -----------------------
+  covergroup soc_ifc_CPTRA_FUSE_AXI_USER_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_FUSE_AXI_USER_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FUSE_AXI_USER_LOCK;
+    bus_CPTRA_FUSE_AXI_USER_LOCK_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -3113,10 +3113,10 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_FLOW_STATUS_cg CPTRA_FLOW_STATUS_cg = new(bus_CPTRA_FLOW_STATUS);
   soc_ifc_CPTRA_RESET_REASON_cg CPTRA_RESET_REASON_cg = new(bus_CPTRA_RESET_REASON);
   // soc_ifc_CPTRA_SECURITY_STATE_cg CPTRA_SECURITY_STATE_cg = new(bus_CPTRA_SECURITY_STATE);
-  soc_ifc_CPTRA_MBOX_VALID_AXI_ID_cg CPTRA_MBOX_VALID_AXI_ID_cg = new(bus_CPTRA_MBOX_VALID_AXI_ID);
-  soc_ifc_CPTRA_MBOX_AXI_ID_LOCK_cg CPTRA_MBOX_AXI_ID_LOCK_cg = new(bus_CPTRA_MBOX_AXI_ID_LOCK);
-  soc_ifc_CPTRA_TRNG_VALID_AXI_ID_cg CPTRA_TRNG_VALID_AXI_ID_cg = new(bus_CPTRA_TRNG_VALID_AXI_ID);
-  soc_ifc_CPTRA_TRNG_AXI_ID_LOCK_cg CPTRA_TRNG_AXI_ID_LOCK_cg = new(bus_CPTRA_TRNG_AXI_ID_LOCK);
+  soc_ifc_CPTRA_MBOX_VALID_AXI_USER_cg CPTRA_MBOX_VALID_AXI_USER_cg = new(bus_CPTRA_MBOX_VALID_AXI_USER);
+  soc_ifc_CPTRA_MBOX_AXI_USER_LOCK_cg CPTRA_MBOX_AXI_USER_LOCK_cg = new(bus_CPTRA_MBOX_AXI_USER_LOCK);
+  soc_ifc_CPTRA_TRNG_VALID_AXI_USER_cg CPTRA_TRNG_VALID_AXI_USER_cg = new(bus_CPTRA_TRNG_VALID_AXI_USER);
+  soc_ifc_CPTRA_TRNG_AXI_USER_LOCK_cg CPTRA_TRNG_AXI_USER_LOCK_cg = new(bus_CPTRA_TRNG_AXI_USER_LOCK);
   soc_ifc_CPTRA_TRNG_DATA_cg CPTRA_TRNG_DATA_cg = new(bus_CPTRA_TRNG_DATA);
   soc_ifc_CPTRA_TRNG_CTRL_cg CPTRA_TRNG_CTRL_cg = new(bus_CPTRA_TRNG_CTRL);
   soc_ifc_CPTRA_TRNG_STATUS_cg CPTRA_TRNG_STATUS_cg = new(bus_CPTRA_TRNG_STATUS);
@@ -3137,8 +3137,8 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_WDT_TIMER2_CTRL_cg CPTRA_WDT_TIMER2_CTRL_cg = new(bus_CPTRA_WDT_TIMER2_CTRL);
   soc_ifc_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_cg CPTRA_WDT_TIMER2_TIMEOUT_PERIOD_cg = new(bus_CPTRA_WDT_TIMER2_TIMEOUT_PERIOD);
   soc_ifc_CPTRA_WDT_STATUS_cg CPTRA_WDT_STATUS_cg = new(bus_CPTRA_WDT_STATUS);
-  soc_ifc_CPTRA_FUSE_VALID_AXI_ID_cg CPTRA_FUSE_VALID_AXI_ID_cg = new(bus_CPTRA_FUSE_VALID_AXI_ID);
-  soc_ifc_CPTRA_FUSE_AXI_ID_LOCK_cg CPTRA_FUSE_AXI_ID_LOCK_cg = new(bus_CPTRA_FUSE_AXI_ID_LOCK);
+  soc_ifc_CPTRA_FUSE_VALID_AXI_USER_cg CPTRA_FUSE_VALID_AXI_USER_cg = new(bus_CPTRA_FUSE_VALID_AXI_USER);
+  soc_ifc_CPTRA_FUSE_AXI_USER_LOCK_cg CPTRA_FUSE_AXI_USER_LOCK_cg = new(bus_CPTRA_FUSE_AXI_USER_LOCK);
   soc_ifc_CPTRA_WDT_CFG_cg CPTRA_WDT_CFG_cg = new(bus_CPTRA_WDT_CFG);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg CPTRA_iTRNG_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_0);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg CPTRA_iTRNG_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_1);

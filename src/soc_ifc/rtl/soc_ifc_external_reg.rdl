@@ -165,46 +165,46 @@ reg {
 } CPTRA_SECURITY_STATE;
 
 reg {
-    name = "Valid ID Registers";
-     desc = "Valid AXI ID attributes for requests from SoC AXI Interface. Only valid once LOCK is set.
+    name = "Valid USER Registers";
+     desc = "Valid AXI USER attributes for requests from SoC AXI Interface. Only valid once LOCK is set.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
-             [br]Read-Only once locked by AXI_ID_LOCK.";
-     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} AXI_ID[32]=0xFFFF_FFFF;
- } CPTRA_MBOX_VALID_AXI_ID[5];
+             Read-Only once locked by AXI_USER_LOCK.";
+     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} AXI_USER[32]=0xFFFF_FFFF;
+ } CPTRA_MBOX_VALID_AXI_USER[5];
 
 //FIXME: Should LOCK be W1 here?
 reg {
     name = "Valid ID Register Lock";
-     desc = "Valid AXI_ID attributes for requests from SoC AXI Interface.
-             [br]Each bit corresponds to locking the associated MBOX_VALID_AXI_ID register.
-             [br]Associated MBOX_VALID_AXI_ID register is only valid once locked by this bit.
+     desc = "Valid AXI_USER attributes for requests from SoC AXI Interface.
+             [br]Each bit corresponds to locking the associated MBOX_VALID_AXI_USER register.
+             [br]Associated MBOX_VALID_AXI_USER register is only valid once locked by this bit.
              [br]Caliptra Access: RW
              [br]SOC Access:      RW
              [br]Read-Only once locked.";
      field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} LOCK=0;
- } CPTRA_MBOX_AXI_ID_LOCK[5];
+ } CPTRA_MBOX_AXI_USER_LOCK[5];
 
 reg {
-    name = "Valid ID for TRNG";
-    desc = "Valid AXI ID attributes for TRNG on SoC AXI Interface. Only valid once LOCK is set.
+    name = "Valid USER for TRNG";
+    desc = "Valid AXI USER attributes for TRNG on SoC AXI Interface. Only valid once LOCK is set.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            [br]Read-Only once locked by TRNG_AXI_ID_LOCK.";
-    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} AXI_ID[32]=0xFFFF_FFFF;
- } CPTRA_TRNG_VALID_AXI_ID;
+            [br]Read-Only once locked by TRNG_AXI_USER_LOCK.";
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_rst_b;} AXI_USER[32]=0xFFFF_FFFF;
+ } CPTRA_TRNG_VALID_AXI_USER;
 
 reg {
-    name = "Valid ID for TRNG AXI_ID Lock";
-    desc = "Valid AXI ID attributes for requests from SoC AXI Interface.
-            [br]Each bit corresponds to locking the associated TRNG_VALID_AXI_ID register.
-            [br]Associated TRNG_VALID_AXI_ID register is only valid once locked by this bit.
+    name = "Valid ID for TRNG AXI_USER Lock";
+    desc = "Valid AXI USER attributes for requests from SoC AXI Interface.
+            [br]Each bit corresponds to locking the associated TRNG_VALID_AXI_USER register.
+            [br]Associated TRNG_VALID_AXI_USER register is only valid once locked by this bit.
             [br]Caliptra FW RW access for survivability but cannot unlock once locked
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]Read-Only once locked.";
     field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} LOCK=0;
- } CPTRA_TRNG_AXI_ID_LOCK;
+ } CPTRA_TRNG_AXI_USER_LOCK;
 
 reg {
     name = "TRNG Data";
@@ -396,25 +396,25 @@ reg {
 } CPTRA_WDT_STATUS;
 
 reg {
-    name = "Valid ID for FUSE";
-    desc = "Valid AXI ID attributes for FUSE on SoC AXI Interface. Only valid once LOCK is set.
+    name = "Valid USER for FUSE";
+    desc = "Valid AXI USER attributes for FUSE on SoC AXI Interface. Only valid once LOCK is set.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
-            [br]Read-Only once locked by FUSE_AXI_ID_LOCK.";
-    field {sw=rw; hw=r; swwel; resetsignal = cptra_pwrgood;} AXI_ID[32]=0xFFFF_FFFF;
- } CPTRA_FUSE_VALID_AXI_ID;
+            [br]Read-Only once locked by FUSE_AXI_USER_LOCK.";
+    field {sw=rw; hw=r; swwel; resetsignal = cptra_pwrgood;} AXI_USER[32]=0xFFFF_FFFF;
+ } CPTRA_FUSE_VALID_AXI_USER;
 
 reg {
-    name = "Valid ID for FUSE AXI_ID Lock";
-    desc = "Valid AXI_ID attributes for requests from SoC AXI Interface.
-            [br]Each bit corresponds to locking the associated FUSE_VALID_AXI_ID register.
-            [br]Associated FUSE_VALID_AXI_ID register is only valid once locked by this bit.
+    name = "Valid USER for FUSE AXI_USER Lock";
+    desc = "Valid AXI_USER attributes for requests from SoC AXI Interface.
+            [br]Each bit corresponds to locking the associated FUSE_VALID_AXI_USER register.
+            [br]Associated FUSE_VALID_AXI_USER register is only valid once locked by this bit.
             [br]Caliptra FW RW access for survivability but cannot unlock once locked
             [br]Caliptra Access: RW
             [br]SOC Access:      RW
             [br]Read-Only once locked.";
     field {sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} LOCK=0;
- } CPTRA_FUSE_AXI_ID_LOCK;
+ } CPTRA_FUSE_AXI_USER_LOCK;
 
 reg {
     name = "Caliptra WDT1 Config";
