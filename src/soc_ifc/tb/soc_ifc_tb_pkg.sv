@@ -112,6 +112,7 @@ package soc_ifc_tb_pkg;
     "FUSE_UDS_SEED"                         : 12,
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_KEY_MANIFEST_PK_HASH"             : 12,
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
@@ -170,7 +171,7 @@ package soc_ifc_tb_pkg;
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                      // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x230 [8]  Field Entropy 
     "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                          // 0x250 [12] - 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK,                       // 0x280      - 
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0,                     // 0x280      - 
     "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,                            // 0x2b4      - 
     "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,                                   // 0x2b8 [4]  - 
     "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                           // 0x2c8      - 

@@ -107,7 +107,7 @@ module soc_ifc_top
     output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
     // Subsystem mode straps
-    input logic [63:0] strap_ss_soc_ifc_base_addr,
+    input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
     input logic [63:0] strap_ss_recovery_ifc_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
@@ -127,7 +127,7 @@ module soc_ifc_top
     output logic [63:0] ss_soc_dbg_unlock_level,
 
     // Subsystem mode firmware execution control
-    output logic [63:0] ss_generic_fw_exec_ctrl,
+    output logic [127:0] ss_generic_fw_exec_ctrl,
 
     // NMI Vector 
     output logic [31:0] nmi_vector,
@@ -648,6 +648,9 @@ always_comb begin
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
+    for (int i=0; i<8; i++) begin
+        soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask[i].mask.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
 
     for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -670,7 +673,6 @@ always_comb begin
     end
 end
 
-always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_fmc_key_manifest_svn.svn.swwel          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_lms_revocation.lms_revocation.swwel     = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -709,10 +711,10 @@ end
 
 always_comb begin : ss_reg_hwwe
     //SS STRAPS WITH TAP WRITE ACCESS
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.we      = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
-                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_L));
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.we      = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
-                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.we     = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_CALIPTRA_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.we     = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_CALIPTRA_BASE_ADDR_H));
     soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.we          = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_L));
     soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.we          = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
@@ -764,8 +766,8 @@ end
 
 always_comb begin : ss_reg_next_vals
     //SS STRAPS WITH TAP WRITE ACCESS    
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.next                            = strap_we ? strap_ss_soc_ifc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
-    soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.next                            = strap_we ? strap_ss_soc_ifc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.next                           = strap_we ? strap_ss_caliptra_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.next                           = strap_we ? strap_ss_caliptra_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next                                = strap_we ? strap_ss_mci_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next                                = strap_we ? strap_ss_mci_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next                       = strap_we ? strap_ss_recovery_ifc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
@@ -810,8 +812,8 @@ end
 always_comb cptra_ss_debug_intent = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
 
 // Also RW-able by SW until CPTRA_FUSE_WR_DONE
-always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_L.addr_l.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-always_comb soc_ifc_reg_hwif_in.SS_SOC_IFC_BASE_ADDR_H.addr_h.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.swwel                                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.swwel                                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -855,7 +857,9 @@ end
 always_comb ss_soc_dbg_unlock_level = {soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value,
                                        soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value};
 
-always_comb ss_generic_fw_exec_ctrl = {soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[1].go.value,
+always_comb ss_generic_fw_exec_ctrl = {soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[3].go.value,
+                                       soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[2].go.value,
+                                       soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[1].go.value,
                                        soc_ifc_reg_hwif_out.SS_GENERIC_FW_EXEC_CTRL[0].go.value};
 
 // Fuse write done can be written by SOC if it is already NOT '1.
@@ -1324,8 +1328,8 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_UDS_SEED_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT)}} & {31'b0, soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value}) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_SOC_IFC_BASE_ADDR_L.addr_l.value ) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_SOC_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_SOC_IFC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_CALIPTRA_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_CALIPTRA_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_CALIPTRA_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_CALIPTRA_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_MCI_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_MCI_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value ) |

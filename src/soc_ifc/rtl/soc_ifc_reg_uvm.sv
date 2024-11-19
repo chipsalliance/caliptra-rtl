@@ -1595,7 +1595,7 @@ package soc_ifc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[4];
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[32];
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg fld_cg;
         rand uvm_reg_field mask;
 
@@ -1610,7 +1610,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.mask = new("mask");
-            this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.mask.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
             end
@@ -1889,17 +1889,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_manuf_dbg_unlock_token
 
-    // Reg - soc_ifc_reg::SS_SOC_IFC_BASE_ADDR_L
-    class soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_L
+    class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L_bit_cg addr_l_bit_cg[32];
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L_fld_cg fld_cg;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L_bit_cg addr_l_bit_cg[32];
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L_fld_cg fld_cg;
         rand uvm_reg_field addr_l;
 
-        function new(string name = "soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L");
+        function new(string name = "soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1917,19 +1917,19 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L
+    endclass : soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_SOC_IFC_BASE_ADDR_H
-    class soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_H
+    class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H_bit_cg addr_h_bit_cg[32];
-        soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H_fld_cg fld_cg;
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H_bit_cg addr_h_bit_cg[32];
+        soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H_fld_cg fld_cg;
         rand uvm_reg_field addr_h;
 
-        function new(string name = "soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H");
+        function new(string name = "soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1947,7 +1947,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H
+    endclass : soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H
 
     // Reg - soc_ifc_reg::SS_MCI_BASE_ADDR_L
     class soc_ifc_reg__SS_MCI_BASE_ADDR_L extends uvm_reg;
@@ -4474,7 +4474,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[16];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
+        rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask[8];
         rand soc_ifc_reg__fuse_fmc_key_manifest_svn fuse_fmc_key_manifest_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
@@ -4484,8 +4484,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_mldsa_revocation fuse_mldsa_revocation;
         rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
         rand soc_ifc_reg__fuse_manuf_dbg_unlock_token fuse_manuf_dbg_unlock_token[4];
-        rand soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L SS_SOC_IFC_BASE_ADDR_L;
-        rand soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H SS_SOC_IFC_BASE_ADDR_H;
+        rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L SS_CALIPTRA_BASE_ADDR_L;
+        rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H SS_CALIPTRA_BASE_ADDR_H;
         rand soc_ifc_reg__SS_MCI_BASE_ADDR_L SS_MCI_BASE_ADDR_L;
         rand soc_ifc_reg__SS_MCI_BASE_ADDR_H SS_MCI_BASE_ADDR_H;
         rand soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L SS_RECOVERY_IFC_BASE_ADDR_L;
@@ -4501,7 +4501,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ SS_DBG_MANUF_SERVICE_REG_REQ;
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP SS_DBG_MANUF_SERVICE_REG_RSP;
         rand soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL SS_SOC_DBG_UNLOCK_LEVEL[2];
-        rand soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL SS_GENERIC_FW_EXEC_CTRL[2];
+        rand soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL SS_GENERIC_FW_EXEC_CTRL[4];
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
@@ -4798,74 +4798,76 @@ package soc_ifc_reg_uvm;
                 this.fuse_key_manifest_pk_hash[i0].build();
                 this.default_map.add_reg(this.fuse_key_manifest_pk_hash[i0], 'h260 + i0*'h4);
             end
-            this.fuse_key_manifest_pk_hash_mask = new("fuse_key_manifest_pk_hash_mask");
-            this.fuse_key_manifest_pk_hash_mask.configure(this);
-
-            this.fuse_key_manifest_pk_hash_mask.build();
-            this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h290);
+            foreach(this.fuse_key_manifest_pk_hash_mask[i0]) begin
+                this.fuse_key_manifest_pk_hash_mask[i0] = new($sformatf("fuse_key_manifest_pk_hash_mask[%0d]", i0));
+                this.fuse_key_manifest_pk_hash_mask[i0].configure(this);
+                
+                this.fuse_key_manifest_pk_hash_mask[i0].build();
+                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask[i0], 'h290 + i0*'h4);
+            end
             this.fuse_fmc_key_manifest_svn = new("fuse_fmc_key_manifest_svn");
             this.fuse_fmc_key_manifest_svn.configure(this);
 
             this.fuse_fmc_key_manifest_svn.build();
-            this.default_map.add_reg(this.fuse_fmc_key_manifest_svn, 'h2b4);
+            this.default_map.add_reg(this.fuse_fmc_key_manifest_svn, 'h2c4);
             foreach(this.fuse_runtime_svn[i0]) begin
                 this.fuse_runtime_svn[i0] = new($sformatf("fuse_runtime_svn[%0d]", i0));
                 this.fuse_runtime_svn[i0].configure(this);
                 
                 this.fuse_runtime_svn[i0].build();
-                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2b8 + i0*'h4);
+                this.default_map.add_reg(this.fuse_runtime_svn[i0], 'h2c8 + i0*'h4);
             end
             this.fuse_anti_rollback_disable = new("fuse_anti_rollback_disable");
             this.fuse_anti_rollback_disable.configure(this);
 
             this.fuse_anti_rollback_disable.build();
-            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2c8);
+            this.default_map.add_reg(this.fuse_anti_rollback_disable, 'h2d8);
             foreach(this.fuse_idevid_cert_attr[i0]) begin
                 this.fuse_idevid_cert_attr[i0] = new($sformatf("fuse_idevid_cert_attr[%0d]", i0));
                 this.fuse_idevid_cert_attr[i0].configure(this);
                 
                 this.fuse_idevid_cert_attr[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2cc + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_cert_attr[i0], 'h2dc + i0*'h4);
             end
             foreach(this.fuse_idevid_manuf_hsm_id[i0]) begin
                 this.fuse_idevid_manuf_hsm_id[i0] = new($sformatf("fuse_idevid_manuf_hsm_id[%0d]", i0));
                 this.fuse_idevid_manuf_hsm_id[i0].configure(this);
                 
                 this.fuse_idevid_manuf_hsm_id[i0].build();
-                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h32c + i0*'h4);
+                this.default_map.add_reg(this.fuse_idevid_manuf_hsm_id[i0], 'h33c + i0*'h4);
             end
             this.fuse_lms_revocation = new("fuse_lms_revocation");
             this.fuse_lms_revocation.configure(this);
 
             this.fuse_lms_revocation.build();
-            this.default_map.add_reg(this.fuse_lms_revocation, 'h340);
+            this.default_map.add_reg(this.fuse_lms_revocation, 'h350);
             this.fuse_mldsa_revocation = new("fuse_mldsa_revocation");
             this.fuse_mldsa_revocation.configure(this);
 
             this.fuse_mldsa_revocation.build();
-            this.default_map.add_reg(this.fuse_mldsa_revocation, 'h344);
+            this.default_map.add_reg(this.fuse_mldsa_revocation, 'h354);
             this.fuse_soc_stepping_id = new("fuse_soc_stepping_id");
             this.fuse_soc_stepping_id.configure(this);
 
             this.fuse_soc_stepping_id.build();
-            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h348);
+            this.default_map.add_reg(this.fuse_soc_stepping_id, 'h358);
             foreach(this.fuse_manuf_dbg_unlock_token[i0]) begin
                 this.fuse_manuf_dbg_unlock_token[i0] = new($sformatf("fuse_manuf_dbg_unlock_token[%0d]", i0));
                 this.fuse_manuf_dbg_unlock_token[i0].configure(this);
                 
                 this.fuse_manuf_dbg_unlock_token[i0].build();
-                this.default_map.add_reg(this.fuse_manuf_dbg_unlock_token[i0], 'h34c + i0*'h4);
+                this.default_map.add_reg(this.fuse_manuf_dbg_unlock_token[i0], 'h35c + i0*'h4);
             end
-            this.SS_SOC_IFC_BASE_ADDR_L = new("SS_SOC_IFC_BASE_ADDR_L");
-            this.SS_SOC_IFC_BASE_ADDR_L.configure(this);
+            this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
+            this.SS_CALIPTRA_BASE_ADDR_L.configure(this);
 
-            this.SS_SOC_IFC_BASE_ADDR_L.build();
-            this.default_map.add_reg(this.SS_SOC_IFC_BASE_ADDR_L, 'h500);
-            this.SS_SOC_IFC_BASE_ADDR_H = new("SS_SOC_IFC_BASE_ADDR_H");
-            this.SS_SOC_IFC_BASE_ADDR_H.configure(this);
+            this.SS_CALIPTRA_BASE_ADDR_L.build();
+            this.default_map.add_reg(this.SS_CALIPTRA_BASE_ADDR_L, 'h500);
+            this.SS_CALIPTRA_BASE_ADDR_H = new("SS_CALIPTRA_BASE_ADDR_H");
+            this.SS_CALIPTRA_BASE_ADDR_H.configure(this);
 
-            this.SS_SOC_IFC_BASE_ADDR_H.build();
-            this.default_map.add_reg(this.SS_SOC_IFC_BASE_ADDR_H, 'h504);
+            this.SS_CALIPTRA_BASE_ADDR_H.build();
+            this.default_map.add_reg(this.SS_CALIPTRA_BASE_ADDR_H, 'h504);
             this.SS_MCI_BASE_ADDR_L = new("SS_MCI_BASE_ADDR_L");
             this.SS_MCI_BASE_ADDR_L.configure(this);
 
@@ -4926,31 +4928,31 @@ package soc_ifc_reg_uvm;
                 this.SS_STRAP_RSVD[i0].configure(this);
                 
                 this.SS_STRAP_RSVD[i0].build();
-                this.default_map.add_reg(this.SS_STRAP_RSVD[i0], 'h5c0 + i0*'h4);
+                this.default_map.add_reg(this.SS_STRAP_RSVD[i0], 'h5a0 + i0*'h4);
             end
             this.SS_DBG_MANUF_SERVICE_REG_REQ = new("SS_DBG_MANUF_SERVICE_REG_REQ");
             this.SS_DBG_MANUF_SERVICE_REG_REQ.configure(this);
 
             this.SS_DBG_MANUF_SERVICE_REG_REQ.build();
-            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_REQ, 'h5e0);
+            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_REQ, 'h5c0);
             this.SS_DBG_MANUF_SERVICE_REG_RSP = new("SS_DBG_MANUF_SERVICE_REG_RSP");
             this.SS_DBG_MANUF_SERVICE_REG_RSP.configure(this);
 
             this.SS_DBG_MANUF_SERVICE_REG_RSP.build();
-            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_RSP, 'h5e4);
+            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_RSP, 'h5c4);
             foreach(this.SS_SOC_DBG_UNLOCK_LEVEL[i0]) begin
                 this.SS_SOC_DBG_UNLOCK_LEVEL[i0] = new($sformatf("SS_SOC_DBG_UNLOCK_LEVEL[%0d]", i0));
                 this.SS_SOC_DBG_UNLOCK_LEVEL[i0].configure(this);
                 
                 this.SS_SOC_DBG_UNLOCK_LEVEL[i0].build();
-                this.default_map.add_reg(this.SS_SOC_DBG_UNLOCK_LEVEL[i0], 'h5e8 + i0*'h4);
+                this.default_map.add_reg(this.SS_SOC_DBG_UNLOCK_LEVEL[i0], 'h5c8 + i0*'h4);
             end
             foreach(this.SS_GENERIC_FW_EXEC_CTRL[i0]) begin
                 this.SS_GENERIC_FW_EXEC_CTRL[i0] = new($sformatf("SS_GENERIC_FW_EXEC_CTRL[%0d]", i0));
                 this.SS_GENERIC_FW_EXEC_CTRL[i0].configure(this);
                 
                 this.SS_GENERIC_FW_EXEC_CTRL[i0].build();
-                this.default_map.add_reg(this.SS_GENERIC_FW_EXEC_CTRL[i0], 'h5f0 + i0*'h4);
+                this.default_map.add_reg(this.SS_GENERIC_FW_EXEC_CTRL[i0], 'h5d0 + i0*'h4);
             end
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));
