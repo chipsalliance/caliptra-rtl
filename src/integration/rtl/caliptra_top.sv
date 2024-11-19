@@ -195,7 +195,6 @@ module caliptra_top
     //caliptra uncore jtag ports & pertinent logic
     logic                       cptra_core_dmi_enable;
     logic                       cptra_uncore_dmi_enable;
-    logic                       cptra_mbox_dmi_enable;
     logic                       cptra_uncore_dmi_reg_en;
     logic                       cptra_uncore_dmi_reg_wr_en;
     logic [31:0]                cptra_uncore_dmi_reg_rdata;
