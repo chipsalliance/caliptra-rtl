@@ -106,7 +106,6 @@ module caliptra_top
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
-    output logic        ss_dbg_prod_enable,
     output logic [63:0] ss_soc_dbg_unlock_level,
 
     // Subsystem mode firmware execution control
@@ -1264,7 +1263,6 @@ soc_ifc_top1
     .cptra_ss_debug_intent                                  (cptra_ss_debug_intent                                  ),
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (ss_dbg_manuf_enable    ),
-    .ss_dbg_prod_enable     (ss_dbg_prod_enable     ),
     .ss_soc_dbg_unlock_level(ss_soc_dbg_unlock_level),
 
     // Subsystem mode firmware execution control

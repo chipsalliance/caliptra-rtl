@@ -268,7 +268,6 @@ caliptra_top caliptra_top_dut (
 
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (/*TODO*/),
-    .ss_dbg_prod_enable     (/*TODO*/),
     .ss_soc_dbg_unlock_level(/*TODO*/),
 
     // Subsystem mode firmware execution control
