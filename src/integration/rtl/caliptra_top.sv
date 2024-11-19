@@ -420,6 +420,7 @@ always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked)
 always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -619,7 +620,7 @@ el2_veer_wrapper rvtop (
     // Security State can be unlocked by setting ss_dbg_manuf_enable or ss_soc_dbg_unlock_level[0]
     always_ff  @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (~cptra_noncore_rst_b) begin
-            unlock_caliptra_security_state <= 0;
+            unlock_caliptra_security_state <= 1;
         end
         else begin
             unlock_caliptra_security_state <= ss_dbg_manuf_enable || ss_soc_dbg_unlock_level[0];
