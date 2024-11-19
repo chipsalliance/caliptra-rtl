@@ -153,7 +153,7 @@ The following tables describe the interface signals.
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :---------- | :--------- | :--------- | :----------------------------------------------- | :--------- |
-|  strap_ss_soc_ifc_base_addr                               | 64  | Input Strap | Synchronous to clk | |
+|  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | |
 |  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | |
 |  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | |
 |  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | |
@@ -166,9 +166,8 @@ The following tables describe the interface signals.
 |  strap_ss_strap_rsvd_3                                    | 32  | Input Strap | Synchronous to clk | |
 |  ss_debug_intent                                          | 1   | Input Strap | Synchronous to clk | |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
-|  ss_dbg_prod_enable                                       | 1   | Output      | Synchronous to clk | |
-|  ss_soc_dbg_unlock_level                                  | 32  | Output      | Synchronous to clk | |
-|  ss_generic_fw_exec_ctrl                                  | 64  | Output      | Synchronous to clk | |
+|  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |
+|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | |
 
 *Table 11: Security and miscellaneous*
 
