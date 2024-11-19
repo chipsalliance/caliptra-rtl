@@ -197,8 +197,6 @@ module caliptra_top
     logic                       cptra_uncore_dmi_enable;
     logic                       cptra_mbox_dmi_enable;
     logic                       cptra_uncore_dmi_reg_en;
-    logic                       cptra_uncore_dmi_unlocked_reg_en;
-    logic                       cptra_uncore_dmi_locked_reg_en;
     logic                       cptra_uncore_dmi_reg_wr_en;
     logic [31:0]                cptra_uncore_dmi_reg_rdata;
     logic [6:0]                 cptra_uncore_dmi_reg_addr;
