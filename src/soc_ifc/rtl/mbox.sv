@@ -62,7 +62,7 @@ module mbox
     output logic soc_mbox_data_avail,
     output logic soc_req_mbox_lock,
     output mbox_protocol_error_t mbox_protocol_error,
-    output logic mbox_inv_axi_id_axs,
+    output logic mbox_inv_axi_user_axs,
 
     //DMI reg access
     input logic dmi_inc_rdptr,
@@ -159,7 +159,7 @@ assign mbox_error = read_error | write_error;
 //2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                               ( req_data.soc_req & soc_has_lock & (req_data.id == hwif_out.mbox_id.id.value[SOC_IFC_ID_W-1:0])));
+                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value[SOC_IFC_USER_W-1:0])));
 
 //Determine if this is a valid request from the receiver side
 always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
@@ -389,12 +389,12 @@ always_comb begin : mbox_fsm_combo
     endcase
 end
 
-// Any ol' AXI_ID is fine for reg-reads (except dataout)
+// Any ol' AXI_USER is fine for reg-reads (except dataout)
 // NOTE: This only captures accesses by AXI agents that are valid, but do not
 //       have lock. Invalid agent accesses are blocked by arbiter.
-assign mbox_inv_axi_id_axs = req_dv && req_data.soc_req && !req_hold &&
-                             !valid_requester && !valid_receiver &&
-                             (req_data.write || hwif_out.mbox_dataout.dataout.swacc);
+assign mbox_inv_axi_user_axs = req_dv && req_data.soc_req && !req_hold &&
+                               !valid_requester && !valid_receiver &&
+                               (req_data.write || hwif_out.mbox_dataout.dataout.swacc);
 
 
 //increment read ptr only if its allowed
@@ -547,7 +547,7 @@ always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == 
 always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & ~soc_has_lock & hwif_out.mbox_lock.lock.swmod & req_data.soc_req;
 
 always_comb hwif_in.cptra_rst_b = rst_b;
-always_comb hwif_in.mbox_id.id.next = 32'(req_data.id);
+always_comb hwif_in.mbox_user.user.next = 32'(req_data.user);
 always_comb hwif_in.mbox_status.mbox_fsm_ps.next = mbox_fsm_ps;
 
 always_comb hwif_in.soc_req = req_data.soc_req;

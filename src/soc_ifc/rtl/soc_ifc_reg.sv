@@ -77,10 +77,10 @@ module soc_ifc_reg (
         logic CPTRA_FLOW_STATUS;
         logic CPTRA_RESET_REASON;
         logic CPTRA_SECURITY_STATE;
-        logic [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
-        logic [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
-        logic CPTRA_TRNG_VALID_AXI_ID;
-        logic CPTRA_TRNG_AXI_ID_LOCK;
+        logic [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
+        logic [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
+        logic CPTRA_TRNG_VALID_AXI_USER;
+        logic CPTRA_TRNG_AXI_USER_LOCK;
         logic [12-1:0]CPTRA_TRNG_DATA;
         logic CPTRA_TRNG_CTRL;
         logic CPTRA_TRNG_STATUS;
@@ -101,8 +101,8 @@ module soc_ifc_reg (
         logic CPTRA_WDT_TIMER2_CTRL;
         logic [2-1:0]CPTRA_WDT_TIMER2_TIMEOUT_PERIOD;
         logic CPTRA_WDT_STATUS;
-        logic CPTRA_FUSE_VALID_AXI_ID;
-        logic CPTRA_FUSE_AXI_ID_LOCK;
+        logic CPTRA_FUSE_VALID_AXI_USER;
+        logic CPTRA_FUSE_AXI_USER_LOCK;
         logic [2-1:0]CPTRA_WDT_CFG;
         logic CPTRA_iTRNG_ENTROPY_CONFIG_0;
         logic CPTRA_iTRNG_ENTROPY_CONFIG_1;
@@ -195,13 +195,13 @@ module soc_ifc_reg (
         decoded_reg_strb.CPTRA_RESET_REASON = cpuif_req_masked & (cpuif_addr == 12'h40);
         decoded_reg_strb.CPTRA_SECURITY_STATE = cpuif_req_masked & (cpuif_addr == 12'h44);
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] = cpuif_req_masked & (cpuif_addr == 12'h48 + i0*12'h4);
+            decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] = cpuif_req_masked & (cpuif_addr == 12'h48 + i0*12'h4);
         end
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c + i0*12'h4);
+            decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c + i0*12'h4);
         end
-        decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID = cpuif_req_masked & (cpuif_addr == 12'h70);
-        decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK = cpuif_req_masked & (cpuif_addr == 12'h74);
+        decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h70);
+        decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK = cpuif_req_masked & (cpuif_addr == 12'h74);
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.CPTRA_TRNG_DATA[i0] = cpuif_req_masked & (cpuif_addr == 12'h78 + i0*12'h4);
         end
@@ -234,8 +234,8 @@ module soc_ifc_reg (
             decoded_reg_strb.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0] = cpuif_req_masked & (cpuif_addr == 12'hfc + i0*12'h4);
         end
         decoded_reg_strb.CPTRA_WDT_STATUS = cpuif_req_masked & (cpuif_addr == 12'h104);
-        decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID = cpuif_req_masked & (cpuif_addr == 12'h108);
-        decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK = cpuif_req_masked & (cpuif_addr == 12'h10c);
+        decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h108);
+        decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK = cpuif_req_masked & (cpuif_addr == 12'h10c);
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.CPTRA_WDT_CFG[i0] = cpuif_req_masked & (cpuif_addr == 12'h110 + i0*12'h4);
         end
@@ -440,26 +440,26 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+            } AXI_USER;
+        } [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        } [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } CPTRA_TRNG_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_TRNG_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } CPTRA_TRNG_AXI_ID_LOCK;
+        } CPTRA_TRNG_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -580,14 +580,14 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } CPTRA_FUSE_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_FUSE_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } CPTRA_FUSE_AXI_ID_LOCK;
+        } CPTRA_FUSE_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1317,23 +1317,23 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+            } AXI_USER;
+        } [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        } [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } CPTRA_TRNG_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_TRNG_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } CPTRA_TRNG_AXI_ID_LOCK;
+        } CPTRA_TRNG_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1433,13 +1433,13 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } CPTRA_FUSE_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_FUSE_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } CPTRA_FUSE_AXI_ID_LOCK;
+        } CPTRA_FUSE_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -2365,93 +2365,93 @@ module soc_ifc_reg (
     end
     assign hwif_out.CPTRA_RESET_REASON.WARM_RESET.value = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_MBOX_VALID_AXI_ID[].AXI_ID
+        // Field: soc_ifc_reg.CPTRA_MBOX_VALID_AXI_USER[].AXI_USER
         always_comb begin
             automatic logic [31:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value;
+            next_c = field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value;
             load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.swwel)) begin // SW write
-                next_c = (field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            if(decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.swwel)) begin // SW write
+                next_c = (field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
-            field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.next = next_c;
-            field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.next = next_c;
+            field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value <= 32'hffffffff;
-            end else if(field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.load_next) begin
-                field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value <= field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.next;
+                field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value <= 32'hffffffff;
+            end else if(field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.load_next) begin
+                field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value <= field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.next;
             end
         end
-        assign hwif_out.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value = field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value;
+        assign hwif_out.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value = field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_MBOX_AXI_ID_LOCK[].LOCK
+        // Field: soc_ifc_reg.CPTRA_MBOX_AXI_USER_LOCK[].LOCK
         always_comb begin
             automatic logic [0:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value;
+            next_c = field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value;
             load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.swwel)) begin // SW write
-                next_c = (field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            if(decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.swwel)) begin // SW write
+                next_c = (field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
             end
-            field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.next = next_c;
-            field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.next = next_c;
+            field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value <= 1'h0;
-            end else if(field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.load_next) begin
-                field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value <= field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.next;
+                field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value <= 1'h0;
+            end else if(field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.load_next) begin
+                field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value <= field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.next;
             end
         end
-        assign hwif_out.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value = field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value;
+        assign hwif_out.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value = field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value;
     end
-    // Field: soc_ifc_reg.CPTRA_TRNG_VALID_AXI_ID.AXI_ID
+    // Field: soc_ifc_reg.CPTRA_TRNG_VALID_AXI_USER.AXI_USER
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value;
+        next_c = field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.next = next_c;
-        field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.load_next = load_next_c;
+        field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.next = next_c;
+        field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value <= 32'hffffffff;
-        end else if(field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.load_next) begin
-            field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value <= field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.next;
+            field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value <= 32'hffffffff;
+        end else if(field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.load_next) begin
+            field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value <= field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.next;
         end
     end
-    assign hwif_out.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value = field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value;
-    // Field: soc_ifc_reg.CPTRA_TRNG_AXI_ID_LOCK.LOCK
+    assign hwif_out.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value = field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value;
+    // Field: soc_ifc_reg.CPTRA_TRNG_AXI_USER_LOCK.LOCK
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
+        next_c = field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_AXI_ID_LOCK.LOCK.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+        if(decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_AXI_USER_LOCK.LOCK.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.next = next_c;
-        field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.load_next = load_next_c;
+        field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.next = next_c;
+        field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value <= 1'h0;
-        end else if(field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.load_next) begin
-            field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value <= field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.next;
+            field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value <= 1'h0;
+        end else if(field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.load_next) begin
+            field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value <= field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.next;
         end
     end
-    assign hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value = field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
+    assign hwif_out.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value = field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.CPTRA_TRNG_DATA[].DATA
         always_comb begin
@@ -2910,48 +2910,48 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_WDT_STATUS.t2_timeout.value = field_storage.CPTRA_WDT_STATUS.t2_timeout.value;
-    // Field: soc_ifc_reg.CPTRA_FUSE_VALID_AXI_ID.AXI_ID
+    // Field: soc_ifc_reg.CPTRA_FUSE_VALID_AXI_USER.AXI_USER
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value;
+        next_c = field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.next = next_c;
-        field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.load_next = load_next_c;
+        field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.next = next_c;
+        field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value <= 32'hffffffff;
-        end else if(field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.load_next) begin
-            field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value <= field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.next;
+            field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value <= 32'hffffffff;
+        end else if(field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.load_next) begin
+            field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value <= field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.next;
         end
     end
-    assign hwif_out.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value = field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value;
-    // Field: soc_ifc_reg.CPTRA_FUSE_AXI_ID_LOCK.LOCK
+    assign hwif_out.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value = field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value;
+    // Field: soc_ifc_reg.CPTRA_FUSE_AXI_USER_LOCK.LOCK
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
+        next_c = field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_AXI_ID_LOCK.LOCK.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+        if(decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_AXI_USER_LOCK.LOCK.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.next = next_c;
-        field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.load_next = load_next_c;
+        field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.next = next_c;
+        field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value <= 1'h0;
-        end else if(field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.load_next) begin
-            field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value <= field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.next;
+            field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value <= 1'h0;
+        end else if(field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.load_next) begin
+            field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value <= field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.next;
         end
     end
-    assign hwif_out.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value = field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
+    assign hwif_out.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value = field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value;
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_WDT_CFG[].TIMEOUT
         always_comb begin
@@ -5805,14 +5805,14 @@ module soc_ifc_reg (
     assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
     assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 28'h0 : '0;
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value : '0;
+        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value : '0;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value : '0;
+        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value : '0;
         assign readback_array[i0*1 + 23][31:1] = '0;
     end
-    assign readback_array[28][31:0] = (decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value : '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value : '0;
+    assign readback_array[28][31:0] = (decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value : '0;
+    assign readback_array[29][0:0] = (decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value : '0;
     assign readback_array[29][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 30][31:0] = (decoded_reg_strb.CPTRA_TRNG_DATA[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DATA[i0].DATA.value : '0;
@@ -5864,8 +5864,8 @@ module soc_ifc_reg (
     assign readback_array[65][0:0] = (decoded_reg_strb.CPTRA_WDT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_STATUS.t1_timeout.value : '0;
     assign readback_array[65][1:1] = (decoded_reg_strb.CPTRA_WDT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_STATUS.t2_timeout.value : '0;
     assign readback_array[65][31:2] = '0;
-    assign readback_array[66][31:0] = (decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value : '0;
-    assign readback_array[67][0:0] = (decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value : '0;
+    assign readback_array[66][31:0] = (decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value : '0;
+    assign readback_array[67][0:0] = (decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value : '0;
     assign readback_array[67][31:1] = '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 68][31:0] = (decoded_reg_strb.CPTRA_WDT_CFG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value : '0;
