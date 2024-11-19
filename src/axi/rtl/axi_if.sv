@@ -214,7 +214,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                   input  axi_burst_e    burst = AXI_BURST_INCR,
                   input  logic [2:0]    size  = $clog2(DW/8),
                   input  logic [7:0]    len   = 0,
-                  input  logic [UW-1:0] user  = UW'(0),
+                  input  logic [UW-1:0] user  = {UW{1'b1}},
                   input  logic [IW-1:0] id    = IW'(0),
                   input  logic          lock  = 1'b0,
                   output logic [DW-1:0] data [],
@@ -253,7 +253,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     endtask
 
     task axi_read_single(input  logic [AW-1:0] addr,
-                         input  logic [UW-1:0] user  = UW'(0),
+                         input  logic [UW-1:0] user  = {UW{1'b1}},
                          input  logic [IW-1:0] id    = IW'(0),
                          input  logic          lock  = 1'b0,
                          output logic [DW-1:0] data,
@@ -306,7 +306,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                    input  axi_burst_e      burst = AXI_BURST_INCR,
                    input  logic [2:0]      size  = $clog2(DW/8),
                    input  logic [7:0]      len   = 0,
-                   input  logic [UW-1:0]   user  = UW'(0),
+                   input  logic [UW-1:0]   user  = {UW{1'b1}},
                    input  logic [IW-1:0]   id    = IW'(0),
                    input  logic            lock  = 1'b0,
                    input  logic [DW-1:0]   data [],
@@ -343,7 +343,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     endtask
 
     task axi_write_single(input  logic [AW-1:0] addr,
-                          input  logic [UW-1:0] user  = UW'(0),
+                          input  logic [UW-1:0] user  = {UW{1'b1}},
                           input  logic [IW-1:0] id    = IW'(0),
                           input  logic          lock  = 1'b0,
                           input  logic [DW-1:0] data,
