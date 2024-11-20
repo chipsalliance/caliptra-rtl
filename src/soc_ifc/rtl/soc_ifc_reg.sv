@@ -138,7 +138,7 @@ module soc_ifc_reg (
         logic SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         logic SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         logic SS_DEBUG_INTENT;
-        logic [4-1:0]SS_STRAP_RSVD;
+        logic [4-1:0]SS_STRAP_GENERIC;
         logic SS_DBG_MANUF_SERVICE_REG_REQ;
         logic SS_DBG_MANUF_SERVICE_REG_RSP;
         logic [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
@@ -316,7 +316,7 @@ module soc_ifc_reg (
         decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES = cpuif_req_masked & (cpuif_addr == 12'h52c);
         decoded_reg_strb.SS_DEBUG_INTENT = cpuif_req_masked & (cpuif_addr == 12'h530);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.SS_STRAP_RSVD[i0] = cpuif_req_masked & (cpuif_addr == 12'h5a0 + i0*12'h4);
+            decoded_reg_strb.SS_STRAP_GENERIC[i0] = cpuif_req_masked & (cpuif_addr == 12'h5a0 + i0*12'h4);
         end
         decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ = cpuif_req_masked & (cpuif_addr == 12'h5c0);
         decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP = cpuif_req_masked & (cpuif_addr == 12'h5c4);
@@ -864,8 +864,8 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } rsvd;
-        } [4-1:0]SS_STRAP_RSVD;
+            } data;
+        } [4-1:0]SS_STRAP_GENERIC;
         struct packed{
             struct packed{
                 logic next;
@@ -1850,8 +1850,8 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } rsvd;
-        } [4-1:0]SS_STRAP_RSVD;
+            } data;
+        } [4-1:0]SS_STRAP_GENERIC;
         struct packed{
             struct packed{
                 logic value;
@@ -4152,30 +4152,30 @@ module soc_ifc_reg (
     end
     assign hwif_out.SS_DEBUG_INTENT.debug_intent.value = field_storage.SS_DEBUG_INTENT.debug_intent.value;
     for(genvar i0=0; i0<4; i0++) begin
-        // Field: soc_ifc_reg.SS_STRAP_RSVD[].rsvd
+        // Field: soc_ifc_reg.SS_STRAP_GENERIC[].data
         always_comb begin
             automatic logic [31:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.SS_STRAP_RSVD[i0].rsvd.value;
+            next_c = field_storage.SS_STRAP_GENERIC[i0].data.value;
             load_next_c = '0;
-            if(decoded_reg_strb.SS_STRAP_RSVD[i0] && decoded_req_is_wr && !(hwif_in.SS_STRAP_RSVD[i0].rsvd.swwel)) begin // SW write
-                next_c = (field_storage.SS_STRAP_RSVD[i0].rsvd.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            if(decoded_reg_strb.SS_STRAP_GENERIC[i0] && decoded_req_is_wr && !(hwif_in.SS_STRAP_GENERIC[i0].data.swwel)) begin // SW write
+                next_c = (field_storage.SS_STRAP_GENERIC[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else if(hwif_in.SS_STRAP_RSVD[i0].rsvd.we) begin // HW Write - we
-                next_c = hwif_in.SS_STRAP_RSVD[i0].rsvd.next;
+            end else if(hwif_in.SS_STRAP_GENERIC[i0].data.we) begin // HW Write - we
+                next_c = hwif_in.SS_STRAP_GENERIC[i0].data.next;
                 load_next_c = '1;
             end
-            field_combo.SS_STRAP_RSVD[i0].rsvd.next = next_c;
-            field_combo.SS_STRAP_RSVD[i0].rsvd.load_next = load_next_c;
+            field_combo.SS_STRAP_GENERIC[i0].data.next = next_c;
+            field_combo.SS_STRAP_GENERIC[i0].data.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
             if(~hwif_in.cptra_pwrgood) begin
-                field_storage.SS_STRAP_RSVD[i0].rsvd.value <= 32'h0;
-            end else if(field_combo.SS_STRAP_RSVD[i0].rsvd.load_next) begin
-                field_storage.SS_STRAP_RSVD[i0].rsvd.value <= field_combo.SS_STRAP_RSVD[i0].rsvd.next;
+                field_storage.SS_STRAP_GENERIC[i0].data.value <= 32'h0;
+            end else if(field_combo.SS_STRAP_GENERIC[i0].data.load_next) begin
+                field_storage.SS_STRAP_GENERIC[i0].data.value <= field_combo.SS_STRAP_GENERIC[i0].data.next;
             end
         end
-        assign hwif_out.SS_STRAP_RSVD[i0].rsvd.value = field_storage.SS_STRAP_RSVD[i0].rsvd.value;
+        assign hwif_out.SS_STRAP_GENERIC[i0].data.value = field_storage.SS_STRAP_GENERIC[i0].data.value;
     end
     // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ
     always_comb begin
@@ -7050,7 +7050,7 @@ module soc_ifc_reg (
     assign readback_array[163][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
     assign readback_array[163][31:1] = '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 164][31:0] = (decoded_reg_strb.SS_STRAP_RSVD[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_RSVD[i0].rsvd.value : '0;
+        assign readback_array[i0*1 + 164][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
     end
     assign readback_array[168][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value : '0;
     assign readback_array[168][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value : '0;

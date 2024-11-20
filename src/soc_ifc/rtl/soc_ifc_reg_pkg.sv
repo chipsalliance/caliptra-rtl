@@ -403,8 +403,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DEBUG_INTENT__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__strap_w32__in_t rsvd;
-    } soc_ifc_reg__SS_STRAP_RSVD__in_t;
+        soc_ifc_reg__strap_w32__in_t data;
+    } soc_ifc_reg__SS_STRAP_GENERIC__in_t;
 
     typedef struct packed{
         logic next;
@@ -679,7 +679,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__in_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
-        soc_ifc_reg__SS_STRAP_RSVD__in_t [4-1:0]SS_STRAP_RSVD;
+        soc_ifc_reg__SS_STRAP_GENERIC__in_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
@@ -1135,8 +1135,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DEBUG_INTENT__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__strap_w32__out_t rsvd;
-    } soc_ifc_reg__SS_STRAP_RSVD__out_t;
+        soc_ifc_reg__strap_w32__out_t data;
+    } soc_ifc_reg__SS_STRAP_GENERIC__out_t;
 
     typedef struct packed{
         logic value;
@@ -1409,7 +1409,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__out_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
-        soc_ifc_reg__SS_STRAP_RSVD__out_t [4-1:0]SS_STRAP_RSVD;
+        soc_ifc_reg__SS_STRAP_GENERIC__out_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;

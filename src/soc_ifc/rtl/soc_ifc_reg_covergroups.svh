@@ -1108,15 +1108,15 @@
 
     endgroup
     covergroup soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg with function sample(
-    input bit [4-1:0] mask
+    input bit [32-1:0] mask
     );
         option.per_instance = 1;
         mask_cp : coverpoint mask {
-            bins zero_val = {4'h0};
-            bins rand_val[4] = {[1:4'hE]};
-            bins ones_val = {{4{1'b1}}};
-            wildcard bins set = (0 => 4'h?);
-            wildcard bins clr = (4'h? => 0);
+            bins zero_val = {32'h0};
+            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
+            bins ones_val = {{32{1'b1}}};
+            wildcard bins set = (0 => 32'h????_????);
+            wildcard bins clr = (32'h????_???? => 0);
         }
 
     endgroup
@@ -1325,8 +1325,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__SS_SOC_IFC_BASE_ADDR_L COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_BASE_ADDR_L COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1337,7 +1337,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L_fld_cg with function sample(
     input bit [32-1:0] addr_l
     );
         option.per_instance = 1;
@@ -1345,8 +1345,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__SS_SOC_IFC_BASE_ADDR_H COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_BASE_ADDR_H COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1357,7 +1357,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H_fld_cg with function sample(
     input bit [32-1:0] addr_h
     );
         option.per_instance = 1;
@@ -1585,8 +1585,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__SS_STRAP_RSVD COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__SS_STRAP_RSVD_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_STRAP_GENERIC COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_STRAP_GENERIC_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1597,11 +1597,11 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__SS_STRAP_RSVD_fld_cg with function sample(
-    input bit [32-1:0] rsvd
+    covergroup soc_ifc_reg__SS_STRAP_GENERIC_fld_cg with function sample(
+    input bit [32-1:0] data
     );
         option.per_instance = 1;
-        rsvd_cp : coverpoint rsvd;
+        data_cp : coverpoint data;
 
     endgroup
 

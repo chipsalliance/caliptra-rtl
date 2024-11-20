@@ -1298,7 +1298,7 @@
             foreach(mask_bit_cg[bt]) this.mask_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[3:0]/*mask*/   );
+            this.fld_cg.sample( data[31:0]/*mask*/   );
         end
     endfunction
 
@@ -1536,8 +1536,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__SS_SOC_IFC_BASE_ADDR_L SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_BASE_ADDR_L SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1552,7 +1552,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_L::sample_values();
+    function void soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(addr_l_bit_cg[bt]) this.addr_l_bit_cg[bt].sample(addr_l.get_mirrored_value() >> bt);
         end
@@ -1561,8 +1561,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__SS_SOC_IFC_BASE_ADDR_H SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_BASE_ADDR_H SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1577,7 +1577,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__SS_SOC_IFC_BASE_ADDR_H::sample_values();
+    function void soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(addr_h_bit_cg[bt]) this.addr_h_bit_cg[bt].sample(addr_h.get_mirrored_value() >> bt);
         end
@@ -1861,8 +1861,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__SS_STRAP_RSVD SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__SS_STRAP_RSVD::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_STRAP_GENERIC SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_STRAP_GENERIC::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1870,19 +1870,19 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(data[0 + bt]);
+            foreach(data_bit_cg[bt]) this.data_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*rsvd*/   );
+            this.fld_cg.sample( data[31:0]/*data*/   );
         end
     endfunction
 
-    function void soc_ifc_reg__SS_STRAP_RSVD::sample_values();
+    function void soc_ifc_reg__SS_STRAP_GENERIC::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(rsvd.get_mirrored_value() >> bt);
+            foreach(data_bit_cg[bt]) this.data_bit_cg[bt].sample(data.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( rsvd.get_mirrored_value()   );
+            this.fld_cg.sample( data.get_mirrored_value()   );
         end
     endfunction
 

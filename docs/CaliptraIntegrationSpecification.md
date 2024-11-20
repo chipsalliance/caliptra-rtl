@@ -160,10 +160,10 @@ The following tables describe the interface signals.
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | |
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | |
 |  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_rsvd_0                                    | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_rsvd_1                                    | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_rsvd_2                                    | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_rsvd_3                                    | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | |
 |  ss_debug_intent                                          | 1   | Input Strap | Synchronous to clk | |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |

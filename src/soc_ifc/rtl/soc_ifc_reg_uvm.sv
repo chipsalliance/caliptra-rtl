@@ -2279,17 +2279,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_DEBUG_INTENT
 
-    // Reg - soc_ifc_reg::SS_STRAP_RSVD
-    class soc_ifc_reg__SS_STRAP_RSVD extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_STRAP_GENERIC
+    class soc_ifc_reg__SS_STRAP_GENERIC extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__SS_STRAP_RSVD_bit_cg rsvd_bit_cg[32];
-        soc_ifc_reg__SS_STRAP_RSVD_fld_cg fld_cg;
-        rand uvm_reg_field rsvd;
+        soc_ifc_reg__SS_STRAP_GENERIC_bit_cg data_bit_cg[32];
+        soc_ifc_reg__SS_STRAP_GENERIC_fld_cg fld_cg;
+        rand uvm_reg_field data;
 
-        function new(string name = "soc_ifc_reg__SS_STRAP_RSVD");
+        function new(string name = "soc_ifc_reg__SS_STRAP_GENERIC");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2299,15 +2299,15 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.data = new("data");
+            this.data.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__SS_STRAP_RSVD
+    endclass : soc_ifc_reg__SS_STRAP_GENERIC
 
     // Reg - soc_ifc_reg::SS_DBG_MANUF_SERVICE_REG_REQ
     class soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ extends uvm_reg;
@@ -4497,7 +4497,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         rand soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         rand soc_ifc_reg__SS_DEBUG_INTENT SS_DEBUG_INTENT;
-        rand soc_ifc_reg__SS_STRAP_RSVD SS_STRAP_RSVD[4];
+        rand soc_ifc_reg__SS_STRAP_GENERIC SS_STRAP_GENERIC[4];
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ SS_DBG_MANUF_SERVICE_REG_REQ;
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP SS_DBG_MANUF_SERVICE_REG_RSP;
         rand soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL SS_SOC_DBG_UNLOCK_LEVEL[2];
@@ -4923,12 +4923,12 @@ package soc_ifc_reg_uvm;
 
             this.SS_DEBUG_INTENT.build();
             this.default_map.add_reg(this.SS_DEBUG_INTENT, 'h530);
-            foreach(this.SS_STRAP_RSVD[i0]) begin
-                this.SS_STRAP_RSVD[i0] = new($sformatf("SS_STRAP_RSVD[%0d]", i0));
-                this.SS_STRAP_RSVD[i0].configure(this);
+            foreach(this.SS_STRAP_GENERIC[i0]) begin
+                this.SS_STRAP_GENERIC[i0] = new($sformatf("SS_STRAP_GENERIC[%0d]", i0));
+                this.SS_STRAP_GENERIC[i0].configure(this);
                 
-                this.SS_STRAP_RSVD[i0].build();
-                this.default_map.add_reg(this.SS_STRAP_RSVD[i0], 'h5a0 + i0*'h4);
+                this.SS_STRAP_GENERIC[i0].build();
+                this.default_map.add_reg(this.SS_STRAP_GENERIC[i0], 'h5a0 + i0*'h4);
             end
             this.SS_DBG_MANUF_SERVICE_REG_REQ = new("SS_DBG_MANUF_SERVICE_REG_REQ");
             this.SS_DBG_MANUF_SERVICE_REG_REQ.configure(this);

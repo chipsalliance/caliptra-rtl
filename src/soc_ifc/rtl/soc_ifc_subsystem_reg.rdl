@@ -144,12 +144,13 @@ reg {
 } SS_DEBUG_INTENT;
 
 reg {
-    name = "RESERVED STRAP";
+    name = "GENERIC STRAP";
     desc = "Straps reserved for late-binding features for survivability.
+            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
-            [br]SOC Access:      RO";
-    strap rsvd[32]=32'h0;
-} SS_STRAP_RSVD[4] @0x5a0;
+            [br]SOC Access:      RWL-S";
+    strap data[32]=32'h0;
+} SS_STRAP_GENERIC[4] @0x5a0;
 
 reg {
     name = "SUBSYSTEM DEBUG & MANUF SERVICE REG REQUEST";
