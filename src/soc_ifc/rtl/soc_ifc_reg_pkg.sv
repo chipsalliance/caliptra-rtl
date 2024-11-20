@@ -13,27 +13,25 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [27:0] next;
-        logic we;
-    } soc_ifc_reg__rw_rw_sticky_hw_w28__in_t;
+    } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__in_t iccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__in_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__in_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__in_t crypto_err;
-        soc_ifc_reg__rw_rw_sticky_hw_w28__in_t rsvd;
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
     typedef struct packed{
         logic [28:0] next;
-        logic we;
-    } soc_ifc_reg__rw_rw_sticky_hw_w29__in_t;
+    } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__rsvd__in_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_prot_no_lock;
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_prot_ooo;
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_ecc_unc;
-        soc_ifc_reg__rw_rw_sticky_hw_w29__in_t rsvd;
+        soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__in_t;
 
     typedef struct packed{
@@ -438,8 +436,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [28:0] next;
-        logic we;
-        logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__RSVD__in_t;
 
     typedef struct packed{
@@ -505,8 +501,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [22:0] next;
-        logic we;
-        logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__RSVD__in_t;
 
     typedef struct packed{
@@ -721,26 +715,16 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__out_t;
 
     typedef struct packed{
-        logic [27:0] value;
-    } soc_ifc_reg__rw_rw_sticky_hw_w28__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__out_t iccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__out_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__out_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__out_t crypto_err;
-        soc_ifc_reg__rw_rw_sticky_hw_w28__out_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
-
-    typedef struct packed{
-        logic [28:0] value;
-    } soc_ifc_reg__rw_rw_sticky_hw_w29__out_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_prot_no_lock;
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_prot_ooo;
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_ecc_unc;
-        soc_ifc_reg__rw_rw_sticky_hw_w29__out_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__out_t;
 
     typedef struct packed{
@@ -1187,14 +1171,9 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t;
 
     typedef struct packed{
-        logic [28:0] value;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__RSVD__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t MANUF_DBG_UNLOCK_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t PROD_DBG_UNLOCK_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t UDS_PROGRAM_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__RSVD__out_t RSVD;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t;
 
     typedef struct packed{
@@ -1234,10 +1213,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t;
 
     typedef struct packed{
-        logic [22:0] value;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__RSVD__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__out_t MANUF_DBG_UNLOCK_SUCCESS;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__out_t MANUF_DBG_UNLOCK_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__out_t MANUF_DBG_UNLOCK_IN_PROGRESS;
@@ -1247,7 +1222,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__out_t UDS_PROGRAM_SUCCESS;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__out_t UDS_PROGRAM_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t UDS_PROGRAM_IN_PROGRESS;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__RSVD__out_t RSVD;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t;
 
     typedef struct packed{

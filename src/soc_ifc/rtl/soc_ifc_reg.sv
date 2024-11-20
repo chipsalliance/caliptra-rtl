@@ -407,10 +407,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } crypto_err;
-            struct packed{
-                logic [27:0] next;
-                logic load_next;
-            } rsvd;
         } CPTRA_HW_ERROR_FATAL;
         struct packed{
             struct packed{
@@ -425,10 +421,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } mbox_ecc_unc;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } rsvd;
         } CPTRA_HW_ERROR_NON_FATAL;
         struct packed{
             struct packed{
@@ -887,10 +879,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } UDS_PROGRAM_REQ;
-            struct packed{
-                logic [28:0] next;
-                logic load_next;
-            } RSVD;
         } SS_DBG_MANUF_SERVICE_REG_REQ;
         struct packed{
             struct packed{
@@ -929,10 +917,6 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } UDS_PROGRAM_IN_PROGRESS;
-            struct packed{
-                logic [22:0] next;
-                logic load_next;
-            } RSVD;
         } SS_DBG_MANUF_SERVICE_REG_RSP;
         struct packed{
             struct packed{
@@ -1489,9 +1473,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } crypto_err;
-            struct packed{
-                logic [27:0] value;
-            } rsvd;
         } CPTRA_HW_ERROR_FATAL;
         struct packed{
             struct packed{
@@ -1503,9 +1484,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } mbox_ecc_unc;
-            struct packed{
-                logic [28:0] value;
-            } rsvd;
         } CPTRA_HW_ERROR_NON_FATAL;
         struct packed{
             struct packed{
@@ -1884,9 +1862,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } UDS_PROGRAM_REQ;
-            struct packed{
-                logic [28:0] value;
-            } RSVD;
         } SS_DBG_MANUF_SERVICE_REG_REQ;
         struct packed{
             struct packed{
@@ -1916,9 +1891,6 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } UDS_PROGRAM_IN_PROGRESS;
-            struct packed{
-                logic [22:0] value;
-            } RSVD;
         } SS_DBG_MANUF_SERVICE_REG_RSP;
         struct packed{
             struct packed{
@@ -2404,30 +2376,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value = field_storage.CPTRA_HW_ERROR_FATAL.crypto_err.value;
-    // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.rsvd
-    always_comb begin
-        automatic logic [27:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value & ~(decoded_wr_data[31:4] & decoded_wr_biten[31:4]);
-            load_next_c = '1;
-        end else if(hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.we) begin // HW Write - we
-            next_c = hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next;
-            load_next_c = '1;
-        end
-        field_combo.CPTRA_HW_ERROR_FATAL.rsvd.next = next_c;
-        field_combo.CPTRA_HW_ERROR_FATAL.rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value <= 28'h0;
-        end else if(field_combo.CPTRA_HW_ERROR_FATAL.rsvd.load_next) begin
-            field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value <= field_combo.CPTRA_HW_ERROR_FATAL.rsvd.next;
-        end
-    end
-    assign hwif_out.CPTRA_HW_ERROR_FATAL.rsvd.value = field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock
     always_comb begin
         automatic logic [0:0] next_c;
@@ -2500,30 +2448,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value;
-    // Field: soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL.rsvd
-    always_comb begin
-        automatic logic [28:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value & ~(decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end else if(hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.we) begin // HW Write - we
-            next_c = hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.next;
-            load_next_c = '1;
-        end
-        field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.next = next_c;
-        field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value <= 29'h0;
-        end else if(field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.load_next) begin
-            field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value <= field_combo.CPTRA_HW_ERROR_NON_FATAL.rsvd.next;
-        end
-    end
-    assign hwif_out.CPTRA_HW_ERROR_NON_FATAL.rsvd.value = field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value;
     // Field: soc_ifc_reg.CPTRA_FW_ERROR_FATAL.error_code
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4325,30 +4249,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value;
-    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD
-    always_comb begin
-        automatic logic [28:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.swwe) begin // SW write
-            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value & ~decoded_wr_biten[31:3]) | (decoded_wr_data[31:3] & decoded_wr_biten[31:3]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next;
-            load_next_c = '1;
-        end
-        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next = next_c;
-        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value <= 29'h0;
-        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.load_next) begin
-            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next;
-        end
-    end
-    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value;
     // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS
     always_comb begin
         automatic logic [0:0] next_c;
@@ -4565,30 +4465,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value;
-    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD
-    always_comb begin
-        automatic logic [22:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.swwe) begin // SW write
-            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value & ~decoded_wr_biten[31:9]) | (decoded_wr_data[31:9] & decoded_wr_biten[31:9]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next;
-            load_next_c = '1;
-        end
-        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next = next_c;
-        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value <= 23'h0;
-        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.load_next) begin
-            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next;
-        end
-    end
-    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value;
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.SS_SOC_DBG_UNLOCK_LEVEL[].LEVEL
         always_comb begin
@@ -7025,11 +6901,11 @@ module soc_ifc_reg (
     assign readback_array[0][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value : '0;
     assign readback_array[0][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value : '0;
     assign readback_array[0][3:3] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.crypto_err.value : '0;
-    assign readback_array[0][31:4] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.rsvd.value : '0;
+    assign readback_array[0][31:4] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next : '0;
     assign readback_array[1][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value : '0;
     assign readback_array[1][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value : '0;
     assign readback_array[1][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value : '0;
-    assign readback_array[1][31:3] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.rsvd.value : '0;
+    assign readback_array[1][31:3] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.next : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.CPTRA_HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_ENC.error_code.value : '0;
@@ -7179,7 +7055,7 @@ module soc_ifc_reg (
     assign readback_array[168][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value : '0;
     assign readback_array[168][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value : '0;
     assign readback_array[168][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value : '0;
-    assign readback_array[168][31:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value : '0;
+    assign readback_array[168][31:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next : '0;
     assign readback_array[169][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value : '0;
     assign readback_array[169][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value : '0;
     assign readback_array[169][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value : '0;
@@ -7189,7 +7065,7 @@ module soc_ifc_reg (
     assign readback_array[169][6:6] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value : '0;
     assign readback_array[169][7:7] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value : '0;
     assign readback_array[169][8:8] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value : '0;
-    assign readback_array[169][31:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value : '0;
+    assign readback_array[169][31:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 170][31:0] = (decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && !decoded_req_is_wr) ? field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value : '0;
     end

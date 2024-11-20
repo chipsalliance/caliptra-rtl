@@ -737,8 +737,6 @@ always_comb begin : ss_reg_hwwe
     soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DEBUG_INTENT));
     //SS REGISTERS WITH TAP WRITE ACCESS
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.we                 = (cptra_uncore_dmi_locked_reg_wr_en & 
-                                                                               (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.we = (cptra_uncore_dmi_locked_reg_wr_en & 
                                                                                (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.we  = (cptra_uncore_dmi_locked_reg_wr_en & 
@@ -754,7 +752,6 @@ always_comb begin : ss_reg_hwwe
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.we             = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.we      = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.we          = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.we                         = (cptra_uncore_dmi_unlocked_reg_wr_en & (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP));
     soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                               (cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL0));
     soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.we = (cptra_uncore_dmi_unlocked_reg_wr_en & 
@@ -784,7 +781,7 @@ always_comb begin : ss_reg_next_vals
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.next        = cptra_uncore_dmi_reg_wdata[0];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.next         = cptra_uncore_dmi_reg_wdata[1];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.next             = cptra_uncore_dmi_reg_wdata[2];
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next                        = cptra_uncore_dmi_reg_wdata[31:3];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next[28:0]                  = 29'h0;
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next     = cptra_uncore_dmi_reg_wdata[0];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next        = cptra_uncore_dmi_reg_wdata[1];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next = cptra_uncore_dmi_reg_wdata[2];
@@ -794,7 +791,7 @@ always_comb begin : ss_reg_next_vals
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next          = cptra_uncore_dmi_reg_wdata[6];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next             = cptra_uncore_dmi_reg_wdata[7];
     soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next      = cptra_uncore_dmi_reg_wdata[8];
-    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next                         = cptra_uncore_dmi_reg_wdata[31:9];
+    soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next[22:0]                   = 23'h0;
     soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.next                         = cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.next                         = cptra_uncore_dmi_reg_wdata;
     //STRAPS WITH RO or NO TAP ACCESS
@@ -1235,6 +1232,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next[27:0]   = 28'h0;
 // Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
 always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.next) ||
@@ -1249,6 +1247,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .we = 
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc     .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.next[28:0]        = 29'h0;
 // Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
 always_comb unmasked_hw_error_non_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.we && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.next) ||
                                                 (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .we && ~soc_ifc_reg_hwif_out.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo    .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .next) ||
@@ -1282,22 +1281,22 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {28'b0,
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[27:0],
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.nmi_pin.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.value) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {29'b0,
-                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value,
-                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value,
-                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value}) |
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_NON_FATAL.rsvd.next[28:0],
+                                                                                                                       soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value,
+                                                                                                                       soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value,
+                                                                                                                       soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_NON_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_NON_FATAL.error_code.value) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {29'b0,
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next[28:0],
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {23'b0,
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next[22:0],
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS,
@@ -1317,13 +1316,13 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.rsvd.value[27:0],
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[27:0],
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.nmi_pin.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_FW_FATAL_ERROR)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_FATAL.error_code.value) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.rsvd.value[28:0],
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_NON_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_NON_FATAL.rsvd.next[28:0],
                                                                                                                          soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value,
                                                                                                                          soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value,
                                                                                                                          soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value}) |
@@ -1343,11 +1342,11 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_1)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[1].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_2)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[2].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_3)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[3].data.value ) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.value[28:0],
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next[28:0],
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.value[22:0],
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next[22:0],
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS,

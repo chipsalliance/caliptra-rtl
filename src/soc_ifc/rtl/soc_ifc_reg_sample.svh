@@ -28,9 +28,10 @@
             foreach(dccm_ecc_unc_bit_cg[bt]) this.dccm_ecc_unc_bit_cg[bt].sample(data[1 + bt]);
             foreach(nmi_pin_bit_cg[bt]) this.nmi_pin_bit_cg[bt].sample(data[2 + bt]);
             foreach(crypto_err_bit_cg[bt]) this.crypto_err_bit_cg[bt].sample(data[3 + bt]);
+            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(data[4 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*iccm_ecc_unc*/  ,  data[1:1]/*dccm_ecc_unc*/  ,  data[2:2]/*nmi_pin*/  ,  data[3:3]/*crypto_err*/   );
+            this.fld_cg.sample( data[0:0]/*iccm_ecc_unc*/  ,  data[1:1]/*dccm_ecc_unc*/  ,  data[2:2]/*nmi_pin*/  ,  data[3:3]/*crypto_err*/  ,  data[31:4]/*rsvd*/   );
         end
     endfunction
 
@@ -40,9 +41,10 @@
             foreach(dccm_ecc_unc_bit_cg[bt]) this.dccm_ecc_unc_bit_cg[bt].sample(dccm_ecc_unc.get_mirrored_value() >> bt);
             foreach(nmi_pin_bit_cg[bt]) this.nmi_pin_bit_cg[bt].sample(nmi_pin.get_mirrored_value() >> bt);
             foreach(crypto_err_bit_cg[bt]) this.crypto_err_bit_cg[bt].sample(crypto_err.get_mirrored_value() >> bt);
+            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(rsvd.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( iccm_ecc_unc.get_mirrored_value()  ,  dccm_ecc_unc.get_mirrored_value()  ,  nmi_pin.get_mirrored_value()  ,  crypto_err.get_mirrored_value()   );
+            this.fld_cg.sample( iccm_ecc_unc.get_mirrored_value()  ,  dccm_ecc_unc.get_mirrored_value()  ,  nmi_pin.get_mirrored_value()  ,  crypto_err.get_mirrored_value()  ,  rsvd.get_mirrored_value()   );
         end
     endfunction
 
@@ -58,9 +60,10 @@
             foreach(mbox_prot_no_lock_bit_cg[bt]) this.mbox_prot_no_lock_bit_cg[bt].sample(data[0 + bt]);
             foreach(mbox_prot_ooo_bit_cg[bt]) this.mbox_prot_ooo_bit_cg[bt].sample(data[1 + bt]);
             foreach(mbox_ecc_unc_bit_cg[bt]) this.mbox_ecc_unc_bit_cg[bt].sample(data[2 + bt]);
+            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(data[3 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*mbox_prot_no_lock*/  ,  data[1:1]/*mbox_prot_ooo*/  ,  data[2:2]/*mbox_ecc_unc*/   );
+            this.fld_cg.sample( data[0:0]/*mbox_prot_no_lock*/  ,  data[1:1]/*mbox_prot_ooo*/  ,  data[2:2]/*mbox_ecc_unc*/  ,  data[31:3]/*rsvd*/   );
         end
     endfunction
 
@@ -69,9 +72,10 @@
             foreach(mbox_prot_no_lock_bit_cg[bt]) this.mbox_prot_no_lock_bit_cg[bt].sample(mbox_prot_no_lock.get_mirrored_value() >> bt);
             foreach(mbox_prot_ooo_bit_cg[bt]) this.mbox_prot_ooo_bit_cg[bt].sample(mbox_prot_ooo.get_mirrored_value() >> bt);
             foreach(mbox_ecc_unc_bit_cg[bt]) this.mbox_ecc_unc_bit_cg[bt].sample(mbox_ecc_unc.get_mirrored_value() >> bt);
+            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(rsvd.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( mbox_prot_no_lock.get_mirrored_value()  ,  mbox_prot_ooo.get_mirrored_value()  ,  mbox_ecc_unc.get_mirrored_value()   );
+            this.fld_cg.sample( mbox_prot_no_lock.get_mirrored_value()  ,  mbox_prot_ooo.get_mirrored_value()  ,  mbox_ecc_unc.get_mirrored_value()  ,  rsvd.get_mirrored_value()   );
         end
     endfunction
 
@@ -1898,9 +1902,10 @@
             foreach(MANUF_DBG_UNLOCK_REQ_bit_cg[bt]) this.MANUF_DBG_UNLOCK_REQ_bit_cg[bt].sample(data[0 + bt]);
             foreach(PROD_DBG_UNLOCK_REQ_bit_cg[bt]) this.PROD_DBG_UNLOCK_REQ_bit_cg[bt].sample(data[1 + bt]);
             foreach(UDS_PROGRAM_REQ_bit_cg[bt]) this.UDS_PROGRAM_REQ_bit_cg[bt].sample(data[2 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[3 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_REQ*/  ,  data[1:1]/*PROD_DBG_UNLOCK_REQ*/  ,  data[2:2]/*UDS_PROGRAM_REQ*/   );
+            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_REQ*/  ,  data[1:1]/*PROD_DBG_UNLOCK_REQ*/  ,  data[2:2]/*UDS_PROGRAM_REQ*/  ,  data[31:3]/*RSVD*/   );
         end
     endfunction
 
@@ -1909,9 +1914,10 @@
             foreach(MANUF_DBG_UNLOCK_REQ_bit_cg[bt]) this.MANUF_DBG_UNLOCK_REQ_bit_cg[bt].sample(MANUF_DBG_UNLOCK_REQ.get_mirrored_value() >> bt);
             foreach(PROD_DBG_UNLOCK_REQ_bit_cg[bt]) this.PROD_DBG_UNLOCK_REQ_bit_cg[bt].sample(PROD_DBG_UNLOCK_REQ.get_mirrored_value() >> bt);
             foreach(UDS_PROGRAM_REQ_bit_cg[bt]) this.UDS_PROGRAM_REQ_bit_cg[bt].sample(UDS_PROGRAM_REQ.get_mirrored_value() >> bt);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( MANUF_DBG_UNLOCK_REQ.get_mirrored_value()  ,  PROD_DBG_UNLOCK_REQ.get_mirrored_value()  ,  UDS_PROGRAM_REQ.get_mirrored_value()   );
+            this.fld_cg.sample( MANUF_DBG_UNLOCK_REQ.get_mirrored_value()  ,  PROD_DBG_UNLOCK_REQ.get_mirrored_value()  ,  UDS_PROGRAM_REQ.get_mirrored_value()  ,  RSVD.get_mirrored_value()   );
         end
     endfunction
 
@@ -1933,9 +1939,10 @@
             foreach(UDS_PROGRAM_SUCCESS_bit_cg[bt]) this.UDS_PROGRAM_SUCCESS_bit_cg[bt].sample(data[6 + bt]);
             foreach(UDS_PROGRAM_FAIL_bit_cg[bt]) this.UDS_PROGRAM_FAIL_bit_cg[bt].sample(data[7 + bt]);
             foreach(UDS_PROGRAM_IN_PROGRESS_bit_cg[bt]) this.UDS_PROGRAM_IN_PROGRESS_bit_cg[bt].sample(data[8 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[9 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_SUCCESS*/  ,  data[1:1]/*MANUF_DBG_UNLOCK_FAIL*/  ,  data[2:2]/*MANUF_DBG_UNLOCK_IN_PROGRESS*/  ,  data[3:3]/*PROD_DBG_UNLOCK_SUCCESS*/  ,  data[4:4]/*PROD_DBG_UNLOCK_FAIL*/  ,  data[5:5]/*PROD_DBG_UNLOCK_IN_PROGRESS*/  ,  data[6:6]/*UDS_PROGRAM_SUCCESS*/  ,  data[7:7]/*UDS_PROGRAM_FAIL*/  ,  data[8:8]/*UDS_PROGRAM_IN_PROGRESS*/   );
+            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_SUCCESS*/  ,  data[1:1]/*MANUF_DBG_UNLOCK_FAIL*/  ,  data[2:2]/*MANUF_DBG_UNLOCK_IN_PROGRESS*/  ,  data[3:3]/*PROD_DBG_UNLOCK_SUCCESS*/  ,  data[4:4]/*PROD_DBG_UNLOCK_FAIL*/  ,  data[5:5]/*PROD_DBG_UNLOCK_IN_PROGRESS*/  ,  data[6:6]/*UDS_PROGRAM_SUCCESS*/  ,  data[7:7]/*UDS_PROGRAM_FAIL*/  ,  data[8:8]/*UDS_PROGRAM_IN_PROGRESS*/  ,  data[31:9]/*RSVD*/   );
         end
     endfunction
 
@@ -1950,9 +1957,10 @@
             foreach(UDS_PROGRAM_SUCCESS_bit_cg[bt]) this.UDS_PROGRAM_SUCCESS_bit_cg[bt].sample(UDS_PROGRAM_SUCCESS.get_mirrored_value() >> bt);
             foreach(UDS_PROGRAM_FAIL_bit_cg[bt]) this.UDS_PROGRAM_FAIL_bit_cg[bt].sample(UDS_PROGRAM_FAIL.get_mirrored_value() >> bt);
             foreach(UDS_PROGRAM_IN_PROGRESS_bit_cg[bt]) this.UDS_PROGRAM_IN_PROGRESS_bit_cg[bt].sample(UDS_PROGRAM_IN_PROGRESS.get_mirrored_value() >> bt);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( MANUF_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  PROD_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  UDS_PROGRAM_SUCCESS.get_mirrored_value()  ,  UDS_PROGRAM_FAIL.get_mirrored_value()  ,  UDS_PROGRAM_IN_PROGRESS.get_mirrored_value()   );
+            this.fld_cg.sample( MANUF_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  PROD_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  UDS_PROGRAM_SUCCESS.get_mirrored_value()  ,  UDS_PROGRAM_FAIL.get_mirrored_value()  ,  UDS_PROGRAM_IN_PROGRESS.get_mirrored_value()  ,  RSVD.get_mirrored_value()   );
         end
     endfunction
 

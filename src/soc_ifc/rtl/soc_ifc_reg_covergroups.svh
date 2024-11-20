@@ -31,13 +31,15 @@
     input bit [1-1:0] iccm_ecc_unc,
     input bit [1-1:0] dccm_ecc_unc,
     input bit [1-1:0] nmi_pin,
-    input bit [1-1:0] crypto_err
+    input bit [1-1:0] crypto_err,
+    input bit [28-1:0] rsvd
     );
         option.per_instance = 1;
         iccm_ecc_unc_cp : coverpoint iccm_ecc_unc;
         dccm_ecc_unc_cp : coverpoint dccm_ecc_unc;
         nmi_pin_cp : coverpoint nmi_pin;
         crypto_err_cp : coverpoint crypto_err;
+        rsvd_cp : coverpoint rsvd;
 
     endgroup
 
@@ -56,12 +58,14 @@
     covergroup soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL_fld_cg with function sample(
     input bit [1-1:0] mbox_prot_no_lock,
     input bit [1-1:0] mbox_prot_ooo,
-    input bit [1-1:0] mbox_ecc_unc
+    input bit [1-1:0] mbox_ecc_unc,
+    input bit [29-1:0] rsvd
     );
         option.per_instance = 1;
         mbox_prot_no_lock_cp : coverpoint mbox_prot_no_lock;
         mbox_prot_ooo_cp : coverpoint mbox_prot_ooo;
         mbox_ecc_unc_cp : coverpoint mbox_ecc_unc;
+        rsvd_cp : coverpoint rsvd;
 
     endgroup
 
@@ -1620,12 +1624,14 @@
     covergroup soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_fld_cg with function sample(
     input bit [1-1:0] MANUF_DBG_UNLOCK_REQ,
     input bit [1-1:0] PROD_DBG_UNLOCK_REQ,
-    input bit [1-1:0] UDS_PROGRAM_REQ
+    input bit [1-1:0] UDS_PROGRAM_REQ,
+    input bit [29-1:0] RSVD
     );
         option.per_instance = 1;
         MANUF_DBG_UNLOCK_REQ_cp : coverpoint MANUF_DBG_UNLOCK_REQ;
         PROD_DBG_UNLOCK_REQ_cp : coverpoint PROD_DBG_UNLOCK_REQ;
         UDS_PROGRAM_REQ_cp : coverpoint UDS_PROGRAM_REQ;
+        RSVD_cp : coverpoint RSVD;
 
     endgroup
 
@@ -1650,7 +1656,8 @@
     input bit [1-1:0] PROD_DBG_UNLOCK_IN_PROGRESS,
     input bit [1-1:0] UDS_PROGRAM_SUCCESS,
     input bit [1-1:0] UDS_PROGRAM_FAIL,
-    input bit [1-1:0] UDS_PROGRAM_IN_PROGRESS
+    input bit [1-1:0] UDS_PROGRAM_IN_PROGRESS,
+    input bit [23-1:0] RSVD
     );
         option.per_instance = 1;
         MANUF_DBG_UNLOCK_SUCCESS_cp : coverpoint MANUF_DBG_UNLOCK_SUCCESS;
@@ -1662,6 +1669,7 @@
         UDS_PROGRAM_SUCCESS_cp : coverpoint UDS_PROGRAM_SUCCESS;
         UDS_PROGRAM_FAIL_cp : coverpoint UDS_PROGRAM_FAIL;
         UDS_PROGRAM_IN_PROGRESS_cp : coverpoint UDS_PROGRAM_IN_PROGRESS;
+        RSVD_cp : coverpoint RSVD;
 
     endgroup
 

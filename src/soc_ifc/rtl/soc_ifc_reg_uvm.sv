@@ -41,7 +41,7 @@ package soc_ifc_reg_uvm;
             this.crypto_err = new("crypto_err");
             this.crypto_err.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 28, 4, "W1C", 1, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 28, 4, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
@@ -87,7 +87,7 @@ package soc_ifc_reg_uvm;
             this.mbox_ecc_unc = new("mbox_ecc_unc");
             this.mbox_ecc_unc.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 29, 3, "W1C", 1, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 29, 3, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mbox_prot_no_lock_bit_cg[bt]) mbox_prot_no_lock_bit_cg[bt] = new();
                 foreach(mbox_prot_ooo_bit_cg[bt]) mbox_prot_ooo_bit_cg[bt] = new();
@@ -2352,7 +2352,7 @@ package soc_ifc_reg_uvm;
             this.UDS_PROGRAM_REQ = new("UDS_PROGRAM_REQ");
             this.UDS_PROGRAM_REQ.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.RSVD = new("RSVD");
-            this.RSVD.configure(this, 29, 3, "RW", 1, 'h0, 1, 1, 0);
+            this.RSVD.configure(this, 29, 3, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(MANUF_DBG_UNLOCK_REQ_bit_cg[bt]) MANUF_DBG_UNLOCK_REQ_bit_cg[bt] = new();
                 foreach(PROD_DBG_UNLOCK_REQ_bit_cg[bt]) PROD_DBG_UNLOCK_REQ_bit_cg[bt] = new();
@@ -2421,7 +2421,7 @@ package soc_ifc_reg_uvm;
             this.UDS_PROGRAM_IN_PROGRESS = new("UDS_PROGRAM_IN_PROGRESS");
             this.UDS_PROGRAM_IN_PROGRESS.configure(this, 1, 8, "RW", 1, 'h0, 1, 1, 0);
             this.RSVD = new("RSVD");
-            this.RSVD.configure(this, 23, 9, "RW", 1, 'h0, 1, 1, 0);
+            this.RSVD.configure(this, 23, 9, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(MANUF_DBG_UNLOCK_SUCCESS_bit_cg[bt]) MANUF_DBG_UNLOCK_SUCCESS_bit_cg[bt] = new();
                 foreach(MANUF_DBG_UNLOCK_FAIL_bit_cg[bt]) MANUF_DBG_UNLOCK_FAIL_bit_cg[bt] = new();
