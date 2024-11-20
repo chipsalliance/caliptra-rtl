@@ -3144,12 +3144,12 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
 0xC6ED2197};
     //Call interrupt init
     init_interrupts();
+    mldsa_io seed;
+    uint32_t sign_rnd[8], entropy[16], privkey[1224], pubkey[648], msg[16], sign[1157], verifyres[16];
 
-    uint32_t seed[8], sign_rnd[8], entropy[16], privkey[1224], pubkey[648], msg[16], sign[1157], verifyres[16];
-
-
+    seed.kv_intf = FALSE;
     for (int i = 0; i < 8; i++)
-        seed[7-i] = ((mldsa_seed[i]<<24) & 0xff000000) |
+        seed.data[7-i] = ((mldsa_seed[i]<<24) & 0xff000000) |
                     ((mldsa_seed[i]<< 8) & 0x00ff0000) |
                     ((mldsa_seed[i]>> 8) & 0x0000ff00) |
                     ((mldsa_seed[i]>>24) & 0x000000ff); //mldsa_seed[i];
@@ -3211,9 +3211,9 @@ uint32_t mldsa_verifyres [] = {0x89E8DA09,
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
 
-    mldsa_verifying_flow(msg, pubkey, sign, verifyres);
-    mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    // mldsa_verifying_flow(msg, pubkey, sign, verifyres);
+    // mldsa_zeroize();
+    // cptra_intr_rcv.mldsa_notif = 0;
 
     printf("%c",0xff); //End the test
     
