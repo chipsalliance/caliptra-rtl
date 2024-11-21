@@ -33,6 +33,7 @@ import soc_ifc_pkg::*;
     // Should only assert when a full block_size of data is available at the
     // recovery interface FIFO
     input logic recovery_data_avail,
+    input logic recovery_image_activated,
 
     // Internal Signaling
     input logic mbox_lock,
@@ -254,12 +255,14 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.ctrl.go.hwclr    = (ctrl_fsm_ps == DMA_DONE) || ((ctrl_fsm_ps == DMA_ERROR) && hwif_out.ctrl.flush.value);
     always_comb hwif_in.ctrl.flush.hwclr = (ctrl_fsm_ps == DMA_IDLE);
 
-    always_comb hwif_in.cap.fifo_max_depth.next      = FIFO_BC/BC;
-    always_comb hwif_in.status0.busy.next            = (ctrl_fsm_ps != DMA_IDLE);
-    always_comb hwif_in.status0.error.next           = (ctrl_fsm_ps == DMA_ERROR);
-    always_comb hwif_in.status0.fifo_depth.next      = 12'(fifo_depth);
-    always_comb hwif_in.status0.axi_dma_fsm_ps.next  = ctrl_fsm_ps;
-    always_comb hwif_in.status1.bytes_remaining.next = bytes_remaining;
+    always_comb hwif_in.cap.fifo_max_depth.next        = FIFO_BC/BC;
+    always_comb hwif_in.status0.busy.next              = (ctrl_fsm_ps != DMA_IDLE);
+    always_comb hwif_in.status0.error.next             = (ctrl_fsm_ps == DMA_ERROR);
+    always_comb hwif_in.status0.fifo_depth.next        = 12'(fifo_depth);
+    always_comb hwif_in.status0.axi_dma_fsm_ps.next    = ctrl_fsm_ps;
+    always_comb hwif_in.status0.payload_available.next = recovery_data_avail;
+    always_comb hwif_in.status0.image_activated.next   = recovery_image_activated;
+    always_comb hwif_in.status1.bytes_remaining.next   = bytes_remaining;
 
 
     // --------------------------------------- //
