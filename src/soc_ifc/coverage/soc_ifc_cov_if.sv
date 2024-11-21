@@ -194,7 +194,7 @@ interface soc_ifc_cov_if
         crypto_error_cp: coverpoint crypto_error;
         security_state_cp: coverpoint security_state;
         ready_for_fuses_cp: coverpoint ready_for_fuses;
-        ready_for_fw_push_cp: coverpoint ready_for_fw_push;
+        ready_for_mb_processing_cp: coverpoint ready_for_mb_processing;
         ready_for_runtime_cp: coverpoint ready_for_runtime;
         mailbox_data_avail_cp: coverpoint mailbox_data_avail;
         mailbox_flow_done_cp: coverpoint mailbox_flow_done;

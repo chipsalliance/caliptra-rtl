@@ -1203,6 +1203,7 @@ soc_ifc_top1
     .mailbox_flow_done(mailbox_flow_done),
 
     .recovery_data_avail(recovery_data_avail),
+    .recovery_image_activated(recovery_image_activated),
 
     .security_state(cptra_security_state_Latched),
     
