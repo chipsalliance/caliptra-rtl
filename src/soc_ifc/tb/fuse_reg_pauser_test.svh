@@ -21,30 +21,26 @@ logic [31:0] fuse_uds_seed [0:11];
 logic [31:0] fuse_field_entropy [0:7]; 
 logic [31:0] fuse_key_manifest_pk_hash [0:11]; 
 logic [3:0]  fuse_key_manifest_pk_hash_mask; 
-logic [31:0] fuse_owner_pk_hash [0:11]; 
 logic [31:0] fuse_fmc_key_manifest_svn; 
 logic [31:0] fuse_runtime_svn [0:3]; 
 logic        fuse_anti_rollback_disable; 
 logic [31:0] fuse_idevid_cert_attr [0:23]; 
 logic [31:0] fuse_idevid_manuf_hsm_id [0:3]; 
-logic [1:0]  fuse_life_cycle ; 
-logic        fuse_lms_verify ; 
 logic [31:0] fuse_lms_revocation; 
+logic [31:0] fuse_mldsa_revocation; 
 
 
 `FORLOOP_COMB( 12 ) fuse_uds_seed[j]                  = `REG_HIER_PFX.fuse_uds_seed[j].seed.value;
 `FORLOOP_COMB( 8 )  fuse_field_entropy[j]             = `REG_HIER_PFX.fuse_field_entropy[j].seed.value;
 `FORLOOP_COMB( 12 ) fuse_key_manifest_pk_hash[j]      = `REG_HIER_PFX.fuse_key_manifest_pk_hash[j].hash.value;
   always_comb       fuse_key_manifest_pk_hash_mask    = `REG_HIER_PFX.fuse_key_manifest_pk_hash_mask.mask.value;
-`FORLOOP_COMB( 12 ) fuse_owner_pk_hash[j]             = `REG_HIER_PFX.fuse_owner_pk_hash[j].hash.value;
   always_comb       fuse_fmc_key_manifest_svn         = `REG_HIER_PFX.fuse_fmc_key_manifest_svn.svn.value;
 `FORLOOP_COMB( 4 )  fuse_runtime_svn[j]               = `REG_HIER_PFX.fuse_runtime_svn[j].svn.value;
   always_comb       fuse_anti_rollback_disable        = `REG_HIER_PFX.fuse_anti_rollback_disable.dis.value;
 `FORLOOP_COMB( 24 ) fuse_idevid_cert_attr[j]          = `REG_HIER_PFX.fuse_idevid_cert_attr[j].cert.value;
 `FORLOOP_COMB( 4 )  fuse_idevid_manuf_hsm_id[j]       = `REG_HIER_PFX.fuse_idevid_manuf_hsm_id[j].hsm_id.value;
-  always_comb       fuse_life_cycle                   = `REG_HIER_PFX.fuse_life_cycle.life_cycle.value;
-  always_comb       fuse_lms_verify                   = `REG_HIER_PFX.fuse_lms_verify.lms_verify.value;
   always_comb       fuse_lms_revocation               = `REG_HIER_PFX.fuse_lms_revocation.lms_revocation.value;
+  always_comb       fuse_mldsa_revocation             = `REG_HIER_PFX.fuse_mldsa_revocation.mldsa_revocation.value;
 
 
 //----------------------------------------------------------------
@@ -265,7 +261,7 @@ endtask // fuse_reg_pauser_test
 //----------------------------------------------------------------
 // function get_fuse_regval()
 //
-// Probes to get the intenral fuse register value inside dut 
+// Probes to get the internal fuse register value inside dut 
 //----------------------------------------------------------------
 function dword_t get_fuse_regval(string rname);
 
@@ -274,16 +270,15 @@ function dword_t get_fuse_regval(string rname);
   automatic int j; 
 
   strq_t prefixes = {"FUSE_UDS_SEED", "FUSE_FIELD_ENTROPY", "FUSE_KEY_MANIFEST_PK_HASH",  
-   "FUSE_OWNER_PK_HASH", "FUSE_RUNTIME_SVN", "FUSE_IDEVID_CERT_ATTR", "FUSE_IDEVID_MANUF_HSM_ID"}; 
+   "FUSE_RUNTIME_SVN", "FUSE_IDEVID_CERT_ATTR", "FUSE_IDEVID_MANUF_HSM_ID"}; 
 
   begin
     case (rname) 
       "FUSE_KEY_MANIFEST_PK_HASH_MASK"      :  regval = fuse_key_manifest_pk_hash_mask; 
       "FUSE_FMC_KEY_MANIFEST_SVN"           :  regval = fuse_fmc_key_manifest_svn; 
       "FUSE_ANTI_ROLLBACK_DISABLE"          :  regval = fuse_anti_rollback_disable; 
-      "FUSE_LIFE_CYCLE"                     :  regval = fuse_life_cycle ; 
-      "FUSE_LMS_VERIFY"                     :  regval = fuse_lms_verify ; 
       "FUSE_LMS_REVOCATION"                 :  regval = fuse_lms_revocation; 
+      "FUSE_MLDSA_REVOCATION"               :  regval = fuse_mldsa_revocation; 
 
       default: begin
         foreach (prefixes[i]) begin
@@ -302,7 +297,6 @@ function dword_t get_fuse_regval(string rname);
           regval =  (pfx == "FUSE_UDS_SEED"            ) ? fuse_uds_seed[j]:
                     (pfx == "FUSE_FIELD_ENTROPY"       ) ? fuse_field_entropy[j] :
                     (pfx == "FUSE_KEY_MANIFEST_PK_HASH") ? fuse_key_manifest_pk_hash[j] :
-                    (pfx == "FUSE_OWNER_PK_HASH"       ) ? fuse_owner_pk_hash[j] :
                     (pfx == "FUSE_RUNTIME_SVN"         ) ? fuse_runtime_svn[j] :
                     (pfx == "FUSE_IDEVID_CERT_ATTR"    ) ? fuse_idevid_cert_attr[j] :
                     (pfx == "FUSE_IDEVID_MANUF_HSM_ID" ) ? fuse_idevid_manuf_hsm_id[j] : 'x;

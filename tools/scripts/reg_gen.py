@@ -42,8 +42,15 @@ import os
 import re
 import rdl_post_process
 
+# Arg processing
+myargs = iter(sys.argv[1:])
+rdl_file = next(myargs)
+build_cov = 0
+if next(myargs,"empty") == "--cov":
+    build_cov = 1
+
 #output directory for dumping files
-rtl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
+rtl_output_dir = os.path.abspath(os.path.dirname(rdl_file))
 repo_root = os.environ.get('CALIPTRA_ROOT')
 
 # Listener to retrieve the address width at the CPU IF and write as a param to the pkg
@@ -85,7 +92,7 @@ try:
     # Compile your RDL files
     #compile the kv defines so that rdl files including kv controls have the definition
     rdlc.compile_file(os.path.join(repo_root, "src/keyvault/rtl/kv_def.rdl")) 
-    rdlc.compile_file(sys.argv[1])
+    rdlc.compile_file(rdl_file)
 
     # Elaborate the design
     root = rdlc.elaborate()
@@ -100,14 +107,15 @@ try:
 
     # Export a UVM register model
     exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/uvm"))
-    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_uvm.sv")
+    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(rdl_file))[0]) + "_uvm.sv")
     # The below lines are used to generate a baseline/starting point for the include files "<reg_name>_covergroups.svh" and "<reg_name>_sample.svh"
     # The generated files will need to be hand-edited to provide the desired functionality.
-    # Uncomment these lines and run this script directly on the target RDL file to generate the files.
-#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/cov"))
-#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_covergroups.svh")
-#    exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/smp"))
-#    exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(sys.argv[1]))[0]) + "_sample.svh")
+    # Run this script directly on the target RDL file, with the second argument "--cov" to generate the files.
+    if build_cov == 1:
+        exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/cov"))
+        exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(rdl_file))[0]) + "_covergroups.svh")
+        exporter = UVMExporter(user_template_dir=os.path.join(repo_root, "tools/templates/rdl/smp"))
+        exporter.export(root, os.path.join(rtl_output_dir, os.path.splitext(os.path.basename(rdl_file))[0]) + "_sample.svh")
 
     # Traverse the register model!
     walker = RDLWalker(unroll=True)

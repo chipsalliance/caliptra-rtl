@@ -581,6 +581,38 @@ interface soc_ifc_cov_if
   assign         full_addr_CPTRA_RSVD_REG[0] = `CLP_SOC_IFC_REG_CPTRA_RSVD_REG_0;
   assign         full_addr_CPTRA_RSVD_REG[1] = `CLP_SOC_IFC_REG_CPTRA_RSVD_REG_1;
 
+  logic          hit_CPTRA_HW_CAPABILITIES;
+  logic [3:0]    bus_CPTRA_HW_CAPABILITIES;
+  logic [31:0]   full_addr_CPTRA_HW_CAPABILITIES = `CLP_SOC_IFC_REG_CPTRA_HW_CAPABILITIES;
+
+  logic          hit_CPTRA_FW_CAPABILITIES;
+  logic [3:0]    bus_CPTRA_FW_CAPABILITIES;
+  logic [31:0]   full_addr_CPTRA_FW_CAPABILITIES = `CLP_SOC_IFC_REG_CPTRA_FW_CAPABILITIES;
+
+  logic          hit_CPTRA_CAP_LOCK;
+  logic [3:0]    bus_CPTRA_CAP_LOCK;
+  logic [31:0]   full_addr_CPTRA_CAP_LOCK = `CLP_SOC_IFC_REG_CPTRA_CAP_LOCK;
+
+  logic          hit_CPTRA_OWNER_PK_HASH[0:11];
+  logic [3:0]    bus_CPTRA_OWNER_PK_HASH[0:11];
+  logic [31:0]   full_addr_CPTRA_OWNER_PK_HASH[0:11];
+  assign         full_addr_CPTRA_OWNER_PK_HASH[0]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_0;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[1]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_1;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[2]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_2;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[3]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_3;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[4]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_4;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[5]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_5;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[6]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_6;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[7]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_7;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[8]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_8;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[9]  = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_9;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[10] = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_10;
+  assign         full_addr_CPTRA_OWNER_PK_HASH[11] = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_11;
+
+  logic          hit_CPTRA_OWNER_PK_HASH_LOCK;
+  logic [3:0]    bus_CPTRA_OWNER_PK_HASH_LOCK;
+  logic [31:0]   full_addr_CPTRA_OWNER_PK_HASH_LOCK = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK;
+
   logic          hit_fuse_uds_seed[0:11];
   logic [3:0]    bus_fuse_uds_seed[0:11];
   logic [31:0]   full_addr_fuse_uds_seed[0:11];
@@ -625,25 +657,17 @@ interface soc_ifc_cov_if
   assign         full_addr_fuse_key_manifest_pk_hash[10] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_10;
   assign         full_addr_fuse_key_manifest_pk_hash[11] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_11;
 
-  logic          hit_fuse_key_manifest_pk_hash_mask;
-  logic [3:0]    bus_fuse_key_manifest_pk_hash_mask;
-  logic [31:0]   full_addr_fuse_key_manifest_pk_hash_mask = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK;
-
-  logic          hit_fuse_owner_pk_hash[0:11];
-  logic [3:0]    bus_fuse_owner_pk_hash[0:11];
-  logic [31:0]   full_addr_fuse_owner_pk_hash[0:11];
-  assign         full_addr_fuse_owner_pk_hash[0] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_0;
-  assign         full_addr_fuse_owner_pk_hash[1] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_1;
-  assign         full_addr_fuse_owner_pk_hash[2] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_2;
-  assign         full_addr_fuse_owner_pk_hash[3] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_3;
-  assign         full_addr_fuse_owner_pk_hash[4] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_4;
-  assign         full_addr_fuse_owner_pk_hash[5] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_5;
-  assign         full_addr_fuse_owner_pk_hash[6] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_6;
-  assign         full_addr_fuse_owner_pk_hash[7] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_7;
-  assign         full_addr_fuse_owner_pk_hash[8] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_8;
-  assign         full_addr_fuse_owner_pk_hash[9] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_9;
-  assign         full_addr_fuse_owner_pk_hash[10] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_10;
-  assign         full_addr_fuse_owner_pk_hash[11] = `CLP_SOC_IFC_REG_FUSE_OWNER_PK_HASH_11;
+  logic          hit_fuse_key_manifest_pk_hash_mask[0:7];
+  logic [3:0]    bus_fuse_key_manifest_pk_hash_mask[0:7];
+  logic [31:0]   full_addr_fuse_key_manifest_pk_hash_mask[0:7];
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[0] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[1] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[2] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_2;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[3] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_3;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[4] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_4;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[5] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_5;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[6] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_6;
+  assign         full_addr_fuse_key_manifest_pk_hash_mask[7] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_7;
 
   logic          hit_fuse_fmc_key_manifest_svn;
   logic [3:0]    bus_fuse_fmc_key_manifest_svn;
@@ -697,17 +721,13 @@ interface soc_ifc_cov_if
   assign         full_addr_fuse_idevid_manuf_hsm_id[2] = `CLP_SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_2;
   assign         full_addr_fuse_idevid_manuf_hsm_id[3] = `CLP_SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_3;
 
-  logic          hit_fuse_life_cycle;
-  logic [3:0]    bus_fuse_life_cycle;
-  logic [31:0]   full_addr_fuse_life_cycle = `CLP_SOC_IFC_REG_FUSE_LIFE_CYCLE;
-
-  logic          hit_fuse_lms_verify;
-  logic [3:0]    bus_fuse_lms_verify;
-  logic [31:0]   full_addr_fuse_lms_verify = `CLP_SOC_IFC_REG_FUSE_LMS_VERIFY;
-
   logic          hit_fuse_lms_revocation;
   logic [3:0]    bus_fuse_lms_revocation;
   logic [31:0]   full_addr_fuse_lms_revocation = `CLP_SOC_IFC_REG_FUSE_LMS_REVOCATION;
+
+  logic          hit_fuse_mldsa_revocation;
+  logic [3:0]    bus_fuse_mldsa_revocation;
+  logic [31:0]   full_addr_fuse_mldsa_revocation = `CLP_SOC_IFC_REG_FUSE_MLDSA_REVOCATION;
 
   logic          hit_fuse_soc_stepping_id;
   logic [3:0]    bus_fuse_soc_stepping_id;
@@ -1136,6 +1156,54 @@ interface soc_ifc_cov_if
   assign hit_CPTRA_RSVD_REG[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_RSVD_REG[1][18-1:0]);
   assign bus_CPTRA_RSVD_REG[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_RSVD_REG[1]}};
 
+  assign hit_CPTRA_HW_CAPABILITIES = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_HW_CAPABILITIES[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_HW_CAPABILITIES = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_HW_CAPABILITIES}};
+
+  assign hit_CPTRA_FW_CAPABILITIES = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_FW_CAPABILITIES[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_FW_CAPABILITIES = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_FW_CAPABILITIES}};
+
+  assign hit_CPTRA_CAP_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_CAP_LOCK[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_CAP_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_CAP_LOCK}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[0][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[0]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[1][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[1]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[2][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[2]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[3][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[3]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[4][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[4]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[5] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[5][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[5]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[6] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[6][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[6]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[7] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[7][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[7]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[8] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[8][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[8]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[9] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[9][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[9]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[10] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[10][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[10]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH[11] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH[11][18-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH[11]}};
+
+  assign hit_CPTRA_OWNER_PK_HASH_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH_LOCK[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_OWNER_PK_HASH_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH_LOCK}};
+
   assign hit_fuse_uds_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[0][18-1:0]);
   assign bus_fuse_uds_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[0]}};
 
@@ -1232,44 +1300,29 @@ interface soc_ifc_cov_if
   assign hit_fuse_key_manifest_pk_hash[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[11][18-1:0]);
   assign bus_fuse_key_manifest_pk_hash[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[11]}};
 
-  assign hit_fuse_key_manifest_pk_hash_mask = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask}};
+  assign hit_fuse_key_manifest_pk_hash_mask[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[0][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[0]}};
 
-  assign hit_fuse_owner_pk_hash[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[0][18-1:0]);
-  assign bus_fuse_owner_pk_hash[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[0]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[1][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[1]}};
 
-  assign hit_fuse_owner_pk_hash[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[1][18-1:0]);
-  assign bus_fuse_owner_pk_hash[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[1]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[2][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[2]}};
 
-  assign hit_fuse_owner_pk_hash[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[2][18-1:0]);
-  assign bus_fuse_owner_pk_hash[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[2]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[3][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[3]}};
 
-  assign hit_fuse_owner_pk_hash[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[3][18-1:0]);
-  assign bus_fuse_owner_pk_hash[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[3]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[4][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[4]}};
 
-  assign hit_fuse_owner_pk_hash[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[4][18-1:0]);
-  assign bus_fuse_owner_pk_hash[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[4]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[5][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[5]}};
 
-  assign hit_fuse_owner_pk_hash[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[5][18-1:0]);
-  assign bus_fuse_owner_pk_hash[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[5]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[6][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[6]}};
 
-  assign hit_fuse_owner_pk_hash[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[6][18-1:0]);
-  assign bus_fuse_owner_pk_hash[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[6]}};
-
-  assign hit_fuse_owner_pk_hash[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[7][18-1:0]);
-  assign bus_fuse_owner_pk_hash[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[7]}};
-
-  assign hit_fuse_owner_pk_hash[8] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[8][18-1:0]);
-  assign bus_fuse_owner_pk_hash[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[8]}};
-
-  assign hit_fuse_owner_pk_hash[9] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[9][18-1:0]);
-  assign bus_fuse_owner_pk_hash[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[9]}};
-
-  assign hit_fuse_owner_pk_hash[10] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[10][18-1:0]);
-  assign bus_fuse_owner_pk_hash[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[10]}};
-
-  assign hit_fuse_owner_pk_hash[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_owner_pk_hash[11][18-1:0]);
-  assign bus_fuse_owner_pk_hash[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_owner_pk_hash[11]}};
+  assign hit_fuse_key_manifest_pk_hash_mask[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[7][AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[7]}};
 
   assign hit_fuse_fmc_key_manifest_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_fmc_key_manifest_svn[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_fmc_key_manifest_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_fmc_key_manifest_svn}};
@@ -1373,14 +1426,11 @@ interface soc_ifc_cov_if
   assign hit_fuse_idevid_manuf_hsm_id[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_idevid_manuf_hsm_id[3][18-1:0]);
   assign bus_fuse_idevid_manuf_hsm_id[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_idevid_manuf_hsm_id[3]}};
 
-  assign hit_fuse_life_cycle = (soc_ifc_reg_req_data.addr == full_addr_fuse_life_cycle[AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_life_cycle = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_life_cycle}};
-
-  assign hit_fuse_lms_verify = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_verify[AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_lms_verify = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_verify}};
-
   assign hit_fuse_lms_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_lms_revocation[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_lms_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_lms_revocation}};
+
+  assign hit_fuse_mldsa_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_mldsa_revocation[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_mldsa_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_mldsa_revocation}};
 
   assign hit_fuse_soc_stepping_id = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_stepping_id[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_soc_stepping_id = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_stepping_id}};
@@ -2084,6 +2134,106 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP CPTRA_HW_CAPABILITIES -----------------------
+  covergroup soc_ifc_CPTRA_HW_CAPABILITIES_cg (ref logic [3:0] bus_event[0:1]) @(posedge clk);
+    CPTRA_HW_CAPABILITIES_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_HW_CAPABILITIES;
+    bus_CPTRA_HW_CAPABILITIES_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_FW_CAPABILITIES -----------------------
+  covergroup soc_ifc_CPTRA_FW_CAPABILITIES_cg (ref logic [3:0] bus_event[0:1]) @(posedge clk);
+    CPTRA_FW_CAPABILITIES_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_FW_CAPABILITIES;
+    bus_CPTRA_FW_CAPABILITIES_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_CAP_LOCK -----------------------
+  covergroup soc_ifc_CPTRA_CAP_LOCK_cg (ref logic [3:0] bus_event[0:1]) @(posedge clk);
+    CPTRA_CAP_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_CAP_LOCK;
+    bus_CPTRA_CAP_LOCK_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_OWNER_PK_HASH [0:11] -----------------------
+  covergroup soc_ifc_CPTRA_OWNER_PK_HASH_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
+    CPTRA_OWNER_PK_HASH0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[0];
+    bus_CPTRA_OWNER_PK_HASH0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[1];
+    bus_CPTRA_OWNER_PK_HASH1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[2];
+    bus_CPTRA_OWNER_PK_HASH2_cp : coverpoint bus_event[2] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[3];
+    bus_CPTRA_OWNER_PK_HASH3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[4];
+    bus_CPTRA_OWNER_PK_HASH4_cp : coverpoint bus_event[4] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH5_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[5];
+    bus_CPTRA_OWNER_PK_HASH5_cp : coverpoint bus_event[5] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH6_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[6];
+    bus_CPTRA_OWNER_PK_HASH6_cp : coverpoint bus_event[6] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH7_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[7];
+    bus_CPTRA_OWNER_PK_HASH7_cp : coverpoint bus_event[7] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH8_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[8];
+    bus_CPTRA_OWNER_PK_HASH8_cp : coverpoint bus_event[8] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH9_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[9];
+    bus_CPTRA_OWNER_PK_HASH9_cp : coverpoint bus_event[9] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH10_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[10];
+    bus_CPTRA_OWNER_PK_HASH10_cp : coverpoint bus_event[10] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_OWNER_PK_HASH11_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH[11];
+    bus_CPTRA_OWNER_PK_HASH11_cp : coverpoint bus_event[11] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_OWNER_PK_HASH_LOCK -----------------------
+  covergroup soc_ifc_CPTRA_OWNER_PK_HASH_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_OWNER_PK_HASH_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_OWNER_PK_HASH_LOCK;
+    bus_CPTRA_OWNER_PK_HASH_LOCK_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP fuse_uds_seed [0:11] -----------------------
   covergroup soc_ifc_fuse_uds_seed_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
     fuse_uds_seed0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[0];
@@ -2260,70 +2410,6 @@ interface soc_ifc_cov_if
   covergroup soc_ifc_fuse_key_manifest_pk_hash_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
     fuse_key_manifest_pk_hash_mask_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask;
     bus_fuse_key_manifest_pk_hash_mask_cp : coverpoint bus_event {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-  endgroup
-
-  // ----------------------- COVERGROUP fuse_owner_pk_hash [0:11] -----------------------
-  covergroup soc_ifc_fuse_owner_pk_hash_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
-    fuse_owner_pk_hash0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[0];
-    bus_fuse_owner_pk_hash0_cp : coverpoint bus_event[0] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[1];
-    bus_fuse_owner_pk_hash1_cp : coverpoint bus_event[1] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[2];
-    bus_fuse_owner_pk_hash2_cp : coverpoint bus_event[2] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[3];
-    bus_fuse_owner_pk_hash3_cp : coverpoint bus_event[3] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[4];
-    bus_fuse_owner_pk_hash4_cp : coverpoint bus_event[4] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[5];
-    bus_fuse_owner_pk_hash5_cp : coverpoint bus_event[5] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[6];
-    bus_fuse_owner_pk_hash6_cp : coverpoint bus_event[6] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[7];
-    bus_fuse_owner_pk_hash7_cp : coverpoint bus_event[7] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash8_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[8];
-    bus_fuse_owner_pk_hash8_cp : coverpoint bus_event[8] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash9_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[9];
-    bus_fuse_owner_pk_hash9_cp : coverpoint bus_event[9] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash10_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[10];
-    bus_fuse_owner_pk_hash10_cp : coverpoint bus_event[10] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_owner_pk_hash11_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_owner_pk_hash[11];
-    bus_fuse_owner_pk_hash11_cp : coverpoint bus_event[11] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -2519,28 +2605,19 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_life_cycle -----------------------
-  covergroup soc_ifc_fuse_life_cycle_cg (ref logic [3:0] bus_event) @(posedge clk);
-    fuse_life_cycle_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_life_cycle;
-    bus_fuse_life_cycle_cp : coverpoint bus_event {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-  endgroup
-
-  // ----------------------- COVERGROUP fuse_lms_verify -----------------------
-  covergroup soc_ifc_fuse_lms_verify_cg (ref logic [3:0] bus_event) @(posedge clk);
-    fuse_lms_verify_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_verify;
-    bus_fuse_lms_verify_cp : coverpoint bus_event {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-  endgroup
-
   // ----------------------- COVERGROUP fuse_lms_revocation -----------------------
   covergroup soc_ifc_fuse_lms_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
     fuse_lms_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_lms_revocation;
     bus_fuse_lms_revocation_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_mldsa_revocation -----------------------
+  covergroup soc_ifc_fuse_mldsa_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_mldsa_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_mldsa_revocation;
+    bus_fuse_mldsa_revocation_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -3066,19 +3143,22 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg CPTRA_iTRNG_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_0);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg CPTRA_iTRNG_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_1);
   soc_ifc_CPTRA_RSVD_REG_cg CPTRA_RSVD_REG_cg = new(bus_CPTRA_RSVD_REG);
+  soc_ifc_CPTRA_HW_CAPABILITIES_cg CPTRA_HW_CAPABILITIES_cg = new(bus_CPTRA_HW_CAPABILITIES);
+  soc_ifc_CPTRA_FW_CAPABILITIES_cg CPTRA_FW_CAPABILITIES_cg = new(bus_CPTRA_FW_CAPABILITIES);
+  soc_ifc_CPTRA_CAP_LOCK_cg CPTRA_CAP_LOCK_cg = new(bus_CPTRA_CAP_LOCK);
+  soc_ifc_CPTRA_OWNER_PK_HASH_cg CPTRA_OWNER_PK_HASH_cg = new(bus_CPTRA_OWNER_PK_HASH);
+  soc_ifc_CPTRA_OWNER_PK_HASH_LOCK_cg CPTRA_OWNER_PK_HASH_LOCK_cg = new(bus_CPTRA_OWNER_PK_HASH_LOCK);
   soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
   soc_ifc_fuse_field_entropy_cg fuse_field_entropy_cg = new(bus_fuse_field_entropy);
   soc_ifc_fuse_key_manifest_pk_hash_cg fuse_key_manifest_pk_hash_cg = new(bus_fuse_key_manifest_pk_hash);
   soc_ifc_fuse_key_manifest_pk_hash_mask_cg fuse_key_manifest_pk_hash_mask_cg = new(bus_fuse_key_manifest_pk_hash_mask);
-  soc_ifc_fuse_owner_pk_hash_cg fuse_owner_pk_hash_cg = new(bus_fuse_owner_pk_hash);
   soc_ifc_fuse_fmc_key_manifest_svn_cg fuse_fmc_key_manifest_svn_cg = new(bus_fuse_fmc_key_manifest_svn);
   soc_ifc_fuse_runtime_svn_cg fuse_runtime_svn_cg = new(bus_fuse_runtime_svn);
   soc_ifc_fuse_anti_rollback_disable_cg fuse_anti_rollback_disable_cg = new(bus_fuse_anti_rollback_disable);
   soc_ifc_fuse_idevid_cert_attr_cg fuse_idevid_cert_attr_cg = new(bus_fuse_idevid_cert_attr);
   soc_ifc_fuse_idevid_manuf_hsm_id_cg fuse_idevid_manuf_hsm_id_cg = new(bus_fuse_idevid_manuf_hsm_id);
-  soc_ifc_fuse_life_cycle_cg fuse_life_cycle_cg = new(bus_fuse_life_cycle);
-  soc_ifc_fuse_lms_verify_cg fuse_lms_verify_cg = new(bus_fuse_lms_verify);
   soc_ifc_fuse_lms_revocation_cg fuse_lms_revocation_cg = new(bus_fuse_lms_revocation);
+  soc_ifc_fuse_mldsa_revocation_cg fuse_mldsa_revocation_cg = new(bus_fuse_mldsa_revocation);
   soc_ifc_fuse_soc_stepping_id_cg fuse_soc_stepping_id_cg = new(bus_fuse_soc_stepping_id);
   soc_ifc_internal_obf_key_cg internal_obf_key_cg = new(bus_internal_obf_key);
   soc_ifc_internal_iccm_lock_cg internal_iccm_lock_cg = new(bus_internal_iccm_lock);
