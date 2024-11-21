@@ -40,8 +40,8 @@
         end
     endfunction
 
-    /*----------------------- MBOX_CSR__MBOX_ID SAMPLE FUNCTIONS -----------------------*/
-    function void mbox_csr__mbox_id::sample(uvm_reg_data_t  data,
+    /*----------------------- MBOX_CSR__MBOX_USER SAMPLE FUNCTIONS -----------------------*/
+    function void mbox_csr__mbox_user::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -49,19 +49,19 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(id_bit_cg[bt]) this.id_bit_cg[bt].sample(data[0 + bt]);
+            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*id*/   );
+            this.fld_cg.sample( data[31:0]/*user*/   );
         end
     endfunction
 
-    function void mbox_csr__mbox_id::sample_values();
+    function void mbox_csr__mbox_user::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(id_bit_cg[bt]) this.id_bit_cg[bt].sample(id.get_mirrored_value() >> bt);
+            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(user.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( id.get_mirrored_value()   );
+            this.fld_cg.sample( user.get_mirrored_value()   );
         end
     endfunction
 
@@ -247,6 +247,31 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( unlock.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- MBOX_CSR__TAP_MODE SAMPLE FUNCTIONS -----------------------*/
+    function void mbox_csr__tap_mode::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(enabled_bit_cg[bt]) this.enabled_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*enabled*/   );
+        end
+    endfunction
+
+    function void mbox_csr__tap_mode::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(enabled_bit_cg[bt]) this.enabled_bit_cg[bt].sample(enabled.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( enabled.get_mirrored_value()   );
         end
     endfunction
 

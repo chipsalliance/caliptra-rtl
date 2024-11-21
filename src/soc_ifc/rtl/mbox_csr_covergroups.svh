@@ -41,8 +41,8 @@
 
     endgroup
 
-    /*----------------------- MBOX_CSR__MBOX_ID COVERGROUPS -----------------------*/
-    covergroup mbox_csr__mbox_id_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- MBOX_CSR__MBOX_USER COVERGROUPS -----------------------*/
+    covergroup mbox_csr__mbox_user_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -53,11 +53,11 @@
         }
 
     endgroup
-    covergroup mbox_csr__mbox_id_fld_cg with function sample(
-    input bit [32-1:0] id
+    covergroup mbox_csr__mbox_user_fld_cg with function sample(
+    input bit [32-1:0] user
     );
         option.per_instance = 1;
-        id_cp : coverpoint id {
+        user_cp : coverpoint user {
             bins zero_val = {32'h0};
             bins rand_val[64] = {[1:32'hFFFF_FFFE]};
             bins ones_val = {{32{1'b1}}};
@@ -320,6 +320,26 @@
             bins rise = (0 => 1);
             bins fall = (1 => 0);
         }
+
+    endgroup
+
+    /*----------------------- MBOX_CSR__TAP_MODE COVERGROUPS -----------------------*/
+    covergroup mbox_csr__tap_mode_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup mbox_csr__tap_mode_fld_cg with function sample(
+    input bit [1-1:0] enabled
+    );
+        option.per_instance = 1;
+        enabled_cp : coverpoint enabled;
 
     endgroup
 
