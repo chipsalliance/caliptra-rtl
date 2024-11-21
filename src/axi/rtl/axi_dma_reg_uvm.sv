@@ -160,13 +160,17 @@ package axi_dma_reg_uvm;
         axi_dma_reg__status0_bit_cg rsvd0_bit_cg[2];
         axi_dma_reg__status0_bit_cg fifo_depth_bit_cg[12];
         axi_dma_reg__status0_bit_cg axi_dma_fsm_ps_bit_cg[2];
-        axi_dma_reg__status0_bit_cg rsvd1_bit_cg[14];
+        axi_dma_reg__status0_bit_cg payload_available_bit_cg[1];
+        axi_dma_reg__status0_bit_cg image_activated_bit_cg[1];
+        axi_dma_reg__status0_bit_cg rsvd1_bit_cg[12];
         axi_dma_reg__status0_fld_cg fld_cg;
         rand uvm_reg_field busy;
         rand uvm_reg_field error;
         rand uvm_reg_field rsvd0;
         rand uvm_reg_field fifo_depth;
         rand uvm_reg_field axi_dma_fsm_ps;
+        rand uvm_reg_field payload_available;
+        rand uvm_reg_field image_activated;
         rand uvm_reg_field rsvd1;
 
         function new(string name = "axi_dma_reg__status0");
@@ -189,14 +193,20 @@ package axi_dma_reg_uvm;
             this.fifo_depth.configure(this, 12, 4, "RO", 1, 'h0, 0, 1, 0);
             this.axi_dma_fsm_ps = new("axi_dma_fsm_ps");
             this.axi_dma_fsm_ps.configure(this, 2, 16, "RO", 1, 'h0, 1, 1, 0);
+            this.payload_available = new("payload_available");
+            this.payload_available.configure(this, 1, 18, "RO", 1, 'h0, 0, 1, 0);
+            this.image_activated = new("image_activated");
+            this.image_activated.configure(this, 1, 19, "RO", 1, 'h0, 0, 1, 0);
             this.rsvd1 = new("rsvd1");
-            this.rsvd1.configure(this, 14, 18, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd1.configure(this, 12, 20, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(busy_bit_cg[bt]) busy_bit_cg[bt] = new();
                 foreach(error_bit_cg[bt]) error_bit_cg[bt] = new();
                 foreach(rsvd0_bit_cg[bt]) rsvd0_bit_cg[bt] = new();
                 foreach(fifo_depth_bit_cg[bt]) fifo_depth_bit_cg[bt] = new();
                 foreach(axi_dma_fsm_ps_bit_cg[bt]) axi_dma_fsm_ps_bit_cg[bt] = new();
+                foreach(payload_available_bit_cg[bt]) payload_available_bit_cg[bt] = new();
+                foreach(image_activated_bit_cg[bt]) image_activated_bit_cg[bt] = new();
                 foreach(rsvd1_bit_cg[bt]) rsvd1_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))

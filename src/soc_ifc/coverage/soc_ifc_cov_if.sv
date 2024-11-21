@@ -66,6 +66,7 @@ interface soc_ifc_cov_if
     input logic mailbox_flow_done,
 
     input logic recovery_data_avail,
+    input logic recovery_image_activated,
 
     input var security_state_t security_state,
 
@@ -197,7 +198,8 @@ interface soc_ifc_cov_if
         ready_for_runtime_cp: coverpoint ready_for_runtime;
         mailbox_data_avail_cp: coverpoint mailbox_data_avail;
         mailbox_flow_done_cp: coverpoint mailbox_flow_done;
-        recovery_data_avail: coverpoint recovery_data_avail;
+        recovery_data_avail_cp: coverpoint recovery_data_avail;
+        recovery_image_activated_cp: coverpoint recovery_image_activated;
         cptra_error_fatal_cp: coverpoint cptra_error_fatal;
         cptra_error_non_fatal_cp: coverpoint cptra_error_non_fatal;
         trng_req_cp: coverpoint trng_req;

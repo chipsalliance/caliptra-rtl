@@ -130,7 +130,18 @@ addrmap axi_dma_reg {
             };
             sw=r; hw=rw; encode = axi_dma_fsm_e;
         } axi_dma_fsm_ps[2] = 0;
-        field { desc="RESERVED."; sw=r; } rsvd1[14]=14'h0000;
+        field { desc="Payload Available. Signal indicates data is available.
+                      When the DMA is active and was armed with nonzero block
+                      size, this is used by the hardware to automatically
+                      trigger AXI transactions of the specified block
+                      size, until the total byte count is transferred.";
+                sw=r; hw=w;
+        } payload_available;
+        field { desc="Image Activated. Signal indicates image activation status
+                      reported by Recovery Interface (from Caliptra Subsystem).";
+                sw=r; hw=w;
+        } image_activated;
+        field { desc="RESERVED."; sw=r; } rsvd1[12]=12'h000;
     } status0;
 
     // Status 1

@@ -237,6 +237,7 @@ caliptra_top caliptra_top_dut (
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
     .recovery_data_avail(1'b1/*TODO*/),
+    .recovery_image_activated(1'b0/*TODO*/),
 
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal    ),

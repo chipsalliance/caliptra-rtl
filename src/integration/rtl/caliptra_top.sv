@@ -76,6 +76,7 @@ module caliptra_top
     output logic                       mailbox_flow_done,
 
     input  logic                       recovery_data_avail,
+    input  logic                       recovery_image_activated,
 
     input logic                        BootFSM_BrkPoint,
 
