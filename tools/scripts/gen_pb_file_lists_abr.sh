@@ -28,7 +28,7 @@ function gen_pb_file_list {
     # lists aren't useful to external integrators
     if [[ $abr_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${abr_lib}] in [${abr_vf_file}]";
-    pb fe file_list --tb adams-bridge_lib::${abr_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${abr_vf_file};
+    pb fe file_list --tb adams_bridge_lib::${abr_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${abr_vf_file};
     # Replace leading portion of Adamsbridge source paths with ${ADAMSBRIDGE_ROOT}
     sed 's,/home.*adams-bridge/src,\${ADAMSBRIDGE_ROOT}/src,' -i ${abr_vf_file}
     # Replace leading portion of UVM/installed library paths with appropriate ENV VAR

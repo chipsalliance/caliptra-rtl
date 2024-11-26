@@ -64,9 +64,5 @@ files:
   # UVMF TBs
   - ../chipsalliance/caliptra-rtl/submodules/adams-bridge/src/mldsa_top/uvmf/config/compile.yml
 
-  # Comodule dereference files FIXME
-  - src/adamsbridge_top/config/compile.yml
-  - src/caliptra-ss/config/compile.yml
-
   # Please add your next file/folder above not below the line
   - ../chipsalliance/caliptra-rtl/src/integration/config/compile.yml

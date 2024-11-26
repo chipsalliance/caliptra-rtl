@@ -162,7 +162,26 @@ stages:
           fi
 
         displayName: 'FILE LIST CHECK'
-        enabled: true
+        enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+        timeoutInMinutes: 90
+  
+      # Run file list check with no GH ref name argument for ADO Pull Requests (GitHub ref will be derived in script)
+      # Run file list check with GitHub ref override in adams-bridge when validating GitHub Pull Requests
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+
+          # Run the Filelist generator script
+          if [[ (${BUILD_REASON} == 'PullRequest') || ( "${{ parameters.run_abr_github_val_flow }}" == "false" ) ]]; then
+              enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName) derived abr'
+          else
+              enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh" && bash $MSFT_REPO_ROOT/tools/scripts/promote_file_list_check.sh $(derivedTargetBranchName) "chips/${{ parameters.github_dest_name }}" abr'
+          fi
+
+        displayName: 'FILE LIST CHECK ABR'
+        enabled: ${{ not(parameters.run_clp_github_val_flow) }}
         timeoutInMinutes: 90
   
     build_and_sim_map:
@@ -199,17 +218,15 @@ stages:
     - caliptra_ss_top_vcs:
       - display_name: 'Build caliptra_ss_top with VCS'
       - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-      #- configspec_name: 'caliptra-ss_lib' FIXME
-      - configspec_name: 'integration_lib'
-      - dut: 'comod_caliptra_ss_top'
+      - configspec_name: 'caliptra_ss_lib'
+      - dut: 'caliptra_ss_top'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_regress:
           - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-          #- configspec_name: 'caliptra-ss_lib' FIXME
-          - configspec_name: 'integration_lib'
-          - dut: 'comod_caliptra_ss_top'
+          - configspec_name: 'caliptra_ss_lib'
+          - dut: 'caliptra_ss_top'
           - timeout: 75
           - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 
@@ -259,16 +276,14 @@ stages:
     - uvmf_mldsa:
         - display_name: 'UVMF_MLDSA'
         - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-        #- configspec_name: 'adams-bridge_lib' FIXME
-        - configspec_name: 'integration_lib'
-        - dut: 'comod_uvmf_mldsa'
+        - configspec_name: 'adams_bridge_lib'
+        - dut: 'uvmf_mldsa'
         - timeout: 25
         - testsuites:
           - l0_regress:
             - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-            #- configspec_name: 'adams-bridge_lib' FIXME
-            - configspec_name: 'integration_lib'
-            - dut: 'comod_uvmf_mldsa'
+            - configspec_name: 'adams_bridge_lib'
+            - dut: 'uvmf_mldsa'
             - path: '${ADAMSBRIDGE_ROOT}/src/mldsa_top/stimulus/uvmf_mldsa_top_promote_regression.yml'
             - timeout: 1440
 
@@ -284,9 +299,8 @@ stages:
 
     - mldsa_top_sglint:
       - enabled: ${{ not(parameters.run_clp_github_val_flow) }}
-      #- configspec_name: 'adams-bridge_lib' FIXME
-      - configspec_name: 'integration_lib'
-      - dut: 'comod_mldsa_top'
+      - configspec_name: 'adams_bridge_lib'
+      - dut: 'mldsa_top'
       - top: 'mldsa_top'
       - lint_tool: 'sglint'
       - timeout: 45
