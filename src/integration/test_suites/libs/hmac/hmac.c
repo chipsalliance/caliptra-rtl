@@ -30,7 +30,7 @@ void wait_for_hmac_intr(){
         }
     };
     //printf("Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
-    printf("Received HMAC notif intr with status = %d\n", cptra_intr_rcv.hmac_notif);
+    printf("Received HMAC notif/err intr with status = %d/ %d\n", cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
 }
 
 void hmac_zeroize(){

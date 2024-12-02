@@ -16,7 +16,7 @@
 //
 // hmac_param_pkg.sv
 // --------
-// HMAC384 Parameters
+// HMAC Parameters
 //
 //
 //======================================================================
@@ -32,6 +32,8 @@ package hmac_param_pkg;
   localparam bit [63:0] HMAC_CORE_NAME        = 64'h61327368_6163686d; // "hmacsha2"
   localparam bit [63:0] HMAC_CORE_VERSION     = 64'h00000000_3030322e; // "2.00"
 
+  localparam bit HMAC384_MODE = 1'b0;
+  localparam bit HMAC512_MODE = 1'b1;
 endpackage
 
 `endif

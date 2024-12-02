@@ -198,9 +198,9 @@ module caliptra_top_tb_services
         operand_t     IV;
         operand_t     privkeyB;
         operand_t     dh_sharedkey;
-    } test_vector_t;
+    } ecc_test_vector_t;
 
-    test_vector_t test_vector;
+    ecc_test_vector_t ecc_test_vector;
 
     typedef struct packed {
           logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] obf_key_uds;
@@ -262,7 +262,9 @@ module caliptra_top_tb_services
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
-    //         8'ha0: 8'ha7 - Inject HMAC_KEY to kv_key register
+    //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
+    //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
+    //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
@@ -410,15 +412,19 @@ module caliptra_top_tb_services
 
     //keyvault injection hooks
     //Inject data to KV key reg
-    logic [0:11][31:0]   ecc_seed_tb    = 384'h8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
-    logic [0:11][31:0]   ecc_privkey_tb = 384'hF274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
-    logic [0:11][31:0]   hmac_key_tb    = 384'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
-    logic [11:0][31:0]   mldsa_seed_tb  = 384'h_55555555555555555555555555555555_9340000a_675fd127_37071d12_3fcee4d5_a243fe28_0768f0d4_46768a85_2d5cf89c; //fixme padded with junk
+    logic [0:15][31:0]   ecc_seed_tb    = 512'h_00000000000000000000000000000000_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
+    logic [0:15][31:0]   ecc_privkey_tb = 512'h_00000000000000000000000000000000_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
+    logic [0:15][31:0]   hmac384_key_tb = 512'h_00000000000000000000000000000000_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
+    logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
+    logic [15:0][31:0]   mldsa_seed_tb  = 512'h_55555555555555555555555555555555_9340000a_675fd127_37071d12_3fcee4d5_a243fe28_0768f0d4_46768a85_2d5cf89c; //fixme padded with junk
+    logic [0:15][31:0]   ecc_privkey_random;
+    
+    always_comb ecc_privkey_random = {128'h_00000000000000000000000000000000, ecc_test_vector.privkey};
 
     genvar dword_i, slot_id;
     generate 
         for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
-            for (dword_i=0; dword_i < 12; dword_i++) begin : inject_dword_loop
+            for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
                     if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
@@ -450,10 +456,20 @@ module caliptra_top_tb_services
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.we = 1'b1;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.next = 'd11;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = test_vector.privkey[dword_i][31 : 0];
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
                     end
-                    //inject valid hmac_key dest and hmac_key value to key reg
-                    else if(((WriteData[7:0] & 8'hf8) == 8'ha0) && mailbox_write) begin
+                    //inject valid hmac_key dest and zero hmac_key value to key reg
+                    else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
+                        inject_hmac_key <= 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
+                    end
+                    //inject valid hmac_key dest and hmac384_key value to key reg
+                    else if((WriteData[7:0] >= 8'ha0) && (WriteData[7:0] < 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
@@ -461,7 +477,19 @@ module caliptra_top_tb_services
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac_key_tb[dword_i][31 : 0];
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac384_key_tb[dword_i][31 : 0];
+                        end
+                    end
+                    //inject valid hmac_key dest and hmac512_key value to key reg
+                    else if((WriteData[7:0] > 8'ha8) && (WriteData[7:0] <= 8'haf) && mailbox_write) begin
+                        inject_hmac_key <= 1'b1;
+                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
                     else if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
@@ -996,27 +1024,27 @@ endgenerate //IV_NO
 
             // Get hashed message, private key, public key x, public key y, k and R
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.hashed_msg));
+            void'($sscanf(line_read, "%h", ecc_test_vector.hashed_msg));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.privkey));
+            void'($sscanf(line_read, "%h", ecc_test_vector.privkey));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.pubkey.x));
+            void'($sscanf(line_read, "%h", ecc_test_vector.pubkey.x));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.pubkey.y));
+            void'($sscanf(line_read, "%h", ecc_test_vector.pubkey.y));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.seed));
+            void'($sscanf(line_read, "%h", ecc_test_vector.seed));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.nonce));
+            void'($sscanf(line_read, "%h", ecc_test_vector.nonce));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.R));
+            void'($sscanf(line_read, "%h", ecc_test_vector.R));
             void'($fgets(line_read, fd_r)); 
-            void'($sscanf(line_read, "%h", test_vector.S));
+            void'($sscanf(line_read, "%h", ecc_test_vector.S));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.IV));
+            void'($sscanf(line_read, "%h", ecc_test_vector.IV));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.privkeyB));
+            void'($sscanf(line_read, "%h", ecc_test_vector.privkeyB));
             void'($fgets(line_read, fd_r));
-            void'($sscanf(line_read, "%h", test_vector.dh_sharedkey));
+            void'($sscanf(line_read, "%h", ecc_test_vector.dh_sharedkey));
 
             $fclose(fd_r);
 
@@ -1033,7 +1061,7 @@ endgenerate //IV_NO
                 end
                 else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                     force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = test_vector.hashed_msg[11-dword][31 : 0];
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_test_vector.hashed_msg[11-dword][31 : 0];
                 end
                 else begin
                     release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;

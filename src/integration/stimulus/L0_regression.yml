@@ -46,6 +46,7 @@ contents:
         - ../test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ../test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
         - ../test_suites/smoke_test_ecc_errortrigger/smoke_test_ecc_errortrigger.yml
+        - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
