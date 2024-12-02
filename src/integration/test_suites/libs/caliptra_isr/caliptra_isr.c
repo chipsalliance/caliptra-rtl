@@ -290,7 +290,10 @@ void init_interrupts(void) {
                                                                        ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // HMAC
-    // TODO error interrupt enables
+    hmac_reg[HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK | 
+                                                                         HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_MASK | 
+                                                                         HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK |
+                                                                         HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK;
     hmac_reg[HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     hmac_reg[HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                          HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
