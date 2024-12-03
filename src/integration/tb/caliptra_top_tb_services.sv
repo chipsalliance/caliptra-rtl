@@ -412,14 +412,14 @@ module caliptra_top_tb_services
 
     //keyvault injection hooks
     //Inject data to KV key reg
-    logic [0:15][31:0]   ecc_seed_tb    = 512'h_00000000000000000000000000000000_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441;
-    logic [0:15][31:0]   ecc_privkey_tb = 512'h_00000000000000000000000000000000_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17;
-    logic [0:15][31:0]   hmac384_key_tb = 512'h_00000000000000000000000000000000_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
+    logic [0:15][31:0]   ecc_seed_tb    = 512'h_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441_00000000000000000000000000000000;
+    logic [0:15][31:0]   ecc_privkey_tb = 512'h_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17_00000000000000000000000000000000;
+    logic [0:15][31:0]   hmac384_key_tb = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [15:0][31:0]   mldsa_seed_tb  = 512'h_55555555555555555555555555555555_9340000a_675fd127_37071d12_3fcee4d5_a243fe28_0768f0d4_46768a85_2d5cf89c; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
     
-    always_comb ecc_privkey_random = {128'h_00000000000000000000000000000000, ecc_test_vector.privkey};
+    always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
 
     genvar dword_i, slot_id;
     generate 
@@ -487,7 +487,7 @@ module caliptra_top_tb_services
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end

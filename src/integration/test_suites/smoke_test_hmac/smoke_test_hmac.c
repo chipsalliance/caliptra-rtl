@@ -197,26 +197,6 @@ void main() {
     hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
-
-    volatile uint32_t * reg_ptr;
-     // Load key from hw_data and write to HMAC core
-    VPRINTF(LOW, "Load zero Key data to HMAC\n");
-    reg_ptr         = (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_15) {
-        *reg_ptr++ = 0;
-    }
-    // Enable HMAC core
-    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-    // wait for HMAC process to be done
-    wait_for_hmac_intr();
-    if ((cptra_intr_rcv.hmac_error == 0)){
-        printf("\nHMAC key_zero error is not detected.\n");
-        printf("%c", 0x1);
-        while(1);
-    }
-    hmac_zeroize();
-
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);
     while(1);

@@ -357,8 +357,8 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (core_key[511:384] == 128'b0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (core_key == 512'b0);
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == 512'b0);
 
 always_comb error_flag = key_zero_error | key_mode_error;
 
