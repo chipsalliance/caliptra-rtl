@@ -38,6 +38,7 @@ schema_version: 2.4.0
 requires:
   - libs
   - lc_ctrl_pkg
+  - edn_pkg
   - caliptra_prim_pkg
   - caliptra_prim_generic
 targets:
