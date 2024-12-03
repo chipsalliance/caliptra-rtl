@@ -14,6 +14,12 @@
 //
 
 package axi_pkg;
+    localparam int AXI_DW = 32;
+    localparam int AXI_AW = 32;
+    localparam int AXI_UW = 32;
+    localparam int AXI_IW = 1;
+    localparam int AXI_BC = AXI_DW/8;
+    localparam int AXI_BW = $clog2(AXI_BC);
 
     localparam AXI_LEN_MAX_VALUE = 256; // 8-bit LEN signal = 256 beats max
     localparam AXI_LEN_WIDTH     = $clog2(AXI_LEN_MAX_VALUE);
