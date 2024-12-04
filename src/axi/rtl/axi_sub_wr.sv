@@ -59,6 +59,7 @@ module axi_sub_wr import axi_pkg::*; #(
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
+    output logic [2:0]    wsize,
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
     input  logic          err
@@ -233,7 +234,7 @@ module axi_sub_wr import axi_pkg::*; #(
     // Address Calculations                    //
     // --------------------------------------- //
     // Force aligned address to component
-    always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
+    always_comb addr = {txn_ctx.addr[AW-1:0]};//,BW'(0)};
     always_comb user = txn_ctx.user;
     always_comb id   = txn_ctx.id;
 
@@ -296,7 +297,7 @@ module axi_sub_wr import axi_pkg::*; #(
         .OPT_OUTREG     (0   ),
         //
         .OPT_PASSTHROUGH(0   ),
-        .DW             (DW + BC + 1)
+        .DW             (DW + BC + 1 + 3)
     ) i_dp_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),
@@ -304,11 +305,13 @@ module axi_sub_wr import axi_pkg::*; #(
         .o_ready(txn_wready      ),
         .i_data ({s_axi_if.wdata,
                   s_axi_if.wstrb,
+                  txn_ctx.size,
                   s_axi_if.wlast}),
         .o_valid(dv_pre          ),
         .i_ready(!hld            ),
         .o_data ({wdata,
                   wstrb,
+                  wsize,
                   last }         )
     );
 
