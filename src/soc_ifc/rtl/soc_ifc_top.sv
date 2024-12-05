@@ -344,6 +344,7 @@ axi_sub #(
     .rdata (soc_req_rdata   ), // Requires: Component dwidth == AXI dwidth
     .last  (                ), // Asserted with final 'dv' of a burst
     .hld   (soc_req_hold    ),
+    .size  (                ),
     .rd_err(soc_req_error   ),
     .wr_err(soc_req_error   )
 );
