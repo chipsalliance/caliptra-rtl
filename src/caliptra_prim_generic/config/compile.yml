@@ -8,3 +8,4 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop_en.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_buf.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_ram_1p.sv
