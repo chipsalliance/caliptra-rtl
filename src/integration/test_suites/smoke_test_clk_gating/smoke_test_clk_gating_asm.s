@@ -124,7 +124,7 @@ _start:
     //TODO: how to write a dword in asm
     //Trigger APB tx
     li x3, CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS
-    li x4, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK
+    li x4, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK
     //sb x5, 0(x3)
     
     loop1:

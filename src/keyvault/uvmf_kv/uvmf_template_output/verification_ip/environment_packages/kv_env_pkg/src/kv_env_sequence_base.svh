@@ -63,7 +63,7 @@ class kv_env_sequence_base #(
     // configuration.kv_doe_write_agent_config.sequencer
     // configuration.kv_hmac_key_read_agent_config.sequencer
     // configuration.kv_hmac_block_read_agent_config.sequencer
-    // configuration.kv_sha512_block_read_agent_config.sequencer
+    // configuration.kv_mldsa_key_read_agent_config.sequencer
     // configuration.kv_ecc_privkey_read_agent_config.sequencer
     // configuration.kv_ecc_seed_read_agent_config.sequencer
 
@@ -85,8 +85,8 @@ class kv_env_sequence_base #(
     typedef kv_read_random_sequence kv_hmac_block_read_agent_random_sequence_t;
     kv_hmac_block_read_agent_random_sequence_t kv_hmac_block_read_agent_rand_seq;
 
-    typedef kv_read_random_sequence kv_sha512_block_read_agent_random_sequence_t;
-    kv_sha512_block_read_agent_random_sequence_t kv_sha512_block_read_agent_rand_seq;
+    typedef kv_read_random_sequence kv_mldsa_key_read_agent_random_sequence_t;
+    kv_mldsa_key_read_agent_random_sequence_t kv_mldsa_key_read_agent_rand_seq;
 
     typedef kv_read_random_sequence kv_ecc_privkey_read_agent_random_sequence_t;
     kv_ecc_privkey_read_agent_random_sequence_t kv_ecc_privkey_read_agent_rand_seq;
@@ -113,7 +113,7 @@ class kv_env_sequence_base #(
     if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
     kv_hmac_key_read_agent_rand_seq = kv_hmac_key_read_agent_random_sequence_t::type_id::create("kv_hmac_key_read_agent_rand_seq");
     kv_hmac_block_read_agent_rand_seq = kv_hmac_block_read_agent_random_sequence_t::type_id::create("kv_hmac_block_read_agent_rand_seq");
-    kv_sha512_block_read_agent_rand_seq = kv_sha512_block_read_agent_random_sequence_t::type_id::create("kv_sha512_block_read_agent_rand_seq");
+    kv_mldsa_key_read_agent_rand_seq = kv_mldsa_key_read_agent_random_sequence_t::type_id::create("kv_mldsa_key_read_agent_rand_seq");
     kv_ecc_privkey_read_agent_rand_seq = kv_ecc_privkey_read_agent_random_sequence_t::type_id::create("kv_ecc_privkey_read_agent_rand_seq");
     kv_ecc_seed_read_agent_rand_seq = kv_ecc_seed_read_agent_random_sequence_t::type_id::create("kv_ecc_seed_read_agent_rand_seq");
 
@@ -122,24 +122,28 @@ class kv_env_sequence_base #(
 
 virtual task gen_rand_entries();
    std::randomize(hmac_write_entry) with {
+       hmac_write_entry < KV_NUM_KEYS;
        hmac_write_entry != sha512_write_entry;
        hmac_write_entry != ecc_write_entry;
        hmac_write_entry != doe_write_entry;
    };
 
    std::randomize(sha512_write_entry) with {
+       sha512_write_entry < KV_NUM_KEYS;
        sha512_write_entry != hmac_write_entry;
        sha512_write_entry != ecc_write_entry;
        sha512_write_entry != doe_write_entry;
    };
 
    std::randomize(ecc_write_entry) with {
+       ecc_write_entry < KV_NUM_KEYS;
        ecc_write_entry != hmac_write_entry;
        ecc_write_entry != sha512_write_entry;
        ecc_write_entry != doe_write_entry;
    };
 
    std::randomize(doe_write_entry) with {
+       doe_write_entry < KV_NUM_KEYS;
        doe_write_entry != hmac_write_entry;
        doe_write_entry != sha512_write_entry;
        doe_write_entry != ecc_write_entry;
@@ -163,7 +167,7 @@ virtual task queue_writes();
          end
          begin
             if (wr_clients[SHA512_WRITE]) begin
-                `uvm_info("QUEUE_SHA512_WRITE", $sformatf("sha512 write with entry = %h", sha512_write_entry), UVM_HIGH)
+                `uvm_info("QUEUE_SHA512_WRITE", $sformatf("mldsa write with entry = %h", sha512_write_entry), UVM_HIGH)
                 uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
                 sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
             end
@@ -207,8 +211,8 @@ virtual task queue_writes();
        repeat (25) kv_hmac_key_read_agent_rand_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
     if ( configuration.kv_hmac_block_read_agent_config.sequencer != null )
        repeat (25) kv_hmac_block_read_agent_rand_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
-    if ( configuration.kv_sha512_block_read_agent_config.sequencer != null )
-       repeat (25) kv_sha512_block_read_agent_rand_seq.start(configuration.kv_sha512_block_read_agent_config.sequencer);
+    if ( configuration.kv_mldsa_key_read_agent_config.sequencer != null )
+       repeat (25) kv_mldsa_key_read_agent_rand_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
     if ( configuration.kv_ecc_privkey_read_agent_config.sequencer != null )
        repeat (25) kv_ecc_privkey_read_agent_rand_seq.start(configuration.kv_ecc_privkey_read_agent_config.sequencer);
     if ( configuration.kv_ecc_seed_read_agent_config.sequencer != null )

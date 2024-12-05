@@ -108,10 +108,11 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"       : 2, 
     "CPTRA_WDT_CFG"                         : 2, 
     "CPTRA_RSVD_REG"                        : 2, 
+    "CPTRA_OWNER_PK_HASH"                   : 12,
     "FUSE_UDS_SEED"                         : 12,
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_KEY_MANIFEST_PK_HASH"             : 12,
-    "FUSE_OWNER_PK_HASH"                    : 12,
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
@@ -164,20 +165,20 @@ package soc_ifc_tb_pkg;
     "CPTRA_ITRNG_ENTROPY_CONFIG_0"	                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0,                         // 0x118      Caliptra iTRNG Entropy Configuration 0 	                            
     "CPTRA_ITRNG_ENTROPY_CONFIG_1"	                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1,                         // 0x11c      Caliptra iTRNG Entropy Configuration 1    
     "CPTRA_RSVD_REG"                                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RSVD_REG_0,                                     // 0x120 [2]  Caliptra Reserved Registers
+    "CPTRA_OWNER_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_0,                                // 0x140 [12] - 
+    "CPTRA_OWNER_PK_HASH_LOCK"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK,                             // 0x170 [12] - 
     // 0x128..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                      // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x230 [8]  Field Entropy 
     "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                          // 0x250 [12] - 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK,                       // 0x280      - 
-    "FUSE_OWNER_PK_HASH"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_OWNER_PK_HASH_0,                                 // 0x284 [12] - 
+    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0,                     // 0x280      - 
     "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,                            // 0x2b4      - 
     "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,                                   // 0x2b8 [4]  - 
     "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                           // 0x2c8      - 
     "FUSE_IDEVID_CERT_ATTR"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_CERT_ATTR_0,                              // 0x2cc [24] - 
     "FUSE_IDEVID_MANUF_HSM_ID"                      : SOCIFC_BASE + `SOC_IFC_REG_FUSE_IDEVID_MANUF_HSM_ID_0,                           // 0x32c [4]  - 
-    "FUSE_LIFE_CYCLE"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LIFE_CYCLE,                                      // 0x33c      - 
-    "FUSE_LMS_VERIFY"                               : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_VERIFY,                                      // 0x340      -
-    "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x344      -
+    "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x340      -
+    "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
     // 0x34c..0x5fc           
     "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,                                   // 0x600 [8]  De-Obfuscation Key 
@@ -291,15 +292,13 @@ package soc_ifc_tb_pkg;
     "FUSE_FIELD_ENTROPY"                               : 32'hffff_ffff,
     "FUSE_KEY_MANIFEST_PK_HASH"                        : 32'hffff_ffff ,
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : 32'hf,          // field 3:0
-    "FUSE_OWNER_PK_HASH"                               : 32'hffff_ffff, 
     "FUSE_FMC_KEY_MANIFEST_SVN"                        : 32'hffff_ffff, 
     "FUSE_RUNTIME_SVN"                                 : 32'hffff_ffff, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : 32'h1,          // field 0
     "FUSE_IDEVID_CERT_ATTR"                            : 32'hffff_ffff, 
     "FUSE_IDEVID_MANUF_HSM_ID"                         : 32'hffff_ffff, 
-    "FUSE_LIFE_CYCLE"                                  : 32'h3,          // field 1:0
-    "FUSE_LMS_VERIFY"                                  : 32'h1,          // field 0
     "FUSE_LMS_REVOCATION"                              : 32'hffff_ffff,
+    "FUSE_MLDSA_REVOCATION"                            : 32'hf,
     "FUSE_SOC_STEPPING_ID"                             : 32'hffff,       // field 15:0
     "CPTRA_HW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
@@ -312,6 +311,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_FUSE_PAUSER_LOCK"                           : 32'h1,
     "CPTRA_TIMER_CONFIG"                               : 32'hffff_ffff,                           
     "CPTRA_WDT_CFG"                                    : 32'hffff_ffff,                           
+    "CPTRA_OWNER_PK_HASH"                              : 32'hffff_ffff, 
+    "CPTRA_OWNER_PK_HASH_LOCK"                         : 32'h1, 
     "INTERNAL_RV_MTIME"                                : 32'hffff_ffff, // for MTIME_L/H, MTIMECMP_L/H
     "INTR_BRF_ERROR_INTERNAL_INTR_R"                   : 32'hff,        // fields 5:0
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R"             : 32'hffff_ffff,          
@@ -356,9 +357,9 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
                                                           `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
     "CPTRA_FUSE_PAUSER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_PAUSER_LOCK_LOCK_MASK, 
+    "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_MASK_MASK,
-    "FUSE_LIFE_CYCLE"                                  : `SOC_IFC_REG_FUSE_LIFE_CYCLE_LIFE_CYCLE_MASK, 
     "FUSE_LMS_VERIFY"                                  : `SOC_IFC_REG_FUSE_LMS_VERIFY_LMS_VERIFY_MASK,
     "FUSE_SOC_STEPPING_ID"                             : `SOC_IFC_REG_FUSE_SOC_STEPPING_ID_SOC_STEPPING_ID_MASK,
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 

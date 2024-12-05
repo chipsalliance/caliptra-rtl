@@ -15,7 +15,5 @@
 addrmap caliptra_top_reg {
     mbox_csr mbox_csr @ 0x3002_0000; //FIXME: Making these address constants as parameters to keep multiple files updated at the same time!
 
-    sha512_acc_csr sha512_acc_csr @ 0x3002_1000;
-
     soc_ifc_reg generic_and_fuse_reg @ 0x3003_0000;
 };

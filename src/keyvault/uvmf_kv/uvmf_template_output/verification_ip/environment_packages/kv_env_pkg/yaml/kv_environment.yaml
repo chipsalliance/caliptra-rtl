@@ -24,7 +24,7 @@ uvmf:
         name: kv_hmac_block_read_agent
         type: kv_read
       - initiator_responder: INITIATOR
-        name: kv_sha512_block_read_agent
+        name: kv_mldsa_key_read_agent
         type: kv_read
       - initiator_responder: INITIATOR
         name: kv_ecc_privkey_read_agent
@@ -87,7 +87,7 @@ uvmf:
       - driver: kv_hmac_block_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
-      - driver: kv_sha512_block_read_agent.monitored_ap
+      - driver: kv_mldsa_key_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
       - driver: kv_ecc_privkey_read_agent.monitored_ap

@@ -34,17 +34,17 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_lock
 
-    // Reg - mbox_csr::mbox_id
-    class mbox_csr__mbox_id extends uvm_reg;
+    // Reg - mbox_csr::mbox_user
+    class mbox_csr__mbox_user extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        mbox_csr__mbox_id_bit_cg id_bit_cg[32];
-        mbox_csr__mbox_id_fld_cg fld_cg;
-        rand uvm_reg_field id;
+        mbox_csr__mbox_user_bit_cg user_bit_cg[32];
+        mbox_csr__mbox_user_fld_cg fld_cg;
+        rand uvm_reg_field user;
 
-        function new(string name = "mbox_csr__mbox_id");
+        function new(string name = "mbox_csr__mbox_user");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -54,15 +54,15 @@ package mbox_csr_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.id = new("id");
-            this.id.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.user = new("user");
+            this.user.configure(this, 32, 0, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(id_bit_cg[bt]) id_bit_cg[bt] = new();
+                foreach(user_bit_cg[bt]) user_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : mbox_csr__mbox_id
+    endclass : mbox_csr__mbox_user
 
     // Reg - mbox_csr::mbox_cmd
     class mbox_csr__mbox_cmd extends uvm_reg;
@@ -115,7 +115,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.length = new("length");
-            this.length.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.length.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(length_bit_cg[bt]) length_bit_cg[bt] = new();
             end
@@ -299,10 +299,40 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_unlock
 
+    // Reg - mbox_csr::tap_mode
+    class mbox_csr__tap_mode extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        mbox_csr__tap_mode_bit_cg enabled_bit_cg[1];
+        mbox_csr__tap_mode_fld_cg fld_cg;
+        rand uvm_reg_field enabled;
+
+        function new(string name = "mbox_csr__tap_mode");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.enabled = new("enabled");
+            this.enabled.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(enabled_bit_cg[bt]) enabled_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : mbox_csr__tap_mode
+
     // Addrmap - mbox_csr
     class mbox_csr extends uvm_reg_block;
         rand mbox_csr__mbox_lock mbox_lock;
-        rand mbox_csr__mbox_id mbox_id;
+        rand mbox_csr__mbox_user mbox_user;
         rand mbox_csr__mbox_cmd mbox_cmd;
         rand mbox_csr__mbox_dlen mbox_dlen;
         rand mbox_csr__mbox_datain mbox_datain;
@@ -310,6 +340,7 @@ package mbox_csr_uvm;
         rand mbox_csr__mbox_execute mbox_execute;
         rand mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 mbox_status;
         rand mbox_csr__mbox_unlock mbox_unlock;
+        rand mbox_csr__tap_mode tap_mode;
 
         function new(string name = "mbox_csr");
             super.new(name);
@@ -322,11 +353,11 @@ package mbox_csr_uvm;
 
             this.mbox_lock.build();
             this.default_map.add_reg(this.mbox_lock, 'h0);
-            this.mbox_id = new("mbox_id");
-            this.mbox_id.configure(this);
+            this.mbox_user = new("mbox_user");
+            this.mbox_user.configure(this);
 
-            this.mbox_id.build();
-            this.default_map.add_reg(this.mbox_id, 'h4);
+            this.mbox_user.build();
+            this.default_map.add_reg(this.mbox_user, 'h4);
             this.mbox_cmd = new("mbox_cmd");
             this.mbox_cmd.configure(this);
 
@@ -362,6 +393,11 @@ package mbox_csr_uvm;
 
             this.mbox_unlock.build();
             this.default_map.add_reg(this.mbox_unlock, 'h20);
+            this.tap_mode = new("tap_mode");
+            this.tap_mode.configure(this);
+
+            this.tap_mode.build();
+            this.default_map.add_reg(this.tap_mode, 'h24);
         endfunction : build
     endclass : mbox_csr
 

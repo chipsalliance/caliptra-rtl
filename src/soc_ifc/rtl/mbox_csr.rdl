@@ -39,15 +39,15 @@ addrmap mbox_csr {
         field {rset; sw=r; hw=r; hwclr=true; precedence=hw; swmod=true;} lock=0;
     } mbox_lock;
 
-    // ID register
-    // store AXI ID from interface when setting lock
+    // USER register
+    // store AXI USER from interface when setting lock
     reg {
-        name="Mailbox ID";
-        desc="Stores the AXI ID that locked the mailbox
+        name="Mailbox USER";
+        desc="Stores the AXI USER that locked the mailbox
         [br]Caliptra Access: RO
         [br]SOC Access:      RO";
-        field {sw=r; hw=rw; we=lock_set;} id[32]=0;
-    } mbox_id;
+        field {sw=r; hw=rw; we=lock_set;} user[32]=0;
+    } mbox_user;
 
     reg {
         name="Mailbox Command";
@@ -62,15 +62,16 @@ addrmap mbox_csr {
         desc="Data length for mailbox access in bytes
         [br]Caliptra Access: RW
         [br]SOC Access:      RW
-        [br]TAP Access [in debug/manuf mode]: RO";
-        field {sw=rw; hw=r; swwe=valid_requester; swmod=true;} length[32]=0;
+        [br]TAP Access [in debug/manuf mode]: RW";
+        field {sw=rw; hw=rw; we; swwe=valid_requester; swmod=true;} length[32]=0;
     } mbox_dlen;
 
     reg {
         name="Mailbox DataIn";
         desc="Data in register, write the next data to mailbox
         [br]Caliptra Access: RW
-        [br]SOC Access:      RW";
+        [br]SOC Access:      RW
+        [br]TAP Access [in debug/manuf mode]: WO";
         field {sw=rw; hw=na; swwe=valid_requester; swmod=true;} datain[32]=0;
     } mbox_datain;
 
@@ -193,6 +194,14 @@ addrmap mbox_csr {
               [br]SOC Access:      RO";
         field {sw=rw; hw=r; singlepulse; swwel = soc_req;} unlock=0;
     } mbox_unlock;
+
+    reg {
+        name="Mailbox TAP Mode";
+        desc="Capability for uC to enable TAP logic to respond to mailbox commands.
+              [br]Caliptra Access: RW
+              [br]SOC Access:      RO";
+        field {sw=rw; hw=r; swwel = soc_req;} enabled=0;
+    } tap_mode;
 
     // This will auto clear the status register whenever a mailbox transfer
     // is not in progress. 1-cycle delayed from when the Receiver clears

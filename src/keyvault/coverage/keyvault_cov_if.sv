@@ -71,25 +71,25 @@ interface keyvault_cov_if
         //in UVM reg coverage. This coverpoint bins the 32-bit lock/clear bus so that
         //they can be used to cross with other signals
         lock_wr: coverpoint key_ctrl_lock_wr {
-            bins bin0 = {[0:'hFFFF]};
-            bins bin1 = {['h1_0000:'hF_FFFF]};
-            bins bin2 = {['h10_0000:'hFF_FFFF]};
-            bins bin3 = {['h100_0000:'hFFF_FFFF]};
-            bins bin4 = {['h1000_0000: 'hFFFF_FFFF]};
+            bins bin0 = {[0:'hFF]};
+            bins bin1 = {['h100:'hFFF]};
+            bins bin2 = {['h1000:'hFFFF]};
+            bins bin3 = {['h1_0000:'hF_FFFF]};
+            bins bin4 = {['h10_0000: 'hFF_FFFF]};
         }
         lock_use: coverpoint key_ctrl_lock_use {
-            bins bin0 = {[0:'hFFFF]};
-            bins bin1 = {['h1_0000:'hF_FFFF]};
-            bins bin2 = {['h10_0000:'hFF_FFFF]};
-            bins bin3 = {['h100_0000:'hFFF_FFFF]};
-            bins bin4 = {['h1000_0000: 'hFFFF_FFFF]};
+            bins bin0 = {[0:'hFF]};
+            bins bin1 = {['h100:'hFFF]};
+            bins bin2 = {['h1000:'hFFFF]};
+            bins bin3 = {['h1_0000:'hF_FFFF]};
+            bins bin4 = {['h10_0000: 'hFF_FFFF]};
         }
         clear: coverpoint key_ctrl_clear {
-            bins bin0 = {[0:'hFFFF]};
-            bins bin1 = {['h1_0000:'hF_FFFF]};
-            bins bin2 = {['h10_0000:'hFF_FFFF]};
-            bins bin3 = {['h100_0000:'hFFF_FFFF]};
-            bins bin4 = {['h1000_0000: 'hFFFF_FFFF]};
+            bins bin0 = {[0:'hFF]};
+            bins bin1 = {['h100:'hFFF]};
+            bins bin2 = {['h1000:'hFFFF]};
+            bins bin3 = {['h1_0000:'hF_FFFF]};
+            bins bin4 = {['h10_0000: 'hFF_FFFF]};
         }
         cp_clear_secrets_sel: coverpoint clear_secrets_sel;
         cp_clear_secrets_wr : coverpoint clear_secrets_wr;

@@ -38,5 +38,4 @@ src/uart/data/uart.rdl
 python3 tools/scripts/reg_doc_gen.py \
 src/soc_ifc/rtl/caliptra_top_reg.rdl \
 src/soc_ifc/rtl/soc_ifc_doc.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl \
-src/soc_ifc/rtl/sha512_acc_csr_doc.rdl
+src/soc_ifc/rtl/mbox_csr.rdl

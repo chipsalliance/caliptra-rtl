@@ -55,6 +55,8 @@ module caliptra_top_tb (
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
     
+    logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
+
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
@@ -88,7 +90,7 @@ module caliptra_top_tb (
     ) axi_sram_if (.clk(core_clk), .rst_n(cptra_rst_b));
 
     logic ready_for_fuses;
-    logic ready_for_fw_push;
+    logic ready_for_mb_processing;
     logic mailbox_data_avail;
     logic mbox_sram_cs;
     logic mbox_sram_we;
@@ -141,7 +143,8 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
     .cycleCnt        (cycleCnt        ),
 
-    .cptra_obf_key   (cptra_obf_key   ),
+    .cptra_obf_key      (cptra_obf_key   ),
+    .cptra_csr_hmac_key (cptra_csr_hmac_key),
 
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
@@ -149,8 +152,8 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .m_axi_bfm_if(m_axi_bfm_if),
 
-    .ready_for_fuses   (ready_for_fuses   ),
-    .ready_for_fw_push (ready_for_fw_push ),
+    .ready_for_fuses         (ready_for_fuses         ),
+    .ready_for_mb_processing (ready_for_mb_processing ),
     .mailbox_data_avail(mailbox_data_avail),
 
     .ras_test_ctrl(ras_test_ctrl),
@@ -196,6 +199,8 @@ caliptra_top caliptra_top_dut (
 
     .cptra_obf_key              (cptra_obf_key),
 
+    .cptra_csr_hmac_key         (cptra_csr_hmac_key),
+
     .jtag_tck(jtag_tck),
     .jtag_tdi(jtag_tdi),
     .jtag_tms(jtag_tms),
@@ -214,7 +219,7 @@ caliptra_top caliptra_top_dut (
     .el2_mem_export(el2_mem_export.veer_sram_src),
 
     .ready_for_fuses(ready_for_fuses),
-    .ready_for_fw_push(ready_for_fw_push),
+    .ready_for_mb_processing(ready_for_mb_processing),
     .ready_for_runtime(),
 
     .mbox_sram_cs(mbox_sram_cs),
@@ -232,6 +237,7 @@ caliptra_top caliptra_top_dut (
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
     .recovery_data_avail(1'b1/*TODO*/),
+    .recovery_image_activated(1'b0/*TODO*/),
 
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal    ),
@@ -247,8 +253,29 @@ caliptra_top caliptra_top_dut (
     .itrng_valid           (1'b0),
 `endif
 
-    .generic_input_wires(generic_input_wires),
-    .generic_output_wires(),
+    // Subsystem mode straps TODO
+    .strap_ss_caliptra_base_addr                            (64'h0),
+    .strap_ss_mci_base_addr                                 (64'h0),
+    .strap_ss_recovery_ifc_base_addr                        (64'h0),
+    .strap_ss_otp_fc_base_addr                              (64'h0),
+    .strap_ss_uds_seed_base_addr                            (64'h0),
+    .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
+    .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
+    .strap_ss_strap_generic_0                               (32'h0),
+    .strap_ss_strap_generic_1                               (32'h0),
+    .strap_ss_strap_generic_2                               (32'h0),
+    .strap_ss_strap_generic_3                               (32'h0),
+    .ss_debug_intent                                        ( 1'b0),
+
+    // Subsystem mode debug outputs
+    .ss_dbg_manuf_enable    (/*TODO*/),
+    .ss_soc_dbg_unlock_level(/*TODO*/),
+
+    // Subsystem mode firmware execution control
+    .ss_generic_fw_exec_ctrl(/*TODO*/),
+
+    .generic_input_wires (generic_input_wires),
+    .generic_output_wires(                   ),
 
     .security_state(security_state),
     .scan_mode     (scan_mode)

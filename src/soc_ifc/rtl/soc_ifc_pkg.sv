@@ -57,14 +57,14 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
 
-    //Valid AXI_ID
-    //Lock the AXI_ID values from integration time
-    parameter [4:0] CPTRA_SET_MBOX_AXI_ID_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
-    parameter [4:0][31:0] CPTRA_MBOX_VALID_AXI_ID = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
-    parameter [31:0] CPTRA_DEF_MBOX_VALID_AXI_ID  = 32'hFFFF_FFFF;
+    //Valid AXI_USER
+    //Lock the AXI_USER values from integration time
+    parameter [4:0] CPTRA_SET_MBOX_AXI_USER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
+    parameter [4:0][31:0] CPTRA_MBOX_VALID_AXI_USER = {32'h4444_4444, 32'h3333_3333, 32'h2222_2222, 32'h1111_1111, 32'h0000_0000};
+    parameter [31:0] CPTRA_DEF_MBOX_VALID_AXI_USER  = 32'hFFFF_FFFF;
 
-    parameter CPTRA_SET_FUSE_AXI_ID_INTEG = 1'b0;
-    parameter [31:0] CPTRA_FUSE_VALID_AXI_ID = 32'h0000_0000;
+    parameter CPTRA_SET_FUSE_AXI_USER_INTEG = 1'b0;
+    parameter [31:0] CPTRA_FUSE_VALID_AXI_USER = 32'h0000_0000;
 
     //DMI Register encodings
     //Read only registers
@@ -74,9 +74,34 @@ package soc_ifc_pkg;
     parameter DMI_REG_BOOT_STATUS = 7'h53;
     parameter DMI_REG_CPTRA_HW_ERRROR_ENC = 7'h54;
     parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
+    parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_L = 7'h56;
+    parameter DMI_REG_SS_UDS_SEED_BASE_ADDR_H = 7'h57;
+    parameter DMI_REG_HW_FATAL_ERROR = 7'h58;
+    parameter DMI_REG_FW_FATAL_ERROR = 7'h59;
+    parameter DMI_REG_HW_NON_FATAL_ERROR = 7'h5a;
+    parameter DMI_REG_FW_NON_FATAL_ERROR = 7'h5b;
     //RW registers
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
+    parameter DMI_REG_MBOX_DIN = 7'h62;
+    parameter DMI_REG_SS_DEBUG_INTENT = 7'h63;
+    parameter DMI_REG_SS_CALIPTRA_BASE_ADDR_L = 7'h64;
+    parameter DMI_REG_SS_CALIPTRA_BASE_ADDR_H = 7'h65;
+    parameter DMI_REG_SS_MCI_BASE_ADDR_L = 7'h66;
+    parameter DMI_REG_SS_MCI_BASE_ADDR_H = 7'h67;
+    parameter DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L = 7'h68;
+    parameter DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H = 7'h69;
+    parameter DMI_REG_SS_OTP_FC_BASE_ADDR_L = 7'h6A;
+    parameter DMI_REG_SS_OTP_FC_BASE_ADDR_H = 7'h6B;
+    parameter DMI_REG_SS_STRAP_GENERIC_0 = 7'h6C;
+    parameter DMI_REG_SS_STRAP_GENERIC_1 = 7'h6D;
+    parameter DMI_REG_SS_STRAP_GENERIC_2 = 7'h6E;
+    parameter DMI_REG_SS_STRAP_GENERIC_3 = 7'h6F;
+    parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ = 7'h70;
+    parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP = 7'h71;
+    parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
+    parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;
+
     
     // This parameter describes the hard-coded implementation in the BOOT FSM
     // that results in noncore reset assertion being delayed from the soft reset
@@ -103,6 +128,7 @@ package soc_ifc_pkg;
         MBOX_RDY_FOR_DATA = 3'b010,
         MBOX_EXECUTE_UC   = 3'b110,
         MBOX_EXECUTE_SOC  = 3'b100,
+        MBOX_EXECUTE_TAP  = 3'b101,
         MBOX_ERROR        = 3'b111
     } mbox_fsm_state_e;
 
@@ -129,7 +155,7 @@ package soc_ifc_pkg;
         logic   [SOC_IFC_ADDR_W-1:0]   addr;
         logic   [SOC_IFC_DATA_W-1:0]   wdata;
         logic   [SOC_IFC_DATA_W/8-1:0] wstrb;
-//        logic   [SOC_IFC_USER_W-1:0] user;
+        logic   [SOC_IFC_USER_W-1:0]   user;
         logic   [SOC_IFC_ID_W  -1:0]   id;
         logic                          write;
         logic                          soc_req;

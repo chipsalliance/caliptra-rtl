@@ -186,7 +186,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
                 `uvm_info("KV_REG_PRED", "Writing to KEY_ENTRY", UVM_FULL)
                 super.write(tr);
 
-                if ((rw.addr >= `KV_REG_KEY_ENTRY_0_0) && (rw.addr <= `KV_REG_KEY_ENTRY_31_11)) begin //Only update KEY_CTRL if it's a KEY_ENTRY write
+                if ((rw.addr >= `KV_REG_KEY_ENTRY_0_0) && (rw.addr <= `KV_REG_KEY_ENTRY_23_15)) begin //Only update KEY_CTRL if it's a KEY_ENTRY write
                 `uvm_info("KV_REG_PRED", "Updating KEY_CTRL", UVM_FULL)
                 
                 //-----------------------------------------------

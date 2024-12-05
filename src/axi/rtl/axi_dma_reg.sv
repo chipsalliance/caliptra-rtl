@@ -2967,7 +2967,9 @@ module axi_dma_reg (
     assign readback_array[3][3:2] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 2'h0 : '0;
     assign readback_array[3][15:4] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.fifo_depth.next : '0;
     assign readback_array[3][17:16] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? field_storage.status0.axi_dma_fsm_ps.value : '0;
-    assign readback_array[3][31:18] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 14'h0 : '0;
+    assign readback_array[3][18:18] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.payload_available.next : '0;
+    assign readback_array[3][19:19] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.image_activated.next : '0;
+    assign readback_array[3][31:20] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 12'h0 : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.status1 && !decoded_req_is_wr) ? hwif_in.status1.bytes_remaining.next : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.src_addr_l && !decoded_req_is_wr) ? field_storage.src_addr_l.addr_l.value : '0;
     assign readback_array[6][31:0] = (decoded_reg_strb.src_addr_h && !decoded_req_is_wr) ? field_storage.src_addr_h.addr_h.value : '0;

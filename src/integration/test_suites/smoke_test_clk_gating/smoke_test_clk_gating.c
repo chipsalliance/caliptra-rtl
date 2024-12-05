@@ -123,7 +123,7 @@ void main() {
                       : "i" (0x304), "r" (mie_machinetimer_en)  /* input : immediate  */ \
                       : /* clobbers: none */);
 
-        *soc_ifc_flow_status = SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK;
+        *soc_ifc_flow_status = SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK;
 
         //Halt the core
         __asm__ volatile ("csrwi    %0, %1" \

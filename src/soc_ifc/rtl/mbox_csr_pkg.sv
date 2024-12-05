@@ -16,11 +16,20 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic [31:0] next;
-    } mbox_csr__mbox_id__id__in_t;
+    } mbox_csr__mbox_user__user__in_t;
 
     typedef struct packed{
-        mbox_csr__mbox_id__id__in_t id;
-    } mbox_csr__mbox_id__in_t;
+        mbox_csr__mbox_user__user__in_t user;
+    } mbox_csr__mbox_user__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic we;
+    } mbox_csr__mbox_dlen__length__in_t;
+
+    typedef struct packed{
+        mbox_csr__mbox_dlen__length__in_t length;
+    } mbox_csr__mbox_dlen__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -80,7 +89,8 @@ package mbox_csr_pkg;
         logic valid_requester;
         logic valid_receiver;
         mbox_csr__mbox_lock__in_t mbox_lock;
-        mbox_csr__mbox_id__in_t mbox_id;
+        mbox_csr__mbox_user__in_t mbox_user;
+        mbox_csr__mbox_dlen__in_t mbox_dlen;
         mbox_csr__mbox_dataout__in_t mbox_dataout;
         mbox_csr__mbox_execute__in_t mbox_execute;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t mbox_status;
@@ -97,11 +107,11 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic [31:0] value;
-    } mbox_csr__mbox_id__id__out_t;
+    } mbox_csr__mbox_user__user__out_t;
 
     typedef struct packed{
-        mbox_csr__mbox_id__id__out_t id;
-    } mbox_csr__mbox_id__out_t;
+        mbox_csr__mbox_user__user__out_t user;
+    } mbox_csr__mbox_user__out_t;
 
     typedef struct packed{
         logic swmod;
@@ -189,8 +199,16 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_unlock__out_t;
 
     typedef struct packed{
+        logic value;
+    } mbox_csr__tap_mode__enabled__out_t;
+
+    typedef struct packed{
+        mbox_csr__tap_mode__enabled__out_t enabled;
+    } mbox_csr__tap_mode__out_t;
+
+    typedef struct packed{
         mbox_csr__mbox_lock__out_t mbox_lock;
-        mbox_csr__mbox_id__out_t mbox_id;
+        mbox_csr__mbox_user__out_t mbox_user;
         mbox_csr__mbox_cmd__out_t mbox_cmd;
         mbox_csr__mbox_dlen__out_t mbox_dlen;
         mbox_csr__mbox_datain__out_t mbox_datain;
@@ -198,6 +216,7 @@ package mbox_csr_pkg;
         mbox_csr__mbox_execute__out_t mbox_execute;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__out_t mbox_status;
         mbox_csr__mbox_unlock__out_t mbox_unlock;
+        mbox_csr__tap_mode__out_t tap_mode;
     } mbox_csr__out_t;
 
     typedef enum logic [31:0] {

@@ -34,7 +34,7 @@
 //   kv_doe_write_agent_ae receives transactions of type  kv_write_transaction
 //   kv_hmac_key_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_hmac_block_read_agent_ae receives transactions of type  kv_read_transaction
-//   kv_sha512_block_read_agent_ae receives transactions of type  kv_read_transaction
+//   kv_mldsa_key_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_privkey_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_seed_read_agent_ae receives transactions of type  kv_read_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
@@ -105,11 +105,11 @@ class kv_predictor #(
                               .BASE_T(BASE_T)
                               )
 ) kv_hmac_block_read_agent_ae;
-  uvm_analysis_imp_kv_sha512_block_read_agent_ae #(kv_read_transaction, kv_predictor #(
+  uvm_analysis_imp_kv_mldsa_key_read_agent_ae #(kv_read_transaction, kv_predictor #(
                              .CONFIG_T(CONFIG_T),
                              .BASE_T(BASE_T)
                               )
-) kv_sha512_block_read_agent_ae;
+) kv_mldsa_key_read_agent_ae;
   uvm_analysis_imp_kv_ecc_privkey_read_agent_ae #(kv_read_transaction, kv_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -136,7 +136,7 @@ class kv_predictor #(
   uvm_analysis_port #(kv_read_transaction) kv_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_hmac_key_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_hmac_block_read_sb_ap;
-  uvm_analysis_port #(kv_read_transaction) kv_sha512_block_read_sb_ap;
+  uvm_analysis_port #(kv_read_transaction) kv_mldsa_key_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_privkey_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_seed_read_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) kv_sb_ahb_ap;
@@ -174,7 +174,7 @@ class kv_predictor #(
 
   kv_read_transaction kv_hmac_key_read_agent_ae_debug;
   kv_read_transaction kv_hmac_block_read_agent_ae_debug;
-  kv_read_transaction kv_sha512_block_read_agent_ae_debug;
+  kv_read_transaction kv_mldsa_key_read_agent_ae_debug;
   kv_read_transaction kv_ecc_privkey_read_agent_ae_debug;
   kv_read_transaction kv_ecc_seed_read_agent_ae_debug;
 
@@ -196,7 +196,7 @@ class kv_predictor #(
   //Read maps
   uvm_reg_map p_kv_hmac_key_read_map;
   uvm_reg_map p_kv_hmac_block_read_map;
-  uvm_reg_map p_kv_sha512_block_read_map;
+  uvm_reg_map p_kv_mldsa_key_read_map;
   uvm_reg_map p_kv_ecc_privkey_read_map;
   uvm_reg_map p_kv_ecc_seed_read_map;
 
@@ -247,7 +247,7 @@ class kv_predictor #(
     kv_doe_write_agent_ae         = new("kv_doe_write_agent_ae", this);
     kv_hmac_key_read_agent_ae     = new("kv_hmac_key_read_agent_ae", this);
     kv_hmac_block_read_agent_ae   = new("kv_hmac_block_read_agent_ae", this);
-    kv_sha512_block_read_agent_ae = new("kv_sha512_block_read_agent_ae", this);
+    kv_mldsa_key_read_agent_ae = new("kv_mldsa_key_read_agent_ae", this);
     kv_ecc_privkey_read_agent_ae  = new("kv_ecc_privkey_read_agent_ae", this);
     kv_ecc_seed_read_agent_ae     = new("kv_ecc_seed_read_agent_ae", this);
     ahb_slave_0_ae                = new("ahb_slave_0_ae", this);
@@ -260,7 +260,7 @@ class kv_predictor #(
     kv_sb_ap                      = new("kv_sb_ap", this );
     kv_hmac_key_read_sb_ap        = new("kv_hmac_key_read_sb_ap", this );
     kv_hmac_block_read_sb_ap      = new("kv_hmac_block_read_sb_ap", this );
-    kv_sha512_block_read_sb_ap    = new("kv_sha512_block_read_sb_ap", this );
+    kv_mldsa_key_read_sb_ap    = new("kv_mldsa_key_read_sb_ap", this );
     kv_ecc_privkey_read_sb_ap     = new("kv_ecc_privkey_read_sb_ap", this );
     kv_ecc_seed_read_sb_ap        = new("kv_ecc_seed_read_sb_ap", this );
     kv_sb_ahb_ap                  = new("kv_sb_ahb_ap", this);
@@ -280,7 +280,7 @@ class kv_predictor #(
     //Read maps
     p_kv_hmac_key_read_map      = p_kv_rm.get_map_by_name("kv_hmac_key_read_map");
     p_kv_hmac_block_read_map    = p_kv_rm.get_map_by_name("kv_hmac_block_read_map");
-    p_kv_sha512_block_read_map  = p_kv_rm.get_map_by_name("kv_sha512_block_read_map");
+    p_kv_mldsa_key_read_map  = p_kv_rm.get_map_by_name("kv_mldsa_key_read_map");
     p_kv_ecc_privkey_read_map   = p_kv_rm.get_map_by_name("kv_ecc_privkey_read_map");
     p_kv_ecc_seed_read_map      = p_kv_rm.get_map_by_name("kv_ecc_seed_read_map");
 
@@ -544,17 +544,17 @@ class kv_predictor #(
     // pragma uvmf custom kv_hmac_block_read_agent_ae_predictor end
   endfunction
 
-  // FUNCTION: write_kv_sha512_block_read_agent_ae
-  // Transactions received through kv_sha512_block_read_agent_ae initiate the execution of this function.
+  // FUNCTION: write_kv_mldsa_key_read_agent_ae
+  // Transactions received through kv_mldsa_key_read_agent_ae initiate the execution of this function.
   // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_kv_sha512_block_read_agent_ae(kv_read_transaction t);
-    // pragma uvmf custom kv_sha512_block_read_agent_ae_predictor begin
-    kv_sha512_block_read_agent_ae_debug = t;
-    `uvm_info("PRED", "Transaction Received through kv_sha512_block_read_agent_ae", UVM_MEDIUM)
+  virtual function void write_kv_mldsa_key_read_agent_ae(kv_read_transaction t);
+    // pragma uvmf custom kv_mldsa_key_read_agent_ae_predictor begin
+    kv_mldsa_key_read_agent_ae_debug = t;
+    `uvm_info("PRED", "Transaction Received through kv_mldsa_key_read_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
     // Construct one of each output transaction type.
     kv_sb_ap_output_transaction = kv_sb_ap_output_transaction_t::type_id::create("kv_sb_ap_output_transaction");
-    client = "sha512_block_read";
+    client = "mldsa_key_read";
     populate_expected_kv_read_txn(kv_sb_ap_output_transaction, t, client);
  
     // Code for sending output transaction out through kv_sb_ap
@@ -562,8 +562,8 @@ class kv_predictor #(
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    kv_sha512_block_read_sb_ap.write(kv_sb_ap_output_transaction);
-    // pragma uvmf custom kv_sha512_block_read_agent_ae_predictor end
+    kv_mldsa_key_read_sb_ap.write(kv_sb_ap_output_transaction);
+    // pragma uvmf custom kv_mldsa_key_read_agent_ae_predictor end
   endfunction
 
   // FUNCTION: write_kv_ecc_privkey_read_agent_ae
@@ -788,7 +788,7 @@ endclass
 
       "hmac_key_read"     : client_dest_valid = dest_valid[0];
       "hmac_block_read"   : client_dest_valid = dest_valid[1];
-      "sha512_block_read" : client_dest_valid = dest_valid[2];
+      "mldsa_key_read" : client_dest_valid = dest_valid[2];
       "ecc_privkey_read"  : client_dest_valid = dest_valid[3];
       "ecc_seed_read"     : client_dest_valid = dest_valid[4];
       default: begin

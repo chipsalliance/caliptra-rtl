@@ -77,10 +77,10 @@ module soc_ifc_reg (
         logic CPTRA_FLOW_STATUS;
         logic CPTRA_RESET_REASON;
         logic CPTRA_SECURITY_STATE;
-        logic [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
-        logic [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
-        logic CPTRA_TRNG_VALID_AXI_ID;
-        logic CPTRA_TRNG_AXI_ID_LOCK;
+        logic [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
+        logic [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
+        logic CPTRA_TRNG_VALID_AXI_USER;
+        logic CPTRA_TRNG_AXI_USER_LOCK;
         logic [12-1:0]CPTRA_TRNG_DATA;
         logic CPTRA_TRNG_CTRL;
         logic CPTRA_TRNG_STATUS;
@@ -101,26 +101,48 @@ module soc_ifc_reg (
         logic CPTRA_WDT_TIMER2_CTRL;
         logic [2-1:0]CPTRA_WDT_TIMER2_TIMEOUT_PERIOD;
         logic CPTRA_WDT_STATUS;
-        logic CPTRA_FUSE_VALID_AXI_ID;
-        logic CPTRA_FUSE_AXI_ID_LOCK;
+        logic CPTRA_FUSE_VALID_AXI_USER;
+        logic CPTRA_FUSE_AXI_USER_LOCK;
         logic [2-1:0]CPTRA_WDT_CFG;
         logic CPTRA_iTRNG_ENTROPY_CONFIG_0;
         logic CPTRA_iTRNG_ENTROPY_CONFIG_1;
         logic [2-1:0]CPTRA_RSVD_REG;
+        logic CPTRA_HW_CAPABILITIES;
+        logic CPTRA_FW_CAPABILITIES;
+        logic CPTRA_CAP_LOCK;
+        logic [12-1:0]CPTRA_OWNER_PK_HASH;
+        logic CPTRA_OWNER_PK_HASH_LOCK;
         logic [16-1:0]fuse_uds_seed;
         logic [8-1:0]fuse_field_entropy;
         logic [12-1:0]fuse_key_manifest_pk_hash;
-        logic fuse_key_manifest_pk_hash_mask;
-        logic [12-1:0]fuse_owner_pk_hash;
+        logic [8-1:0]fuse_key_manifest_pk_hash_mask;
         logic fuse_fmc_key_manifest_svn;
         logic [4-1:0]fuse_runtime_svn;
         logic fuse_anti_rollback_disable;
         logic [24-1:0]fuse_idevid_cert_attr;
         logic [4-1:0]fuse_idevid_manuf_hsm_id;
-        logic fuse_life_cycle;
-        logic fuse_lms_verify;
         logic fuse_lms_revocation;
+        logic fuse_mldsa_revocation;
         logic fuse_soc_stepping_id;
+        logic [4-1:0]fuse_manuf_dbg_unlock_token;
+        logic SS_CALIPTRA_BASE_ADDR_L;
+        logic SS_CALIPTRA_BASE_ADDR_H;
+        logic SS_MCI_BASE_ADDR_L;
+        logic SS_MCI_BASE_ADDR_H;
+        logic SS_RECOVERY_IFC_BASE_ADDR_L;
+        logic SS_RECOVERY_IFC_BASE_ADDR_H;
+        logic SS_OTP_FC_BASE_ADDR_L;
+        logic SS_OTP_FC_BASE_ADDR_H;
+        logic SS_UDS_SEED_BASE_ADDR_L;
+        logic SS_UDS_SEED_BASE_ADDR_H;
+        logic SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
+        logic SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
+        logic SS_DEBUG_INTENT;
+        logic [4-1:0]SS_STRAP_GENERIC;
+        logic SS_DBG_MANUF_SERVICE_REG_REQ;
+        logic SS_DBG_MANUF_SERVICE_REG_RSP;
+        logic [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
+        logic [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
         logic [8-1:0]internal_obf_key;
         logic internal_iccm_lock;
         logic internal_fw_update_reset;
@@ -195,13 +217,13 @@ module soc_ifc_reg (
         decoded_reg_strb.CPTRA_RESET_REASON = cpuif_req_masked & (cpuif_addr == 12'h40);
         decoded_reg_strb.CPTRA_SECURITY_STATE = cpuif_req_masked & (cpuif_addr == 12'h44);
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] = cpuif_req_masked & (cpuif_addr == 12'h48 + i0*12'h4);
+            decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] = cpuif_req_masked & (cpuif_addr == 12'h48 + i0*12'h4);
         end
         for(int i0=0; i0<5; i0++) begin
-            decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c + i0*12'h4);
+            decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c + i0*12'h4);
         end
-        decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID = cpuif_req_masked & (cpuif_addr == 12'h70);
-        decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK = cpuif_req_masked & (cpuif_addr == 12'h74);
+        decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h70);
+        decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK = cpuif_req_masked & (cpuif_addr == 12'h74);
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.CPTRA_TRNG_DATA[i0] = cpuif_req_masked & (cpuif_addr == 12'h78 + i0*12'h4);
         end
@@ -234,8 +256,8 @@ module soc_ifc_reg (
             decoded_reg_strb.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i0] = cpuif_req_masked & (cpuif_addr == 12'hfc + i0*12'h4);
         end
         decoded_reg_strb.CPTRA_WDT_STATUS = cpuif_req_masked & (cpuif_addr == 12'h104);
-        decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID = cpuif_req_masked & (cpuif_addr == 12'h108);
-        decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK = cpuif_req_masked & (cpuif_addr == 12'h10c);
+        decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h108);
+        decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK = cpuif_req_masked & (cpuif_addr == 12'h10c);
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.CPTRA_WDT_CFG[i0] = cpuif_req_masked & (cpuif_addr == 12'h110 + i0*12'h4);
         end
@@ -244,6 +266,13 @@ module soc_ifc_reg (
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.CPTRA_RSVD_REG[i0] = cpuif_req_masked & (cpuif_addr == 12'h120 + i0*12'h4);
         end
+        decoded_reg_strb.CPTRA_HW_CAPABILITIES = cpuif_req_masked & (cpuif_addr == 12'h128);
+        decoded_reg_strb.CPTRA_FW_CAPABILITIES = cpuif_req_masked & (cpuif_addr == 12'h12c);
+        decoded_reg_strb.CPTRA_CAP_LOCK = cpuif_req_masked & (cpuif_addr == 12'h130);
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.CPTRA_OWNER_PK_HASH[i0] = cpuif_req_masked & (cpuif_addr == 12'h140 + i0*12'h4);
+        end
+        decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK = cpuif_req_masked & (cpuif_addr == 12'h170);
         for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.fuse_uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 12'h200 + i0*12'h4);
         end
@@ -253,25 +282,50 @@ module soc_ifc_reg (
         for(int i0=0; i0<12; i0++) begin
             decoded_reg_strb.fuse_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h260 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_key_manifest_pk_hash_mask = cpuif_req_masked & (cpuif_addr == 12'h290);
-        for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.fuse_owner_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h294 + i0*12'h4);
+        for(int i0=0; i0<8; i0++) begin
+            decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] = cpuif_req_masked & (cpuif_addr == 12'h290 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2c4);
+        decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2b4);
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2c8 + i0*12'h4);
+            decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2b8 + i0*12'h4);
         end
-        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2d8);
+        decoded_reg_strb.fuse_anti_rollback_disable = cpuif_req_masked & (cpuif_addr == 12'h2c8);
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2dc + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_cert_attr[i0] = cpuif_req_masked & (cpuif_addr == 12'h2cc + i0*12'h4);
         end
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h33c + i0*12'h4);
+            decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] = cpuif_req_masked & (cpuif_addr == 12'h32c + i0*12'h4);
         end
-        decoded_reg_strb.fuse_life_cycle = cpuif_req_masked & (cpuif_addr == 12'h34c);
-        decoded_reg_strb.fuse_lms_verify = cpuif_req_masked & (cpuif_addr == 12'h350);
-        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h354);
-        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h358);
+        decoded_reg_strb.fuse_lms_revocation = cpuif_req_masked & (cpuif_addr == 12'h340);
+        decoded_reg_strb.fuse_mldsa_revocation = cpuif_req_masked & (cpuif_addr == 12'h344);
+        decoded_reg_strb.fuse_soc_stepping_id = cpuif_req_masked & (cpuif_addr == 12'h348);
+        for(int i0=0; i0<4; i0++) begin
+            decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] = cpuif_req_masked & (cpuif_addr == 12'h34c + i0*12'h4);
+        end
+        decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h500);
+        decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h504);
+        decoded_reg_strb.SS_MCI_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h508);
+        decoded_reg_strb.SS_MCI_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h50c);
+        decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h510);
+        decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h514);
+        decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h518);
+        decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h51c);
+        decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h520);
+        decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h524);
+        decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET = cpuif_req_masked & (cpuif_addr == 12'h528);
+        decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES = cpuif_req_masked & (cpuif_addr == 12'h52c);
+        decoded_reg_strb.SS_DEBUG_INTENT = cpuif_req_masked & (cpuif_addr == 12'h530);
+        for(int i0=0; i0<4; i0++) begin
+            decoded_reg_strb.SS_STRAP_GENERIC[i0] = cpuif_req_masked & (cpuif_addr == 12'h5a0 + i0*12'h4);
+        end
+        decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ = cpuif_req_masked & (cpuif_addr == 12'h5c0);
+        decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP = cpuif_req_masked & (cpuif_addr == 12'h5c4);
+        for(int i0=0; i0<2; i0++) begin
+            decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c8 + i0*12'h4);
+        end
+        for(int i0=0; i0<4; i0++) begin
+            decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] = cpuif_req_masked & (cpuif_addr == 12'h5d0 + i0*12'h4);
+        end
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h4);
         end
@@ -416,7 +470,7 @@ module soc_ifc_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } ready_for_fw;
+            } ready_for_mb_processing;
             struct packed{
                 logic next;
                 logic load_next;
@@ -440,26 +494,26 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+            } AXI_USER;
+        } [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        } [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } CPTRA_TRNG_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_TRNG_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } CPTRA_TRNG_AXI_ID_LOCK;
+        } CPTRA_TRNG_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -580,14 +634,14 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } AXI_ID;
-        } CPTRA_FUSE_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_FUSE_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic next;
                 logic load_next;
             } LOCK;
-        } CPTRA_FUSE_AXI_ID_LOCK;
+        } CPTRA_FUSE_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -624,6 +678,36 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
+            } cap;
+        } CPTRA_HW_CAPABILITIES;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } cap;
+        } CPTRA_FW_CAPABILITIES;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } lock;
+        } CPTRA_CAP_LOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } hash;
+        } [12-1:0]CPTRA_OWNER_PK_HASH;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } lock;
+        } CPTRA_OWNER_PK_HASH_LOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
             } seed;
         } [16-1:0]fuse_uds_seed;
         struct packed{
@@ -640,16 +724,10 @@ module soc_ifc_reg (
         } [12-1:0]fuse_key_manifest_pk_hash;
         struct packed{
             struct packed{
-                logic [3:0] next;
-                logic load_next;
-            } mask;
-        } fuse_key_manifest_pk_hash_mask;
-        struct packed{
-            struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } hash;
-        } [12-1:0]fuse_owner_pk_hash;
+            } mask;
+        } [8-1:0]fuse_key_manifest_pk_hash_mask;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -682,28 +760,176 @@ module soc_ifc_reg (
         } [4-1:0]fuse_idevid_manuf_hsm_id;
         struct packed{
             struct packed{
-                logic [1:0] next;
-                logic load_next;
-            } life_cycle;
-        } fuse_life_cycle;
-        struct packed{
-            struct packed{
-                logic next;
-                logic load_next;
-            } lms_verify;
-        } fuse_lms_verify;
-        struct packed{
-            struct packed{
                 logic [31:0] next;
                 logic load_next;
             } lms_revocation;
         } fuse_lms_revocation;
         struct packed{
             struct packed{
+                logic [3:0] next;
+                logic load_next;
+            } mldsa_revocation;
+        } fuse_mldsa_revocation;
+        struct packed{
+            struct packed{
                 logic [15:0] next;
                 logic load_next;
             } soc_stepping_id;
         } fuse_soc_stepping_id;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } token;
+        } [4-1:0]fuse_manuf_dbg_unlock_token;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_CALIPTRA_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_CALIPTRA_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_MCI_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_MCI_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_RECOVERY_IFC_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_RECOVERY_IFC_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_OTP_FC_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_OTP_FC_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_UDS_SEED_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_UDS_SEED_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } offset;
+        } SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } num;
+        } SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } debug_intent;
+        } SS_DEBUG_INTENT;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } data;
+        } [4-1:0]SS_STRAP_GENERIC;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } MANUF_DBG_UNLOCK_REQ;
+            struct packed{
+                logic next;
+                logic load_next;
+            } PROD_DBG_UNLOCK_REQ;
+            struct packed{
+                logic next;
+                logic load_next;
+            } UDS_PROGRAM_REQ;
+        } SS_DBG_MANUF_SERVICE_REG_REQ;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } MANUF_DBG_UNLOCK_SUCCESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } MANUF_DBG_UNLOCK_FAIL;
+            struct packed{
+                logic next;
+                logic load_next;
+            } MANUF_DBG_UNLOCK_IN_PROGRESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } PROD_DBG_UNLOCK_SUCCESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } PROD_DBG_UNLOCK_FAIL;
+            struct packed{
+                logic next;
+                logic load_next;
+            } PROD_DBG_UNLOCK_IN_PROGRESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } UDS_PROGRAM_SUCCESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } UDS_PROGRAM_FAIL;
+            struct packed{
+                logic next;
+                logic load_next;
+            } UDS_PROGRAM_IN_PROGRESS;
+        } SS_DBG_MANUF_SERVICE_REG_RSP;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } LEVEL;
+        } [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } go;
+        } [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1298,7 +1524,7 @@ module soc_ifc_reg (
             } idevid_csr_ready;
             struct packed{
                 logic value;
-            } ready_for_fw;
+            } ready_for_mb_processing;
             struct packed{
                 logic value;
             } ready_for_runtime;
@@ -1317,23 +1543,23 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } [5-1:0]CPTRA_MBOX_VALID_AXI_ID;
+            } AXI_USER;
+        } [5-1:0]CPTRA_MBOX_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } [5-1:0]CPTRA_MBOX_AXI_ID_LOCK;
+        } [5-1:0]CPTRA_MBOX_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } CPTRA_TRNG_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_TRNG_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } CPTRA_TRNG_AXI_ID_LOCK;
+        } CPTRA_TRNG_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1433,13 +1659,13 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } AXI_ID;
-        } CPTRA_FUSE_VALID_AXI_ID;
+            } AXI_USER;
+        } CPTRA_FUSE_VALID_AXI_USER;
         struct packed{
             struct packed{
                 logic value;
             } LOCK;
-        } CPTRA_FUSE_AXI_ID_LOCK;
+        } CPTRA_FUSE_AXI_USER_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1469,6 +1695,31 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
+            } cap;
+        } CPTRA_HW_CAPABILITIES;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } cap;
+        } CPTRA_FW_CAPABILITIES;
+        struct packed{
+            struct packed{
+                logic value;
+            } lock;
+        } CPTRA_CAP_LOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } hash;
+        } [12-1:0]CPTRA_OWNER_PK_HASH;
+        struct packed{
+            struct packed{
+                logic value;
+            } lock;
+        } CPTRA_OWNER_PK_HASH_LOCK;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
             } seed;
         } [16-1:0]fuse_uds_seed;
         struct packed{
@@ -1483,14 +1734,9 @@ module soc_ifc_reg (
         } [12-1:0]fuse_key_manifest_pk_hash;
         struct packed{
             struct packed{
-                logic [3:0] value;
-            } mask;
-        } fuse_key_manifest_pk_hash_mask;
-        struct packed{
-            struct packed{
                 logic [31:0] value;
-            } hash;
-        } [12-1:0]fuse_owner_pk_hash;
+            } mask;
+        } [8-1:0]fuse_key_manifest_pk_hash_mask;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1518,24 +1764,144 @@ module soc_ifc_reg (
         } [4-1:0]fuse_idevid_manuf_hsm_id;
         struct packed{
             struct packed{
-                logic [1:0] value;
-            } life_cycle;
-        } fuse_life_cycle;
-        struct packed{
-            struct packed{
-                logic value;
-            } lms_verify;
-        } fuse_lms_verify;
-        struct packed{
-            struct packed{
                 logic [31:0] value;
             } lms_revocation;
         } fuse_lms_revocation;
         struct packed{
             struct packed{
+                logic [3:0] value;
+            } mldsa_revocation;
+        } fuse_mldsa_revocation;
+        struct packed{
+            struct packed{
                 logic [15:0] value;
             } soc_stepping_id;
         } fuse_soc_stepping_id;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } token;
+        } [4-1:0]fuse_manuf_dbg_unlock_token;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_CALIPTRA_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_CALIPTRA_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_MCI_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_MCI_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_RECOVERY_IFC_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_RECOVERY_IFC_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_OTP_FC_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_OTP_FC_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_UDS_SEED_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_UDS_SEED_BASE_ADDR_H;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } offset;
+        } SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } num;
+        } SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
+        struct packed{
+            struct packed{
+                logic value;
+            } debug_intent;
+        } SS_DEBUG_INTENT;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } data;
+        } [4-1:0]SS_STRAP_GENERIC;
+        struct packed{
+            struct packed{
+                logic value;
+            } MANUF_DBG_UNLOCK_REQ;
+            struct packed{
+                logic value;
+            } PROD_DBG_UNLOCK_REQ;
+            struct packed{
+                logic value;
+            } UDS_PROGRAM_REQ;
+        } SS_DBG_MANUF_SERVICE_REG_REQ;
+        struct packed{
+            struct packed{
+                logic value;
+            } MANUF_DBG_UNLOCK_SUCCESS;
+            struct packed{
+                logic value;
+            } MANUF_DBG_UNLOCK_FAIL;
+            struct packed{
+                logic value;
+            } MANUF_DBG_UNLOCK_IN_PROGRESS;
+            struct packed{
+                logic value;
+            } PROD_DBG_UNLOCK_SUCCESS;
+            struct packed{
+                logic value;
+            } PROD_DBG_UNLOCK_FAIL;
+            struct packed{
+                logic value;
+            } PROD_DBG_UNLOCK_IN_PROGRESS;
+            struct packed{
+                logic value;
+            } UDS_PROGRAM_SUCCESS;
+            struct packed{
+                logic value;
+            } UDS_PROGRAM_FAIL;
+            struct packed{
+                logic value;
+            } UDS_PROGRAM_IN_PROGRESS;
+        } SS_DBG_MANUF_SERVICE_REG_RSP;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } LEVEL;
+        } [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } go;
+        } [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -2259,27 +2625,27 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_FLOW_STATUS.idevid_csr_ready.value = field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value;
-    // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_fw
+    // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_mb_processing
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
+        next_c = field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value;
         load_next_c = '0;
         if(decoded_reg_strb.CPTRA_FLOW_STATUS && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
-            next_c = (field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value & ~decoded_wr_biten[28:28]) | (decoded_wr_data[28:28] & decoded_wr_biten[28:28]);
+            next_c = (field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value & ~decoded_wr_biten[28:28]) | (decoded_wr_data[28:28] & decoded_wr_biten[28:28]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_FLOW_STATUS.ready_for_fw.next = next_c;
-        field_combo.CPTRA_FLOW_STATUS.ready_for_fw.load_next = load_next_c;
+        field_combo.CPTRA_FLOW_STATUS.ready_for_mb_processing.next = next_c;
+        field_combo.CPTRA_FLOW_STATUS.ready_for_mb_processing.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value <= 1'h0;
-        end else if(field_combo.CPTRA_FLOW_STATUS.ready_for_fw.load_next) begin
-            field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value <= field_combo.CPTRA_FLOW_STATUS.ready_for_fw.next;
+            field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value <= 1'h0;
+        end else if(field_combo.CPTRA_FLOW_STATUS.ready_for_mb_processing.load_next) begin
+            field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value <= field_combo.CPTRA_FLOW_STATUS.ready_for_mb_processing.next;
         end
     end
-    assign hwif_out.CPTRA_FLOW_STATUS.ready_for_fw.value = field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value;
+    assign hwif_out.CPTRA_FLOW_STATUS.ready_for_mb_processing.value = field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value;
     // Field: soc_ifc_reg.CPTRA_FLOW_STATUS.ready_for_runtime
     always_comb begin
         automatic logic [0:0] next_c;
@@ -2365,93 +2731,93 @@ module soc_ifc_reg (
     end
     assign hwif_out.CPTRA_RESET_REASON.WARM_RESET.value = field_storage.CPTRA_RESET_REASON.WARM_RESET.value;
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_MBOX_VALID_AXI_ID[].AXI_ID
+        // Field: soc_ifc_reg.CPTRA_MBOX_VALID_AXI_USER[].AXI_USER
         always_comb begin
             automatic logic [31:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value;
+            next_c = field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value;
             load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.swwel)) begin // SW write
-                next_c = (field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            if(decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.swwel)) begin // SW write
+                next_c = (field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
-            field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.next = next_c;
-            field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.next = next_c;
+            field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value <= 32'hffffffff;
-            end else if(field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.load_next) begin
-                field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value <= field_combo.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.next;
+                field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value <= 32'hffffffff;
+            end else if(field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.load_next) begin
+                field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value <= field_combo.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.next;
             end
         end
-        assign hwif_out.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value = field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value;
+        assign hwif_out.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value = field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        // Field: soc_ifc_reg.CPTRA_MBOX_AXI_ID_LOCK[].LOCK
+        // Field: soc_ifc_reg.CPTRA_MBOX_AXI_USER_LOCK[].LOCK
         always_comb begin
             automatic logic [0:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value;
+            next_c = field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value;
             load_next_c = '0;
-            if(decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.swwel)) begin // SW write
-                next_c = (field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            if(decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.swwel)) begin // SW write
+                next_c = (field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
             end
-            field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.next = next_c;
-            field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.load_next = load_next_c;
+            field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.next = next_c;
+            field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
             if(~hwif_in.cptra_rst_b) begin
-                field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value <= 1'h0;
-            end else if(field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.load_next) begin
-                field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value <= field_combo.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.next;
+                field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value <= 1'h0;
+            end else if(field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.load_next) begin
+                field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value <= field_combo.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.next;
             end
         end
-        assign hwif_out.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value = field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value;
+        assign hwif_out.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value = field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value;
     end
-    // Field: soc_ifc_reg.CPTRA_TRNG_VALID_AXI_ID.AXI_ID
+    // Field: soc_ifc_reg.CPTRA_TRNG_VALID_AXI_USER.AXI_USER
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value;
+        next_c = field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.next = next_c;
-        field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.load_next = load_next_c;
+        field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.next = next_c;
+        field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value <= 32'hffffffff;
-        end else if(field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.load_next) begin
-            field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value <= field_combo.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.next;
+            field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value <= 32'hffffffff;
+        end else if(field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.load_next) begin
+            field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value <= field_combo.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.next;
         end
     end
-    assign hwif_out.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value = field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value;
-    // Field: soc_ifc_reg.CPTRA_TRNG_AXI_ID_LOCK.LOCK
+    assign hwif_out.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value = field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value;
+    // Field: soc_ifc_reg.CPTRA_TRNG_AXI_USER_LOCK.LOCK
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
+        next_c = field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_AXI_ID_LOCK.LOCK.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+        if(decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_TRNG_AXI_USER_LOCK.LOCK.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.next = next_c;
-        field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.load_next = load_next_c;
+        field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.next = next_c;
+        field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value <= 1'h0;
-        end else if(field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.load_next) begin
-            field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value <= field_combo.CPTRA_TRNG_AXI_ID_LOCK.LOCK.next;
+            field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value <= 1'h0;
+        end else if(field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.load_next) begin
+            field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value <= field_combo.CPTRA_TRNG_AXI_USER_LOCK.LOCK.next;
         end
     end
-    assign hwif_out.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value = field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value;
+    assign hwif_out.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value = field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.CPTRA_TRNG_DATA[].DATA
         always_comb begin
@@ -2910,48 +3276,48 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_WDT_STATUS.t2_timeout.value = field_storage.CPTRA_WDT_STATUS.t2_timeout.value;
-    // Field: soc_ifc_reg.CPTRA_FUSE_VALID_AXI_ID.AXI_ID
+    // Field: soc_ifc_reg.CPTRA_FUSE_VALID_AXI_USER.AXI_USER
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value;
+        next_c = field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.next = next_c;
-        field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.load_next = load_next_c;
+        field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.next = next_c;
+        field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value <= 32'hffffffff;
-        end else if(field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.load_next) begin
-            field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value <= field_combo.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.next;
+            field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value <= 32'hffffffff;
+        end else if(field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.load_next) begin
+            field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value <= field_combo.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.next;
         end
     end
-    assign hwif_out.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value = field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value;
-    // Field: soc_ifc_reg.CPTRA_FUSE_AXI_ID_LOCK.LOCK
+    assign hwif_out.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value = field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value;
+    // Field: soc_ifc_reg.CPTRA_FUSE_AXI_USER_LOCK.LOCK
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
+        next_c = field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value;
         load_next_c = '0;
-        if(decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_AXI_ID_LOCK.LOCK.swwel)) begin // SW write
-            next_c = (field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+        if(decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_FUSE_AXI_USER_LOCK.LOCK.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.next = next_c;
-        field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.load_next = load_next_c;
+        field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.next = next_c;
+        field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value <= 1'h0;
-        end else if(field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.load_next) begin
-            field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value <= field_combo.CPTRA_FUSE_AXI_ID_LOCK.LOCK.next;
+            field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value <= 1'h0;
+        end else if(field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.load_next) begin
+            field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value <= field_combo.CPTRA_FUSE_AXI_USER_LOCK.LOCK.next;
         end
     end
-    assign hwif_out.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value = field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value;
+    assign hwif_out.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value = field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value;
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.CPTRA_WDT_CFG[].TIMEOUT
         always_comb begin
@@ -3076,6 +3442,111 @@ module soc_ifc_reg (
             end
         end
     end
+    // Field: soc_ifc_reg.CPTRA_HW_CAPABILITIES.cap
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_HW_CAPABILITIES.cap.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_HW_CAPABILITIES && decoded_req_is_wr && !(hwif_in.CPTRA_HW_CAPABILITIES.cap.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_HW_CAPABILITIES.cap.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_HW_CAPABILITIES.cap.next = next_c;
+        field_combo.CPTRA_HW_CAPABILITIES.cap.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_HW_CAPABILITIES.cap.value <= 32'h0;
+        end else if(field_combo.CPTRA_HW_CAPABILITIES.cap.load_next) begin
+            field_storage.CPTRA_HW_CAPABILITIES.cap.value <= field_combo.CPTRA_HW_CAPABILITIES.cap.next;
+        end
+    end
+    // Field: soc_ifc_reg.CPTRA_FW_CAPABILITIES.cap
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_FW_CAPABILITIES.cap.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_FW_CAPABILITIES && decoded_req_is_wr && !(hwif_in.CPTRA_FW_CAPABILITIES.cap.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_FW_CAPABILITIES.cap.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_FW_CAPABILITIES.cap.next = next_c;
+        field_combo.CPTRA_FW_CAPABILITIES.cap.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_FW_CAPABILITIES.cap.value <= 32'h0;
+        end else if(field_combo.CPTRA_FW_CAPABILITIES.cap.load_next) begin
+            field_storage.CPTRA_FW_CAPABILITIES.cap.value <= field_combo.CPTRA_FW_CAPABILITIES.cap.next;
+        end
+    end
+    // Field: soc_ifc_reg.CPTRA_CAP_LOCK.lock
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_CAP_LOCK.lock.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_CAP_LOCK && decoded_req_is_wr && !(hwif_in.CPTRA_CAP_LOCK.lock.swwel)) begin // SW write
+            next_c = (field_storage.CPTRA_CAP_LOCK.lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_CAP_LOCK.lock.next = next_c;
+        field_combo.CPTRA_CAP_LOCK.lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.CPTRA_CAP_LOCK.lock.value <= 1'h0;
+        end else if(field_combo.CPTRA_CAP_LOCK.lock.load_next) begin
+            field_storage.CPTRA_CAP_LOCK.lock.value <= field_combo.CPTRA_CAP_LOCK.lock.next;
+        end
+    end
+    assign hwif_out.CPTRA_CAP_LOCK.lock.value = field_storage.CPTRA_CAP_LOCK.lock.value;
+    for(genvar i0=0; i0<12; i0++) begin
+        // Field: soc_ifc_reg.CPTRA_OWNER_PK_HASH[].hash
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.CPTRA_OWNER_PK_HASH[i0] && decoded_req_is_wr && !(hwif_in.CPTRA_OWNER_PK_HASH[i0].hash.swwel)) begin // SW write
+                next_c = (field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.CPTRA_OWNER_PK_HASH[i0].hash.next = next_c;
+            field_combo.CPTRA_OWNER_PK_HASH[i0].hash.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
+                field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value <= 32'h0;
+            end else if(field_combo.CPTRA_OWNER_PK_HASH[i0].hash.load_next) begin
+                field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value <= field_combo.CPTRA_OWNER_PK_HASH[i0].hash.next;
+            end
+        end
+        assign hwif_out.CPTRA_OWNER_PK_HASH[i0].hash.value = field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value;
+    end
+    // Field: soc_ifc_reg.CPTRA_OWNER_PK_HASH_LOCK.lock
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK && decoded_req_is_wr && hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe) begin // SW write
+            next_c = (field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.CPTRA_OWNER_PK_HASH_LOCK.lock.next = next_c;
+        field_combo.CPTRA_OWNER_PK_HASH_LOCK.lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value <= 1'h0;
+        end else if(field_combo.CPTRA_OWNER_PK_HASH_LOCK.lock.load_next) begin
+            field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value <= field_combo.CPTRA_OWNER_PK_HASH_LOCK.lock.next;
+        end
+    end
+    assign hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value = field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: soc_ifc_reg.fuse_uds_seed[].seed
         always_comb begin
@@ -3151,49 +3622,28 @@ module soc_ifc_reg (
         end
         assign hwif_out.fuse_key_manifest_pk_hash[i0].hash.value = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
     end
-    // Field: soc_ifc_reg.fuse_key_manifest_pk_hash_mask.mask
-    always_comb begin
-        automatic logic [3:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_key_manifest_pk_hash_mask.mask.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.fuse_key_manifest_pk_hash_mask && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel)) begin // SW write
-            next_c = (field_storage.fuse_key_manifest_pk_hash_mask.mask.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
-            load_next_c = '1;
-        end
-        field_combo.fuse_key_manifest_pk_hash_mask.mask.next = next_c;
-        field_combo.fuse_key_manifest_pk_hash_mask.mask.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.fuse_key_manifest_pk_hash_mask.mask.value <= 4'h0;
-        end else if(field_combo.fuse_key_manifest_pk_hash_mask.mask.load_next) begin
-            field_storage.fuse_key_manifest_pk_hash_mask.mask.value <= field_combo.fuse_key_manifest_pk_hash_mask.mask.next;
-        end
-    end
-    assign hwif_out.fuse_key_manifest_pk_hash_mask.mask.value = field_storage.fuse_key_manifest_pk_hash_mask.mask.value;
-    for(genvar i0=0; i0<12; i0++) begin
-        // Field: soc_ifc_reg.fuse_owner_pk_hash[].hash
+    for(genvar i0=0; i0<8; i0++) begin
+        // Field: soc_ifc_reg.fuse_key_manifest_pk_hash_mask[].mask
         always_comb begin
             automatic logic [31:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.fuse_owner_pk_hash[i0].hash.value;
+            next_c = field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value;
             load_next_c = '0;
-            if(decoded_reg_strb.fuse_owner_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_owner_pk_hash[i0].hash.swwel)) begin // SW write
-                next_c = (field_storage.fuse_owner_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            if(decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash_mask[i0].mask.swwel)) begin // SW write
+                next_c = (field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
-            field_combo.fuse_owner_pk_hash[i0].hash.next = next_c;
-            field_combo.fuse_owner_pk_hash[i0].hash.load_next = load_next_c;
+            field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.next = next_c;
+            field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
             if(~hwif_in.cptra_pwrgood) begin
-                field_storage.fuse_owner_pk_hash[i0].hash.value <= 32'h0;
-            end else if(field_combo.fuse_owner_pk_hash[i0].hash.load_next) begin
-                field_storage.fuse_owner_pk_hash[i0].hash.value <= field_combo.fuse_owner_pk_hash[i0].hash.next;
+                field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value <= 32'h0;
+            end else if(field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.load_next) begin
+                field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value <= field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.next;
             end
         end
-        assign hwif_out.fuse_owner_pk_hash[i0].hash.value = field_storage.fuse_owner_pk_hash[i0].hash.value;
+        assign hwif_out.fuse_key_manifest_pk_hash_mask[i0].mask.value = field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value;
     end
     // Field: soc_ifc_reg.fuse_fmc_key_manifest_svn.svn
     always_comb begin
@@ -3306,48 +3756,6 @@ module soc_ifc_reg (
         end
         assign hwif_out.fuse_idevid_manuf_hsm_id[i0].hsm_id.value = field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value;
     end
-    // Field: soc_ifc_reg.fuse_life_cycle.life_cycle
-    always_comb begin
-        automatic logic [1:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_life_cycle.life_cycle.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.fuse_life_cycle && decoded_req_is_wr && !(hwif_in.fuse_life_cycle.life_cycle.swwel)) begin // SW write
-            next_c = (field_storage.fuse_life_cycle.life_cycle.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
-            load_next_c = '1;
-        end
-        field_combo.fuse_life_cycle.life_cycle.next = next_c;
-        field_combo.fuse_life_cycle.life_cycle.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.fuse_life_cycle.life_cycle.value <= 2'h0;
-        end else if(field_combo.fuse_life_cycle.life_cycle.load_next) begin
-            field_storage.fuse_life_cycle.life_cycle.value <= field_combo.fuse_life_cycle.life_cycle.next;
-        end
-    end
-    assign hwif_out.fuse_life_cycle.life_cycle.value = field_storage.fuse_life_cycle.life_cycle.value;
-    // Field: soc_ifc_reg.fuse_lms_verify.lms_verify
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_lms_verify.lms_verify.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.fuse_lms_verify && decoded_req_is_wr && !(hwif_in.fuse_lms_verify.lms_verify.swwel)) begin // SW write
-            next_c = (field_storage.fuse_lms_verify.lms_verify.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-            load_next_c = '1;
-        end
-        field_combo.fuse_lms_verify.lms_verify.next = next_c;
-        field_combo.fuse_lms_verify.lms_verify.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.fuse_lms_verify.lms_verify.value <= 1'h0;
-        end else if(field_combo.fuse_lms_verify.lms_verify.load_next) begin
-            field_storage.fuse_lms_verify.lms_verify.value <= field_combo.fuse_lms_verify.lms_verify.next;
-        end
-    end
-    assign hwif_out.fuse_lms_verify.lms_verify.value = field_storage.fuse_lms_verify.lms_verify.value;
     // Field: soc_ifc_reg.fuse_lms_revocation.lms_revocation
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3369,6 +3777,27 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fuse_lms_revocation.lms_revocation.value = field_storage.fuse_lms_revocation.lms_revocation.value;
+    // Field: soc_ifc_reg.fuse_mldsa_revocation.mldsa_revocation
+    always_comb begin
+        automatic logic [3:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.fuse_mldsa_revocation.mldsa_revocation.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.fuse_mldsa_revocation && decoded_req_is_wr && !(hwif_in.fuse_mldsa_revocation.mldsa_revocation.swwel)) begin // SW write
+            next_c = (field_storage.fuse_mldsa_revocation.mldsa_revocation.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
+            load_next_c = '1;
+        end
+        field_combo.fuse_mldsa_revocation.mldsa_revocation.next = next_c;
+        field_combo.fuse_mldsa_revocation.mldsa_revocation.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.fuse_mldsa_revocation.mldsa_revocation.value <= 4'h0;
+        end else if(field_combo.fuse_mldsa_revocation.mldsa_revocation.load_next) begin
+            field_storage.fuse_mldsa_revocation.mldsa_revocation.value <= field_combo.fuse_mldsa_revocation.mldsa_revocation.next;
+        end
+    end
+    assign hwif_out.fuse_mldsa_revocation.mldsa_revocation.value = field_storage.fuse_mldsa_revocation.mldsa_revocation.value;
     // Field: soc_ifc_reg.fuse_soc_stepping_id.soc_stepping_id
     always_comb begin
         automatic logic [15:0] next_c;
@@ -3390,6 +3819,701 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.fuse_soc_stepping_id.soc_stepping_id.value = field_storage.fuse_soc_stepping_id.soc_stepping_id.value;
+    for(genvar i0=0; i0<4; i0++) begin
+        // Field: soc_ifc_reg.fuse_manuf_dbg_unlock_token[].token
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.fuse_manuf_dbg_unlock_token[i0].token.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && decoded_req_is_wr && !(hwif_in.fuse_manuf_dbg_unlock_token[i0].token.swwel)) begin // SW write
+                next_c = (field_storage.fuse_manuf_dbg_unlock_token[i0].token.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.fuse_manuf_dbg_unlock_token[i0].token.next = next_c;
+            field_combo.fuse_manuf_dbg_unlock_token[i0].token.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
+                field_storage.fuse_manuf_dbg_unlock_token[i0].token.value <= 32'h0;
+            end else if(field_combo.fuse_manuf_dbg_unlock_token[i0].token.load_next) begin
+                field_storage.fuse_manuf_dbg_unlock_token[i0].token.value <= field_combo.fuse_manuf_dbg_unlock_token[i0].token.next;
+            end
+        end
+        assign hwif_out.fuse_manuf_dbg_unlock_token[i0].token.value = field_storage.fuse_manuf_dbg_unlock_token[i0].token.value;
+    end
+    // Field: soc_ifc_reg.SS_CALIPTRA_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_CALIPTRA_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_CALIPTRA_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_CALIPTRA_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_CALIPTRA_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value <= field_combo.SS_CALIPTRA_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_CALIPTRA_BASE_ADDR_L.addr_l.value = field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_CALIPTRA_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_CALIPTRA_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_CALIPTRA_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_CALIPTRA_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_CALIPTRA_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value <= field_combo.SS_CALIPTRA_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_CALIPTRA_BASE_ADDR_H.addr_h.value = field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value;
+    // Field: soc_ifc_reg.SS_MCI_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_MCI_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_MCI_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_MCI_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_MCI_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_MCI_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_MCI_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_MCI_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_MCI_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_MCI_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_MCI_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_MCI_BASE_ADDR_L.addr_l.value <= field_combo.SS_MCI_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_MCI_BASE_ADDR_L.addr_l.value = field_storage.SS_MCI_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_MCI_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_MCI_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_MCI_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_MCI_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_MCI_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_MCI_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_MCI_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_MCI_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_MCI_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_MCI_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_MCI_BASE_ADDR_H.addr_h.value <= field_combo.SS_MCI_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_MCI_BASE_ADDR_H.addr_h.value = field_storage.SS_MCI_BASE_ADDR_H.addr_h.value;
+    // Field: soc_ifc_reg.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value <= field_combo.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value = field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value <= field_combo.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value = field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value;
+    // Field: soc_ifc_reg.SS_OTP_FC_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_OTP_FC_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_OTP_FC_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_OTP_FC_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value <= field_combo.SS_OTP_FC_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value = field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_OTP_FC_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_OTP_FC_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_OTP_FC_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_OTP_FC_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value <= field_combo.SS_OTP_FC_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value = field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value;
+    // Field: soc_ifc_reg.SS_UDS_SEED_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_UDS_SEED_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_UDS_SEED_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_UDS_SEED_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value <= field_combo.SS_UDS_SEED_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_UDS_SEED_BASE_ADDR_L.addr_l.value = field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_UDS_SEED_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_UDS_SEED_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_UDS_SEED_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_UDS_SEED_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value <= field_combo.SS_UDS_SEED_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value = field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value;
+    // Field: soc_ifc_reg.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && decoded_req_is_wr && !(hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.swwel)) begin // SW write
+            next_c = (field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.we) begin // HW Write - we
+            next_c = hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next = next_c;
+        field_combo.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value <= 32'h0;
+        end else if(field_combo.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.load_next) begin
+            field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value <= field_combo.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next;
+        end
+    end
+    assign hwif_out.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value = field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value;
+    // Field: soc_ifc_reg.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && decoded_req_is_wr && !(hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.swwel)) begin // SW write
+            next_c = (field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.we) begin // HW Write - we
+            next_c = hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next = next_c;
+        field_combo.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value <= 32'h8;
+        end else if(field_combo.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.load_next) begin
+            field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value <= field_combo.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next;
+        end
+    end
+    assign hwif_out.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value = field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value;
+    // Field: soc_ifc_reg.SS_DEBUG_INTENT.debug_intent
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DEBUG_INTENT.debug_intent.value;
+        load_next_c = '0;
+        if(hwif_in.SS_DEBUG_INTENT.debug_intent.we) begin // HW Write - we
+            next_c = hwif_in.SS_DEBUG_INTENT.debug_intent.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DEBUG_INTENT.debug_intent.next = next_c;
+        field_combo.SS_DEBUG_INTENT.debug_intent.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_DEBUG_INTENT.debug_intent.value <= 1'h0;
+        end else if(field_combo.SS_DEBUG_INTENT.debug_intent.load_next) begin
+            field_storage.SS_DEBUG_INTENT.debug_intent.value <= field_combo.SS_DEBUG_INTENT.debug_intent.next;
+        end
+    end
+    assign hwif_out.SS_DEBUG_INTENT.debug_intent.value = field_storage.SS_DEBUG_INTENT.debug_intent.value;
+    for(genvar i0=0; i0<4; i0++) begin
+        // Field: soc_ifc_reg.SS_STRAP_GENERIC[].data
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.SS_STRAP_GENERIC[i0].data.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.SS_STRAP_GENERIC[i0] && decoded_req_is_wr && !(hwif_in.SS_STRAP_GENERIC[i0].data.swwel)) begin // SW write
+                next_c = (field_storage.SS_STRAP_GENERIC[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end else if(hwif_in.SS_STRAP_GENERIC[i0].data.we) begin // HW Write - we
+                next_c = hwif_in.SS_STRAP_GENERIC[i0].data.next;
+                load_next_c = '1;
+            end
+            field_combo.SS_STRAP_GENERIC[i0].data.next = next_c;
+            field_combo.SS_STRAP_GENERIC[i0].data.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
+                field_storage.SS_STRAP_GENERIC[i0].data.value <= 32'h0;
+            end else if(field_combo.SS_STRAP_GENERIC[i0].data.load_next) begin
+                field_storage.SS_STRAP_GENERIC[i0].data.value <= field_combo.SS_STRAP_GENERIC[i0].data.next;
+            end
+        end
+        assign hwif_out.SS_STRAP_GENERIC[i0].data.value = field_storage.SS_STRAP_GENERIC[i0].data.value;
+    end
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value = field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.we) begin // HW Write - we
+            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value;
+    for(genvar i0=0; i0<2; i0++) begin
+        // Field: soc_ifc_reg.SS_SOC_DBG_UNLOCK_LEVEL[].LEVEL
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && decoded_req_is_wr && !(hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.swwel)) begin // SW write
+                next_c = (field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end else if(hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.we) begin // HW Write - we
+                next_c = hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next;
+                load_next_c = '1;
+            end
+            field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next = next_c;
+            field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+            if(~hwif_in.cptra_rst_b) begin
+                field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value <= 32'h0;
+            end else if(field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.load_next) begin
+                field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value <= field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next;
+            end
+        end
+        assign hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value = field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value;
+    end
+    for(genvar i0=0; i0<4; i0++) begin
+        // Field: soc_ifc_reg.SS_GENERIC_FW_EXEC_CTRL[].go
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+                next_c = (field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.SS_GENERIC_FW_EXEC_CTRL[i0].go.next = next_c;
+            field_combo.SS_GENERIC_FW_EXEC_CTRL[i0].go.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+            if(~hwif_in.cptra_rst_b) begin
+                field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value <= 32'h0;
+            end else if(field_combo.SS_GENERIC_FW_EXEC_CTRL[i0].go.load_next) begin
+                field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value <= field_combo.SS_GENERIC_FW_EXEC_CTRL[i0].go.next;
+            end
+        end
+        assign hwif_out.SS_GENERIC_FW_EXEC_CTRL[i0].go.value = field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value;
+    end
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.internal_obf_key[].key
         always_comb begin
@@ -5772,16 +6896,16 @@ module soc_ifc_reg (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [186-1:0][31:0] readback_array;
+    logic [225-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value : '0;
     assign readback_array[0][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value : '0;
     assign readback_array[0][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value : '0;
     assign readback_array[0][3:3] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.crypto_err.value : '0;
-    assign readback_array[0][31:4] = '0;
+    assign readback_array[0][31:4] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next : '0;
     assign readback_array[1][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value : '0;
     assign readback_array[1][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value : '0;
     assign readback_array[1][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value : '0;
-    assign readback_array[1][31:3] = '0;
+    assign readback_array[1][31:3] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_NON_FATAL.rsvd.next : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_FATAL.error_code.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.CPTRA_FW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_FW_ERROR_NON_FATAL.error_code.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.CPTRA_HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_ENC.error_code.value : '0;
@@ -5793,7 +6917,7 @@ module soc_ifc_reg (
     assign readback_array[15][23:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
     assign readback_array[15][24:24] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value : '0;
     assign readback_array[15][27:25] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next : '0;
-    assign readback_array[15][28:28] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_fw.value : '0;
+    assign readback_array[15][28:28] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_mb_processing.value : '0;
     assign readback_array[15][29:29] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.ready_for_runtime.value : '0;
     assign readback_array[15][30:30] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next : '0;
     assign readback_array[15][31:31] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.mailbox_flow_done.value : '0;
@@ -5805,14 +6929,14 @@ module soc_ifc_reg (
     assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
     assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 28'h0 : '0;
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_AXI_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_AXI_ID[i0].AXI_ID.value : '0;
+        assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value : '0;
     end
     for(genvar i0=0; i0<5; i0++) begin
-        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_MBOX_AXI_ID_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_AXI_ID_LOCK[i0].LOCK.value : '0;
+        assign readback_array[i0*1 + 23][0:0] = (decoded_reg_strb.CPTRA_MBOX_AXI_USER_LOCK[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_AXI_USER_LOCK[i0].LOCK.value : '0;
         assign readback_array[i0*1 + 23][31:1] = '0;
     end
-    assign readback_array[28][31:0] = (decoded_reg_strb.CPTRA_TRNG_VALID_AXI_ID && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_VALID_AXI_ID.AXI_ID.value : '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.CPTRA_TRNG_AXI_ID_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_AXI_ID_LOCK.LOCK.value : '0;
+    assign readback_array[28][31:0] = (decoded_reg_strb.CPTRA_TRNG_VALID_AXI_USER && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.value : '0;
+    assign readback_array[29][0:0] = (decoded_reg_strb.CPTRA_TRNG_AXI_USER_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_AXI_USER_LOCK.LOCK.value : '0;
     assign readback_array[29][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 30][31:0] = (decoded_reg_strb.CPTRA_TRNG_DATA[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DATA[i0].DATA.value : '0;
@@ -5842,11 +6966,10 @@ module soc_ifc_reg (
         assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.CPTRA_FW_REV_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value : '0;
     end
     assign readback_array[56][0:0] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next : '0;
-    assign readback_array[56][1:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.QSPI_en.next : '0;
-    assign readback_array[56][2:2] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.I3C_en.next : '0;
-    assign readback_array[56][3:3] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.UART_en.next : '0;
+    assign readback_array[56][3:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.RSVD_en.next : '0;
     assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
-    assign readback_array[56][31:5] = '0;
+    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next : '0;
+    assign readback_array[56][31:6] = '0;
     assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
     assign readback_array[57][31:1] = '0;
     assign readback_array[58][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value : '0;
@@ -5864,8 +6987,8 @@ module soc_ifc_reg (
     assign readback_array[65][0:0] = (decoded_reg_strb.CPTRA_WDT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_STATUS.t1_timeout.value : '0;
     assign readback_array[65][1:1] = (decoded_reg_strb.CPTRA_WDT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_STATUS.t2_timeout.value : '0;
     assign readback_array[65][31:2] = '0;
-    assign readback_array[66][31:0] = (decoded_reg_strb.CPTRA_FUSE_VALID_AXI_ID && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_VALID_AXI_ID.AXI_ID.value : '0;
-    assign readback_array[67][0:0] = (decoded_reg_strb.CPTRA_FUSE_AXI_ID_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_AXI_ID_LOCK.LOCK.value : '0;
+    assign readback_array[66][31:0] = (decoded_reg_strb.CPTRA_FUSE_VALID_AXI_USER && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value : '0;
+    assign readback_array[67][0:0] = (decoded_reg_strb.CPTRA_FUSE_AXI_USER_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_AXI_USER_LOCK.LOCK.value : '0;
     assign readback_array[67][31:1] = '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 68][31:0] = (decoded_reg_strb.CPTRA_WDT_CFG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_CFG[i0].TIMEOUT.value : '0;
@@ -5877,152 +7000,197 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 72][31:0] = (decoded_reg_strb.CPTRA_RSVD_REG[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_RSVD_REG[i0].RSVD.value : '0;
     end
+    assign readback_array[74][31:0] = (decoded_reg_strb.CPTRA_HW_CAPABILITIES && !decoded_req_is_wr) ? field_storage.CPTRA_HW_CAPABILITIES.cap.value : '0;
+    assign readback_array[75][31:0] = (decoded_reg_strb.CPTRA_FW_CAPABILITIES && !decoded_req_is_wr) ? field_storage.CPTRA_FW_CAPABILITIES.cap.value : '0;
+    assign readback_array[76][0:0] = (decoded_reg_strb.CPTRA_CAP_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_CAP_LOCK.lock.value : '0;
+    assign readback_array[76][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 74][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 77][31:0] = (decoded_reg_strb.CPTRA_OWNER_PK_HASH[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_OWNER_PK_HASH[i0].hash.value : '0;
     end
-    assign readback_array[86][3:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask.mask.value : '0;
-    assign readback_array[86][31:4] = '0;
+    assign readback_array[89][0:0] = (decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value : '0;
+    assign readback_array[89][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 87][31:0] = (decoded_reg_strb.fuse_owner_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_owner_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[99][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
+    for(genvar i0=0; i0<8; i0++) begin
+        assign readback_array[i0*1 + 102][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value : '0;
+    end
+    assign readback_array[110][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 100][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 111][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
     end
-    assign readback_array[104][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
-    assign readback_array[104][31:1] = '0;
+    assign readback_array[115][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
+    assign readback_array[115][31:1] = '0;
     for(genvar i0=0; i0<24; i0++) begin
-        assign readback_array[i0*1 + 105][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
+        assign readback_array[i0*1 + 116][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 129][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
+        assign readback_array[i0*1 + 140][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
     end
-    assign readback_array[133][1:0] = (decoded_reg_strb.fuse_life_cycle && !decoded_req_is_wr) ? field_storage.fuse_life_cycle.life_cycle.value : '0;
-    assign readback_array[133][31:2] = '0;
-    assign readback_array[134][0:0] = (decoded_reg_strb.fuse_lms_verify && !decoded_req_is_wr) ? field_storage.fuse_lms_verify.lms_verify.value : '0;
-    assign readback_array[134][31:1] = '0;
-    assign readback_array[135][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
-    assign readback_array[136][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
-    assign readback_array[136][31:16] = '0;
-    assign readback_array[137][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;
-    assign readback_array[137][31:1] = '0;
-    assign readback_array[138][0:0] = (decoded_reg_strb.internal_fw_update_reset && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset.core_rst.value : '0;
-    assign readback_array[138][31:1] = '0;
-    assign readback_array[139][7:0] = (decoded_reg_strb.internal_fw_update_reset_wait_cycles && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value : '0;
-    assign readback_array[139][31:8] = '0;
-    assign readback_array[140][31:0] = (decoded_reg_strb.internal_nmi_vector && !decoded_req_is_wr) ? field_storage.internal_nmi_vector.vec.value : '0;
-    assign readback_array[141][0:0] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value : '0;
-    assign readback_array[141][1:1] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value : '0;
-    assign readback_array[141][2:2] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value : '0;
-    assign readback_array[141][3:3] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? 1'h0 : '0;
-    assign readback_array[141][31:4] = '0;
-    assign readback_array[142][0:0] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value : '0;
-    assign readback_array[142][1:1] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value : '0;
-    assign readback_array[142][2:2] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value : '0;
-    assign readback_array[142][31:3] = '0;
-    assign readback_array[143][31:0] = (decoded_reg_strb.internal_fw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_fatal_mask.mask.value : '0;
-    assign readback_array[144][31:0] = (decoded_reg_strb.internal_fw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_non_fatal_mask.mask.value : '0;
-    assign readback_array[145][31:0] = (decoded_reg_strb.internal_rv_mtime_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_l.count_l.value : '0;
-    assign readback_array[146][31:0] = (decoded_reg_strb.internal_rv_mtime_h && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_h.count_h.value : '0;
-    assign readback_array[147][31:0] = (decoded_reg_strb.internal_rv_mtimecmp_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtimecmp_l.compare_l.value : '0;
-    assign readback_array[148][31:0] = (decoded_reg_strb.internal_rv_mtimecmp_h && !decoded_req_is_wr) ? field_storage.internal_rv_mtimecmp_h.compare_h.value : '0;
-    assign readback_array[149][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[149][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[149][31:2] = '0;
-    assign readback_array[150][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value : '0;
-    assign readback_array[150][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value : '0;
-    assign readback_array[150][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value : '0;
-    assign readback_array[150][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value : '0;
-    assign readback_array[150][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value : '0;
-    assign readback_array[150][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value : '0;
-    assign readback_array[150][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en.value : '0;
-    assign readback_array[150][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value : '0;
-    assign readback_array[150][31:8] = '0;
-    assign readback_array[151][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value : '0;
-    assign readback_array[151][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value : '0;
-    assign readback_array[151][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_debug_locked_en.value : '0;
-    assign readback_array[151][3:3] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_scan_mode_en.value : '0;
-    assign readback_array[151][4:4] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en.value : '0;
-    assign readback_array[151][5:5] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value : '0;
-    assign readback_array[151][31:6] = '0;
-    assign readback_array[152][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[152][31:1] = '0;
-    assign readback_array[153][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[153][31:1] = '0;
-    assign readback_array[154][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value : '0;
-    assign readback_array[154][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value : '0;
-    assign readback_array[154][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value : '0;
-    assign readback_array[154][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value : '0;
-    assign readback_array[154][4:4] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value : '0;
-    assign readback_array[154][5:5] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value : '0;
-    assign readback_array[154][6:6] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value : '0;
-    assign readback_array[154][7:7] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value : '0;
-    assign readback_array[154][31:8] = '0;
-    assign readback_array[155][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value : '0;
-    assign readback_array[155][1:1] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value : '0;
-    assign readback_array[155][2:2] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value : '0;
-    assign readback_array[155][3:3] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value : '0;
-    assign readback_array[155][4:4] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value : '0;
-    assign readback_array[155][5:5] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value : '0;
-    assign readback_array[155][31:6] = '0;
-    assign readback_array[156][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
-    assign readback_array[156][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value : '0;
-    assign readback_array[156][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value : '0;
-    assign readback_array[156][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value : '0;
-    assign readback_array[156][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value : '0;
-    assign readback_array[156][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value : '0;
-    assign readback_array[156][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value : '0;
-    assign readback_array[156][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value : '0;
-    assign readback_array[156][31:8] = '0;
-    assign readback_array[157][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value : '0;
-    assign readback_array[157][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value : '0;
-    assign readback_array[157][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value : '0;
-    assign readback_array[157][3:3] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value : '0;
-    assign readback_array[157][4:4] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value : '0;
-    assign readback_array[157][5:5] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value : '0;
-    assign readback_array[157][31:6] = '0;
-    assign readback_array[158][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
-    assign readback_array[159][31:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value : '0;
-    assign readback_array[160][31:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value : '0;
-    assign readback_array[161][31:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value : '0;
-    assign readback_array[162][31:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value : '0;
-    assign readback_array[163][31:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value : '0;
-    assign readback_array[164][31:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer1_timeout_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt.value : '0;
-    assign readback_array[165][31:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer2_timeout_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt.value : '0;
-    assign readback_array[166][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value : '0;
-    assign readback_array[167][31:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value : '0;
-    assign readback_array[168][31:0] = (decoded_reg_strb.intr_block_rf.notif_debug_locked_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_debug_locked_intr_count_r.cnt.value : '0;
-    assign readback_array[169][31:0] = (decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_scan_mode_intr_count_r.cnt.value : '0;
-    assign readback_array[170][31:0] = (decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt.value : '0;
-    assign readback_array[171][31:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt.value : '0;
-    assign readback_array[172][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[172][31:1] = '0;
-    assign readback_array[173][0:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[173][31:1] = '0;
-    assign readback_array[174][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[174][31:1] = '0;
-    assign readback_array[175][0:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[175][31:1] = '0;
-    assign readback_array[176][0:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[144][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
+    assign readback_array[145][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
+    assign readback_array[145][31:4] = '0;
+    assign readback_array[146][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
+    assign readback_array[146][31:16] = '0;
+    for(genvar i0=0; i0<4; i0++) begin
+        assign readback_array[i0*1 + 147][31:0] = (decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && !decoded_req_is_wr) ? field_storage.fuse_manuf_dbg_unlock_token[i0].token.value : '0;
+    end
+    assign readback_array[151][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[152][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[153][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[154][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[155][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[156][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[157][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[158][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[159][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[160][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[161][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
+    assign readback_array[162][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
+    assign readback_array[163][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
+    assign readback_array[163][31:1] = '0;
+    for(genvar i0=0; i0<4; i0++) begin
+        assign readback_array[i0*1 + 164][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
+    end
+    assign readback_array[168][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value : '0;
+    assign readback_array[168][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value : '0;
+    assign readback_array[168][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value : '0;
+    assign readback_array[168][31:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next : '0;
+    assign readback_array[169][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value : '0;
+    assign readback_array[169][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value : '0;
+    assign readback_array[169][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value : '0;
+    assign readback_array[169][3:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value : '0;
+    assign readback_array[169][4:4] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value : '0;
+    assign readback_array[169][5:5] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value : '0;
+    assign readback_array[169][6:6] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value : '0;
+    assign readback_array[169][7:7] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value : '0;
+    assign readback_array[169][8:8] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value : '0;
+    assign readback_array[169][31:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
+    for(genvar i0=0; i0<2; i0++) begin
+        assign readback_array[i0*1 + 170][31:0] = (decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && !decoded_req_is_wr) ? field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value : '0;
+    end
+    for(genvar i0=0; i0<4; i0++) begin
+        assign readback_array[i0*1 + 172][31:0] = (decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] && !decoded_req_is_wr) ? field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value : '0;
+    end
+    assign readback_array[176][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;
     assign readback_array[176][31:1] = '0;
-    assign readback_array[177][0:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[177][0:0] = (decoded_reg_strb.internal_fw_update_reset && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset.core_rst.value : '0;
     assign readback_array[177][31:1] = '0;
-    assign readback_array[178][0:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[178][31:1] = '0;
-    assign readback_array[179][0:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[179][31:1] = '0;
-    assign readback_array[180][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[180][31:1] = '0;
-    assign readback_array[181][0:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[181][31:1] = '0;
-    assign readback_array[182][0:0] = (decoded_reg_strb.intr_block_rf.notif_debug_locked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_debug_locked_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[182][31:1] = '0;
-    assign readback_array[183][0:0] = (decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_scan_mode_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[183][31:1] = '0;
-    assign readback_array[184][0:0] = (decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_soc_req_lock_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[184][31:1] = '0;
-    assign readback_array[185][0:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[185][31:1] = '0;
+    assign readback_array[178][7:0] = (decoded_reg_strb.internal_fw_update_reset_wait_cycles && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value : '0;
+    assign readback_array[178][31:8] = '0;
+    assign readback_array[179][31:0] = (decoded_reg_strb.internal_nmi_vector && !decoded_req_is_wr) ? field_storage.internal_nmi_vector.vec.value : '0;
+    assign readback_array[180][0:0] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value : '0;
+    assign readback_array[180][1:1] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value : '0;
+    assign readback_array[180][2:2] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value : '0;
+    assign readback_array[180][3:3] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? 1'h0 : '0;
+    assign readback_array[180][31:4] = '0;
+    assign readback_array[181][0:0] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock.value : '0;
+    assign readback_array[181][1:1] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo.value : '0;
+    assign readback_array[181][2:2] = (decoded_reg_strb.internal_hw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc.value : '0;
+    assign readback_array[181][31:3] = '0;
+    assign readback_array[182][31:0] = (decoded_reg_strb.internal_fw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_fatal_mask.mask.value : '0;
+    assign readback_array[183][31:0] = (decoded_reg_strb.internal_fw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_non_fatal_mask.mask.value : '0;
+    assign readback_array[184][31:0] = (decoded_reg_strb.internal_rv_mtime_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_l.count_l.value : '0;
+    assign readback_array[185][31:0] = (decoded_reg_strb.internal_rv_mtime_h && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_h.count_h.value : '0;
+    assign readback_array[186][31:0] = (decoded_reg_strb.internal_rv_mtimecmp_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtimecmp_l.compare_l.value : '0;
+    assign readback_array[187][31:0] = (decoded_reg_strb.internal_rv_mtimecmp_h && !decoded_req_is_wr) ? field_storage.internal_rv_mtimecmp_h.compare_h.value : '0;
+    assign readback_array[188][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+    assign readback_array[188][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+    assign readback_array[188][31:2] = '0;
+    assign readback_array[189][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value : '0;
+    assign readback_array[189][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value : '0;
+    assign readback_array[189][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_cmd_fail_en.value : '0;
+    assign readback_array[189][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_bad_fuse_en.value : '0;
+    assign readback_array[189][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_iccm_blocked_en.value : '0;
+    assign readback_array[189][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_mbox_ecc_unc_en.value : '0;
+    assign readback_array[189][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer1_timeout_en.value : '0;
+    assign readback_array[189][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_wdt_timer2_timeout_en.value : '0;
+    assign readback_array[189][31:8] = '0;
+    assign readback_array[190][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_avail_en.value : '0;
+    assign readback_array[190][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_mbox_ecc_cor_en.value : '0;
+    assign readback_array[190][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_debug_locked_en.value : '0;
+    assign readback_array[190][3:3] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_scan_mode_en.value : '0;
+    assign readback_array[190][4:4] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_soc_req_lock_en.value : '0;
+    assign readback_array[190][5:5] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_gen_in_toggle_en.value : '0;
+    assign readback_array[190][31:6] = '0;
+    assign readback_array[191][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
+    assign readback_array[191][31:1] = '0;
+    assign readback_array[192][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[192][31:1] = '0;
+    assign readback_array[193][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value : '0;
+    assign readback_array[193][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value : '0;
+    assign readback_array[193][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_cmd_fail_sts.value : '0;
+    assign readback_array[193][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_bad_fuse_sts.value : '0;
+    assign readback_array[193][4:4] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_iccm_blocked_sts.value : '0;
+    assign readback_array[193][5:5] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_mbox_ecc_unc_sts.value : '0;
+    assign readback_array[193][6:6] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value : '0;
+    assign readback_array[193][7:7] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value : '0;
+    assign readback_array[193][31:8] = '0;
+    assign readback_array[194][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.value : '0;
+    assign readback_array[194][1:1] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.value : '0;
+    assign readback_array[194][2:2] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.value : '0;
+    assign readback_array[194][3:3] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.value : '0;
+    assign readback_array[194][4:4] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value : '0;
+    assign readback_array[194][5:5] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value : '0;
+    assign readback_array[194][31:6] = '0;
+    assign readback_array[195][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
+    assign readback_array[195][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value : '0;
+    assign readback_array[195][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value : '0;
+    assign readback_array[195][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_bad_fuse_trig.value : '0;
+    assign readback_array[195][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_iccm_blocked_trig.value : '0;
+    assign readback_array[195][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_mbox_ecc_unc_trig.value : '0;
+    assign readback_array[195][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer1_timeout_trig.value : '0;
+    assign readback_array[195][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_wdt_timer2_timeout_trig.value : '0;
+    assign readback_array[195][31:8] = '0;
+    assign readback_array[196][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_avail_trig.value : '0;
+    assign readback_array[196][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_mbox_ecc_cor_trig.value : '0;
+    assign readback_array[196][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_debug_locked_trig.value : '0;
+    assign readback_array[196][3:3] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_scan_mode_trig.value : '0;
+    assign readback_array[196][4:4] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_soc_req_lock_trig.value : '0;
+    assign readback_array[196][5:5] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_gen_in_toggle_trig.value : '0;
+    assign readback_array[196][31:6] = '0;
+    assign readback_array[197][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
+    assign readback_array[198][31:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_r.cnt.value : '0;
+    assign readback_array[199][31:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_r.cnt.value : '0;
+    assign readback_array[200][31:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_r.cnt.value : '0;
+    assign readback_array[201][31:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_r.cnt.value : '0;
+    assign readback_array[202][31:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r.cnt.value : '0;
+    assign readback_array[203][31:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer1_timeout_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r.cnt.value : '0;
+    assign readback_array[204][31:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer2_timeout_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r.cnt.value : '0;
+    assign readback_array[205][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_r.cnt.value : '0;
+    assign readback_array[206][31:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r.cnt.value : '0;
+    assign readback_array[207][31:0] = (decoded_reg_strb.intr_block_rf.notif_debug_locked_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_debug_locked_intr_count_r.cnt.value : '0;
+    assign readback_array[208][31:0] = (decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_scan_mode_intr_count_r.cnt.value : '0;
+    assign readback_array[209][31:0] = (decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r.cnt.value : '0;
+    assign readback_array[210][31:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r.cnt.value : '0;
+    assign readback_array[211][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[211][31:1] = '0;
+    assign readback_array[212][0:0] = (decoded_reg_strb.intr_block_rf.error_inv_dev_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_inv_dev_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[212][31:1] = '0;
+    assign readback_array[213][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_fail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_fail_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[213][31:1] = '0;
+    assign readback_array[214][0:0] = (decoded_reg_strb.intr_block_rf.error_bad_fuse_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_bad_fuse_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[214][31:1] = '0;
+    assign readback_array[215][0:0] = (decoded_reg_strb.intr_block_rf.error_iccm_blocked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_iccm_blocked_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[215][31:1] = '0;
+    assign readback_array[216][0:0] = (decoded_reg_strb.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[216][31:1] = '0;
+    assign readback_array[217][0:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[217][31:1] = '0;
+    assign readback_array[218][0:0] = (decoded_reg_strb.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[218][31:1] = '0;
+    assign readback_array[219][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_avail_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_avail_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[219][31:1] = '0;
+    assign readback_array[220][0:0] = (decoded_reg_strb.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[220][31:1] = '0;
+    assign readback_array[221][0:0] = (decoded_reg_strb.intr_block_rf.notif_debug_locked_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_debug_locked_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[221][31:1] = '0;
+    assign readback_array[222][0:0] = (decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_scan_mode_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[222][31:1] = '0;
+    assign readback_array[223][0:0] = (decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_soc_req_lock_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[223][31:1] = '0;
+    assign readback_array[224][0:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[224][31:1] = '0;
 
     // Reduce the array
     always_comb begin
@@ -6030,7 +7198,7 @@ module soc_ifc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<186; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<225; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

@@ -16,8 +16,6 @@
 #ifndef SOC_IFC_H
   #define SOC_IFC_H
   
-#include "caliptra_defines.h"
-#include "caliptra_reg.h"
 #include "stdint.h"
 #include "riscv_hw_if.h"
 
@@ -121,24 +119,16 @@ enum sha_accel_mode_e {
 
 /* --------------- Function Prototypes --------------- */
 // Simple reg accesses
-inline uint32_t soc_ifc_mbox_read_dataout_single() {
-    return lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
-}
-inline uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr) {
-    return lsu_read_32(0x30000000 + rdptr);
-}
-inline uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
-    lsu_write_32(0x30000000 + wrptr, wrdata);
-}
+uint32_t soc_ifc_mbox_read_dataout_single();
+uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr);
+uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata);
 void soc_ifc_clear_execute_reg();
 uint8_t soc_ifc_chk_execute_uc();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
 void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);
 void soc_ifc_set_fw_update_reset(uint8_t wait_cycles);
-inline void soc_ifc_set_iccm_lock() {
-    lsu_write_32((CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK), SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
-}
+void soc_ifc_set_iccm_lock();
 // Mailbox command flows
 uint8_t soc_ifc_mbox_acquire_lock(uint32_t attempt_count);
 mbox_op_s soc_ifc_read_mbox_cmd();
@@ -149,9 +139,7 @@ uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_coun
 // SHA Accelerator Functions
 void soc_ifc_sha_accel_acquire_lock();
 void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode);
-inline void soc_ifc_sha_accel_execute() {
-    lsu_write_32((CLP_SHA512_ACC_CSR_EXECUTE), SHA512_ACC_CSR_EXECUTE_EXECUTE_MASK);
-}
+void soc_ifc_sha_accel_execute();
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
 void soc_ifc_w1clr_sha_lock_field();

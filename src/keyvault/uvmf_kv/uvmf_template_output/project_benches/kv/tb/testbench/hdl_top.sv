@@ -116,10 +116,10 @@ import uvmf_base_pkg_hdl::*;
      .clk(clk), .dummy(1'b1)
      // pragma uvmf custom kv_hmac_block_read_agent_bus_connections end
      );
-  kv_read_if  kv_sha512_block_read_agent_bus(
-     // pragma uvmf custom kv_sha512_block_read_agent_bus_connections begin
+  kv_read_if  kv_mldsa_key_read_agent_bus(
+     // pragma uvmf custom kv_mldsa_key_read_agent_bus_connections begin
      .clk(clk), .dummy(1'b1)
-     // pragma uvmf custom kv_sha512_block_read_agent_bus_connections end
+     // pragma uvmf custom kv_mldsa_key_read_agent_bus_connections end
      );
   kv_read_if  kv_ecc_privkey_read_agent_bus(
      // pragma uvmf custom kv_ecc_privkey_read_agent_bus_connections begin
@@ -139,7 +139,7 @@ import uvmf_base_pkg_hdl::*;
   kv_write_monitor_bfm  kv_doe_write_agent_mon_bfm(kv_doe_write_agent_bus.monitor_port);
   kv_read_monitor_bfm  kv_hmac_key_read_agent_mon_bfm(kv_hmac_key_read_agent_bus.monitor_port);
   kv_read_monitor_bfm  kv_hmac_block_read_agent_mon_bfm(kv_hmac_block_read_agent_bus.monitor_port);
-  kv_read_monitor_bfm  kv_sha512_block_read_agent_mon_bfm(kv_sha512_block_read_agent_bus.monitor_port);
+  kv_read_monitor_bfm  kv_mldsa_key_read_agent_mon_bfm(kv_mldsa_key_read_agent_bus.monitor_port);
   kv_read_monitor_bfm  kv_ecc_privkey_read_agent_mon_bfm(kv_ecc_privkey_read_agent_bus.monitor_port);
   kv_read_monitor_bfm  kv_ecc_seed_read_agent_mon_bfm(kv_ecc_seed_read_agent_bus.monitor_port);
   kv_rst_driver_bfm  kv_rst_agent_drv_bfm(kv_rst_agent_bus.initiator_port);
@@ -149,7 +149,7 @@ import uvmf_base_pkg_hdl::*;
   kv_write_driver_bfm  kv_doe_write_agent_drv_bfm(kv_doe_write_agent_bus.initiator_port);
   kv_read_driver_bfm  kv_hmac_key_read_agent_drv_bfm(kv_hmac_key_read_agent_bus.initiator_port);
   kv_read_driver_bfm  kv_hmac_block_read_agent_drv_bfm(kv_hmac_block_read_agent_bus.initiator_port);
-  kv_read_driver_bfm  kv_sha512_block_read_agent_drv_bfm(kv_sha512_block_read_agent_bus.initiator_port);
+  kv_read_driver_bfm  kv_mldsa_key_read_agent_drv_bfm(kv_mldsa_key_read_agent_bus.initiator_port);
   kv_read_driver_bfm  kv_ecc_privkey_read_agent_drv_bfm(kv_ecc_privkey_read_agent_bus.initiator_port);
   kv_read_driver_bfm  kv_ecc_seed_read_agent_drv_bfm(kv_ecc_seed_read_agent_bus.initiator_port);
 
@@ -169,7 +169,7 @@ import uvmf_base_pkg_hdl::*;
   localparam DOE_WRITE_IDX    = 3;
   localparam HMAC_KEY_READ_IDX     = 0;
   localparam HMAC_BLOCK_READ_IDX   = 1;
-  localparam SHA512_BLOCK_READ_IDX = 2;
+  localparam MLDSA_KEY_READ_IDX = 2;
   localparam ECC_PRIVKEY_READ_IDX  = 3;
   localparam ECC_SEED_READ_IDX     = 4;
 
@@ -180,13 +180,13 @@ import uvmf_base_pkg_hdl::*;
     kv_write[DOE_WRITE_IDX   ] = kv_doe_write_agent_bus.kv_write;
     kv_read[HMAC_KEY_READ_IDX    ] = kv_hmac_key_read_agent_bus.kv_read;
     kv_read[HMAC_BLOCK_READ_IDX  ] = kv_hmac_block_read_agent_bus.kv_read;
-    kv_read[SHA512_BLOCK_READ_IDX] = kv_sha512_block_read_agent_bus.kv_read;
+    kv_read[MLDSA_KEY_READ_IDX] = kv_mldsa_key_read_agent_bus.kv_read;
     kv_read[ECC_PRIVKEY_READ_IDX ] = kv_ecc_privkey_read_agent_bus.kv_read;
     kv_read[ECC_SEED_READ_IDX    ] = kv_ecc_seed_read_agent_bus.kv_read;
   end
   assign kv_hmac_key_read_agent_bus.kv_rd_resp     = kv_rd_resp[HMAC_KEY_READ_IDX    ];
   assign kv_hmac_block_read_agent_bus.kv_rd_resp   = kv_rd_resp[HMAC_BLOCK_READ_IDX  ];
-  assign kv_sha512_block_read_agent_bus.kv_rd_resp = kv_rd_resp[SHA512_BLOCK_READ_IDX];
+  assign kv_mldsa_key_read_agent_bus.kv_rd_resp = kv_rd_resp[MLDSA_KEY_READ_IDX];
   assign kv_ecc_privkey_read_agent_bus.kv_rd_resp  = kv_rd_resp[ECC_PRIVKEY_READ_IDX ];
   assign kv_ecc_seed_read_agent_bus.kv_rd_resp     = kv_rd_resp[ECC_SEED_READ_IDX    ];
 
@@ -256,7 +256,7 @@ import uvmf_base_pkg_hdl::*;
     uvm_config_db #( virtual kv_write_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_doe_write_agent_BFM , kv_doe_write_agent_mon_bfm ); 
     uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_hmac_key_read_agent_BFM , kv_hmac_key_read_agent_mon_bfm ); 
     uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_hmac_block_read_agent_BFM , kv_hmac_block_read_agent_mon_bfm ); 
-    uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_sha512_block_read_agent_BFM , kv_sha512_block_read_agent_mon_bfm ); 
+    uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_mldsa_key_read_agent_BFM , kv_mldsa_key_read_agent_mon_bfm ); 
     uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_privkey_read_agent_BFM , kv_ecc_privkey_read_agent_mon_bfm ); 
     uvm_config_db #( virtual kv_read_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_mon_bfm ); 
     uvm_config_db #( virtual kv_rst_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_rst_agent_BFM , kv_rst_agent_drv_bfm  );
@@ -266,7 +266,7 @@ import uvmf_base_pkg_hdl::*;
     uvm_config_db #( virtual kv_write_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_doe_write_agent_BFM , kv_doe_write_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_hmac_key_read_agent_BFM , kv_hmac_key_read_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_hmac_block_read_agent_BFM , kv_hmac_block_read_agent_drv_bfm  );
-    uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_sha512_block_read_agent_BFM , kv_sha512_block_read_agent_drv_bfm  );
+    uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_mldsa_key_read_agent_BFM , kv_mldsa_key_read_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_privkey_read_agent_BFM , kv_ecc_privkey_read_agent_drv_bfm  );
     uvm_config_db #( virtual kv_read_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_drv_bfm  );
   end

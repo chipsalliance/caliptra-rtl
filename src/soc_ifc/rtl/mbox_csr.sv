@@ -67,7 +67,7 @@ module mbox_csr (
     //--------------------------------------------------------------------------
     typedef struct packed{
         logic mbox_lock;
-        logic mbox_id;
+        logic mbox_user;
         logic mbox_cmd;
         logic mbox_dlen;
         logic mbox_datain;
@@ -75,6 +75,7 @@ module mbox_csr (
         logic mbox_execute;
         logic mbox_status;
         logic mbox_unlock;
+        logic tap_mode;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_req;
@@ -84,7 +85,7 @@ module mbox_csr (
 
     always_comb begin
         decoded_reg_strb.mbox_lock = cpuif_req_masked & (cpuif_addr == 6'h0);
-        decoded_reg_strb.mbox_id = cpuif_req_masked & (cpuif_addr == 6'h4);
+        decoded_reg_strb.mbox_user = cpuif_req_masked & (cpuif_addr == 6'h4);
         decoded_reg_strb.mbox_cmd = cpuif_req_masked & (cpuif_addr == 6'h8);
         decoded_reg_strb.mbox_dlen = cpuif_req_masked & (cpuif_addr == 6'hc);
         decoded_reg_strb.mbox_datain = cpuif_req_masked & (cpuif_addr == 6'h10);
@@ -92,6 +93,7 @@ module mbox_csr (
         decoded_reg_strb.mbox_execute = cpuif_req_masked & (cpuif_addr == 6'h18);
         decoded_reg_strb.mbox_status = cpuif_req_masked & (cpuif_addr == 6'h1c);
         decoded_reg_strb.mbox_unlock = cpuif_req_masked & (cpuif_addr == 6'h20);
+        decoded_reg_strb.tap_mode = cpuif_req_masked & (cpuif_addr == 6'h24);
     end
 
     // Pass down signals to next stage
@@ -114,8 +116,8 @@ module mbox_csr (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } id;
-        } mbox_id;
+            } user;
+        } mbox_user;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -178,6 +180,12 @@ module mbox_csr (
                 logic load_next;
             } unlock;
         } mbox_unlock;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } enabled;
+        } tap_mode;
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -190,8 +198,8 @@ module mbox_csr (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } id;
-        } mbox_id;
+            } user;
+        } mbox_user;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -242,6 +250,11 @@ module mbox_csr (
                 logic value;
             } unlock;
         } mbox_unlock;
+        struct packed{
+            struct packed{
+                logic value;
+            } enabled;
+        } tap_mode;
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -270,27 +283,27 @@ module mbox_csr (
     end
     assign hwif_out.mbox_lock.lock.value = field_storage.mbox_lock.lock.value;
     assign hwif_out.mbox_lock.lock.swmod = decoded_reg_strb.mbox_lock && !decoded_req_is_wr;
-    // Field: mbox_csr.mbox_id.id
+    // Field: mbox_csr.mbox_user.user
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.mbox_id.id.value;
+        next_c = field_storage.mbox_user.user.value;
         load_next_c = '0;
         if(hwif_in.lock_set) begin // HW Write - we
-            next_c = hwif_in.mbox_id.id.next;
+            next_c = hwif_in.mbox_user.user.next;
             load_next_c = '1;
         end
-        field_combo.mbox_id.id.next = next_c;
-        field_combo.mbox_id.id.load_next = load_next_c;
+        field_combo.mbox_user.user.next = next_c;
+        field_combo.mbox_user.user.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
-            field_storage.mbox_id.id.value <= 32'h0;
-        end else if(field_combo.mbox_id.id.load_next) begin
-            field_storage.mbox_id.id.value <= field_combo.mbox_id.id.next;
+            field_storage.mbox_user.user.value <= 32'h0;
+        end else if(field_combo.mbox_user.user.load_next) begin
+            field_storage.mbox_user.user.value <= field_combo.mbox_user.user.next;
         end
     end
-    assign hwif_out.mbox_id.id.value = field_storage.mbox_id.id.value;
+    assign hwif_out.mbox_user.user.value = field_storage.mbox_user.user.value;
     // Field: mbox_csr.mbox_cmd.command
     always_comb begin
         automatic logic [31:0] next_c;
@@ -320,6 +333,9 @@ module mbox_csr (
         load_next_c = '0;
         if(decoded_reg_strb.mbox_dlen && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
             next_c = (field_storage.mbox_dlen.length.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.mbox_dlen.length.we) begin // HW Write - we
+            next_c = hwif_in.mbox_dlen.length.next;
             load_next_c = '1;
         end
         field_combo.mbox_dlen.length.next = next_c;
@@ -565,6 +581,27 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_unlock.unlock.value = field_storage.mbox_unlock.unlock.value;
+    // Field: mbox_csr.tap_mode.enabled
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.tap_mode.enabled.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.tap_mode && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = (field_storage.tap_mode.enabled.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.tap_mode.enabled.next = next_c;
+        field_combo.tap_mode.enabled.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.tap_mode.enabled.value <= 1'h0;
+        end else if(field_combo.tap_mode.enabled.load_next) begin
+            field_storage.tap_mode.enabled.value <= field_combo.tap_mode.enabled.next;
+        end
+    end
+    assign hwif_out.tap_mode.enabled.value = field_storage.tap_mode.enabled.value;
 
     //--------------------------------------------------------------------------
     // Write response
@@ -582,10 +619,10 @@ module mbox_csr (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [9-1:0][31:0] readback_array;
+    logic [10-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
     assign readback_array[0][31:1] = '0;
-    assign readback_array[1][31:0] = (decoded_reg_strb.mbox_id && !decoded_req_is_wr) ? field_storage.mbox_id.id.value : '0;
+    assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
     assign readback_array[2][31:0] = (decoded_reg_strb.mbox_cmd && !decoded_req_is_wr) ? field_storage.mbox_cmd.command.value : '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.mbox_dlen && !decoded_req_is_wr) ? field_storage.mbox_dlen.length.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.mbox_datain && !decoded_req_is_wr) ? field_storage.mbox_datain.datain.value : '0;
@@ -601,6 +638,8 @@ module mbox_csr (
     assign readback_array[7][31:25] = '0;
     assign readback_array[8][0:0] = (decoded_reg_strb.mbox_unlock && !decoded_req_is_wr) ? field_storage.mbox_unlock.unlock.value : '0;
     assign readback_array[8][31:1] = '0;
+    assign readback_array[9][0:0] = (decoded_reg_strb.tap_mode && !decoded_req_is_wr) ? field_storage.tap_mode.enabled.value : '0;
+    assign readback_array[9][31:1] = '0;
 
     // Reduce the array
     always_comb begin
@@ -608,7 +647,7 @@ module mbox_csr (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<9; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<10; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

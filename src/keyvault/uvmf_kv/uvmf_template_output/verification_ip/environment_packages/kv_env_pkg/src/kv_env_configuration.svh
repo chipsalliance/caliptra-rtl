@@ -66,8 +66,8 @@ extends uvmf_environment_configuration_base;
     typedef kv_read_configuration kv_hmac_block_read_agent_config_t;
     rand kv_hmac_block_read_agent_config_t kv_hmac_block_read_agent_config;
 
-    typedef kv_read_configuration kv_sha512_block_read_agent_config_t;
-    rand kv_sha512_block_read_agent_config_t kv_sha512_block_read_agent_config;
+    typedef kv_read_configuration kv_mldsa_key_read_agent_config_t;
+    rand kv_mldsa_key_read_agent_config_t kv_mldsa_key_read_agent_config;
 
     typedef kv_read_configuration kv_ecc_privkey_read_agent_config_t;
     rand kv_ecc_privkey_read_agent_config_t kv_ecc_privkey_read_agent_config;
@@ -103,7 +103,7 @@ extends uvmf_environment_configuration_base;
     kv_doe_write_agent_config = kv_doe_write_agent_config_t::type_id::create("kv_doe_write_agent_config");
     kv_hmac_key_read_agent_config = kv_hmac_key_read_agent_config_t::type_id::create("kv_hmac_key_read_agent_config");
     kv_hmac_block_read_agent_config = kv_hmac_block_read_agent_config_t::type_id::create("kv_hmac_block_read_agent_config");
-    kv_sha512_block_read_agent_config = kv_sha512_block_read_agent_config_t::type_id::create("kv_sha512_block_read_agent_config");
+    kv_mldsa_key_read_agent_config = kv_mldsa_key_read_agent_config_t::type_id::create("kv_mldsa_key_read_agent_config");
     kv_ecc_privkey_read_agent_config = kv_ecc_privkey_read_agent_config_t::type_id::create("kv_ecc_privkey_read_agent_config");
     kv_ecc_seed_read_agent_config = kv_ecc_seed_read_agent_config_t::type_id::create("kv_ecc_seed_read_agent_config");
 
@@ -151,7 +151,7 @@ extends uvmf_environment_configuration_base;
      "\n", kv_doe_write_agent_config.convert2string,
      "\n", kv_hmac_key_read_agent_config.convert2string,
      "\n", kv_hmac_block_read_agent_config.convert2string,
-     "\n", kv_sha512_block_read_agent_config.convert2string,
+     "\n", kv_mldsa_key_read_agent_config.convert2string,
      "\n", kv_ecc_privkey_read_agent_config.convert2string,
      "\n", kv_ecc_seed_read_agent_config.convert2string,
 
@@ -209,9 +209,9 @@ extends uvmf_environment_configuration_base;
      kv_hmac_block_read_agent_config.initialize( interface_activity[7], {environment_path,".kv_hmac_block_read_agent"}, interface_names[7]);
      kv_hmac_block_read_agent_config.initiator_responder = INITIATOR;
      kv_hmac_block_read_agent_config.has_coverage = 1;
-     kv_sha512_block_read_agent_config.initialize( interface_activity[8], {environment_path,".kv_sha512_block_read_agent"}, interface_names[8]);
-     kv_sha512_block_read_agent_config.initiator_responder = INITIATOR;
-     kv_sha512_block_read_agent_config.has_coverage = 1;
+     kv_mldsa_key_read_agent_config.initialize( interface_activity[8], {environment_path,".kv_mldsa_key_read_agent"}, interface_names[8]);
+     kv_mldsa_key_read_agent_config.initiator_responder = INITIATOR;
+     kv_mldsa_key_read_agent_config.has_coverage = 1;
      kv_ecc_privkey_read_agent_config.initialize( interface_activity[9], {environment_path,".kv_ecc_privkey_read_agent"}, interface_names[9]);
      kv_ecc_privkey_read_agent_config.initiator_responder = INITIATOR;
      kv_ecc_privkey_read_agent_config.has_coverage = 1;

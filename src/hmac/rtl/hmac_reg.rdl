@@ -72,18 +72,19 @@ addrmap hmac_reg {
                                 processing for the key and the first padded 
                                 message block.
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the HMAC512 core to start the 
                                 processing for the remining padded message block.
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe;} NEXT = 1'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Control mode command bits: Indicates the HMAC512 core to set dynamically
                                  the type of hashing algorithm. This can be:
                                  0 for HMAC384
-                                 1 for HMAC512";} MODE = 1'b1;
+                                 1 for HMAC512"; swwe;} MODE = 1'b1;
+        field {desc = "CSR Mode: Indicates to the HMAC512 core to use the CSR HMAC key"; swwe;} CSR_MODE = 1'b0;
         field {desc = "Reserved";} Reserved = 1'b0;                                 
     
     } HMAC512_CTRL @0x00000010;

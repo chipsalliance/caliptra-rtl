@@ -1,8 +1,8 @@
-commit fe63594a775c1258a6fec06e574c4fe03f629cd4
-Merge: 78cac32bfcc 2d868166ce3
+commit 2388ae0ccd41cbcb301bf452a3c87561596ff45d
+Merge: 3085254cc68 b6a17d0909b
 Author: Tomasz Michalak <tmichalak@antmicro.com>
-Date:   Fri Nov 8 15:57:47 2024 +0100
+Date:   Mon Nov 18 10:44:23 2024 +0100
 
-    Merge pull request #259 from chipsalliance/wsip/export_dmi
+    Merge pull request #269 from antmicro/kiryk/fix-custom-reports
     
-    export DMI signals
+    Fix custom report runs

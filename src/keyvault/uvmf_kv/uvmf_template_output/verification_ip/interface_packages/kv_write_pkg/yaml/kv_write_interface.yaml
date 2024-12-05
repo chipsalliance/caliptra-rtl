@@ -30,7 +30,7 @@ uvmf:
       transaction_constraints:
       - comment: ''
         name: dest_valid_c
-        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "SHA512"}) write_dest_valid == 63; }'
+        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "MLDSA"}) write_dest_valid == 63; }'
       transaction_vars:
       - comment: ''
         iscompare: 'False'
