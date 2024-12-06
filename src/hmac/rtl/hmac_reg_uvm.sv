@@ -465,13 +465,13 @@ package hmac_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__error_intr_en_t_bit_cg error0_en_bit_cg[1];
-        hmac_reg__error_intr_en_t_bit_cg error1_en_bit_cg[1];
+        hmac_reg__error_intr_en_t_bit_cg key_mode_error_en_bit_cg[1];
+        hmac_reg__error_intr_en_t_bit_cg key_zero_error_en_bit_cg[1];
         hmac_reg__error_intr_en_t_bit_cg error2_en_bit_cg[1];
         hmac_reg__error_intr_en_t_bit_cg error3_en_bit_cg[1];
         hmac_reg__error_intr_en_t_fld_cg fld_cg;
-        rand uvm_reg_field error0_en;
-        rand uvm_reg_field error1_en;
+        rand uvm_reg_field key_mode_error_en;
+        rand uvm_reg_field key_zero_error_en;
         rand uvm_reg_field error2_en;
         rand uvm_reg_field error3_en;
 
@@ -485,17 +485,17 @@ package hmac_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.error0_en = new("error0_en");
-            this.error0_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
-            this.error1_en = new("error1_en");
-            this.error1_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.key_mode_error_en = new("key_mode_error_en");
+            this.key_mode_error_en.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.key_zero_error_en = new("key_zero_error_en");
+            this.key_zero_error_en.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
             this.error2_en = new("error2_en");
             this.error2_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.error3_en = new("error3_en");
             this.error3_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(error0_en_bit_cg[bt]) error0_en_bit_cg[bt] = new();
-                foreach(error1_en_bit_cg[bt]) error1_en_bit_cg[bt] = new();
+                foreach(key_mode_error_en_bit_cg[bt]) key_mode_error_en_bit_cg[bt] = new();
+                foreach(key_zero_error_en_bit_cg[bt]) key_zero_error_en_bit_cg[bt] = new();
                 foreach(error2_en_bit_cg[bt]) error2_en_bit_cg[bt] = new();
                 foreach(error3_en_bit_cg[bt]) error3_en_bit_cg[bt] = new();
             end
@@ -594,23 +594,23 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - hmac_reg::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
-    class hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 extends uvm_reg;
+    // Reg - hmac_reg::error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183
+    class hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error0_sts_bit_cg[1];
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error1_sts_bit_cg[1];
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error2_sts_bit_cg[1];
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_bit_cg error3_sts_bit_cg[1];
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_fld_cg fld_cg;
-        rand uvm_reg_field error0_sts;
-        rand uvm_reg_field error1_sts;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183_bit_cg key_mode_error_sts_bit_cg[1];
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183_bit_cg key_zero_error_sts_bit_cg[1];
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183_bit_cg error2_sts_bit_cg[1];
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183_bit_cg error3_sts_bit_cg[1];
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183_fld_cg fld_cg;
+        rand uvm_reg_field key_mode_error_sts;
+        rand uvm_reg_field key_zero_error_sts;
         rand uvm_reg_field error2_sts;
         rand uvm_reg_field error3_sts;
 
-        function new(string name = "hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378");
+        function new(string name = "hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -620,24 +620,24 @@ package hmac_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.error0_sts = new("error0_sts");
-            this.error0_sts.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
-            this.error1_sts = new("error1_sts");
-            this.error1_sts.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
+            this.key_mode_error_sts = new("key_mode_error_sts");
+            this.key_mode_error_sts.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
+            this.key_zero_error_sts = new("key_zero_error_sts");
+            this.key_zero_error_sts.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
             this.error2_sts = new("error2_sts");
             this.error2_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.error3_sts = new("error3_sts");
             this.error3_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(error0_sts_bit_cg[bt]) error0_sts_bit_cg[bt] = new();
-                foreach(error1_sts_bit_cg[bt]) error1_sts_bit_cg[bt] = new();
+                foreach(key_mode_error_sts_bit_cg[bt]) key_mode_error_sts_bit_cg[bt] = new();
+                foreach(key_zero_error_sts_bit_cg[bt]) key_zero_error_sts_bit_cg[bt] = new();
                 foreach(error2_sts_bit_cg[bt]) error2_sts_bit_cg[bt] = new();
                 foreach(error3_sts_bit_cg[bt]) error3_sts_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
+    endclass : hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183
 
     // Reg - hmac_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
@@ -675,13 +675,13 @@ package hmac_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__error_intr_trig_t_bit_cg error0_trig_bit_cg[1];
-        hmac_reg__error_intr_trig_t_bit_cg error1_trig_bit_cg[1];
+        hmac_reg__error_intr_trig_t_bit_cg key_mode_error_trig_bit_cg[1];
+        hmac_reg__error_intr_trig_t_bit_cg key_zero_error_trig_bit_cg[1];
         hmac_reg__error_intr_trig_t_bit_cg error2_trig_bit_cg[1];
         hmac_reg__error_intr_trig_t_bit_cg error3_trig_bit_cg[1];
         hmac_reg__error_intr_trig_t_fld_cg fld_cg;
-        rand uvm_reg_field error0_trig;
-        rand uvm_reg_field error1_trig;
+        rand uvm_reg_field key_mode_error_trig;
+        rand uvm_reg_field key_zero_error_trig;
         rand uvm_reg_field error2_trig;
         rand uvm_reg_field error3_trig;
 
@@ -695,17 +695,17 @@ package hmac_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.error0_trig = new("error0_trig");
-            this.error0_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
-            this.error1_trig = new("error1_trig");
-            this.error1_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.key_mode_error_trig = new("key_mode_error_trig");
+            this.key_mode_error_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.key_zero_error_trig = new("key_zero_error_trig");
+            this.key_zero_error_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
             this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
             this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
-                foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
+                foreach(key_mode_error_trig_bit_cg[bt]) key_mode_error_trig_bit_cg[bt] = new();
+                foreach(key_zero_error_trig_bit_cg[bt]) key_zero_error_trig_bit_cg[bt] = new();
                 foreach(error2_trig_bit_cg[bt]) error2_trig_bit_cg[bt] = new();
                 foreach(error3_trig_bit_cg[bt]) error3_trig_bit_cg[bt] = new();
             end
@@ -744,17 +744,17 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__notif_intr_trig_t
 
-    // Reg - hmac_reg::intr_count_t_cnt_35ace267
-    class hmac_reg__intr_count_t_cnt_35ace267 extends uvm_reg;
+    // Reg - hmac_reg::intr_count_t_cnt_b8d41777
+    class hmac_reg__intr_count_t_cnt_b8d41777 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__intr_count_t_cnt_35ace267_bit_cg cnt_bit_cg[32];
-        hmac_reg__intr_count_t_cnt_35ace267_fld_cg fld_cg;
+        hmac_reg__intr_count_t_cnt_b8d41777_bit_cg cnt_bit_cg[32];
+        hmac_reg__intr_count_t_cnt_b8d41777_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "hmac_reg__intr_count_t_cnt_35ace267");
+        function new(string name = "hmac_reg__intr_count_t_cnt_b8d41777");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -772,19 +772,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__intr_count_t_cnt_35ace267
+    endclass : hmac_reg__intr_count_t_cnt_b8d41777
 
-    // Reg - hmac_reg::intr_count_t_cnt_73c42c28
-    class hmac_reg__intr_count_t_cnt_73c42c28 extends uvm_reg;
+    // Reg - hmac_reg::intr_count_t_cnt_55fc66d7
+    class hmac_reg__intr_count_t_cnt_55fc66d7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__intr_count_t_cnt_73c42c28_bit_cg cnt_bit_cg[32];
-        hmac_reg__intr_count_t_cnt_73c42c28_fld_cg fld_cg;
+        hmac_reg__intr_count_t_cnt_55fc66d7_bit_cg cnt_bit_cg[32];
+        hmac_reg__intr_count_t_cnt_55fc66d7_fld_cg fld_cg;
         rand uvm_reg_field cnt;
 
-        function new(string name = "hmac_reg__intr_count_t_cnt_73c42c28");
+        function new(string name = "hmac_reg__intr_count_t_cnt_55fc66d7");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -802,7 +802,7 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__intr_count_t_cnt_73c42c28
+    endclass : hmac_reg__intr_count_t_cnt_55fc66d7
 
     // Reg - hmac_reg::intr_count_t_cnt_d8af96ff
     class hmac_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
@@ -894,17 +894,17 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_be67d6d5
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_37026c97
-    class hmac_reg__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
+    // Reg - hmac_reg::intr_count_incr_t_pulse_14f62453
+    class hmac_reg__intr_count_incr_t_pulse_14f62453 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__intr_count_incr_t_pulse_37026c97_bit_cg pulse_bit_cg[1];
-        hmac_reg__intr_count_incr_t_pulse_37026c97_fld_cg fld_cg;
+        hmac_reg__intr_count_incr_t_pulse_14f62453_bit_cg pulse_bit_cg[1];
+        hmac_reg__intr_count_incr_t_pulse_14f62453_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
-        function new(string name = "hmac_reg__intr_count_incr_t_pulse_37026c97");
+        function new(string name = "hmac_reg__intr_count_incr_t_pulse_14f62453");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -922,19 +922,19 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__intr_count_incr_t_pulse_37026c97
+    endclass : hmac_reg__intr_count_incr_t_pulse_14f62453
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_d860d977
-    class hmac_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
+    // Reg - hmac_reg::intr_count_incr_t_pulse_080329b7
+    class hmac_reg__intr_count_incr_t_pulse_080329b7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        hmac_reg__intr_count_incr_t_pulse_d860d977_bit_cg pulse_bit_cg[1];
-        hmac_reg__intr_count_incr_t_pulse_d860d977_fld_cg fld_cg;
+        hmac_reg__intr_count_incr_t_pulse_080329b7_bit_cg pulse_bit_cg[1];
+        hmac_reg__intr_count_incr_t_pulse_080329b7_fld_cg fld_cg;
         rand uvm_reg_field pulse;
 
-        function new(string name = "hmac_reg__intr_count_incr_t_pulse_d860d977");
+        function new(string name = "hmac_reg__intr_count_incr_t_pulse_080329b7");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -952,7 +952,7 @@ package hmac_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : hmac_reg__intr_count_incr_t_pulse_d860d977
+    endclass : hmac_reg__intr_count_incr_t_pulse_080329b7
 
     // Reg - hmac_reg::intr_count_incr_t_pulse_87b45fe7
     class hmac_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
@@ -1051,17 +1051,17 @@ package hmac_reg_uvm;
         rand hmac_reg__notif_intr_en_t notif_intr_en_r;
         rand hmac_reg__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand hmac_reg__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 error_internal_intr_r;
+        rand hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183 error_internal_intr_r;
         rand hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e notif_internal_intr_r;
         rand hmac_reg__error_intr_trig_t error_intr_trig_r;
         rand hmac_reg__notif_intr_trig_t notif_intr_trig_r;
-        rand hmac_reg__intr_count_t_cnt_35ace267 error0_intr_count_r;
-        rand hmac_reg__intr_count_t_cnt_73c42c28 error1_intr_count_r;
+        rand hmac_reg__intr_count_t_cnt_b8d41777 key_mode_error_intr_count_r;
+        rand hmac_reg__intr_count_t_cnt_55fc66d7 key_zero_error_intr_count_r;
         rand hmac_reg__intr_count_t_cnt_d8af96ff error2_intr_count_r;
         rand hmac_reg__intr_count_t_cnt_9bd7f809 error3_intr_count_r;
         rand hmac_reg__intr_count_t_cnt_be67d6d5 notif_cmd_done_intr_count_r;
-        rand hmac_reg__intr_count_incr_t_pulse_37026c97 error0_intr_count_incr_r;
-        rand hmac_reg__intr_count_incr_t_pulse_d860d977 error1_intr_count_incr_r;
+        rand hmac_reg__intr_count_incr_t_pulse_14f62453 key_mode_error_intr_count_incr_r;
+        rand hmac_reg__intr_count_incr_t_pulse_080329b7 key_zero_error_intr_count_incr_r;
         rand hmac_reg__intr_count_incr_t_pulse_87b45fe7 error2_intr_count_incr_r;
         rand hmac_reg__intr_count_incr_t_pulse_c1689ee6 error3_intr_count_incr_r;
         rand hmac_reg__intr_count_incr_t_pulse_6173128e notif_cmd_done_intr_count_incr_r;
@@ -1117,16 +1117,16 @@ package hmac_reg_uvm;
 
             this.notif_intr_trig_r.build();
             this.default_map.add_reg(this.notif_intr_trig_r, 'h20);
-            this.error0_intr_count_r = new("error0_intr_count_r");
-            this.error0_intr_count_r.configure(this);
+            this.key_mode_error_intr_count_r = new("key_mode_error_intr_count_r");
+            this.key_mode_error_intr_count_r.configure(this);
 
-            this.error0_intr_count_r.build();
-            this.default_map.add_reg(this.error0_intr_count_r, 'h100);
-            this.error1_intr_count_r = new("error1_intr_count_r");
-            this.error1_intr_count_r.configure(this);
+            this.key_mode_error_intr_count_r.build();
+            this.default_map.add_reg(this.key_mode_error_intr_count_r, 'h100);
+            this.key_zero_error_intr_count_r = new("key_zero_error_intr_count_r");
+            this.key_zero_error_intr_count_r.configure(this);
 
-            this.error1_intr_count_r.build();
-            this.default_map.add_reg(this.error1_intr_count_r, 'h104);
+            this.key_zero_error_intr_count_r.build();
+            this.default_map.add_reg(this.key_zero_error_intr_count_r, 'h104);
             this.error2_intr_count_r = new("error2_intr_count_r");
             this.error2_intr_count_r.configure(this);
 
@@ -1142,16 +1142,16 @@ package hmac_reg_uvm;
 
             this.notif_cmd_done_intr_count_r.build();
             this.default_map.add_reg(this.notif_cmd_done_intr_count_r, 'h180);
-            this.error0_intr_count_incr_r = new("error0_intr_count_incr_r");
-            this.error0_intr_count_incr_r.configure(this);
+            this.key_mode_error_intr_count_incr_r = new("key_mode_error_intr_count_incr_r");
+            this.key_mode_error_intr_count_incr_r.configure(this);
 
-            this.error0_intr_count_incr_r.build();
-            this.default_map.add_reg(this.error0_intr_count_incr_r, 'h200);
-            this.error1_intr_count_incr_r = new("error1_intr_count_incr_r");
-            this.error1_intr_count_incr_r.configure(this);
+            this.key_mode_error_intr_count_incr_r.build();
+            this.default_map.add_reg(this.key_mode_error_intr_count_incr_r, 'h200);
+            this.key_zero_error_intr_count_incr_r = new("key_zero_error_intr_count_incr_r");
+            this.key_zero_error_intr_count_incr_r.configure(this);
 
-            this.error1_intr_count_incr_r.build();
-            this.default_map.add_reg(this.error1_intr_count_incr_r, 'h204);
+            this.key_zero_error_intr_count_incr_r.build();
+            this.default_map.add_reg(this.key_zero_error_intr_count_incr_r, 'h204);
             this.error2_intr_count_incr_r = new("error2_intr_count_incr_r");
             this.error2_intr_count_incr_r.configure(this);
 

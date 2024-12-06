@@ -90,13 +90,13 @@ module hmac_reg (
             logic notif_internal_intr_r;
             logic error_intr_trig_r;
             logic notif_intr_trig_r;
-            logic error0_intr_count_r;
-            logic error1_intr_count_r;
+            logic key_mode_error_intr_count_r;
+            logic key_zero_error_intr_count_r;
             logic error2_intr_count_r;
             logic error3_intr_count_r;
             logic notif_cmd_done_intr_count_r;
-            logic error0_intr_count_incr_r;
-            logic error1_intr_count_incr_r;
+            logic key_mode_error_intr_count_incr_r;
+            logic key_zero_error_intr_count_incr_r;
             logic error2_intr_count_incr_r;
             logic error3_intr_count_incr_r;
             logic notif_cmd_done_intr_count_incr_r;
@@ -144,13 +144,13 @@ module hmac_reg (
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h818);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h81c);
         decoded_reg_strb.intr_block_rf.notif_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h820);
-        decoded_reg_strb.intr_block_rf.error0_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h900);
-        decoded_reg_strb.intr_block_rf.error1_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h904);
+        decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h900);
+        decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h904);
         decoded_reg_strb.intr_block_rf.error2_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h908);
         decoded_reg_strb.intr_block_rf.error3_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h90c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h980);
-        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00);
-        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04);
+        decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00);
+        decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04);
         decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha08);
         decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha0c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10);
@@ -319,11 +319,11 @@ module hmac_reg (
                 struct packed{
                     logic next;
                     logic load_next;
-                } error0_en;
+                } key_mode_error_en;
                 struct packed{
                     logic next;
                     logic load_next;
-                } error1_en;
+                } key_zero_error_en;
                 struct packed{
                     logic next;
                     logic load_next;
@@ -355,11 +355,11 @@ module hmac_reg (
                 struct packed{
                     logic next;
                     logic load_next;
-                } error0_sts;
+                } key_mode_error_sts;
                 struct packed{
                     logic next;
                     logic load_next;
-                } error1_sts;
+                } key_zero_error_sts;
                 struct packed{
                     logic next;
                     logic load_next;
@@ -379,11 +379,11 @@ module hmac_reg (
                 struct packed{
                     logic next;
                     logic load_next;
-                } error0_trig;
+                } key_mode_error_trig;
                 struct packed{
                     logic next;
                     logic load_next;
-                } error1_trig;
+                } key_zero_error_trig;
                 struct packed{
                     logic next;
                     logic load_next;
@@ -406,7 +406,7 @@ module hmac_reg (
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
-            } error0_intr_count_r;
+            } key_mode_error_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] next;
@@ -414,7 +414,7 @@ module hmac_reg (
                     logic incrthreshold;
                     logic incrsaturate;
                 } cnt;
-            } error1_intr_count_r;
+            } key_zero_error_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] next;
@@ -446,7 +446,7 @@ module hmac_reg (
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
-            } error0_intr_count_incr_r;
+            } key_mode_error_intr_count_incr_r;
             struct packed{
                 struct packed{
                     logic next;
@@ -454,7 +454,7 @@ module hmac_reg (
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
-            } error1_intr_count_incr_r;
+            } key_zero_error_intr_count_incr_r;
             struct packed{
                 struct packed{
                     logic next;
@@ -605,10 +605,10 @@ module hmac_reg (
             struct packed{
                 struct packed{
                     logic value;
-                } error0_en;
+                } key_mode_error_en;
                 struct packed{
                     logic value;
-                } error1_en;
+                } key_zero_error_en;
                 struct packed{
                     logic value;
                 } error2_en;
@@ -634,10 +634,10 @@ module hmac_reg (
             struct packed{
                 struct packed{
                     logic value;
-                } error0_sts;
+                } key_mode_error_sts;
                 struct packed{
                     logic value;
-                } error1_sts;
+                } key_zero_error_sts;
                 struct packed{
                     logic value;
                 } error2_sts;
@@ -653,10 +653,10 @@ module hmac_reg (
             struct packed{
                 struct packed{
                     logic value;
-                } error0_trig;
+                } key_mode_error_trig;
                 struct packed{
                     logic value;
-                } error1_trig;
+                } key_zero_error_trig;
                 struct packed{
                     logic value;
                 } error2_trig;
@@ -673,12 +673,12 @@ module hmac_reg (
                 struct packed{
                     logic [31:0] value;
                 } cnt;
-            } error0_intr_count_r;
+            } key_mode_error_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] value;
                 } cnt;
-            } error1_intr_count_r;
+            } key_zero_error_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] value;
@@ -698,12 +698,12 @@ module hmac_reg (
                 struct packed{
                     logic value;
                 } pulse;
-            } error0_intr_count_incr_r;
+            } key_mode_error_intr_count_incr_r;
             struct packed{
                 struct packed{
                     logic value;
                 } pulse;
-            } error1_intr_count_incr_r;
+            } key_zero_error_intr_count_incr_r;
             struct packed{
                 struct packed{
                     logic value;
@@ -1418,44 +1418,44 @@ module hmac_reg (
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error_intr_en_r.error0_en
+    // Field: hmac_reg.intr_block_rf.error_intr_en_r.key_mode_error_en
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value;
         load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.intr_block_rf.error_intr_en_r.error0_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_intr_en_r.error0_en.next = next_c;
-        field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next = load_next_c;
+        field_combo.intr_block_rf.error_intr_en_r.key_mode_error_en.next = next_c;
+        field_combo.intr_block_rf.error_intr_en_r.key_mode_error_en.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+            field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_en_r.key_mode_error_en.load_next) begin
+            field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.key_mode_error_en.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error_intr_en_r.error1_en
+    // Field: hmac_reg.intr_block_rf.error_intr_en_r.key_zero_error_en
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value;
         load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.intr_block_rf.error_intr_en_r.error1_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_intr_en_r.error1_en.next = next_c;
-        field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next = load_next_c;
+        field_combo.intr_block_rf.error_intr_en_r.key_zero_error_en.next = next_c;
+        field_combo.intr_block_rf.error_intr_en_r.key_zero_error_en.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+            field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_en_r.key_zero_error_en.load_next) begin
+            field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.key_zero_error_en.next;
         end
     end
     // Field: hmac_reg.intr_block_rf.error_intr_en_r.error2_en
@@ -1562,56 +1562,56 @@ module hmac_reg (
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
-    // Field: hmac_reg.intr_block_rf.error_internal_intr_r.error0_sts
+    // Field: hmac_reg.intr_block_rf.error_internal_intr_r.key_mode_error_sts
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value != '0) begin // stickybit
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
             load_next_c = '1;
-        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next = next_c;
-        field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next = load_next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.key_mode_error_sts.next = next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.key_mode_error_sts.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+            field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_internal_intr_r.key_mode_error_sts.load_next) begin
+            field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.key_mode_error_sts.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error_internal_intr_r.error1_sts
+    // Field: hmac_reg.intr_block_rf.error_internal_intr_r.key_zero_error_sts
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value != '0) begin // stickybit
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
             load_next_c = '1;
-        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next = next_c;
-        field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next = load_next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.key_zero_error_sts.next = next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.key_zero_error_sts.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+            field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_internal_intr_r.key_zero_error_sts.load_next) begin
+            field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.key_zero_error_sts.next;
         end
     end
     // Field: hmac_reg.intr_block_rf.error_internal_intr_r.error2_sts
@@ -1667,8 +1667,8 @@ module hmac_reg (
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
-        |(field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value & field_storage.intr_block_rf.error_intr_en_r.error0_en.value)
-        || |(field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value & field_storage.intr_block_rf.error_intr_en_r.error1_en.value)
+        |(field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value & field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value)
+        || |(field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value & field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value & field_storage.intr_block_rf.error_intr_en_r.error2_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & field_storage.intr_block_rf.error_intr_en_r.error3_en.value);
     // Field: hmac_reg.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts
@@ -1699,50 +1699,50 @@ module hmac_reg (
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
         |(field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value);
-    // Field: hmac_reg.intr_block_rf.error_intr_trig_r.error0_trig
+    // Field: hmac_reg.intr_block_rf.error_intr_trig_r.key_mode_error_trig
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
         load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next = next_c;
-        field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next = load_next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.key_mode_error_trig.next = next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.key_mode_error_trig.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+            field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_trig_r.key_mode_error_trig.load_next) begin
+            field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.key_mode_error_trig.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error_intr_trig_r.error1_trig
+    // Field: hmac_reg.intr_block_rf.error_intr_trig_r.key_zero_error_trig
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
         load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next = next_c;
-        field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next = load_next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.key_zero_error_trig.next = next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.key_zero_error_trig.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+            field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_trig_r.key_zero_error_trig.load_next) begin
+            field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.key_zero_error_trig.next;
         end
     end
     // Field: hmac_reg.intr_block_rf.error_intr_trig_r.error2_trig
@@ -1814,17 +1814,17 @@ module hmac_reg (
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error0_intr_count_r.cnt
+    // Field: hmac_reg.intr_block_rf.key_mode_error_intr_count_r.cnt
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
+        next_c = field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value;
         load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error0_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_r && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        if(field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value) begin // increment
+        if(field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value) begin // increment
             if(((33)'(next_c) + 32'h1) > 32'hffffffff) begin // up-counter saturated
                 next_c = 32'hffffffff;
             end else begin
@@ -1832,33 +1832,33 @@ module hmac_reg (
             end
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error0_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
-        field_combo.intr_block_rf.error0_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
+        field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value >= 32'hffffffff);
+        field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value >= 32'hffffffff);
         if(next_c > 32'hffffffff) begin
             next_c = 32'hffffffff;
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error0_intr_count_r.cnt.next = next_c;
-        field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next = load_next_c;
+        field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.next = next_c;
+        field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
-            field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+            field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value <= 32'h0;
+        end else if(field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.load_next) begin
+            field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.key_mode_error_intr_count_r.cnt.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error1_intr_count_r.cnt
+    // Field: hmac_reg.intr_block_rf.key_zero_error_intr_count_r.cnt
     always_comb begin
         automatic logic [31:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
+        next_c = field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value;
         load_next_c = '0;
-        if(decoded_reg_strb.intr_block_rf.error1_intr_count_r && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+        if(decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_r && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
         end
-        if(field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value) begin // increment
+        if(field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value) begin // increment
             if(((33)'(next_c) + 32'h1) > 32'hffffffff) begin // up-counter saturated
                 next_c = 32'hffffffff;
             end else begin
@@ -1866,20 +1866,20 @@ module hmac_reg (
             end
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error1_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
-        field_combo.intr_block_rf.error1_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
+        field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value >= 32'hffffffff);
+        field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value >= 32'hffffffff);
         if(next_c > 32'hffffffff) begin
             next_c = 32'hffffffff;
             load_next_c = '1;
         end
-        field_combo.intr_block_rf.error1_intr_count_r.cnt.next = next_c;
-        field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next = load_next_c;
+        field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.next = next_c;
+        field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
-            field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+            field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value <= 32'h0;
+        end else if(field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.load_next) begin
+            field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.key_zero_error_intr_count_r.cnt.next;
         end
     end
     // Field: hmac_reg.intr_block_rf.error2_intr_count_r.cnt
@@ -1984,66 +1984,66 @@ module hmac_reg (
             field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error0_intr_count_incr_r.pulse
+    // Field: hmac_reg.intr_block_rf.key_mode_error_intr_count_incr_r.pulse
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
+        next_c = field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // HW Write - we
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value) begin // HW Write - we
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
             load_next_c = '1;
-        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
         end
-        if(field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value) begin // decrement
-            field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.underflow = (next_c < (1'h1));
+        if(field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value) begin // decrement
+            field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.underflow = (next_c < (1'h1));
             next_c = next_c - 1'h1;
             load_next_c = '1;
         end else begin
-            field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.underflow = '0;
+            field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.underflow = '0;
         end
-        field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= 1'd0);
-        field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next = next_c;
-        field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next = load_next_c;
+        field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value <= 1'd0);
+        field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.next = next_c;
+        field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+            field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.load_next) begin
+            field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.next;
         end
     end
-    // Field: hmac_reg.intr_block_rf.error1_intr_count_incr_r.pulse
+    // Field: hmac_reg.intr_block_rf.key_zero_error_intr_count_incr_r.pulse
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
+        next_c = field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // HW Write - we
-            next_c = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value) begin // HW Write - we
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
             load_next_c = '1;
-        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
         end
-        if(field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value) begin // decrement
-            field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.underflow = (next_c < (1'h1));
+        if(field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value) begin // decrement
+            field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.underflow = (next_c < (1'h1));
             next_c = next_c - 1'h1;
             load_next_c = '1;
         end else begin
-            field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.underflow = '0;
+            field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.underflow = '0;
         end
-        field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= 1'd0);
-        field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next = next_c;
-        field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next = load_next_c;
+        field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value <= 1'd0);
+        field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.next = next_c;
+        field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+            field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.load_next) begin
+            field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.next;
         end
     end
     // Field: hmac_reg.intr_block_rf.error2_intr_count_incr_r.pulse
@@ -2200,8 +2200,8 @@ module hmac_reg (
     assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
     assign readback_array[27][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
     assign readback_array[27][31:2] = '0;
-    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[28][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
+    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value : '0;
+    assign readback_array[28][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value : '0;
     assign readback_array[28][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
     assign readback_array[28][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
     assign readback_array[28][31:4] = '0;
@@ -2211,28 +2211,28 @@ module hmac_reg (
     assign readback_array[30][31:1] = '0;
     assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
     assign readback_array[31][31:1] = '0;
-    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[32][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
+    assign readback_array[32][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value : '0;
+    assign readback_array[32][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value : '0;
     assign readback_array[32][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
     assign readback_array[32][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
     assign readback_array[32][31:4] = '0;
     assign readback_array[33][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
     assign readback_array[33][31:1] = '0;
-    assign readback_array[34][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[34][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
+    assign readback_array[34][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value : '0;
+    assign readback_array[34][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value : '0;
     assign readback_array[34][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
     assign readback_array[34][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
     assign readback_array[34][31:4] = '0;
     assign readback_array[35][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
     assign readback_array[35][31:1] = '0;
-    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
+    assign readback_array[36][31:0] = (decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value : '0;
+    assign readback_array[37][31:0] = (decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value : '0;
     assign readback_array[38][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
     assign readback_array[39][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
     assign readback_array[40][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value : '0;
     assign readback_array[41][31:1] = '0;
-    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value : '0;
     assign readback_array[42][31:1] = '0;
     assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
     assign readback_array[43][31:1] = '0;
