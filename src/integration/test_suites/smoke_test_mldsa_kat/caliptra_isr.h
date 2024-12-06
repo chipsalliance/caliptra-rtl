@@ -114,6 +114,7 @@ inline void service_mldsa_notif_intr() {
         while(1);
     }
 }
-
+inline void service_axi_dma_error_intr() {return;}
+inline void service_axi_dma_notif_intr() {return;}
 
 #endif //CALIPTRA_ISR_H
