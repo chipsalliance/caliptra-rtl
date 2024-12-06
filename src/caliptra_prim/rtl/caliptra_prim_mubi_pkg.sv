@@ -19,11 +19,12 @@ package caliptra_prim_mubi_pkg;
   //////////////////////////////////////////////
 
   parameter int MuBi4Width = 4;
+  /* 
   typedef enum logic [MuBi4Width-1:0] {
     MuBi4True = 4'h6, // enabled
     MuBi4False = 4'h9  // disabled
   } mubi4_t;
-
+  */
   typedef logic [MuBi4Width-1:0] mubi4_t;
   localparam mubi4_t MuBi4True = 4'h6;
   localparam mubi4_t MuBi4False = 4'h9;
