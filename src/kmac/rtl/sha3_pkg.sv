@@ -90,6 +90,14 @@ package sha3_pkg;
      576/MsgWidth   //  9 depth := (1600 - 512*2)
   };
 
+  parameter int unsigned KeccakBitCapacity [5] = '{
+    2 * 128, // capacity for L128
+    2 * 224, // capacity for L224
+    2 * 256, // capacity for L256
+    2 * 384, // capacity for L384
+    2 * 512  // capacity for L512
+  };
+
   parameter int unsigned MaxBlockSize = KeccakRate[0];
 
   parameter int unsigned KeccakEntries = 1600/MsgWidth;
@@ -130,7 +138,7 @@ package sha3_pkg;
     // completed. The main indicator is `absorbed` signal.
     StAbsorb_sparse = 6'b100001,
 
-    // TODO: Implement StAbort later after context-switching discussion.
+    // Reserved state for context-switching. See #3479.
     // Abort stage can be moved from StAbsorb stage. It basically holds the
     // keccak round operation and opens up the internal state variable to the
     // software. This stage is for the software to pause current operation and
@@ -179,6 +187,69 @@ package sha3_pkg;
       default            : return StError;
     endcase
   endfunction : sparse2logic
+
+
+  //////////////////////
+  // Keccak Round FSM //
+  //////////////////////
+
+  // Encoding generated with:
+  // $ ./util/design/sparse-fsm-encode.py -d 3 -m 8 -n 6 \
+  //      -s 1363425333 --language=sv
+  //
+  // Hamming distance histogram:
+  //
+  //  0: --
+  //  1: --
+  //  2: --
+  //  3: |||||||||||||||||||| (57.14%)
+  //  4: ||||||||||||||| (42.86%)
+  //  5: --
+  //  6: --
+  //
+  // Minimum Hamming distance: 3
+  // Maximum Hamming distance: 4
+  // Minimum Hamming weight: 1
+  // Maximum Hamming weight: 5
+  //
+  localparam int KeccakFsmWidth = 6;
+  typedef enum logic [KeccakFsmWidth-1:0] {
+    KeccakStIdle = 6'b011111,
+
+    // Active state is used in Unmasked version only.
+    // It handles keccak round in a cycle
+    KeccakStActive = 6'b000100,
+
+    // Phase1 --> Phase2Cycle1 --> Phase2Cycle2 --> Phase2Cycle3
+    // Activated only in Masked version.
+    // Phase1 processes Theta, Rho, Pi steps in a cycle and stores the states
+    // into storage. It only moves to Phase2 once the randomness required for
+    // Phase2 is available.
+    KeccakStPhase1 = 6'b101101,
+
+    // Chi Stage 1 for first lane halves. Unconditionally move to Phase2Cycle2.
+    KeccakStPhase2Cycle1 = 6'b000011,
+
+    // Chi Stage 2 and Iota for first lane halves. Chi Stage 1 for second
+    // lane halves. We only move forward if the fresh randomness required for
+    // remasking is available. Otherwise, keep computing Phase2Cycle1.
+    KeccakStPhase2Cycle2 = 6'b011000,
+
+    // Chi Stage 2 and Iota for second lane halves.
+    // This state doesn't require random value as it is XORed into the states
+    // in Phase1 and Phase2Cycle2. When doing the last round (MaxRound -1)
+    // it completes the process and goes back to Idle. If not, it repeats
+    // the phases again.
+    KeccakStPhase2Cycle3 = 6'b101010,
+
+    // Error state. Not clearly defined yet.
+    // Intention is if any unexpected input in the process, state moves to
+    // here and report through the error fifo with debugging information.
+    KeccakStError = 6'b110001,
+
+    KeccakStTerminalError = 6'b110110
+  } keccak_st_e;
+
 
   //////////////////
   // Error Report //
