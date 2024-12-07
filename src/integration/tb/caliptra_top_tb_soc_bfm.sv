@@ -22,7 +22,7 @@ module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
 import soc_ifc_pkg::*;
 import caliptra_top_tb_pkg::*; 
-import global_fuse_ctrl_init_done_event::*; #(
+import global_fuse_ctrl_init_done_event_pkg::*; #(
     parameter SKIP_BRINGUP = 0,
     paramater SKIP_FUSE_CTRL = 1
 ) (

@@ -13,6 +13,6 @@
 // limitations under the License.
 //
 
-module global_fuse_ctrl_init_done_event;
+package global_fuse_ctrl_init_done_event;
     event  fuse_ctrl_init_done;
-endmodule
+endpackage
