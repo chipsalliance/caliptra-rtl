@@ -24,7 +24,7 @@ import soc_ifc_pkg::*;
 import caliptra_top_tb_pkg::*; 
 import global_fuse_ctrl_init_done_event_pkg::*; #(
     parameter SKIP_BRINGUP = 0,
-    paramater SKIP_FUSE_CTRL = 1
+    parameter SKIP_FUSE_CTRL = 1
 ) (
     input logic core_clk,
     output logic                       cptra_pwrgood,
