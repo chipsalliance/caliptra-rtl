@@ -21,8 +21,10 @@
 module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
 import soc_ifc_pkg::*;
-import caliptra_top_tb_pkg::*; #(
-    parameter SKIP_BRINGUP = 0
+import caliptra_top_tb_pkg::*; 
+import global_fuse_ctrl_init_done_event::*; #(
+    parameter SKIP_BRINGUP = 0,
+    paramater SKIP_FUSE_CTRL = 1
 ) (
     input logic core_clk,
     output logic                       cptra_pwrgood,
@@ -488,6 +490,10 @@ import caliptra_top_tb_pkg::*; #(
                     assert_rst_flag_from_fatal = 1'b0;
                     m_axi_bfm_if.rst_mgr();
                 end: RESET_FLOW
+                begin: WAIT_FOR_FUSE_CTRL_INIT_DONE
+                    if (!SKIP_FUSE_CTRL)
+                    @(fuse_ctrl_init_done);
+                end: WAIT_FOR_FUSE_CTRL_INIT_DONE
             join_any
         end
     end

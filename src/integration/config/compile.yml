@@ -66,6 +66,8 @@ requires:
   - asserts
   - libs
   - caliptra_axi_sram
+  - otp_ctrl_pkg
+  - lc_ctrl_pkg
   - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
@@ -99,6 +101,7 @@ targets:
       - $COMPILE_ROOT/tb
       - $COMPILE_ROOT/coverage
     files:
+      - $COMPILE_ROOT/tb/global_fuse_ctrl_init_done_event.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
