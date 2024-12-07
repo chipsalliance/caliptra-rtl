@@ -66,8 +66,6 @@ requires:
   - asserts
   - libs
   - caliptra_axi_sram
-  - otp_ctrl_pkg
-  - lc_ctrl_pkg
   - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
