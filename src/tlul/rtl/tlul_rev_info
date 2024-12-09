@@ -1,0 +1,10 @@
+commit a9b955893ff967d59adca6c562fc387d3cd88516
+Author: Andrea Caforio <andrea.caforio@lowrisc.org>
+Date:   Thu Nov 28 14:27:58 2024 +0100
+
+    [tlul, shim] Externalize Valid-Hold registers
+    
+    Move Valid-Hold-internal registers to a separate module with its own
+    VH interface and redirect requests to it.
+    
+    Signed-off-by: Andrea Caforio <andrea.caforio@lowrisc.org>
