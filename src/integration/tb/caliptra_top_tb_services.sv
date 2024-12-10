@@ -442,21 +442,21 @@ module caliptra_top_tb_services
                     //inject privkey value to key reg
                     else if((WriteData[7:0] == 8'h90) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.next = 5'b1000;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.next = 'd11;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].dest_valid.next = 5'b1000;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_SIGNING].last_dword.next = 'd11;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
                     end
                     //inject valid hmac_key dest and zero hmac_key value to key reg
                     else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
