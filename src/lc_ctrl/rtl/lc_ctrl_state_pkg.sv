@@ -338,7 +338,9 @@ package lc_ctrl_state_pkg;
   parameter lc_token_t AllZeroToken = {
     128'h0
   };
-  parameter lc_token_t RndCnstRawUnlockToken = {
+  // [anjpar]: Renaming to *Default as we are not running topgen
+  //parameter lc_token_t RndCnstRawUnlockToken = {
+  parameter lc_token_t RndCnstRawUnlockTokenDefault = {
     128'h1C8BE2FF12790AE2E6D6A68151CBD084
   };
   parameter lc_token_t AllZeroTokenHashed = {
