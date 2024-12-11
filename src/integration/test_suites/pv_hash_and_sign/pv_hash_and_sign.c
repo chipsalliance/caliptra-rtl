@@ -77,19 +77,24 @@ void main() {
                        0xa0b43fbf,
                        0x49897978};
 
-    uint32_t exp3[] = {0x2ab50775,
-                       0xdab80928,
-                       0xb8de848c,
-                       0xabbdfa56,
-                       0x897ed7b1,
-                       0x45be930e,
-                       0x1e340ce0,
-                       0x8c5bfc73,
-                       0x1d997144,
-                       0x0c43f5a5,
-                       0xaa48ac99,
-                       0x8dbe6bb9};
-
+    // exp3 = SHA512(31*384'h0 | exp2 | nonce)
+    uint32_t exp3[] = {0x4f373650,
+                       0x83ef4325,
+                       0x29e9bcdb,
+                       0x404adf86,
+                       0x05566e5c,
+                       0xe1f01af8,
+                       0x01a485ec,
+                       0x46d049d1,
+                       0x48028f54,
+                       0x31afc07f,
+                       0x4abc21c1,
+                       0x5df9f791,
+                       0x125cff3b,
+                       0xbff7aa9f,
+                       0x7610ca06,
+                       0x819ec76a};
+                       
     uint32_t exp_sign_r[] = {0x871e6ea4, 
                              0xddc5432c, 
                              0xddaa60fd, 
@@ -281,7 +286,7 @@ void main() {
     //check expected output from digest
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_11) {
+    while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_15) {
         read_data = *reg_ptr++;
         if (exp3[offset] != read_data) {
             VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp3[offset], read_data);

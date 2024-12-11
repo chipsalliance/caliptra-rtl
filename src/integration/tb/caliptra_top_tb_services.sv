@@ -1051,17 +1051,20 @@ endgenerate //IV_NO
         end
     endtask
 
-    logic [0:11][31:0]   ecc_msg_tb    = 384'hC8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D;
+    logic [0:15][31:0]   ecc_msg_tb    = 512'h_C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D_00000000000000000000000000000000;
+    logic [0:15][31:0]   ecc_random_msg;
+    always_comb ecc_random_msg = {ecc_test_vector.hashed_msg, 128'h00000000000000000000000000000000};
+
     generate 
-        for (genvar dword = 0; dword < 12; dword++) begin
+        for (genvar dword = 0; dword < 16; dword++) begin
             always@(posedge clk) begin
                 if((WriteData[7:0] == 8'h90) && mailbox_write) begin
                     force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_msg_tb[11-dword][31 : 0];
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_msg_tb[15-dword][31 : 0];
                 end
                 else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                     force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_test_vector.hashed_msg[11-dword][31 : 0];
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
                 end
                 else begin
                     release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;
