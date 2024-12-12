@@ -217,16 +217,16 @@ module caliptra_top_sva
         //ecc sign r
         pcr_ecc_sign_r:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.test_vector.R[dword] == `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
+                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.ecc_test_vector.R[dword] == `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
                                               )
-                                  else $display("SVA ERROR: PCR SIGNING SIGN_R mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.test_vector.R[dword], `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value);                     
+                                  else $display("SVA ERROR: PCR SIGNING SIGN_R mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.ecc_test_vector.R[dword], `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value);                     
         
         //ecc sign s
         pcr_ecc_sign_s:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.test_vector.S[dword] == `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value)
+                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.ecc_test_vector.S[dword] == `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value)
                                               )
-                                  else $display("SVA ERROR: PCR SIGNING SIGN_S mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.test_vector.S[dword], `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value); 
+                                  else $display("SVA ERROR: PCR SIGNING SIGN_S mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.ecc_test_vector.S[dword], `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value); 
       end
     end
   endgenerate

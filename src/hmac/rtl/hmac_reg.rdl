@@ -201,8 +201,8 @@ addrmap hmac_reg {
         // Specific enables for the events defined in this
         // event type in the instantiating peripheral.
         // TODO add error events
-        field {desc = "Enable bit for Event 0";} error0_en = 1'b0;
-        field {desc = "Enable bit for Event 1";} error1_en = 1'b0;
+        field {desc = "Enable bit for Event 0";} key_mode_error_en = 1'b0;
+        field {desc = "Enable bit for Event 1";} key_zero_error_en = 1'b0;
         field {desc = "Enable bit for Event 2";} error2_en = 1'b0;
         field {desc = "Enable bit for Event 3";} error3_en = 1'b0;
     };
@@ -233,8 +233,8 @@ addrmap hmac_reg {
         default woclr = true;
         default level intr;
 
-        field {desc = "Interrupt Event 0 status bit";} error0_sts = 1'b0;
-        field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
+        field {desc = "Interrupt Event 0 status bit when 384-bit key is selected in HMAC512 mode";} key_mode_error_sts = 1'b0;
+        field {desc = "Interrupt Event 1 status bit when all-zero key is derived from KeyVault";} key_zero_error_sts = 1'b0;
         field {desc = "Interrupt Event 2 status bit";} error2_sts = 1'b0;
         field {desc = "Interrupt Event 3 status bit";} error3_sts = 1'b0;
     };
@@ -290,8 +290,8 @@ addrmap hmac_reg {
         default singlepulse = true;
 
         // Instantiate triggers bit-by-bit.
-        field {desc = "Interrupt Trigger 0 bit";} error0_trig = 1'b0;
-        field {desc = "Interrupt Trigger 1 bit";} error1_trig = 1'b0;
+        field {desc = "Interrupt Trigger 0 bit";} key_mode_error_trig = 1'b0;
+        field {desc = "Interrupt Trigger 1 bit";} key_zero_error_trig = 1'b0;
         field {desc = "Interrupt Trigger 2 bit";} error2_trig = 1'b0;
         field {desc = "Interrupt Trigger 3 bit";} error3_trig = 1'b0;
     };
@@ -377,8 +377,8 @@ addrmap hmac_reg {
         notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
                                                                                                                          //
         // Align this set of registers; number of counters is based on peripheral event requirements                     //
-        intr_count_t      error0_intr_count_r @0x100;  /* Per error */                                                   //
-        intr_count_t      error1_intr_count_r;         /* Per error */                                                   //
+        intr_count_t      key_mode_error_intr_count_r @0x100;  /* Per error */                                                   //
+        intr_count_t      key_zero_error_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
         intr_count_t      notif_cmd_done_intr_count_r @0x180;   /* Per notification */                                   //
@@ -388,33 +388,33 @@ addrmap hmac_reg {
         // to be implemented (requiring 2*32 32-bit registers starting at                                                //
         // offset 0x100), and still allowing the entire regfile to fit                                                   //
         // inside a 1024-byte space.                                                                                     //
-        intr_count_incr_t error0_intr_count_incr_r @0x200;             /* Per error count incrementor pulse */           //
-        intr_count_incr_t error1_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
+        intr_count_incr_t key_mode_error_intr_count_incr_r @0x200;             /* Per error count incrementor pulse */           //
+        intr_count_incr_t key_zero_error_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
         intr_count_incr_t error2_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
         intr_count_incr_t error3_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
         intr_count_incr_t notif_cmd_done_intr_count_incr_r;            /* Per notification count incrementor pulse */    //
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
-        error_internal_intr_r.error0_sts -> resetsignal = error_reset_b;
-        error_internal_intr_r.error1_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.key_mode_error_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.key_zero_error_sts -> resetsignal = error_reset_b;
         error_internal_intr_r.error2_sts -> resetsignal = error_reset_b;
         error_internal_intr_r.error3_sts -> resetsignal = error_reset_b;
-        error0_intr_count_r.cnt          -> resetsignal = error_reset_b;
-        error1_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        key_mode_error_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        key_zero_error_intr_count_r.cnt          -> resetsignal = error_reset_b;
         error2_intr_count_r.cnt          -> resetsignal = error_reset_b;
         error3_intr_count_r.cnt          -> resetsignal = error_reset_b;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */
-        error_internal_intr_r.error0_sts -> enable = error_intr_en_r.error0_en;
-        error_internal_intr_r.error1_sts -> enable = error_intr_en_r.error1_en;
+        error_internal_intr_r.key_mode_error_sts -> enable = error_intr_en_r.key_mode_error_en;
+        error_internal_intr_r.key_zero_error_sts -> enable = error_intr_en_r.key_zero_error_en;
         error_internal_intr_r.error2_sts -> enable = error_intr_en_r.error2_en;
         error_internal_intr_r.error3_sts -> enable = error_intr_en_r.error3_en;
         notif_internal_intr_r.notif_cmd_done_sts -> enable = notif_intr_en_r.notif_cmd_done_en;
 
-        error_internal_intr_r.error0_sts -> next   = error_intr_trig_r.error0_trig;
-        error_internal_intr_r.error1_sts -> next   = error_intr_trig_r.error1_trig;
+        error_internal_intr_r.key_mode_error_sts -> next   = error_intr_trig_r.key_mode_error_trig;
+        error_internal_intr_r.key_zero_error_sts -> next   = error_intr_trig_r.key_zero_error_trig;
         error_internal_intr_r.error2_sts -> next   = error_intr_trig_r.error2_trig;
         error_internal_intr_r.error3_sts -> next   = error_intr_trig_r.error3_trig;
         notif_internal_intr_r.notif_cmd_done_sts -> next   = notif_intr_trig_r.notif_cmd_done_trig;
@@ -434,17 +434,17 @@ addrmap hmac_reg {
         //       self-clearing, which results in a pulse. Must be configured
         //       to be sensitive to the interrupt trigger events for each event.
         //       The output pulse is then used to increment the ACTUAL counter
-        error0_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error0_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error0_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error0_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error0_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error0_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error0_intr_count_incr_r.pulse -> decr     = error0_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error0_intr_count_r.cnt        -> incr     = error0_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        key_mode_error_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.key_mode_error_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        key_mode_error_intr_count_incr_r.pulse -> next     = error_internal_intr_r.key_mode_error_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        key_mode_error_intr_count_incr_r.pulse -> we       = error_internal_intr_r.key_mode_error_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        key_mode_error_intr_count_incr_r.pulse -> decr     = key_mode_error_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        key_mode_error_intr_count_r.cnt        -> incr     = key_mode_error_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
-        error1_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error1_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
-        error1_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error1_sts -> next;  // /      as a pulse to increment the intr_count_r register
-        error1_intr_count_incr_r.pulse -> we       = error_internal_intr_r.error1_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error1_intr_count_incr_r.pulse -> decr     = error1_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error1_intr_count_r.cnt        -> incr     = error1_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        key_zero_error_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.key_zero_error_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
+        key_zero_error_intr_count_incr_r.pulse -> next     = error_internal_intr_r.key_zero_error_sts -> next;  // /      as a pulse to increment the intr_count_r register
+        key_zero_error_intr_count_incr_r.pulse -> we       = error_internal_intr_r.key_zero_error_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        key_zero_error_intr_count_incr_r.pulse -> decr     = key_zero_error_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        key_zero_error_intr_count_r.cnt        -> incr     = key_zero_error_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error2_intr_count_incr_r.pulse -> hwset    = error_internal_intr_r.error2_sts -> hwset; // \_____ Capture both firmware and hardware triggered events
         error2_intr_count_incr_r.pulse -> next     = error_internal_intr_r.error2_sts -> next;  // /      as a pulse to increment the intr_count_r register
