@@ -20,6 +20,15 @@
 #include "caliptra_reg.h"
 #include "riscv_hw_if.h"
 
+#define MLDSA87_SEED_SIZE 8
+#define MLDSA87_SIGN_RND_SIZE 8
+#define MLDSA87_ENTROPY_SIZE 16
+#define MLDSA87_PRIVKEY_SIZE 1224
+#define MLDSA87_PUBKEY_SIZE 648
+#define MLDSA87_MSG_SIZE 16
+#define MLDSA87_SIGN_SIZE 1157
+#define MLDSA_VERIFY_RES_SIZE 16
+
 typedef uint8_t BOOL;
 #define FALSE 0u
 #define TRUE 1u
