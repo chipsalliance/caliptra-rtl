@@ -55,13 +55,18 @@ module tlul_adapter_vh
   output logic [ID_WIDTH-1:0]   int_id_o
 );
 
+  // The adapter distinguishes between two types of VH accesses: those going to an internal register
+  // file and those targeting OpenTitan registers, with the latter ones being translated into TLUL
+  // requests while the other requests are relayed to the internal register file.
+  logic internal_access;
+  assign internal_access = addr_i >= VH_REGISTER_ADDRESS_OFFSET;
+
   // Differentiate between two levels of acknowledgements:
   //  - `req_ack`: A host-to-device request is acknowledged by the device, meaning that the response
   //    is pending.
   //  - `resp_ack`: The device-to-host response is acknowledged.
   logic pending_d, pending_q;
   logic req_ack, resp_ack;
-  logic internal_access;
 
   assign req_ack =  dv_i & tl_i.a_ready & tl_o.a_valid & ~internal_access;
   assign resp_ack = dv_i & tl_o.d_ready & tl_i.d_valid & ~internal_access;
@@ -100,11 +105,6 @@ module tlul_adapter_vh
     // unused
     a_param: 3'h0
   };
-
-  // The adapter distinguishes between two types of VH accesses: those going to an internal register
-  // file and those targeting OpenTitan registers, with the latter ones being translated into TLUL
-  // requests while the other requests are relayed to the internal register file.
-  assign internal_access = addr_i >= VH_REGISTER_ADDRESS_OFFSET;
 
   // Accesses to device registers are acknowledged with the TLUL d-channel handshake.
   assign hld_o = !pending_q && internal_access && !int_hld_i ? 1'b0 :

@@ -81,6 +81,18 @@ aes_clp_reg_pkg::aes_clp_reg__out_t hwif_out;
 
 caliptra_prim_mubi_pkg::mubi4_t aes_idle;
 
+kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
+kv_error_code_e kv_key_error;
+logic kv_key_ready, kv_key_done;
+
+logic kv_key_write_en;
+logic [2:0] kv_key_write_offset;
+logic [31:0] kv_key_write_data;
+
+edn_pkg::edn_req_t edn_req;
+
+keymgr_pkg::hw_key_req_t keymgr_key;
+
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle);
 
 //AHB interface
@@ -194,11 +206,11 @@ aes_inst (
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
   .rst_edn_ni(reset_n),
-  .edn_o(),
-  .edn_i('{edn_ack:0, edn_fips:0, edn_bus:'0}), //FIXME
+  .edn_o(edn_req),
+  .edn_i('{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:'0}), //FIXME
 
   // Key manager (keymgr) key sideload interface
-  .keymgr_key_i('0), //FIXME
+  .keymgr_key_i(keymgr_key), //FIXME
 
   // Bus interface
   .tl_i(adapter_to_aes_tl),
@@ -217,6 +229,17 @@ always_comb begin
   hwif_in.AES_VERSION[0].VERSION.next = '0; //FIXME
   hwif_in.AES_VERSION[1].VERSION.next = '0; //FIXME
 
+  //set ready when keyvault isn't busy
+  hwif_in.AES_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
+  //set error code
+  hwif_in.AES_KV_RD_KEY_STATUS.ERROR.next = kv_key_error;
+  //set valid when fsm is done
+  hwif_in.AES_KV_RD_KEY_STATUS.VALID.hwset = kv_key_done;
+  //clear valid when new request is made
+  hwif_in.AES_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
+  //clear enable when busy
+  hwif_in.AES_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
+
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //FIXME
   hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
@@ -225,7 +248,49 @@ always_comb begin
 end
 
 //keyault FSM
+//keyvault control reg macros for assigning to struct
+`CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, AES_KV_RD_KEY_CTRL)
+
+//Read Key
+kv_read_client #(
+  .DATA_WIDTH(256), //FIXME key size
+  .PAD(0)
+)
+hmac_key_kv_read
+(
+    .clk(clk),
+    .rst_b(reset_n),
+    .zeroize('0), //FIXME
+
+    //client control register
+    .read_ctrl_reg(kv_key_read_ctrl_reg),
+
+    //interface with kv
+    .kv_read(kv_read),
+    .kv_resp(kv_rd_resp),
+
+    //interface with client
+    .write_en(kv_key_write_en),
+    .write_offset(kv_key_write_offset),
+    .write_data(kv_key_write_data),
+
+    .error_code(kv_key_error),
+    .kv_ready(kv_key_ready),
+    .read_done(kv_key_done)
+);
 
 //Drive keymgr interface into AES
+always_ff @(posedge clk or negedge reset_n) begin
+  if (~reset_n) begin
+    keymgr_key.valid <= '0;
+    keymgr_key.key <= '0;
+  end
+  else begin
+    keymgr_key.valid <= '0;
+    keymgr_key.key[0] <= '0; //FIXME drive from kv
+    keymgr_key.key[1] <= '0;
+  end
+end
+
 
 endmodule

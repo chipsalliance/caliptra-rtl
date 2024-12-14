@@ -12,4 +12,304 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+#include "caliptra_defines.h"
+#include "printf.h"
+#include "aes.h"
+#include <stdint.h>
+#include <string.h>
 
+//"0388dace60b6a392f328c2b971b2fe78"
+
+void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size) {
+    int len = strlen(hex_str);
+    const uint32_t index[] = {1,0,3,2,5,4,7,6};
+    if (len % 8 != 0) {
+        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 8.\n");
+        return;
+    }
+
+    *array_size = len / 8;
+    for (int i = 0; i < *array_size; i++) {
+        uint32_t value = 0x00000000;
+        for (int j = 0; j < 8; j++) {
+            char c = hex_str[i * 8 + j];
+            uint32_t digit;
+
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            } else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            } else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            } else {
+                VPRINTF(HIGH, "Error: Invalid hex character: %c\n", c);
+                return;
+            }
+            value |= digit << (4 * index[j]);
+        }
+        array[i] = value;
+    }
+}
+
+void aes_wait_idle(){
+  while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
+}
+
+
+void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input){
+  uint8_t fail_cmd = 0x1;
+  uint32_t ciphertext[4];
+  uint32_t tag[4];
+  uint32_t partial_text_len = aes_input.text_len%16;
+  uint32_t partial_aad_len = aes_input.aad_len%16;
+  uint32_t num_blocks_text = (partial_text_len == 0) ? aes_input.text_len/16 : aes_input.text_len/16 +1;
+  uint32_t num_blocks_aad = (partial_aad_len == 0) ? aes_input.aad_len/16 : aes_input.aad_len/16 + 1;
+  uint32_t length;
+  uint32_t num_bytes;
+  uint32_t masked = 0;
+
+  // wait for AES to be idle
+  aes_wait_idle();
+
+  uint32_t aes_ctrl =
+    ((op << AES_REG_CTRL_SHADOWED_OPERATION_LOW) & AES_REG_CTRL_SHADOWED_OPERATION_MASK) |
+    ((mode << AES_REG_CTRL_SHADOWED_MODE_LOW) & AES_REG_CTRL_SHADOWED_MODE_MASK) |
+    ((key_len << AES_REG_CTRL_SHADOWED_KEY_LEN_LOW) & AES_REG_CTRL_SHADOWED_KEY_LEN_MASK) |
+    (0x0 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW) |
+    (aes_input.key.kv_intf << AES_REG_CTRL_SHADOWED_SIDELOAD_LOW);
+
+  VPRINTF(LOW, "Write AES CTRL with value 0x%x\n", aes_ctrl);
+  
+  //write shadowed ctrl twice
+  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+
+
+  if (mode == AES_GCM) {
+    aes_wait_idle();
+
+    //If GCM set CTRL_GCM to GCM_INIT
+    lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_INIT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                (16 << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+    lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_INIT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                (16 << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+  }
+
+  aes_wait_idle();
+
+  //Write the key
+  if (aes_input.key.kv_intf){
+      // Wait for KV read logic to be idle
+      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
+
+      // Program KEY Read
+      lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                      ((aes_input.key.kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+
+      // Check that AES key is loaded
+      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+  }
+  else{
+      // Load key from hw_data and write to AES
+      VPRINTF(LOW, "Load Key data to AES\n");
+      for (int j = 0; j < 8; j++) {
+        lsu_write_32(CLP_AES_REG_KEY_SHARE0_0 + j * 4, aes_input.key.key_share0[j]);
+        lsu_write_32(CLP_AES_REG_KEY_SHARE1_0 + j * 4, aes_input.key.key_share1[j]);
+      }
+  }
+
+  aes_wait_idle();
+
+  // Write IV
+  VPRINTF(LOW, "Write AES IV\n");
+  for (int j = 0; j < 4; j++) {
+    lsu_write_32((CLP_AES_REG_IV_0 + j * 4), aes_input.iv[j]);
+  }
+
+  //If GCM set CTRL_GCM to GCM_AAD
+  if ((mode == AES_GCM) && (aes_input.aad_len > 0)) {
+
+    // Write AAD to REG_DATA_IN
+    // Check INPUT_READY between blocks
+    for (int i = 0; i < num_blocks_aad; i++) {
+      if ((i==0) || ((i==(num_blocks_aad-1)) && (partial_aad_len > 0))) {
+        num_bytes = ((i==(num_blocks_aad-1)) && (partial_aad_len > 0)) ? partial_aad_len : 16;
+
+        aes_wait_idle();
+
+        VPRINTF(LOW, "Write GCM_AAD Phase, NUM_BYTES 0x%x\n", num_bytes);
+        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_AAD << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_AAD << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+      }
+
+      // Wait for INPUT_READY
+      while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
+
+      VPRINTF(LOW, "Write AES AAD Block %d\n", i);
+      for (int j = 0; j < 4; j++) {
+        VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.aad[j+i*4]);
+        lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4]);
+      }
+    }
+  }
+
+  // Wait for IDLE
+  aes_wait_idle();
+
+  if (aes_input.text_len > 0) { 
+
+    if (mode == AES_GCM) {
+      //only a partial text
+      num_bytes = (num_blocks_text == 0) ? partial_text_len : 16;
+
+      // Wait for IDLE
+      aes_wait_idle();
+
+      //set CTRL_GCM to GCM_TEXT
+      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+    }
+
+    // Write Input Data Block 0.
+    VPRINTF(LOW, "Write AES Input Data Block %d\n", 0);
+    for (int j = 0; j < 4; j++) {
+      lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j]);
+    }                      
+
+    // Wait for INPUT_READY
+    while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
+
+    //If first block was partial, or this block is partial set valid bytes
+    if ((mode == AES_GCM) && (num_blocks_text <= 1) && (partial_text_len > 0)) {
+      //If we only had one block, set to 0. Else use partial length
+      num_bytes = (num_blocks_text == 0) ? 0 : partial_text_len;
+
+      aes_wait_idle();
+
+      //set CTRL_GCM to GCM_TEXT
+      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+    }
+
+    VPRINTF(LOW, "Write AES Input Data Block %d\n", 1);
+    for (int j = 0; j < 4; j++) {
+      lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j + 4]);
+    }  
+
+    // For Data Block I=0,...,N-1
+    for (int i = 0; i < num_blocks_text; i++) {
+
+      // Wait for OUTPUT_VALID bit
+      while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
+
+      // Read Output Data Block I
+      for (int j = 0; j < 4; j++) {
+        ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
+        VPRINTF(LOW, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+
+        //byte mask
+        uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
+        //this is the last block, and the partial is inside this dword
+        if ((i == num_blocks_text-1) && (partial_text_len > 0) && (partial_text_len >= j*4) && (partial_text_len < (j+1)*4)) {
+          mask = (1 << (partial_text_len%4)*8) - 1;
+          masked = 0x1;
+        }
+
+        if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
+          VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+          VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+          VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
+          VPRINTF(FATAL,"%c", fail_cmd);
+          while(1);
+        }
+      }
+
+      if ((num_blocks_text > 2) && (i < (num_blocks_text - 2))) {
+        //If last block is partial, write the valid bytes
+        if ((mode == AES_GCM) && (i == (num_blocks_text-3)) && (partial_text_len > 0)) {
+          num_bytes = partial_text_len;
+
+          aes_wait_idle();
+
+          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+        }
+
+        // Write Input Data Block I.
+        VPRINTF(LOW, "Write AES Input Data Block %d\n", i+2);
+        for (int j = 0; j < 4; j++) {
+          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j + 4 * (i + 2)]);
+        }
+      }
+    }
+  }
+
+  // Wait for IDLE
+  aes_wait_idle();
+
+  if (mode == AES_GCM) {
+    // If GCM set CTRL_GCM to GCM_TAG
+    lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TAG << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                (16 << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+    lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TAG << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                (16 << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+
+    //Write Input Data Block containing length of AAD and length of ciphertext
+    //compute length of AAD
+    length = aes_input.aad_len << 3; //convert length from bytes to bits
+    length = ((length<<24) & 0xff000000) | //swap the bytes
+             ((length<< 8) & 0x00ff0000) |
+             ((length>> 8) & 0x0000ff00) |
+             ((length>>24) & 0x000000ff);
+
+    VPRINTF(HIGH, "Write AAD Length: 0x%x\n", length);
+    lsu_write_32(CLP_AES_REG_DATA_IN_0, 0);
+    lsu_write_32(CLP_AES_REG_DATA_IN_1, length);
+
+    //compute length of text
+    length = aes_input.text_len << 3; //convert length from bytes to bits
+    length = ((length<<24) & 0xff000000) | //swap the bytes
+             ((length<< 8) & 0x00ff0000) |
+             ((length>> 8) & 0x0000ff00) |
+             ((length>>24) & 0x000000ff);
+
+    VPRINTF(HIGH, "Write Text Length: 0x%x\n", length);
+    lsu_write_32(CLP_AES_REG_DATA_IN_2, 0);
+    lsu_write_32(CLP_AES_REG_DATA_IN_3, length);
+
+    // Wait for OUTPUT_VALID bit
+    while ((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
+
+    //compare output data to expected tag
+    // Read Output Data Block I
+    for (int j = 0; j < 4; j++) {
+      tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
+      VPRINTF(LOW, "TAG: 0x%x\n", tag[j]);
+      if (tag[j] != aes_input.tag[j]) {
+        VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
+        VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
+        VPRINTF(FATAL,"Expected data: 0x%x\n", aes_input.tag[j]);
+        VPRINTF(FATAL,"%c", fail_cmd);
+        while(1);
+      }
+    }
+  }
+
+  // Disable autostart. Note the control register is shadowed and thus needs to be written twice.
+  aes_ctrl = 0x1 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW;
+  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+
+  // Clear all key, IV, Input Data and Output Data registers.
+  lsu_write_32(CLP_AES_REG_TRIGGER, (0x1 << AES_REG_TRIGGER_KEY_IV_DATA_IN_CLEAR_LOW) |
+                                     (0x1 << AES_REG_TRIGGER_DATA_OUT_CLEAR_LOW));
+
+}

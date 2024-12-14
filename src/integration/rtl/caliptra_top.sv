@@ -973,8 +973,8 @@ aes_clp_wrapper #(
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
 
     // kv interface
-    .kv_read(),
-    .kv_rd_resp('0),
+    .kv_read(kv_read[5]),
+    .kv_rd_resp(kv_rd_resp[5]),
 
     .busy_o(aes_busy),
 
