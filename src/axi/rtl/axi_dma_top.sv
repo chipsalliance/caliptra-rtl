@@ -36,6 +36,7 @@ import soc_ifc_pkg::*;
     // Should only assert when a full block_size of data is available at the
     // recovery interface FIFO
     input logic recovery_data_avail,
+    input logic recovery_image_activated,
 
     // SOC_IFC Internal Signaling
     input logic mbox_lock,
@@ -104,6 +105,7 @@ import soc_ifc_pkg::*;
         // Should only assert when a full block_size of data is available at the
         // recovery interface FIFO
         .recovery_data_avail(recovery_data_avail),
+        .recovery_image_activated(recovery_image_activated),
 
         // Internal Signaling
         .mbox_lock(mbox_lock),

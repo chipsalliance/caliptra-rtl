@@ -44,10 +44,20 @@ package axi_dma_reg_pkg;
     } axi_dma_reg__status0__axi_dma_fsm_ps__in_t;
 
     typedef struct packed{
+        logic next;
+    } axi_dma_reg__status0__payload_available__in_t;
+
+    typedef struct packed{
+        logic next;
+    } axi_dma_reg__status0__image_activated__in_t;
+
+    typedef struct packed{
         axi_dma_reg__status0__busy__in_t busy;
         axi_dma_reg__status0__error__in_t error;
         axi_dma_reg__status0__fifo_depth__in_t fifo_depth;
         axi_dma_reg__status0__axi_dma_fsm_ps__in_t axi_dma_fsm_ps;
+        axi_dma_reg__status0__payload_available__in_t payload_available;
+        axi_dma_reg__status0__image_activated__in_t image_activated;
     } axi_dma_reg__status0__in_t;
 
     typedef struct packed{

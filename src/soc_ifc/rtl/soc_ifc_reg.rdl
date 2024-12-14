@@ -16,5 +16,6 @@ addrmap soc_ifc_reg {
     `include "soc_ifc_reg_properties.rdl"
     `include "soc_ifc_external_reg.rdl"
     `include "soc_ifc_fuse_reg.rdl"
+    `include "soc_ifc_subsystem_reg.rdl"
     `include "soc_ifc_internal_reg.rdl"
 };

@@ -43,6 +43,7 @@ void main(void) {
         volatile uint32_t * doe_notif_trig        = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         volatile uint32_t * ecc_notif_trig        = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         volatile uint32_t * hmac_notif_trig       = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
+        volatile uint32_t * hmac_error_trig       = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R);
         volatile uint32_t * sha512_notif_trig     = (uint32_t *) (CLP_SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         volatile uint32_t * sha256_notif_trig     = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
         volatile uint32_t * sha512_acc_notif_trig = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R);
@@ -53,6 +54,8 @@ void main(void) {
         volatile uint32_t * sha256_notif_ctr         = (uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         volatile uint32_t * sha512_acc_notif_ctr     = (uint32_t *) (CLP_SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         volatile uint32_t * hmac_notif_ctr           = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
+        volatile uint32_t * hmac_error_key_mode_ctr  = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_KEY_MODE_ERROR_INTR_COUNT_R);
+        volatile uint32_t * hmac_error_key_zero_ctr  = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_KEY_ZERO_ERROR_INTR_COUNT_R);        
         volatile uint32_t * ecc_notif_ctr            = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         volatile uint32_t * doe_notif_ctr            = (uint32_t *) (CLP_DOE_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R);
         volatile uint32_t * soc_ifc_error_internal_ctr     = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R);
@@ -73,7 +76,9 @@ void main(void) {
         uint32_t sha512_intr_count = 0;
         uint32_t sha256_intr_count = 0;
         uint32_t sha512_acc_intr_count = 0;
-        uint32_t hmac_intr_count = 0;
+        uint32_t hmac_notif_intr_count = 0;
+        uint32_t hmac_error_intr_count = 0;
+        uint32_t hmac_error_intr_count_hw = 0;
         uint32_t ecc_intr_count = 0;
         uint32_t doe_intr_count = 0;
         uint32_t soc_ifc_notif_intr_count = 0;
@@ -93,25 +98,28 @@ void main(void) {
         // Busy loop
         while (intr_count < 64) {
             // Trigger interrupt manually
-            if ((intr_count % 0x13) >= 0x12) {
+            if ((intr_count % 0x15) >= 0x14) { //14-15
+                *hmac_error_trig = 1 << (intr_count % 0x2);
+                hmac_error_intr_count++;
+            } else if ((intr_count % 0x15) >= 0x12) {
                 *sha512_notif_trig = SHA512_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x11) {
+            } else if ((intr_count % 0x15) >= 0x11) {
                 *sha256_notif_trig = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha256_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x10) {
+            } else if ((intr_count % 0x15) >= 0x10) {
                 *sha512_acc_notif_trig = SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 sha512_acc_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x0F) {
+            } else if ((intr_count % 0x15) >= 0x0F) {
                 *hmac_notif_trig = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
-                hmac_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x0E) {
+                hmac_notif_intr_count++;
+            } else if ((intr_count % 0x15) >= 0x0E) {
                 *ecc_notif_trig = ECC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 ecc_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x0D) {
+            } else if ((intr_count % 0x15) >= 0x0D) {
                 *doe_notif_trig = DOE_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK;
                 doe_intr_count++;
-            } else if ((intr_count % 0x13) >= 0x08) { //8-C
+            } else if ((intr_count % 0x15) >= 0x08) { //8-C
                 *soc_ifc_notif_trig = 1 << (intr_count % 0x5);
                 soc_ifc_notif_intr_count++;
             } else { //0-7
@@ -153,14 +161,23 @@ void main(void) {
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
-        // HMAC
-        VPRINTF(MEDIUM, "HMAC fw count: %x\n", hmac_intr_count);
-        VPRINTF(MEDIUM, "HMAC hw count: %x\n", *hmac_notif_ctr);
-        if (hmac_intr_count != *hmac_notif_ctr) {
-            VPRINTF(ERROR, "HMAC count mismatch!\n");
+        // HMAC Notif
+        VPRINTF(MEDIUM, "HMAC fw Notif count: %x\n", hmac_notif_intr_count);
+        VPRINTF(MEDIUM, "HMAC hw Notif count: %x\n", *hmac_notif_ctr);
+        if (hmac_notif_intr_count != *hmac_notif_ctr) {
+            VPRINTF(ERROR, "HMAC Notif count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
+        // HMAC Error
+        VPRINTF(MEDIUM, "HMAC fw Err count: %x\n", hmac_error_intr_count);
+        VPRINTF(MEDIUM, "HMAC hw Err count: %x\n", *hmac_notif_ctr);
+        hmac_error_intr_count_hw =  *hmac_error_key_mode_ctr +
+                                    *hmac_error_key_zero_ctr;
+        if (hmac_error_intr_count != hmac_error_intr_count_hw) {
+            VPRINTF(ERROR, "HMAC Err count mismatch!\n");
+            SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
+        }
         // ECC
         VPRINTF(MEDIUM, "ECC fw count: %x\n", ecc_intr_count);
         VPRINTF(MEDIUM, "ECC hw count: %x\n", *ecc_notif_ctr);
@@ -209,7 +226,7 @@ void main(void) {
 
         // Print total interrupt count
         VPRINTF(MEDIUM, "main end - intr_cnt:%x\n", intr_count);
-        if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + soc_ifc_notif_intr_count_hw) {
+        if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + hmac_error_intr_count_hw + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + soc_ifc_notif_intr_count_hw) {
             VPRINTF(ERROR, "TOTAL count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }

@@ -127,6 +127,13 @@ module hmac
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   logic core_tag_we;
+
+  logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
+  logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
+
+  logic error_flag;
+  logic error_flag_reg;
+  logic error_flag_edge;
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -147,7 +154,7 @@ module hmac
                            lfsr_seed_reg[06], lfsr_seed_reg[07], lfsr_seed_reg[08], lfsr_seed_reg[09], lfsr_seed_reg[10], lfsr_seed_reg[11]};
   
   //rising edge detect on core tag valid
-  assign core_tag_we = core_tag_valid & ~tag_valid_reg;
+  assign core_tag_we = (core_tag_valid & ~tag_valid_reg) & ~error_flag_reg;
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -206,7 +213,7 @@ module hmac
         end
       else
         begin
-          tag_valid_reg <= core_tag_valid;
+          tag_valid_reg <= core_tag_valid & ~error_flag_reg;
           ready_reg     <= core_ready; 
 
           //write to sw register
@@ -351,10 +358,39 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == 512'b0);
+
+always_comb error_flag = key_zero_error | key_mode_error;
+
+always_ff @(posedge clk or negedge reset_n) 
+begin : error_detection
+    if(!reset_n) begin
+      error_flag_reg <= 1'b0;
+      key_mode_error_reg <= 1'b0;
+      key_zero_error_reg <= 1'b0;
+    end
+    else if(zeroize_reg) begin
+      error_flag_reg <= 1'b0;
+      key_mode_error_reg <= 1'b0;
+      key_zero_error_reg <= 1'b0;
+    end
+    else begin
+      if (error_flag)
+        error_flag_reg <= 1'b1;
+      key_mode_error_reg <= key_mode_error;
+      key_zero_error_reg <= key_zero_error;
+    end
+end // error_detection
+
+always_comb error_flag_edge = error_flag & (!error_flag_reg);
+always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
+always_comb key_zero_error_edge = key_zero_error & (!key_zero_error_reg);
+
 //Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
-assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset = key_mode_error_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset = key_zero_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 

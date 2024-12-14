@@ -267,7 +267,7 @@ void mbox_fw() {
     uint32_t data;
 
     //set ready for FW
-    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS, SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);
 
     // Roughly equivalent to .rept 99 "nop" since the loop requires 3 (5?) ops each iteration
     // nop

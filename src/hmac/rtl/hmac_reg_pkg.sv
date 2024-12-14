@@ -126,26 +126,26 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic hwset;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__key_mode_error_sts_enable_28f0af4b_next_7027a86d_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__key_zero_error_sts_enable_8d7a01ba_next_938a4efa_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__key_mode_error_sts_enable_28f0af4b_next_7027a86d_resetsignal_939e99d4__in_t key_mode_error_sts;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__key_zero_error_sts_enable_8d7a01ba_next_938a4efa_resetsignal_939e99d4__in_t key_zero_error_sts;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__in_t;
 
     typedef struct packed{
         logic hwset;
@@ -156,7 +156,7 @@ package hmac_reg_pkg;
     } hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t;
 
     typedef struct packed{
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t error_internal_intr_r;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__in_t error_internal_intr_r;
         hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__in_t notif_internal_intr_r;
     } hmac_reg__intr_block_t__in_t;
 
@@ -317,7 +317,7 @@ package hmac_reg_pkg;
 
     typedef struct packed{
         logic intr;
-    } hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t;
+    } hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__out_t;
 
     typedef struct packed{
         logic intr;
@@ -326,7 +326,7 @@ package hmac_reg_pkg;
     typedef struct packed{
         hmac_reg__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         hmac_reg__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
-        hmac_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t error_internal_intr_r;
+        hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183__out_t error_internal_intr_r;
         hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e__out_t notif_internal_intr_r;
     } hmac_reg__intr_block_t__out_t;
 

@@ -28,6 +28,7 @@ reg {
     rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
     rw_rw_sticky_hw crypto_err=0;       /* Crypto parallel operation error No Mask */ 
+    field {sw=r; hw=w;} rsvd[28]=28'h0;
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
@@ -51,6 +52,7 @@ reg {
     rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
     rw_rw_sticky_hw mbox_prot_ooo=0;     /* Register access out-of-order */
     rw_rw_sticky_hw mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
+    field {sw=r; hw=w;} rsvd[29]=29'h0;
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";
@@ -124,7 +126,7 @@ reg {
     rw_ro status[24]=0;
     field {desc="DEV ID CSR ready";                                          sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} idevid_csr_ready[1]=0;
     field {desc="Boot FSM State";                                            sw=r;                   hw=w ; /* no storage, no reset */} boot_fsm_ps[3];
-    field {desc="Indicates Caliptra is ready for Firmware Download";         sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_fw[1]=0;
+    field {desc="Indicates Caliptra is ready for Mailbox operations";        sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_mb_processing[1]=0;
     field {desc="Indicates Caliptra is ready for RT flows";                  sw=rw; swwel = soc_req; hw=r ; resetsignal = cptra_rst_b;} ready_for_runtime[1]=0;
     field {desc="Indicates Caliptra is ready for Fuses to be programmed.
                  Read-only to both Caliptra and SOC.";                       sw=r;                   hw=w ; /* no storage, no reset */} ready_for_fuses[1];
@@ -175,7 +177,7 @@ reg {
 
 //FIXME: Should LOCK be W1 here?
 reg {
-    name = "Valid ID Register Lock";
+    name = "Valid USER Register Lock";
      desc = "Valid AXI_USER attributes for requests from SoC AXI Interface.
              [br]Each bit corresponds to locking the associated MBOX_VALID_AXI_USER register.
              [br]Associated MBOX_VALID_AXI_USER register is only valid once locked by this bit.
@@ -195,7 +197,7 @@ reg {
  } CPTRA_TRNG_VALID_AXI_USER;
 
 reg {
-    name = "Valid ID for TRNG AXI_USER Lock";
+    name = "Valid USER for TRNG AXI_USER Lock";
     desc = "Valid AXI USER attributes for requests from SoC AXI Interface.
             [br]Each bit corresponds to locking the associated TRNG_VALID_AXI_USER register.
             [br]Associated TRNG_VALID_AXI_USER register is only valid once locked by this bit.
@@ -329,10 +331,9 @@ reg {
             [br]SOC Access:      RO";
     // No storage, i.e. no resetsignal
     field {sw=r; hw=w;} iTRNG_en;
-    field {sw=r; hw=w;} QSPI_en;
-    field {sw=r; hw=w;} I3C_en;
-    field {sw=r; hw=w;} UART_en;
+    field {sw=r; hw=w;} RSVD_en[3];
     field {sw=r; hw=w;} LMS_acc_en;
+    field {sw=r; hw=w;} ACTIVE_MODE_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1
@@ -450,3 +451,46 @@ reg {
             [br]SOC Access:      RW";
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[32]=0;
  } CPTRA_RSVD_REG[2];
+
+reg {
+    name = "Caliptra HW Capabilities";
+    desc = "Caliptra HW Capabilities. Initialized with reset values, rewritable by Caliptra firmware.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            [br]Read-only once locked.";
+    field {sw=rw; swwel; resetsignal=cptra_rst_b;} cap[32]=32'h0;
+} CPTRA_HW_CAPABILITIES;
+
+reg {
+    name = "Caliptra FW Capabilities";
+    desc = "Caliptra FW Capabilities. Initialized with reset values, rewritable by Caliptra firmware.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            [br]Read-only once locked.";
+    field {sw=rw; swwel; resetsignal=cptra_rst_b;} cap[32]=32'h0;
+} CPTRA_FW_CAPABILITIES;
+
+reg {
+    name = "Caliptra Capabilities Lock";
+    desc = "Lock register to disable further firmware modifications to capabilities registers.
+            [br]Once set, this register may not be cleared until a warm reset. If set, the values in CPTRA_HW_CAPABILITIES and CPTRA_FW_CAPABILITIES may not be modified.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO
+            [br]Read-only once locked.";
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} lock = 1'b0;
+} CPTRA_CAP_LOCK;
+
+reg {
+    desc = "Owner PK hash lockable register.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    field {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;} hash[32]=0;
+} CPTRA_OWNER_PK_HASH[12] @0x140;
+
+reg {
+    name = "Owner PK hash register lock";
+    desc = "Owner PK hash register lock. Locks further writes to Owner PK hash register. Reset only by power cycle.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RW1-S";
+    field {sw=rw; hw=r; swwe; resetsignal=cptra_pwrgood;} lock=0;
+} CPTRA_OWNER_PK_HASH_LOCK;

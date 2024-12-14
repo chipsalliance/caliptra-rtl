@@ -270,6 +270,18 @@ void caliptra_rt() {
 
         if (cptra_intr_rcv.hmac_error      ) {
             VPRINTF(ERROR, "Intr received: hmac_error\n");
+            if (cptra_intr_rcv.hmac_error & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK) {
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.hmac_error, ~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK)
+            }
+            if (cptra_intr_rcv.hmac_error & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK) {
+                CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.hmac_error, ~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK)
+            }
+            if (cptra_intr_rcv.hmac_error & (~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK &
+                                             ~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK)) {
+                VPRINTF(FATAL, "Intr received: unsupported hmac_error (0x%x)\n", cptra_intr_rcv.hmac_error);
+                SEND_STDOUT_CTRL(0x1);
+                while(1);
+            }
         }
 
         if (cptra_intr_rcv.kv_error        ) {

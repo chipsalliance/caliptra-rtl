@@ -53,7 +53,7 @@ void main () {
     VPRINTF(LOW, "----------------------------------\n");
 
     //set ready for FW so tb will push FW
-    soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FW_MASK);
+    soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);
 
     // Sleep
     for (uint16_t slp = 0; slp < 33; slp++);
