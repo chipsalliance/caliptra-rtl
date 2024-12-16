@@ -657,7 +657,7 @@ addrmap entropy_src {
     } FW_OV_SHA3_START @ 0xB4;
     reg {
         field {
-            desc = "\"When this bit is clear, writes to the FW_OV_WR_DATA register are allowed.
+            desc = "When this bit is clear, writes to the FW_OV_WR_DATA register are allowed.
             If this bit is set, it is the equivalent to a FIFO full condition, and writes
             to the FW_OV_WR_DATA register must be delayed until this bit is reset.";
             sw = r;
@@ -677,7 +677,8 @@ addrmap entropy_src {
         field {
             desc = "A read of this register pops and returns the top of the observe FIFO.
             For this to work, the !!FW_OV_CONTROL.FW_OV_MODE field needs to be set to `kMultiBitBool4True`
-            In addition, the otp_en_entropy_src_fw_over input needs to be set to `kMultiBitBool8True`.";
+            In addition, the otp_en_entropy_src_fw_over input needs to be set to `kMultiBitBool8True`.
+            Reading this register while the observe FIFO is empty results in a fatal error with !!ERR_CODE.FIFO_READ_ERR and !!ERR_CODE.SFIFO_OBSERVE_ERR going high.";
             sw = r;
         } FW_OV_RD_DATA[31:0];
     } FW_OV_RD_DATA @ 0xC0;
