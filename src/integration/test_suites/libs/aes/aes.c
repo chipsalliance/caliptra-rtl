@@ -156,54 +156,35 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   }
 
   // Wait for IDLE
-  aes_wait_idle();
+  //aes_wait_idle();
 
   if (aes_input.text_len > 0) { 
-
-    if (mode == AES_GCM) {
-      //only a partial text
-      num_bytes = (num_blocks_text == 0) ? partial_text_len : 16;
-
-      // Wait for IDLE
-      aes_wait_idle();
-
-      //set CTRL_GCM to GCM_TEXT
-      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-    }
-
-    // Write Input Data Block 0.
-    VPRINTF(LOW, "Write AES Input Data Block %d\n", 0);
-    for (int j = 0; j < 4; j++) {
-      lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j]);
-    }                      
-
-    // Wait for INPUT_READY
-    while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
-
-    //If first block was partial, or this block is partial set valid bytes
-    if ((mode == AES_GCM) && (num_blocks_text <= 1) && (partial_text_len > 0)) {
-      //If we only had one block, set to 0. Else use partial length
-      num_bytes = (num_blocks_text == 0) ? 0 : partial_text_len;
-
-      aes_wait_idle();
-
-      //set CTRL_GCM to GCM_TEXT
-      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-      lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                  (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-    }
-
-    VPRINTF(LOW, "Write AES Input Data Block %d\n", 1);
-    for (int j = 0; j < 4; j++) {
-      lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j + 4]);
-    }  
-
     // For Data Block I=0,...,N-1
     for (int i = 0; i < num_blocks_text; i++) {
+      
+      //Check if first block or a partial last block
+      if ((mode == AES_GCM) && ((i == 0) || ((i == num_blocks_text-1) && (partial_text_len > 0)))) {
+        //Set num bytes for the last block (could be first also)
+        num_bytes = ((i == num_blocks_text-1) && (partial_text_len > 0)) ?  partial_text_len : 16;
+
+        // Wait for IDLE
+        aes_wait_idle();
+
+        //set CTRL_GCM to GCM_TEXT
+        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+      }
+
+      // Wait for INPUT_READY
+      while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
+
+      // Write Input Data Block.
+      VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
+      for (int j = 0; j < 4; j++) {
+        lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
+      }                      
 
       // Wait for OUTPUT_VALID bit
       while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
@@ -227,26 +208,6 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
           VPRINTF(FATAL,"%c", fail_cmd);
           while(1);
-        }
-      }
-
-      if ((num_blocks_text > 2) && (i < (num_blocks_text - 2))) {
-        //If last block is partial, write the valid bytes
-        if ((mode == AES_GCM) && (i == (num_blocks_text-3)) && (partial_text_len > 0)) {
-          num_bytes = partial_text_len;
-
-          aes_wait_idle();
-
-          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-        }
-
-        // Write Input Data Block I.
-        VPRINTF(LOW, "Write AES Input Data Block %d\n", i+2);
-        for (int j = 0; j < 4; j++) {
-          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j + 4 * (i + 2)]);
         }
       }
     }
