@@ -71,7 +71,7 @@ void end_sim_if_itrng_disabled() {
 void enable_csrng() {
   uint32_t read_data;
   printf("Enabling entropy_src\n");
-  lsu_write_32(CLP_ENTROPY_SRC_REG_CONF, 0x909099);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_CONF, 0x2649999);
   lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE, 0x6);
 
   printf("Enabling csrng\n");
