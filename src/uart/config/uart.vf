@@ -52,6 +52,7 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_arb.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_intr_hw.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_onehot_check.sv
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_onehot_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_mubi8_sync.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_fifo_sync_cnt.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_buf.sv
