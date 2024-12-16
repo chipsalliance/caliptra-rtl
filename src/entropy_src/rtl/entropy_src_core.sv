@@ -988,7 +988,9 @@ module entropy_src_core
   end : gen_err_code_test_bit
 
   // alert - send all interrupt sources to the alert for the fatal case
-  assign fatal_alert_o = event_es_fatal_err;
+  assign fatal_alert_o = (event_es_fatal_err |
+                          sfifo_distr_int_err | sfifo_esrng_int_err |
+                          sfifo_observe_int_err | sfifo_esfinal_int_err);
 
   // alert test
   assign recov_alert_test_o = {

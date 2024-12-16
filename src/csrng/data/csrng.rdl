@@ -134,18 +134,55 @@ addrmap csrng {
     } CMD_REQ @ 0x18;
     reg {
         field {
-            desc = "This bit indicates when the command interface is ready to accept commands.";
-            sw = r;
-        } CMD_RDY[0:0] = 0x1;
+            desc = "Setting this field will set the number of generate requests that can be
+            made to CSRNG before a reseed request needs to be made.
+            This register supports a maximum of 2^32 requests between reseeds.
+            This register will be compared to a counter, which counts the number of
+            generate commands between reseed or instantiate commands.
+            If the counter reaches the value of this register, the violating command
+            will be acknowledged with a status error.
+            If the violating command was issued by a HW instance, an interrupt will
+            be triggered.";
+            sw = rw;
+        } RESEED_INTERVAL[31:0] = 0xFFFFFFFF;
+    } RESEED_INTERVAL @ 0x1C;
+    reg {
         field {
-            desc = "This one bit field is the status code returned with the application command ack.
+            desc = "This bit indicates when the command interface is ready to accept commands.
+            Before starting to write a new command to !!SW_CMD_REQ, this field needs to be polled.
+            0b0: CSRNG is not ready to accept commands or the last command hasn't been acked yet.
+            0b1: CSRNG is ready to accept the next command.";
+            sw = r;
+        } CMD_RDY[1:1] = 0x0;
+        field {
+            desc = "This one bit field indicates when a SW command has been acknowledged by the CSRNG.
+            It is set to low each time a new command is written to !!CMD_REQ.
+            The field is set to high once a SW command request has been acknowledged by the CSRNG.
+            0b0: The last SW command has not been acknowledged yet.
+            0b1: The last SW command has been acknowledged.";
+            sw = r;
+        } CMD_ACK[2:2] = 0x0;
+        field {
+            desc = "This field represents the status code returned with the application command ack.
             It is updated each time a command ack is asserted on the internal application
             interface for software use.
-            0b0: Request completed successfully
-            0b1: Request completed with an error";
+            To check whether a command was succesful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
+            !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.
+            0x0: Request completed successfully.
+            0x1: Request completed with an invalid application command error.
+                 This error indicates that the issued application command doesn't represent a valid operation.
+                 If this error appears, the main state machine will hang and the entropy complex has to be restarted.
+            0x2: Request completed with an invalid counter drbg generation command error.
+                 This error indicates that CSRNG entropy was generated for a command that is not a generate command.
+                 In this case the entropy should not be considered as valid.
+            0x3: This error indicates that the last command was issued out of sequence.
+                 This happens when a command other than instantiate was issued without sending an instantiate command first.
+                 This can also happen when an uninstantiate command is sent without instantiating first.
+            0x4: This error indicates that the number of generate commands between reseeds exceeded the maximum number allowed.
+                 This happens only for generate commands.";
             sw = r;
-        } CMD_STS[1:1] = 0x0;
-    } SW_CMD_STS @ 0x1C;
+        } CMD_STS[5:3] = 0x0;
+    } SW_CMD_STS @ 0x20;
     reg {
         field {
             desc = "This bit is set when genbits are available on this application interface.";
@@ -155,7 +192,7 @@ addrmap csrng {
             desc = "This bit is set when genbits are FIPS/CC compliant.";
             sw = r;
         } GENBITS_FIPS[1:1];
-    } GENBITS_VLD @ 0x20;
+    } GENBITS_VLD @ 0x24;
     reg {
         field {
             desc = "Reading this register will get the generated bits that were requested with
@@ -168,7 +205,7 @@ addrmap csrng {
             Otherwise, the register reads as 0.";
             sw = r;
         } GENBITS[31:0];
-    } GENBITS @ 0x24;
+    } GENBITS @ 0x28;
     reg {
         field {
             desc = "Setting this field will set the number for which internal state can be
@@ -182,7 +219,7 @@ addrmap csrng {
             that the !!INT_STATE_VAL read back is accurate.";
             sw = rw;
         } INT_STATE_NUM[3:0];
-    } INT_STATE_NUM @ 0x28;
+    } INT_STATE_NUM @ 0x2C;
     reg {
         field {
             desc = "Reading this register will dump out the contents of the selected internal state field.
@@ -196,7 +233,7 @@ addrmap csrng {
             Otherwise, the register reads as 0.";
             sw = r;
         } INT_STATE_VAL[31:0];
-    } INT_STATE_VAL @ 0x2C;
+    } INT_STATE_VAL @ 0x30;
     reg {
         field {
             desc = "Reading this register indicates whether one of the CSRNG HW instances has
@@ -208,7 +245,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } HW_EXC_STS[15:0];
-    } HW_EXC_STS @ 0x30;
+    } HW_EXC_STS @ 0x34;
     reg {
         field {
             desc = "This bit is set when the ENABLE field in the !!CTRL register is set to
@@ -246,12 +283,32 @@ addrmap csrng {
             onwrite = woclr;
         } CS_BUS_CMP_ALERT[12:12];
         field {
-            desc = "This bit is set when an unsupported/illegal CSRNG command is being processed.
-            The main FSM will hang unless the module enable field is set to the disabled state.";
+            desc = "This bit is set when an unsupported/illegal CSRNG command is received by the
+            main state machine.
+            The invalid command is ignored and CSRNG continues to operate.
+            Writing a zero resets this status bit.";
             sw = rw;
             onwrite = woclr;
         } CS_MAIN_SM_ALERT[13:13];
-    } RECOV_ALERT_STS @ 0x34;
+        field {
+            desc = "This bit is set when an out of order command is received by the main state machine.
+            This happens when an instantiate command is sent for a state that was already
+            instantiated or when any command other than instantiate is sent for a state that
+            wasn't instantiated yet.
+            The invalid command is ignored and CSRNG continues to operate.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } CS_MAIN_SM_INVALID_CMD_SEQ[14:14];
+        field {
+            desc = "This bit is set when the maximum number of generate requests between reseeds is
+            exceeded.
+            The invalid generate command is ignored and CSRNG continues to operate.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } CMD_STAGE_RESEED_CNT_ALERT[15:15];
+    } RECOV_ALERT_STS @ 0x38;
     reg {
         field {
             desc = "This bit will be set to one when an error has been detected for the
@@ -436,7 +493,7 @@ addrmap csrng {
             This bit will stay set until the next reset.";
             sw = r;
         } FIFO_STATE_ERR[30:30];
-    } ERR_CODE @ 0x38;
+    } ERR_CODE @ 0x3C;
     reg {
         field {
             desc = "Setting this field will set the bit number for which an error
@@ -447,12 +504,12 @@ addrmap csrng {
             an interrupt or an alert.";
             sw = rw;
         } ERR_CODE_TEST[4:0];
-    } ERR_CODE_TEST @ 0x3C;
+    } ERR_CODE_TEST @ 0x40;
     reg {
         field {
             desc = "This is the state of the CSRNG main state machine.
             See the RTL file `csrng_main_sm` for the meaning of the values.";
             sw = r;
         } MAIN_SM_STATE[7:0] = 0x4E;
-    } MAIN_SM_STATE @ 0x40;
+    } MAIN_SM_STATE @ 0x44;
 };

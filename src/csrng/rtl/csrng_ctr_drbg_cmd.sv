@@ -6,6 +6,8 @@
 //
 // Accepts all csrng commands
 
+`include "caliptra_prim_assert.sv"
+
 module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
   parameter logic [31:0] Cmd = 3,
   parameter logic [31:0] StateId = 4,
@@ -33,7 +35,7 @@ module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
   input logic                ctr_drbg_cmd_fips_i,
 
   output logic               ctr_drbg_cmd_ack_o, // final ack when update process has been completed
-  output logic               ctr_drbg_cmd_sts_o, // final ack status
+  output csrng_cmd_sts_e     ctr_drbg_cmd_sts_o, // final ack status
   input logic                ctr_drbg_cmd_rdy_i, // ready to process the ack above
   output logic [Cmd-1:0]     ctr_drbg_cmd_ccmd_o,
   output logic [StateId-1:0] ctr_drbg_cmd_inst_id_o,
@@ -211,8 +213,8 @@ module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
          '0;
 
   assign prep_rc =
-         (cmdreq_ccmd == INS) ? {{(CtrLen-1){1'b0}},1'b1} :
-         (cmdreq_ccmd == RES) ? {{(CtrLen-1){1'b0}},1'b1} :
+         (cmdreq_ccmd == INS) ? {{(CtrLen-1){1'b0}},1'b0} :
+         (cmdreq_ccmd == RES) ? {{(CtrLen-1){1'b0}},1'b0} :
          (cmdreq_ccmd == GEN) ? cmdreq_rc :
          (cmdreq_ccmd == UPD) ? cmdreq_rc :
          '0;
@@ -317,9 +319,6 @@ module csrng_ctr_drbg_cmd import csrng_pkg::*; #(
 
   // block ack
   assign ctr_drbg_cmd_ack_o = sfifo_keyvrc_pop;
-
-  assign ctr_drbg_cmd_sts_o = sfifo_keyvrc_pop && (ctr_drbg_cmd_ccmd_o == UNI) &&
-         ((KeyLen == unsigned'(0)) && (BlkLen == unsigned'(0)) && (CtrLen == unsigned'(0)));
-
+  assign ctr_drbg_cmd_sts_o = CMD_STS_SUCCESS;
 
 endmodule
