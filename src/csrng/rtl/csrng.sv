@@ -99,8 +99,7 @@ module csrng
     .hrdata_o,
     .reg2hw,
     .hw2reg,
-    .intg_err_o(intg_err_alert[1]),
-    .devmode_i(1'b1)
+    .intg_err_o(intg_err_alert[1])
   );
 
   csrng_core #(
