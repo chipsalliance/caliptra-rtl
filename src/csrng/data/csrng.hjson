@@ -387,26 +387,82 @@
         }
       ]
     },
-    { multireg: {
-      name: "RESEED_COUNTER",
+    # Our reg_json.py doesn't support multireg, so expand all instances.
+    # { multireg: {
+    #   name: "RESEED_COUNTER",
+    #   desc: '''
+    #     Reseed counter.
+    #
+    #     The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+    #   '''
+    #   count: "NumApps",
+    #   cname: "RESEED_COUNTER",
+    #   swaccess: "ro",
+    #   hwaccess: "hwo",
+    #   hwext:    "true",
+    #   fields: [
+    #     { bits: "31:0",
+    #       name: "RESEED_COUNTER",
+    #       desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+    #       resval: "0",
+    #     }
+    #   ],
+    #   },
+    # },
+    {
+      name: "RESEED_COUNTER_0",
       desc: '''
-        Reseed counter.
+        Reseed counter 0.
 
         The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
       '''
-      count: "NumApps",
-      cname: "RESEED_COUNTER",
       swaccess: "ro",
       hwaccess: "hwo",
       hwext:    "true",
       fields: [
         { bits: "31:0",
-          name: "RESEED_COUNTER",
+          name: "RESEED_COUNTER_0",
           desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
           resval: "0",
         }
       ],
-      },
+    },
+    {
+      name: "RESEED_COUNTER_1",
+      desc: '''
+        Reseed counter 1.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER_0",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
+    },
+    {
+      name: "RESEED_COUNTER_2",
+      desc: '''
+        Reseed counter 2.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      count: "NumApps",
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER_0",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
     },
     {
       name: "SW_CMD_STS",
