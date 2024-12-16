@@ -11,7 +11,7 @@
   "version": "2.0.0",
   "life_stage": "L1",
   "design_stage": "D2S",
-  "verification_stage": "V1",
+  "verification_stage": "V2S",
   "dif_stage": "S2",
   "clocking": [
     {
@@ -1156,7 +1156,7 @@
         {
           "bits": "0",
           "name": "FW_OV_WR_FIFO_FULL",
-          "desc": "\"When this bit is clear, writes to the FW_OV_WR_DATA register are allowed.\nIf this bit is set, it is the equivalent to a FIFO full condition, and writes\nto the FW_OV_WR_DATA register must be delayed until this bit is reset."
+          "desc": "When this bit is clear, writes to the FW_OV_WR_DATA register are allowed.\nIf this bit is set, it is the equivalent to a FIFO full condition, and writes\nto the FW_OV_WR_DATA register must be delayed until this bit is reset."
         }
       ]
     },
@@ -1184,7 +1184,7 @@
       "fields": [
         {
           "bits": "31:0",
-          "desc": "A read of this register pops and returns the top of the observe FIFO.\nFor this to work, the !!FW_OV_CONTROL.FW_OV_MODE field needs to be set to `kMultiBitBool4True`\nIn addition, the otp_en_entropy_src_fw_over input needs to be set to `kMultiBitBool8True`."
+          "desc": "A read of this register pops and returns the top of the observe FIFO.\nFor this to work, the !!FW_OV_CONTROL.FW_OV_MODE field needs to be set to `kMultiBitBool4True`\nIn addition, the otp_en_entropy_src_fw_over input needs to be set to `kMultiBitBool8True`.\nReading this register while the observe FIFO is empty results in a fatal error with !!ERR_CODE.FIFO_READ_ERR and !!ERR_CODE.SFIFO_OBSERVE_ERR going high."
         }
       ]
     },

@@ -3278,7 +3278,7 @@ module entropy_src_core
       default: bsc_state_d = BscStIncomplete;
     endcase
     // If not enabled, always clear to incomplete.
-    if (!mubi4_test_true_strict(mubi_es_enable)) begin
+    if (!es_delayed_enable) begin
       bsc_state_d = BscStIncomplete;
     end
   end
@@ -3344,18 +3344,16 @@ module entropy_src_core
       end
     end
     // If not enabled, always clear to no result.
-    if (!mubi4_test_true_strict(mubi_es_enable)) begin
+    if (!es_delayed_enable) begin
       ht_state_d = HtStNoResult;
     end
   end
 
-  // Track when entropy is expected to get dropped instead of pushed into the esfinal FIFO: when the
-  // esfinal FIFO is full and either routing to SW and the SW read isn't done or not routing to SW
-  // and no request on the hardware interface.
+  // Track when entropy is expected to get dropped instead of pushed into the esfinal FIFO. This is
+  // the case whenever the esfinal FIFO is full. When routing to SW and the SW read finished at the
+  // same time, the entropy isn't dropped.
   logic esfinal_exp_drop;
-  assign esfinal_exp_drop = sfifo_esfinal_full & (es_route_to_sw ?
-                                                  ~swread_done :                // SW read not done
-                                                  ~entropy_src_hw_if_i.es_req); // no HW request
+  assign esfinal_exp_drop = sfifo_esfinal_full & (es_route_to_sw ? ~swread_done : 1'b1);
 
   // Count number of bits that are expected to have gotten pushed into precon FIFO and into esfinal
   // FIFO after boot and startup checks and while bypass mode was disabled.
@@ -3433,7 +3431,7 @@ module entropy_src_core
       precon_post_startup_push_bit_cnt_q  <= '0;
       precon_push_bit_cnt_q               <= '0;
       rng_valid_bit_cnt_q                 <= '0;
-    end else if (mubi4_test_true_strict(mubi_es_enable) & !fw_ov_mode_entropy_insert) begin
+    end else if (es_delayed_enable & !fw_ov_mode_entropy_insert) begin
       // All these counters get updated if and only if entropy_src is enabled and the firmware
       // override entropy insertion mode is disabled.  Otherwise, there are no guarantees on how
       // much entropy from the noise source gets dropped due to backpressure.
@@ -3470,6 +3468,20 @@ module entropy_src_core
       precon_post_startup_exp_push_bit_cnt_q  <= precon_post_startup_exp_push_bit_cnt_d;
     end
   end
+
+  // When triggering the conditioner, the precon FIFO must be empty. The postht and distr FIFOs
+  // must have been empty in the cycle before. Otherwise, some entropy bits tested as part of the
+  // current window won't make into the corresponding seed.
+  //
+  // In Firmware Override: Extract & Insert mode, we don't care as firmware is responsible for
+  // filling the precon FIFO and for triggering the conditioner:
+  // - If the conditioner is triggered without the precon FIFO being empty, a recoverable alert is
+  //   signaled.
+  // - The fill levels of the postht and distr FIFOs are irrelevant for the conditioner in this
+  //   mode.
+  `CALIPTRA_ASSERT(FifosEmptyWhenShaProcess_A,
+      !fw_ov_mode_entropy_insert && $rose(sha3_process) |->
+      $past(!pfifo_postht_not_empty) && $past(!sfifo_distr_not_empty) && !pfifo_precon_not_empty)
 `endif
 
 endmodule
