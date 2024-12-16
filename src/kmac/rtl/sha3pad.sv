@@ -493,7 +493,7 @@ module sha3pad
     // SEC_CM: FSM.GLOBAL_ESC, FSM.LOCAL_ESC
     // Unconditionally jump into the terminal error state
     // if the life cycle controller triggers an escalation.
-    if (lc_escalate_en_i != lc_ctrl_pkg::Off) begin
+    if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i)) begin
       st_d = StTerminalError;
     end
   end
@@ -831,10 +831,7 @@ module sha3pad
   `CALIPTRA_ASSERT(CompleteBlockWhenProcess_A,
     $rose(process_latched) && (!end_of_block && !sent_blocksize )
     && !(st inside {StPrefixWait, StMessageWait}) |-> ##[1:5] keccak_valid_o,
-    clk_i, !rst_ni || lc_escalate_en_i != lc_ctrl_pkg::Off)
-  // If `process_i` is asserted, eventually sha3pad trigger run signal
-  `CALIPTRA_ASSERT(ProcessToRun_A, process_i |-> strong(##[2:$] keccak_run_o),
-    clk_i, !rst_ni || lc_escalate_en_i != lc_ctrl_pkg::Off)
+    clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))
 
   // If process_i asserted, completion shall be asserted shall be asserted
   //`CALIPTRA_ASSERT(ProcessToAbsorbed_A, process_i |=> strong(##[24*Share:$] absorbed_o))
@@ -848,12 +845,6 @@ module sha3pad
       (mode_i == Sha3 && (strength_i inside {L224, L256, L384, L512})) ||
       ((mode_i == Shake || mode_i == CShake) && (strength_i inside {L128, L256})),
     clk_i, !rst_ni)
-
-  // Keccak control interface
-  // Keccak run triggered -> completion should come
-  `CALIPTRA_ASSUME(RunThenComplete_M,
-    keccak_run_o |-> strong(##[24*Share:$] keccak_complete_i),
-    clk_i, !rst_ni || lc_escalate_en_i != lc_ctrl_pkg::Off)
 
   // No partial write is allowed for Message FIFO interface
   `CALIPTRA_ASSUME(NoPartialMsgFifo_M,
