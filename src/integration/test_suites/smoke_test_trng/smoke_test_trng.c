@@ -112,7 +112,7 @@ int run_smoke_test() {
   printf("Uninitiate Command\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x905);
 
-  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK);
+  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
   printf("Initiate Command - Writing 48B of seed\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x06C1);
@@ -129,7 +129,7 @@ int run_smoke_test() {
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0xa468649e);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0xdf5d73fa);
 
-  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK);
+  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
   printf("Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
@@ -158,7 +158,7 @@ int run_smoke_test() {
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0xc58a553e);
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0x5d6e1012);
 
-  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK);
+  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
   printf("Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
@@ -188,7 +188,7 @@ int run_smoke_test() {
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0xdb17514c);
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0xa43c41b7);
 
-  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK);
+  poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
   return error;
 }

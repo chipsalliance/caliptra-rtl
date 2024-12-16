@@ -49,16 +49,17 @@ module csrng_tb
   parameter ADDR_REGWEN          = 32'h10;
   parameter ADDR_CTRL            = 32'h14;
   parameter ADDR_CMD_REQ         = 32'h18;
-  parameter ADDR_SW_CMD_STS      = 32'h1c;
-  parameter ADDR_GENBITS_VLD     = 32'h20;
-  parameter ADDR_GENBITS         = 32'h24;
-  parameter ADDR_INT_STATE_NUM   = 32'h28;
-  parameter ADDR_INT_STATE_VAL   = 32'h2c;
-  parameter ADDR_HW_EXC_STS      = 32'h30;
-  parameter ADDR_RECOV_ALERT_STS = 32'h34;
-  parameter ADDR_ERR_CODE        = 32'h38;
-  parameter ADDR_ERR_CODE_TEST   = 32'h3c;
-  parameter ADDR_MAIN_SM_STATE   = 32'h40;
+  parameter ADDR_RESEED_INTERVAL = 32'h1c;
+  parameter ADDR_SW_CMD_STS      = 32'h20;
+  parameter ADDR_GENBITS_VLD     = 32'h24;
+  parameter ADDR_GENBITS         = 32'h28;
+  parameter ADDR_INT_STATE_NUM   = 32'h2c;
+  parameter ADDR_INT_STATE_VAL   = 32'h30;
+  parameter ADDR_HW_EXC_STS      = 32'h34;
+  parameter ADDR_RECOV_ALERT_STS = 32'h38;
+  parameter ADDR_ERR_CODE        = 32'h3c;
+  parameter ADDR_ERR_CODE_TEST   = 32'h40;
+  parameter ADDR_MAIN_SM_STATE   = 32'h44;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -361,7 +362,7 @@ module csrng_tb
     $display("Uninitiate Command");
     write_single_word(ADDR_CMD_REQ, 32'h0905);
     repeat (200) @(posedge clk_tb);
-    poll_register_value(ADDR_SW_CMD_STS, 32'h1);
+    poll_register_value(ADDR_SW_CMD_STS, 32'h6);
 
     $display("Initiate Command - Writing 48B of seed");
     write_single_word(ADDR_CMD_REQ, 32'h06C1);
@@ -378,7 +379,7 @@ module csrng_tb
     write_single_word(ADDR_CMD_REQ, 32'ha468649e);
     write_single_word(ADDR_CMD_REQ, 32'hdf5d73fa);
 
-    poll_register_value(ADDR_SW_CMD_STS, 32'h1);
+    poll_register_value(ADDR_SW_CMD_STS, 32'h6);
 
     $display("Generate Command - 512b");
     write_single_word(ADDR_CMD_REQ, 32'h4903);
@@ -408,7 +409,7 @@ module csrng_tb
     read_and_compare(ADDR_GENBITS, 32'hc58a553e);
     read_and_compare(ADDR_GENBITS, 32'h5d6e1012);
 
-    poll_register_value(ADDR_SW_CMD_STS, 32'h1);
+    poll_register_value(ADDR_SW_CMD_STS, 32'h6);
 
     $display("Generate Command - 512b");
     write_single_word(ADDR_CMD_REQ, 32'h4903);
@@ -438,7 +439,7 @@ module csrng_tb
     read_and_compare(ADDR_GENBITS, 32'hdb17514c);
     read_and_compare(ADDR_GENBITS, 32'ha43c41b7);
 
-    poll_register_value(ADDR_SW_CMD_STS, 32'h1);
+    poll_register_value(ADDR_SW_CMD_STS, 32'h6);
 
   endtask // run_smoke_test
 
