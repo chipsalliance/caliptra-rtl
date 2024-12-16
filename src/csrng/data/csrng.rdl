@@ -95,7 +95,8 @@ addrmap csrng {
         field {
             desc = "Setting this field to kMultiBitBool4True will enable reading from the !!INT_STATE_VAL register.
             Reading the internal state of the enable instances will be enabled
-            only if the otp_en_csrng_sw_app_read input vector is set to the enable encoding.";
+            only if the otp_en_csrng_sw_app_read input vector is set to the enable encoding.
+            Also, the !!INT_STATE_READ_ENABLE bit of the selected instance needs to be set to true for this to work.";
             sw = rw;
         } READ_INT_STATE[11:8] = 0x9;
         field {
@@ -218,6 +219,23 @@ addrmap csrng {
     } GENBITS @ 0x34;
     reg {
         field {
+            desc = "Per-instance internal state read enable.
+            Defines whether the internal state of the corresponding instance is readable via !!INT_STATE_VAL.
+            Note that for !!INT_STATE_VAL to provide read access to the internal state, also !!CTRL.READ_INT_STATE needs to be set to `kMultiBitBool4True`.
+            In addition, the otp_en_csrng_sw_app_read input needs to be set to `kMultiBitBool8True`.";
+            sw = rw;
+        } INT_STATE_READ_ENABLE[2:0] = 0x7;
+    } INT_STATE_READ_ENABLE @ 0x38;
+    reg {
+        field {
+            desc = "INT_STATE_READ_ENABLE register configuration enable bit.
+            If this is cleared to 0, the INT_STATE_READ_ENABLE register cannot be written anymore.";
+            sw = rw;
+            onwrite = woclr;
+        } INT_STATE_READ_ENABLE_REGWEN[0:0] = 0x1;
+    } INT_STATE_READ_ENABLE_REGWEN @ 0x3C;
+    reg {
+        field {
             desc = "Setting this field will set the number for which internal state can be
             selected for a read access. Up to 16 internal state values can be chosen
             from this register. The actual number of valid internal state fields
@@ -229,7 +247,7 @@ addrmap csrng {
             that the !!INT_STATE_VAL read back is accurate.";
             sw = rw;
         } INT_STATE_NUM[3:0];
-    } INT_STATE_NUM @ 0x38;
+    } INT_STATE_NUM @ 0x40;
     reg {
         field {
             desc = "Reading this register will dump out the contents of the selected internal state field.
@@ -240,10 +258,11 @@ addrmap csrng {
             another internal state field can be read.
             Note that for !!INT_STATE_VAL to provide read access to the internal state, also !!CTRL.READ_INT_STATE needs to be set to `kMultiBitBool4True`.
             In addition, the otp_en_csrng_sw_app_read input needs to be set to `kMultiBitBool8True`.
+            Also, the !!INT_STATE_READ_ENABLE bit of the selected instance needs to be set to true for this to work.
             Otherwise, the register reads as 0.";
             sw = r;
         } INT_STATE_VAL[31:0];
-    } INT_STATE_VAL @ 0x3C;
+    } INT_STATE_VAL @ 0x44;
     reg {
         field {
             desc = "Force the FIPS/CC compliance flag of individual instances to true.
@@ -254,7 +273,7 @@ addrmap csrng {
             Note that for this to work, !!CTRL.FIPS_FORCE_ENABLE needs to be set to kMultiBitBool4True.";
             sw = rw;
         } FIPS_FORCE[2:0];
-    } FIPS_FORCE @ 0x40;
+    } FIPS_FORCE @ 0x48;
     reg {
         field {
             desc = "Reading this register indicates whether one of the CSRNG HW instances has
@@ -266,7 +285,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } HW_EXC_STS[15:0];
-    } HW_EXC_STS @ 0x44;
+    } HW_EXC_STS @ 0x4C;
     reg {
         field {
             desc = "This bit is set when the ENABLE field in the !!CTRL register is set to
@@ -335,7 +354,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } CMD_STAGE_RESEED_CNT_ALERT[15:15];
-    } RECOV_ALERT_STS @ 0x48;
+    } RECOV_ALERT_STS @ 0x50;
     reg {
         field {
             desc = "This bit will be set to one when an error has been detected for the
@@ -520,7 +539,7 @@ addrmap csrng {
             This bit will stay set until the next reset.";
             sw = r;
         } FIFO_STATE_ERR[30:30];
-    } ERR_CODE @ 0x4C;
+    } ERR_CODE @ 0x54;
     reg {
         field {
             desc = "Setting this field will set the bit number for which an error
@@ -531,12 +550,12 @@ addrmap csrng {
             an interrupt or an alert.";
             sw = rw;
         } ERR_CODE_TEST[4:0];
-    } ERR_CODE_TEST @ 0x50;
+    } ERR_CODE_TEST @ 0x58;
     reg {
         field {
             desc = "This is the state of the CSRNG main state machine.
             See the RTL file `csrng_main_sm` for the meaning of the values.";
             sw = r;
         } MAIN_SM_STATE[7:0] = 0x4E;
-    } MAIN_SM_STATE @ 0x54;
+    } MAIN_SM_STATE @ 0x5C;
 };
