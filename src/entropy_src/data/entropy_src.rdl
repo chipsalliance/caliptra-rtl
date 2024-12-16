@@ -618,6 +618,7 @@ addrmap entropy_src {
             desc = "Setting this field to `kMultiBitBool4True` will put the entropy flow in firmware override mode.
             In this mode, firmware can monitor the post-health test entropy by reading
             the observe FIFO (see !!FW_OV_RD_DATA).
+            This includes the entropy bits used for the startup health testing.
             For this to work, the otp_en_entropy_src_fw_over input needs to be set to `kMultiBitBool8True`.
 
             Note that the post-health test entropy bits collected in the observe FIFO continue to flow through the hardware pipeline and may eventually reach the block hardware interface.";
@@ -636,7 +637,9 @@ addrmap entropy_src {
             The observe FIFO will collect 2 kBit of contiguous entropy bits.
             Any entropy bits arriving after the observe FIFO is full are being discarded.
             Firmware has to read out the entire observe FIFO to restart entropy collection.
-            Only entropy bits inserted by firmware by writing !!FW_OV_WR_DATA may eventually reach the block hardware interface.";
+            Only entropy bits inserted by firmware by writing !!FW_OV_WR_DATA may eventually reach the block hardware interface.
+
+            Also, the hardware startup health testing is skipped and firmware becomes responsible for performing any startup health testing.";
             sw = rw;
         } FW_OV_ENTROPY_INSERT[7:4] = 0x9;
     } FW_OV_CONTROL @ 0xB0;

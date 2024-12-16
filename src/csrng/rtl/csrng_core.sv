@@ -346,6 +346,7 @@ module csrng_core
   logic                        state_db_reg_rd_id_pulse;
   logic [StateId-1:0]          state_db_reg_rd_id;
   logic [31:0]                 state_db_reg_rd_val;
+  logic [NApps-1:0]            int_state_read_enable;
 
   logic [30:0]                 err_code_test_bit;
   logic                        ctr_drbg_upd_es_ack;
@@ -498,6 +499,19 @@ module csrng_core
     .intr_o                 (intr_cs_fatal_err_o)
   );
 
+  // Counter and FSM errors are structural errors and are always active regardless of the
+  // functional state. main_sm_err_sum is not included here to prevent some tools from
+  // inferring combo loops. However, to include the state machine error for testing,
+  // we use the error code test bit (index 21) directly.
+  logic fatal_loc_events;
+  assign fatal_loc_events = cmd_gen_cnt_err_sum ||
+                            cmd_stage_sm_err_sum ||
+                            drbg_gen_sm_err_sum ||
+                            drbg_updbe_sm_err_sum ||
+                            drbg_updob_sm_err_sum ||
+                            aes_cipher_sm_err_sum ||
+                            err_code_test_bit[21];
+
   // set the interrupt sources
   assign event_cs_fatal_err = (cs_enable_fo[1]  && (
          (|cmd_stage_sfifo_cmd_err_sum) ||
@@ -520,13 +534,8 @@ module csrng_core
          fifo_read_err_sum ||
          fifo_status_err_sum)) ||
          // errs not gated by cs_enable
-         cmd_stage_sm_err_sum ||
          main_sm_err_sum ||
-         drbg_gen_sm_err_sum ||
-         drbg_updbe_sm_err_sum ||
-         drbg_updob_sm_err_sum ||
-         aes_cipher_sm_err_sum ||
-         cmd_gen_cnt_err_sum;
+         fatal_loc_events;
 
   // set fifo errors that are single instances of source
   assign ctr_drbg_cmd_sfifo_cmdreq_err_sum = (|ctr_drbg_cmd_sfifo_cmdreq_err) ||
@@ -1171,7 +1180,7 @@ module csrng_core
     .uninstant_req_o        (uninstant_req),
     .clr_adata_packer_o     (clr_adata_packer),
     .cmd_complete_i         (state_db_wr_req),
-    .local_escalate_i       (cmd_gen_cnt_err_sum),
+    .local_escalate_i       (fatal_loc_events),
     .main_sm_state_o        (cs_main_sm_state),
     .main_sm_err_o          (cs_main_sm_err)
   );
@@ -1235,7 +1244,7 @@ module csrng_core
   assign state_db_reg_rd_id_pulse = reg2hw.int_state_num.qe;
   assign hw2reg.int_state_val.d = state_db_reg_rd_val;
   assign state_db_is_dump_en = cs_enable_fo[40] && read_int_state && efuse_sw_app_enable[1];
-
+  assign int_state_read_enable = reg2hw.int_state_read_enable.q;
 
   csrng_state_db #(
     .NApps(NApps),
@@ -1273,6 +1282,7 @@ module csrng_core
     .state_db_sts_ack_o(state_db_sts_ack),
     .state_db_sts_sts_o(state_db_sts_sts),
     .state_db_sts_id_o(state_db_sts_id),
+    .int_state_read_enable_i(int_state_read_enable),
 
     .reseed_counter_o(reseed_counter)
   );
