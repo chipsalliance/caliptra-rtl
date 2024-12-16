@@ -252,7 +252,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW1C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_state_cs_cmd_req_done (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -278,7 +279,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW1C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_state_cs_entropy_req (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -304,7 +306,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW1C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_state_cs_hw_inst_exc (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -330,7 +333,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW1C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_state_cs_fatal_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -358,7 +362,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_enable_cs_cmd_req_done (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -384,7 +389,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_enable_cs_entropy_req (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -410,7 +416,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_enable_cs_hw_inst_exc (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -436,7 +443,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_intr_enable_cs_fatal_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -569,7 +577,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h1)
+    .RESVAL  (1'h1),
+    .Mubi    (1'b0)
   ) u_regwen (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -600,7 +609,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (4),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (4'h9)
+    .RESVAL  (4'h9),
+    .Mubi    (1'b1)
   ) u_ctrl_enable (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -626,7 +636,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (4),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (4'h9)
+    .RESVAL  (4'h9),
+    .Mubi    (1'b1)
   ) u_ctrl_sw_app_enable (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -652,7 +663,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (4),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (4'h9)
+    .RESVAL  (4'h9),
+    .Mubi    (1'b1)
   ) u_ctrl_read_int_state (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -690,7 +702,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (32),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessWO),
-    .RESVAL  (32'h0)
+    .RESVAL  (32'h0),
+    .Mubi    (1'b0)
   ) u_cmd_req (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -719,7 +732,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h1)
+    .RESVAL  (1'h1),
+    .Mubi    (1'b0)
   ) u_sw_cmd_sts_cmd_rdy (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -745,7 +759,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_sw_cmd_sts_cmd_sts (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -831,7 +846,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (4),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (4'h0)
+    .RESVAL  (4'h0),
+    .Mubi    (1'b0)
   ) u_int_state_num (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -875,7 +891,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (16),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (16'h0)
+    .RESVAL  (16'h0),
+    .Mubi    (1'b0)
   ) u_hw_exc_sts (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -903,7 +920,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_enable_field_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -929,7 +947,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_sw_app_enable_field_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -955,7 +974,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_read_int_state_field_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -981,7 +1001,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_acmd_flag0_field_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1007,7 +1028,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_cs_bus_cmp_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1033,7 +1055,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessW0C),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_recov_alert_sts_cs_main_sm_alert (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1061,7 +1084,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_cmd_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1087,7 +1111,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_genbits_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1113,7 +1138,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_cmdreq_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1139,7 +1165,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_rcstage_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1165,7 +1192,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_keyvrc_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1191,7 +1219,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_updreq_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1217,7 +1246,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_bencreq_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1243,7 +1273,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_bencack_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1269,7 +1300,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_pdata_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1295,7 +1327,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_final_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1321,7 +1354,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_gbencack_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1347,7 +1381,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_grcstage_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1373,7 +1408,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_ggenreq_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1399,7 +1435,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_gadstage_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1425,7 +1462,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_ggenbits_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1451,7 +1489,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_sfifo_blkenc_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1477,7 +1516,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_cmd_stage_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1503,7 +1543,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_main_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1529,7 +1570,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_drbg_gen_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1555,7 +1597,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_drbg_updbe_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1581,7 +1624,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_drbg_updob_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1607,7 +1651,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_aes_cipher_sm_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1633,7 +1678,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_cmd_gen_cnt_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1659,7 +1705,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_fifo_write_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1685,7 +1732,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_fifo_read_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1711,7 +1759,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (1),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (1'h0)
+    .RESVAL  (1'h0),
+    .Mubi    (1'b0)
   ) u_err_code_fifo_state_err (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1752,7 +1801,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (5),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW),
-    .RESVAL  (5'h0)
+    .RESVAL  (5'h0),
+    .Mubi    (1'b0)
   ) u_err_code_test (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -1780,7 +1830,8 @@ module csrng_reg_top #(
   caliptra_prim_subreg #(
     .DW      (8),
     .SwAccess(caliptra_prim_subreg_pkg::SwAccessRO),
-    .RESVAL  (8'h4e)
+    .RESVAL  (8'h4e),
+    .Mubi    (1'b0)
   ) u_main_sm_state (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),

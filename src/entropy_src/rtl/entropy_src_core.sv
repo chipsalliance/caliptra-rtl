@@ -68,7 +68,6 @@ module entropy_src_core
   localparam int EighthRegWidth = 4;
   localparam int SeedLen = 384;
   localparam int ObserveFifoWidth = 32;
-  localparam int ObserveFifoDepth = 64;
   localparam int PreCondWidth = 64;
   localparam int Clog2ObserveFifoDepth = $clog2(ObserveFifoDepth);
   localparam int EsEnableCopies = 20;
@@ -106,6 +105,7 @@ module entropy_src_core
   logic       rng_bit_enable_pfe;
   logic       rng_bit_enable_pfa;
   logic [1:0] rng_bit_sel;
+  logic       rng_enable_q, rng_enable_d;
   logic       entropy_data_reg_en_pfe;
   logic       entropy_data_reg_en_pfa;
   logic       es_data_reg_rd_en;
@@ -504,6 +504,7 @@ module entropy_src_core
       sha3_flush_q           <= '0;
       sha3_start_mask_q      <= '0;
       fw_ov_corrupted_q      <= 2'b00;
+      rng_enable_q           <= 1'b 0;
     end else begin
       ht_failed_q            <= ht_failed_d;
       ht_done_pulse_q        <= ht_done_pulse_d;
@@ -517,6 +518,7 @@ module entropy_src_core
       sha3_start_mask_q      <= sha3_start_mask_d;
       mubi_mod_en_dly_q      <= mubi_mod_en_dly_d;
       fw_ov_corrupted_q      <= fw_ov_corrupted_d;
+      rng_enable_q           <= rng_enable_d;
     end
   end
 
@@ -742,9 +744,13 @@ module entropy_src_core
   //       It is assumed that the source is in a different time domain,
   //       and requires the AsyncOn parameter to be set.
 
-  assign entropy_src_rng_o.rng_enable = es_enable_fo[1] &&
-                                        es_delayed_enable &&
-                                        sfifo_esrng_not_full;
+  // rng_enable is being used in other clock domains. Need to latch the
+  // signal.
+  assign rng_enable_d = es_enable_fo[1] &&
+                        es_delayed_enable &&
+                        sfifo_esrng_not_full;
+
+  assign entropy_src_rng_o.rng_enable = rng_enable_q;
 
   assign es_rng_src_valid = entropy_src_rng_i.rng_valid;
   assign es_rng_bus = entropy_src_rng_i.rng_b;
@@ -969,7 +975,8 @@ module entropy_src_core
   caliptra_prim_fifo_sync #(
     .Width(RngBusWidth),
     .Pass(0),
-    .Depth(2)
+    .Depth(2),
+    .OutputZeroIfEmpty(1'b0)
   ) u_caliptra_prim_fifo_sync_esrng (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
@@ -986,7 +993,8 @@ module entropy_src_core
   );
 
   // fifo controls
-  assign sfifo_esrng_push = (es_enable_fo[5] && es_delayed_enable && es_rng_src_valid);
+  assign sfifo_esrng_push = es_enable_fo[5] && es_delayed_enable && es_rng_src_valid &&
+                            rng_enable_q;
 
   assign sfifo_esrng_clr   = ~es_delayed_enable;
   assign sfifo_esrng_wdata = es_rng_bus;
@@ -1141,6 +1149,12 @@ module entropy_src_core
 
 
   assign health_test_window = es_bypass_mode ? health_test_bypass_window : health_test_fips_window;
+
+  // Window sizes other than 384 bits (the seed length) are currently not tested nor supported in
+  // bypass or boot-time mode.
+  `CALIPTRA_ASSERT(EsBootTimeHtWindowSizeSupported_A,
+      main_sm_enable && es_bypass_mode && !fw_ov_mode_entropy_insert
+      |-> health_test_bypass_window == HalfRegWidth'(SeedLen/4))
 
   //------------------------------
   // repcnt one-way thresholds
@@ -2301,7 +2315,14 @@ module entropy_src_core
   // statistics.
 
   assign pfifo_postht_clr = fw_ov_mode_entropy_insert ? !es_enable_fo[7] : !es_delayed_enable;
+
+  // In firmware override mode with extract & insert enabled, post-health test entropy bits can
+  // only move into the observe FIFO. Once the observe FIFO is full, post-health test entropy is
+  // just discarded.
   assign pfifo_postht_pop = fw_ov_mode_entropy_insert ? pfifo_postht_not_empty :
+                            // In firmware override mode (observe only) or during normal
+                            // operation, post-health test entropy bits continue to flow
+                            // through the hardware pipeline.
                             es_bypass_mode ? pfifo_bypass_push :
                             pfifo_precon_push & pfifo_precon_not_full;
 
@@ -2395,8 +2416,15 @@ module entropy_src_core
     .depth_o    ()
   );
 
+  // When bypassing the hardware conditioning - due to a) disabling FIPS mode or b) routing entropy
+  // to the ENTROPY_DATA register (ES_ROUTE) and bypassing the conditioner (ES_TYPE) - nothing is
+  // going into the conditioner.
   assign pfifo_precon_push = es_bypass_mode ? 1'b0 :
+                             // In firmware override mode with extract & insert enabled, only bits
+                             // inserted by firmware continue down the pipeline.
                              fw_ov_mode_entropy_insert ? fw_ov_fifo_wr_pulse :
+                             // Otherwise post-health test entropy bits continue to flow
+                             // downstream. This includes observe-only firmware override mode.
                              pfifo_postht_not_empty;
 
   assign pfifo_precon_wdata = fw_ov_mode_entropy_insert ? fw_ov_wr_data :
@@ -2534,9 +2562,17 @@ module entropy_src_core
     .depth_o    ()
   );
 
+  // Unless the hardware conditioning is bypassed - due to a) disabling FIPS mode or b) routing
+  // entropy to the ENTROPY_DATA register (ES_ROUTE) and bypassing the conditioner (ES_TYPE) -
+  // nothing is going into the bypass FIFO.
   assign pfifo_bypass_push = !es_bypass_mode ? 1'b0 :
+                             // In firmware override mode with extract & insert enabled, only bits
+                             // inserted by firmware continue down the pipeline
                              fw_ov_mode_entropy_insert ? fw_ov_fifo_wr_pulse :
+                             // Otherwise post-health test entropy bits continue to flow
+                             // downstream. This includes observe-only firmware override mode.
                              pfifo_postht_not_empty;
+
   assign pfifo_bypass_wdata = fw_ov_mode_entropy_insert ? fw_ov_wr_data :
                               pfifo_postht_rdata;
 
@@ -2653,7 +2689,8 @@ module entropy_src_core
   caliptra_prim_fifo_sync #(
     .Width(1+SeedLen),
     .Pass(0),
-    .Depth(EsFifoDepth)
+    .Depth(EsFifoDepth),
+    .OutputZeroIfEmpty(1'b0)
   ) u_caliptra_prim_fifo_sync_esfinal (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
@@ -2792,5 +2829,423 @@ module entropy_src_core
   assign unused_entropy_data = (|reg2hw.entropy_data.q);
   assign unused_fw_ov_rd_data = (|reg2hw.fw_ov_rd_data.q);
 
+  //--------------------------------------------
+  // Assertions
+  //--------------------------------------------
+
+`ifdef INC_ASSERT
+  // entropy_src is known to activate Keccak without AES Halt handshakes with CSRNG (#17941).
+  // This code ensures that this does not happen too often (i.e., at most `KAWAH_THRESHOLD` out of
+  // `KAWAH_WINDOW_SIZE` consecutive clock cycles) outside *Firmware Override - Extract & Insert*
+  // mode.  When firmware inserts entropy, it is essentially in control of the SHA3 core
+  // and the current HW implementation cannot make guarantees around AES Halt and Keccak activity.
+  //
+  // When issue #17941 gets resolved and there are assertions (or equivalent checks) in place to
+  // ensure that Keccak is not activated without AES Halt handshakes, this code should be removed.
+
+  // Track activity of Keccak.
+  logic keccak_active;
+  assign keccak_active = u_sha3.u_keccak.keccak_st != sha3_pkg::KeccakStIdle;
+  `CALIPTRA_ASSERT_KNOWN(KeccakActiveKnown_A, keccak_active)
+
+  // Track state of AES Halt req/ack with CSRNG.
+  logic cs_aes_halt_active;
+  assign cs_aes_halt_active = cs_aes_halt_o.cs_aes_halt_req && cs_aes_halt_i.cs_aes_halt_ack;
+  `CALIPTRA_ASSERT_KNOWN(CsAesHaltActiveKnown_A, cs_aes_halt_active)
+
+  // Track when Keccak is active without AES Halt ('KAWAH') outside FW entropy insertion mode.
+  localparam int unsigned KAWAH_WINDOW_SIZE = 512;
+  logic [KAWAH_WINDOW_SIZE-1:0] kawah_window_d, kawah_window_q;
+  assign kawah_window_d[0] = keccak_active & ~cs_aes_halt_active & ~fw_ov_mode_entropy_insert;
+  assign kawah_window_d[KAWAH_WINDOW_SIZE-1:1] = kawah_window_q[KAWAH_WINDOW_SIZE-2:0];
+
+  // Count how many cycles Keccak was active without AES Halt in the current window.
+  localparam int unsigned KAWAH_COUNTER_SIZE = $clog2(KAWAH_WINDOW_SIZE);
+  logic [KAWAH_COUNTER_SIZE-1:0] kawah_counter_d, kawah_counter_q;
+  always_comb begin
+    kawah_counter_d = kawah_counter_q;
+    // Increment counter if Keccak is active without AES Halt in the current cycle.
+    if (kawah_window_d[0]) kawah_counter_d += 1;
+    // Decrement counter if Keccak was active without AES Halt in the cycle that falls out of the
+    // sliding window in this cycle.
+    if (kawah_window_q[KAWAH_WINDOW_SIZE-1]) begin
+      // If the counter would underflow, a testbench error has happened (only relevant if reset is
+      // deasserted).
+      `CALIPTRA_ASSERT_I(KawahCounterNoUnderflow_A, rst_ni !== 1'b1 || kawah_counter_d > 0)
+      kawah_counter_d -= 1;
+    end
+  end
+  // Ensure counter does not overflow.
+  `CALIPTRA_ASSERT(KawahCounterNoOverflow_A, kawah_counter_d < KAWAH_WINDOW_SIZE - 1)
+
+  // Assert that in the last KAWAH_WINDOW_SIZE clock cycles, Keccak was active without AES Halt for
+  // at most KAWAH_THRESHOLD clock cycles.
+  localparam int unsigned KAWAH_THRESHOLD = 24;
+  `CALIPTRA_ASSERT(KeccakNotTooActiveWithoutAesHalt_A, kawah_counter_q <= KAWAH_THRESHOLD)
+  `CALIPTRA_ASSERT_INIT(KawahParametersLegal_A, KAWAH_THRESHOLD < KAWAH_WINDOW_SIZE)
+
+  always_ff @(posedge clk_i, negedge rst_ni) begin
+    if (!rst_ni) begin
+      kawah_counter_q <= '0;
+      kawah_window_q  <= '0;
+    end else begin
+      kawah_counter_q <= kawah_counter_d;
+      kawah_window_q  <= kawah_window_d;
+    end
+  end
+`endif
+
+  //--------------------------------------------
+  // Assertions
+  //--------------------------------------------
+`ifdef INC_ASSERT
+`include "caliptra_prim_macros.svh"
+
+  // Count number of disables since last reset.
+  logic [63:0] disable_cnt_d, disable_cnt_q;
+  always_comb begin
+    disable_cnt_d = disable_cnt_q;
+    if (!mubi4_test_true_strict(mubi_mod_en_dly_d) &&
+        mubi4_test_true_strict(mubi_mod_en_dly_q)) begin
+      disable_cnt_d += 1;
+    end
+  end
+
+  // Assert that no entropy gets dropped during FIPS-compliant operation mode.
+  //
+  // The following code, which includes counters, small FSMs, and assertions, tracks entropy bits
+  // from the noise source input through Entropy Source to the hardware interface output and checks
+  // that in FIPS-compliant mode entropy does not get dropped unless it should get dropped.  The
+  // code is arranged in the same order as entropy flows through Entropy Source, so having Entropy
+  // Source's block diagram ready when reading this code is highly recommended.
+
+  // Delay `es_delayed_enable` by one clock cycle to track when Entropy Source actually accepts RNG
+  // inputs.
+  logic es_delayed_enable_d, es_delayed_enable_q;
+  assign es_delayed_enable_d = es_delayed_enable;
+
+  // Count number of valid bits from RNG input (RNG_BUS_WIDTH wide) while Entropy Source is enabled.
+  logic [63:0] rng_valid_bit_cnt_d, rng_valid_bit_cnt_q;
+  assign rng_valid_bit_cnt_d = entropy_src_rng_i.rng_valid && es_delayed_enable_q ?
+                               rng_valid_bit_cnt_q + RNG_BUS_WIDTH :
+                               rng_valid_bit_cnt_q;
+
+  // Count number of bits pushed into esrng FIFO (RngBusWidth wide).
+  logic [63:0] esrng_push_bit_cnt_d, esrng_push_bit_cnt_q;
+  assign esrng_push_bit_cnt_d = sfifo_esrng_push & sfifo_esrng_not_full ?
+                                esrng_push_bit_cnt_q + RngBusWidth :
+                                esrng_push_bit_cnt_q;
+
+  // Assert that as many bits got pushed into the esrng FIFO (destination) as there were valid RNG
+  // input bits (source).  RngBusWidth bits may get lost after every re-enable; add a margin to
+  // account for that.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(ValidRngBitsPushedIntoEsrngFifo_A,
+                             `WITHIN_MARGIN(esrng_push_bit_cnt_q,        // actual
+                                            rng_valid_bit_cnt_q,         // expected
+                                            disable_cnt_q * RngBusWidth, // allowed less
+                                            0))                          // allowed more
+
+  // Count number of bits pushed into esbit FIFO (1 wide input, RngBusWidth wide output).
+  logic [63:0] esbit_push_bit_cnt_d, esbit_push_bit_cnt_q;
+  assign esbit_push_bit_cnt_d = pfifo_esbit_push & pfifo_esbit_not_full ?
+                                esbit_push_bit_cnt_q + 1 :
+                                esbit_push_bit_cnt_q;
+
+  // Count number of bits pushed into postht FIFO (RngBusWidth wide input, PostHTWidth wide output).
+  logic [63:0] postht_push_bit_cnt_d, postht_push_bit_cnt_q;
+  assign postht_push_bit_cnt_d = pfifo_postht_push & pfifo_postht_not_full ?
+                                 postht_push_bit_cnt_q + RngBusWidth :
+                                 postht_push_bit_cnt_q;
+
+  // Count number of bits pushed into postht FIFO from esrng FIFO.
+  logic [63:0] postht_from_esrng_push_bit_cnt_d, postht_from_esrng_push_bit_cnt_q;
+  assign postht_from_esrng_push_bit_cnt_d =
+      pfifo_postht_push & pfifo_postht_not_full & ~rng_bit_en ?
+      postht_from_esrng_push_bit_cnt_q + RngBusWidth :
+      postht_from_esrng_push_bit_cnt_q;
+
+  // Assert that as many bits got pushed into the esbit FIFO or the postht FIFO (destinations) as
+  // into the esrng FIFO (source).  The number of bits pushed into the esbit FIFO has to be
+  // multiplied by the output width of the esrng FIFO (RngBusWidth) because only 1 bit gets pushed
+  // into the esbit FIFO for every pop from the esrng FIFO.  Add a margin (allowed less) because:
+  // - RngBusWidth bits may get lost after every re-enable
+  // - one entry may just have been pushed into esrng FIFO when the assertion gets evaluated.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsrngFifoPushedIntoEsbitOrPosthtFifos_A,
+                             `WITHIN_MARGIN((esbit_push_bit_cnt_q * RngBusWidth +
+                                             postht_from_esrng_push_bit_cnt_q), // actual
+                                            esrng_push_bit_cnt_q,               // expected
+                                            (disable_cnt_q + 1) * RngBusWidth,  // allowed less
+                                            0))                                 // allowed more
+
+  // Count number of bits pushed into postht FIFO from esbit FIFO.
+  logic [63:0] postht_from_esbit_push_bit_cnt_d, postht_from_esbit_push_bit_cnt_q;
+  assign postht_from_esbit_push_bit_cnt_d =
+      pfifo_postht_push & pfifo_postht_not_full & rng_bit_en ?
+      postht_from_esbit_push_bit_cnt_q + RngBusWidth :
+      postht_from_esbit_push_bit_cnt_q;
+
+  // Assert that as many bits got pushed into the postht FIFO (destination) as into the esbit FIFO
+  // (source) when the latter was selected as source.  Add a margin (allowed less) because:
+  // - RngBusWidth bits may get lost after every re-enable
+  // - esbit FIFO may be partially full when the assertion gets evaluated.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsbitFifoPushedIntoPosthtFifo_A,
+                             `WITHIN_MARGIN(postht_from_esbit_push_bit_cnt_q,      // actual
+                                            esbit_push_bit_cnt_q,                  // expected
+                                            (disable_cnt_q + 1) * RngBusWidth - 1, // allowed less
+                                            0))                                    // allowed more
+
+  // Assert that as many bits got pushed into the postht FIFO as got counted from the esrng FIFO or
+  // the esbit FIFO.  This assertion checks more the completeness of the other assertions than the
+  // design itself.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(PosthtFifoPushedFromEsbitOrEsrngFifos_A,
+                             postht_push_bit_cnt_q == (postht_from_esrng_push_bit_cnt_q +
+                                                       postht_from_esbit_push_bit_cnt_q))
+
+  // Count number of bits popped from postht FIFO (PostHTWidth wide output) when bypass mode was
+  // disabled.
+  logic [63:0] postht_non_bypass_pop_bit_cnt_d, postht_non_bypass_pop_bit_cnt_q;
+  assign postht_non_bypass_pop_bit_cnt_d =
+      pfifo_postht_pop & pfifo_postht_not_empty & ~es_bypass_mode ?
+      postht_non_bypass_pop_bit_cnt_q + PostHTWidth :
+      postht_non_bypass_pop_bit_cnt_q;
+
+  // Count number of bits pushed into precon FIFO (ObserveFifoWidth wide input, PreCondWidth wide
+  // output).
+  logic [63:0] precon_push_bit_cnt_d, precon_push_bit_cnt_q;
+  assign precon_push_bit_cnt_d = pfifo_precon_push & pfifo_precon_not_full ?
+                                 precon_push_bit_cnt_q + ObserveFifoWidth :
+                                 precon_push_bit_cnt_q;
+
+  // Assert that as many bits got pushed into the precon FIFO (destination) as got popped from the
+  // postht FIFO when bypass mode was disabled (source).
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(PosthtFifoPushedIntoPreconFifo_A,
+                             precon_push_bit_cnt_q == postht_non_bypass_pop_bit_cnt_q)
+
+  // Track when boot and startup checks are completing.
+  logic boot_startup_checks_completing;
+  assign boot_startup_checks_completing =
+      (u_entropy_src_main_sm.state_q == entropy_src_main_sm_pkg::StartupPass1 &
+       u_entropy_src_main_sm.ht_done_pulse_i &
+       ~u_entropy_src_main_sm.ht_fail_pulse_i);
+
+  // Track state of boot and startup checks.
+  typedef enum logic [1:0] {
+    BscStIncomplete,  // checks incomplete
+    BscStPassed,      // checks passed
+    BscStPushed       // entropy from passed checks pushed
+  } bsc_state_e;
+  bsc_state_e bsc_state_d, bsc_state_q;
+  always_comb begin
+    bsc_state_d = bsc_state_q;
+    unique case (bsc_state_q)
+      BscStIncomplete: begin
+        if (boot_startup_checks_completing) begin
+          // Checks have just completed.
+          bsc_state_d = BscStPassed;
+        end
+      end
+      BscStPassed: begin
+        if (main_stage_push) begin
+          // Entropy from passed checks is being pushed.
+          bsc_state_d = BscStPushed;
+        end
+      end
+      BscStPushed: begin
+        // Boot and startup checks remained passed and their entropy pushed until Entropy Source
+        // gets disabled again (which is handled below).
+        bsc_state_d = bsc_state_q;
+      end
+      default: bsc_state_d = BscStIncomplete;
+    endcase
+    // If not enabled, always clear to incomplete.
+    if (!mubi4_test_true_strict(mubi_es_enable)) begin
+      bsc_state_d = BscStIncomplete;
+    end
+  end
+
+  // Count number of bits pushed into precon FIFO (ObserveFifoWidth wide input, PreCondWidth wide
+  // output) after boot and startup checks.
+  logic [63:0] precon_post_startup_push_bit_cnt_d, precon_post_startup_push_bit_cnt_q;
+  assign precon_post_startup_push_bit_cnt_d =
+      pfifo_precon_push & pfifo_precon_not_full & (bsc_state_q != BscStIncomplete) ?
+      precon_post_startup_push_bit_cnt_q + ObserveFifoWidth :
+      precon_post_startup_push_bit_cnt_q;
+
+  // Track when esfinal FIFO gets pushed while bypass mode is disabled.
+  logic esfinal_non_bypass_push;
+  assign esfinal_non_bypass_push = sfifo_esfinal_push & sfifo_esfinal_not_full & ~es_bypass_mode;
+
+  // Count number of bits pushed into esfinal FIFO (SeedLen bits per push) while bypass mode was
+  // disabled.
+  logic [63:0] esfinal_non_bypass_push_cnt_d, esfinal_non_bypass_push_cnt_q;
+  assign esfinal_non_bypass_push_cnt_d = esfinal_non_bypass_push ?
+                                         esfinal_non_bypass_push_cnt_q + SeedLen :
+                                         esfinal_non_bypass_push_cnt_q;
+
+  // Count number of bits pushed into esfinal FIFO (SeedLen bits per push) after startup checks have
+  // passed and while bypass mode was disabled.
+  logic [63:0] esfinal_post_startup_push_bit_cnt_d, esfinal_post_startup_push_bit_cnt_q;
+  assign esfinal_post_startup_push_bit_cnt_d =
+      esfinal_non_bypass_push & (bsc_state_q != BscStIncomplete) ?
+      esfinal_post_startup_push_bit_cnt_q + SeedLen :
+      esfinal_post_startup_push_bit_cnt_q;
+
+  // Assert that all bits pushed into the esfinal FIFO came from or after passed startup checks.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsfinalFifoPushed_A,
+                             esfinal_non_bypass_push_cnt_q == esfinal_post_startup_push_bit_cnt_q)
+
+  // Track result of health tests after boot and startup tests.
+  typedef enum logic [1:0] {
+    HtStNoResult, // no health test result is currently available
+    HtStPassed,   // last health test has passed and entropy has not propagated from conditioner yet
+    HtStFailed    // last health test has failed
+  } ht_state_e;
+  ht_state_e ht_state_d, ht_state_q;
+  always_comb begin
+    ht_state_d = ht_state_q;
+    if (bsc_state_q == BscStPushed) begin
+      if (ht_state_q inside {HtStNoResult, HtStFailed}) begin
+        if (health_test_done_pulse) begin
+          if (!any_fail_pulse && !alert_threshold_fail) begin
+            ht_state_d = HtStPassed;
+          end else begin
+            ht_state_d = HtStFailed;
+          end
+        end
+      end else if (ht_state_q == HtStPassed) begin
+        if (main_stage_push_raw) begin
+          ht_state_d = HtStNoResult;
+        end
+      end else begin
+        ht_state_d = HtStNoResult;
+      end
+      if (ht_state_q == HtStFailed) begin
+        `CALIPTRA_ASSERT_I(NoPushAfterFailedHealthTest_A, rst_ni !== 1'b1 || !main_stage_push_raw)
+      end
+    end
+    // If not enabled, always clear to no result.
+    if (!mubi4_test_true_strict(mubi_es_enable)) begin
+      ht_state_d = HtStNoResult;
+    end
+  end
+
+  // Track when entropy is expected to get dropped instead of pushed into the esfinal FIFO: when the
+  // esfinal FIFO is full and either routing to SW and the SW read FIFO is full or not routing to SW
+  // and no request on the hardware interface.
+  logic esfinal_exp_drop;
+  assign esfinal_exp_drop = sfifo_esfinal_full & (es_route_to_sw ?
+                                                  ~pfifo_swread_not_full :      // SW read FIFO full
+                                                  ~entropy_src_hw_if_i.es_req); // no HW request
+
+  // Count number of bits that are expected to have gotten pushed into precon FIFO and into esfinal
+  // FIFO after boot and startup checks and while bypass mode was disabled.
+  logic [63:0] precon_post_startup_exp_push_bit_cnt_d, precon_post_startup_exp_push_bit_cnt_q;
+  logic [63:0] esfinal_post_startup_exp_push_bit_cnt_d, esfinal_post_startup_exp_push_bit_cnt_q;
+  always_comb begin
+    esfinal_post_startup_exp_push_bit_cnt_d = esfinal_post_startup_exp_push_bit_cnt_q;
+    precon_post_startup_exp_push_bit_cnt_d = precon_post_startup_exp_push_bit_cnt_q;
+    if (bsc_state_q == BscStPassed && bsc_state_d == BscStPushed) begin
+      // On the completion of boot and startup checks, SeedLen bits are expected to be pushed into
+      // the esfinal FIFO.
+      esfinal_post_startup_exp_push_bit_cnt_d += SeedLen;
+    end
+    if (bsc_state_q != BscStIncomplete && health_test_done_pulse) begin
+      // Once boot and startup checks have completed, (4 * health_test_window) bits are expected to
+      // have gotten pushed into the precon FIFO.
+      precon_post_startup_exp_push_bit_cnt_d += 4 * health_test_window;
+    end
+    if (ht_state_q == HtStPassed && main_stage_push_raw && !esfinal_exp_drop) begin
+      // If none of the health tests failed and the alert threshold has not been exceeded, SeedLen
+      // bits are expected to be pushed into the esfinal FIFO -- unless we expect them to get
+      // dropped (see above).
+      esfinal_post_startup_exp_push_bit_cnt_d += SeedLen;
+    end
+    // When Entropy Source gets disabled after boot and startup checks have been completed, add the
+    // number of bits that have been pushed into precon FIFO since the last conditioner output to
+    // the expected number of bits.
+    if ((bsc_state_q != BscStIncomplete) && (bsc_state_d == BscStIncomplete)) begin
+      logic [63:0] diff_;
+      diff_ = precon_post_startup_push_bit_cnt_q - precon_post_startup_exp_push_bit_cnt_q;
+      // Assert that the difference is not negative.
+      `CALIPTRA_ASSERT_I(PreconPostStartupDiffNonNegative_A,
+                rst_ni !== 1'b1 || (precon_post_startup_push_bit_cnt_q >=
+                                    precon_post_startup_exp_push_bit_cnt_q))
+      // Assert that the difference is smaller than the number of bits that would have sufficed to
+      // get pushed into the conditioner.
+      `CALIPTRA_ASSERT_I(PreconPostStartupDiffSmall_A, rst_ni !== 1'b1 || diff_ < (4 * health_test_window))
+      precon_post_startup_exp_push_bit_cnt_d += diff_;
+    end
+  end
+  // This code assumes that `health_test_window` does not change dynamically; capture that in an
+  // assertion ensuring it only changes when entropy_src is not enabled.
+  `CALIPTRA_ASSERT(HealthTestWindowStableWhenEnabled_A,
+          mubi4_test_true_strict(mubi_es_enable) |-> $stable(health_test_window))
+
+  // Assert that all bits pushed into the esfinal FIFO after startup checks were expected.
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsfinalFifoPushedPostStartup_A,
+                             esfinal_post_startup_push_bit_cnt_q ==
+                             esfinal_post_startup_exp_push_bit_cnt_q)
+
+  // Assert that the expected number of bits pushed into the precon FIFO based on the number of
+  // outputs of the conditioner matches the actual number of bits pushed into the precon FIFO after
+  // startup checks.  Add a margin (allowed more) as the simulation may end when bits in the precon
+  // FIFO have not resulted in conditioner output and Entropy Source has not been disabled.
+  logic [63:0] ppspb_allowed_more;
+  assign ppspb_allowed_more = bsc_state_q != BscStIncomplete ? 4 * health_test_window : '0;
+  `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(PreconFifoPushedPostStartup_A,
+                             `WITHIN_MARGIN(precon_post_startup_push_bit_cnt_q,     // actual
+                                            precon_post_startup_exp_push_bit_cnt_q, // expected
+                                            0,                                      // allowed less
+                                            ppspb_allowed_more))                    // allowed more
+
+  always_ff @(posedge clk_i, negedge rst_ni) begin
+    if (!rst_ni) begin
+      esbit_push_bit_cnt_q                <= '0;
+      esfinal_non_bypass_push_cnt_q       <= '0;
+      esfinal_post_startup_push_bit_cnt_q <= '0;
+      esrng_push_bit_cnt_q                <= '0;
+      postht_from_esbit_push_bit_cnt_q    <= '0;
+      postht_from_esrng_push_bit_cnt_q    <= '0;
+      postht_non_bypass_pop_bit_cnt_q     <= '0;
+      postht_push_bit_cnt_q               <= '0;
+      precon_post_startup_push_bit_cnt_q  <= '0;
+      precon_push_bit_cnt_q               <= '0;
+      rng_valid_bit_cnt_q                 <= '0;
+    end else if (mubi4_test_true_strict(mubi_es_enable) & !fw_ov_mode_entropy_insert) begin
+      // All these counters get updated if and only if entropy_src is enabled and the firmware
+      // override entropy insertion mode is disabled.  Otherwise, there are no guarantees on how
+      // much entropy from the noise source gets dropped due to backpressure.
+      esbit_push_bit_cnt_q                <= esbit_push_bit_cnt_d;
+      esfinal_non_bypass_push_cnt_q       <= esfinal_non_bypass_push_cnt_d;
+      esfinal_post_startup_push_bit_cnt_q <= esfinal_post_startup_push_bit_cnt_d;
+      esrng_push_bit_cnt_q                <= esrng_push_bit_cnt_d;
+      postht_from_esbit_push_bit_cnt_q    <= postht_from_esbit_push_bit_cnt_d;
+      postht_from_esrng_push_bit_cnt_q    <= postht_from_esrng_push_bit_cnt_d;
+      postht_non_bypass_pop_bit_cnt_q     <= postht_non_bypass_pop_bit_cnt_d;
+      postht_push_bit_cnt_q               <= postht_push_bit_cnt_d;
+      precon_post_startup_push_bit_cnt_q  <= precon_post_startup_push_bit_cnt_d;
+      precon_push_bit_cnt_q               <= precon_push_bit_cnt_d;
+      rng_valid_bit_cnt_q                 <= rng_valid_bit_cnt_d;
+    end
+  end
+
+  always_ff @(posedge clk_i, negedge rst_ni) begin
+    if (!rst_ni) begin
+      bsc_state_q                             <= BscStIncomplete;
+      disable_cnt_q                           <= '0;
+      es_delayed_enable_q                     <= '0;
+      esfinal_post_startup_exp_push_bit_cnt_q <= '0;
+      ht_state_q                              <= HtStNoResult;
+      precon_post_startup_exp_push_bit_cnt_q  <= '0;
+    end else begin
+      bsc_state_q                             <= bsc_state_d;
+      disable_cnt_q                           <= disable_cnt_d;
+      es_delayed_enable_q                     <= es_delayed_enable_d;
+      esfinal_post_startup_exp_push_bit_cnt_q <= esfinal_post_startup_exp_push_bit_cnt_d;
+      ht_state_q                              <= ht_state_d;
+      precon_post_startup_exp_push_bit_cnt_q  <= precon_post_startup_exp_push_bit_cnt_d;
+    end
+  end
+`endif
 
 endmodule
