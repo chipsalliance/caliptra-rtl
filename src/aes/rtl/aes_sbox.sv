@@ -15,7 +15,6 @@ module aes_sbox
   input  logic                     clk_i,
   input  logic                     rst_ni,
   input  logic                     en_i,
-  input  logic                     prd_we_i,
   output logic                     out_req_o,
   input  logic                     out_ack_i,
   input  ciph_op_e                 op_i,
@@ -75,7 +74,6 @@ module aes_sbox
         .clk_i      ( clk_i       ),
         .rst_ni     ( rst_ni      ),
         .en_i       ( en_i        ),
-        .prd_we_i   ( prd_we_i    ),
         .out_req_o  ( out_req_o   ),
         .out_ack_i  ( out_ack_i   ),
         .op_i       ( op_i        ),
@@ -139,9 +137,7 @@ module aes_sbox
   if (SBoxSingleCycle) begin : gen_req_singlecycle
     // Tie off unused inputs.
     logic unused_out_ack;
-    logic unused_prd_we;
     assign unused_out_ack = out_ack_i;
-    assign unused_prd_we  = prd_we_i;
 
     // Signal that we have valid output right away.
     assign out_req_o = en_i;

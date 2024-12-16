@@ -312,6 +312,21 @@
       ]
     },
     {
+      "name": "RESEED_INTERVAL",
+      "desc": "CSRNG maximum number of generate requests allowed between reseeds register",
+      "swaccess": "rw",
+      "hwaccess": "hro",
+      "hwqe": "true",
+      "fields": [
+        {
+          "bits": "31:0",
+          "name": "RESEED_INTERVAL",
+          "desc": "Setting this field will set the number of generate requests that can be\nmade to CSRNG before a reseed request needs to be made.\nThis register supports a maximum of 2^32 requests between reseeds.\nThis register will be compared to a counter, which counts the number of\ngenerate commands between reseed or instantiate commands.\nIf the counter reaches the value of this register, the violating command\nwill be acknowledged with a status error.\nIf the violating command was issued by a HW instance, an interrupt will\nbe triggered.",
+          "resval": "0xffff_ffff"
+        }
+      ]
+    },
+    {
       "name": "SW_CMD_STS",
       "desc": "Application interface command status register",
       "swaccess": "ro",
@@ -321,15 +336,21 @@
       ],
       "fields": [
         {
-          "bits": "0",
+          "bits": "1",
           "name": "CMD_RDY",
-          "desc": "This bit indicates when the command interface is ready to accept commands.",
-          "resval": "1"
+          "desc": "This bit indicates when the command interface is ready to accept commands.\nBefore starting to write a new command to !!SW_CMD_REQ, this field needs to be polled.\n0b0: CSRNG is not ready to accept commands or the last command hasn't been acked yet.\n0b1: CSRNG is ready to accept the next command.",
+          "resval": "0"
         },
         {
-          "bits": "1",
+          "bits": "2",
+          "name": "CMD_ACK",
+          "desc": "This one bit field indicates when a SW command has been acknowledged by the CSRNG.\nIt is set to low each time a new command is written to !!CMD_REQ.\nThe field is set to high once a SW command request has been acknowledged by the CSRNG.\n0b0: The last SW command has not been acknowledged yet.\n0b1: The last SW command has been acknowledged.",
+          "resval": "0"
+        },
+        {
+          "bits": "5:3",
           "name": "CMD_STS",
-          "desc": "This one bit field is the status code returned with the application command ack.\nIt is updated each time a command ack is asserted on the internal application\ninterface for software use.\n0b0: Request completed successfully\n0b1: Request completed with an error",
+          "desc": "This field represents the status code returned with the application command ack.\nIt is updated each time a command ack is asserted on the internal application\ninterface for software use.\nTo check whether a command was succesful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or\n!!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.\n0x0: Request completed successfully.\n0x1: Request completed with an invalid application command error.\n     This error indicates that the issued application command doesn't represent a valid operation.\n     If this error appears, the main state machine will hang and the entropy complex has to be restarted.\n0x2: Request completed with an invalid counter drbg generation command error.\n     This error indicates that CSRNG entropy was generated for a command that is not a generate command.\n     In this case the entropy should not be considered as valid.\n0x3: This error indicates that the last command was issued out of sequence.\n     This happens when a command other than instantiate was issued without sending an instantiate command first.\n     This can also happen when an uninstantiate command is sent without instantiating first.\n0x4: This error indicates that the number of generate commands between reseeds exceeded the maximum number allowed.\n     This happens only for generate commands.",
           "resval": "0"
         }
       ]
@@ -444,7 +465,17 @@
         {
           "bits": "13",
           "name": "CS_MAIN_SM_ALERT",
-          "desc": "This bit is set when an unsupported/illegal CSRNG command is being processed.\nThe main FSM will hang unless the module enable field is set to the disabled state."
+          "desc": "This bit is set when an unsupported/illegal CSRNG command is received by the\nmain state machine.\nThe invalid command is ignored and CSRNG continues to operate.\nWriting a zero resets this status bit."
+        },
+        {
+          "bits": "14",
+          "name": "CS_MAIN_SM_INVALID_CMD_SEQ",
+          "desc": "This bit is set when an out of order command is received by the main state machine.\nThis happens when an instantiate command is sent for a state that was already\ninstantiated or when any command other than instantiate is sent for a state that\nwasn't instantiated yet.\nThe invalid command is ignored and CSRNG continues to operate.\nWriting a zero resets this status bit."
+        },
+        {
+          "bits": "15",
+          "name": "CMD_STAGE_RESEED_CNT_ALERT",
+          "desc": "This bit is set when the maximum number of generate requests between reseeds is\nexceeded.\nThe invalid generate command is ignored and CSRNG continues to operate.\nWriting a zero resets this status bit."
         }
       ]
     },
