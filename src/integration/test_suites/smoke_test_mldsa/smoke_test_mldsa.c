@@ -499,11 +499,6 @@ void main() {
 
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
         verify_res[i] = mldsa_verify_res[i];
-
-
-    uint8_t offset;
-    volatile uint32_t * reg_ptr;
-    uint8_t privkey_inject_cmd;
    
 
     mldsa_keygen_flow(seed, entropy, privkey, pubkey);
