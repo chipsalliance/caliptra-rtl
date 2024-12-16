@@ -4,9 +4,6 @@
 //
 // AES package
 
-`ifndef AES_PKG
-`define AES_PKG
-
 package aes_pkg;
 
 // If this parameter is set, fatal alerts clear all status and trigger bits to zero. By
@@ -745,4 +742,3 @@ function automatic logic [3:0][7:0] aes_prd_get_lsbs(
 endfunction
 
 endpackage
-`endif

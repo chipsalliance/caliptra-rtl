@@ -1,10 +1,12 @@
-commit a9b955893ff967d59adca6c562fc387d3cd88516
+commit e9437d6dc68b9884e2a76571d70edf17ba8ed72d
 Author: Andrea Caforio <andrea.caforio@lowrisc.org>
-Date:   Thu Nov 28 14:27:58 2024 +0100
+Date:   Fri Dec 13 13:39:43 2024 +0100
 
-    [tlul, shim] Externalize Valid-Hold registers
+    [aes, pre-dv] Remove test vector redundancies
     
-    Move Valid-Hold-internal registers to a separate module with its own
-    VH interface and redirect requests to it.
+    Firstly, this commit removes some redundant instructions in the test
+    vector sequences, e.g., unnecessary writes to the `CTRL_GCM` register.
+    Secondly, some redundant polls for the `IDLE` bit in the `STATUS`
+    register are replaced with polls for the `INPUT_READY` bit.
     
     Signed-off-by: Andrea Caforio <andrea.caforio@lowrisc.org>
