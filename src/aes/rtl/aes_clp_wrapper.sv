@@ -253,14 +253,14 @@ end
 
 //Read Key
 kv_read_client #(
-  .DATA_WIDTH(256), //FIXME key size
+  .DATA_WIDTH(keymgr_pkg::KeyWidth),
   .PAD(0)
 )
-hmac_key_kv_read
+aes_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
-    .zeroize('0), //FIXME
+    .zeroize('0), //FIXME needed?
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -279,15 +279,38 @@ hmac_key_kv_read
     .read_done(kv_key_done)
 );
 
+logic [(keymgr_pkg::KeyWidth/32)-1:0][31:0] kv_key_reg;
+
+//load keyvault key into local reg
+genvar g_dword;
+generate
+  for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
+    always_ff @(posedge clk or negedge reset_n) begin
+      if (~reset_n) begin
+        kv_key_reg[g_dword] <= '0;
+      end else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin
+        kv_key_reg[g_dword] <= '0;
+      end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
+        kv_key_reg[g_dword] <= kv_key_write_data;
+      end
+    end
+  end
+endgenerate
+
 //Drive keymgr interface into AES
 always_ff @(posedge clk or negedge reset_n) begin
   if (~reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else begin
+  else if (kv_key_read_ctrl_reg.read_en) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
     keymgr_key.key[0] <= '0; //FIXME drive from kv
+    keymgr_key.key[1] <= '0;
+  end
+  else if (kv_key_done) begin //key is copied, drive valid to aes
+    keymgr_key.valid <= '1;
+    keymgr_key.key[0] <= kv_key_reg;
     keymgr_key.key[1] <= '0;
   end
 end
