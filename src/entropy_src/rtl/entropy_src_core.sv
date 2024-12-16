@@ -1504,8 +1504,9 @@ module entropy_src_core
     .incr_en_i(health_test_esbus_vld),
     .decr_en_i(1'b0),
     .step_i(HalfRegWidth'(1)),
+    .commit_i(1'b1),
     .cnt_o(window_cntr),
-    .cnt_next_o(),
+    .cnt_after_commit_o(),
     .err_o(window_cntr_err)
   );
 
