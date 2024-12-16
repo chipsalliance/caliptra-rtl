@@ -1,12 +1,10 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
 // AES SubBytes
 
-module aes_sub_bytes 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_sub_bytes import aes_pkg::*;
 #(
   parameter sbox_impl_e SecSBoxImpl = SBoxImplDom
 ) (

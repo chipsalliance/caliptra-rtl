@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -7,9 +7,7 @@
 // This module contains the AES cipher core control FSM operating on
 // and producing the positive values of important control signals.
 
-module aes_cipher_control_fsm_p 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_cipher_control_fsm_p import aes_pkg::*;
 #(
   parameter bit         SecMasking  = 0,
   parameter sbox_impl_e SecSBoxImpl = SBoxImplDom

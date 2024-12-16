@@ -26,3 +26,4 @@ python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/soc_ifc/rtl/soc_ifc_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/hmac/rtl/hmac_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/doe/rtl/doe_reg.rdl
 python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/axi/rtl/axi_dma_reg.rdl
+python3 tools/scripts/reg_gen.py $CALIPTRA_ROOT/src/aes/rtl/aes_clp_reg.rdl

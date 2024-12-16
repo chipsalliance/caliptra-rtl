@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -6,9 +6,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_key_expand 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_key_expand import aes_pkg::*;
 #(
   parameter bit         AES192Enable = 1,
   parameter bit         SecMasking   = 0,
@@ -21,6 +19,7 @@ module aes_key_expand
   input  logic                   cfg_valid_i,
   input  ciph_op_e               op_i,
   input  sp2v_e                  en_i,
+  input  logic                   prd_we_i,
   output sp2v_e                  out_req_o,
   input  sp2v_e                  out_ack_i,
   input  logic                   clear_i,
@@ -49,6 +48,7 @@ module aes_key_expand
   logic      [31:0] rot_word_in [NumShares];
   logic      [31:0] rot_word_out [NumShares];
   logic             use_rot_word;
+  logic             prd_we, prd_we_force, prd_we_inhibit;
   logic      [31:0] sub_word_in, sub_word_out;
   logic       [3:0] sub_word_out_req;
   logic      [31:0] sw_in_mask, sw_out_mask;
@@ -207,17 +207,54 @@ module aes_key_expand
     assign sw_in_mask = use_rot_word ? rot_word_out[1] : rot_word_in[1];
   end
 
+  // Make sure that whenever the data/mask inputs of the S-Boxes update, the buffered PRD is
+  // updated in sync. There are two special cases we need to handle here:
+  // - For AES-256, the initial round is short (no round key computation). But the data/mask inputs
+  //   are updated either way. Thus, we need to force a PRD update as well.
+  // - For AES-192 in FWD mode, the data/mask inputs aren't updated in Round 1, 4, 7 and 10. Thus,
+  //   we need to inhibit PRD updates triggred at the end of Round 0, 3, 6 and 9.
+  assign prd_we_force = (key_len_i == AES_256) & (rnd == 0);
+  assign prd_we_inhibit = (key_len_i == AES_192) & (op_i == CIPH_FWD) &
+      (rnd == 0 || rnd == 3 || rnd == 6 || rnd == 9);
+  assign prd_we = (prd_we_i & ~prd_we_inhibit) | prd_we_force;
+
+  // PRD buffering
+  logic [WidthPRDKey-1:0] prd_q;
+
+  if (!SecMasking) begin : gen_no_prd_buffer
+    // The masks are ignored anyway.
+    assign prd_q = prd_i;
+
+    // Tie-off unused signals.
+    logic unused_prd_we;
+    assign unused_prd_we = prd_we;
+
+  end else begin : gen_prd_buffer
+    // PRD buffer stage to:
+    // 1. Make sure the S-Boxes get always presented new data/mask inputs together with fresh PRD
+    //    for remasking.
+    // 2. Prevent glitches originating from inside the masking PRNG from propagating into the
+    //    masked S-Boxes.
+    always_ff @(posedge clk_i or negedge rst_ni) begin : prd_reg
+      if (!rst_ni) begin
+        prd_q <= '0;
+      end else if (prd_we) begin
+        prd_q <= prd_i;
+      end
+    end
+  end
+
   // SubWord - individually substitute bytes.
   // Every DOM S-Box instance consumes 28 bits of randomness but itself produces 20 bits for use in
-  // another S-Box instance. For other S-Box implementations, only the bits corresponding to prd_i
+  // another S-Box instance. For other S-Box implementations, only the bits corresponding to prd_q
   // are used. Other bits are ignored and tied to 0.
   logic [3:0][WidthPRDSBox+19:0] in_prd;
   logic [3:0]             [19:0] out_prd;
 
   for (genvar i = 0; i < 4; i++) begin : gen_sbox
     // Rotate the randomness produced by the S-Boxes. The LSBs are taken from the masking PRNG
-    // (prd_i) whereas the MSBs are produced by the other S-Box instances.
-    assign in_prd[i] = {out_prd[aes_rot_int(i,4)], prd_i[WidthPRDSBox*i +: WidthPRDSBox]};
+    // (prd_q) whereas the MSBs are produced by the other S-Box instances.
+    assign in_prd[i] = {out_prd[aes_rot_int(i,4)], prd_q[WidthPRDSBox*i +: WidthPRDSBox]};
 
     aes_sbox #(
       .SecSBoxImpl ( SecSBoxImpl )

@@ -22,6 +22,10 @@ addrmap clp {
 
     hmac_reg hmac_reg @ 0x1001_0000;
 
+    aes aes_reg @ 0x1001_1000;
+
+    aes_clp_reg aes_clp_reg @ 0x1001_1100;
+
     kv_reg kv_reg @ 0x1001_8000;
 
     pv_reg pv_reg @ 0x1001_A000;

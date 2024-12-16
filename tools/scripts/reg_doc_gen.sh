@@ -29,11 +29,13 @@ src/axi/rtl/axi_dma_reg.rdl \
 src/soc_ifc/rtl/soc_ifc_reg.rdl \
 src/hmac/rtl/hmac_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
-src/keyvault/rtl/kv_def.rdl \
 src/entropy_src/data/entropy_src.rdl \
 src/csrng/data/csrng.rdl \
 src/spi_host/data/spi_host.rdl \
-src/uart/data/uart.rdl
+src/uart/data/uart.rdl \
+src/aes/data/aes.rdl \
+src/aes/rtl/aes_clp_reg.rdl \
+src/keyvault/rtl/kv_def.rdl
 
 python3 tools/scripts/reg_doc_gen.py \
 src/soc_ifc/rtl/caliptra_top_reg.rdl \

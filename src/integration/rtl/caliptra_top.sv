@@ -281,7 +281,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -366,6 +366,7 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -989,6 +990,37 @@ mldsa_top #(
      .kv_rd_resp    (kv_rd_resp[2]),
      .error_intr    (mldsa_error_intr),
      .notif_intr    (mldsa_notif_intr)
+);
+
+aes_clp_wrapper #(
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES))
+) aes_inst (
+    .clk(clk_cg),
+    .reset_n(cptra_noncore_rst_b),
+    .cptra_pwrgood(cptra_pwrgood),
+
+    .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
+    .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hwdata),
+    .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hsel),
+    .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hwrite),
+    .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hready),
+    .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].htrans),
+    .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hsize),
+    .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hresp),
+    .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
+    .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
+
+    // kv interface
+    .kv_read(kv_read[5]),
+    .kv_rd_resp(kv_rd_resp[5]),
+
+    .busy_o(aes_busy),
+
+    // Interrupt
+    .error_intr(),
+    .notif_intr(),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
 kv #(

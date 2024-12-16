@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,6 +19,9 @@ parameter int unsigned SliceSizeCtr = 16;
 parameter int unsigned NumSlicesCtr = aes_reg_pkg::NumRegsIv * 32 / SliceSizeCtr;
 parameter int unsigned SliceIdxWidth = caliptra_prim_util_pkg::vbits(NumSlicesCtr);
 
+// In GCM, the counter performs inc32() instead of inc128(), i.e., the counter wraps at 32 bits.
+parameter int unsigned SliceIdxMaxInc32 = 32 / SliceSizeCtr - 1;
+
 // Widths of signals carrying pseudo-random data for clearing
 parameter int unsigned WidthPRDClearing = 64;
 parameter int unsigned NumChunksPRDClearing128 = 128/WidthPRDClearing;
@@ -31,8 +34,6 @@ parameter int unsigned WidthPRDSBox     = 8;  // Number PRD bits per S-Box. This
 parameter int unsigned WidthPRDData     = 16*WidthPRDSBox; // 16 S-Boxes for the data path
 parameter int unsigned WidthPRDKey      = 4*WidthPRDSBox;  // 4 S-Boxes for the key expand
 parameter int unsigned WidthPRDMasking  = WidthPRDData + WidthPRDKey;
-
-parameter int unsigned ChunkSizePRDMasking = WidthPRDMasking/5;
 
 // Clearing PRNG default LFSR seed and permutation
 // These LFSR parameters have been generated with
@@ -51,21 +52,27 @@ parameter clearing_lfsr_perm_t RndCnstClearingSharePermDefault = {
   256'h9736b95ac3f3b5205caf8dc536aad73605d393c8dd94476e830e97891d4828d0
 };
 
-// Masking PRNG default LFSR seed and permutation
-// We use a single seed that is split down into chunks internally.
+// Masking PRNG default state seed and output permutation
+// The output width is 160 bits (WidthPRDMasking = WidthPRDSBox * (16 + 4)).
 // These LFSR parameters have been generated with
 // $ util/design/gen-lfsr-seed.py --width 160 --seed 31468618 --prefix "Masking"
 parameter int MaskingLfsrWidth = 160; // = WidthPRDMasking = WidthPRDSBox * (16 + 4)
-typedef logic [MaskingLfsrWidth-1:0] masking_lfsr_seed_t;
 typedef logic [MaskingLfsrWidth-1:0][$clog2(MaskingLfsrWidth)-1:0] masking_lfsr_perm_t;
-parameter masking_lfsr_seed_t RndCnstMaskingLfsrSeedDefault =
-  160'hc132b5723c5a4cf4743b3c7c32d580f74f1713a;
 parameter masking_lfsr_perm_t RndCnstMaskingLfsrPermDefault = {
   256'h17261943423e4c5c03872194050c7e5f8497081d96666d406f4b606473303469,
   256'h8e7c721c8832471f59919e0b128f067b25622768462e554d8970815d490d7f44,
   256'h048c867d907a239b20220f6c79071a852d76485452189f14091b1e744e396737,
   256'h4f785b772b352f6550613c58130a8b104a3f28019c9a380233956b00563a512c,
   256'h808d419d63982a16995e0e3b57826a36718a9329452492533d83115a75316e15
+};
+// The state width is 177 bits (Bivium) but the primitive expects a 288-bit seed (Trivium).
+// These LFSR parameters have been generated with
+// $ util/design/gen-lfsr-seed.py --width 288 --seed 31468618 --prefix "Masking"
+parameter int MaskingPrngStateWidth = 288;
+typedef logic [MaskingPrngStateWidth-1:0] masking_lfsr_seed_t;
+parameter masking_lfsr_seed_t RndCnstMaskingLfsrSeedDefault = {
+  32'h758a4420,
+  256'h31e1c461_6ea343ec_153282a3_0c132b57_23c5a4cf_4743b3c7_c32d580f_74f1713a
 };
 
 typedef enum logic [31:0] {
@@ -79,12 +86,26 @@ typedef enum logic [31:0] {
                                  // see aes_sbox_canright_dom.sv
 } sbox_impl_e;
 
+// GF(2^128) irreducible, field-generating polynomial for AES-GCM
+// See Section "6.3 Multiplication Operation on Blocks" of
+// https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf on Page 11:
+//   "Let R be the bit string 11100001 || 0^120."
+// And further on Page 12:
+//   "The reduction modulus is the polynomial of degree 128 that corresponds to R || 1"
+// Or in other words: x^128 + x^7 + x^2 + x + 1
+// The MSB gets clipped off below.
+parameter int unsigned GCMDegree = 128;
+parameter bit [GCMDegree-1:0] GCMIPoly = GCMDegree'(1'b1) << 7 |
+                                         GCMDegree'(1'b1) << 2 |
+                                         GCMDegree'(1'b1) << 1 |
+                                         GCMDegree'(1'b1) << 0;
 
 // Parameters used for controlgroups in the coverage
 parameter int AES_OP_WIDTH             = 2;
 parameter int AES_MODE_WIDTH           = 6;
 parameter int AES_KEYLEN_WIDTH         = 3;
 parameter int AES_PRNGRESEEDRATE_WIDTH = 3;
+parameter int AES_GCMPHASE_WIDTH       = 6;
 
 // SEC_CM: MAIN.CONFIG.SPARSE
 typedef enum logic [AES_OP_WIDTH-1:0] {
@@ -99,9 +120,11 @@ typedef enum logic [AES_MODE_WIDTH-1:0] {
   AES_CFB  = 6'b00_0100,
   AES_OFB  = 6'b00_1000,
   AES_CTR  = 6'b01_0000,
-  AES_NONE = 6'b10_0000
+  AES_GCM  = 6'b10_0000,
+  AES_NONE = 6'b11_1111
 } aes_mode_e;
 
+// SEC_CM: MAIN.CONFIG.SPARSE
 typedef enum logic [AES_OP_WIDTH-1:0] {
   CIPH_FWD = 2'b01,
   CIPH_INV = 2'b10
@@ -121,6 +144,16 @@ typedef enum logic [AES_PRNGRESEEDRATE_WIDTH-1:0] {
   PER_8K = 3'b100
 } prs_rate_e;
 parameter int unsigned BlockCtrWidth = 13;
+
+// SEC_CM: GCM.CONFIG.SPARSE
+typedef enum logic [AES_GCMPHASE_WIDTH-1:0] {
+  GCM_INIT    = 6'b00_0001,
+  GCM_RESTORE = 6'b00_0010,
+  GCM_AAD     = 6'b00_0100,
+  GCM_TEXT    = 6'b00_1000,
+  GCM_SAVE    = 6'b01_0000,
+  GCM_TAG     = 6'b10_0000
+} gcm_phase_e;
 
 typedef struct packed {
   logic [31:7] unused;
@@ -216,13 +249,44 @@ typedef struct packed {
   typedef enum logic [CtrlStateWidth-1:0] {
     CTRL_IDLE        = 6'b001001,
     CTRL_LOAD        = 6'b100011,
-    CTRL_PRNG_UPDATE = 6'b111101,
+    CTRL_GHASH_READY = 6'b111101,
     CTRL_PRNG_RESEED = 6'b010000,
     CTRL_FINISH      = 6'b100100,
     CTRL_CLEAR_I     = 6'b111010,
     CTRL_CLEAR_CO    = 6'b001110,
     CTRL_ERROR       = 6'b010111
   } aes_ctrl_e;
+
+// Encoding generated with:
+// $ ./util/design/sparse-fsm-encode.py -d 3 -m 8 -n 6 \
+//     -s 31468618 --language=sv
+//
+// Hamming distance histogram:
+//
+//  0: --
+//  1: --
+//  2: --
+//  3: |||||||||||||||||||| (57.14%)
+//  4: ||||||||||||||| (42.86%)
+//  5: --
+//  6: --
+//
+// Minimum Hamming distance: 3
+// Maximum Hamming distance: 4
+// Minimum Hamming weight: 1
+// Maximum Hamming weight: 5
+//
+localparam int GhashStateWidth = 6;
+typedef enum logic [GhashStateWidth-1:0] {
+  GHASH_IDLE                    = 6'b101001,
+  GHASH_MULT                    = 6'b010000,
+  GHASH_ADD_S                   = 6'b111110,
+  GHASH_OUT                     = 6'b011101,
+  GHASH_ERROR                   = 6'b110011,
+  GHASH_MASKED_INIT             = 6'b001010,
+  GHASH_MASKED_ADD_STATE_SHARES = 6'b000111,
+  GHASH_MASKED_ADD_CORR         = 6'b100100
+} aes_ghash_e;
 
 // Generic, sparse mux selector encodings
 
@@ -294,6 +358,35 @@ typedef enum logic [Mux4SelWidth-1:0] {
   MUX4_SEL_2 = 5'b00001,
   MUX4_SEL_3 = 5'b10111
 } mux4_sel_e;
+
+// Encoding generated with:
+// $ ./util/design/sparse-fsm-encode.py -d 3 -m 5 -n 6 \
+//     -s 31468618 --language=sv
+//
+// Hamming distance histogram:
+//
+//  0: --
+//  1: --
+//  2: --
+//  3: |||||||||||||||||||| (50.00%)
+//  4: |||||||||||||||| (40.00%)
+//  5: |||| (10.00%)
+//  6: --
+//
+// Minimum Hamming distance: 3
+// Maximum Hamming distance: 5
+// Minimum Hamming weight: 1
+// Maximum Hamming weight: 5
+//
+localparam int Mux5SelWidth = 6;
+typedef enum logic [Mux5SelWidth-1:0] {
+  MUX5_SEL_0 = 6'b110000,
+  MUX5_SEL_1 = 6'b001000,
+  MUX5_SEL_2 = 6'b000011,
+  MUX5_SEL_3 = 6'b011101,
+  MUX5_SEL_4 = 6'b111110
+} mux5_sel_e;
+
 
 // $ ./sparse-fsm-encode.py -d 3 -m 6 -n 6 \
 //      -s 31468618 --language=sv
@@ -419,6 +512,46 @@ typedef enum logic [AddSOSelWidth-1:0] {
   ADD_SO_DIP  = MUX3_SEL_2
 } add_so_sel_e;
 
+parameter int GHashInSelNum = 3;
+parameter int GHashInSelWidth = Mux3SelWidth;
+typedef enum logic [GHashInSelWidth-1:0] {
+  GHASH_IN_DATA_IN_PREV = MUX3_SEL_0,
+  GHASH_IN_DATA_OUT     = MUX3_SEL_1,
+  GHASH_IN_S            = MUX3_SEL_2
+} ghash_in_sel_e;
+
+parameter int GHashAddInSelNum = 3;
+parameter int GHashAddInSelWidth = Mux3SelWidth;
+typedef enum logic [GHashAddInSelWidth-1:0] {
+  ADD_IN_GHASH_IN = MUX3_SEL_0,
+  ADD_IN_CORR_A   = MUX3_SEL_1,
+  ADD_IN_CORR_B   = MUX3_SEL_2
+} ghash_add_in_sel_e;
+
+parameter int GHashStateSelNum = 4;
+parameter int GHashStateSelWidth = Mux4SelWidth;
+typedef enum logic [GHashStateSelWidth-1:0] {
+  GHASH_STATE_RESTORE = MUX4_SEL_0,
+  GHASH_STATE_INIT    = MUX4_SEL_1,
+  GHASH_STATE_ADD     = MUX4_SEL_2,
+  GHASH_STATE_MULT    = MUX4_SEL_3
+} ghash_state_sel_e;
+
+parameter int GFMultS1SelNum = 3;
+parameter int GFMultS1SelWidth = Mux3SelWidth;
+typedef enum logic [GFMultS1SelWidth-1:0] {
+  MULT_IN_STATE0 = MUX3_SEL_0,
+  MULT_IN_STATE1 = MUX3_SEL_1,
+  MULT_IN_S1     = MUX3_SEL_2
+} gf_mult_in_sel_e;
+
+parameter int DataOutSelNum = 2;
+parameter int DataOutSelWidth = Mux2SelWidth;
+typedef enum logic [DataOutSelWidth-1:0] {
+  DATA_OUT_CIPHER = MUX2_SEL_0,
+  DATA_OUT_GHASH  = MUX2_SEL_1
+} data_out_sel_e;
+
 // Sparse two-value signal type sp2v_e
 parameter int Sp2VNum = 2;
 parameter int Sp2VWidth = Mux2SelWidth;
@@ -448,6 +581,12 @@ parameter ctrl_reg_t CTRL_RESET = '{
   mode:             aes_mode_e'(aes_reg_pkg::AES_CTRL_SHADOWED_MODE_RESVAL),
   operation:        aes_op_e'(aes_reg_pkg::AES_CTRL_SHADOWED_OPERATION_RESVAL)
 };
+
+// GCM control register type
+typedef struct packed {
+  logic [4:0] num_valid_bytes;
+  gcm_phase_e phase;
+} ctrl_gcm_reg_t;
 
 // Multiplication by {02} (i.e. x) on GF(2^8)
 // with field generating polynomial {01}{1b} (9'h11b)
@@ -509,6 +648,28 @@ function automatic logic [3:0][3:0][7:0] aes_transpose(logic [3:0][3:0][7:0] in)
   return transpose;
 endfunction
 
+// Convert AES byte state matrix to internal GHASH bit vector representation.
+function automatic logic [127:0] aes_state_to_ghash_vec(logic [3:0][3:0][7:0] in);
+  logic [127:0] out;
+  logic [15:0][7:0] byte_vec;
+  for (int i = 0; i < 4; i++) begin
+    for (int j = 0; j < 4; j++) begin
+      byte_vec[15 - 4*i - j] = in[j][i];
+    end
+  end
+  out = byte_vec;
+  return out;
+endfunction
+
+// Convert internal GHASH bit vector representation to simple bit vector.
+function automatic logic [127:0] aes_ghash_reverse_bit_order(logic [127:0] in);
+  logic [127:0] out;
+  for (int i = 0; i < 128; i++) begin
+    out[i] = in[127-i];
+  end
+  return out;
+endfunction
+
 // Extract single column from state matrix
 function automatic logic [3:0][7:0] aes_col_get(logic [3:0][3:0][7:0] in, logic [1:0] idx);
   logic [3:0][7:0] out;
@@ -550,12 +711,11 @@ endfunction
 // The masking PRNG is used for generating both the PRD for the S-Boxes/SubBytes operation as
 // well as for the input data masks. When using any of the masked Canright S-Box implementations,
 // it is important that the SubBytes input masks (generated by the PRNG in Round X-1) and the
-// SubBytes output masks (generated by the PRNG in Round X) are independent. Inside the PRNG,
-// this is achieved by using multiple, separately re-seeded LFSR chunks and by selecting the
-// separate LFSR chunks in alternating fashion. Since the input data masks become the SubBytes
-// input masks in the first round, we select the same 8 bit lanes for the input data masks which
-// are also used to form the SubBytes output mask for the masked Canright S-Box implementations,
-// i.e., the 8 LSBs of the per S-Box PRD. In particular, we have:
+// SubBytes output masks (generated by the PRNG in Round X) are independent. This can be achieved
+// by using e.g. an unrolled Bivium stream cipher primitive inside the PRNG. Since the input data
+// masks become the SubBytes input masks in the first round, we select the same 8 bit lanes for the
+// input data masks which are also used to form the SubBytes output mask for the masked Canright
+// S-Box implementations, i.e., the 8 LSBs of the per S-Box PRD. In particular, we have:
 //
 // prng_output = { prd_key_expand, ... , sb_prd[4], sb_out_mask[4], sb_prd[0], sb_out_mask[0] }
 //
@@ -565,7 +725,7 @@ endfunction
 //
 // When using a masked S-Box implementation other than Canright, we still select the 8 LSBs of
 // the per-S-Box PRD to form the input data mask of the corresponding byte. We do this to
-// distribute the input data masks over all LFSR chunks of the masking PRNG.
+// distribute the input data masks over all output bits the masking PRNG.
 
 // For one row of the state matrix, extract the 8 LSBs of the per-S-Box PRD from the PRNG output.
 // These bits are used as:
