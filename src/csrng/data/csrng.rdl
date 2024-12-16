@@ -152,6 +152,24 @@ addrmap csrng {
     } RESEED_INTERVAL @ 0x1C;
     reg {
         field {
+            desc = "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command.";
+            sw = r;
+        } RESEED_COUNTER_0[31:0] = 0x0;
+    } RESEED_COUNTER_0 @ 0x20;
+    reg {
+        field {
+            desc = "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command.";
+            sw = r;
+        } RESEED_COUNTER_0[31:0] = 0x0;
+    } RESEED_COUNTER_1 @ 0x24;
+    reg {
+        field {
+            desc = "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command.";
+            sw = r;
+        } RESEED_COUNTER_0[31:0] = 0x0;
+    } RESEED_COUNTER_2 @ 0x28;
+    reg {
+        field {
             desc = "This bit indicates when the command interface is ready to accept commands.
             Before starting to write a new command to !!SW_CMD_REQ, this field needs to be polled.
             0b0: CSRNG is not ready to accept commands or the last command hasn't been acked yet.
@@ -174,7 +192,7 @@ addrmap csrng {
             !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.";
             sw = r;
         } CMD_STS[5:3] = 0x0;
-    } SW_CMD_STS @ 0x20;
+    } SW_CMD_STS @ 0x2C;
     reg {
         field {
             desc = "This bit is set when genbits are available on this application interface.";
@@ -184,7 +202,7 @@ addrmap csrng {
             desc = "This bit is set when genbits are FIPS/CC compliant.";
             sw = r;
         } GENBITS_FIPS[1:1];
-    } GENBITS_VLD @ 0x24;
+    } GENBITS_VLD @ 0x30;
     reg {
         field {
             desc = "Reading this register will get the generated bits that were requested with
@@ -197,7 +215,7 @@ addrmap csrng {
             Otherwise, the register reads as 0.";
             sw = r;
         } GENBITS[31:0];
-    } GENBITS @ 0x28;
+    } GENBITS @ 0x34;
     reg {
         field {
             desc = "Setting this field will set the number for which internal state can be
@@ -211,7 +229,7 @@ addrmap csrng {
             that the !!INT_STATE_VAL read back is accurate.";
             sw = rw;
         } INT_STATE_NUM[3:0];
-    } INT_STATE_NUM @ 0x2C;
+    } INT_STATE_NUM @ 0x38;
     reg {
         field {
             desc = "Reading this register will dump out the contents of the selected internal state field.
@@ -225,7 +243,7 @@ addrmap csrng {
             Otherwise, the register reads as 0.";
             sw = r;
         } INT_STATE_VAL[31:0];
-    } INT_STATE_VAL @ 0x30;
+    } INT_STATE_VAL @ 0x3C;
     reg {
         field {
             desc = "Force the FIPS/CC compliance flag of individual instances to true.
@@ -236,7 +254,7 @@ addrmap csrng {
             Note that for this to work, !!CTRL.FIPS_FORCE_ENABLE needs to be set to kMultiBitBool4True.";
             sw = rw;
         } FIPS_FORCE[2:0];
-    } FIPS_FORCE @ 0x34;
+    } FIPS_FORCE @ 0x40;
     reg {
         field {
             desc = "Reading this register indicates whether one of the CSRNG HW instances has
@@ -248,7 +266,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } HW_EXC_STS[15:0];
-    } HW_EXC_STS @ 0x38;
+    } HW_EXC_STS @ 0x44;
     reg {
         field {
             desc = "This bit is set when the ENABLE field in the !!CTRL register is set to
@@ -317,7 +335,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } CMD_STAGE_RESEED_CNT_ALERT[15:15];
-    } RECOV_ALERT_STS @ 0x3C;
+    } RECOV_ALERT_STS @ 0x48;
     reg {
         field {
             desc = "This bit will be set to one when an error has been detected for the
@@ -502,7 +520,7 @@ addrmap csrng {
             This bit will stay set until the next reset.";
             sw = r;
         } FIFO_STATE_ERR[30:30];
-    } ERR_CODE @ 0x40;
+    } ERR_CODE @ 0x4C;
     reg {
         field {
             desc = "Setting this field will set the bit number for which an error
@@ -513,12 +531,12 @@ addrmap csrng {
             an interrupt or an alert.";
             sw = rw;
         } ERR_CODE_TEST[4:0];
-    } ERR_CODE_TEST @ 0x44;
+    } ERR_CODE_TEST @ 0x50;
     reg {
         field {
             desc = "This is the state of the CSRNG main state machine.
             See the RTL file `csrng_main_sm` for the meaning of the values.";
             sw = r;
         } MAIN_SM_STATE[7:0] = 0x4E;
-    } MAIN_SM_STATE @ 0x48;
+    } MAIN_SM_STATE @ 0x54;
 };
