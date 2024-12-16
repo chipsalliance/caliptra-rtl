@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -97,6 +97,7 @@ module aes_cipher_core
   import aes_pkg::*;
 #(
   parameter bit          AES192Enable         = 1,
+  parameter bit          CiphOpFwdOnly        = 0,
   parameter bit          SecMasking           = 1,
   parameter sbox_impl_e  SecSBoxImpl          = SBoxImplDom,
   parameter bit          SecAllowForcingMasks = 0,
@@ -137,7 +138,8 @@ module aes_cipher_core
   output logic                        alert_o,
 
   // Pseudo-random data for register clearing
-  input  logic [WidthPRDClearing-1:0] prd_clearing_i [NumShares],
+  input  logic        [3:0][3:0][7:0] prd_clearing_state_i [NumShares],
+  input  logic            [7:0][31:0] prd_clearing_key_i [NumShares],
 
   // Masking PRNG
   input  logic                        force_masks_i, // Useful for SCA only.
@@ -223,10 +225,7 @@ module aes_cipher_core
   logic                               sp_enc_err_d, sp_enc_err_q;
   logic                               op_err;
 
-  // Pseudo-random data for clearing and masking purposes
-  logic                       [127:0] prd_clearing_128 [NumShares];
-  logic                       [255:0] prd_clearing_256 [NumShares];
-
+  // Pseudo-random data for masking purposes
   logic         [WidthPRDMasking-1:0] prd_masking;
   logic  [3:0][3:0][WidthPRDSBox-1:0] prd_sub_bytes;
   logic             [WidthPRDKey-1:0] prd_key_expand;
@@ -235,17 +234,6 @@ module aes_cipher_core
   logic                               prd_masking_rsd_ack;
 
   logic               [3:0][3:0][7:0] data_in_mask;
-
-  // Generate clearing signals of appropriate widths. If masking is enabled, the two shares of
-  // the registers must be cleared with different pseudo-random data.
-  for (genvar s = 0; s < NumShares; s++) begin : gen_prd_clearing_shares
-    for (genvar c = 0; c < NumChunksPRDClearing128; c++) begin : gen_prd_clearing_128
-      assign prd_clearing_128[s][c * WidthPRDClearing +: WidthPRDClearing] = prd_clearing_i[s];
-    end
-    for (genvar c = 0; c < NumChunksPRDClearing256; c++) begin : gen_prd_clearing_256
-      assign prd_clearing_256[s][c * WidthPRDClearing +: WidthPRDClearing] = prd_clearing_i[s];
-    end
-  end
 
   // op_i is one-hot encoded. Check the provided value and trigger an alert upon detecing invalid
   // encodings.
@@ -262,8 +250,8 @@ module aes_cipher_core
     unique case (state_sel)
       STATE_INIT:  state_d = state_init_i;
       STATE_ROUND: state_d = add_round_key_out;
-      STATE_CLEAR: state_d = prd_clearing_128;
-      default:     state_d = prd_clearing_128;
+      STATE_CLEAR: state_d = prd_clearing_state_i;
+      default:     state_d = prd_clearing_state_i;
     endcase
   end
 
@@ -308,7 +296,6 @@ module aes_cipher_core
     // - the PRD required by the key expand module (has 4 S-Boxes internally).
     aes_prng_masking #(
       .Width                ( WidthPRDMasking        ),
-      .ChunkSize            ( ChunkSizePRDMasking    ),
       .EntropyWidth         ( EntropyWidth           ),
       .SecAllowForcingMasks ( SecAllowForcingMasks   ),
       .SecSkipPRNGReseeding ( SecSkipPRNGReseeding   ),
@@ -433,10 +420,10 @@ module aes_cipher_core
   always_comb begin : key_full_mux
     unique case (key_full_sel)
       KEY_FULL_ENC_INIT: key_full_d = key_init_i;
-      KEY_FULL_DEC_INIT: key_full_d = key_dec_q;
+      KEY_FULL_DEC_INIT: key_full_d = !CiphOpFwdOnly ? key_dec_q : prd_clearing_key_i;
       KEY_FULL_ROUND:    key_full_d = key_expand_out;
-      KEY_FULL_CLEAR:    key_full_d = prd_clearing_256;
-      default:           key_full_d = prd_clearing_256;
+      KEY_FULL_CLEAR:    key_full_d = prd_clearing_key_i;
+      default:           key_full_d = prd_clearing_key_i;
     endcase
   end
 
@@ -448,21 +435,36 @@ module aes_cipher_core
     end
   end
 
-  // SEC_CM: KEY.SEC_WIPE
-  // Decryption Key registers
-  always_comb begin : key_dec_mux
-    unique case (key_dec_sel)
-      KEY_DEC_EXPAND: key_dec_d = key_expand_out;
-      KEY_DEC_CLEAR:  key_dec_d = prd_clearing_256;
-      default:        key_dec_d = prd_clearing_256;
-    endcase
-  end
+  if (!CiphOpFwdOnly) begin : gen_key_dec
+    // SEC_CM: KEY.SEC_WIPE
+    // Decryption Key registers
+    always_comb begin : key_dec_mux
+      unique case (key_dec_sel)
+        KEY_DEC_EXPAND: key_dec_d = key_expand_out;
+        KEY_DEC_CLEAR:  key_dec_d = prd_clearing_key_i;
+        default:        key_dec_d = prd_clearing_key_i;
+      endcase
+    end
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin : key_dec_reg
-    if (!rst_ni) begin
-      key_dec_q <= '{default: '0};
-    end else if (key_dec_we == SP2V_HIGH) begin
-      key_dec_q <= key_dec_d;
+    always_ff @(posedge clk_i or negedge rst_ni) begin : key_dec_reg
+      if (!rst_ni) begin
+        key_dec_q <= '{default: '0};
+      end else if (key_dec_we == SP2V_HIGH) begin
+        key_dec_q <= key_dec_d;
+      end
+    end
+  end else begin : gen_no_key_dec
+    // No Decryption Key registers
+    assign key_dec_q = '{default: '0};
+    assign key_dec_d = key_dec_q;
+
+    // Tie-off unused signals.
+    logic unused_key_dec;
+    always_comb begin
+      unused_key_dec = ^{key_dec_sel, key_dec_we};
+      for (int s = 0; s < NumShares; s++) begin
+        unused_key_dec ^= ^{key_dec_d[s]};
+      end
     end
   end
 
@@ -517,9 +519,20 @@ module aes_cipher_core
   always_comb begin : round_key_mux
     unique case (round_key_sel)
       ROUND_KEY_DIRECT: round_key = key_bytes;
-      ROUND_KEY_MIXED:  round_key = key_mix_columns_out;
+      ROUND_KEY_MIXED:  round_key = !CiphOpFwdOnly ? key_mix_columns_out : key_bytes;
       default:          round_key = key_bytes;
     endcase
+  end
+
+  if (CiphOpFwdOnly) begin : gen_unused_key_mix_columns_out
+    // Tie-off unused signals.
+    logic unused_key_mix_columns_out;
+    always_comb begin
+      unused_key_mix_columns_out = 1'b0;
+      for (int s = 0; s < NumShares; s++) begin
+        unused_key_mix_columns_out ^= ^{key_mix_columns_out[s]};
+      end
+    end
   end
 
   /////////////
@@ -528,8 +541,9 @@ module aes_cipher_core
 
   // Control
   aes_cipher_control #(
-    .SecMasking  ( SecMasking  ),
-    .SecSBoxImpl ( SecSBoxImpl )
+    .CiphOpFwdOnly ( CiphOpFwdOnly ),
+    .SecMasking    ( SecMasking    ),
+    .SecSBoxImpl   ( SecSBoxImpl   )
   ) u_aes_cipher_control (
     .clk_i                ( clk_i               ),
     .rst_ni               ( rst_ni              ),
@@ -778,7 +792,7 @@ module aes_cipher_core
 
   // Signals used for assertions only.
   logic prd_clearing_equals_output, unused_prd_clearing_equals_output;
-  assign prd_clearing_equals_output = (prd_clearing_128 == add_round_key_out);
+  assign prd_clearing_equals_output = (prd_clearing_state_i == add_round_key_out);
   assign unused_prd_clearing_equals_output = prd_clearing_equals_output;
 
   // Ensure that the state register gets cleared with pseudo-random data at the end of the last

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 { name:               "csrng",
@@ -20,10 +20,10 @@
   dv_doc:             "../doc/dv",
   hw_checklist:       "../doc/checklist",
   sw_checklist:       "/sw/device/lib/dif/dif_csrng",
-  version:            "1.0.0",
+  version:            "2.0.0",
   life_stage:         "L1",
   design_stage:       "D2S",
-  verification_stage: "V2S",
+  verification_stage: "V1",
   dif_stage:          "S2",
   clocking: [{clock: "clk_i", reset: "rst_ni"}],
   bus_interfaces: [
@@ -103,6 +103,7 @@
       name:    "otp_en_csrng_sw_app_read"
       act:     "rcv"
       package: "caliptra_prim_mubi_pkg"
+      default: "caliptra_prim_mubi_pkg::MuBi8True"
     }
     { struct:  "lc_tx"
       type:    "uni"
