@@ -98,6 +98,10 @@ addrmap csrng {
             only if the otp_en_csrng_sw_app_read input vector is set to the enable encoding.";
             sw = rw;
         } READ_INT_STATE[11:8] = 0x9;
+        field {
+            desc = "Setting this field to kMultiBitBool4True enables forcing the FIPS/CC compliance flag to true via the !!FIPS_FORCE register.";
+            sw = rw;
+        } FIPS_FORCE_ENABLE[15:12] = 0x9;
     } CTRL @ 0x14;
     reg {
         field {
@@ -166,20 +170,8 @@ addrmap csrng {
             desc = "This field represents the status code returned with the application command ack.
             It is updated each time a command ack is asserted on the internal application
             interface for software use.
-            To check whether a command was succesful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
-            !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.
-            0x0: Request completed successfully.
-            0x1: Request completed with an invalid application command error.
-                 This error indicates that the issued application command doesn't represent a valid operation.
-                 If this error appears, the main state machine will hang and the entropy complex has to be restarted.
-            0x2: Request completed with an invalid counter drbg generation command error.
-                 This error indicates that CSRNG entropy was generated for a command that is not a generate command.
-                 In this case the entropy should not be considered as valid.
-            0x3: This error indicates that the last command was issued out of sequence.
-                 This happens when a command other than instantiate was issued without sending an instantiate command first.
-                 This can also happen when an uninstantiate command is sent without instantiating first.
-            0x4: This error indicates that the number of generate commands between reseeds exceeded the maximum number allowed.
-                 This happens only for generate commands.";
+            To check whether a command was successful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
+            !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.";
             sw = r;
         } CMD_STS[5:3] = 0x0;
     } SW_CMD_STS @ 0x20;
@@ -236,6 +228,17 @@ addrmap csrng {
     } INT_STATE_VAL @ 0x30;
     reg {
         field {
+            desc = "Force the FIPS/CC compliance flag of individual instances to true.
+            This allows CSRNG to set the output FIPS/CC compliance flag to true despite running in fully deterministic mode (flag0 being true).
+            This can be useful e.g. for known-answer testing through entropy consumers accepting FIPS/CC compliant entropy only, or when firmware is used to derive FIPS/CC compliant entropy seeds.
+            After setting a particular bit to 1, the FIPS/CC compliance flag of the corresponding instance will be forced to true upon the next Instantiate or Reseed command.
+
+            Note that for this to work, !!CTRL.FIPS_FORCE_ENABLE needs to be set to kMultiBitBool4True.";
+            sw = rw;
+        } FIPS_FORCE[2:0];
+    } FIPS_FORCE @ 0x34;
+    reg {
+        field {
             desc = "Reading this register indicates whether one of the CSRNG HW instances has
             encountered an exception.  Each bit corresponds to a particular hardware
             instance, with bit 0 corresponding to instance HW0, bit 1 corresponding
@@ -245,7 +248,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } HW_EXC_STS[15:0];
-    } HW_EXC_STS @ 0x34;
+    } HW_EXC_STS @ 0x38;
     reg {
         field {
             desc = "This bit is set when the ENABLE field in the !!CTRL register is set to
@@ -269,12 +272,18 @@ addrmap csrng {
             onwrite = woclr;
         } READ_INT_STATE_FIELD_ALERT[2:2];
         field {
+            desc = "This bit is set when the FIPS_FORCE_ENABLE field in the !!CTRL register is set to a value other than kMultiBitBool4True or kMultiBitBool4False.
+            Writing a zero resets this status bit.";
+            sw = rw;
+            onwrite = woclr;
+        } FIPS_FORCE_ENABLE_FIELD_ALERT[3:3];
+        field {
             desc = "This bit is set when the FLAG0 field in the Application Command is set to
             a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
             onwrite = woclr;
-        } ACMD_FLAG0_FIELD_ALERT[3:3];
+        } ACMD_FLAG0_FIELD_ALERT[4:4];
         field {
             desc = "This bit is set when the software application port genbits bus value is equal
             to the prior valid value on the bus, indicating a possible attack.
@@ -289,7 +298,7 @@ addrmap csrng {
             Writing a zero resets this status bit.";
             sw = rw;
             onwrite = woclr;
-        } CS_MAIN_SM_ALERT[13:13];
+        } CMD_STAGE_INVALID_ACMD_ALERT[13:13];
         field {
             desc = "This bit is set when an out of order command is received by the main state machine.
             This happens when an instantiate command is sent for a state that was already
@@ -299,7 +308,7 @@ addrmap csrng {
             Writing a zero resets this status bit.";
             sw = rw;
             onwrite = woclr;
-        } CS_MAIN_SM_INVALID_CMD_SEQ[14:14];
+        } CMD_STAGE_INVALID_CMD_SEQ_ALERT[14:14];
         field {
             desc = "This bit is set when the maximum number of generate requests between reseeds is
             exceeded.
@@ -308,7 +317,7 @@ addrmap csrng {
             sw = rw;
             onwrite = woclr;
         } CMD_STAGE_RESEED_CNT_ALERT[15:15];
-    } RECOV_ALERT_STS @ 0x38;
+    } RECOV_ALERT_STS @ 0x3C;
     reg {
         field {
             desc = "This bit will be set to one when an error has been detected for the
@@ -493,7 +502,7 @@ addrmap csrng {
             This bit will stay set until the next reset.";
             sw = r;
         } FIFO_STATE_ERR[30:30];
-    } ERR_CODE @ 0x3C;
+    } ERR_CODE @ 0x40;
     reg {
         field {
             desc = "Setting this field will set the bit number for which an error
@@ -504,12 +513,12 @@ addrmap csrng {
             an interrupt or an alert.";
             sw = rw;
         } ERR_CODE_TEST[4:0];
-    } ERR_CODE_TEST @ 0x40;
+    } ERR_CODE_TEST @ 0x44;
     reg {
         field {
             desc = "This is the state of the CSRNG main state machine.
             See the RTL file `csrng_main_sm` for the meaning of the values.";
             sw = r;
         } MAIN_SM_STATE[7:0] = 0x4E;
-    } MAIN_SM_STATE @ 0x44;
+    } MAIN_SM_STATE @ 0x48;
 };

@@ -51,6 +51,14 @@
       local: "false",
       expose: "true"
     },
+    # Note: All parameters below are local, they are not actually configurable.
+    # Selecting values different from the default values below might cause undefined behavior.
+    { name:    "NumApps",
+      type:    "int",
+      default: "3",
+      desc:    "Number of application interfaces",
+      local:   "true"
+    },
   ],
   interrupt_list: [
     { name: "cs_cmd_req_done"
@@ -298,6 +306,14 @@
                   '''
           resval: false
         },
+        { bits: "15:12",
+          name: "FIPS_FORCE_ENABLE",
+          mubi: true
+          desc: '''
+                Setting this field to kMultiBitBool4True enables forcing the FIPS/CC compliance flag to true via the !!FIPS_FORCE register.
+                '''
+          resval: false
+        },
       ]
     },
     {
@@ -371,6 +387,27 @@
         }
       ]
     },
+    { multireg: {
+      name: "RESEED_COUNTER",
+      desc: '''
+        Reseed counter.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      count: "NumApps",
+      cname: "RESEED_COUNTER",
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
+      },
+    },
     {
       name: "SW_CMD_STS",
       desc: "Application interface command status register",
@@ -406,22 +443,48 @@
                 This field represents the status code returned with the application command ack.
                 It is updated each time a command ack is asserted on the internal application
                 interface for software use.
-                To check whether a command was succesful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
+                To check whether a command was successful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
                 !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.
-                0x0: Request completed successfully.
-                0x1: Request completed with an invalid application command error.
-                     This error indicates that the issued application command doesn't represent a valid operation.
-                     If this error appears, the main state machine will hang and the entropy complex has to be restarted.
-                0x2: Request completed with an invalid counter drbg generation command error.
-                     This error indicates that CSRNG entropy was generated for a command that is not a generate command.
-                     In this case the entropy should not be considered as valid.
-                0x3: This error indicates that the last command was issued out of sequence.
-                     This happens when a command other than instantiate was issued without sending an instantiate command first.
-                     This can also happen when an uninstantiate command is sent without instantiating first.
-                0x4: This error indicates that the number of generate commands between reseeds exceeded the maximum number allowed.
-                     This happens only for generate commands.
                 '''
           resval: "0"
+          enum: [
+            { value: "0",
+              name: "SUCCESS",
+              desc: '''
+                    Request completed successfully.
+                    '''
+            },
+            { value: "1",
+              name: "INVALID_ACMD",
+              desc: '''
+                    Request completed with an invalid application command error.
+                    This error indicates that the issued application command doesn't represent a valid operation.
+                    '''
+            },
+            { value: "2",
+              name: "INVALID_GEN_CMD",
+              desc: '''
+                    Request completed with an invalid counter DRBG generation command error.
+                    This error indicates that CSRNG entropy was generated for a command that is not a Generate command.
+                    In this case the entropy should not be considered as valid.
+                    '''
+            },
+            { value: "3",
+              name: "INVALID_CMD_SEQ",
+              desc: '''
+                    This error indicates that the last command was issued out of sequence.
+                    This happens when a command other than Instantiate was issued without sending an Instantiate command first.
+                    This can also happen when an Uninstantiate command is sent without instantiating first.
+                    '''
+            },
+            { value: "4",
+              name: "RESEED_CNT_EXCEEDED",
+              desc: '''
+                    This error indicates that the number of generate requests between reseeds exceeded the maximum number allowed (see !!RESEED_INTERVAL).
+                    This happens only for Generate commands.
+                    '''
+            },
+          ]
         }
       ]
     },
@@ -513,6 +576,26 @@
       ]
     },
     {
+      name: "FIPS_FORCE",
+      desc: "FIPS/CC compliance flag forcing register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      regwen: "REGWEN",
+      fields: [
+        { bits: "2:0",
+          name: "FIPS_FORCE",
+          desc: '''
+                Force the FIPS/CC compliance flag of individual instances to true.
+                This allows CSRNG to set the output FIPS/CC compliance flag to true despite running in fully deterministic mode (flag0 being true).
+                This can be useful e.g. for known-answer testing through entropy consumers accepting FIPS/CC compliant entropy only, or when firmware is used to derive FIPS/CC compliant entropy seeds.
+                After setting a particular bit to 1, the FIPS/CC compliance flag of the corresponding instance will be forced to true upon the next Instantiate or Reseed command.
+
+                Note that for this to work, !!CTRL.FIPS_FORCE_ENABLE needs to be set to kMultiBitBool4True.
+                '''
+        }
+      ]
+    },
+    {
       name: "HW_EXC_STS",
       desc: "Hardware instance exception status register",
       swaccess: "rw0c",
@@ -562,6 +645,13 @@
                 '''
         }
         { bits: "3",
+          name: "FIPS_FORCE_ENABLE_FIELD_ALERT",
+          desc: '''
+                This bit is set when the FIPS_FORCE_ENABLE field in the !!CTRL register is set to a value other than kMultiBitBool4True or kMultiBitBool4False.
+                Writing a zero resets this status bit.
+                '''
+        }
+        { bits: "4",
           name: "ACMD_FLAG0_FIELD_ALERT",
           desc: '''
                 This bit is set when the FLAG0 field in the Application Command is set to
@@ -578,7 +668,7 @@
                 '''
         }
         { bits: "13",
-          name: "CS_MAIN_SM_ALERT",
+          name: "CMD_STAGE_INVALID_ACMD_ALERT",
           desc: '''
                 This bit is set when an unsupported/illegal CSRNG command is received by the
                 main state machine.
@@ -587,7 +677,7 @@
                 '''
         }
         { bits: "14",
-          name: "CS_MAIN_SM_INVALID_CMD_SEQ",
+          name: "CMD_STAGE_INVALID_CMD_SEQ_ALERT",
           desc: '''
                 This bit is set when an out of order command is received by the main state machine.
                 This happens when an instantiate command is sent for a state that was already
