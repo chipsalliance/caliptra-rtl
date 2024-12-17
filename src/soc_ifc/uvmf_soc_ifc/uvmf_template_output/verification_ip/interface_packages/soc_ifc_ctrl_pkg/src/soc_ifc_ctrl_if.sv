@@ -39,6 +39,8 @@
 // .dut_signal_port(soc_ifc_ctrl_bus.security_state), // Agent output 
 // .dut_signal_port(soc_ifc_ctrl_bus.BootFSM_BrkPoint), // Agent output 
 // .dut_signal_port(soc_ifc_ctrl_bus.generic_input_wires), // Agent output 
+// .dut_signal_port(soc_ifc_ctrl_bus.recovery_data_avail), // Agent output 
+// .dut_signal_port(soc_ifc_ctrl_bus.recovery_image_activated), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
 import soc_ifc_ctrl_pkg_hdl::*;
@@ -53,7 +55,9 @@ interface  soc_ifc_ctrl_if
   inout tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
   inout tri [2:0] security_state,
   inout tri  BootFSM_BrkPoint,
-  inout tri [63:0] generic_input_wires
+  inout tri [63:0] generic_input_wires,
+  inout tri  recovery_data_avail,
+  inout tri  recovery_image_activated
   );
 
 modport monitor_port 
@@ -65,7 +69,9 @@ modport monitor_port
   input cptra_obf_key,
   input security_state,
   input BootFSM_BrkPoint,
-  input generic_input_wires
+  input generic_input_wires,
+  input recovery_data_avail,
+  input recovery_image_activated
   );
 
 modport initiator_port 
@@ -77,7 +83,9 @@ modport initiator_port
   output cptra_obf_key,
   output security_state,
   output BootFSM_BrkPoint,
-  output generic_input_wires
+  output generic_input_wires,
+  output recovery_data_avail,
+  output recovery_image_activated
   );
 
 modport responder_port 
@@ -89,7 +97,9 @@ modport responder_port
   input cptra_obf_key,
   input security_state,
   input BootFSM_BrkPoint,
-  input generic_input_wires
+  input generic_input_wires,
+  input recovery_data_avail,
+  input recovery_image_activated
   );
   
 

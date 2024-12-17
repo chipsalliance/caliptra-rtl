@@ -48,11 +48,17 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   typedef cptra_ctrl_agent  cptra_ctrl_agent_t;
   cptra_ctrl_agent_t cptra_ctrl_agent;
 
+  typedef ss_mode_ctrl_agent  ss_mode_ctrl_agent_t;
+  ss_mode_ctrl_agent_t ss_mode_ctrl_agent;
+
   typedef soc_ifc_status_agent  soc_ifc_status_agent_t;
   soc_ifc_status_agent_t soc_ifc_status_agent;
 
   typedef cptra_status_agent  cptra_status_agent_t;
   cptra_status_agent_t cptra_status_agent;
+
+  typedef ss_mode_status_agent  ss_mode_status_agent_t;
+  ss_mode_status_agent_t ss_mode_status_agent;
 
   typedef mbox_sram_agent  mbox_sram_agent_t;
   mbox_sram_agent_t mbox_sram_agent;
@@ -171,10 +177,14 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_ctrl_agent.set_config(configuration.soc_ifc_ctrl_agent_config);
     cptra_ctrl_agent = cptra_ctrl_agent_t::type_id::create("cptra_ctrl_agent",this);
     cptra_ctrl_agent.set_config(configuration.cptra_ctrl_agent_config);
+    ss_mode_ctrl_agent = ss_mode_ctrl_agent_t::type_id::create("ss_mode_ctrl_agent",this);
+    ss_mode_ctrl_agent.set_config(configuration.ss_mode_ctrl_agent_config);
     soc_ifc_status_agent = soc_ifc_status_agent_t::type_id::create("soc_ifc_status_agent",this);
     soc_ifc_status_agent.set_config(configuration.soc_ifc_status_agent_config);
     cptra_status_agent = cptra_status_agent_t::type_id::create("cptra_status_agent",this);
     cptra_status_agent.set_config(configuration.cptra_status_agent_config);
+    ss_mode_status_agent = ss_mode_status_agent_t::type_id::create("ss_mode_status_agent",this);
+    ss_mode_status_agent.set_config(configuration.ss_mode_status_agent_config);
     mbox_sram_agent = mbox_sram_agent_t::type_id::create("mbox_sram_agent",this);
     mbox_sram_agent.set_config(configuration.mbox_sram_agent_config);
     soc_ifc_pred = soc_ifc_pred_t::type_id::create("soc_ifc_pred",this);
@@ -215,13 +225,16 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     super.connect_phase(phase);
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
+    ss_mode_ctrl_agent.monitored_ap.connect(soc_ifc_pred.ss_mode_ctrl_agent_ae);
     mbox_sram_agent.monitored_ap.connect(soc_ifc_pred.mbox_sram_agent_ae);
     soc_ifc_pred.soc_ifc_sb_ap.connect(soc_ifc_sb.expected_analysis_export);
     soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
+    soc_ifc_pred.ss_mode_sb_ap.connect(soc_ifc_sb.expected_ss_mode_analysis_export);
     soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
     soc_ifc_pred.soc_ifc_sb_apb_ap.connect(soc_ifc_sb.expected_apb_analysis_export);
     soc_ifc_status_agent.monitored_ap.connect(soc_ifc_sb.actual_analysis_export);
     cptra_status_agent.monitored_ap.connect(soc_ifc_sb.actual_cptra_analysis_export);
+    ss_mode_status_agent.monitored_ap.connect(soc_ifc_sb.actual_ss_mode_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_apb5_slave_subenv_apb5_master_0_ap = qvip_apb5_slave_subenv.apb5_master_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);

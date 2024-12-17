@@ -88,6 +88,61 @@ targets:
     options:
       - +define+MAP_PROT_ATTR
 ---
+provides: [avery_axi_uvm_lib]
+schema_version: 2.4.0
+requires:
+  - uvm_lib
+targets:
+  tb:
+    directories:
+      - $AVERY_AXI/src.uvm 
+#      - $AVERY_AXI/testsuite/examples.uvm 
+      - $AVERY_AXI/src.axi.VCS 
+      - $AVERY_AXI/src.axi 
+      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
+      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
+      - $AVERY_AXI/testbench
+    files:
+      - $AVERY_AXI/src/avery_pkg.sv 
+      - $AVERY_AXI/src/avery_pkg_test.sv 
+      - $AVERY_AXI/src.axi/aaxi_pkg.sv 
+      - $AVERY_AXI/src.axi/aaxi_pkg_xactor.sv 
+      - $AVERY_AXI/src.axi/aaxi_class_pll.sv 
+      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
+      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/aaxi_monitor_wrapper.sv 
+      - $AVERY_AXI/src.VCS/aaxi_busmonitor.v \
+      - $AVERY_AXI/src.axi/aaxi_coverage_metrics.sv 
+      - $AVERY_AXI/src.axi/aaxi_pkg_test.sv 
+      - $AVERY_AXI/src.axi/aaxi_intf.sv 
+      - $AVERY_AXI/src.uvm/aaxi_uvm_pkg.sv 
+      - $AVERY_AXI/src.uvm/aaxi_uvm_test_top.sv 
+    tops: []
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-full64'
+        - +define+AVERY_VCS
+        - +define+AVERY_ASSERT_ON
+        - +define+AVERY_COVERAGE_ON
+        - +define+AVERY_MONITOR_ON
+        - +define+AVERY_CLOCK=5
+        - +define+AVERY_NAMED_CONSTRUCTOR
+        - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+FOUR_OUTSTANDING
+        - +define+AAXI_MAX_DATA_WIDTH=32
+        - +define+AAXI_MAX_ADDR_WIDTH=64
+        - +define+AAXI_MAX_ID_WIDTH=5
+        #- +define+AAXI_TOP_PATH=aaxi_uvm_test_top
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.a"
+        - "-P $AVERY_PLI/tb_vcs64.tab"
+      elab:
+        - '+libext+.v+.sv+.svh'
+        - +warn=noUII-L
+      sim:
+        - '+vpi'
+---
 provides: [uvmf_lib]
 schema_version: 2.4.0
 requires:

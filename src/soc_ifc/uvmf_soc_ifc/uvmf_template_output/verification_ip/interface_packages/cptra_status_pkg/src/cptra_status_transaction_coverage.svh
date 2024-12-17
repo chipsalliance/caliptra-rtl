@@ -71,6 +71,16 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
         bins rise = (0 => 1);
         bins fall = (1 => 0);
     }
+    dma_err_intr_pending: coverpoint coverage_trans.dma_err_intr_pending;
+    dma_err_intr_transition: coverpoint coverage_trans.dma_err_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
+    dma_notif_intr_pending: coverpoint coverage_trans.dma_notif_intr_pending;
+    dma_notif_intr_transition: coverpoint coverage_trans.dma_notif_intr_pending {
+        bins rise = (0 => 1);
+        bins fall = (1 => 0);
+    }
     timer_intr_pending: coverpoint coverage_trans.timer_intr_pending;
     timer_intr_transition: coverpoint coverage_trans.timer_intr_pending {
         bins rise = (0 => 1);

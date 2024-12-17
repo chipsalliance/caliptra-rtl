@@ -8,12 +8,18 @@ uvmf:
       - initiator_responder: INITIATOR
         name: cptra_ctrl_agent
         type: cptra_ctrl
+      - initiator_responder: INITIATOR
+        name: ss_mode_ctrl_agent
+        type: ss_mode_ctrl
       - initiator_responder: RESPONDER
         name: soc_ifc_status_agent
         type: soc_ifc_status
       - initiator_responder: RESPONDER
         name: cptra_status_agent
         type: cptra_status
+      - initiator_responder: RESPONDER
+        name: ss_mode_status_agent
+        type: ss_mode_status
       - initiator_responder: RESPONDER
         name: mbox_sram_agent
         type: mbox_sram
@@ -70,6 +76,9 @@ uvmf:
       - driver: cptra_ctrl_agent.monitored_ap
         receiver: soc_ifc_pred.cptra_ctrl_agent_ae
         validate: 'True'
+      - driver: ss_mode_ctrl_agent.monitored_ap
+        receiver: soc_ifc_pred.ss_mode_ctrl_agent_ae
+        validate: 'True'
       - driver: mbox_sram_agent.monitored_ap
         receiver: soc_ifc_pred.mbox_sram_agent_ae
         validate: 'True'
@@ -78,6 +87,9 @@ uvmf:
         validate: 'True'
       - driver: soc_ifc_pred.cptra_sb_ap
         receiver: soc_ifc_sb.expected_cptra_analysis_export
+        validate: 'True'
+      - driver: soc_ifc_pred.ss_mode_sb_ap
+        receiver: soc_ifc_sb.expected_ss_mode_analysis_export
         validate: 'True'
       - driver: soc_ifc_pred.soc_ifc_sb_ahb_ap
         receiver: soc_ifc_sb.expected_ahb_analysis_export
@@ -90,4 +102,7 @@ uvmf:
         validate: 'True'
       - driver: cptra_status_agent.monitored_ap
         receiver: soc_ifc_sb.actual_cptra_analysis_export
+        validate: 'True'
+      - driver: ss_mode_status_agent.monitored_ap
+        receiver: soc_ifc_sb.actual_ss_mode_analysis_export
         validate: 'True'

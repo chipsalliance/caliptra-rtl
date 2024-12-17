@@ -56,8 +56,10 @@ vlog -sv -timescale 1ps/1ps +incdir+$env(UVMF_HOME)/common/utility_packages/qvip
 ###################################################################
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_status_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_status_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_status_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/mbox_sram_pkg/compile.do
 
 ###################################################################

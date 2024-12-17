@@ -51,11 +51,17 @@ extends uvmf_environment_configuration_base;
     typedef cptra_ctrl_configuration cptra_ctrl_agent_config_t;
     rand cptra_ctrl_agent_config_t cptra_ctrl_agent_config;
 
+    typedef ss_mode_ctrl_configuration ss_mode_ctrl_agent_config_t;
+    rand ss_mode_ctrl_agent_config_t ss_mode_ctrl_agent_config;
+
     typedef soc_ifc_status_configuration soc_ifc_status_agent_config_t;
     rand soc_ifc_status_agent_config_t soc_ifc_status_agent_config;
 
     typedef cptra_status_configuration cptra_status_agent_config_t;
     rand cptra_status_agent_config_t cptra_status_agent_config;
+
+    typedef ss_mode_status_configuration ss_mode_status_agent_config_t;
+    rand ss_mode_status_agent_config_t ss_mode_status_agent_config;
 
     typedef mbox_sram_configuration mbox_sram_agent_config_t;
     rand mbox_sram_agent_config_t mbox_sram_agent_config;
@@ -91,8 +97,10 @@ extends uvmf_environment_configuration_base;
 
     soc_ifc_ctrl_agent_config = soc_ifc_ctrl_agent_config_t::type_id::create("soc_ifc_ctrl_agent_config");
     cptra_ctrl_agent_config = cptra_ctrl_agent_config_t::type_id::create("cptra_ctrl_agent_config");
+    ss_mode_ctrl_agent_config = ss_mode_ctrl_agent_config_t::type_id::create("ss_mode_ctrl_agent_config");
     soc_ifc_status_agent_config = soc_ifc_status_agent_config_t::type_id::create("soc_ifc_status_agent_config");
     cptra_status_agent_config = cptra_status_agent_config_t::type_id::create("cptra_status_agent_config");
+    ss_mode_status_agent_config = ss_mode_status_agent_config_t::type_id::create("ss_mode_status_agent_config");
     mbox_sram_agent_config = mbox_sram_agent_config_t::type_id::create("mbox_sram_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
@@ -135,8 +143,10 @@ extends uvmf_environment_configuration_base;
      
      "\n", soc_ifc_ctrl_agent_config.convert2string,
      "\n", cptra_ctrl_agent_config.convert2string,
+     "\n", ss_mode_ctrl_agent_config.convert2string,
      "\n", soc_ifc_status_agent_config.convert2string,
      "\n", cptra_status_agent_config.convert2string,
+     "\n", ss_mode_status_agent_config.convert2string,
      "\n", mbox_sram_agent_config.convert2string,
 
      "\n", qvip_ahb_lite_slave_subenv_config.convert2string,
@@ -185,13 +195,19 @@ extends uvmf_environment_configuration_base;
      cptra_ctrl_agent_config.initialize( interface_activity[3], {environment_path,".cptra_ctrl_agent"}, interface_names[3]);
      cptra_ctrl_agent_config.initiator_responder = INITIATOR;
      cptra_ctrl_agent_config.has_coverage = 1;
-     soc_ifc_status_agent_config.initialize( interface_activity[4], {environment_path,".soc_ifc_status_agent"}, interface_names[4]);
+     ss_mode_ctrl_agent_config.initialize( interface_activity[4], {environment_path,".ss_mode_ctrl_agent"}, interface_names[4]);
+     ss_mode_ctrl_agent_config.initiator_responder = INITIATOR;
+     ss_mode_ctrl_agent_config.has_coverage = 1;
+     soc_ifc_status_agent_config.initialize( interface_activity[5], {environment_path,".soc_ifc_status_agent"}, interface_names[5]);
      soc_ifc_status_agent_config.initiator_responder = RESPONDER;
      soc_ifc_status_agent_config.has_coverage = 1;
-     cptra_status_agent_config.initialize( interface_activity[5], {environment_path,".cptra_status_agent"}, interface_names[5]);
+     cptra_status_agent_config.initialize( interface_activity[6], {environment_path,".cptra_status_agent"}, interface_names[6]);
      cptra_status_agent_config.initiator_responder = RESPONDER;
      cptra_status_agent_config.has_coverage = 1;
-     mbox_sram_agent_config.initialize( interface_activity[6], {environment_path,".mbox_sram_agent"}, interface_names[6]);
+     ss_mode_status_agent_config.initialize( interface_activity[7], {environment_path,".ss_mode_status_agent"}, interface_names[7]);
+     ss_mode_status_agent_config.initiator_responder = RESPONDER;
+     ss_mode_status_agent_config.has_coverage = 1;
+     mbox_sram_agent_config.initialize( interface_activity[8], {environment_path,".mbox_sram_agent"}, interface_names[8]);
      mbox_sram_agent_config.initiator_responder = RESPONDER;
      mbox_sram_agent_config.has_coverage = 1;
 

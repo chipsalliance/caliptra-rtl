@@ -1,0 +1,175 @@
+uvmf:
+  interfaces:
+    ss_mode_ctrl:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: strap_ss_caliptra_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_mci_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_recovery_ifc_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_otp_fc_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_uds_seed_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: strap_ss_num_of_prod_debug_unlock_auth_pk_hashes
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: strap_ss_strap_generic_0
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: strap_ss_strap_generic_1
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: strap_ss_strap_generic_2
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: strap_ss_strap_generic_3
+        reset_value: '''bz'
+        width: '32'
+      - dir: output
+        name: ss_debug_intent
+        reset_value: '''bz'
+        width: '1'
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints:
+      - comment: ''
+        name: strap_ss_caliptra_base_addr_c
+        value: '{ strap_ss_caliptra_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_mci_base_addr_c
+        value: '{ strap_ss_mci_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_recovery_ifc_base_addr_c
+        value: '{ strap_ss_recovery_ifc_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_otp_fc_base_addr_c
+        value: '{ strap_ss_otp_fc_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_uds_seed_base_addr_c
+        value: '{ strap_ss_uds_seed_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_c
+        value: '{ strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_c
+        value: '{ strap_ss_num_of_prod_debug_unlock_auth_pk_hashes dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_strap_generic_0_c
+        value: '{ strap_ss_strap_generic_0 dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_strap_generic_1_c
+        value: '{ strap_ss_strap_generic_1 dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_strap_generic_2_c
+        value: '{ strap_ss_strap_generic_2 dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_strap_generic_3_c
+        value: '{ strap_ss_strap_generic_3 dist {0 :/ 1, [1:32''hFFFF_FFFE] :/ 98, 32''hFFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: debug_intent_c
+        value: '{ ss_debug_intent dist {1 :/ 1, 0 :/ 9}; }'
+      transaction_vars:
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_caliptra_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_mci_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_recovery_ifc_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_otp_fc_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_uds_seed_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_num_of_prod_debug_unlock_auth_pk_hashes
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_strap_generic_0
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_strap_generic_1
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_strap_generic_2
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_strap_generic_3
+        type: bit [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: ss_debug_intent
+        type: bit
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

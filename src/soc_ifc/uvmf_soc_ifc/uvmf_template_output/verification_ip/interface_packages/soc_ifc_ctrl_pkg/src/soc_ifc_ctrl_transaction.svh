@@ -39,6 +39,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   rand security_state_t security_state ;
   rand bit set_bootfsm_breakpoint ;
   rand bit [63:0] generic_input_val ;
+  bit recovery_data_avail ;
+  bit recovery_image_activated ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:9] :/ 80, [10:99] :/ 15, [100:500] :/ 5}; }
@@ -134,7 +136,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   //
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
-    // UVMF_CHANGE_ME : Customize format if desired.
+    // UVMF_CHANGE_ME : Customize format if desired. FIXME recovery sigs
     return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x security_state:%p set_bootfsm_breakpoint:0x%x generic_input_val:0x%x %s",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
@@ -164,6 +166,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
             &&(this.cptra_obf_key_rand == RHS.cptra_obf_key_rand)
+            &&(this.recovery_data_avail == RHS.recovery_data_avail)
+            &&(this.recovery_image_activated == RHS.recovery_image_activated)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -185,6 +189,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     this.security_state = RHS.security_state;
     this.set_bootfsm_breakpoint = RHS.set_bootfsm_breakpoint;
     this.generic_input_val = RHS.generic_input_val;
+    this.recovery_data_avail = RHS.recovery_data_avail;
+    this.recovery_image_activated = RHS.recovery_image_activated;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -215,6 +221,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,security_state,"security_state");
     $add_attribute(transaction_view_h,set_bootfsm_breakpoint,"set_bootfsm_breakpoint");
     $add_attribute(transaction_view_h,generic_input_val,"generic_input_val");
+    $add_attribute(transaction_view_h,recovery_data_avail,"recovery_data_avail");
+    $add_attribute(transaction_view_h,recovery_image_activated,"recovery_image_activated");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

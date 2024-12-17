@@ -8,6 +8,8 @@ uvmf:
         type: cptra_ctrl_transaction
       - name: mbox_sram_agent_ae
         type: mbox_sram_transaction
+      - name: ss_mode_ctrl_agent_ae
+        type: ss_mode_ctrl_transaction
       - name: ahb_slave_0_ae
         type: mvc_sequence_item_base
       - name: apb5_slave_0_ae
@@ -21,5 +23,7 @@ uvmf:
         type: mvc_sequence_item_base
       - name: soc_ifc_sb_apb_ap
         type: mvc_sequence_item_base
+      - name: ss_mode_sb_ap
+        type: ss_mode_status_transaction
       existing_library_component: 'True'
       type: predictor

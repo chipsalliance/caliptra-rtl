@@ -4,12 +4,16 @@ uvmf:
       analysis_exports:
       - name: expected_analysis_export
         type: soc_ifc_status_transaction
+      - name: expected_ss_mode_analysis_export
+        type: ss_mode_status_transaction
       - name: expected_cptra_analysis_export
         type: cptra_status_transaction
       - name: actual_analysis_export
         type: soc_ifc_status_transaction
       - name: actual_cptra_analysis_export
         type: cptra_status_transaction
+      - name: actual_ss_mode_analysis_export
+        type: ss_mode_status_transaction
       existing_library_component: 'True'
       qvip_analysis_exports:
       - name: expected_ahb_analysis_export

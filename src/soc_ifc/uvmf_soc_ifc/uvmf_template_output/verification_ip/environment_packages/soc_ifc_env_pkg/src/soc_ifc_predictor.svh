@@ -30,6 +30,7 @@
 //   soc_ifc_ctrl_agent_ae receives transactions of type  soc_ifc_ctrl_transaction
 //   cptra_ctrl_agent_ae receives transactions of type  cptra_ctrl_transaction
 //   mbox_sram_agent_ae receives transactions of type  mbox_sram_transaction
+//   ss_mode_ctrl_agent_ae receives transactions of type  ss_mode_ctrl_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //   apb5_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //
@@ -40,6 +41,7 @@
 //  cptra_sb_ap broadcasts transactions of type cptra_status_transaction
 //  soc_ifc_sb_ahb_ap broadcasts transactions of type mvc_sequence_item_base
 //  soc_ifc_sb_apb_ap broadcasts transactions of type mvc_sequence_item_base
+//  ss_mode_sb_ap broadcasts transactions of type ss_mode_status_transaction
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -87,38 +89,39 @@ class soc_ifc_predictor #(
   uvm_analysis_imp_soc_ifc_ctrl_agent_ae #(soc_ifc_ctrl_transaction, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) soc_ifc_ctrl_agent_ae;
-  uvm_analysis_imp_cptra_ctrl_agent_ae #(cptra_ctrl_transaction, soc_ifc_predictor #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-) cptra_ctrl_agent_ae;
-  uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-) mbox_sram_agent_ae;
-  uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-) ahb_slave_0_ae;
+                              )) soc_ifc_ctrl_agent_ae;
   uvm_analysis_imp_apb5_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) apb5_slave_0_ae;
+                              )) apb5_slave_0_ae;
+  uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) mbox_sram_agent_ae;
+  uvm_analysis_imp_cptra_ctrl_agent_ae #(cptra_ctrl_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) cptra_ctrl_agent_ae;
+  uvm_analysis_imp_ss_mode_ctrl_agent_ae #(ss_mode_ctrl_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) ss_mode_ctrl_agent_ae;
+  uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) ahb_slave_0_ae;
 
 
   // Instantiate the analysis ports
   uvm_analysis_port #(soc_ifc_status_transaction) soc_ifc_sb_ap;
   uvm_analysis_port #(cptra_status_transaction) cptra_sb_ap;
-  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_apb_ap;
+  uvm_analysis_port #(ss_mode_status_transaction) ss_mode_sb_ap;
+  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
 
   uvm_analysis_port #(soc_ifc_ctrl_transaction) soc_ifc_cov_ap;
   uvm_analysis_port #(cptra_ctrl_transaction  ) cptra_cov_ap;
+  uvm_analysis_port #(ss_mode_ctrl_transaction) ss_mode_cov_ap;
 
 
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ap
@@ -137,6 +140,25 @@ class soc_ifc_predictor #(
   // Code for sending output transaction out through cptra_sb_ap
   // cptra_sb_ap.write(cptra_sb_ap_output_transaction);
 
+  // Transaction variable for predicted values to be sent out soc_ifc_sb_apb_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
+  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) soc_ifc_sb_apb_ap_output_transaction_t;
+  soc_ifc_sb_apb_ap_output_transaction_t soc_ifc_sb_apb_ap_output_transaction;
+  // Code for sending output transaction out through soc_ifc_sb_apb_ap
+  // soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
+
+  // Transaction variable for predicted values to be sent out ss_mode_sb_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
+  typedef ss_mode_status_transaction ss_mode_sb_ap_output_transaction_t;
+  ss_mode_sb_ap_output_transaction_t ss_mode_sb_ap_output_transaction;
+  // Code for sending output transaction out through ss_mode_sb_ap
+  // ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ahb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
   // be constructed for the next predicted transaction. 
@@ -150,23 +172,13 @@ class soc_ifc_predictor #(
   // Code for sending output transaction out through soc_ifc_sb_ahb_ap
   // soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
 
-  // Transaction variable for predicted values to be sent out soc_ifc_sb_apb_ap
-  // Once a transaction is sent through an analysis_port, another transaction should
-  // be constructed for the next predicted transaction. 
-  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) soc_ifc_sb_apb_ap_output_transaction_t;
-  soc_ifc_sb_apb_ap_output_transaction_t soc_ifc_sb_apb_ap_output_transaction;
-  // Code for sending output transaction out through soc_ifc_sb_apb_ap
-  // soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
-  cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
-  mbox_sram_transaction mbox_sram_agent_ae_debug;
-  mvc_sequence_item_base ahb_slave_0_ae_debug;
   mvc_sequence_item_base apb5_slave_0_ae_debug;
+  mbox_sram_transaction mbox_sram_agent_ae_debug;
+  cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
+  ss_mode_ctrl_transaction ss_mode_ctrl_agent_ae_debug;
+  mvc_sequence_item_base ahb_slave_0_ae_debug;
 
 
   // pragma uvmf custom class_item_additional begin
@@ -189,8 +201,8 @@ class soc_ifc_predictor #(
   bit cptra_error_fatal = 1'b0;
   bit cptra_error_non_fatal = 1'b0;
   bit fuse_update_enabled = 1'b1;
-  bit ready_for_fw_push      = 1'b0;
-  bit ready_for_fw_push_fall = 1'b0;
+  bit ready_for_mb_processing      = 1'b0;
+  bit ready_for_mb_processing_fall = 1'b0;
   bit ready_for_runtime      = 1'b0;
   bit ready_for_runtime_fall = 1'b0;
   bit mailbox_flow_done      = 1'b0;
@@ -217,6 +229,9 @@ class soc_ifc_predictor #(
 
   bit [63:0] generic_output_wires      = 64'h0;
   bit        generic_output_wires_fall = 1'b0;
+
+  bit        recovery_data_avail = 1'b0; // TODO
+  bit        recovery_image_activated = 1'b0; // TODO
 
   bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6]    = '{default: '1};
   bit [4:0]                                    mbox_valid_users_locked = 5'b00000;
@@ -292,16 +307,19 @@ class soc_ifc_predictor #(
     soc_ifc_ctrl_agent_ae = new("soc_ifc_ctrl_agent_ae", this);
     cptra_ctrl_agent_ae = new("cptra_ctrl_agent_ae", this);
     mbox_sram_agent_ae = new("mbox_sram_agent_ae", this);
+    ss_mode_ctrl_agent_ae = new("ss_mode_ctrl_agent_ae", this); // FIXME
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
     apb5_slave_0_ae = new("apb5_slave_0_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
     cptra_sb_ap = new("cptra_sb_ap", this );
     soc_ifc_sb_ahb_ap = new("soc_ifc_sb_ahb_ap", this );
     soc_ifc_sb_apb_ap = new("soc_ifc_sb_apb_ap", this );
+    ss_mode_sb_ap = new("ss_mode_sb_ap", this ); // FIXME
     soc_ifc_ahb_reg_ap = new("soc_ifc_ahb_reg_ap", this);
     soc_ifc_apb_reg_ap = new("soc_ifc_apb_reg_ap", this);
     soc_ifc_cov_ap = new("soc_ifc_cov_ap", this );
     cptra_cov_ap = new("cptra_cov_ap", this );
+    ss_mode_cov_ap = new("ss_mode_cov_ap", this ); // FIXME
   // pragma uvmf custom build_phase begin
     p_soc_ifc_rm = configuration.soc_ifc_rm;
     p_soc_ifc_AHB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AHB_map");
@@ -670,6 +688,58 @@ class soc_ifc_predictor #(
         `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
     end
     // pragma uvmf custom mbox_sram_agent_ae_predictor end
+  endfunction
+
+  // FUNCTION: write_ss_mode_ctrl_agent_ae
+  // Transactions received through ss_mode_ctrl_agent_ae initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_ss_mode_ctrl_agent_ae(ss_mode_ctrl_transaction t);
+    // pragma uvmf custom ss_mode_ctrl_agent_ae_predictor begin
+    ss_mode_ctrl_agent_ae_debug = t;
+    `uvm_info("PRED", "Transaction Received through ss_mode_ctrl_agent_ae", UVM_MEDIUM)
+    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
+    // Construct one of each output transaction type.
+    soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
+    cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
+    soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
+    //  UVMF_CHANGE_ME: Implement predictor model here.  
+    `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
+    `uvm_error("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The soc_ifc_predictor::write_ss_mode_ctrl_agent_ae function needs to be completed with DUT prediction model")
+    `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
+ 
+    // Code for sending output transaction out through soc_ifc_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
+    // Code for sending output transaction out through cptra_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
+    // Code for sending output transaction out through ss_mode_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+    // Code for sending output transaction out through soc_ifc_sb_ahb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
+    // pragma uvmf custom ss_mode_ctrl_agent_ae_predictor end
   endfunction
 
   // FUNCTION: write_ahb_slave_0_ae
@@ -1183,16 +1253,16 @@ class soc_ifc_predictor #(
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
-                        ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw.get_mirrored_value()      != this.ready_for_fw_push) ||
-                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value() != this.ready_for_runtime) ||
-                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value() != this.mailbox_flow_done))) begin
-                        if (this.ready_for_fw_push && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value())
-                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_fw_push_fall)
+                        ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value() != this.ready_for_mb_processing) ||
+                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value()       != this.ready_for_runtime) ||
+                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value()       != this.mailbox_flow_done))) begin
+                        if (this.ready_for_mb_processing && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value())
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_mb_processing_fall)
                         if (this.ready_for_runtime && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value())
                             `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_runtime_fall)
                         if (this.mailbox_flow_done && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value())
                             `SOC_IFC_PRED_PULSE_1_CYCLE(this.mailbox_flow_done_fall)
-                        this.ready_for_fw_push = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value();
+                        this.ready_for_mb_processing = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value();
                         this.ready_for_runtime = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value();
                         this.mailbox_flow_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value();
                         send_soc_ifc_sts_txn = 1'b1;
@@ -3171,9 +3241,9 @@ function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_noncore_reset(
     // signal deassertion will still be observed at the same time as the reset.
     // Thus, generate an expected status transaction for these signals based on falling edges.
     /* FIXME calculate all of these from the reg-model somehow? */
-    return ready_for_fw_push || ready_for_fw_push_fall ||
-           ready_for_runtime || ready_for_runtime_fall ||
-           mailbox_data_avail || mailbox_data_avail_fall ||
+    return ready_for_mb_processing || ready_for_mb_processing_fall ||
+           ready_for_runtime       || ready_for_runtime_fall ||
+           mailbox_data_avail      || mailbox_data_avail_fall ||
            |generic_output_wires || generic_output_wires_fall /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
 endfunction
 
@@ -3514,7 +3584,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     // propagates to the internal resets
     // FIXME: Do a reg-model reset and then extract these from the reg_model???
     if (kind inside {"HARD", "NONCORE"}) begin: RESET_VAL_CHANGES_HARD_NONCORE
-        ready_for_fw_push = 1'b0;
+        ready_for_mb_processing = 1'b0;
         ready_for_runtime = 1'b0;
         nmi_vector = '0;
         iccm_locked = 1'b0;
@@ -3637,7 +3707,7 @@ endfunction
 
 function void soc_ifc_predictor::populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
     txn.ready_for_fuses                    = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value();
-    txn.ready_for_fw_push                  = this.ready_for_fw_push;
+    txn.ready_for_mb_processing            = this.ready_for_mb_processing;
     txn.ready_for_runtime                  = this.ready_for_runtime;
     txn.mailbox_data_avail                 = this.mailbox_data_avail;
     txn.mailbox_flow_done                  = this.mailbox_flow_done; // FIXME

@@ -90,6 +90,8 @@ end
   tri [2:0] security_state_i;
   tri  BootFSM_BrkPoint_i;
   tri [63:0] generic_input_wires_i;
+  tri  recovery_data_avail_i;
+  tri  recovery_image_activated_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
@@ -98,6 +100,8 @@ end
   assign security_state_i = bus.security_state;
   assign BootFSM_BrkPoint_i = bus.BootFSM_BrkPoint;
   assign generic_input_wires_i = bus.generic_input_wires;
+  assign recovery_data_avail_i = bus.recovery_data_avail;
+  assign recovery_image_activated_i = bus.recovery_image_activated;
 
   // Proxy handle to UVM monitor
   soc_ifc_ctrl_pkg::soc_ifc_ctrl_monitor  proxy;
@@ -110,6 +114,8 @@ end
   logic [63:0] generic_input_wires_r;
   security_state_t security_state_r;
   logic BootFSM_BrkPoint_r;
+  logic recovery_data_avail_r;
+  logic recovery_image_activated_r;
   // Returns 1 on first transaction that sets any value to cptra_pwrgood_i or cptra_rst_b_i
   // Also returns 1 anytime any other signal transitions, outside of a reset
   function bit any_signal_changed();
@@ -118,12 +124,14 @@ end
       else if (cptra_rst_b_r !== 1'b1)
           return (cptra_rst_b_i !== cptra_rst_b_r);
       else
-          return |(cptra_pwrgood_i       ^  cptra_pwrgood_r      ) ||
-                 |(cptra_rst_b_i         ^  cptra_rst_b_r        ) ||
-                 |(cptra_obf_key_i       ^  cptra_obf_key_r      ) ||
-                 |(security_state_i      ^  security_state_r     ) ||
-                 |(BootFSM_BrkPoint_i    ^  BootFSM_BrkPoint_r   ) ||
-                 |(generic_input_wires_i ^  generic_input_wires_r);
+          return |(cptra_pwrgood_i            ^  cptra_pwrgood_r      ) ||
+                 |(cptra_rst_b_i              ^  cptra_rst_b_r        ) ||
+                 |(cptra_obf_key_i            ^  cptra_obf_key_r      ) ||
+                 |(security_state_i           ^  security_state_r     ) ||
+                 |(BootFSM_BrkPoint_i         ^  BootFSM_BrkPoint_r   ) ||
+                 |(generic_input_wires_i      ^  generic_input_wires_r) ||
+                 |(recovery_data_avail_i      ^  recovery_data_avail_r) ||
+                 |(recovery_image_activated_i ^  recovery_image_activated_r);
   endfunction
   
   //******************************************************************                         
@@ -183,7 +191,7 @@ end
   // Inject pragmas's here to throw a warning on regeneration.
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
-  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf 
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf
     if (count == 0) `uvm_fatal("CFG", "wait_for_num_clocks called with count of 0 - this will lead to a hang");
     @(posedge clk_i);
     repeat (count-1) @(posedge clk_i);                                                    
@@ -236,6 +244,8 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.security_state
     //     //    soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint
     //     //    soc_ifc_ctrl_monitor_struct.generic_input_val
+    //     //    soc_ifc_ctrl_monitor_struct.recovery_data_avail
+    //     //    soc_ifc_ctrl_monitor_struct.recovery_image_activated
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -249,6 +259,8 @@ end
     //      soc_ifc_ctrl_monitor_struct.xyz = security_state_i;  //    [2:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = BootFSM_BrkPoint_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = recovery_data_avail_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = recovery_image_activated_i;  //     
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code 
     // below are examples of how to capture signal values and assign them to 
@@ -261,21 +273,25 @@ end
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_ctrl_monitor_struct.
     while (!any_signal_changed()) @(posedge clk_i);
-    cptra_pwrgood_r       = cptra_pwrgood_i;
-    cptra_rst_b_r         = cptra_rst_b_i;
-    cptra_obf_key_r       = cptra_obf_key_i;
-    security_state_r      = security_state_i;
-    BootFSM_BrkPoint_r    = BootFSM_BrkPoint_i;
-    generic_input_wires_r = generic_input_wires_i;
+    cptra_pwrgood_r            = cptra_pwrgood_i;
+    cptra_rst_b_r              = cptra_rst_b_i;
+    cptra_obf_key_r            = cptra_obf_key_i;
+    security_state_r           = security_state_i;
+    BootFSM_BrkPoint_r         = BootFSM_BrkPoint_i;
+    generic_input_wires_r      = generic_input_wires_i;
+    recovery_data_avail_r      = recovery_data_avail_i;
+    recovery_image_activated_r = recovery_image_activated_i;
     begin: build_return_struct
          // Variables within the soc_ifc_ctrl_monitor_struct:
-         soc_ifc_ctrl_monitor_struct.set_pwrgood            = cptra_pwrgood_i;
-         soc_ifc_ctrl_monitor_struct.assert_rst             = !cptra_rst_b_i;
-         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand     = cptra_obf_key_i;
-         soc_ifc_ctrl_monitor_struct.security_state         = security_state_i;
-         soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint = BootFSM_BrkPoint_i;
-         soc_ifc_ctrl_monitor_struct.generic_input_val      = generic_input_wires_i;
-         soc_ifc_ctrl_monitor_struct.wait_cycles            = 0;
+         soc_ifc_ctrl_monitor_struct.set_pwrgood              = cptra_pwrgood_i;
+         soc_ifc_ctrl_monitor_struct.assert_rst               = !cptra_rst_b_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand       = cptra_obf_key_i;
+         soc_ifc_ctrl_monitor_struct.security_state           = security_state_i;
+         soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint   = BootFSM_BrkPoint_i;
+         soc_ifc_ctrl_monitor_struct.recovery_data_avail      = recovery_data_avail_i;
+         soc_ifc_ctrl_monitor_struct.recovery_image_activated = recovery_image_activated_i;
+         soc_ifc_ctrl_monitor_struct.generic_input_val        = generic_input_wires_i;
+         soc_ifc_ctrl_monitor_struct.wait_cycles              = 0;
     end
     // pragma uvmf custom do_monitor end
   endtask         

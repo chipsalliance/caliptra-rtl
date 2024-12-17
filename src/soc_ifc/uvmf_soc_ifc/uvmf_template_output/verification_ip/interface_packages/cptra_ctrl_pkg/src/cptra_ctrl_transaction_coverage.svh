@@ -49,6 +49,7 @@ class cptra_ctrl_transaction_coverage  extends uvm_subscriber #(.T(cptra_ctrl_tr
     pulse_rv_ic_double_ecc_error: coverpoint coverage_trans.pulse_rv_ecc_error.cptra_iccm_ecc_double_error;
     pulse_rv_dc_single_ecc_error: coverpoint coverage_trans.pulse_rv_ecc_error.cptra_dccm_ecc_single_error;
     pulse_rv_dc_double_ecc_error: coverpoint coverage_trans.pulse_rv_ecc_error.cptra_dccm_ecc_double_error;
+    crypto_error: coverpoint coverage_trans.crypto_error;
     // pragma uvmf custom covergroup end
   endgroup
 

@@ -52,13 +52,29 @@ uvmf:
         dir: output
         width: '64'
 
+      # Recovery Signals
+      - name: recovery_data_avail
+        dir: output
+        width: '1'
+      - name: recovery_image_activated
+        dir: output
+        width: '1'
+
       transaction_constraints:
       - name: wait_cycles_c
-        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+        value: '{ wait_cycles dist {[1:9] :/ 80, [10:99] :/ 15, [100:500] :/ 5}; }'
       - name: generic_tie_zero_c
         value: "{ generic_input_val == 64'h0; }"
+      - name: debug_locked_c
+        value: "{security_state.debug_locked == 1'b1;}"
       - name: device_lifecycle_const_c
         value: "{ if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }"
+      # Match RTL constraint for latching bootfsm breakpoint
+      # we'll never set bootfsm breakpoint unless we are in the appropriate debug/device lifecycle state to latch it in RTL
+      - name: set_bootfsm_breakpoint_c
+        value: "{ if ((security_state.debug_locked) & ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
+                      {set_bootfsm_breakpoint == 0;}
+                  solve security_state before set_bootfsm_breakpoint; }"
 
       transaction_vars:
       - name: cptra_obf_key_rand
@@ -89,6 +105,14 @@ uvmf:
         type: bit [63:0]
         iscompare: 'False'
         isrand: 'True'
+      - name: recovery_data_avail
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: recovery_image_activated
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
     cptra_ctrl:
       clock: clk
       reset: dummy
@@ -113,6 +137,10 @@ uvmf:
         dir: output
         width: '4'
 
+      - name: crypto_error
+        dir: output
+        width: '1'
+
       transaction_constraints: []
 
       transaction_vars:
@@ -126,5 +154,9 @@ uvmf:
         isrand: 'False'
       - name: pulse_rv_ecc_error
         type: rv_ecc_sts_t
+        iscompare: 'False'
+        isrand: 'False'
+      - name: crypto_error
+        type: bit
         iscompare: 'False'
         isrand: 'False'

@@ -27,9 +27,11 @@
 //   listed transaction type.
 //   
 //   expected_analysis_export receives transactions of type  soc_ifc_status_transaction  
+//   expected_ss_mode_analysis_export receives transactions of type  ss_mode_status_transaction  
 //   expected_cptra_analysis_export receives transactions of type  cptra_status_transaction  
 //   actual_analysis_export receives transactions of type  soc_ifc_status_transaction  
 //   actual_cptra_analysis_export receives transactions of type  cptra_status_transaction  
+//   actual_ss_mode_analysis_export receives transactions of type  ss_mode_status_transaction  
 //
 //   This analysis component has the following analysis_ports that can broadcast 
 //   the listed transaction type.
@@ -71,6 +73,11 @@ class soc_ifc_scoreboard #(
                               .BASE_T(BASE_T)
                               )
 ) expected_analysis_export;
+  uvm_analysis_imp_expected_ss_mode_analysis_export #(ss_mode_status_transaction, soc_ifc_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+) expected_ss_mode_analysis_export;
   uvm_analysis_imp_expected_cptra_analysis_export #(cptra_status_transaction, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -86,6 +93,11 @@ class soc_ifc_scoreboard #(
                               .BASE_T(BASE_T)
                               )
 ) actual_cptra_analysis_export;
+  uvm_analysis_imp_actual_ss_mode_analysis_export #(ss_mode_status_transaction, soc_ifc_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+) actual_ss_mode_analysis_export;
 
 
  
@@ -186,9 +198,11 @@ class soc_ifc_scoreboard #(
   virtual function void build_phase (uvm_phase phase);
 
     expected_analysis_export = new("expected_analysis_export", this);
+    expected_ss_mode_analysis_export = new("expected_ss_mode_analysis_export", this);
     expected_cptra_analysis_export = new("expected_cptra_analysis_export", this);
     actual_analysis_export = new("actual_analysis_export", this);
     actual_cptra_analysis_export = new("actual_cptra_analysis_export", this);
+    actual_ss_mode_analysis_export = new("actual_ss_mode_analysis_export", this);
     expected_ahb_analysis_export = new("expected_ahb_analysis_export", this);
     expected_apb_analysis_export = new("expected_apb_analysis_export", this);
     actual_ahb_analysis_export = new("actual_ahb_analysis_export", this);
@@ -234,6 +248,21 @@ class soc_ifc_scoreboard #(
     -> entry_received;
  
     // pragma uvmf custom expected_analysis_export_scoreboard end
+  endfunction
+
+  // FUNCTION: write_expected_ss_mode_analysis_export
+  // Transactions received through expected_ss_mode_analysis_export initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_expected_ss_mode_analysis_export(ss_mode_status_transaction t);
+    // pragma uvmf custom expected_ss_mode_analysis_export_scoreboard begin
+    `uvm_info("PRED", "Transaction Received through expected_ss_mode_analysis_export", UVM_MEDIUM)
+    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
+    //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_warning("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_ss_mode_analysis_export function needs to be completed with custom scoreboard functionality")
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+ 
+    // pragma uvmf custom expected_ss_mode_analysis_export_scoreboard end
   endfunction
 
   // FUNCTION: write_expected_cptra_analysis_export
@@ -407,6 +436,21 @@ class soc_ifc_scoreboard #(
     -> entry_received;
  
     // pragma uvmf custom actual_cptra_analysis_export_scoreboard end
+  endfunction
+
+  // FUNCTION: write_actual_ss_mode_analysis_export
+  // Transactions received through actual_ss_mode_analysis_export initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_actual_ss_mode_analysis_export(ss_mode_status_transaction t);
+    // pragma uvmf custom actual_ss_mode_analysis_export_scoreboard begin
+    `uvm_info("PRED", "Transaction Received through actual_ss_mode_analysis_export", UVM_MEDIUM)
+    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
+    //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ss_mode_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
+    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+ 
+    // pragma uvmf custom actual_ss_mode_analysis_export_scoreboard end
   endfunction
 
 

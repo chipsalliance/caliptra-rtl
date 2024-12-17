@@ -70,6 +70,8 @@ typedef struct packed  { \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
+  bit recovery_data_avail ; \
+  bit recovery_image_activated ; \
      } soc_ifc_ctrl_monitor_s;
 
   `define soc_ifc_ctrl_TO_MONITOR_STRUCT_FUNCTION \
@@ -82,7 +84,9 @@ typedef struct packed  { \
             this.wait_cycles , \
             this.security_state , \
             this.set_bootfsm_breakpoint , \
-            this.generic_input_val  \
+            this.generic_input_val , \
+            this.recovery_data_avail , \
+            this.recovery_image_activated  \
             };\
     return ( soc_ifc_ctrl_monitor_struct);\
   endfunction\
@@ -96,7 +100,9 @@ typedef struct packed  { \
             this.wait_cycles , \
             this.security_state , \
             this.set_bootfsm_breakpoint , \
-            this.generic_input_val  \
+            this.generic_input_val , \
+            this.recovery_data_avail , \
+            this.recovery_image_activated  \
             } = soc_ifc_ctrl_monitor_struct;\
   endfunction
 
@@ -113,6 +119,8 @@ typedef struct packed  { \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
+  bit recovery_data_avail ; \
+  bit recovery_image_activated ; \
      } soc_ifc_ctrl_initiator_s;
 
   `define soc_ifc_ctrl_TO_INITIATOR_STRUCT_FUNCTION \
@@ -125,7 +133,9 @@ typedef struct packed  { \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
-           this.generic_input_val  \
+           this.generic_input_val , \
+           this.recovery_data_avail , \
+           this.recovery_image_activated  \
            };\
     return ( soc_ifc_ctrl_initiator_struct);\
   endfunction
@@ -139,7 +149,9 @@ typedef struct packed  { \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
-           this.generic_input_val  \
+           this.generic_input_val , \
+           this.recovery_data_avail , \
+           this.recovery_image_activated  \
            } = soc_ifc_ctrl_initiator_struct;\
   endfunction
 
@@ -156,6 +168,8 @@ typedef struct packed  { \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
   bit [63:0] generic_input_val ; \
+  bit recovery_data_avail ; \
+  bit recovery_image_activated ; \
      } soc_ifc_ctrl_responder_s;
 
   `define soc_ifc_ctrl_TO_RESPONDER_STRUCT_FUNCTION \
@@ -168,7 +182,9 @@ typedef struct packed  { \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
-           this.generic_input_val  \
+           this.generic_input_val , \
+           this.recovery_data_avail , \
+           this.recovery_image_activated  \
            };\
     return ( soc_ifc_ctrl_responder_struct);\
   endfunction
@@ -182,7 +198,9 @@ typedef struct packed  { \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
-           this.generic_input_val  \
+           this.generic_input_val , \
+           this.recovery_data_avail , \
+           this.recovery_image_activated  \
            } = soc_ifc_ctrl_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

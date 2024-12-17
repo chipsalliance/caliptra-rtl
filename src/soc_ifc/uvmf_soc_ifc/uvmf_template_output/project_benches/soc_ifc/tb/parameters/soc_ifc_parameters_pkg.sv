@@ -43,9 +43,11 @@ package soc_ifc_parameters_pkg;
   parameter string uvm_test_top_environment_qvip_apb5_slave_subenv_apb5_master_0  = "uvm_test_top.environment.qvip_apb5_slave_subenv.apb5_master_0"; /* [1] */
   parameter string soc_ifc_ctrl_agent_BFM  = "soc_ifc_ctrl_agent_BFM"; /* [2] */
   parameter string cptra_ctrl_agent_BFM  = "cptra_ctrl_agent_BFM"; /* [3] */
-  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [4] */
-  parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [5] */
-  parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [6] */
+  parameter string ss_mode_ctrl_agent_BFM  = "ss_mode_ctrl_agent_BFM"; /* [4] */
+  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [5] */
+  parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [6] */
+  parameter string ss_mode_status_agent_BFM  = "ss_mode_status_agent_BFM"; /* [7] */
+  parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [8] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

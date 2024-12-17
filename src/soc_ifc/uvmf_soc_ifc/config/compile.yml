@@ -12,10 +12,14 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
@@ -31,6 +35,11 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg/src/cptra_ctrl_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/ss_mode_ctrl_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/ss_mode_ctrl_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/src/soc_ifc_status_driver_bfm.sv
@@ -41,6 +50,11 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/src/cptra_status_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/ss_mode_status_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/ss_mode_status_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/src/ss_mode_status_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/src/ss_mode_status_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ss_mode_status_pkg/src/ss_mode_status_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_driver_bfm.sv

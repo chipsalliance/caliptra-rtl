@@ -8,7 +8,7 @@ uvmf:
         isrand: 'False'
         name: inject_ecc_error
         type: bit [1:0]
-        value: 1'b0
+        value: 2'b00
       - comment: When set, causes the mbox_sram_responder_sequence to clear the variable 'inject_ecc_error' after a single ECC error is injected
         isrand: 'False'
         name: auto_clear_ecc_error_injection

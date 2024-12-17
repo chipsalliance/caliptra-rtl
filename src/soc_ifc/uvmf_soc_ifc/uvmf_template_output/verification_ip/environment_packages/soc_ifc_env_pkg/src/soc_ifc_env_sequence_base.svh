@@ -51,10 +51,12 @@ class soc_ifc_env_sequence_base #(
   // Initiator agent sequencers in soc_ifc_environment:
     // configuration.soc_ifc_ctrl_agent_config.sequencer
     // configuration.cptra_ctrl_agent_config.sequencer
+    // configuration.ss_mode_ctrl_agent_config.sequencer
 
   // Responder agent sequencers in soc_ifc_environment:
     // configuration.soc_ifc_status_agent_config.sequencer
     // configuration.cptra_status_agent_config.sequencer
+    // configuration.ss_mode_status_agent_config.sequencer
     // configuration.mbox_sram_agent_config.sequencer
 
 
@@ -63,6 +65,11 @@ class soc_ifc_env_sequence_base #(
 
     typedef cptra_ctrl_random_sequence cptra_ctrl_agent_random_sequence_t;
     cptra_ctrl_agent_random_sequence_t cptra_ctrl_agent_rand_seq;
+
+    typedef ss_mode_ctrl_random_sequence ss_mode_ctrl_agent_random_sequence_t;
+    ss_mode_ctrl_agent_random_sequence_t ss_mode_ctrl_agent_rand_seq;
+
+
 
 
 
@@ -95,6 +102,7 @@ class soc_ifc_env_sequence_base #(
     super.new(name);
     soc_ifc_ctrl_agent_rand_seq = soc_ifc_ctrl_agent_random_sequence_t::type_id::create("soc_ifc_ctrl_agent_rand_seq");
     cptra_ctrl_agent_rand_seq = cptra_ctrl_agent_random_sequence_t::type_id::create("cptra_ctrl_agent_rand_seq");
+    ss_mode_ctrl_agent_rand_seq = ss_mode_ctrl_agent_random_sequence_t::type_id::create("ss_mode_ctrl_agent_rand_seq");
 
 
   endfunction
@@ -105,6 +113,8 @@ class soc_ifc_env_sequence_base #(
        repeat (25) soc_ifc_ctrl_agent_rand_seq.start(configuration.soc_ifc_ctrl_agent_config.sequencer);
     if ( configuration.cptra_ctrl_agent_config.sequencer != null )
        repeat (25) cptra_ctrl_agent_rand_seq.start(configuration.cptra_ctrl_agent_config.sequencer);
+    if ( configuration.ss_mode_ctrl_agent_config.sequencer != null )
+       repeat (25) ss_mode_ctrl_agent_rand_seq.start(configuration.ss_mode_ctrl_agent_config.sequencer);
 
 
   endtask

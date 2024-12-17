@@ -430,6 +430,8 @@ class soc_ifc_env_cov_subscriber #(
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;
   uvm_analysis_imp_cov_ahb_ae            #(mvc_sequence_item_base,     this_type) ahb_ae;
   uvm_analysis_imp_cov_mbox_sram_ae      #(mbox_sram_transaction,      this_type) mbox_sram_ae;
+  uvm_analysis_imp_cov_ss_mode_ctrl_ae   #(ss_mode_ctrl_transaction,   this_type) ss_mode_ctrl_ae;
+  uvm_analysis_imp_cov_ss_mode_status_ae #(ss_mode_status_transaction, this_type) ss_mode_status_ae;
 
   //------------------------------------------------------------------------------------------
   //                                   Constructor
@@ -451,6 +453,8 @@ class soc_ifc_env_cov_subscriber #(
     cptra_status_ae   = new("cptra_status_ae"  , this);
     ahb_ae            = new("ahb_ae"           , this);
     mbox_sram_ae      = new("mbox_sram_ae"     , this);
+    ss_mode_ctrl_ae   = new("ss_mode_ctrl_ae"  , this);
+    ss_mode_status_ae = new("ss_mode_status_ae", this);
 
     c_soc_ifc_rm = configuration.soc_ifc_rm;
     soc_ifc_env_mbox_steps_cg.set_inst_name($sformatf("soc_ifc_env_mbox_steps_cg_%s",get_full_name()));
@@ -488,6 +492,20 @@ class soc_ifc_env_cov_subscriber #(
   //                                   SOC_IFC STATUS - write
   //------------------------------------------------------------------------------------------
   virtual function void write_cov_soc_ifc_status_ae(soc_ifc_status_transaction txn);
+//    `uvm_fatal("FIXME", "FIXME")
+  endfunction
+
+  //------------------------------------------------------------------------------------------
+  //                                   SS_MODE CTRL - write
+  //------------------------------------------------------------------------------------------
+  virtual function void write_cov_ss_mode_ctrl_ae(ss_mode_ctrl_transaction txn);
+//    `uvm_fatal("FIXME", "FIXME")
+  endfunction
+
+  //------------------------------------------------------------------------------------------
+  //                                   SS_MODE STATUS - write
+  //------------------------------------------------------------------------------------------
+  virtual function void write_cov_ss_mode_status_ae(ss_mode_status_transaction txn);
 //    `uvm_fatal("FIXME", "FIXME")
   endfunction
 

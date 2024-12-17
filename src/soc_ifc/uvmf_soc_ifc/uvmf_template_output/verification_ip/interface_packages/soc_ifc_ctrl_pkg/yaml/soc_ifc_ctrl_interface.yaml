@@ -36,18 +36,32 @@ uvmf:
         name: generic_input_wires
         reset_value: '''bz'
         width: '64'
+      - dir: output
+        name: recovery_data_avail
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: recovery_image_activated
+        reset_value: '''bz'
+        width: '1'
       reset: dummy
       reset_assertion_level: 'False'
       transaction_constraints:
       - comment: ''
         name: wait_cycles_c
-        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+        value: '{ wait_cycles dist {[1:9] :/ 80, [10:99] :/ 15, [100:500] :/ 5}; }'
       - comment: ''
         name: generic_tie_zero_c
         value: '{ generic_input_val == 64''h0; }'
       - comment: ''
+        name: debug_locked_c
+        value: '{security_state.debug_locked == 1''b1;}'
+      - comment: ''
         name: device_lifecycle_const_c
         value: '{ if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }'
+      - comment: ''
+        name: set_bootfsm_breakpoint_c
+        value: '{ if ((security_state.debug_locked) & ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING))) {set_bootfsm_breakpoint == 0;} solve security_state before set_bootfsm_breakpoint; }'
       transaction_vars:
       - comment: ''
         iscompare: 'True'
@@ -90,5 +104,17 @@ uvmf:
         isrand: 'True'
         name: generic_input_val
         type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: recovery_data_avail
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: recovery_image_activated
+        type: bit
         unpacked_dimension: ''
       use_dpi_link: 'False'

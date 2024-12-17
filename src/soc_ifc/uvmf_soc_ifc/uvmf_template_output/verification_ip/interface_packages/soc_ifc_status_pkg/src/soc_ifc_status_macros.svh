@@ -64,7 +64,7 @@ typedef struct packed  { \
 //
   `define soc_ifc_status_MONITOR_STRUCT typedef struct packed  { \
   bit ready_for_fuses ; \
-  bit ready_for_fw_push ; \
+  bit ready_for_mb_processing ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
@@ -79,7 +79,7 @@ typedef struct packed  { \
     soc_ifc_status_monitor_struct = \
             { \
             this.ready_for_fuses , \
-            this.ready_for_fw_push , \
+            this.ready_for_mb_processing , \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
@@ -95,7 +95,7 @@ typedef struct packed  { \
   virtual function void from_monitor_struct(soc_ifc_status_monitor_s soc_ifc_status_monitor_struct);\
             {\
             this.ready_for_fuses , \
-            this.ready_for_fw_push , \
+            this.ready_for_mb_processing , \
             this.ready_for_runtime , \
             this.mailbox_data_avail , \
             this.mailbox_flow_done , \
@@ -113,7 +113,7 @@ typedef struct packed  { \
 //
   `define soc_ifc_status_INITIATOR_STRUCT typedef struct packed  { \
   bit ready_for_fuses ; \
-  bit ready_for_fw_push ; \
+  bit ready_for_mb_processing ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
@@ -128,7 +128,7 @@ typedef struct packed  { \
     soc_ifc_status_initiator_struct = \
            {\
            this.ready_for_fuses , \
-           this.ready_for_fw_push , \
+           this.ready_for_mb_processing , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
@@ -144,7 +144,7 @@ typedef struct packed  { \
   virtual function void from_initiator_struct(soc_ifc_status_initiator_s soc_ifc_status_initiator_struct);\
            {\
            this.ready_for_fuses , \
-           this.ready_for_fw_push , \
+           this.ready_for_mb_processing , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
@@ -162,7 +162,7 @@ typedef struct packed  { \
 //
   `define soc_ifc_status_RESPONDER_STRUCT typedef struct packed  { \
   bit ready_for_fuses ; \
-  bit ready_for_fw_push ; \
+  bit ready_for_mb_processing ; \
   bit ready_for_runtime ; \
   bit mailbox_data_avail ; \
   bit mailbox_flow_done ; \
@@ -177,7 +177,7 @@ typedef struct packed  { \
     soc_ifc_status_responder_struct = \
            {\
            this.ready_for_fuses , \
-           this.ready_for_fw_push , \
+           this.ready_for_mb_processing , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \
@@ -193,7 +193,7 @@ typedef struct packed  { \
   virtual function void from_responder_struct(soc_ifc_status_responder_s soc_ifc_status_responder_struct);\
            {\
            this.ready_for_fuses , \
-           this.ready_for_fw_push , \
+           this.ready_for_mb_processing , \
            this.ready_for_runtime , \
            this.mailbox_data_avail , \
            this.mailbox_flow_done , \

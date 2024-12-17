@@ -93,6 +93,8 @@ end
   tri  soc_ifc_notif_intr_i;
   tri  sha_error_intr_i;
   tri  sha_notif_intr_i;
+  tri  dma_error_intr_i;
+  tri  dma_notif_intr_i;
   tri  timer_intr_i;
   tri [31:0] nmi_vector_i;
   tri  nmi_intr_i;
@@ -109,6 +111,8 @@ end
   assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
   assign sha_error_intr_i = bus.sha_error_intr;
   assign sha_notif_intr_i = bus.sha_notif_intr;
+  assign dma_error_intr_i = bus.dma_error_intr;
+  assign dma_notif_intr_i = bus.dma_notif_intr;
   assign timer_intr_i = bus.timer_intr;
   assign nmi_vector_i = bus.nmi_vector;
   assign nmi_intr_i = bus.nmi_intr;
@@ -172,7 +176,7 @@ end
   endtask
 
   // pragma uvmf custom wait_for_num_clocks begin
-  //****************************************************************************                         
+  //****************************************************************************
   // Inject pragmas's here to throw a warning on regeneration.
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
@@ -181,7 +185,7 @@ end
     @(posedge clk_i);
     repeat (count-1) @(posedge clk_i);
   endtask
-  // pragma uvmf custom wait_for_num_clocks end                                                                
+  // pragma uvmf custom wait_for_num_clocks end
 
   //******************************************************************
   event go;
@@ -226,6 +230,8 @@ end
     //     //    cptra_status_monitor_struct.soc_ifc_notif_intr_pending
     //     //    cptra_status_monitor_struct.sha_err_intr_pending
     //     //    cptra_status_monitor_struct.sha_notif_intr_pending
+    //     //    cptra_status_monitor_struct.dma_err_intr_pending
+    //     //    cptra_status_monitor_struct.dma_notif_intr_pending
     //     //    cptra_status_monitor_struct.timer_intr_pending
     //     //    cptra_status_monitor_struct.noncore_rst_asserted
     //     //    cptra_status_monitor_struct.uc_rst_asserted
@@ -253,6 +259,8 @@ end
     //      cptra_status_monitor_struct.xyz = soc_ifc_notif_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_error_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_notif_intr_i;  //     
+    //      cptra_status_monitor_struct.xyz = dma_error_intr_i;  //     
+    //      cptra_status_monitor_struct.xyz = dma_notif_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = timer_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = nmi_vector_i;  //    [31:0] 
     //      cptra_status_monitor_struct.xyz = nmi_intr_i;  //     
@@ -275,6 +283,8 @@ end
         soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
         sha_error_intr_o               <= sha_error_intr_i      ;
         sha_notif_intr_o               <= sha_notif_intr_i      ;
+        dma_error_intr_o               <= dma_error_intr_i      ;
+        dma_notif_intr_o               <= dma_notif_intr_i      ;
         timer_intr_o                   <= timer_intr_i          ;
         nmi_intr_o                     <= nmi_intr_i            ;
         @(posedge clk_i);
@@ -289,6 +299,8 @@ end
     soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
     sha_error_intr_o               <= sha_error_intr_i      ;
     sha_notif_intr_o               <= sha_notif_intr_i      ;
+    dma_error_intr_o               <= dma_error_intr_i      ;
+    dma_notif_intr_o               <= dma_notif_intr_i      ;
     timer_intr_o                   <= timer_intr_i          ;
     nmi_vector_o                   <= nmi_vector_i          ;
     nmi_intr_o                     <= nmi_intr_i            ;
@@ -303,6 +315,8 @@ end
          cptra_status_monitor_struct.soc_ifc_notif_intr_pending =  soc_ifc_notif_intr_i;
          cptra_status_monitor_struct.sha_err_intr_pending       =  sha_error_intr_i;
          cptra_status_monitor_struct.sha_notif_intr_pending     =  sha_notif_intr_i;
+         cptra_status_monitor_struct.dma_err_intr_pending       =  dma_error_intr_i;
+         cptra_status_monitor_struct.dma_notif_intr_pending     =  dma_notif_intr_i;
          cptra_status_monitor_struct.timer_intr_pending         =  timer_intr_i;
          cptra_status_monitor_struct.cptra_obf_key_reg          =  cptra_obf_key_reg_i;
          cptra_status_monitor_struct.obf_field_entropy          =  obf_field_entropy_i;

@@ -78,6 +78,8 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
         bins byte_6    = {[0:$]} with ($countones(item[55:48] > 0));
         bins byte_7    = {[0:$]} with ($countones(item[63:56] > 0));
     }
+    recovery_data_avail: coverpoint coverage_trans.recovery_data_avail;
+    recovery_image_activated: coverpoint coverage_trans.recovery_image_activated;
 
     cross_rst : cross set_pwrgood, assert_rst;
     cross_brk : cross assert_rst, set_bootfsm_breakpoint {
