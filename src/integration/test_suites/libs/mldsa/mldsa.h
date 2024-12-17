@@ -20,6 +20,15 @@
 #include "caliptra_reg.h"
 #include "riscv_hw_if.h"
 
+#define MLDSA87_SEED_SIZE 8
+#define MLDSA87_SIGN_RND_SIZE 8
+#define MLDSA87_ENTROPY_SIZE 16
+#define MLDSA87_PRIVKEY_SIZE 1224
+#define MLDSA87_PUBKEY_SIZE 648
+#define MLDSA87_MSG_SIZE 16
+#define MLDSA87_SIGN_SIZE 1157
+#define MLDSA_VERIFY_RES_SIZE 16
+
 typedef uint8_t BOOL;
 #define FALSE 0u
 #define TRUE 1u
@@ -28,13 +37,13 @@ typedef uint8_t BOOL;
 typedef struct {
   BOOL      kv_intf;
   uint8_t   kv_id;
-  uint32_t  data[8];
+  uint32_t  data[MLDSA87_SEED_SIZE];
 } mldsa_io;
 
 void mldsa_zeroize();
 void wait_for_mldsa_intr();
-void mldsa_keygen_flow(mldsa_io seed, uint32_t sign_rnd[8], uint32_t entropy[16], uint32_t privkey[1224], uint32_t pubkey[648]);
-void mldsa_signing_flow(uint32_t privkey[1224], uint32_t msg[16], uint32_t entropy[16], uint32_t sign[1157]);
-void mldsa_verifying_flow(uint32_t msg[16], uint32_t pubkey[648], uint32_t sign[1157], uint32_t verifyres[16]);
-void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t sign_rnd[8], uint32_t msg[16], uint32_t privkey[1224], uint32_t pubkey[648], uint32_t sign[1157]);
+void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE]);
+void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLDSA87_MSG_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE]);
+void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE]);
+void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE]);
 #endif
