@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -37,7 +37,7 @@ module csrng_state_db import csrng_pkg::*; #(
   input logic [KeyLen-1:0]   state_db_wr_key_i,
   input logic [BlkLen-1:0]   state_db_wr_v_i,
   input logic [CtrLen-1:0]   state_db_wr_res_ctr_i,
-  input logic                state_db_wr_sts_i,
+  input csrng_cmd_sts_e      state_db_wr_sts_i,
   // status interface
   input logic                state_db_is_dump_en_i,
   input logic                state_db_reg_rd_sel_i,
@@ -45,14 +45,18 @@ module csrng_state_db import csrng_pkg::*; #(
   input logic [StateId-1:0]  state_db_reg_rd_id_i,
   output logic [31:0]        state_db_reg_rd_val_o,
   output logic               state_db_sts_ack_o,
-  output logic               state_db_sts_sts_o,
-  output logic [StateId-1:0] state_db_sts_id_o
+  output csrng_cmd_sts_e     state_db_sts_sts_o,
+  output logic [StateId-1:0] state_db_sts_id_o,
+  input logic [NApps-1:0]    int_state_read_enable_i,
+
+  // The reseed counters are always readable via register interface.
+  output logic [NApps-1:0][31:0] reseed_counter_o
 );
 
   localparam logic[31:0] InternalStateWidth = 2+KeyLen+BlkLen+CtrLen;
   localparam logic[31:0] RegInternalStateWidth = 30+InternalStateWidth;
   localparam logic[31:0] RegW = 32;
-  localparam logic[31:0] StateWidth = 1+1+KeyLen+BlkLen+CtrLen+StateId+1;
+  localparam logic[31:0] StateWidth = 1+1+KeyLen+BlkLen+CtrLen+StateId+CSRNG_CMD_STS_WIDTH;
 
   logic [StateId-1:0]              state_db_id;
   logic [KeyLen-1:0]               state_db_key;
@@ -60,19 +64,21 @@ module csrng_state_db import csrng_pkg::*; #(
   logic [CtrLen-1:0]               state_db_rc;
   logic                            state_db_fips;
   logic                            state_db_inst_st;
-  logic                            state_db_sts;
+  csrng_cmd_sts_e                  state_db_sts;
   logic                            state_db_write;
   logic                            instance_status;
   logic [NApps-1:0]                int_st_out_sel;
   logic [NApps-1:0]                int_st_dump_sel;
   logic [InternalStateWidth-1:0]   internal_states_out[NApps];
   logic [InternalStateWidth-1:0]   internal_states_dump[NApps];
+  logic [InternalStateWidth-1:0]   internal_state_pl;
+  logic [InternalStateWidth-1:0]   internal_state_pl_dump;
   logic [RegInternalStateWidth-1:0] internal_state_diag;
   logic                             reg_rd_ptr_inc;
 
   // flops
   logic                            state_db_sts_ack_q, state_db_sts_ack_d;
-  logic                            state_db_sts_sts_q, state_db_sts_sts_d;
+  csrng_cmd_sts_e                  state_db_sts_sts_q, state_db_sts_sts_d;
   logic [StateId-1:0]              state_db_sts_id_q, state_db_sts_id_d;
   logic [StateId-1:0]              reg_rd_ptr_q, reg_rd_ptr_d;
   logic [StateId-1:0]              int_st_dump_id_q, int_st_dump_id_d;
@@ -80,7 +86,7 @@ module csrng_state_db import csrng_pkg::*; #(
   always_ff @(posedge clk_i or negedge rst_ni)
     if (!rst_ni) begin
       state_db_sts_ack_q   <= '0;
-      state_db_sts_sts_q   <= '0;
+      state_db_sts_sts_q   <= CMD_STS_SUCCESS;
       state_db_sts_id_q    <= '0;
       reg_rd_ptr_q         <= '0;
       int_st_dump_id_q     <= '0;
@@ -94,16 +100,11 @@ module csrng_state_db import csrng_pkg::*; #(
 
   // flops - no reset
   logic [InternalStateWidth-1:0]  internal_states_q[NApps], internal_states_d[NApps];
-  logic [InternalStateWidth-1:0]  internal_state_pl_q, internal_state_pl_d;
-  logic [InternalStateWidth-1:0]  internal_state_pl_dump_q, internal_state_pl_dump_d;
-
 
   // no reset on state
   always_ff @(posedge clk_i)
     begin
       internal_states_q <= internal_states_d;
-      internal_state_pl_q <= internal_state_pl_d;
-      internal_state_pl_dump_q <= internal_state_pl_dump_d;
     end
 
 
@@ -114,27 +115,27 @@ module csrng_state_db import csrng_pkg::*; #(
     assign int_st_out_sel[rd] = (state_db_rd_inst_id_i == rd);
     assign int_st_dump_sel[rd] = (int_st_dump_id_q == rd);
     assign internal_states_out[rd] = int_st_out_sel[rd] ? internal_states_q[rd] : '0;
-    assign internal_states_dump[rd] = int_st_dump_sel[rd] ? internal_states_q[rd] : '0;
+    assign internal_states_dump[rd] =
+        int_st_dump_sel[rd] && int_state_read_enable_i[rd] ? internal_states_q[rd] : '0;
   end
 
   // since only one of the internal states is active at a time, a
   // logical "or" is made of all of the buses into one
   always_comb begin
-    internal_state_pl_d = '0;
-    internal_state_pl_dump_d = '0;
+    internal_state_pl = '0;
+    internal_state_pl_dump = '0;
     for (int i = 0; i < NApps; i = i+1) begin
-      internal_state_pl_d |= internal_states_out[i];
-      internal_state_pl_dump_d |= internal_states_dump[i];
+      internal_state_pl |= internal_states_out[i];
+      internal_state_pl_dump |= internal_states_dump[i];
     end
   end
 
   assign {state_db_rd_fips_o,state_db_rd_inst_st_o,
           state_db_rd_key_o,state_db_rd_v_o,
-          state_db_rd_res_ctr_o} = internal_state_pl_q;
+          state_db_rd_res_ctr_o} = internal_state_pl;
 
 
-  // using a copy of the internal state pipeline version for better timing
-  assign internal_state_diag = {30'b0,internal_state_pl_dump_q};
+  assign internal_state_diag = {30'b0,internal_state_pl_dump};
 
 
   // Register access of internal state
@@ -171,6 +172,11 @@ module csrng_state_db import csrng_pkg::*; #(
          (!state_db_enable_i) ? '0 :
          state_db_reg_rd_id_pulse_i ? state_db_reg_rd_id_i :
          int_st_dump_id_q;
+
+  // The reseed counters are always readable via register interface.
+  for (genvar i = 0; i < NApps; i++) begin : gen_reseed_counter
+    assign reseed_counter_o[i] = internal_states_q[i][31:0];
+  end
 
   //--------------------------------------------
   // write state logic
@@ -216,7 +222,6 @@ module csrng_state_db import csrng_pkg::*; #(
   assign state_db_sts_sts_o = state_db_sts_sts_q;
   assign state_db_sts_id_o = state_db_sts_id_q;
   assign state_db_wr_req_rdy_o = 1'b1;
-
 
   // Assertions
   `CALIPTRA_ASSERT_KNOWN(IntStOutSelOneHot_A, $onehot(int_st_out_sel))

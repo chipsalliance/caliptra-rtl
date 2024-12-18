@@ -1,7 +1,30 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
-{ name: "csrng",
+{ name:               "csrng",
+  human_name:         "Cryptographically Secure Random Number Generator",
+  one_line_desc:      "Takes entropy bits to produce cryptographically secure random numbers for consumption by hardware blocks and by software",
+  one_paragraph_desc: '''
+  Cryptographically Secure Random Number Generator (CSRNG) consumes random seeds from Entropy Source and generates random numbers for separate application interface contexts, such as multiple entropy distribution networks and software.
+  When used in fully deterministic mode, the random numbers are generated just based on seeds provided by the application input.
+  CSRNG targets compliance with [BSI's AIS31 recommendations for Common Criteria (CC)][bsi-ais31] as well as NIST's [SP 800-90A][nist-sp-800-90a] and [SP 800-90C][nist-sp-800-90c].
+  Internally, it uses the CTR_DRBG construction with a security strength of 256 bits as specified by [SP 800-90A][nist-sp-800-90a].
+
+  [bsi-ais31]: https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Zertifizierung/Interpretationen/AIS_31_Functionality_classes_for_random_number_generators_e.pdf
+  [nist-sp-800-90a]: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf
+  [nist-sp-800-90c]: https://csrc.nist.gov/CSRC/media/Publications/sp/800-90c/draft/documents/sp800_90c_second_draft.pdf
+  '''
+  // Unique comportable IP identifier defined under KNOWN_CIP_IDS in the regtool.
+  cip_id:             "5",
+  design_spec:        "../doc",
+  dv_doc:             "../doc/dv",
+  hw_checklist:       "../doc/checklist",
+  sw_checklist:       "/sw/device/lib/dif/dif_csrng",
+  version:            "2.0.0",
+  life_stage:         "L1",
+  design_stage:       "D2S",
+  verification_stage: "V2S",
+  dif_stage:          "S2",
   clocking: [{clock: "clk_i", reset: "rst_ni"}],
   bus_interfaces: [
     { protocol: "tlul", direction: "device" }
@@ -27,6 +50,14 @@
       desc: "Selection of the S-Box implementation. See aes_pkg.sv.",
       local: "false",
       expose: "true"
+    },
+    # Note: All parameters below are local, they are not actually configurable.
+    # Selecting values different from the default values below might cause undefined behavior.
+    { name:    "NumApps",
+      type:    "int",
+      default: "3",
+      desc:    "Number of application interfaces",
+      local:   "true"
     },
   ],
   interrupt_list: [
@@ -70,12 +101,17 @@
       name:    "cs_aes_halt"
       act:     "rsp"
       package: "entropy_src_pkg"
+      desc:    '''
+               Coordinate activity between CSRNG's AES and Entropy Source's SHA3.
+               When CSRNG gets a request and its AES is not active, it acknowledges and until the request has dropped neither runs its AES nor drops the acknowledge.
+               '''
     }
     { struct:  "mubi8"
       type:    "uni"
       name:    "otp_en_csrng_sw_app_read"
       act:     "rcv"
       package: "caliptra_prim_mubi_pkg"
+      default: "caliptra_prim_mubi_pkg::MuBi8True"
     }
     { struct:  "lc_tx"
       type:    "uni"
@@ -83,6 +119,50 @@
       act:     "rcv"
       default: "lc_ctrl_pkg::Off"
       package: "lc_ctrl_pkg"
+    }
+  ],
+  features: [
+    {
+      name: "CSRNG.INTERFACE.SOFTWARE",
+      desc: '''
+            CSRNG has an application interface for the software to interact with.
+
+            Note that for software to actually retrieve random numbers from this interface, the otp_en_csrng_sw_app_read input from OTP needs to be `kMultiBitBool8True` and !!CTRL.SW_APP_ENABLE needs to be set to `kMultiBitBool4True`.
+            Otherwise the !!GENBITS register always reads 0.
+            '''
+    }
+    {
+      name: "CSRNG.INTERFACE.HARDWARE0",
+      desc: "CSRNG has an application interface intended for hardware; this interface is labelled zero."
+    }
+    {
+      name: "CSRNG.INTERFACE.HARDWARE1",
+      desc: "CSRNG has an application interface intended for hardware; this interface is labelled one."
+    }
+    {
+      name: "CSRNG.MODE.DETERMINISTIC",
+      desc: "CSRNG can be set up to deterministically generate the same sequence of random values by using a fixed seed."
+    }
+    {
+      name: "CSRNG.MODE.NONDETERMINISTIC",
+      desc: "CSRNG can be set up to generate non-deterministic random values by using a random seed from the entropy source."
+    }
+    {
+      name: "CSRNG.READ_INT_STATE",
+      desc: '''
+            CSRNG allows reading the internal state of the three CTR_DRBG instances corresponding to the three interfaces.
+            This is useful for debugging and validation testing.
+
+            Note that for this to work the `otp_en_csrng_sw_app_read` input from OTP needs to be `kMultiBitBool8True`.
+            '''
+    }
+    {
+      name: "CSRNG.LIFECYCLE.DEBUGENABLE",
+      desc: '''
+            CSRNG has a debug enable signal, which allows for seed diversification.
+            Depending on this value it will use the non-production seed constant or the production seed constant.
+            This state is controlled by the life-cycle controller and so debug is enabled only in test mode.
+            '''
     }
   ],
   countermeasures: [
@@ -223,7 +303,16 @@
                   Setting this field to kMultiBitBool4True will enable reading from the !!INT_STATE_VAL register.
                   Reading the internal state of the enable instances will be enabled
                   only if the otp_en_csrng_sw_app_read input vector is set to the enable encoding.
+                  Also, the !!INT_STATE_READ_ENABLE bit of the selected instance needs to be set to true for this to work.
                   '''
+          resval: false
+        },
+        { bits: "15:12",
+          name: "FIPS_FORCE_ENABLE",
+          mubi: true
+          desc: '''
+                Setting this field to kMultiBitBool4True enables forcing the FIPS/CC compliance flag to true via the !!FIPS_FORCE register.
+                '''
           resval: false
         },
       ]
@@ -276,6 +365,106 @@
         }
       ]
     },
+    { name: "RESEED_INTERVAL",
+      desc: "CSRNG maximum number of generate requests allowed between reseeds register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      hwqe: "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_INTERVAL",
+          desc: '''
+                Setting this field will set the number of generate requests that can be
+                made to CSRNG before a reseed request needs to be made.
+                This register supports a maximum of 2^32 requests between reseeds.
+                This register will be compared to a counter, which counts the number of
+                generate commands between reseed or instantiate commands.
+                If the counter reaches the value of this register, the violating command
+                will be acknowledged with a status error.
+                If the violating command was issued by a HW instance, an interrupt will
+                be triggered.
+                '''
+          resval: 0xffff_ffff
+        }
+      ]
+    },
+    # Our reg_json.py doesn't support multireg, so expand all instances.
+    # { multireg: {
+    #   name: "RESEED_COUNTER",
+    #   desc: '''
+    #     Reseed counter.
+    #
+    #     The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+    #   '''
+    #   count: "NumApps",
+    #   cname: "RESEED_COUNTER",
+    #   swaccess: "ro",
+    #   hwaccess: "hwo",
+    #   hwext:    "true",
+    #   fields: [
+    #     { bits: "31:0",
+    #       name: "RESEED_COUNTER",
+    #       desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+    #       resval: "0",
+    #     }
+    #   ],
+    #   },
+    # },
+    {
+      name: "RESEED_COUNTER_0",
+      desc: '''
+        Reseed counter 0.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER_0",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
+    },
+    {
+      name: "RESEED_COUNTER_1",
+      desc: '''
+        Reseed counter 1.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER_0",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
+    },
+    {
+      name: "RESEED_COUNTER_2",
+      desc: '''
+        Reseed counter 2.
+
+        The per-instance reseed counter indicates the number of Generate requests that have been completed since new entropy input has been obtained with an Instantiate or a Reseed command.
+      '''
+      count: "NumApps",
+      swaccess: "ro",
+      hwaccess: "hwo",
+      hwext:    "true",
+      fields: [
+        { bits: "31:0",
+          name: "RESEED_COUNTER_0",
+          desc: "Reseed Counter indicating the number of completed Generate requests since the last Instantiate or Reseed command."
+          resval: "0",
+        }
+      ],
+    },
     {
       name: "SW_CMD_STS",
       desc: "Application interface command status register",
@@ -284,22 +473,75 @@
       tags: [// Internal HW can modify status register
                  "excl:CsrNonInitTests:CsrExclCheck"]
       fields: [
-        { bits: "0",
-          name: "CMD_RDY",
-          desc: '''This bit indicates when the command interface is ready to accept commands.
-                '''
-          resval: "1"
-        }
         { bits: "1",
-          name: "CMD_STS",
+          name: "CMD_RDY",
           desc: '''
-                This one bit field is the status code returned with the application command ack.
-                It is updated each time a command ack is asserted on the internal application
-                interface for software use.
-                0b0: Request completed successfully
-                0b1: Request completed with an error
+                This bit indicates when the command interface is ready to accept commands.
+                Before starting to write a new command to !!SW_CMD_REQ, this field needs to be polled.
+                0b0: CSRNG is not ready to accept commands or the last command hasn't been acked yet.
+                0b1: CSRNG is ready to accept the next command.
                 '''
           resval: "0"
+        }
+        { bits: "2",
+          name: "CMD_ACK",
+          desc: '''
+                This one bit field indicates when a SW command has been acknowledged by the CSRNG.
+                It is set to low each time a new command is written to !!CMD_REQ.
+                The field is set to high once a SW command request has been acknowledged by the CSRNG.
+                0b0: The last SW command has not been acknowledged yet.
+                0b1: The last SW command has been acknowledged.
+                '''
+          resval: "0"
+        }
+        { bits: "5:3",
+          name: "CMD_STS",
+          desc: '''
+                This field represents the status code returned with the application command ack.
+                It is updated each time a command ack is asserted on the internal application
+                interface for software use.
+                To check whether a command was successful, wait for !!INTR_STATE.CS_CMD_REQ_DONE or
+                !!SW_CMD_STS.CMD_ACK to be high and then check the value of this field.
+                '''
+          resval: "0"
+          enum: [
+            { value: "0",
+              name: "SUCCESS",
+              desc: '''
+                    Request completed successfully.
+                    '''
+            },
+            { value: "1",
+              name: "INVALID_ACMD",
+              desc: '''
+                    Request completed with an invalid application command error.
+                    This error indicates that the issued application command doesn't represent a valid operation.
+                    '''
+            },
+            { value: "2",
+              name: "INVALID_GEN_CMD",
+              desc: '''
+                    Request completed with an invalid counter DRBG generation command error.
+                    This error indicates that CSRNG entropy was generated for a command that is not a Generate command.
+                    In this case the entropy should not be considered as valid.
+                    '''
+            },
+            { value: "3",
+              name: "INVALID_CMD_SEQ",
+              desc: '''
+                    This error indicates that the last command was issued out of sequence.
+                    This happens when a command other than Instantiate was issued without sending an Instantiate command first.
+                    This can also happen when an Uninstantiate command is sent without instantiating first.
+                    '''
+            },
+            { value: "4",
+              name: "RESEED_CNT_EXCEEDED",
+              desc: '''
+                    This error indicates that the number of generate requests between reseeds exceeded the maximum number allowed (see !!RESEED_INTERVAL).
+                    This happens only for Generate commands.
+                    '''
+            },
+          ]
         }
       ]
     },
@@ -332,11 +574,48 @@
           name: "GENBITS",
           desc: '''
                 Reading this register will get the generated bits that were requested with
-                the generate request. This register must be four times for each request
-                number made. For example, a application command generate request with
-                a `creq` value of 4 requires this register to be read 16 times to get all
+                the generate request. This register must be read four times for each request
+                made. For example, an application command generate request with
+                a `clen` value of 4 requires this register to be read 16 times to get all
                 of the data out of the FIFO path.
+                Note that for !!GENBITS to be able to deliver random numbers, also !!CTRL.SW_APP_ENABLE needs to be set to `kMultiBitBool4True`.
+                In addition, the otp_en_csrng_sw_app_read input needs to be set to `kMultiBitBool8True`.
+                Otherwise, the register reads as 0.
                 '''
+        }
+      ]
+    },
+    {
+      name: "INT_STATE_READ_ENABLE",
+      desc: "Internal state read enable register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      regwen: "INT_STATE_READ_ENABLE_REGWEN",
+      fields: [
+        { bits: "2:0",
+          name: "INT_STATE_READ_ENABLE",
+          desc: '''
+                Per-instance internal state read enable.
+                Defines whether the internal state of the corresponding instance is readable via !!INT_STATE_VAL.
+                Note that for !!INT_STATE_VAL to provide read access to the internal state, also !!CTRL.READ_INT_STATE needs to be set to `kMultiBitBool4True`.
+                In addition, the otp_en_csrng_sw_app_read input needs to be set to `kMultiBitBool8True`.
+                '''
+          resval: 0x7
+        }
+      ]
+    },
+    {
+      name: "INT_STATE_READ_ENABLE_REGWEN",
+      desc: "Internal state read enable REGWEN register",
+      swaccess: "rw0c",
+      hwaccess: "none",
+      fields: [
+        { bits: "0",
+          desc: '''
+                INT_STATE_READ_ENABLE register configuration enable bit.
+                If this is cleared to 0, the INT_STATE_READ_ENABLE register cannot be written anymore.
+                '''
+          resval: 1,
         }
       ]
     },
@@ -380,6 +659,30 @@
                 pointer (selects 32 bits of the 448 bit field) will reset to zero. The !!INT_STATE_NUM
                 can be re-written at this time (internal read pointer is also reset), and then
                 another internal state field can be read.
+                Note that for !!INT_STATE_VAL to provide read access to the internal state, also !!CTRL.READ_INT_STATE needs to be set to `kMultiBitBool4True`.
+                In addition, the otp_en_csrng_sw_app_read input needs to be set to `kMultiBitBool8True`.
+                Also, the !!INT_STATE_READ_ENABLE bit of the selected instance needs to be set to true for this to work.
+                Otherwise, the register reads as 0.
+                '''
+        }
+      ]
+    },
+    {
+      name: "FIPS_FORCE",
+      desc: "FIPS/CC compliance flag forcing register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      regwen: "REGWEN",
+      fields: [
+        { bits: "2:0",
+          name: "FIPS_FORCE",
+          desc: '''
+                Force the FIPS/CC compliance flag of individual instances to true.
+                This allows CSRNG to set the output FIPS/CC compliance flag to true despite running in fully deterministic mode (flag0 being true).
+                This can be useful e.g. for known-answer testing through entropy consumers accepting FIPS/CC compliant entropy only, or when firmware is used to derive FIPS/CC compliant entropy seeds.
+                After setting a particular bit to 1, the FIPS/CC compliance flag of the corresponding instance will be forced to true upon the next Instantiate or Reseed command.
+
+                Note that for this to work, !!CTRL.FIPS_FORCE_ENABLE needs to be set to kMultiBitBool4True.
                 '''
         }
       ]
@@ -434,6 +737,13 @@
                 '''
         }
         { bits: "3",
+          name: "FIPS_FORCE_ENABLE_FIELD_ALERT",
+          desc: '''
+                This bit is set when the FIPS_FORCE_ENABLE field in the !!CTRL register is set to a value other than kMultiBitBool4True or kMultiBitBool4False.
+                Writing a zero resets this status bit.
+                '''
+        }
+        { bits: "4",
           name: "ACMD_FLAG0_FIELD_ALERT",
           desc: '''
                 This bit is set when the FLAG0 field in the Application Command is set to
@@ -450,10 +760,32 @@
                 '''
         }
         { bits: "13",
-          name: "CS_MAIN_SM_ALERT",
+          name: "CMD_STAGE_INVALID_ACMD_ALERT",
           desc: '''
-                This bit is set when an unsupported/illegal CSRNG command is being processed.
-                The main FSM will hang unless the module enable field is set to the disabled state.
+                This bit is set when an unsupported/illegal CSRNG command is received by the
+                main state machine.
+                The invalid command is ignored and CSRNG continues to operate.
+                Writing a zero resets this status bit.
+                '''
+        }
+        { bits: "14",
+          name: "CMD_STAGE_INVALID_CMD_SEQ_ALERT",
+          desc: '''
+                This bit is set when an out of order command is received by the main state machine.
+                This happens when an instantiate command is sent for a state that was already
+                instantiated or when any command other than instantiate is sent for a state that
+                wasn't instantiated yet.
+                The invalid command is ignored and CSRNG continues to operate.
+                Writing a zero resets this status bit.
+                '''
+        }
+        { bits: "15",
+          name: "CMD_STAGE_RESEED_CNT_ALERT",
+          desc: '''
+                This bit is set when the maximum number of generate requests between reseeds is
+                exceeded.
+                The invalid generate command is ignored and CSRNG continues to operate.
+                Writing a zero resets this status bit.
                 '''
         }
       ]
