@@ -1,0 +1,17 @@
+---
+provides: [caliptra_tlul_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_tlul_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_adapter_vh.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_adapter_reg.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_cmd_intg_gen.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_cmd_intg_chk.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_rsp_intg_gen.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_rsp_intg_chk.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_data_integ_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_data_integ_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_err.sv
