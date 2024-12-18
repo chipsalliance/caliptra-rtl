@@ -111,6 +111,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 | ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
+| AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 
 #### Peripherals subsystem
 
@@ -1060,7 +1061,7 @@ The ECC architecture inputs and outputs are described in the following table.
 | r\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | s\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | r’\[383:0\]                | Output          | The signature verification result.                                                                                         |
-| DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                         |
+| DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                  |
 | valid                      | output          | When HIGH, the signal indicates the result is ready.                                                                       |
 
 ### Address map
@@ -1311,6 +1312,31 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
+
+## AES
+
+The AES unit is a cryptographic accelerator that processes requests from the processor to encrypt or decrypt 16-byte data blocks. It supports AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).
+
+The AES unit is reused from here, (see [aes](https://github.com/lowRISC/opentitan/tree/master/hw/ip/aes) with a shim to translate from AHB-lite to the tl-ul interface.
+
+Additional registers have been added to support key vault integration. Keys from the key vault can be loaded into the AES unit to be used for encryption or decryption.
+
+### Operation
+
+For more information, see the [AES Programmer's Guide](https://opentitan.org/book/hw/ip/aes/doc/programmers_guide.html).
+
+### Signal descriptions
+
+The AES architecture inputs and outputs are described in the following table.
+
+| Name                        | Input or output | Description  |
+| :-------------------------- | :-------------- | :----------- |
+| clk                         | input           | All signal timings are related to the rising edge of clk. |
+
+### Address map
+
+The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
+
 
 ## PCR vault
 
