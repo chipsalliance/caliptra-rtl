@@ -119,7 +119,7 @@ if [[ -d submodules ]]; then
             echo "Searching for modified file list collateral in submodule ${sub}, which is updated from version ${old_commit} to ${new_commit}"
             pushd "${sub}"
             yml_mod_count_sub=$(git diff ${old_commit} ${new_commit} --name-status | grep -c 'compile.yml$\|compilespecs.yml$' || exit 0)
-            yml_mod_count=$(bc <<< "${yml_mod_count} + ${yml_mod_count_sub}")
+            yml_mod_count=$(expr ${yml_mod_count} + ${yml_mod_count_sub})
         fi
     done
 fi
