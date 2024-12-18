@@ -266,6 +266,7 @@ module caliptra_top_tb_services
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
+    //         8'hd8        - Inject makehint failure during mldsa signing
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
     //         8'hdb        - Perform mldsa verify
@@ -598,82 +599,55 @@ module caliptra_top_tb_services
 
     //MLDSA
     logic mldsa_keygen, mldsa_signing, mldsa_verify, mldsa_keygen_signing;
+
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
         end
         else if ((WriteData[7:0] == 8'hd9) && mailbox_write) begin
             mldsa_keygen <= 'b1;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
-            $display("In keygen branch\n");
+            mldsa_keygen_signing <= 'b0;
         end
         //unlock debug mode
         else if ((WriteData[7:0] == 8'hda) && mailbox_write) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b1;
             mldsa_verify <= 'b0;
-            $display("In signing branch\n");
+            mldsa_keygen_signing <= 'b0;
         end
         else if((WriteData[7:0] == 8'hdb) && mailbox_write) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b1;
-            $display("In verify branch\n");
+            mldsa_keygen_signing <= 'b0;
+        end
+        else if((WriteData[7:0] == 8'hdc) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b1;
         end
     end
-/*
+
+    genvar mldsa_dword;
     generate
-        for (genvar dword = 0; dword < 8; dword++) begin
-            always@(negedge clk) begin
-                //Inject mldsa seed
+        for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
+            always @(negedge clk) begin
                 if (mldsa_keygen) begin
-                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[dword].SEED.value = {mldsa_test_vector.seed[7-dword][7:0], mldsa_test_vector.seed[7-dword][15:8], mldsa_test_vector.seed[7-dword][23:16], mldsa_test_vector.seed[7-dword][31:24]};
+                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
                 end
-                else
-                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[dword].SEED.value;
-                
-                //Inject mldsa sign_rnd
-                if (mldsa_signing)
-                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SIGN_RND[dword].SIGN_RND.value = {mldsa_test_vector.sign_rnd[7-dword][7:0], mldsa_test_vector.sign_rnd[7-dword][15:8], mldsa_test_vector.sign_rnd[7-dword][23:16], mldsa_test_vector.sign_rnd[7-dword][31:24]};
-                else
-                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SIGN_RND[dword].SIGN_RND.value;
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value;
+                end
             end
         end
-
-        for (genvar dword = 0; dword < 16; dword++) begin
-            always@(negedge clk) begin
-                //Inject mldsa msg
-                if (mldsa_signing)
-                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[dword].MSG.value = {mldsa_test_vector.msg[15-dword][7:0], mldsa_test_vector.msg[15-dword][15:8], mldsa_test_vector.msg[15-dword][23:16], mldsa_test_vector.msg[15-dword][31:24]};
-                else
-                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[dword].MSG.value;
-            end
-        end
-
-        // for (genvar dword = 0; dword < 648; dword++) begin
-        //     always@(negedge clk) begin
-        //         //Inject mldsa pubkey
-        //         if (mldsa_verify)
-        //             force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_PUBKEY[dword].PUBKEY.value = {mldsa_test_vector.pubkey[647-dword][7:0], mldsa_test_vector.pubkey[647-dword][15:8], mldsa_test_vector.pubkey[647-dword][23:16], mldsa_test_vector.pubkey[647-dword][31:24]};
-        //         else 
-        //             release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_PUBKEY[dword].PUBKEY.value;
-        //     end
-        // end
-
-        // for (genvar dword = 0; dword < 1157; dword++) begin
-        //     always@(negedge clk) begin
-        //         //Inject mldsa signature
-        //         if (mldsa_verify)
-        //             force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SIGNATURE[dword].SIGNATURE.value = {mldsa_test_vector.signature[1156-dword][7:0], mldsa_test_vector.signature[1156-dword][15:8], mldsa_test_vector.signature[1156-dword][23:16], mldsa_test_vector.signature[1156-dword][31:24]};
-        //         else 
-        //             release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SIGNATURE[dword].SIGNATURE.value;
-        //     end
-        // end
     endgenerate
-    */
+
     //Randomized wntz
     generate
         for (genvar dword = 15; dword >= 0; dword--) begin
@@ -913,89 +887,86 @@ endgenerate //IV_NO
 
     endtask
 
-    // task mldsa_input_hex_gen (input int mode); //mode = CTRL.value-1
-    //     int fd_r;
-    //     string outfile;
-    //     outfile = "mldsa_input.hex";
+    task mldsa_input_hex_gen(); //mode = CTRL.value-1
+        int fd_r;
+        logic [7:0][31:0] seed;
+        logic [15:0][31:0] msg;
+        string keygen_outfile, sign_outfile, verify_outfile;
+        string keygen_infile, sign_infile, verify_infile;
+        string line_read;
+        keygen_outfile = "keygen_input.hex";
+        keygen_infile = "keygen_output.hex";
+        sign_outfile = "sign_input.hex";
+        sign_infile = "sign_output.hex";
+        verify_outfile = "verify_input.hex";
+        verify_infile = "verify_output.hex";
         
-    //     logic [7:0][31:0] seed;
-    //     logic [15:0][31:0] msg;
-    //     logic [1223:0][31:0] privkey;
-    //     logic [647:0][31:0] pubkey;
-    //     logic [1156:0][31:0] signature;
-    //     fd_r = $fopen(outfile, "w");
+        //---------------------------
+        //Keygen
+        //---------------------------
+        fd_r = $fopen(keygen_outfile, "w");
+        for (int i = 0; i < 8; i++) begin
+            seed[i] = $urandom();
+        end
+        mldsa_test_vector.seed = seed;
+        $fwrite(fd_r, "%02X\n", 0); //write cmd (keygen) as a 2 digit number
+        $fwrite(fd_r, "%h", seed); //write random seed 8*4 bytes
+        $fclose(fd_r);
+        $system("./test_dilithium5 keygen_input.hex keygen_output.hex");
 
-    //     seed = $urandom();
-    //     if (mode == 0) begin //keygen
-    //         $fwrite(fd_r, "%2h", mode); //write cmd (in this case mode-1) as a 2 digit number
-    //         $fwrite(fd_r, "%h", seed); //write random seed 8*4 bytes
-    //     end
-    //     // else if (mode == 1) begin //sign
-    //     //     $fwrite(fd_r, "%2h", mode); //write cmd
-    //     //     $fwrite(fd_r, "%128h", 1); //write msg
-    //     //     $fwrite(fd_r, "%h", privkey); //write privkey
-    //     // end
-    // //     else if (mode == 2) begin //verify
-    // //         $fwrite(fd_r, "%2h", mode); //write cmd
-    // //         $fwrite(fd_r, "%128h", 1); //write msg
-    // //         $fwrite(fd_r, "%h", pubkey); //write pubkey - ideally comes from keygen step. TODO: fixme
-    // //         $fwrite(fd_r, "%h", signature);
-    // //     end
-    // endtask
+        fd_r = $fopen(keygen_infile, "r");
+        if (fd_r == 0)
+            $error("Can't open file %s", keygen_infile);
 
-    // task mldsa_output_hex_gen ();
-    //     string infile, outfile;
-    //     begin
-    //         infile = "mldsa_input.hex";
-    //         outfile = "mldsa_output.hex";
-    //         $system("./test_dilithium5 mldsa_input.hex mldsa_output.hex");
+        void'($fgets(line_read, fd_r)); //skip cmd
+        void'($fgets(line_read, fd_r));
+        void'($sscanf(line_read, "%h", mldsa_test_vector.pubkey));
+        void'($fgets(line_read, fd_r));
+        void'($sscanf(line_read, "%h", mldsa_test_vector.privkey));
 
-    //         if (!UVM_TB) mldsa_read_test_vectors(outfile);
-    //     end
-    // endtask
+        //---------------------------
+        //Sign
+        //---------------------------
+        fd_r = $fopen(sign_outfile, "w");
+        for (int i = 0; i < 16; i++) begin
+            msg[i] = $urandom();
+        end
+        mldsa_test_vector.msg = msg;
+        $fwrite(fd_r, "%02X\n", 1);
+        $fwrite(fd_r, "%h\n", msg);
+        $fwrite(fd_r, "%h", mldsa_test_vector.privkey);
+        $fclose(fd_r);
+        $system("./test_dilithium5 sign_input.hex sign_output.hex");
 
-    // Placeholder
-    // task mldsa_testvector_generator ();
-    //     string    file_name;
-    //     begin
+        fd_r = $fopen(sign_infile, "r");
+        if (fd_r == 0)
+            $error("Can't open file %s", sign_infile);
 
-    //     // $system("./test_dilithium5 mldsa_input.hex mldsa_output.hex");
+        void'($fgets(line_read, fd_r)); //skip cmd
+        void'($fgets(line_read, fd_r)); //skip sig length
+        void'($fgets(line_read, fd_r));
+        void'($sscanf(line_read, "%h", mldsa_test_vector.signature));
+        
+        //---------------------------
+        //Verify
+        //---------------------------
+        fd_r = $fopen(verify_outfile, "w");
+        $fwrite(fd_r, "%02X\n", 2);
+        $fwrite(fd_r, "%h\n", {mldsa_test_vector.signature[0][23:0], mldsa_test_vector.signature[1:1156]}); //[0:1156][31:0] signature
+        $fwrite(fd_r, "%h\n", mldsa_test_vector.msg);
+        $fwrite(fd_r, "%h", mldsa_test_vector.pubkey);
+        $fclose(fd_r);
+        $system("./test_dilithium5 verify_input.hex verify_output.hex");
+        
+        fd_r = $fopen(verify_infile, "r");
+        if (fd_r == 0)
+            $error("Can't open file %s", verify_infile);
 
-    //     file_name = "smoke_test_mldsa_vector.hex";
-    //     if (!UVM_TB) mldsa_read_test_vectors(file_name);
-    //     end
-    // endtask // mldsa_test
-
-    // task static mldsa_read_test_vectors (input string fname);
-    //     integer values_per_test_vector;
-    //     int fd_r;
-    //     string line_read;
-    //     begin
-    //         // // ATTN: Must match the number of fields generated by gen_mm_test_vectors.py script
-    //         values_per_test_vector = 7;
-
-    //         fd_r = $fopen(fname, "r");
-    //         if (fd_r == 0)
-    //             $error("Can't open file %s", fname);
-            
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.seed));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.pubkey));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.privkey));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.msg));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.signature));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.verify_res));
-    //         void'($fgets(line_read, fd_r));
-    //         void'($sscanf(line_read, "%h", mldsa_test_vector.sign_rnd));
-
-    //         $fclose(fd_r);
-    //     end
-    // endtask
+        void'($fgets(line_read, fd_r)); //skip cmd
+        void'($fgets(line_read, fd_r)); //skip 2nd line
+        void'($fgets(line_read, fd_r));
+        void'($sscanf(line_read, "%h", mldsa_test_vector.verify_res));
+    endtask
 
     task ecc_testvector_generator ();
         string    file_name;
@@ -1480,9 +1451,8 @@ endgenerate //IV_NO
             ecc_testvector_generator();
             doe_testvector_generator();
             sha256_wntz_testvector_generator();
+            mldsa_input_hex_gen();
 
-            //Placeholder
-            // mldsa_testvector_generator();
             //Note: Both obf_key_uds and obf_key_fe are the same
             //for(int dword = 0; dword < `CLP_OBF_KEY_DWORDS; dword++) begin
             //    cptra_obf_key_tb[dword] = doe_test_vector.obf_key_uds[(`CLP_OBF_KEY_DWORDS-1)-dword];
