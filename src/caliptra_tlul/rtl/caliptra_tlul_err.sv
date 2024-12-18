@@ -5,7 +5,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module tlul_err import tlul_pkg::*; (
+module caliptra_tlul_err import caliptra_tlul_pkg::*; (
   input clk_i,
   input rst_ni,
 
@@ -97,7 +97,7 @@ module tlul_err import tlul_pkg::*; (
                           & mask_chk
                           & (op_get | op_partial | fulldata_chk) ;
 
-  // Only 32 bit data width for current tlul_err
+  // Only 32 bit data width for current caliptra_tlul_err
   `CALIPTRA_ASSERT_INIT(dataWidthOnly32_A, DW == 32)
 
 endmodule

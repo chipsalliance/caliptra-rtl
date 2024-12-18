@@ -4,8 +4,8 @@
 
 `include "caliptra_prim_assert.sv"
 
-module tlul_adapter_vh
-  import tlul_pkg::*;
+module caliptra_tlul_adapter_vh
+  import caliptra_tlul_pkg::*;
   import caliptra_prim_mubi_pkg::mubi4_t;
 #(
   parameter int ADDR_WIDTH = TL_AW,
@@ -90,8 +90,8 @@ module tlul_adapter_vh
 
   // Only make a new request (through `a_valid`) to the device when none are pending. If the
   // integrity checks are enabled, the `a_user` fields will be set by the corresponding module (see
-  // `tlul_cmd_intg_gen`).
-  tlul_pkg::tl_h2d_t tl_o_pre;
+  // `caliptra_tlul_cmd_intg_gen`).
+  caliptra_tlul_pkg::tl_h2d_t tl_o_pre;
   assign tl_o_pre = '{
     a_valid: dv_i & ~pending_q & ~internal_access,
     a_opcode: ~write_i ? Get : (&wstrb_i ? PutFullData : PutPartialData),
@@ -123,7 +123,7 @@ module tlul_adapter_vh
   assign int_user_o  = user_i;
   assign int_id_o    = id_i;
 
-  tlul_cmd_intg_gen #(
+  caliptra_tlul_cmd_intg_gen #(
     .EnableDataIntgGen (EnableDataIntgGen)
   ) u_cmd_intg_gen (
     .tl_i ( tl_o_pre ),
@@ -131,7 +131,7 @@ module tlul_adapter_vh
   );
 
   logic intg_err_chk;
-  tlul_rsp_intg_chk #(
+  caliptra_tlul_rsp_intg_chk #(
     .EnableRspDataIntgCheck(EnableRspDataIntgCheck)
   ) u_rsp_chk (
     .tl_i  ( tl_i         ),

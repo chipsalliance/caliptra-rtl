@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-package tlul_pkg;
+package caliptra_tlul_pkg;
 
   localparam int TL_AW=32;
   localparam int TL_DW=32;    // = TL_DBW * 8; TL_DBW must be a power-of-two

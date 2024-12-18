@@ -8,7 +8,7 @@
  * Tile-Link UL command integrity check
  */
 
-module tlul_cmd_intg_chk import tlul_pkg::*; (
+module caliptra_tlul_cmd_intg_chk import caliptra_tlul_pkg::*; (
   // TL-UL interface
   input  tl_h2d_t tl_i,
 
@@ -28,7 +28,7 @@ module tlul_cmd_intg_chk import tlul_pkg::*; (
     .err_o(err)
   );
 
-  tlul_data_integ_dec u_tlul_data_integ_dec (
+  caliptra_tlul_data_integ_dec u_caliptra_tlul_data_integ_dec (
     .data_intg_i({tl_i.a_user.data_intg, DataMaxWidth'(tl_i.a_data)}),
     .data_err_o(data_err)
   );
@@ -50,4 +50,4 @@ module tlul_cmd_intg_chk import tlul_pkg::*; (
 
   `CALIPTRA_ASSERT_INIT(PayLoadWidthCheck, $bits(tl_h2d_cmd_intg_t) <= H2DCmdMaxWidth)
 
-endmodule // tlul_payload_chk
+endmodule // caliptra_tlul_payload_chk

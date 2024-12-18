@@ -8,7 +8,7 @@
  * Tile-Link UL response integrity check
  */
 
-module tlul_rsp_intg_chk import tlul_pkg::*; #(
+module caliptra_tlul_rsp_intg_chk import caliptra_tlul_pkg::*; #(
   parameter bit EnableRspDataIntgCheck = 0
 ) (
   // TL-UL interface
@@ -31,7 +31,7 @@ module tlul_rsp_intg_chk import tlul_pkg::*; #(
 
   logic rsp_data_err;
   if (EnableRspDataIntgCheck) begin : gen_rsp_data_intg_check
-    tlul_data_integ_dec u_tlul_data_integ_dec (
+    caliptra_tlul_data_integ_dec u_caliptra_tlul_data_integ_dec (
       .data_intg_i({tl_i.d_user.data_intg, DataMaxWidth'(tl_i.d_data)}),
       .data_err_o(rsp_data_err)
     );
@@ -51,4 +51,4 @@ module tlul_rsp_intg_chk import tlul_pkg::*; #(
 
   `CALIPTRA_ASSERT_INIT(PayLoadWidthCheck, $bits(tl_d2h_rsp_intg_t) <= D2HRspMaxWidth)
 
-endmodule // tlul_rsp_intg_chk
+endmodule // caliptra_tlul_rsp_intg_chk

@@ -8,7 +8,7 @@
  * Tile-Link UL command integrity generator
  */
 
-module tlul_cmd_intg_gen import tlul_pkg::*; #(
+module caliptra_tlul_cmd_intg_gen import caliptra_tlul_pkg::*; #(
   parameter bit EnableDataIntgGen = 1'b1
 ) (
   // TL-UL interface
@@ -55,4 +55,4 @@ module tlul_cmd_intg_gen import tlul_pkg::*; #(
 
   `CALIPTRA_ASSERT_INIT(PayMaxWidthCheck_A, $bits(tl_h2d_cmd_intg_t) <= H2DCmdMaxWidth)
 
-endmodule : tlul_cmd_intg_gen
+endmodule : caliptra_tlul_cmd_intg_gen

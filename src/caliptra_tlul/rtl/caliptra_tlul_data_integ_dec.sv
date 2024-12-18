@@ -8,7 +8,7 @@
  * Data integrity decoder for bus integrity scheme
  */
 
-module tlul_data_integ_dec import tlul_pkg::*; (
+module caliptra_tlul_data_integ_dec import caliptra_tlul_pkg::*; (
   // TL-UL interface
   input        [DataMaxWidth+DataIntgWidth-1:0] data_intg_i,
   output logic                                  data_err_o
@@ -24,4 +24,4 @@ module tlul_data_integ_dec import tlul_pkg::*; (
 
   assign data_err_o = |data_err;
 
-endmodule : tlul_data_integ_dec
+endmodule : caliptra_tlul_data_integ_dec

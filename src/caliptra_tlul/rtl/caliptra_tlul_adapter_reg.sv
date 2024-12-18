@@ -16,8 +16,8 @@
  * module and its parameterization needs.
  */
 
-module tlul_adapter_reg
-  import tlul_pkg::*;
+module caliptra_tlul_adapter_reg
+  import caliptra_tlul_pkg::*;
   import caliptra_prim_mubi_pkg::mubi4_t;
 #(
   parameter  bit CmdIntgCheck      = 0,  // 1: Enable command integrity check
@@ -149,7 +149,7 @@ module tlul_adapter_reg
     assign error = error_q;
   end
 
-  tlul_pkg::tl_d2h_t tl_o_pre;
+  caliptra_tlul_pkg::tl_d2h_t tl_o_pre;
   assign tl_o_pre = '{
     // busy is selected based on address
     // thus if there is no valid transaction, we should ignore busy
@@ -166,7 +166,7 @@ module tlul_adapter_reg
   };
 
   // outgoing integrity generation
-  tlul_rsp_intg_gen #(
+  caliptra_tlul_rsp_intg_gen #(
     .EnableRspIntgGen(EnableRspIntgGen),
     .EnableDataIntgGen(EnableDataIntgGen)
   ) u_rsp_intg_gen (
@@ -176,7 +176,7 @@ module tlul_adapter_reg
 
   if (CmdIntgCheck) begin : gen_cmd_intg_check
     logic intg_error_q;
-    tlul_cmd_intg_chk u_cmd_intg_chk (
+    caliptra_tlul_cmd_intg_chk u_cmd_intg_chk (
       .tl_i(tl_i),
       .err_o(intg_error)
     );
@@ -219,7 +219,7 @@ module tlul_adapter_reg
   end
 
   // tl_err : separate checker
-  tlul_err u_err (
+  caliptra_tlul_err u_err (
     .clk_i,
     .rst_ni,
     .tl_i,

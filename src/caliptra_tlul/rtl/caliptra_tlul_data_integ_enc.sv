@@ -8,7 +8,7 @@
  * Data integrity encoder for bus integrity scheme
  */
 
-module tlul_data_integ_enc import tlul_pkg::*; (
+module caliptra_tlul_data_integ_enc import caliptra_tlul_pkg::*; (
   // TL-UL interface
   input        [DataMaxWidth-1:0]               data_i,
   output logic [DataMaxWidth+DataIntgWidth-1:0] data_intg_o
@@ -19,4 +19,4 @@ module tlul_data_integ_enc import tlul_pkg::*; (
     .data_o(data_intg_o)
   );
 
-endmodule : tlul_data_integ_enc
+endmodule : caliptra_tlul_data_integ_enc

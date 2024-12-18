@@ -8,7 +8,7 @@
  * Tile-Link UL response integrity generator
  */
 
-module tlul_rsp_intg_gen import tlul_pkg::*; #(
+module caliptra_tlul_rsp_intg_gen import caliptra_tlul_pkg::*; #(
   parameter bit EnableRspIntgGen = 1'b1,
   parameter bit EnableDataIntgGen = 1'b1
 ) (
@@ -35,7 +35,7 @@ module tlul_rsp_intg_gen import tlul_pkg::*; #(
   logic [DataIntgWidth-1:0] data_intg;
   if (EnableDataIntgGen) begin : gen_data_intg
     logic [DataMaxWidth-1:0] unused_data;
-    tlul_data_integ_enc u_tlul_data_integ_enc (
+    caliptra_tlul_data_integ_enc u_caliptra_tlul_data_integ_enc (
       .data_i(DataMaxWidth'(tl_i.d_data)),
       .data_intg_o({data_intg, unused_data})
     );
