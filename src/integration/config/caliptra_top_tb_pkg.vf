@@ -27,6 +27,7 @@
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/coverage
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/coverage
 +incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
++incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include
@@ -157,6 +158,8 @@ ${CALIPTRA_ROOT}/src/pcrvault/coverage/pcrvault_cov_bind.sv
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_if.sv
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_props.sv
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_bind.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/coverage/mldsa_top_cov_if.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/coverage/mldsa_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_services.sv
