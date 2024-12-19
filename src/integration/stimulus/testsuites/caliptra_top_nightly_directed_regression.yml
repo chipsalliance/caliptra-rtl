@@ -29,7 +29,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc/smoke_test_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_rand.yml
+        # - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_rand.yml  //TODO: Add after updating submodule
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
@@ -44,7 +44,7 @@ contents:
 #        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
+        #- ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml //TODO: Add after updating submodule
         - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
