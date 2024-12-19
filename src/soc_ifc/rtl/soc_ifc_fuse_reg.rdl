@@ -44,8 +44,8 @@ reg {
     desc = "Key Manifest Mask Fuse (ECC Revocation).
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
-     Fuse mask[32]=0;
-} fuse_key_manifest_pk_hash_mask[8];
+     Fuse mask[4]=0;
+} fuse_key_manifest_pk_hash_mask;
 
 reg {
     desc = "FMC Security Version Number.

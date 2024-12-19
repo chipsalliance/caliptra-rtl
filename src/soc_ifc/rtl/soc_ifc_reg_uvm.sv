@@ -1605,7 +1605,7 @@ package soc_ifc_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[32];
+        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[4];
         soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg fld_cg;
         rand uvm_reg_field mask;
 
@@ -1620,7 +1620,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.mask = new("mask");
-            this.mask.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
             end
@@ -4494,7 +4494,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[16];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
         rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask[8];
+        rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
         rand soc_ifc_reg__fuse_fmc_key_manifest_svn fuse_fmc_key_manifest_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
@@ -4818,13 +4818,11 @@ package soc_ifc_reg_uvm;
                 this.fuse_key_manifest_pk_hash[i0].build();
                 this.default_map.add_reg(this.fuse_key_manifest_pk_hash[i0], 'h260 + i0*'h4);
             end
-            foreach(this.fuse_key_manifest_pk_hash_mask[i0]) begin
-                this.fuse_key_manifest_pk_hash_mask[i0] = new($sformatf("fuse_key_manifest_pk_hash_mask[%0d]", i0));
-                this.fuse_key_manifest_pk_hash_mask[i0].configure(this);
-                
-                this.fuse_key_manifest_pk_hash_mask[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask[i0], 'h290 + i0*'h4);
-            end
+            this.fuse_key_manifest_pk_hash_mask = new("fuse_key_manifest_pk_hash_mask");
+            this.fuse_key_manifest_pk_hash_mask.configure(this);
+
+            this.fuse_key_manifest_pk_hash_mask.build();
+            this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h290);
             this.fuse_fmc_key_manifest_svn = new("fuse_fmc_key_manifest_svn");
             this.fuse_fmc_key_manifest_svn.configure(this);
 
