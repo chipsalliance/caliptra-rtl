@@ -648,9 +648,6 @@ always_comb begin
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
-    for (int i=0; i<8; i++) begin
-        soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask[i].mask.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-    end
 
     for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -673,6 +670,7 @@ always_comb begin
     end
 end
 
+always_comb soc_ifc_reg_hwif_in.fuse_key_manifest_pk_hash_mask.mask.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_fmc_key_manifest_svn.svn.swwel          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_anti_rollback_disable.dis.swwel         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_lms_revocation.lms_revocation.swwel     = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;

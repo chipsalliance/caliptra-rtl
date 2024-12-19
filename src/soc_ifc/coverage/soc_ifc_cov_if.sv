@@ -716,17 +716,9 @@ interface soc_ifc_cov_if
   assign         full_addr_fuse_key_manifest_pk_hash[10] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_10;
   assign         full_addr_fuse_key_manifest_pk_hash[11] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_11;
 
-  logic          hit_fuse_key_manifest_pk_hash_mask[0:7];
-  logic [3:0]    bus_fuse_key_manifest_pk_hash_mask[0:7];
-  logic [31:0]   full_addr_fuse_key_manifest_pk_hash_mask[0:7];
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[0] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[1] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[2] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_2;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[3] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_3;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[4] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_4;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[5] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_5;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[6] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_6;
-  assign         full_addr_fuse_key_manifest_pk_hash_mask[7] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_7;
+  logic          hit_fuse_key_manifest_pk_hash_mask;
+  logic [3:0]    bus_fuse_key_manifest_pk_hash_mask;
+  logic [31:0]   full_addr_fuse_key_manifest_pk_hash_mask = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK;
 
   logic          hit_fuse_fmc_key_manifest_svn;
   logic [3:0]    bus_fuse_fmc_key_manifest_svn;
@@ -1469,29 +1461,8 @@ interface soc_ifc_cov_if
   assign hit_fuse_key_manifest_pk_hash[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[11][18-1:0]);
   assign bus_fuse_key_manifest_pk_hash[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[11]}};
 
-  assign hit_fuse_key_manifest_pk_hash_mask[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[0][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[0]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[1][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[1]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[2][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[2]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[3][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[3]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[4][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[4]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[5][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[5]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[6][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[6]}};
-
-  assign hit_fuse_key_manifest_pk_hash_mask[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[7][AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask[7]}};
+  assign hit_fuse_key_manifest_pk_hash_mask = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_key_manifest_pk_hash_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask}};
 
   assign hit_fuse_fmc_key_manifest_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_fmc_key_manifest_svn[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_fmc_key_manifest_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_fmc_key_manifest_svn}};
@@ -2688,45 +2659,10 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_key_manifest_pk_hash_mask [0:7] -----------------------
-  covergroup soc_ifc_fuse_key_manifest_pk_hash_mask_cg (ref logic [3:0] bus_event[0:7]) @(posedge clk);
-    fuse_key_manifest_pk_hash_mask0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[0];
-    bus_fuse_key_manifest_pk_hash_mask0_cp : coverpoint bus_event[0] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[1];
-    bus_fuse_key_manifest_pk_hash_mask1_cp : coverpoint bus_event[1] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[2];
-    bus_fuse_key_manifest_pk_hash_mask2_cp : coverpoint bus_event[2] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[3];
-    bus_fuse_key_manifest_pk_hash_mask3_cp : coverpoint bus_event[3] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[4];
-    bus_fuse_key_manifest_pk_hash_mask4_cp : coverpoint bus_event[4] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[5];
-    bus_fuse_key_manifest_pk_hash_mask5_cp : coverpoint bus_event[5] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[6];
-    bus_fuse_key_manifest_pk_hash_mask6_cp : coverpoint bus_event[6] {
-      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
-      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
-    }
-    fuse_key_manifest_pk_hash_mask7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask[7];
-    bus_fuse_key_manifest_pk_hash_mask7_cp : coverpoint bus_event[7] {
+  // ----------------------- COVERGROUP fuse_key_manifest_pk_hash_mask -----------------------
+  covergroup soc_ifc_fuse_key_manifest_pk_hash_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_key_manifest_pk_hash_mask_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask;
+    bus_fuse_key_manifest_pk_hash_mask_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
