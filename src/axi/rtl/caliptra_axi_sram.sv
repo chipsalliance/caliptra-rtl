@@ -69,6 +69,7 @@ axi_sub #(
     .wstrb   (        ),
     .rdata   (rdata   ),
     .last    (        ),
+    .size    (        ),
     .hld     (hold    ),
     .rd_err  (rd_error),
     .wr_err  (wr_error)
