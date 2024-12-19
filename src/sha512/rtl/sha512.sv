@@ -68,7 +68,7 @@ module sha512
         output pv_write_t pv_write,
         input pv_rd_resp_t pv_rd_resp,
         input pv_wr_resp_t pv_wr_resp,
-        output logic [PV_NUM_DWORDS-1:0][DATA_WIDTH-1:0] pcr_signing_hash,
+        output logic [PCR_HASH_NUM_DWORDS-1:0][DATA_WIDTH-1:0] pcr_signing_hash,
 
         // Interrupts
         output wire error_intr,
@@ -99,11 +99,11 @@ module sha512
   reg [PV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      kv_reg;
   
   
-  reg [PV_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]      pcr_sign_reg;
-  logic [PV_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0]     pcr_sign;
-  logic                                             pcr_sign_we;
-  reg                                               digest_valid_reg;
-  logic                                             digest_we;
+  reg [PCR_HASH_NUM_DWORDS -1 : 0][DATA_WIDTH-1 : 0]  pcr_sign_reg;
+  logic [PCR_HASH_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] pcr_sign;
+  logic                                               pcr_sign_we;
+  reg                                                 digest_valid_reg;
+  logic                                               digest_we;
   
   sha512_reg__in_t hwif_in;
   sha512_reg__out_t hwif_out;
@@ -175,8 +175,8 @@ module sha512
   assign err = read_error | write_error;
 
   always_comb begin // ecc_reg_writing
-      for (int dword=0; dword < PV_NUM_DWORDS; dword++)begin
-        pcr_signing_hash[dword] = pcr_sign_reg[(PV_NUM_DWORDS-1)-dword];
+      for (int dword=0; dword < PCR_HASH_NUM_DWORDS; dword++)begin
+        pcr_signing_hash[dword] = pcr_sign_reg[(PCR_HASH_NUM_DWORDS-1)-dword];
       end
   end
 
@@ -258,7 +258,7 @@ module sha512
 
   always_comb begin
     pcr_sign_we = (dest_data_avail & gen_hash_ip);
-    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS];
+    pcr_sign = core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PCR_HASH_NUM_DWORDS];
   end
 
   //register hw interface
@@ -274,7 +274,7 @@ module sha512
     init_reg = gen_hash_ip ? gen_hash_init_reg : (hwif_out.SHA512_CTRL.INIT.value & kv_src_ready);
     next_reg = gen_hash_ip ? gen_hash_next_reg : (hwif_out.SHA512_CTRL.NEXT.value & kv_src_ready);
     restore_reg = gen_hash_ip ? '0 : (hwif_out.SHA512_CTRL.RESTORE.value & kv_src_ready);
-    mode_reg = gen_hash_ip ? 2'b10 : hwif_out.SHA512_CTRL.MODE.value;
+    mode_reg = gen_hash_ip ? MODE_SHA_512 : hwif_out.SHA512_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
     hwif_in.SHA512_CTRL.LAST.hwclr = core_digest_valid & ~digest_valid_reg;
@@ -290,8 +290,8 @@ module sha512
       hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
     //output comes in big endian
-    for (int dword =0; dword < PV_NUM_DWORDS; dword++) begin
-      hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.next = pcr_sign_reg[(PV_NUM_DWORDS-1)-dword];
+    for (int dword =0; dword < PCR_HASH_NUM_DWORDS; dword++) begin
+      hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.next = pcr_sign_reg[(PCR_HASH_NUM_DWORDS-1)-dword];
       hwif_in.SHA512_GEN_PCR_HASH_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
     end
 

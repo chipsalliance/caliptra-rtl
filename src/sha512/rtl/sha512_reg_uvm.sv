@@ -1250,7 +1250,7 @@ package sha512_reg_uvm;
         rand sha512_reg__SHA512_GEN_PCR_HASH_NONCE SHA512_GEN_PCR_HASH_NONCE[8];
         rand sha512_reg__SHA512_GEN_PCR_HASH_CTRL SHA512_GEN_PCR_HASH_CTRL;
         rand sha512_reg__SHA512_GEN_PCR_HASH_STATUS SHA512_GEN_PCR_HASH_STATUS;
-        rand sha512_reg__SHA512_GEN_PCR_HASH_DIGEST SHA512_GEN_PCR_HASH_DIGEST[12];
+        rand sha512_reg__SHA512_GEN_PCR_HASH_DIGEST SHA512_GEN_PCR_HASH_DIGEST[16];
         rand sha512_reg__intr_block_t intr_block_rf;
 
         function new(string name = "sha512_reg");

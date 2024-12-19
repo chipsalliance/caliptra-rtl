@@ -224,7 +224,7 @@ import uvmf_base_pkg_hdl::*;
       .kv_write(kv_write),
       .kv_rd_resp(kv_rd_resp),
       .kv_wr_resp(kv_wr_resp),
-      .pcr_signing_key() //TODO
+      .pcr_ecc_signing_key() //TODO
   );
 
   keyvault_cov_bind i_keyvault_cov_bind();
