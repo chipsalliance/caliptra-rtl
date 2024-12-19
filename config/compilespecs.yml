@@ -20,6 +20,7 @@ files:
   # -- Start RNG --
   - ../chipsalliance/caliptra-rtl/src/caliptra_prim_generic/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/caliptra_prim/config/compile.yml
+  - ../chipsalliance/caliptra-rtl/src/caliptra_tlul/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/lc_ctrl/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/aes/config/compile.yml
   - ../chipsalliance/caliptra-rtl/src/edn/config/compile.yml
