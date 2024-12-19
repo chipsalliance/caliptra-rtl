@@ -1,0 +1,11 @@
++incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_pkg.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_adapter_vh.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_adapter_reg.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_cmd_intg_gen.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_cmd_intg_chk.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_gen.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_chk.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_dec.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_enc.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err.sv

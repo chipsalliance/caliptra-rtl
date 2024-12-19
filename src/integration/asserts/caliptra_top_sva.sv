@@ -274,6 +274,61 @@ module caliptra_top_sva
   endgenerate
   `endif
 
+  //MLDSA data checks
+  generate
+    begin: MLDSA_keygen_data_check
+      for (genvar dword = 0; dword < 32; dword++) begin
+        MLDSA_privkey_0_31_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            ((`SERVICES_PATH.mldsa_keygen && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.privatekey_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[dword][31:24]}))
+        )
+        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`MLDSA_PATH.privatekey_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[dword][31:24]}, dword);
+      end
+
+      for (genvar dword = 0; dword < 596; dword++) begin
+        MLDSA_privkey_even_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            ((`SERVICES_PATH.mldsa_keygen && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.mldsa_sk_ram_bank0.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][31:24]}))
+        )
+        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`MLDSA_PATH.mldsa_sk_ram_bank0.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[32+(2*dword)][31:24]}, 32+(2*dword));
+      end
+
+      for (genvar dword = 0; dword < 596; dword++) begin
+        MLDSA_privkey_odd_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            ((`SERVICES_PATH.mldsa_keygen && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.mldsa_sk_ram_bank1.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][31:24]}))
+        )
+        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`MLDSA_PATH.mldsa_sk_ram_bank0.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[33+(2*dword)][31:24]}, 33+(2*dword));
+      end
+
+      for (genvar dword = 0; dword < 8; dword++) begin
+        MLDSA_pubkey_0_7_data_check: assert property (
+          @(posedge `SVA_RDC_CLK)
+          disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+          ((`SERVICES_PATH.mldsa_keygen && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.publickey_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.pubkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][31:24]}))
+        )
+        else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %h", `MLDSA_PATH.publickey_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.pubkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][31:24]}, dword);
+      end
+    end
+  endgenerate
+  generate
+    begin: MLDSA_pubkey_data_check
+      for (genvar i = 0; i < 64; i++) begin
+        for (genvar j = 0; j < 10; j++) begin
+          MLDSA_pubkey_8_647_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            ((`SERVICES_PATH.mldsa_keygen && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.mldsa_pubkey_ram.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}))
+          )
+          else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %0d %0d", `MLDSA_PATH.mldsa_pubkey_ram.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}, i, j);
+        end
+      end
+    end
+  endgenerate
+
   //Generate disable signal for fuse_wr_check sva when hwclr is asserted. The disable needs to be for 3 clks in order to ignore the fuses being cleared
   logic clear_obf_secrets_f;
   logic clear_obf_secrets_ff;
@@ -545,7 +600,13 @@ module caliptra_top_sva
                                     @(posedge `SVA_RDC_CLK)
                                     `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
                                     )
-                        else $display("SVA ERROR: ECC VALID flag mismatch!");      
+                        else $display("SVA ERROR: ECC VALID flag mismatch!");
+                        
+  MLDSA_valid_flag:     assert property (
+                                    @(posedge `SVA_RDC_CLK)
+                                    `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready 
+                                    )
+                        else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 
