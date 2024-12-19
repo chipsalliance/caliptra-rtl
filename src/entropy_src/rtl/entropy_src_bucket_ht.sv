@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -60,8 +60,9 @@ module entropy_src_bucket_ht #(
       .incr_en_i(bin_incr[i]),
       .decr_en_i(1'b0),
       .step_i(RegWidth'(1)),
+      .commit_i(1'b1),
       .cnt_o(bin_cntr[i]),
-      .cnt_next_o(),
+      .cnt_after_commit_o(),
       .err_o(bin_cntr_err[i])
     );
     assign bin_cnt_exceeds_thresh[i] = (bin_cntr[i] > thresh_i);

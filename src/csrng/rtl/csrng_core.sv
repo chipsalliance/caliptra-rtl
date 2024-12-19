@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -61,6 +61,7 @@ module csrng_core
   import caliptra_prim_mubi_pkg::mubi4_test_invalid;
 
   localparam logic [31:0] NApps = NHwApps + 1;
+  localparam logic [31:0] NAppsLog = $clog2(NApps);
   localparam logic [31:0] AppCmdWidth = 32;
   localparam logic [31:0] AppCmdFifoDepth = 2;
   localparam logic [31:0] GenBitsWidth = 128;
@@ -77,7 +78,7 @@ module csrng_core
   localparam logic [31:0] MaxClen = 12;
   localparam logic [31:0] ADataDepthWidth = SeedLen/AppCmdWidth;
   localparam logic [31:0] ADataDepthClog = $clog2(ADataDepthWidth)+1;
-  localparam logic [31:0] CsEnableCopies = 53;
+  localparam logic [31:0] CsEnableCopies = 51;
   localparam logic [31:0] LcHwDebugCopies = 1;
   localparam logic [31:0] Flag0Copies = 3;
 
@@ -97,6 +98,9 @@ module csrng_core
   logic                        read_int_state;
   logic                        read_int_state_pfe;
   logic                        read_int_state_pfa;
+  logic                        fips_force_enable;
+  logic                        fips_force_enable_pfe;
+  logic                        fips_force_enable_pfa;
   logic                        recov_alert_event;
   logic                        acmd_avail;
   logic                        acmd_sop;
@@ -111,7 +115,7 @@ module csrng_core
   logic [KeyLen-1:0]           state_db_wr_key;
   logic [BlkLen-1:0]           state_db_wr_v;
   logic [CtrLen-1:0]           state_db_wr_rc;
-  logic                        state_db_wr_sts;
+  csrng_cmd_sts_e              state_db_wr_sts;
   logic                        state_db_wr_fips;
   logic [Cmd-1:0]              state_db_wr_ccmd;
 
@@ -130,7 +134,7 @@ module csrng_core
 
   logic                        cmd_result_wr_req;
   logic                        cmd_result_ack;
-  logic                        cmd_result_ack_sts;
+  csrng_cmd_sts_e              cmd_result_ack_sts;
   logic [Cmd-1:0]              cmd_result_ccmd;
   logic                        cmd_result_ack_rdy;
   logic [StateId-1:0]          cmd_result_inst_id;
@@ -142,11 +146,11 @@ module csrng_core
   logic [CtrLen-1:0]           cmd_result_rc;
 
   logic                        state_db_sts_ack;
-  logic                        state_db_sts_sts;
+  csrng_cmd_sts_e              state_db_sts_sts;
   logic [StateId-1:0]          state_db_sts_id;
 
   logic                        gen_result_wr_req;
-  logic                        gen_result_ack_sts;
+  csrng_cmd_sts_e              gen_result_ack_sts;
   logic                        gen_result_ack_rdy;
   logic [Cmd-1:0]              gen_result_ccmd;
   logic [StateId-1:0]          gen_result_inst_id;
@@ -199,7 +203,6 @@ module csrng_core
   logic                        cmd_gen_cnt_err_sum;
   logic                        cmd_stage_sm_err_sum;
   logic                        main_sm_err_sum;
-  logic                        cs_main_sm_alert;
   logic                        cs_main_sm_err;
   logic [MainSmStateWidth-1:0] cs_main_sm_state;
   logic                        drbg_gen_sm_err_sum;
@@ -308,55 +311,63 @@ module csrng_core
   logic                        ctr_drbg_upd_v_ctr_err;
   logic                        ctr_drbg_gen_v_ctr_err;
 
-  logic [NApps-1:0]          cmd_stage_vld;
-  logic [StateId-1:0]        cmd_stage_shid[NApps];
-  logic [AppCmdWidth-1:0]    cmd_stage_bus[NApps];
-  logic [NApps-1:0]          cmd_stage_rdy;
-  logic [NApps-1:0]          cmd_arb_req;
-  logic [0:0]                cmd_arb_di [NApps];
-  logic [NApps-1:0]          cmd_arb_gnt;
-  logic [$clog2(NApps)-1:0]  cmd_arb_idx;
-  logic [NApps-1:0]          cmd_arb_sop;
-  logic [NApps-1:0]          cmd_arb_mop;
-  logic [NApps-1:0]          cmd_arb_eop;
-  logic [AppCmdWidth-1:0]    cmd_arb_bus[NApps];
-  logic [NApps-1:0]          cmd_core_ack;
-  logic [NApps-1:0]          cmd_core_ack_sts;
-  logic [NApps-1:0]          cmd_stage_ack;
-  logic [NApps-1:0]          cmd_stage_ack_sts;
-  logic [NApps-1:0]          genbits_core_vld;
-  logic [GenBitsWidth-1:0]   genbits_core_bus[NApps];
-  logic [NApps-1:0]          genbits_core_fips;
-  logic [NApps-1:0]          genbits_stage_vld;
-  logic [NApps-1:0]          genbits_stage_fips;
-  logic [GenBitsWidth-1:0]   genbits_stage_bus[NApps];
-  logic [NApps-1:0]          genbits_stage_rdy;
-  logic                      genbits_stage_vldo_sw;
-  logic                      genbits_stage_bus_rd_sw;
-  logic [31:0]               genbits_stage_bus_sw;
-  logic                      genbits_stage_fips_sw;
+  logic [NApps-1:0]            cmd_stage_vld;
+  logic [StateId-1:0]          cmd_stage_shid[NApps];
+  logic [AppCmdWidth-1:0]      cmd_stage_bus[NApps];
+  logic [NApps-1:0]            cmd_stage_rdy;
+  logic [NApps-1:0]            cmd_arb_req;
+  logic [0:0]                  cmd_arb_di [NApps];
+  logic [NApps-1:0]            cmd_arb_gnt;
+  logic [$clog2(NApps)-1:0]    cmd_arb_idx;
+  logic [NApps-1:0]            cmd_arb_sop;
+  logic [NApps-1:0]            cmd_arb_mop;
+  logic [NApps-1:0]            cmd_arb_eop;
+  logic [AppCmdWidth-1:0]      cmd_arb_bus[NApps];
+  logic [NApps-1:0]            cmd_core_ack;
+  csrng_cmd_sts_e [NApps-1:0]  cmd_core_ack_sts;
+  logic [NApps-1:0]            cmd_stage_ack;
+  csrng_cmd_sts_e [NApps-1:0]  cmd_stage_ack_sts;
+  logic [NApps-1:0]            genbits_core_vld;
+  logic [GenBitsWidth-1:0]     genbits_core_bus[NApps];
+  logic [NApps-1:0]            genbits_core_fips;
+  logic [NApps-1:0]            genbits_stage_vld;
+  logic [NApps-1:0]            genbits_stage_fips;
+  logic [GenBitsWidth-1:0]     genbits_stage_bus[NApps];
+  logic [NApps-1:0]            genbits_stage_rdy;
+  logic                        genbits_stage_vldo_sw;
+  logic                        genbits_stage_bus_rd_sw;
+  logic [31:0]                 genbits_stage_bus_sw;
+  logic                        genbits_stage_fips_sw;
 
-  logic [15:0]               hw_exception_sts;
-  logic [LcHwDebugCopies-1:0]lc_hw_debug_on_fo;
-  logic                      state_db_is_dump_en;
-  logic                      state_db_reg_rd_sel;
-  logic                      state_db_reg_rd_id_pulse;
-  logic [StateId-1:0]        state_db_reg_rd_id;
-  logic [31:0]               state_db_reg_rd_val;
+  logic [15:0]                 hw_exception_sts;
+  logic [LcHwDebugCopies-1:0]  lc_hw_debug_on_fo;
+  logic                        state_db_is_dump_en;
+  logic                        state_db_reg_rd_sel;
+  logic                        state_db_reg_rd_id_pulse;
+  logic [StateId-1:0]          state_db_reg_rd_id;
+  logic [31:0]                 state_db_reg_rd_val;
+  logic [NApps-1:0]            int_state_read_enable;
 
-  logic [30:0]               err_code_test_bit;
-  logic                      ctr_drbg_upd_es_ack;
-  logic                      ctr_drbg_gen_es_ack;
-  logic                      block_encrypt_quiet;
+  logic [30:0]                 err_code_test_bit;
+  logic                        ctr_drbg_upd_es_ack;
+  logic                        ctr_drbg_gen_es_ack;
+  logic                        block_encrypt_quiet;
 
-  logic                      cs_rdata_capt_vld;
-  logic                      cs_bus_cmp_alert;
-  logic                      cmd_rdy;
-  logic [1:0]                efuse_sw_app_enable;
+  logic                        cs_rdata_capt_vld;
+  logic                        cs_bus_cmp_alert;
+  logic                        cmd_rdy;
+  logic [NApps-1:0]            invalid_cmd_seq_alert;
+  logic [NApps-1:0]            invalid_acmd_alert;
+  logic [NApps-1:0]            reseed_cnt_alert;
+  logic                        sw_sts_ack;
+  logic [1:0]                  efuse_sw_app_enable;
 
-  logic                      unused_err_code_test_bit;
-  logic                      unused_reg2hw_genbits;
-  logic                      unused_int_state_val;
+  logic [NApps-1:0][31:0]      reseed_counter;
+
+  logic                        unused_err_code_test_bit;
+  logic                        unused_reg2hw_genbits;
+  logic                        unused_int_state_val;
+  logic                        unused_reseed_interval;
 
   caliptra_prim_mubi_pkg::mubi8_t [1:0] en_csrng_sw_app_read;
   caliptra_prim_mubi_pkg::mubi4_t [CsEnableCopies-1:0] mubi_cs_enable_fanout;
@@ -378,8 +389,10 @@ module csrng_core
   logic [63:0]               cs_rdata_capt_q, cs_rdata_capt_d;
   logic                      cs_rdata_capt_vld_q, cs_rdata_capt_vld_d;
   logic                      sw_rdy_sts_q, sw_rdy_sts_d;
+  logic                      sw_sts_ack_q, sw_sts_ack_d;
+  logic [NApps-1:0]          reseed_cnt_reached_q, reseed_cnt_reached_d;
 
-  always_ff @(posedge clk_i or negedge rst_ni)
+  always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       acmd_q                  <= '0;
       shid_q                  <= '0;
@@ -396,6 +409,8 @@ module csrng_core
       cs_rdata_capt_q         <= '0;
       cs_rdata_capt_vld_q     <= '0;
       sw_rdy_sts_q            <= '0;
+      sw_sts_ack_q            <= '0;
+      reseed_cnt_reached_q    <= '0;
     end else begin
       acmd_q                  <= acmd_d;
       shid_q                  <= shid_d;
@@ -412,7 +427,10 @@ module csrng_core
       cs_rdata_capt_q         <= cs_rdata_capt_d;
       cs_rdata_capt_vld_q     <= cs_rdata_capt_vld_d;
       sw_rdy_sts_q            <= sw_rdy_sts_d;
+      sw_sts_ack_q            <= sw_sts_ack_d;
+      reseed_cnt_reached_q    <= reseed_cnt_reached_d;
     end
+  end
 
   //--------------------------------------------
   // instantiate interrupt hardware primitives
@@ -481,6 +499,19 @@ module csrng_core
     .intr_o                 (intr_cs_fatal_err_o)
   );
 
+  // Counter and FSM errors are structural errors and are always active regardless of the
+  // functional state. main_sm_err_sum is not included here to prevent some tools from
+  // inferring combo loops. However, to include the state machine error for testing,
+  // we use the error code test bit (index 21) directly.
+  logic fatal_loc_events;
+  assign fatal_loc_events = cmd_gen_cnt_err_sum ||
+                            cmd_stage_sm_err_sum ||
+                            drbg_gen_sm_err_sum ||
+                            drbg_updbe_sm_err_sum ||
+                            drbg_updob_sm_err_sum ||
+                            aes_cipher_sm_err_sum ||
+                            err_code_test_bit[21];
+
   // set the interrupt sources
   assign event_cs_fatal_err = (cs_enable_fo[1]  && (
          (|cmd_stage_sfifo_cmd_err_sum) ||
@@ -503,13 +534,8 @@ module csrng_core
          fifo_read_err_sum ||
          fifo_status_err_sum)) ||
          // errs not gated by cs_enable
-         cmd_stage_sm_err_sum ||
          main_sm_err_sum ||
-         drbg_gen_sm_err_sum ||
-         drbg_updbe_sm_err_sum ||
-         drbg_updob_sm_err_sum ||
-         aes_cipher_sm_err_sum ||
-         cmd_gen_cnt_err_sum;
+         fatal_loc_events;
 
   // set fifo errors that are single instances of source
   assign ctr_drbg_cmd_sfifo_cmdreq_err_sum = (|ctr_drbg_cmd_sfifo_cmdreq_err) ||
@@ -735,7 +761,9 @@ module csrng_core
          sw_app_enable_pfa ||
          read_int_state_pfa ||
          acmd_flag0_pfa ||
-         cs_main_sm_alert ||
+         |reseed_cnt_alert ||
+         |invalid_cmd_seq_alert ||
+         |invalid_acmd_alert ||
          cs_bus_cmp_alert;
 
 
@@ -814,10 +842,29 @@ module csrng_core
     .mubi_o(mubi_read_int_state_fanout)
   );
 
+  // SEC_CM: CONFIG.MUBI
+  mubi4_t mubi_fips_force_enable;
+  mubi4_t [1:0] mubi_fips_force_enable_fanout;
+  assign mubi_fips_force_enable = mubi4_t'(reg2hw.ctrl.fips_force_enable.q);
+  assign fips_force_enable_pfe = mubi4_test_true_strict(mubi_fips_force_enable_fanout[0]);
+  assign fips_force_enable_pfa = mubi4_test_invalid(mubi_fips_force_enable_fanout[1]);
+  assign hw2reg.recov_alert_sts.fips_force_enable_field_alert.de = fips_force_enable_pfa;
+  assign hw2reg.recov_alert_sts.fips_force_enable_field_alert.d  = fips_force_enable_pfa;
+
+  caliptra_prim_mubi4_sync #(
+    .NumCopies(2),
+    .AsyncOn(0)
+  ) u_caliptra_prim_mubi4_sync_fips_force_enable (
+    .clk_i,
+    .rst_ni,
+    .mubi_i(mubi_fips_force_enable),
+    .mubi_o(mubi_fips_force_enable_fanout)
+  );
 
   // master module enable
   assign sw_app_enable = sw_app_enable_pfe;
   assign read_int_state = read_int_state_pfe;
+  assign fips_force_enable = fips_force_enable_pfe;
 
   //------------------------------------------
   // application interface
@@ -842,6 +889,10 @@ module csrng_core
       .cmd_stage_shid_i             (cmd_stage_shid[ai]),
       .cmd_stage_bus_i              (cmd_stage_bus[ai]),
       .cmd_stage_rdy_o              (cmd_stage_rdy[ai]),
+      .reseed_cnt_reached_i         (reseed_cnt_reached_q[ai]),
+      .reseed_cnt_alert_o           (reseed_cnt_alert[ai]),
+      .invalid_cmd_seq_alert_o      (invalid_cmd_seq_alert[ai]),
+      .invalid_acmd_alert_o         (invalid_acmd_alert[ai]),
       .cmd_arb_req_o                (cmd_arb_req[ai]),
       .cmd_arb_sop_o                (cmd_arb_sop[ai]),
       .cmd_arb_mop_o                (cmd_arb_mop[ai]),
@@ -865,6 +916,13 @@ module csrng_core
       .cmd_stage_sm_err_o           (cmd_stage_sm_err[ai])
     );
 
+    // Set reseed_cnt_reached_d to true if the max number of generate requests between reseeds
+    // has been reached for the respective counter.
+    assign reseed_cnt_reached_d[ai] =
+        state_db_wr_req && state_db_wr_req_rdy && (state_db_wr_inst_id == ai) ?
+            (state_db_wr_rc >= reg2hw.reseed_interval.q) :
+            reseed_cnt_reached_q[ai];
+
   end : gen_cmd_stage
 
   // SW interface connection (only 1, and must be present)
@@ -876,11 +934,19 @@ module csrng_core
   assign hw2reg.sw_cmd_sts.cmd_rdy.d = cmd_rdy;
   assign cmd_rdy = !cmd_stage_vld[NApps-1] && sw_rdy_sts_q;
   assign sw_rdy_sts_d =
-         !cs_enable_fo[28] ? 1'b1 :
+         !cs_enable_fo[28] ? 1'b0 :
          cmd_stage_vld[NApps-1] ? 1'b0 :
          cmd_stage_rdy[NApps-1] ? 1'b1 :
          sw_rdy_sts_q;
-
+  // cmd sts ack
+  assign hw2reg.sw_cmd_sts.cmd_ack.de = 1'b1;
+  assign hw2reg.sw_cmd_sts.cmd_ack.d = sw_sts_ack_d;
+  assign sw_sts_ack = cmd_stage_ack[NApps-1];
+  assign sw_sts_ack_d =
+         !cs_enable_fo[28] ? 1'b0 :
+         cmd_stage_vld[NApps-1] ? 1'b0 :
+         cmd_stage_ack[NApps-1] ? 1'b1 :
+         sw_sts_ack_q;
   // cmd ack sts
   assign hw2reg.sw_cmd_sts.cmd_sts.de = cmd_stage_ack[NApps-1];
   assign hw2reg.sw_cmd_sts.cmd_sts.d = cmd_stage_ack_sts[NApps-1];
@@ -957,9 +1023,14 @@ module csrng_core
   assign hw2reg.recov_alert_sts.cs_bus_cmp_alert.de = cs_bus_cmp_alert;
   assign hw2reg.recov_alert_sts.cs_bus_cmp_alert.d  = cs_bus_cmp_alert;
 
-  assign hw2reg.recov_alert_sts.cs_main_sm_alert.de = cs_main_sm_alert;
-  assign hw2reg.recov_alert_sts.cs_main_sm_alert.d  = cs_main_sm_alert;
+  assign hw2reg.recov_alert_sts.cmd_stage_invalid_acmd_alert.de = |invalid_acmd_alert;
+  assign hw2reg.recov_alert_sts.cmd_stage_invalid_acmd_alert.d  = |invalid_acmd_alert;
 
+  assign hw2reg.recov_alert_sts.cmd_stage_invalid_cmd_seq_alert.de = |invalid_cmd_seq_alert;
+  assign hw2reg.recov_alert_sts.cmd_stage_invalid_cmd_seq_alert.d  = |invalid_cmd_seq_alert;
+
+  assign hw2reg.recov_alert_sts.cmd_stage_reseed_cnt_alert.de = |reseed_cnt_alert;
+  assign hw2reg.recov_alert_sts.cmd_stage_reseed_cnt_alert.d  = |reseed_cnt_alert;
 
   // HW interface connections (up to 16, numbered 0-14)
   for (genvar hai = 0; hai < (NApps-1); hai = hai+1) begin : gen_app_if
@@ -974,13 +1045,13 @@ module csrng_core
     // genbits
     assign csrng_cmd_o[hai].genbits_valid = genbits_stage_vld[hai];
     assign csrng_cmd_o[hai].genbits_fips = genbits_stage_fips[hai];
-    assign csrng_cmd_o[hai].genbits_bus = genbits_stage_vld[hai] ? genbits_stage_bus[hai] : '0;
+    assign csrng_cmd_o[hai].genbits_bus = genbits_stage_bus[hai];
     assign genbits_stage_rdy[hai] = csrng_cmd_i[hai].genbits_ready;
   end : gen_app_if
 
   // set ack status for configured instances
   for (genvar i = 0; i < NHwApps; i = i+1) begin : gen_app_if_sts
-    assign hw_exception_sts[i] = cmd_stage_ack[i] && cmd_stage_ack_sts[i];
+    assign hw_exception_sts[i] = cmd_stage_ack[i] && (cmd_stage_ack_sts[i] != CMD_STS_SUCCESS);
   end : gen_app_if_sts
 
   // set ack status to zero for un-configured instances
@@ -1109,14 +1180,13 @@ module csrng_core
     .uninstant_req_o        (uninstant_req),
     .clr_adata_packer_o     (clr_adata_packer),
     .cmd_complete_i         (state_db_wr_req),
-    .local_escalate_i       (cmd_gen_cnt_err_sum),
+    .local_escalate_i       (fatal_loc_events),
     .main_sm_state_o        (cs_main_sm_state),
-    .main_sm_alert_o        (cs_main_sm_alert),
     .main_sm_err_o          (cs_main_sm_err)
   );
 
   // interrupt for sw app interface only
-  assign event_cs_cmd_req_done = cmd_stage_ack[NApps-1];
+  assign event_cs_cmd_req_done = sw_sts_ack;
 
   // interrupt for entropy request
   assign event_cs_entropy_req = entropy_src_hw_if_o.es_req;
@@ -1174,7 +1244,7 @@ module csrng_core
   assign state_db_reg_rd_id_pulse = reg2hw.int_state_num.qe;
   assign hw2reg.int_state_val.d = state_db_reg_rd_val;
   assign state_db_is_dump_en = cs_enable_fo[40] && read_int_state && efuse_sw_app_enable[1];
-
+  assign int_state_read_enable = reg2hw.int_state_read_enable.q;
 
   csrng_state_db #(
     .NApps(NApps),
@@ -1211,7 +1281,10 @@ module csrng_core
     .state_db_reg_rd_val_o(state_db_reg_rd_val),
     .state_db_sts_ack_o(state_db_sts_ack),
     .state_db_sts_sts_o(state_db_sts_sts),
-    .state_db_sts_id_o(state_db_sts_id)
+    .state_db_sts_id_o(state_db_sts_id),
+    .int_state_read_enable_i(int_state_read_enable),
+
+    .reseed_counter_o(reseed_counter)
   );
 
   assign statedb_wr_select_d =
@@ -1235,6 +1308,12 @@ module csrng_core
   assign state_db_wr_rc = gen_blk_select ? gen_result_rc : cmd_result_rc;
   assign state_db_wr_sts = gen_blk_select ? gen_result_ack_sts : cmd_result_ack_sts;
 
+  // Forward the reseed counter values to the register interface.
+  always_comb begin : reseed_counter_assign
+    for (int i = 0; i < NApps; i++) begin
+      hw2reg.reseed_counter[i].d = reseed_counter[i];
+    end
+  end
 
   //--------------------------------------------
   // entropy interface
@@ -1251,16 +1330,16 @@ module csrng_core
 
   // Capture entropy from entropy_src
   assign entropy_src_seed_d =
-         ~cs_enable_fo[51] ? '0 :
-         cmd_req_dly_q ? '0 :                  // reset after every cmd
-         (cmd_entropy_avail && flag0_fo[1]) ? '0 : // special case where zero is used
-         cmd_entropy_avail ? (entropy_src_hw_if_i.es_bits ^ seed_diversification) :
+         flag0_fo[1] ? '0 : // special case where zero is used
+         cmd_entropy_req && cmd_entropy_avail ?
+            (entropy_src_hw_if_i.es_bits ^ seed_diversification) :
          entropy_src_seed_q;
   assign entropy_src_fips_d =
-         ~cs_enable_fo[52] ? '0 :
-         cmd_req_dly_q ? '0 :                  // reset after every cmd
-         (cmd_entropy_avail && flag0_fo[2]) ? '0 : // special case where zero is used
-         cmd_entropy_avail ? entropy_src_hw_if_i.es_fips :
+         // Use shid_d here such that u_csrng_ctr_drbg_cmd gets the shid_q and the proper
+         // entropy_src_fips_q in the next clock cycle.
+         fips_force_enable && reg2hw.fips_force.q[shid_d[NAppsLog-1:0]] ? 1'b1 :
+         flag0_fo[2] ? '0 : // special case where zero is used
+         cmd_entropy_req && cmd_entropy_avail ? entropy_src_hw_if_i.es_fips :
          entropy_src_fips_q;
 
   assign cmd_entropy = entropy_src_seed_q;
@@ -1479,7 +1558,7 @@ module csrng_core
   );
 
   for (genvar i = 0; i < LcHwDebugCopies; i = i+1) begin : gen_lc_dbg_copies
-    assign lc_hw_debug_on_fo[i] = (lc_hw_debug_en_out[i] == lc_ctrl_pkg::On);
+    assign lc_hw_debug_on_fo[i] = lc_ctrl_pkg::lc_tx_test_true_strict(lc_hw_debug_en_out[i]);
   end : gen_lc_dbg_copies
 
 
@@ -1639,7 +1718,7 @@ module csrng_core
   // es to cs halt request to reduce power spikes
   assign cs_aes_halt_d =
          (ctr_drbg_upd_es_ack && ctr_drbg_gen_es_ack && block_encrypt_quiet &&
-          cs_aes_halt_i.cs_aes_halt_req && !cs_aes_halt_q);
+          cs_aes_halt_i.cs_aes_halt_req);
 
   assign cs_aes_halt_o.cs_aes_halt_ack = cs_aes_halt_q;
 
@@ -1662,6 +1741,47 @@ module csrng_core
   assign unused_err_code_test_bit = (|err_code_test_bit[19:16]) || (|err_code_test_bit[27:26]);
   assign unused_reg2hw_genbits = (|reg2hw.genbits.q);
   assign unused_int_state_val = (|reg2hw.int_state_val.q);
+  assign unused_reseed_interval = reg2hw.reseed_interval.qe;
 
+  //--------------------------------------------
+  // Assertions
+  //--------------------------------------------
+`ifdef INC_ASSERT
+  // Track activity of AES.
+  logic aes_active_d, aes_active_q;
+  assign aes_active_d =
+      (u_csrng_block_encrypt.u_aes_cipher_core.in_valid_i == aes_pkg::SP2V_HIGH &&
+       u_csrng_block_encrypt.u_aes_cipher_core.in_ready_o == aes_pkg::SP2V_HIGH)  ? 1'b1 : // set
+      (u_csrng_block_encrypt.u_aes_cipher_core.out_valid_o == aes_pkg::SP2V_HIGH &&
+       u_csrng_block_encrypt.u_aes_cipher_core.out_ready_i == aes_pkg::SP2V_HIGH) ? 1'b0 : // clear
+      aes_active_q;                                                                        // keep
+
+  // Track state of AES Halt req/ack with entropy_src.
+  logic cs_aes_halt_active;
+  assign cs_aes_halt_active = cs_aes_halt_i.cs_aes_halt_req & cs_aes_halt_o.cs_aes_halt_ack;
+
+  // Assert that when AES Halt is active, AES is not active.
+  `CALIPTRA_ASSERT(AesNotActiveWhileCsAesHaltActive_A, cs_aes_halt_active |-> !aes_active_d)
+
+  always_ff @(posedge clk_i, negedge rst_ni) begin
+    if (!rst_ni) begin
+      aes_active_q <= '0;
+    end else begin
+      aes_active_q <= aes_active_d;
+    end
+  end
+
+  logic state_db_zeroize;
+  assign state_db_zeroize = state_db_wr_req && (state_db_wr_ccmd == UNI);
+  `CALIPTRA_ASSERT(CsrngUniZeroizeFips_A, state_db_zeroize -> (state_db_wr_fips == '0))
+  `CALIPTRA_ASSERT(CsrngUniZeroizeKey_A,  state_db_zeroize -> (state_db_wr_key  == '0))
+  `CALIPTRA_ASSERT(CsrngUniZeroizeV_A,    state_db_zeroize -> (state_db_wr_v    == '0))
+  `CALIPTRA_ASSERT(CsrngUniZeroizeRc_A,   state_db_zeroize -> (state_db_wr_rc   == '0))
+  `CALIPTRA_ASSERT(CsrngUniZeroizeSts_A,  state_db_zeroize -> (state_db_wr_sts  == '0))
+
+  // The number of application interfaces defined in the hjson must match the number of
+  // application interfaces derived from the top-level parameter NHwApps.
+  `CALIPTRA_ASSERT_INIT(CsrngNumAppsMatch_A, NumApps == NApps)
+`endif
 
 endmodule // csrng_core
