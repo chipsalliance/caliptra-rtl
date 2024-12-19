@@ -4317,6 +4317,8 @@
 #define MLDSA_REG_MLDSA_CTRL_CTRL_MASK                                                              (0x7)
 #define MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW                                                            (3)
 #define MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK                                                           (0x8)
+#define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_LOW                                                           (4)
+#define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK                                                          (0x10)
 #define CLP_MLDSA_REG_MLDSA_STATUS                                                                  (0x10030014)
 #define MLDSA_REG_MLDSA_STATUS                                                                      (0x14)
 #define MLDSA_REG_MLDSA_STATUS_READY_LOW                                                            (0)
