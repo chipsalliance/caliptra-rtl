@@ -33,7 +33,7 @@ module aes_wrap
   localparam aes_mode_e AES_MODE = AES_ECB;
 
   import aes_reg_pkg::*;
-  import tlul_pkg::*;
+  import caliptra_tlul_pkg::*;
 
   logic unused_idle;
   logic [31:0] unused_wdata;
@@ -64,7 +64,7 @@ module aes_wrap
   assign alert_fatal_o = alert_tx[1].alert_p | ~alert_tx[1].alert_n;
 
   // Command integrity generation
-  tlul_cmd_intg_gen tlul_cmd_intg_gen (
+  caliptra_tlul_cmd_intg_gen caliptra_tlul_cmd_intg_gen (
     .tl_i(h2d),
     .tl_o(h2d_intg)
   );

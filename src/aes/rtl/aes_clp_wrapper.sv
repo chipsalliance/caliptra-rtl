@@ -59,8 +59,8 @@ module aes_clp_wrapper
   input  logic debugUnlock_or_scan_mode_switch
 );
 
-tlul_pkg::tl_h2d_t adapter_to_aes_tl;
-tlul_pkg::tl_d2h_t aes_to_adapter_tl;
+caliptra_tlul_pkg::tl_h2d_t adapter_to_aes_tl;
+caliptra_tlul_pkg::tl_d2h_t aes_to_adapter_tl;
 
 logic ahb_dv;
 logic ahb_hold;
@@ -74,7 +74,7 @@ logic clp_reg_dv;
 logic clp_reg_write;
 logic [31 : 0] clp_reg_rdata;
 logic [31 : 0] clp_reg_wdata;
-logic [tlul_pkg::TL_AW-1 : 0] clp_reg_addr;
+logic [caliptra_tlul_pkg::TL_AW-1 : 0] clp_reg_addr;
 
 aes_clp_reg_pkg::aes_clp_reg__in_t hwif_in;
 aes_clp_reg_pkg::aes_clp_reg__out_t hwif_out;
@@ -130,8 +130,8 @@ ahb_slv_sif #(
 );
 
 //TLUL Adapter
-tlul_adapter_vh
-tlul_adapter_vh_inst
+caliptra_tlul_adapter_vh
+caliptra_tlul_adapter_vh_inst
 (
   .clk_i(clk),
   .rst_ni(reset_n),
@@ -142,7 +142,7 @@ tlul_adapter_vh_inst
   // Valid-Hold device interface (VH to TLUL).
   .dv_i(ahb_dv),
   .hld_o(ahb_hold),
-  .addr_i({ {tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, ahb_addr }),
+  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, ahb_addr }),
   .write_i(ahb_write),
   .wdata_i(ahb_wdata),
   .wstrb_i('1),

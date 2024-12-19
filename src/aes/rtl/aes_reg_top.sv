@@ -10,8 +10,8 @@ module aes_reg_top (
   input clk_i,
   input rst_ni,
   input rst_shadowed_ni,
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  caliptra_tlul_pkg::tl_h2d_t tl_i,
+  output caliptra_tlul_pkg::tl_d2h_t tl_o,
   // To HW
   output aes_reg_pkg::aes_reg2hw_t reg2hw, // Write
   input  aes_reg_pkg::aes_hw2reg_t hw2reg, // Read
@@ -43,13 +43,13 @@ module aes_reg_top (
   logic [DW-1:0] reg_rdata_next;
   logic reg_busy;
 
-  tlul_pkg::tl_h2d_t tl_reg_h2d;
-  tlul_pkg::tl_d2h_t tl_reg_d2h;
+  caliptra_tlul_pkg::tl_h2d_t tl_reg_h2d;
+  caliptra_tlul_pkg::tl_d2h_t tl_reg_d2h;
 
 
   // incoming payload check
   logic intg_err;
-  tlul_cmd_intg_chk u_chk (
+  caliptra_tlul_cmd_intg_chk u_chk (
     .tl_i(tl_i),
     .err_o(intg_err)
   );
@@ -81,8 +81,8 @@ module aes_reg_top (
   assign intg_err_o = err_q | intg_err | reg_we_err;
 
   // outgoing integrity generation
-  tlul_pkg::tl_d2h_t tl_o_pre;
-  tlul_rsp_intg_gen #(
+  caliptra_tlul_pkg::tl_d2h_t tl_o_pre;
+  caliptra_tlul_rsp_intg_gen #(
     .EnableRspIntgGen(1),
     .EnableDataIntgGen(1)
   ) u_rsp_intg_gen (
@@ -93,7 +93,7 @@ module aes_reg_top (
   assign tl_reg_h2d = tl_i;
   assign tl_o_pre   = tl_reg_d2h;
 
-  tlul_adapter_reg #(
+  caliptra_tlul_adapter_reg #(
     .RegAw(AW),
     .RegDw(DW),
     .EnableDataIntgGen(0)
@@ -1942,6 +1942,6 @@ module aes_reg_top (
 
   // this is formulated as an assumption such that the FPV testbenches do disprove this
   // property by mistake
-  //`ASSUME(reqParity, tl_reg_h2d.a_valid |-> tl_reg_h2d.a_user.chk_en == tlul_pkg::CheckDis)
+  //`ASSUME(reqParity, tl_reg_h2d.a_valid |-> tl_reg_h2d.a_user.chk_en == caliptra_tlul_pkg::CheckDis)
 
 endmodule
