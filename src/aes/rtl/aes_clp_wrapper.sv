@@ -191,6 +191,10 @@ aes_clp_reg aes_clp_reg_inst (
   .hwif_out(hwif_out)
 );
 
+edn_pkg::edn_rsp_t edn_i;
+
+assign edn_i = '{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:'0}; //FIXME
+
 //AES Engine
 aes
 aes_inst (
@@ -207,7 +211,7 @@ aes_inst (
   .clk_edn_i(clk),
   .rst_edn_ni(reset_n),
   .edn_o(edn_req),
-  .edn_i('{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:'0}), //FIXME
+  .edn_i(edn_i), //FIXME
 
   // Key manager (keymgr) key sideload interface
   .keymgr_key_i(keymgr_key), //FIXME
