@@ -16,7 +16,7 @@ provides: [aes]
 schema_version: 2.4.0
 requires:
   - aes_pkg
-  - tlul_pkg
+  - caliptra_tlul_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

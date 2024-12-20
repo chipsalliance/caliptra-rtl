@@ -1329,14 +1329,35 @@ For more information, see the [AES Programmer's Guide](https://opentitan.org/boo
 
 The AES architecture inputs and outputs are described in the following table.
 
-| Name                        | Input or output | Description  |
-| :-------------------------- | :-------------- | :----------- |
-| clk                         | input           | All signal timings are related to the rising edge of clk. |
+| Name                               | Input or output | Description  |
+| :--------------------------------- | :-------------- | :----------- |
+| clk                                | input           | All signal timings are related to the rising edge of clk. |
+| reset_n                            | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.      |
+| DATA_IN                            | input           | Input block to be encrypted or decrypted. Written in four 32-bit registers.       |
+| DATA_OUT                           | output          | Output block result of encryption or decryption. Stored in four 32-bit registers.       |
+| CTRL_SHADOWED.MANUAL_OPERATION     | input           | Configures the AES core to operation in manual mode.       |
+| CTRL_SHADOWED.PRNG_RESEED_RATE     | input           | Configures the rate of reseeding the internal PRNG used for masking.       |
+| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the keyvault interface.       |
+| CTRL_SHADOWED.KEY_LEN              | input           | Configures the AES key length. Supports 128, 192, and 256-bit keys.      |
+| CTRL_SHADOWED.MODE                 | input           | Configures the AES block cipher mode.      |
+| CTRL_SHADOWED.OPERATION            | input           | Configures the AES core to operate in encryption or decryption modes.      |
+| TRIGGER.PRNG_RESEED                | input           | Forces a PRNG reseed.      |
+| TRIGGER.DATA_OUT_CLEAR             | input           | Clears the DATA_OUT registers with pseudo-random data.      |
+| TRIGGER.KEY_IV_DATA_IN_CLEAR       | input           | Clears the Key, IV, and DATA_INT registers with pseudo-random data.      |
+| TRIGGER.START                      | input           | Triggers the encryption/decryption of one data block if in manual operation mode.      |
+| STATUS.ALERT_FATAL_FAULT           | output          | A fatal fault has ocurred and the AES unit needs to be reset.      |
+| STATUS.ALERT_RECOV_CTRL_UPDATE_ERR | output          | An update error has occurred in the shadowed Control Register. <br>
+                                                         AES operation needs to be restarted by re-writing the Control Register. |
+| STATUS.INPUT_READY                 | output          | The AES unit is ready to receive new data input via the DATA_IN registers.      |
+| STATUS.OUTPUT_VALID                | output          | The AES unit has alid output data.      |
+| STATUS.OUTPUT_LOST                 | output          | All previous output data has been fully read by the processor (0) or at least one previous output data block has been lost (1). It has been overwritten by the AES unit before the processor could fully read it. Once set to 1, this flag remains set until AES operation is restarted by re-writing the Control Register. The primary use of this flag is for design verification. This flag is not meaningful if MANUAL_OPERATION=0.      |
+| STATUS.STALL                       | output          | The AES unit is stalled because there is previous output data that must be read by the processor before the AES unit can overwrite this data. This flag is not meaningful if MANUAL_OPERATION=1.      |
+| STATUS.IDLE                        | output          | The AES unit is idle.      |
+
 
 ### Address map
 
 The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
-
 
 ## PCR vault
 
