@@ -30,6 +30,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
          - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_rand.yml
+         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_keygen_rand.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
