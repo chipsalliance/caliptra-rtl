@@ -130,7 +130,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     
 }
 
-void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE])
+void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint8_t inject_fail_value)
 {
     uint16_t offset;
     volatile uint32_t * reg_ptr;
@@ -190,7 +190,13 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
-    
+
+    if ((inject_fail_value == 0xd7) | (inject_fail_value == 0xd8)) {
+        if (inject_fail_value == 0xd7) printf("Injecting norm check failure\n");
+        if (inject_fail_value == 0xd8) printf("Injecting makehint failure\n");
+        printf("%c",inject_fail_value);
+    }
+
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
@@ -284,7 +290,7 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
 
 }
 
-void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE])
+void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE], uint8_t inject_fail_value)
 {
     uint16_t offset;
     volatile uint32_t * reg_ptr;
@@ -319,6 +325,11 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     // Enable MLDSA VERIFYING core
     printf("\nMLDSA VERIFYING\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+
+    if (inject_fail_value == 0xd7) {
+        printf("Injecting norm check failure\n");
+        printf("%c",inject_fail_value);
+    }
     
     // wait for MLDSA VERIFYING process to be done
     wait_for_mldsa_intr();
