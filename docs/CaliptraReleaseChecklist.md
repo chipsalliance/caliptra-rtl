@@ -27,6 +27,26 @@ When necessary, a patch release may be applied retroactively to earlier versions
 For each release, the following steps are followed to ensure code functionality and quality.
 
 - Ensure all critical [issues](https://github.com/chipsalliance/caliptra-rtl/issues) and [Pull Requests](https://github.com/chipsalliance/caliptra-rtl/pulls) are closed
+- Paranoia checks
+  - Audit pipelines: Coverage logging enabled
+  - Audit pipelines: File list checks updated
+  - Audit pipelines: License header check targets updated
+  - Audit pipelines: RDL generator script is updated
+  - Audit pipelines: RDL file checker is updated
+  - Audit pipelines: Promote pipeline synth check enabled
+  - Audit pipelines: Promote pipeline lint check enabled
+  - Audit pipelines: Promote pipeline L0 regression list updated
+  - Audit pipelines: Promote pipeline L0 regression enabled
+  - Audit pipelines: Promote pipeline unit tests enabled
+  - Audit pipelines: Nightly pipeline firmware regression test list updated
+  - Audit pipelines: Nightly pipeline firmware regression test list enabled
+  - Audit pipelines: Nightly pipeline unit testbench regression test list updated
+  - Audit pipelines: Nightly pipeline unit testbench regression test list enabled
+  - Audit pipelines: Nightly pipeline UVM UNIT regressions test list updated
+  - Audit pipelines: Nightly pipeline UVM UNIT regressions enabled
+  - Audit pipelines: Nightly pipeline UVM TOP regression test list updated
+  - Audit pipelines: Nightly pipeline UVM TOP regression enabled
+  - Audit pipelines: Nightly pipeline UVM TOP (ROM) regression enabled
 - Pre-Silicon Regressions
   - [L0 regression](../src/integration/stimulus/L0_regression.yml)
   - Directed/Random regression per the [Test Plan](./Caliptra_TestPlan.xlsx)
