@@ -12,6 +12,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_trivium_pkg.sv
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
@@ -22,6 +23,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_trivium_pkg.sv
 ---
 provides: [caliptra_prim]
 schema_version: 2.4.0
@@ -56,6 +58,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_intr_hw.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_onehot_check.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_onehot_enc.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi8_sync.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_sync_cnt.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_buf.sv
@@ -71,4 +74,5 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_sum_tree.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg_ext.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_edge_detector.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_trivium.sv
     tops: [caliptra_prim]
