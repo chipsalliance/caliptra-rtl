@@ -44,10 +44,52 @@ jobs:
           cp -R src/soc_ifc/docs/caliptra_top_reg_html /tmp/pages-docs/main/external-regs
           find /tmp/pages-docs
 
-      - name: Generate GitHub Pages artifacts
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload artifacts for main
+        uses: actions/upload-artifact@v4
         with:
-          path: /tmp/pages-docs
+          name: pages_main
+          path: /tmp/pages-docs/main
+
+  build-1_1:
+    name: Build v1.1
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "patch_v1.1"
+
+      - name: Install peakrdl
+        run: |
+          python3 -m pip install \
+              systemrdl-compiler==1.27.3 \
+              peakrdl-systemrdl==0.3.0 \
+              peakrdl-regblock==0.21.0 \
+              peakrdl-uvm==2.3.0 \
+              peakrdl-ipxact==3.4.3 \
+              peakrdl-html==2.10.1 \
+              peakrdl-cheader==1.0.0 \
+              peakrdl==1.1.0
+
+      - name: Generate docs for v1.1
+        run: |
+          echo Running script
+          tools/scripts/reg_doc_gen.sh
+
+      - name: Stage documents for v1.1
+        run: |
+          mkdir -p /tmp/pages-docs/v1_1
+          tools/scripts/reg_doc_gen.sh
+          cp -R src/integration/docs/caliptra_reg_html /tmp/pages-docs/v1_1/internal-regs
+          cp -R src/soc_ifc/docs/caliptra_top_reg_html /tmp/pages-docs/v1_1/external-regs
+          find /tmp/pages-docs
+
+      - name: Upload artifacts for v1.1
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages_v1_1
+          path: /tmp/pages-docs/v1_1
 
   deploy:
     name: Deploy
@@ -63,8 +105,25 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-22.04
-      
+
     steps:
+      - name: Download main artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pages_main
+          path: /tmp/pages-docs/main
+
+      - name: Download v1.1 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pages_v1_1
+          path: /tmp/pages-docs/v1_1
+
+      - name: Generate GitHub Pages artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: /tmp/pages-docs
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
