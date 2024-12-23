@@ -600,12 +600,14 @@ module caliptra_top_tb_services
 
     //MLDSA
     logic inject_makehint_failure, inject_normcheck_failure;
+    logic reset_mldsa_failure;
     logic [1:0] normcheck_mode_random;
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
             inject_makehint_failure <= 1'b0;
             inject_normcheck_failure <= 1'b0;
+            reset_mldsa_failure <= 1'b0;
             normcheck_mode_random <= 'h0;
         end
         else if (((WriteData[7:0] == 8'hd8) && mailbox_write) /*&& !caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid*/) begin
@@ -618,7 +620,10 @@ module caliptra_top_tb_services
             else
                 normcheck_mode_random <= $urandom_range(0,2);
         end
-        else if ((caliptra_top_dut.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) || caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
+        else if ((caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid))
+            reset_mldsa_failure <= 1'b1;
+        else if (((caliptra_top_dut.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
+            reset_mldsa_failure <= 1'b0;
             inject_makehint_failure <= 1'b0;
             inject_normcheck_failure <= 1'b0;
         end
