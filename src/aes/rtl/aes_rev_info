@@ -1,0 +1,12 @@
+commit e9437d6dc68b9884e2a76571d70edf17ba8ed72d
+Author: Andrea Caforio <andrea.caforio@lowrisc.org>
+Date:   Fri Dec 13 13:39:43 2024 +0100
+
+    [aes, pre-dv] Remove test vector redundancies
+    
+    Firstly, this commit removes some redundant instructions in the test
+    vector sequences, e.g., unnecessary writes to the `CTRL_GCM` register.
+    Secondly, some redundant polls for the `IDLE` bit in the `STATUS`
+    register are replaced with polls for the `INPUT_READY` bit.
+    
+    Signed-off-by: Andrea Caforio <andrea.caforio@lowrisc.org>

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -8,12 +8,11 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_cipher_control 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_cipher_control import aes_pkg::*;
 #(
-  parameter bit         SecMasking  = 0,
-  parameter sbox_impl_e SecSBoxImpl = SBoxImplDom
+  parameter bit         CiphOpFwdOnly = 0,
+  parameter bit         SecMasking    = 0,
+  parameter sbox_impl_e SecSBoxImpl   = SBoxImplDom
 ) (
   input  logic                    clk_i,
   input  logic                    rst_ni,
@@ -371,8 +370,8 @@ module aes_cipher_control
   end
 
   // Use separate signal for key expand operation, forward round.
-  assign key_expand_op_o    = (dec_key_gen_d == SP2V_HIGH ||
-                               dec_key_gen_q == SP2V_HIGH) ? CIPH_FWD : op_i;
+  assign key_expand_op_o    = (dec_key_gen_d == SP2V_HIGH  ||
+                               dec_key_gen_q == SP2V_HIGH) || CiphOpFwdOnly ? CIPH_FWD : op_i;
   assign key_expand_round_o = rnd_ctr;
 
   // Let the main controller know whate we are doing.
