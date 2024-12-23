@@ -138,7 +138,7 @@ always_comb begin : response_block
     if (err & ~err_f) begin
         hreadyout_o = 1'b0;
         hresp_o = H_ERROR;
-    end else if (hld) begin
+    end else if (dv & hld) begin
         hreadyout_o = 1'b0;
         hresp_o = H_OKAY;
     end else if (err_f) begin

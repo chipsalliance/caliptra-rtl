@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -23,7 +23,6 @@ module aes_sel_buf_chk #(
   output logic             err_o
 );
 
-  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Tie off unused inputs.

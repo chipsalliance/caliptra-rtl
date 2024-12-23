@@ -602,7 +602,8 @@ package ecc_reg_uvm;
         kv_write_ctrl_reg_bit_cg mldsa_seed_dest_valid_bit_cg[1];
         kv_write_ctrl_reg_bit_cg ecc_pkey_dest_valid_bit_cg[1];
         kv_write_ctrl_reg_bit_cg ecc_seed_dest_valid_bit_cg[1];
-        kv_write_ctrl_reg_bit_cg rsvd_bit_cg[21];
+        kv_write_ctrl_reg_bit_cg aes_key_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg rsvd_bit_cg[20];
         kv_write_ctrl_reg_fld_cg fld_cg;
         rand uvm_reg_field write_en;
         rand uvm_reg_field write_entry;
@@ -611,6 +612,7 @@ package ecc_reg_uvm;
         rand uvm_reg_field mldsa_seed_dest_valid;
         rand uvm_reg_field ecc_pkey_dest_valid;
         rand uvm_reg_field ecc_seed_dest_valid;
+        rand uvm_reg_field aes_key_dest_valid;
         rand uvm_reg_field rsvd;
 
         function new(string name = "kv_write_ctrl_reg");
@@ -637,8 +639,10 @@ package ecc_reg_uvm;
             this.ecc_pkey_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
             this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
             this.ecc_seed_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.aes_key_dest_valid = new("aes_key_dest_valid");
+            this.aes_key_dest_valid.configure(this, 1, 11, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 21, 11, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 20, 12, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(write_en_bit_cg[bt]) write_en_bit_cg[bt] = new();
                 foreach(write_entry_bit_cg[bt]) write_entry_bit_cg[bt] = new();
@@ -647,6 +651,7 @@ package ecc_reg_uvm;
                 foreach(mldsa_seed_dest_valid_bit_cg[bt]) mldsa_seed_dest_valid_bit_cg[bt] = new();
                 foreach(ecc_pkey_dest_valid_bit_cg[bt]) ecc_pkey_dest_valid_bit_cg[bt] = new();
                 foreach(ecc_seed_dest_valid_bit_cg[bt]) ecc_seed_dest_valid_bit_cg[bt] = new();
+                foreach(aes_key_dest_valid_bit_cg[bt]) aes_key_dest_valid_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
