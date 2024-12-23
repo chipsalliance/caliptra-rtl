@@ -453,40 +453,40 @@ void main() {
     printf("ECC/MLDSA: Inject PCR into msg_reg\n");
     printf("%c", 0x90);
 
-    // VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
-    // //run ECC signing on PCR
-    // reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
-    //       ((2 << ECC_REG_ECC_CTRL_CTRL_LOW) & ECC_REG_ECC_CTRL_CTRL_MASK) |
-    //       ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
-    // lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
+    VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
+    //run ECC signing on PCR
+    reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
+          ((2 << ECC_REG_ECC_CTRL_CTRL_LOW) & ECC_REG_ECC_CTRL_CTRL_MASK) |
+          ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
 
-    // VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
-    // // wait for ECC SIGNING process to be done
-    // while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
+    // wait for ECC SIGNING process to be done
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    // //check expected output from sign r
-    // reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
-    // offset = 0;
-    // while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-    //     read_data = *reg_ptr++;
-    //     if (exp_ecc_sign_r[offset] != read_data) {
-    //         VPRINTF(FATAL,"ECC SIGN R Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_r[offset], read_data);
-    //         SEND_STDOUT_CTRL( 0x01);
-    //     }
-    //     offset++;
-    // }
+    //check expected output from sign r
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+        read_data = *reg_ptr++;
+        if (exp_ecc_sign_r[offset] != read_data) {
+            VPRINTF(FATAL,"ECC SIGN R Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_r[offset], read_data);
+            SEND_STDOUT_CTRL( 0x01);
+        }
+        offset++;
+    }
 
-    // //check expected output from sign s
-    // reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
-    // offset = 0;
-    // while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-    //     read_data = *reg_ptr++;
-    //     if (exp_ecc_sign_s[offset] != read_data) {
-    //         VPRINTF(FATAL,"ECC SIGN S Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_s[offset], read_data);
-    //         SEND_STDOUT_CTRL( 0x01);
-    //     }
-    //     offset++;
-    // }
+    //check expected output from sign s
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+        read_data = *reg_ptr++;
+        if (exp_ecc_sign_s[offset] != read_data) {
+            VPRINTF(FATAL,"ECC SIGN S Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_s[offset], read_data);
+            SEND_STDOUT_CTRL( 0x01);
+        }
+        offset++;
+    }
 
     VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
     //run MLDSA keygen+signing on PCR

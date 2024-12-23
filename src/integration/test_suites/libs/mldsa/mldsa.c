@@ -39,6 +39,11 @@ void wait_for_mldsa_intr(){
 void mldsa_zeroize(){
     printf("MLDSA zeroize flow.\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
+
+    // wait for MLDSA to be ready
+    printf("Waiting for mldsa status ready\n");
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+
 }
 
 
