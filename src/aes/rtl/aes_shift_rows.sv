@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -10,7 +10,6 @@ module aes_shift_rows (
   output logic [3:0][3:0][7:0] data_o
 );
 
-  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   // Row 0 is left untouched
