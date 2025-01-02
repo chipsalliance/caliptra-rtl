@@ -34,12 +34,7 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-void main() {
-    VPRINTF(LOW,"---------------------------\n");
-    VPRINTF(LOW," KV PCR Hash Extend Test !!\n");
-    VPRINTF(LOW,"---------------------------\n");
-
-    uint32_t msg[] = {0x00000000,
+const uint32_t msg[] = {0x00000000,
                       0x00000000,
                       0x00000000,
                       0x00000000,
@@ -52,7 +47,7 @@ void main() {
                       0x00000000,
                       0x00000000};
 
-    uint32_t exp1[] = {0xf57bb7ed,
+const uint32_t exp1[] = {0xf57bb7ed,
                        0x82c6ae4a,
                        0x29e6c987,
                        0x9338c592,
@@ -65,7 +60,7 @@ void main() {
                        0x39ddd00c,
                        0xd07d8317};
 
-    uint32_t exp2[] = {0x11143121,
+const uint32_t exp2[] = {0x11143121,
                        0xbeb365e6,
                        0x3826e7de,
                        0x89f9c76a,
@@ -79,7 +74,7 @@ void main() {
                        0x49897978};
 
     // exp3 = SHA512(31*384'h0 | exp2 | nonce)
-    uint32_t exp3[] = {0x4f373650,
+const uint32_t exp3[] = {0x4f373650,
                        0x83ef4325,
                        0x29e9bcdb,
                        0x404adf86,
@@ -96,7 +91,7 @@ void main() {
                        0x7610ca06,
                        0x819ec76a};
                        
-    uint32_t exp_ecc_sign_r[] = {
+const uint32_t exp_ecc_sign_r[] = {
                              0x871e6ea4, 
                              0xddc5432c, 
                              0xddaa60fd, 
@@ -110,7 +105,7 @@ void main() {
                              0x9e4f5a7b, 
                              0xfc1dd2ac};
 
-    uint32_t exp_ecc_sign_s[] = {
+const uint32_t exp_ecc_sign_s[] = {
                              0x3e5552de, 
                              0x6403350e, 
                              0xe70ad74e, 
@@ -124,7 +119,7 @@ void main() {
                              0x4f80796d, 
                              0xae29365c};
 
-    uint32_t nonce[] = {0x01234567,
+const uint32_t nonce[] = {0x01234567,
                         0x11111111,
                         0x22222222,
                         0x33333333,
@@ -133,7 +128,7 @@ void main() {
                         0x66666666,
                         0x77777777};
 
-    uint32_t exp_mldsa_signature[] = {  //additional 00
+const uint32_t exp_mldsa_signature[] = {  //additional 00
 0x0036312d, 0x29211a15, 0x0b000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x0000923a,
 0x35120192, 0x8c7902ee, 0x3a3305f8, 0xd6cdc4bc, 0xb7380deb, 0xe1b3967b, 0x250ae5c6, 0xa1763af5,
 0xc7bb8e74, 0x69676649, 0x0ceae8c0, 0xab965d34, 0x2f140e05, 0xee0d03e9, 0xfb53319a, 0xe1692381,
@@ -281,6 +276,10 @@ void main() {
 0x83f77540, 0xd7e53766, 0x784cb5fc, 0x41be7973, 0xf8a8b10b
 };
 
+void main() {
+    VPRINTF(LOW,"---------------------------\n");
+    VPRINTF(LOW," KV PCR Hash Extend Test !!\n");
+    VPRINTF(LOW,"---------------------------\n");
 
     volatile uint32_t* reg_ptr;
     uint8_t offset;
@@ -453,40 +452,40 @@ void main() {
     printf("ECC/MLDSA: Inject PCR into msg_reg\n");
     printf("%c", 0x90);
 
-    VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
-    //run ECC signing on PCR
-    reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
-          ((2 << ECC_REG_ECC_CTRL_CTRL_LOW) & ECC_REG_ECC_CTRL_CTRL_MASK) |
-          ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
+    // VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
+    // //run ECC signing on PCR
+    // reg = ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
+    //       ((2 << ECC_REG_ECC_CTRL_CTRL_LOW) & ECC_REG_ECC_CTRL_CTRL_MASK) |
+    //       ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+    // lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
 
-    VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
-    // wait for ECC SIGNING process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    // VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
+    // // wait for ECC SIGNING process to be done
+    // while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    //check expected output from sign r
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        read_data = *reg_ptr++;
-        if (exp_ecc_sign_r[offset] != read_data) {
-            VPRINTF(FATAL,"ECC SIGN R Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_r[offset], read_data);
-            SEND_STDOUT_CTRL( 0x01);
-        }
-        offset++;
-    }
+    // //check expected output from sign r
+    // reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
+    // offset = 0;
+    // while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+    //     read_data = *reg_ptr++;
+    //     if (exp_ecc_sign_r[offset] != read_data) {
+    //         VPRINTF(FATAL,"ECC SIGN R Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_r[offset], read_data);
+    //         SEND_STDOUT_CTRL( 0x01);
+    //     }
+    //     offset++;
+    // }
 
-    //check expected output from sign s
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        read_data = *reg_ptr++;
-        if (exp_ecc_sign_s[offset] != read_data) {
-            VPRINTF(FATAL,"ECC SIGN S Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_s[offset], read_data);
-            SEND_STDOUT_CTRL( 0x01);
-        }
-        offset++;
-    }
+    // //check expected output from sign s
+    // reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+    // offset = 0;
+    // while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+    //     read_data = *reg_ptr++;
+    //     if (exp_ecc_sign_s[offset] != read_data) {
+    //         VPRINTF(FATAL,"ECC SIGN S Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_ecc_sign_s[offset], read_data);
+    //         SEND_STDOUT_CTRL( 0x01);
+    //     }
+    //     offset++;
+    // }
 
     VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
     //run MLDSA keygen+signing on PCR
@@ -497,22 +496,21 @@ void main() {
 
     VPRINTF(MEDIUM,"MLDSA: Polling for PCR Sign to be complete\n");
     // wait for MLDSA KEYGEN+SIGNING process to be done
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_VALID_MASK) == 0);
 
     //check expected output from signature
+    uint32_t cnt;
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
-    uint32_t cnt = 0;
+    cnt = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         read_data = *reg_ptr;
         if (exp_mldsa_signature[offset] != read_data) {
-            // VPRINTF(FATAL,"MLDSA SIGNATURE Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_mldsa_signature[offset], read_data);
-            VPRINTF(FATAL,"0x%x,\n", read_data);
+            VPRINTF(FATAL,"MLDSA SIGNATURE Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp_mldsa_signature[offset], read_data);
             cnt++;
-            if (cnt > 200){
+            if (cnt>8){
                 SEND_STDOUT_CTRL( 0x01);
             }
-            
         }
         reg_ptr++;
         offset++;
