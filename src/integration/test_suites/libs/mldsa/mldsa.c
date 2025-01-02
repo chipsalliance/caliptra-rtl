@@ -190,7 +190,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
-    
+
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 

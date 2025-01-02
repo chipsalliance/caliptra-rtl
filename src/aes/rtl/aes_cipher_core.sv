@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -92,11 +92,10 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_cipher_core 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_cipher_core import aes_pkg::*;
 #(
   parameter bit          AES192Enable         = 1,
+  parameter bit          CiphOpFwdOnly        = 0,
   parameter bit          SecMasking           = 1,
   parameter sbox_impl_e  SecSBoxImpl          = SBoxImplDom,
   parameter bit          SecAllowForcingMasks = 0,
@@ -137,7 +136,8 @@ module aes_cipher_core
   output logic                        alert_o,
 
   // Pseudo-random data for register clearing
-  input  logic [WidthPRDClearing-1:0] prd_clearing_i [NumShares],
+  input  logic        [3:0][3:0][7:0] prd_clearing_state_i [NumShares],
+  input  logic            [7:0][31:0] prd_clearing_key_i [NumShares],
 
   // Masking PRNG
   input  logic                        force_masks_i, // Useful for SCA only.
@@ -198,6 +198,7 @@ module aes_cipher_core
   logic                   [7:0][31:0] key_expand_out [NumShares];
   ciph_op_e                           key_expand_op;
   sp2v_e                              key_expand_en;
+  logic                               key_expand_prd_we;
   sp2v_e                              key_expand_out_req;
   sp2v_e                              key_expand_out_ack;
   logic                               key_expand_err;
@@ -221,27 +222,16 @@ module aes_cipher_core
   logic                               sp_enc_err_d, sp_enc_err_q;
   logic                               op_err;
 
-  // Pseudo-random data for clearing and masking purposes
-  logic                       [127:0] prd_clearing_128 [NumShares];
-  logic                       [255:0] prd_clearing_256 [NumShares];
-
+  // Pseudo-random data for masking purposes
   logic         [WidthPRDMasking-1:0] prd_masking;
-  logic  [3:0][3:0][WidthPRDSBox-1:0] prd_sub_bytes;
+  logic  [3:0][3:0][WidthPRDSBox-1:0] prd_sub_bytes_d;
+  logic  [3:0][3:0][WidthPRDSBox-1:0] prd_sub_bytes_q;
   logic             [WidthPRDKey-1:0] prd_key_expand;
   logic                               prd_masking_upd;
   logic                               prd_masking_rsd_req;
   logic                               prd_masking_rsd_ack;
 
-  // Generate clearing signals of appropriate widths. If masking is enabled, the two shares of
-  // the registers must be cleared with different pseudo-random data.
-  for (genvar s = 0; s < NumShares; s++) begin : gen_prd_clearing_shares
-    for (genvar c = 0; c < NumChunksPRDClearing128; c++) begin : gen_prd_clearing_128
-      assign prd_clearing_128[s][c * WidthPRDClearing +: WidthPRDClearing] = prd_clearing_i[s];
-    end
-    for (genvar c = 0; c < NumChunksPRDClearing256; c++) begin : gen_prd_clearing_256
-      assign prd_clearing_256[s][c * WidthPRDClearing +: WidthPRDClearing] = prd_clearing_i[s];
-    end
-  end
+  logic               [3:0][3:0][7:0] data_in_mask;
 
   // op_i is one-hot encoded. Check the provided value and trigger an alert upon detecing invalid
   // encodings.
@@ -258,8 +248,8 @@ module aes_cipher_core
     unique case (state_sel)
       STATE_INIT:  state_d = state_init_i;
       STATE_ROUND: state_d = add_round_key_out;
-      STATE_CLEAR: state_d = prd_clearing_128;
-      default:     state_d = prd_clearing_128;
+      STATE_CLEAR: state_d = prd_clearing_state_i;
+      default:     state_d = prd_clearing_state_i;
     endcase
   end
 
@@ -304,7 +294,6 @@ module aes_cipher_core
     // - the PRD required by the key expand module (has 4 S-Boxes internally).
     aes_prng_masking #(
       .Width                ( WidthPRDMasking        ),
-      .ChunkSize            ( ChunkSizePRDMasking    ),
       .EntropyWidth         ( EntropyWidth           ),
       .SecAllowForcingMasks ( SecAllowForcingMasks   ),
       .SecSkipPRNGReseeding ( SecSkipPRNGReseeding   ),
@@ -327,21 +316,45 @@ module aes_cipher_core
   // Extract randomness for key expand module and SubBytes.
   //
   // The masking PRNG output has the following shape:
-  // prd_masking = { prd_key_expand, prd_sub_bytes }
-  assign prd_key_expand = prd_masking[WidthPRDMasking-1 -: WidthPRDKey];
-  assign prd_sub_bytes  = prd_masking[WidthPRDData-1 -: WidthPRDData];
+  // prd_masking = { prd_key_expand, prd_sub_bytes_d }
+  assign prd_key_expand  = prd_masking[WidthPRDMasking-1 -: WidthPRDKey];
+  assign prd_sub_bytes_d = prd_masking[WidthPRDData-1 -: WidthPRDData];
+
+  // PRD buffering
+  if (!SecMasking) begin : gen_no_prd_buffer
+    // The masks are ignored anyway.
+    assign prd_sub_bytes_q = prd_sub_bytes_d;
+
+  end else begin : gen_prd_buffer
+    // PRD buffer stage to:
+    // 1. Make sure the S-Boxes get always presented new data/mask inputs together with fresh PRD
+    //    for remasking.
+    // 2. Prevent glitches originating from inside the masking PRNG from propagating into the
+    //    masked S-Boxes.
+    always_ff @(posedge clk_i or negedge rst_ni) begin : prd_sub_bytes_reg
+      if (!rst_ni) begin
+        prd_sub_bytes_q <= '0;
+      end else if (state_we == SP2V_HIGH) begin
+        prd_sub_bytes_q <= prd_sub_bytes_d;
+      end
+    end
+  end
+
+  // Convert the 3-dimensional prd_sub_bytes_q array to a 1-dimensional packed array for the
+  // aes_prd_get_lsbs() function used below.
+  logic [WidthPRDData-1:0] prd_sub_bytes;
+  assign prd_sub_bytes = prd_sub_bytes_q;
 
   // Extract randomness for masking the input data.
   //
   // The masking PRNG is used for generating both the PRD for the S-Boxes/SubBytes operation as
   // well as for the input data masks. When using any of the masked Canright S-Box implementations,
   // it is important that the SubBytes input masks (generated by the PRNG in Round X-1) and the
-  // SubBytes output masks (generated by the PRNG in Round X) are independent. Inside the PRNG,
-  // this is achieved by using multiple, separately re-seeded LFSR chunks and by selecting the
-  // separate LFSR chunks in alternating fashion. Since the input data masks become the SubBytes
-  // input masks in the first round, we select the same 8 bit lanes for the input data masks which
-  // are also used to form the SubBytes output mask for the masked Canright S-Box implementations,
-  // i.e., the 8 LSBs of the per S-Box PRD. In particular, we have:
+  // SubBytes output masks (generated by the PRNG in Round X) are independent. This can be achieved
+  // by using e.g. an unrolled Bivium stream cipher primitive inside the PRNG. Since the input data
+  // masks become the SubBytes input masks in the first round, we select the same 8 bit lanes for
+  // the input data masks which are also used to form the SubBytes output mask for the masked
+  // Canright S-Box implementations, i.e., the 8 LSBs of the per S-Box PRD. In particular, we have:
   //
   // prd_masking = { prd_key_expand, ... , sb_prd[4], sb_out_mask[4], sb_prd[0], sb_out_mask[0] }
   //
@@ -351,12 +364,16 @@ module aes_cipher_core
   //
   // When using a masked S-Box implementation other than Canright, we still select the 8 LSBs of
   // the per-S-Box PRD to form the input data mask of the corresponding byte. We do this to
-  // distribute the input data masks over all LFSR chunks of the masking PRNG. We do the extraction
-  // on a row basis.
+  // distribute the input data masks over all output bits the masking PRNG. We do the extraction on
+  // a row basis.
   localparam int unsigned WidthPRDRow = 4*WidthPRDSBox;
   for (genvar i = 0; i < 4; i++) begin : gen_in_mask
-    assign data_in_mask_o[i] = aes_prd_get_lsbs(prd_masking[i * WidthPRDRow +: WidthPRDRow]);
+    assign data_in_mask[i] = aes_prd_get_lsbs(prd_sub_bytes[i * WidthPRDRow +: WidthPRDRow]);
   end
+
+  // Rotate the data input masks by 64 bits to ensure the data input masks are independent
+  // from the PRD fed to the S-Boxes/SubBytes operation.
+  assign data_in_mask_o = {data_in_mask[1], data_in_mask[0], data_in_mask[3], data_in_mask[2]};
 
   // Cipher data path
   aes_sub_bytes #(
@@ -370,7 +387,7 @@ module aes_cipher_core
     .op_i      ( op_i              ),
     .data_i    ( state_q[0]        ),
     .mask_i    ( sb_in_mask        ),
-    .prd_i     ( prd_sub_bytes     ),
+    .prd_i     ( prd_sub_bytes_q   ),
     .data_o    ( sub_bytes_out     ),
     .mask_o    ( sb_out_mask       ),
     .err_o     ( sub_bytes_err     )
@@ -420,10 +437,10 @@ module aes_cipher_core
   always_comb begin : key_full_mux
     unique case (key_full_sel)
       KEY_FULL_ENC_INIT: key_full_d = key_init_i;
-      KEY_FULL_DEC_INIT: key_full_d = key_dec_q;
+      KEY_FULL_DEC_INIT: key_full_d = !CiphOpFwdOnly ? key_dec_q : prd_clearing_key_i;
       KEY_FULL_ROUND:    key_full_d = key_expand_out;
-      KEY_FULL_CLEAR:    key_full_d = prd_clearing_256;
-      default:           key_full_d = prd_clearing_256;
+      KEY_FULL_CLEAR:    key_full_d = prd_clearing_key_i;
+      default:           key_full_d = prd_clearing_key_i;
     endcase
   end
 
@@ -435,23 +452,42 @@ module aes_cipher_core
     end
   end
 
-  // SEC_CM: KEY.SEC_WIPE
-  // Decryption Key registers
-  always_comb begin : key_dec_mux
-    unique case (key_dec_sel)
-      KEY_DEC_EXPAND: key_dec_d = key_expand_out;
-      KEY_DEC_CLEAR:  key_dec_d = prd_clearing_256;
-      default:        key_dec_d = prd_clearing_256;
-    endcase
-  end
+  if (!CiphOpFwdOnly) begin : gen_key_dec
+    // SEC_CM: KEY.SEC_WIPE
+    // Decryption Key registers
+    always_comb begin : key_dec_mux
+      unique case (key_dec_sel)
+        KEY_DEC_EXPAND: key_dec_d = key_expand_out;
+        KEY_DEC_CLEAR:  key_dec_d = prd_clearing_key_i;
+        default:        key_dec_d = prd_clearing_key_i;
+      endcase
+    end
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin : key_dec_reg
-    if (!rst_ni) begin
-      key_dec_q <= '{default: '0};
-    end else if (key_dec_we == SP2V_HIGH) begin
-      key_dec_q <= key_dec_d;
+    always_ff @(posedge clk_i or negedge rst_ni) begin : key_dec_reg
+      if (!rst_ni) begin
+        key_dec_q <= '{default: '0};
+      end else if (key_dec_we == SP2V_HIGH) begin
+        key_dec_q <= key_dec_d;
+      end
+    end
+  end else begin : gen_no_key_dec
+    // No Decryption Key registers
+    assign key_dec_q = '{default: '0};
+    assign key_dec_d = key_dec_q;
+
+    // Tie-off unused signals.
+    logic unused_key_dec;
+    always_comb begin
+      unused_key_dec = ^{key_dec_sel, key_dec_we};
+      for (int s = 0; s < NumShares; s++) begin
+        unused_key_dec ^= ^{key_dec_d[s]};
+      end
     end
   end
+
+  // Make sure that whenever the data/mask inputs of the S-Boxes update, the internally buffered
+  // PRD is updated in sync.
+  assign key_expand_prd_we = (key_full_we == SP2V_HIGH) ? 1'b1 : 1'b0;
 
   // Key expand data path
   aes_key_expand #(
@@ -464,6 +500,7 @@ module aes_cipher_core
     .cfg_valid_i ( cfg_valid          ),
     .op_i        ( key_expand_op      ),
     .en_i        ( key_expand_en      ),
+    .prd_we_i    ( key_expand_prd_we  ),
     .out_req_o   ( key_expand_out_req ),
     .out_ack_i   ( key_expand_out_ack ),
     .clear_i     ( key_expand_clear   ),
@@ -499,9 +536,20 @@ module aes_cipher_core
   always_comb begin : round_key_mux
     unique case (round_key_sel)
       ROUND_KEY_DIRECT: round_key = key_bytes;
-      ROUND_KEY_MIXED:  round_key = key_mix_columns_out;
+      ROUND_KEY_MIXED:  round_key = !CiphOpFwdOnly ? key_mix_columns_out : key_bytes;
       default:          round_key = key_bytes;
     endcase
+  end
+
+  if (CiphOpFwdOnly) begin : gen_unused_key_mix_columns_out
+    // Tie-off unused signals.
+    logic unused_key_mix_columns_out;
+    always_comb begin
+      unused_key_mix_columns_out = 1'b0;
+      for (int s = 0; s < NumShares; s++) begin
+        unused_key_mix_columns_out ^= ^{key_mix_columns_out[s]};
+      end
+    end
   end
 
   /////////////
@@ -510,8 +558,9 @@ module aes_cipher_core
 
   // Control
   aes_cipher_control #(
-    .SecMasking  ( SecMasking  ),
-    .SecSBoxImpl ( SecSBoxImpl )
+    .CiphOpFwdOnly ( CiphOpFwdOnly ),
+    .SecMasking    ( SecMasking    ),
+    .SecSBoxImpl   ( SecSBoxImpl   )
   ) u_aes_cipher_control (
     .clk_i                ( clk_i               ),
     .rst_ni               ( rst_ni              ),
@@ -760,7 +809,7 @@ module aes_cipher_core
 
   // Signals used for assertions only.
   logic prd_clearing_equals_output, unused_prd_clearing_equals_output;
-  assign prd_clearing_equals_output = (prd_clearing_128 == add_round_key_out);
+  assign prd_clearing_equals_output = (prd_clearing_state_i == add_round_key_out);
   assign unused_prd_clearing_equals_output = prd_clearing_equals_output;
 
   // Ensure that the state register gets cleared with pseudo-random data at the end of the last
@@ -791,7 +840,7 @@ module aes_cipher_core
           sub_bytes_en == SP2V_HIGH && ($past(sub_bytes_en) == SP2V_LOW ||
               ($past(sub_bytes_out_req) == SP2V_HIGH &&
                $past(sub_bytes_out_ack) == SP2V_HIGH)) |=>
-          $past(prd_sub_bytes) != $past(prd_sub_bytes, NumCyclesPerRound + 1) ||
+          $past(prd_sub_bytes_q) != $past(prd_sub_bytes_q, NumCyclesPerRound + 1) ||
           SecAllowForcingMasks && force_masks_i)
 
       // Ensure that the PRNG has been updated between masking the input and starting the first
@@ -871,7 +920,7 @@ module aes_cipher_core
     end
     for (genvar i = 0; i < 4; i++) begin : gen_unused_prd_masking
       assign unused_prd_masking[i * WidthPRDRow +: WidthPRDRow] =
-          aes_prd_concat_bits(data_in_mask_o[i], unused_prd_msbs[i]);
+          aes_prd_concat_bits(data_in_mask[i], unused_prd_msbs[i]);
     end
     assign unused_prd_masking[WidthPRDMasking-1 -: WidthPRDKey] = prd_key_expand;
     `CALIPTRA_ASSERT(AesMskgPrdExtraction, prd_masking == unused_prd_masking)
