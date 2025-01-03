@@ -266,6 +266,7 @@ module caliptra_top_tb_services
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
+    //         8'hd7        - Inject normcheck failure during mldsa signing
     //         8'hd8        - Inject makehint failure during mldsa signing
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
@@ -598,6 +599,48 @@ module caliptra_top_tb_services
     end
 
     //MLDSA
+    logic inject_makehint_failure, inject_normcheck_failure;
+    logic reset_mldsa_failure;
+    logic [1:0] normcheck_mode_random;
+
+    always_ff @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            inject_makehint_failure <= 1'b0;
+            inject_normcheck_failure <= 1'b0;
+            reset_mldsa_failure <= 1'b0;
+            normcheck_mode_random <= 'h0;
+        end
+        else if (((WriteData[7:0] == 8'hd8) && mailbox_write) /*&& !caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid*/) begin
+            inject_makehint_failure <= 1'b1;
+        end
+        else if (((WriteData[7:0] == 8'hd7) && mailbox_write) /*&& (!caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid || !caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid)*/) begin
+            inject_normcheck_failure <= 1'b1;
+            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process)
+                normcheck_mode_random <= 'h0;
+            else
+                normcheck_mode_random <= $urandom_range(0,2);
+        end
+        else if ((caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid))
+            reset_mldsa_failure <= 1'b1;
+        else if (((caliptra_top_dut.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
+            reset_mldsa_failure <= 1'b0;
+            inject_makehint_failure <= 1'b0;
+            inject_normcheck_failure <= 1'b0;
+        end
+    end
+
+    always_ff @(negedge clk) begin
+        if (inject_makehint_failure & caliptra_top_dut.mldsa.makehint_inst.hintgen_enable)
+            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
+        else
+            release caliptra_top_dut.mldsa.makehint_inst.hintsum;
+        
+        if (inject_normcheck_failure & caliptra_top_dut.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable & (caliptra_top_dut.mldsa.norm_check_inst.mode == normcheck_mode_random))
+            force caliptra_top_dut.mldsa.norm_check_inst.invalid = 'b1;
+        else
+            release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+    end
+
     logic mldsa_keygen, mldsa_signing, mldsa_verify, mldsa_keygen_signing;
 
     always @(negedge clk or negedge cptra_rst_b) begin
@@ -631,6 +674,13 @@ module caliptra_top_tb_services
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
+        end
+        else if((WriteData[7:0] == 8'hdc) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b1;
+            $display("In keygen+sign branch\n");
         end
     end
 
@@ -1953,7 +2003,7 @@ sha512_ctrl_cov_bind i_sha512_ctrl_cov_bind();
 sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
 hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
 ecc_top_cov_bind i_ecc_top_cov_bind();
-// mldsa_top_cov_bind i_mldsa_top_cov_bind(); //TODO: Add after updating submodule
+mldsa_top_cov_bind i_mldsa_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 `endif

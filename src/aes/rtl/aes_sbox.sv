@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -6,9 +6,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_sbox 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_sbox import aes_pkg::*;
 #(
   parameter sbox_impl_e SecSBoxImpl = SBoxImplLut
 ) (
