@@ -973,23 +973,24 @@ mldsa_top #(
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
 ) mldsa (
-     .clk           (clk_cg),
-     .rst_b         (cptra_noncore_rst_b),
+     .clk               (clk_cg),
+     .rst_b             (cptra_noncore_rst_b),
      //TODO: pwrgood
-     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)-1:0]),
-     .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwdata),
-     .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsel),
-     .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwrite),
-     .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hready),
-     .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].htrans),
-     .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsize),
-     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
-     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
-     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
-     .kv_read       (kv_read[2]),
-     .kv_rd_resp    (kv_rd_resp[2]),
-     .error_intr    (mldsa_error_intr),
-     .notif_intr    (mldsa_notif_intr)
+     .haddr_i           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)-1:0]),
+     .hwdata_i          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwdata),
+     .hsel_i            (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsel),
+     .hwrite_i          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwrite),
+     .hready_i          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hready),
+     .htrans_i          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].htrans),
+     .hsize_i           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hsize),
+     .hresp_o           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
+     .hreadyout_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
+     .hrdata_o          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
+     .kv_read           (kv_read[2]),
+     .kv_rd_resp        (kv_rd_resp[2]),
+     .pcr_signing_data  (pcr_signing_data),
+     .error_intr        (mldsa_error_intr),
+     .notif_intr        (mldsa_notif_intr)
 );
 
 aes_clp_wrapper #(
@@ -1052,7 +1053,8 @@ key_vault1
     .kv_write             (kv_write),
     .kv_rd_resp           (kv_rd_resp),
     .kv_wr_resp           (kv_wr_resp),
-    .pcr_signing_key      (pcr_signing_data.pcr_signing_privkey)
+    .pcr_ecc_signing_key  (pcr_signing_data.pcr_ecc_signing_privkey),
+    .pcr_mldsa_signing_key  (pcr_signing_data.pcr_mldsa_signing_seed)
 );
 
 pv #(

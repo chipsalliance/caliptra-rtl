@@ -54,7 +54,7 @@ module sha512_ctrl
     output pv_write_t pv_write,
     input pv_rd_resp_t pv_rd_resp,
     input pv_wr_resp_t pv_wr_resp,
-    output logic [PV_NUM_DWORDS-1:0][31:0] pcr_signing_hash,
+    output logic [PCR_HASH_NUM_DWORDS-1:0][31:0] pcr_signing_hash,
 
     // Interrupt
     output logic error_intr,
