@@ -20,12 +20,12 @@
 
 package soc_ifc_pkg;
     
-    parameter SOC_IFC_ADDR_W = 18;
+    parameter SOC_IFC_ADDR_W = 19;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
     parameter SOC_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
     
-    parameter MBOX_SIZE_KB = 128;
+    parameter MBOX_SIZE_KB = 256;
     parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
     parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
     parameter MBOX_DATA_W = 32;
@@ -44,8 +44,6 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_OFFSET = 32'h3000_0000;
 
     //memory map
-    parameter MBOX_DIR_START_ADDR     = 32'h0000_0000;
-    parameter MBOX_DIR_END_ADDR       = 32'h0001_FFFF;
     parameter MBOX_REG_START_ADDR     = `CLP_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_REG_END_ADDR       = MBOX_REG_START_ADDR + 32'h0000_0FFF;
     parameter SHA_REG_START_ADDR      = `CLP_SHA512_ACC_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
@@ -56,6 +54,8 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
+    parameter MBOX_DIR_START_ADDR     = 32'h0004_0000;
+    parameter MBOX_DIR_END_ADDR       = 32'h0007_FFFF;
 
     //Valid AXI_USER
     //Lock the AXI_USER values from integration time
