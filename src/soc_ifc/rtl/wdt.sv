@@ -58,27 +58,27 @@ assign timer1_count_en = timer1_en;
 assign timer2_count_en = !timer2_en ? t1_timeout : timer2_en;
 
 // In cascade mode if T2 timesout it is a fatal error.
-assign fatal_timout = t2_timeout && !timer2_en;          
+assign fatal_timeout = t2_timeout && !timer2_en;          
 
 
 // Timeout Service Logic
 
 // Only acknowledge the T1 timeout servicing request if T1 has timeout
-assign wdt_timer1_timeout_serviced_qual = wdt_timer1_timeout_serviced & t1_timout 
+assign wdt_timer1_timeout_serviced_qual = wdt_timer1_timeout_serviced & t1_timeout; 
 
 // Only restart T1 via timeout service request if:
 //  1. In independent mode and T1 has timed out
 //  2. In cascade mode and T2 hasn't timed out
-assign wdt_timer1_timeout_serviced_restart = wdt_timer1_timeout_serviced_qual & (timer2_en || !t2_timeout);
+assign wdt_timer1_timeout_serviced_restart = wdt_timer1_timeout_serviced_qual & (timer2_en | ~t2_timeout);
 
 
 // Only acknowledge the T2 timeout servicing request if T2 has timeout and in parallel mode
-assign wdt_timer2_timeout_serviced_qual = wdt_timer2_timeout_serviced & t2_timout & timer2_en; 
+assign wdt_timer2_timeout_serviced_qual = wdt_timer2_timeout_serviced & t2_timeout & timer2_en; 
 
 // Only restart T2 via timeout service request if:
 //  1. In casecade mode T2 hasn't timeout out and T1 has been serviced
 //  2. In independent mode and T2 has timed out
-assign wdt_timer2_timeout_serviced_restart = (wdt_timer1_timeout_serviced_qual & !t2_timeout && !timer2_en) | wdt_timer2_timeout_serviced_qual;
+assign wdt_timer2_timeout_serviced_restart = (wdt_timer1_timeout_serviced_qual & ~t2_timeout & ~timer2_en) | wdt_timer2_timeout_serviced_qual;
 
 
 //Timer1
