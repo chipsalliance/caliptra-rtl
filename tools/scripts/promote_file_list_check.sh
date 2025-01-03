@@ -18,12 +18,14 @@ set -eo pipefail
 
 derive_github_dest=0
 abr_check=0
+comod_tag_repo=caliptra-rtl-mirror
 
 if [[ $# -eq 3 ]]; then
     merge_dest=$1
     if [[ $3 == "abr" ]]; then
         echo "Running adams-bridge file list check"
         abr_check=1
+        comod_tag_repo=adams-bridge-mirror
     else
         echo "Invalid third arg [$3], expected [abr] or []"
         exit 1
@@ -59,11 +61,6 @@ internal_mod_count=$(git diff --merge-base ${merge_dest} --name-status | grep -c
 # Derive the GitHub comparison ref if needed
 if [[ ${derive_github_dest} -eq 1 ]]; then
     cmd="git diff --merge-base ${merge_dest} --no-prefix --unified=0 --no-color -- .git-comodules"
-    if [[ ${abr_check} -eq 1 ]]; then
-        comod_tag_repo=promote_adams-bridge-mirror
-    else
-        comod_tag_repo=promote_caliptra-rtl-mirror
-    fi
     if $cmd | grep -c "promote_${comod_tag_repo}" > /dev/null; then
         github_dest=$($cmd | grep --max-count=1 --only-matching --color=never -E "promote_${comod_tag_repo}\S+\b")
         echo "Derived github_dest as ${github_dest} from modifications to ${comod_tag_repo} entry in .git-comodules"
@@ -119,10 +116,19 @@ if [[ -d submodules ]]; then
             echo "Searching for modified file list collateral in submodule ${sub}, which is updated from version ${old_commit} to ${new_commit}"
             pushd "${sub}"
             yml_mod_count_sub=$(git diff ${old_commit} ${new_commit} --name-status | grep -c 'compile.yml$\|compilespecs.yml$' || exit 0)
-            yml_mod_count=$(expr ${yml_mod_count} + ${yml_mod_count_sub})
+            echo "  > running 'expr ${yml_mod_count} + ${yml_mod_count_sub}'"
+            yml_mod_count=$(expr ${yml_mod_count} + ${yml_mod_count_sub} || exit 0)
+            echo "In ${sub}, yml_mod_count_sub is ${yml_mod_count_sub}, bringing yml_mod_count to ${yml_mod_count}"
         fi
     done
 fi
+
+printvar="Repo FileModCount\n"
+printvar+="Caliptra ${internal_mod_count}\n"
+printvar+="${comod_tag_repo} ${yml_mod_count}\n"
+echo "================================="
+echo -e "${printvar}" | column -t
+echo "================================="
 
 # Run the file list generator if modifications were found in collateral
 if [[ (${yml_mod_count} -gt 0) || (${internal_mod_count} -gt 0) ]]; then
