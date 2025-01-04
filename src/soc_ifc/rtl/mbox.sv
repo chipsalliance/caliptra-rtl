@@ -632,8 +632,8 @@ always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;
-always_comb dmi_reg.MBOX_STATUS = {7'd0,                                        /* [31:25] */
-                                   hwif_out.mbox_status.mbox_rdptr.value,       /* [24:10]*/
+always_comb dmi_reg.MBOX_STATUS = {6'd0,                                        /* [31:26] */
+                                   hwif_out.mbox_status.mbox_rdptr.value,       /* [25:10]*/
                                    hwif_out.mbox_status.soc_has_lock.value,     /* [9] */
                                    hwif_out.mbox_status.mbox_fsm_ps.value,      /* [8:6] */
                                    hwif_out.mbox_status.ecc_double_error.value, /* [5] */
