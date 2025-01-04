@@ -111,6 +111,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 | ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
+| AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 
 #### Peripherals subsystem
 
@@ -1060,7 +1061,7 @@ The ECC architecture inputs and outputs are described in the following table.
 | r\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | s\[383:0\]                 | output          | The signature value of the given priveKey/message.                                                                         |
 | r’\[383:0\]                | Output          | The signature verification result.                                                                                         |
-| DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                         |
+| DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                  |
 | valid                      | output          | When HIGH, the signal indicates the result is ready.                                                                       |
 
 ### Address map
@@ -1311,6 +1312,52 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
+
+## AES
+
+The AES unit is a cryptographic accelerator that processes requests from the processor to encrypt or decrypt 16-byte data blocks. It supports AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).
+
+The AES unit is reused from here, (see [aes](https://github.com/lowRISC/opentitan/tree/master/hw/ip/aes) with a shim to translate from AHB-lite to the tl-ul interface.
+
+Additional registers have been added to support key vault integration. Keys from the key vault can be loaded into the AES unit to be used for encryption or decryption.
+
+### Operation
+
+For more information, see the [AES Programmer's Guide](https://opentitan.org/book/hw/ip/aes/doc/programmers_guide.html).
+
+### Signal descriptions
+
+The AES architecture inputs and outputs are described in the following table.
+
+| Name                               | Input or output | Description  |
+| :--------------------------------- | :-------------- | :----------- |
+| clk                                | input           | All signal timings are related to the rising edge of clk. |
+| reset_n                            | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.      |
+| DATA_IN                            | input           | Input block to be encrypted or decrypted. Written in four 32-bit registers.       |
+| DATA_OUT                           | output          | Output block result of encryption or decryption. Stored in four 32-bit registers.       |
+| CTRL_SHADOWED.MANUAL_OPERATION     | input           | Configures the AES core to operation in manual mode.       |
+| CTRL_SHADOWED.PRNG_RESEED_RATE     | input           | Configures the rate of reseeding the internal PRNG used for masking.       |
+| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the keyvault interface.       |
+| CTRL_SHADOWED.KEY_LEN              | input           | Configures the AES key length. Supports 128, 192, and 256-bit keys.      |
+| CTRL_SHADOWED.MODE                 | input           | Configures the AES block cipher mode.      |
+| CTRL_SHADOWED.OPERATION            | input           | Configures the AES core to operate in encryption or decryption modes.      |
+| TRIGGER.PRNG_RESEED                | input           | Forces a PRNG reseed.      |
+| TRIGGER.DATA_OUT_CLEAR             | input           | Clears the DATA_OUT registers with pseudo-random data.      |
+| TRIGGER.KEY_IV_DATA_IN_CLEAR       | input           | Clears the Key, IV, and DATA_INT registers with pseudo-random data.      |
+| TRIGGER.START                      | input           | Triggers the encryption/decryption of one data block if in manual operation mode.      |
+| STATUS.ALERT_FATAL_FAULT           | output          | A fatal fault has ocurred and the AES unit needs to be reset.      |
+| STATUS.ALERT_RECOV_CTRL_UPDATE_ERR | output          | An update error has occurred in the shadowed Control Register. <br>
+                                                         AES operation needs to be restarted by re-writing the Control Register. |
+| STATUS.INPUT_READY                 | output          | The AES unit is ready to receive new data input via the DATA_IN registers.      |
+| STATUS.OUTPUT_VALID                | output          | The AES unit has alid output data.      |
+| STATUS.OUTPUT_LOST                 | output          | All previous output data has been fully read by the processor (0) or at least one previous output data block has been lost (1). It has been overwritten by the AES unit before the processor could fully read it. Once set to 1, this flag remains set until AES operation is restarted by re-writing the Control Register. The primary use of this flag is for design verification. This flag is not meaningful if MANUAL_OPERATION=0.      |
+| STATUS.STALL                       | output          | The AES unit is stalled because there is previous output data that must be read by the processor before the AES unit can overwrite this data. This flag is not meaningful if MANUAL_OPERATION=1.      |
+| STATUS.IDLE                        | output          | The AES unit is idle.      |
+
+
+### Address map
+
+The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
 
 ## PCR vault
 

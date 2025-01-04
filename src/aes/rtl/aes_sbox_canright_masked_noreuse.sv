@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -39,7 +39,6 @@ module aes_masked_inverse_gf2p4_noreuse (
   output logic [3:0] b_inv
 );
 
-  import aes_reg_pkg::*;
   import aes_pkg::*;
   import aes_sbox_canright_pkg::*;
 
