@@ -22,6 +22,8 @@
 // 
 //======================================================================
 
+`include "kv_macros.svh"
+
 module aes_clp_wrapper
   import kv_defines_pkg::*;
   import aes_clp_reg_pkg::*;
