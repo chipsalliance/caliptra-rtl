@@ -25,6 +25,8 @@ parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
 parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
 parameter KV_NUM_READ=6;
 parameter KV_NUM_WRITE=4;
+parameter ECC_NUM_DWORDS = 12;
+parameter MLDSA_NUM_DWORDS = 8;
 
 parameter KV_ENTRY_FOR_ECC_SIGNING = 7;
 parameter KV_ENTRY_FOR_MLDSA_SIGNING = 8;
@@ -84,9 +86,9 @@ typedef enum logic [7:0] {
 } kv_error_code_e;
 
 typedef struct packed {
-    logic [PCR_HASH_NUM_DWORDS-1:0][31:0] pcr_hash;
-    logic [KV_NUM_DWORDS-1:0][31:0] pcr_ecc_signing_privkey;
-    logic [KV_NUM_DWORDS-1:0][31:0] pcr_mldsa_signing_seed;
+    logic [PCR_HASH_NUM_DWORDS-1:0][31:0]   pcr_hash;
+    logic [ECC_NUM_DWORDS-1:0][31:0]        pcr_ecc_signing_privkey;
+    logic [MLDSA_NUM_DWORDS-1:0][31:0]      pcr_mldsa_signing_seed;
 } pcr_signing_t;
 
 endpackage

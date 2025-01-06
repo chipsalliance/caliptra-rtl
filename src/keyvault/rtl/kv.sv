@@ -125,13 +125,13 @@ always_comb flush_keyvault = debugUnlock_or_scan_mode_switch |
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
 always_comb begin : keyvault_pcr_ecc_signing
-    for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+    for (int dword = 0; dword < ECC_NUM_DWORDS; dword++) begin
         pcr_ecc_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword].data.value;
     end 
 end
 
 always_comb begin : keyvault_pcr_mldsa_signing
-    for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+    for (int dword = 0; dword < MLDSA_NUM_DWORDS; dword++) begin
         pcr_mldsa_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword].data.value;
     end 
 end
