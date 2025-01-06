@@ -30,25 +30,16 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-//#ifndef MY_RANDOM_SEED
-//#define MY_RANDOM_SEED 17
-//#endif // MY_RANDOM_SEED
-//
-//const long seed = MY_RANDOM_SEED; 
-
 void main () {
 
     uint32_t data;
     uint8_t* read_addr;
+    uint8_t odd_offset;
 
     // Message
     VPRINTF(LOW, "----------------------------------\n");
     VPRINTF(LOW, " Caliptra Mbox SRAM DIR Smoke Test!!\n"    );
     VPRINTF(LOW, "----------------------------------\n");
-
-//    VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-//    srand(seed);
-//    VPRINTF(MEDIUM, "srand done\n")
 
     // Acquire Lock
     if (soc_ifc_mbox_acquire_lock(1)) {
@@ -57,19 +48,22 @@ void main () {
         while(1);
     }
 
+    //Randomize odd or even entries to shorten test run time
+    odd_offset = (rand() % 2) * 4;
+
     // Write data to fill mailbox
-    for (data = CLP_MBOX_SRAM_BASE_ADDR; data < CLP_MBOX_SRAM_END_ADDR; data+=4) {
+    for (data = CLP_MBOX_SRAM_BASE_ADDR + odd_offset; data < CLP_MBOX_SRAM_END_ADDR; data+=8) {
         // Data written is the address being written to
         lsu_write_32((uintptr_t) data, data);
-        if ((data & 0xfff) == 0) {
+        if ((data & 0xfff) == odd_offset) {
             VPRINTF(MEDIUM, "Writing [0x%x] to addr [0x%x]\n", data, data)
         }
     }
 
     // Read back one byte at a time and check values
-    read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR;
+    read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR + odd_offset;
     while(read_addr <= (uint8_t*) CLP_MBOX_SRAM_END_ADDR) {
-        if (((uintptr_t)read_addr & 0xfff) == 0) {
+        if (((uintptr_t)read_addr & 0xfff) == odd_offset) {
             VPRINTF(MEDIUM, "Reading from addr [0x%x]\n", read_addr)
         }
         // Data should match the address being read from
@@ -97,6 +91,7 @@ void main () {
             while(1);
         }
         read_addr++;
+        read_addr += 4;
     }
 
     // Force unlock
