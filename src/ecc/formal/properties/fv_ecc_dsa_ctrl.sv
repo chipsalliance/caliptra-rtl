@@ -693,7 +693,7 @@ module fv_ecc_dsa_ctrl_m
             hwif_out.ECC_CTRL.PCR_SIGN.value 
             |->
             hwif_in.ECC_MSG[word].MSG.we == !(fv_zeroize) &&
-            hwif_in.ECC_PRIVKEY_IN[word].PRIVKEY_IN.next == pcr_signing_data.pcr_signing_privkey[word] &&
+            hwif_in.ECC_PRIVKEY_IN[word].PRIVKEY_IN.next == pcr_signing_data.pcr_ecc_signing_privkey[word] &&
             hwif_in.ECC_PRIVKEY_IN[word].PRIVKEY_IN.we == !(fv_zeroize)
             ;
         endproperty
