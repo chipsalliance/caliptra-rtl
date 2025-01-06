@@ -51,8 +51,8 @@ module kv
     input kv_write_t [KV_NUM_WRITE-1:0]   kv_write,
     output kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp,
     output kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp,
-    output logic [KV_NUM_DWORDS-1:0][31:0] pcr_ecc_signing_key,
-    output logic [KV_NUM_DWORDS-1:0][31:0] pcr_mldsa_signing_key
+    output logic [ECC_NUM_DWORDS-1:0][31:0]     pcr_ecc_signing_key,
+    output logic [MLDSA_NUM_DWORDS-1:0][31:0]   pcr_mldsa_signing_key
 );
 
 logic uc_req_dv, uc_req_hold;
