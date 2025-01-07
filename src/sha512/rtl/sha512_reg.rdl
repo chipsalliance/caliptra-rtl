@@ -168,14 +168,14 @@ addrmap sha512_reg {
     } SHA512_GEN_PCR_HASH_STATUS;
     reg {
         name = "SHA512 PCR Hash Digest";
-        desc = "12 32-bit registers storing the 384-bit digest output.";
+        desc = "16 32-bit registers storing the 512-bit digest output.";
 
         default sw = r;
         default hw = w;
         default resetsignal = reset_b;
         field {desc = "Output digest field for PCR hash"; hwclr;} DIGEST[32] = 32'b0;
     
-    } SHA512_GEN_PCR_HASH_DIGEST[12];
+    } SHA512_GEN_PCR_HASH_DIGEST[16];
     /* ---- Global Interrupt Enable ---- */
     reg global_intr_en_t {
         name = "Per-Type Interrupt Enable Register";
