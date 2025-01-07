@@ -262,8 +262,8 @@ soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 
 //WDT signals
-logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer1_timeout_period;
-logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer2_timeout_period;
+logic [SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer1_timeout_period;
+logic [SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer2_timeout_period;
 logic timer1_en;
 logic timer2_en;
 logic timer1_restart;
@@ -1158,7 +1158,7 @@ assign timer2_en = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_EN.timer2_en.value;
 assign timer1_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value;
 assign timer2_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_CTRL.timer2_restart.value;
 
-for (genvar i = 0; i < WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
+for (genvar i = 0; i < SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
   assign timer1_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i].timer1_timeout_period.value;
   assign timer2_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i].timer2_timeout_period.value;
 end
@@ -1205,7 +1205,7 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
 end
 
 wdt #(
-    .WDT_TIMEOUT_PERIOD_NUM_DWORDS(WDT_TIMEOUT_PERIOD_NUM_DWORDS)
+    .WDT_TIMEOUT_PERIOD_NUM_DWORDS(SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS)
 )i_wdt (
     .clk(rdc_clk_cg),
     .cptra_rst_b(cptra_noncore_rst_b),
