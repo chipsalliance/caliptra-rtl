@@ -172,7 +172,7 @@ package sha512_reg_pkg;
         kv_write_ctrl_reg__in_t SHA512_KV_WR_CTRL;
         kv_status_reg__in_t SHA512_KV_WR_STATUS;
         sha512_reg__SHA512_GEN_PCR_HASH_STATUS__in_t SHA512_GEN_PCR_HASH_STATUS;
-        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t [12-1:0]SHA512_GEN_PCR_HASH_DIGEST;
+        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t [16-1:0]SHA512_GEN_PCR_HASH_DIGEST;
         sha512_reg__intr_block_t__in_t intr_block_rf;
     } sha512_reg__in_t;
 
