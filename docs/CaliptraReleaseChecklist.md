@@ -34,7 +34,7 @@ For each release, the following steps are followed to ensure code functionality 
   - Audit pipelines: RDL generator script is updated
   - Audit pipelines: RDL file checker is updated
   - Audit pipelines: Promote pipeline synth check enabled
-  - Audit pipelines: Promote pipeline lint check enabled
+  - Audit pipelines: Promote pipeline lint check enabled (and test a false-negative)
   - Audit pipelines: Promote pipeline L0 regression list updated
   - Audit pipelines: Promote pipeline L0 regression enabled
   - Audit pipelines: Promote pipeline unit tests enabled
