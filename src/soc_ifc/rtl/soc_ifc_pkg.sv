@@ -55,7 +55,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = 32'h0004_0000;
-    parameter MBOX_DIR_END_ADDR       = CPTRA_MBOX_SIZE_BYTES - 1;
+    parameter MBOX_DIR_END_ADDR       = MBOX_DIR_START_ADDR + (CPTRA_MBOX_SIZE_BYTES - 1);
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
 
     //Valid AXI_USER
