@@ -586,13 +586,13 @@ module caliptra_top_sva
 
   cascade_wdt_t1_service: assert property (
     @(posedge `SVA_RDC_CLK)
-    (`WDT_PATH.wdt_timer1_timeout_serviced && !`WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
+    (`WDT_PATH.wdt_timer1_timeout_serviced_qual && !`WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
   )
   else $display("SVA ERROR: [Cascade] WDT Timer1 did not restart after interrupt service");
 
   cascade_wdt_t2_service: assert property (
     @(posedge `SVA_RDC_CLK)
-    (`WDT_PATH.wdt_timer2_timeout_serviced && !`WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+    (`WDT_PATH.wdt_timer2_timeout_serviced_qual && !`WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
   )
   else $display("SVA ERROR: [Cascade] WDT Timer2 did not restart after interrupt service");
 
@@ -610,13 +610,13 @@ module caliptra_top_sva
 
   independent_wdt_t1_service: assert property (
     @(posedge `SVA_RDC_CLK)
-    (`WDT_PATH.wdt_timer1_timeout_serviced && `WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
+    (`WDT_PATH.wdt_timer1_timeout_serviced_qual && `WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer1_count == 'h0)
   )
   else $display("SVA ERROR: [Independent] WDT Timer1 did not restart after interrupt service");
 
   independent_wdt_t2_service: assert property (
     @(posedge `SVA_RDC_CLK)
-    (`WDT_PATH.wdt_timer2_timeout_serviced && `WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
+    (`WDT_PATH.wdt_timer2_timeout_serviced_qual && `WDT_PATH.timer2_en) |=> (`WDT_PATH.timer2_count == 'h0)
   )
   else $display("SVA ERROR: [Independent] WDT Timer2 did not restart after interrupt service");
 
