@@ -1210,10 +1210,10 @@ endgenerate //IV_NO
         end
         else begin
             if (!UVM_TB) begin
-                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced) begin
+                if(caliptra_top_tb.caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced_qual) begin
                     set_wdt_timer1_period <= 'b1;
                 end
-                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced) begin
+                if(caliptra_top_tb.caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced_qual) begin
                     set_wdt_timer2_period <= 'b1;
                 end
             end
