@@ -92,6 +92,14 @@ module caliptra_top_tb_services
    //=========================================================================-
    // Parameters
    //=========================================================================-
+    localparam SEED_NUM_DWORDS = 8;
+    localparam MSG_NUM_DWORDS = 16;
+    localparam PRIVKEY_NUM_DWORDS = 1224;
+    localparam PRIVKEY_REG_NUM_DWORDS = 32;
+    localparam PRIVKEY_REG_RHO_NUM_DWORDS = 8;
+    localparam SIGNATURE_H_NUM_DWORDS = 21;
+    localparam VERIFY_RES_NUM_DWORDS = 16;
+
     `ifndef VERILATOR
     int MAX_CYCLES;
     initial begin
@@ -641,6 +649,7 @@ module caliptra_top_tb_services
             release caliptra_top_dut.mldsa.norm_check_inst.invalid;
     end
 
+    `ifndef VERILATOR
     logic mldsa_keygen, mldsa_signing, mldsa_verify, mldsa_keygen_signing;
 
     always @(negedge clk or negedge cptra_rst_b) begin
@@ -680,7 +689,7 @@ module caliptra_top_tb_services
     genvar mldsa_dword;
     generate
         //MLDSA keygen - inject seed
-        for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
+        for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_keygen | mldsa_keygen_signing) begin
                     force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
@@ -692,7 +701,7 @@ module caliptra_top_tb_services
         end
 
         //MLDSA signing or MLDSA verify - inject msg
-        for (mldsa_dword = 0; mldsa_dword < 16; mldsa_dword++) begin
+        for (mldsa_dword = 0; mldsa_dword < MSG_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing | mldsa_verify | mldsa_keygen_signing) begin
                     force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
@@ -704,7 +713,7 @@ module caliptra_top_tb_services
         end
 
         //MLDSA signing - inject sk
-        for (mldsa_dword = 0; mldsa_dword < 4; mldsa_dword++) begin
+        for (mldsa_dword = 0; mldsa_dword < PRIVKEY_REG_RHO_NUM_DWORDS/2; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing) begin
                     force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][31:24],
@@ -731,7 +740,7 @@ module caliptra_top_tb_services
             end
         end
 
-        for (mldsa_dword = 32; mldsa_dword < 1224; mldsa_dword++) begin
+        for (mldsa_dword = PRIVKEY_REG_NUM_DWORDS; mldsa_dword < PRIVKEY_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing) begin
                     if ((mldsa_dword % 2) == 0) begin
@@ -773,7 +782,7 @@ module caliptra_top_tb_services
         end
 
         //MLDSA verify - inject signature
-        for (mldsa_dword = 0; mldsa_dword < 16; mldsa_dword++) begin
+        for (mldsa_dword = 0; mldsa_dword < VERIFY_RES_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_verify) begin
                     force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
@@ -783,7 +792,7 @@ module caliptra_top_tb_services
                 end
             end
         end
-        for (mldsa_dword = 0; mldsa_dword < 21; mldsa_dword++) begin
+        for (mldsa_dword = 0; mldsa_dword < SIGNATURE_H_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_verify) begin
                     force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
@@ -806,6 +815,7 @@ module caliptra_top_tb_services
             end
         end
     endgenerate
+    `endif
 
     //Randomized wntz
     generate
