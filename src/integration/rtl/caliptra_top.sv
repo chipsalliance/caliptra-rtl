@@ -59,9 +59,9 @@ module caliptra_top
     //SRAM interface for mbox
     output logic mbox_sram_cs,
     output logic mbox_sram_we,
-    output logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    output logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr,
+    output logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    input  logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
     output logic imem_cs,

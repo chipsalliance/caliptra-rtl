@@ -200,7 +200,7 @@ logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
 logic soc_ifc_reg_rdata_mask;
 
 logic sha_sram_req_dv;
-logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
+logic [CPTRA_MBOX_ADDR_W-1:0] sha_sram_req_addr;
 mbox_sram_resp_t sha_sram_resp;
 logic sha_sram_hold;
 
@@ -1066,8 +1066,9 @@ i_sha512_acc_top (
 //This module contains the Caliptra Mailbox and associated control logic
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
 mbox #(
-    .DATA_W(SOC_IFC_DATA_W),
-    .SIZE_KB(MBOX_SIZE_KB)
+    .MBOX_DATA_W(CPTRA_MBOX_DATA_W),
+    .MBOX_ECC_DATA_W(CPTRA_MBOX_ECC_DATA_W),
+    .MBOX_SIZE_KB(CPTRA_MBOX_SIZE_KB)
     )
 i_mbox (
     .clk(soc_ifc_clk_cg),

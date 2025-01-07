@@ -25,14 +25,14 @@ package soc_ifc_pkg;
     parameter SOC_IFC_USER_W = 32;
     parameter SOC_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
     
-    parameter MBOX_SIZE_KB = 256;
-    parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
-    parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
-    parameter MBOX_DATA_W = 32;
-    parameter MBOX_ECC_DATA_W = 7;
-    parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
-    parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
-    parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
+    parameter CPTRA_MBOX_SIZE_KB = 256;
+    parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;
+    parameter CPTRA_MBOX_SIZE_DWORDS = CPTRA_MBOX_SIZE_BYTES/4;
+    parameter CPTRA_MBOX_DATA_W = SOC_IFC_DATA_W;
+    parameter CPTRA_MBOX_ECC_DATA_W = 7;
+    parameter CPTRA_MBOX_DATA_AND_ECC_W = CPTRA_MBOX_DATA_W + CPTRA_MBOX_ECC_DATA_W;
+    parameter CPTRA_MBOX_DEPTH = (CPTRA_MBOX_SIZE_KB * 1024 * 8) / CPTRA_MBOX_DATA_W;
+    parameter CPTRA_MBOX_ADDR_W = $clog2(CPTRA_MBOX_DEPTH);
 
     parameter CPTRA_AXI_DMA_DATA_WIDTH = 32;
     parameter CPTRA_AXI_DMA_ID_WIDTH   = 5; // FIXME related to CALIPTRA_AXI_ID_WIDTH?
@@ -55,7 +55,8 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = 32'h0004_0000;
-    parameter MBOX_DIR_END_ADDR       = 32'h0007_FFFF;
+    parameter MBOX_DIR_END_ADDR       = CPTRA_MBOX_SIZE_BYTES - 1;
+    parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
 
     //Valid AXI_USER
     //Lock the AXI_USER values from integration time
@@ -162,14 +163,14 @@ package soc_ifc_pkg;
     } soc_ifc_req_t;
     // ECC protected data
     typedef struct packed {
-        logic [MBOX_ECC_DATA_W-1:0] ecc;
-        logic [MBOX_DATA_W-1:0]     data;
+        logic [CPTRA_MBOX_ECC_DATA_W-1:0] ecc;
+        logic [CPTRA_MBOX_DATA_W-1:0]     data;
     } mbox_sram_data_t;
     //Request to mbox sram
     typedef struct packed {
         logic cs;
         logic we;
-        logic [MBOX_ADDR_W-1:0] addr;
+        logic [CPTRA_MBOX_ADDR_W-1:0] addr;
         mbox_sram_data_t wdata;
     } mbox_sram_req_t;
     //Response from mbox sram

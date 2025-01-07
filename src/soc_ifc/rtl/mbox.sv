@@ -18,8 +18,14 @@ module mbox
     import soc_ifc_pkg::*;
     import mbox_csr_pkg::*;
     #(
-     parameter DATA_W = 32
-    ,parameter SIZE_KB = 128
+     parameter MBOX_DATA_W = 32
+    ,parameter MBOX_ECC_DATA_W = 7
+    ,parameter MBOX_SIZE_KB = 128
+    ,localparam MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024
+    ,localparam MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4
+    ,localparam MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W
+    ,localparam MBOX_ADDR_W = $clog2(MBOX_DEPTH)
+    ,localparam MBOX_DEPTH_LOG2 = $clog2(MBOX_DEPTH)
     )
     (
     input logic         clk,
@@ -32,8 +38,8 @@ module mbox
     input soc_ifc_req_t req_data,
     output logic        mbox_error,
 
-    output logic [DATA_W-1:0] rdata,
-    output logic [DATA_W-1:0] dir_rdata,
+    output logic [MBOX_DATA_W-1:0] rdata,
+    output logic [MBOX_DATA_W-1:0] dir_rdata,
 
     input logic sha_sram_req_dv,
     input logic [MBOX_ADDR_W-1:0] sha_sram_req_addr,
@@ -74,10 +80,10 @@ module mbox
 
 );
 
-localparam MBOX_SIZE_IN_BYTES = SIZE_KB*1024;
-localparam MBOX_SIZE_IN_DW = (MBOX_SIZE_IN_BYTES)/4;
-localparam DEPTH = (MBOX_SIZE_IN_DW * 32) / DATA_W;
-localparam DEPTH_LOG2 = $clog2(DEPTH);
+
+
+
+
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -112,22 +118,22 @@ logic arc_MBOX_EXECUTE_UC_MBOX_ERROR;
 logic arc_MBOX_EXECUTE_SOC_MBOX_ERROR;
 logic arc_MBOX_EXECUTE_TAP_MBOX_ERROR;
 //sram
-logic [DATA_W-1:0] sram_wdata;
+logic [MBOX_DATA_W-1:0] sram_wdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_wdata_ecc;
-logic [DEPTH_LOG2-1:0] sram_waddr;
-logic [DEPTH_LOG2-1:0] mbox_wrptr, mbox_wrptr_nxt;
+logic [MBOX_DEPTH_LOG2-1:0] sram_waddr;
+logic [MBOX_DEPTH_LOG2-1:0] mbox_wrptr, mbox_wrptr_nxt;
 logic mbox_wr_full, mbox_wr_full_nxt;
 logic inc_wrptr;
-logic [DEPTH_LOG2-1:0] sram_rdaddr;
-logic [DEPTH_LOG2-1:0] mbox_rdptr, mbox_rdptr_nxt;
+logic [MBOX_DEPTH_LOG2-1:0] sram_rdaddr;
+logic [MBOX_DEPTH_LOG2-1:0] mbox_rdptr, mbox_rdptr_nxt;
 logic mbox_rd_full, mbox_rd_full_nxt;
 logic inc_rdptr;
 logic rst_mbox_rdptr;
 logic rst_mbox_wrptr;
 logic sram_rd_ecc_en;
-logic [DATA_W-1:0] sram_rdata;
+logic [MBOX_DATA_W-1:0] sram_rdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_ecc;
-logic [DATA_W-1:0] sram_rdata_cor;
+logic [MBOX_DATA_W-1:0] sram_rdata_cor;
 logic [MBOX_ECC_DATA_W-1:0] sram_rdata_cor_ecc;
 logic sram_we;
 logic mbox_protocol_sram_we;
@@ -136,15 +142,15 @@ logic dir_req_dv_q, dir_req_rd_phase;
 logic dir_req_wr_ph;
 logic dma_sram_req_dv_q, dma_sram_req_rd_phase;
 logic mask_rdata;
-logic [DEPTH_LOG2-1:0] dir_req_addr;
+logic [MBOX_DEPTH_LOG2-1:0] dir_req_addr;
 
 logic soc_has_lock, soc_has_lock_nxt;
 logic valid_requester;
 logic valid_receiver;
 
-logic [DEPTH_LOG2:0] mbox_dlen_in_dws;
+logic [MBOX_DEPTH_LOG2:0] mbox_dlen_in_dws;
 logic latch_dlen_in_dws;
-logic [DEPTH_LOG2:0] dlen_in_dws, dlen_in_dws_nxt;
+logic [MBOX_DEPTH_LOG2:0] dlen_in_dws, dlen_in_dws_nxt;
 logic rdptr_inc_valid;
 logic mbox_rd_valid, mbox_rd_valid_f;
 logic wrptr_inc_valid;
@@ -155,7 +161,7 @@ logic tap_mode;
 logic tap_mbox_data_avail;
 
 //csr
-logic [DATA_W-1:0] csr_rdata;
+logic [MBOX_DATA_W-1:0] csr_rdata;
 logic read_error;
 logic write_error;
 
@@ -248,21 +254,21 @@ always_comb arc_MBOX_EXECUTE_TAP_MBOX_ERROR  = 1'b0;
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC |
                                 arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP | arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
-always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_IN_BYTES) ? MBOX_SIZE_IN_DW[DEPTH_LOG2:0] :
-                               (hwif_out.mbox_dlen.length.value[DEPTH_LOG2+2:2]) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
+always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_BYTES) ? MBOX_SIZE_DWORDS[MBOX_DEPTH_LOG2:0] :
+                               (hwif_out.mbox_dlen.length.value[MBOX_DEPTH_LOG2+2:2]) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
 //this avoids a case where a sender writes less than programmed and the receiver can read beyond that
 //if the mailbox is full (flag set when writing last entry), always take the programmed dlen
 always_comb dlen_in_dws_nxt = (~mbox_wr_full & ({1'b0,mbox_wrptr} < mbox_dlen_in_dws)) ? {1'b0,mbox_wrptr} : mbox_dlen_in_dws;
 
 // Restrict the read pointer from passing the dlen or rolling over
-always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < (MBOX_SIZE_IN_DW-1));
+always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < (MBOX_SIZE_DWORDS-1));
 // No more valid reads if we read the last entry
 // On pre-load of entry 0, ensure that next dlen isn't 0
 // Restrict reads once read pointer has passed the dlen
 always_comb mbox_rd_valid = (rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws));
 // Restrict the write pointer from rolling over
-always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_IN_DW-1);
+always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_DWORDS-1);
 
 
 always_comb begin : mbox_fsm_combo
@@ -500,8 +506,8 @@ always_comb dir_req_dv_q = (dir_req_dv & ~dir_req_rd_phase & hwif_out.mbox_lock.
                             sha_sram_req_dv;
 always_comb dir_req_wr_ph = dir_req_dv_q & ~sha_sram_req_dv & ((~dma_sram_req_dv_q & req_data.write) | (dma_sram_req_dv_q & dma_sram_req_data.write));
 always_comb dir_req_addr = sha_sram_req_dv   ? sha_sram_req_addr :
-                           dma_sram_req_dv_q ? dma_sram_req_data.addr[DEPTH_LOG2+1:2] :
-                                               req_data.addr[DEPTH_LOG2+1:2];
+                           dma_sram_req_dv_q ? dma_sram_req_data.addr[MBOX_DEPTH_LOG2+1:2] :
+                                               req_data.addr[MBOX_DEPTH_LOG2+1:2];
 
 // Arb precedence:
 //   SHA accelerator: highest
@@ -527,7 +533,7 @@ always_comb sram_rdaddr = dir_req_dv_q ? dir_req_addr :
 always_comb sram_waddr = dir_req_dv_q    ? dir_req_addr : mbox_wrptr;
 //data phase after request for direct access
 //We want to mask the read data for certain accesses
-always_comb rdata = ({DATA_W{~mask_rdata}} & csr_rdata);
+always_comb rdata = ({MBOX_DATA_W{~mask_rdata}} & csr_rdata);
 always_comb dir_rdata = dir_req_rd_phase ? sram_rdata_cor : '0;
 always_comb dma_sram_rdata = dma_sram_req_rd_phase ? sram_rdata_cor : '0;
 
@@ -555,8 +561,8 @@ rvecc_encode mbox_ecc_encode (
 );
 // synthesis translate_off
 `ifdef CLP_ASSERT_ON 
-initial assert(DATA_W == 32) else
-    $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support DATA_W = %d", DATA_W);
+initial assert(MBOX_DATA_W == 32) else
+    $error("%m::rvecc_encode supports 32-bit data width; must change SRAM ECC implementation to support MBOX_DATA_W = %d", MBOX_DATA_W);
 `endif
 // synthesis translate_on
 rvecc_decode ecc_decode (
@@ -581,14 +587,14 @@ always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
                              (inc_wrptr & wrptr_inc_valid) ? mbox_wrptr + 'd1 : 
                                                              mbox_wrptr;
 
-always_comb mbox_wr_full_nxt = rst_mbox_wrptr ? '0 : inc_wrptr & (mbox_wrptr == (DEPTH-1));
+always_comb mbox_wr_full_nxt = rst_mbox_wrptr ? '0 : inc_wrptr & (mbox_wrptr == (MBOX_DEPTH-1));
 
 //in execute state we increment the pointer each time we write
 always_comb mbox_rdptr_nxt = rst_mbox_rdptr ? 'd1 :
                              (inc_rdptr & rdptr_inc_valid) ? mbox_rdptr + 'd1 : 
                                                              mbox_rdptr;
 
-always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == (DEPTH-1));
+always_comb mbox_rd_full_nxt = rst_mbox_rdptr ? '0 : inc_rdptr & (mbox_rdptr == (MBOX_DEPTH-1));
 
 //Intterupts
 //Notify uC when it has the lock and SoC is requesting the lock

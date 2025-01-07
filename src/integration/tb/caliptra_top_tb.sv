@@ -94,9 +94,9 @@ module caliptra_top_tb (
     logic mailbox_data_avail;
     logic mbox_sram_cs;
     logic mbox_sram_we;
-    logic [MBOX_ADDR_W-1:0] mbox_sram_addr;
-    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata;
-    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata;
+    logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr;
+    logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata;
+    logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata;
 
     logic imem_cs;
     logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;
