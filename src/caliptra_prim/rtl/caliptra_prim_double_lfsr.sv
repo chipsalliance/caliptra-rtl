@@ -103,7 +103,7 @@ module caliptra_prim_double_lfsr #(
   assign err_o = lfsr_state[0] != lfsr_state[1];
 
   // This logic that will be assign to one, when user adds macro
-  // ASSERT_PRIM_DOUBLE_LFSR_ERROR_TRIGGER_ALERT to check the error with alert, in case that
+  // CALIPTRA_ASSERT_PRIM_DOUBLE_LFSR_ERROR_TRIGGER_ALERT to check the error with alert, in case that
   // prim_double_lfsr is used in design without adding this assertion check.
   `ifdef CALIPTRA_INC_ASSERT
   logic unused_assert_connected;

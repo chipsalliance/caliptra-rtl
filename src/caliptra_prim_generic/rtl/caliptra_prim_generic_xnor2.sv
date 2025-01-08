@@ -4,18 +4,14 @@
 
 `include "caliptra_prim_assert.sv"
 
-module caliptra_prim_sec_anchor_buf #(
+module caliptra_prim_generic_xnor2 #(
   parameter int Width = 1
 ) (
-  input        [Width-1:0] in_i,
+  input        [Width-1:0] in0_i,
+  input        [Width-1:0] in1_i,
   output logic [Width-1:0] out_o
 );
 
-  caliptra_prim_buf #(
-    .Width(Width)
-  ) u_secure_anchor_buf (
-    .in_i,
-    .out_o
-  );
+  assign out_o = !(in0_i ^ in1_i);
 
 endmodule

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -66,6 +66,7 @@ module caliptra_prim_packer_fifo #(
 
   localparam int unsigned   WidthRatio = MaxW / MinW;
   localparam bit [DepthW:0] FullDepth = WidthRatio[DepthW:0];
+  localparam bit [DepthW:0] DepthOne = 1;
 
   // signals
   logic  load_data;
@@ -103,7 +104,7 @@ module caliptra_prim_packer_fifo #(
     assign load_data = wvalid_i && wready_o;
 
     assign depth_d =  clear_status ? '0 :
-           load_data ? depth_q+1 :
+           load_data ? (depth_q + DepthOne):
            depth_q;
 
     assign data_d = clear_data ? '0 :
@@ -132,7 +133,7 @@ module caliptra_prim_packer_fifo #(
 
     assign lsb_is_one = {{DepthW{1'b0}},1'b1};
     assign max_value = FullDepth;
-    assign rdata_shifted = MaxW'(data_q >> ptr_q*OutW);
+    assign rdata_shifted = data_q >> ptr_q*OutW;
     assign clear_status = (rready_i && (depth_q == lsb_is_one)) || clr_q;
     assign clear_data = (ClearOnRead && clear_status) || clr_q;
     assign load_data = wvalid_i && wready_o;
@@ -140,11 +141,11 @@ module caliptra_prim_packer_fifo #(
 
     assign depth_d =  clear_status ? '0 :
            load_data ? max_value :
-           pull_data ? depth_q-1 :
+           pull_data ? (depth_q - DepthOne) :
            depth_q;
 
     assign ptr_d =  clear_status ? '0 :
-           pull_data ? ptr_q+1 :
+           pull_data ? (ptr_q + DepthOne) :
            ptr_q;
 
     assign data_d = clear_data ? '0 :

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -137,19 +137,20 @@ module caliptra_prim_onehot_check #(
     assign addr_err = 1'b0;
   end
 
-  // This logic that will be assign to one, when user adds macro
-  // CALIPTRA_ASSERT_PRIM_ONEHOT_ERROR_TRIGGER_ALERT to check the error with alert, in case that
-  // caliptra_prim_onehot_check is used in design without adding this assertion check.
-  `ifdef CALIPTRA_INC_ASSERT
-  `ifndef PRIM_DEFAULT_IMPL
-    `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
-  `endif
-  parameter caliptra_prim_pkg::impl_e Impl = `CALIPTRA_PRIM_DEFAULT_IMPL;
-
+  // We want to know that a block that instantiates prim_onehot_check will raise an alert if we set
+  // our err_o output.
+  //
+  // For confidence that this is true, we use the scheme described in "Security Countermeasure
+  // Verification Framework". We expect a user of prim_onehot_check to use the
+  // CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT macro to check that they will indeed raise an alert if we
+  // set err_o.
+  //
+  // That macro is also designed to drive our local unused_assert_connected variable to true. We add
+  // an assertion locally that checks (just after the start of time) that it is indeed true. This
+  // gives us confidence that the user has bound up the alert correctly.
+`ifdef CALIPTRA_INC_ASSERT
   logic unused_assert_connected;
-  // TODO(#13337): only check generic for now. The path of this prim in other Impl may differ
-  if (Impl == caliptra_prim_pkg::ImplGeneric) begin : gen_generic
-    `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
-  end
-  `endif
+  `CALIPTRA_ASSERT_INIT_NET(AssertConnected_A, unused_assert_connected === 1'b1 || !EnableAlertTriggerSVA)
+`endif
+
 endmodule : caliptra_prim_onehot_check

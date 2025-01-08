@@ -2492,7 +2492,7 @@ module csrng_reg_top #(
         reg_rdata_next[15] = recov_alert_sts_cmd_stage_reseed_cnt_alert_qs;
       end
 
-      22'h200000: begin
+      24'h200000: begin
         reg_rdata_next[0] = err_code_sfifo_cmd_err_qs;
         reg_rdata_next[1] = err_code_sfifo_genbits_err_qs;
         reg_rdata_next[2] = err_code_sfifo_cmdreq_err_qs;
@@ -2521,11 +2521,11 @@ module csrng_reg_top #(
         reg_rdata_next[30] = err_code_fifo_state_err_qs;
       end
 
-      22'h400000: begin
+      24'h400000: begin
         reg_rdata_next[4:0] = err_code_test_qs;
       end
 
-      22'h800000: begin
+      24'h800000: begin
         reg_rdata_next[7:0] = main_sm_state_qs;
       end
     endcase
