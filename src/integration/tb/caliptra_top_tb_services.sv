@@ -92,6 +92,14 @@ module caliptra_top_tb_services
    //=========================================================================-
    // Parameters
    //=========================================================================-
+    localparam SEED_NUM_DWORDS = 8;
+    localparam MSG_NUM_DWORDS = 16;
+    localparam PRIVKEY_NUM_DWORDS = 1224;
+    localparam PRIVKEY_REG_NUM_DWORDS = 32;
+    localparam PRIVKEY_REG_RHO_NUM_DWORDS = 8;
+    localparam SIGNATURE_H_NUM_DWORDS = 21;
+    localparam VERIFY_RES_NUM_DWORDS = 16;
+
     `ifndef VERILATOR
     int MAX_CYCLES;
     initial begin
@@ -649,6 +657,7 @@ module caliptra_top_tb_services
             release caliptra_top_dut.mldsa.norm_check_inst.invalid;
     end
 
+    `ifndef VERILATOR
     logic mldsa_keygen, mldsa_signing, mldsa_verify, mldsa_keygen_signing;
 
     always @(negedge clk or negedge cptra_rst_b) begin
@@ -683,20 +692,14 @@ module caliptra_top_tb_services
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
         end
-        else if((WriteData[7:0] == 8'hdc) && mailbox_write) begin
-            mldsa_keygen <= 'b0;
-            mldsa_signing <= 'b0;
-            mldsa_verify <= 'b0;
-            mldsa_keygen_signing <= 'b1;
-            $display("In keygen+sign branch\n");
-        end
     end
 
     genvar mldsa_dword;
     generate
-        for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
+        //MLDSA keygen - inject seed
+        for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
-                if (mldsa_keygen) begin
+                if (mldsa_keygen | mldsa_keygen_signing) begin
                     force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
                 end
                 else begin
@@ -704,7 +707,123 @@ module caliptra_top_tb_services
                 end
             end
         end
+
+        //MLDSA signing or MLDSA verify - inject msg
+        for (mldsa_dword = 0; mldsa_dword < MSG_NUM_DWORDS; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_signing | mldsa_verify | mldsa_keygen_signing) begin
+                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value;
+                end
+            end
+        end
+
+        //MLDSA signing - inject sk
+        for (mldsa_dword = 0; mldsa_dword < PRIVKEY_REG_RHO_NUM_DWORDS/2; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_signing) begin
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][31:24],
+                                                                                                        mldsa_test_vector.privkey[(mldsa_dword*2)][7:0], mldsa_test_vector.privkey[(mldsa_dword*2)][15:8], mldsa_test_vector.privkey[(mldsa_dword*2)][23:16], mldsa_test_vector.privkey[(mldsa_dword*2)][31:24]};
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][31:24],
+                                                                                                      mldsa_test_vector.privkey[((mldsa_dword*2)+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword];
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword];
+                end
+            end
+        end
+
+        for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_signing) begin
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][31:24],
+                                                                                                       mldsa_test_vector.privkey[((mldsa_dword*2)+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword];
+                end
+            end
+        end
+
+        for (mldsa_dword = PRIVKEY_REG_NUM_DWORDS; mldsa_dword < PRIVKEY_NUM_DWORDS; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_signing) begin
+                    if ((mldsa_dword % 2) == 0) begin
+                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                    end
+                    else begin
+                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                    end
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2];
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2];
+                end
+            end
+        end
+
+        //MLDSA verify - inject pk
+        for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_verify) begin
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.pubkey[mldsa_dword][7:0], mldsa_test_vector.pubkey[mldsa_dword][15:8], mldsa_test_vector.pubkey[mldsa_dword][23:16], mldsa_test_vector.pubkey[mldsa_dword][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword];
+                end
+            end
+        end
+        for (genvar a = 0; a < 64; a++) begin
+            for (genvar b = 0; b < 10; b++) begin
+                always @(negedge clk) begin
+                    if (mldsa_verify) begin
+                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
+                    end
+                    else begin
+                        release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4];
+                    end
+                end
+            end
+        end
+
+        //MLDSA verify - inject signature
+        for (mldsa_dword = 0; mldsa_dword < VERIFY_RES_NUM_DWORDS; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_verify) begin
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword];
+                end
+            end
+        end
+        for (mldsa_dword = 0; mldsa_dword < SIGNATURE_H_NUM_DWORDS; mldsa_dword++) begin
+            always @(negedge clk) begin
+                if (mldsa_verify) begin
+                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
+                end
+                else begin
+                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword];
+                end
+            end
+        end
+        for (genvar a = 0; a < 224; a++) begin
+            for (genvar b = 0; b < 5; b++) begin
+                always @(negedge clk) begin
+                    if (mldsa_verify) begin
+                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
+                    end
+                    else begin
+                        release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4];
+                    end
+                end
+            end
+        end
     endgenerate
+    `endif
 
     //Randomized wntz
     generate
@@ -1004,13 +1123,16 @@ endgenerate //IV_NO
         void'($fgets(line_read, fd_r)); //skip sig length
         void'($fgets(line_read, fd_r));
         void'($sscanf(line_read, "%h", mldsa_test_vector.signature));
+        mldsa_test_vector.signature = {mldsa_test_vector.signature[0:1156], 8'h00};
+
+        mldsa_test_vector.sign_rnd = 'h0;
         
         //---------------------------
         //Verify
         //---------------------------
         fd_r = $fopen(verify_outfile, "w");
         $fwrite(fd_r, "%02X\n", 2);
-        $fwrite(fd_r, "%h\n", {mldsa_test_vector.signature[0][23:0], mldsa_test_vector.signature[1:1156]}); //[0:1156][31:0] signature
+        $fwrite(fd_r, "%h\n", {mldsa_test_vector.signature[0:1155], mldsa_test_vector.signature[1156][31:8]}); //[0:1156][31:0] signature
         $fwrite(fd_r, "%h\n", mldsa_test_vector.msg);
         $fwrite(fd_r, "%h", mldsa_test_vector.pubkey);
         $fclose(fd_r);
