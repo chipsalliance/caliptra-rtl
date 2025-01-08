@@ -23,6 +23,7 @@
 //======================================================================
 
 `include "caliptra_reg_defines.svh"
+`include "kv_macros.svh"
 
 module hmac_ctrl_tb();
 
@@ -61,6 +62,8 @@ module hmac_ctrl_tb();
   reg           reset_n_tb;
   reg           cptra_pwrgood_tb;
 
+  reg [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_tb;
+
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
   reg           hsel_i_tb;
@@ -90,6 +93,8 @@ module hmac_ctrl_tb();
              .clk(clk_tb),
              .reset_n(reset_n_tb),
              .cptra_pwrgood(cptra_pwrgood_tb),
+
+             .cptra_csr_hmac_key(cptra_csr_hmac_key_tb),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -182,6 +187,8 @@ module hmac_ctrl_tb();
       clk_tb        = 0;
       reset_n_tb    = 0;
       cptra_pwrgood_tb = 0;
+
+      cptra_csr_hmac_key_tb = 0;
 
       haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
@@ -969,6 +976,54 @@ module hmac_ctrl_tb();
     end
   endtask // hmac_tests
 
+  task hmac_csr_tests;
+    begin
+      reg [511 : 0] key;
+      reg [1023: 0] data;
+      reg [383 : 0] seed;
+      reg [511 : 0] expected;
+      
+      $display("\n\n*** Testcases for CSR started.");
+                      
+      cptra_csr_hmac_key_tb =  {4{128'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b}};
+      key = 512'h0;
+      data = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
+      expected = 512'h637edc6e01dce7e6742a99451aae82df23da3e92439e590e43e761b33e910fb8ac2878ebd5803f6f0b61dbce5e251ff8789a4722c1be65aea45fd464e89f8f5b;
+      seed = random_gen();
+            
+      hmac_write_key(key);
+      write_block(data);
+      write_seed(seed);
+      
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+      
+      $display("*** TC%01d - CSR test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+      
+      $display("*** Testcases for CSR completed.");
+    end
+  endtask // hmac_csr_tests
+
   //----------------------------------------------------------------
   // The main test functionality.
   //----------------------------------------------------------------
@@ -982,6 +1037,8 @@ module hmac_ctrl_tb();
       check_name_version();
       hmac384_tests();
       hmac512_tests();
+
+      hmac_csr_tests();
 
       display_test_result();
 
