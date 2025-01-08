@@ -42,8 +42,8 @@ SECTIONS {
   _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
 
   _end = _bss_lma_end;
-  ASSERT( _end < 0x0000C000, "ERROR: ROM size exceeds 48KiB")
-
+  ASSERT( _end < 0x00018000, "ERROR: ROM size exceeds 96KiB")
+  
   /* DCCM as VMA and LMA */
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
@@ -68,5 +68,5 @@ SECTIONS {
   /* Stack is at the end of DCCM after .data_iccm2 */
   . = ALIGN(iccm_code2_end,16);
   STACK = ALIGN(16) + 0x8000;
-  ASSERT( (STACK < 0x50020000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
+  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
 }

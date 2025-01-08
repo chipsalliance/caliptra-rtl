@@ -1462,9 +1462,9 @@ endgenerate //IV_NO
         hex_file_is_empty = $system("test -s mailbox.hex");
         if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,MBOX_DIR_MEM_SIZE);
         hex_file_is_empty = $system("test -s dccm.hex");
-        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0001_FFFF);
+        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0003_FFFF);
         hex_file_is_empty = $system("test -s iccm.hex");
-        if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0001_FFFF);
+        if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0003_FFFF);
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
@@ -1590,9 +1590,9 @@ caliptra_sram #(
 // This is used to load the generated ICCM hexfile prior to
 // running slam_iccm_ram
 caliptra_sram #(
-     .DEPTH     (16384        ), // 128KiB
+     .DEPTH     (32768        ), // 256KiB
      .DATA_WIDTH(64           ),
-     .ADDR_WIDTH($clog2(16384))
+     .ADDR_WIDTH($clog2(32768))
 
 ) dummy_iccm_preloader (
     .clk_i   (clk),
@@ -1608,9 +1608,9 @@ caliptra_sram #(
 // This is used to load the generated DCCM hexfile prior to
 // running slam_dccm_ram
 caliptra_sram #(
-     .DEPTH     (16384        ), // 128KiB
+     .DEPTH     (32768        ), // 256KiB
      .DATA_WIDTH(64           ),
-     .ADDR_WIDTH($clog2(16384))
+     .ADDR_WIDTH($clog2(32768))
 
 ) dummy_dccm_preloader (
     .clk_i   (clk),
@@ -1673,10 +1673,10 @@ task static preload_iccm;
 
     for(addr= saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
-                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
-                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h1}],
-                dummy_iccm_preloader.ram [addr[16:3]] [{addr[2],2'h0}]};
+        data = {dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h3}],
+                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h2}],
+                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h1}],
+                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h0}]};
         //data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
@@ -1705,10 +1705,10 @@ task static preload_dccm;
 
     for(addr=saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h3}],
-                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h2}],
-                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h1}],
-                dummy_dccm_preloader.ram [addr[16:3]] [{addr[2],2'h0}]};
+        data = {dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h3}],
+                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h2}],
+                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h1}],
+                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h0}]};
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");
