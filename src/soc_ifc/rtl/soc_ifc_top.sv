@@ -685,7 +685,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_HW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     soc_ifc_reg_hwif_in.CPTRA_FW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     for (int i=0; i<12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~soc_ifc_reg_req_data.soc_req;
+        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
     end
 end
 
