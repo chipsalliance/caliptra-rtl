@@ -76,7 +76,7 @@ assign wdt_timer1_timeout_serviced_restart = wdt_timer1_timeout_serviced_qual & 
 assign wdt_timer2_timeout_serviced_qual = wdt_timer2_timeout_serviced & t2_timeout & timer2_en; 
 
 // Only restart T2 via timeout service request if:
-//  1. In casecade mode T2 hasn't timeout out and T1 has been serviced
+//  1. In cascade mode T2 hasn't timeout out and T1 has been serviced
 //  2. In independent mode and T2 has timed out
 assign wdt_timer2_timeout_serviced_restart = (wdt_timer1_timeout_serviced_qual & ~t2_timeout & ~timer2_en) | wdt_timer2_timeout_serviced_qual;
 
