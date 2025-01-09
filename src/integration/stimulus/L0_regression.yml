@@ -22,7 +22,8 @@ contents:
         - ../test_suites/hello_world_iccm/hello_world_iccm.yml
         - ../test_suites/iccm_lock/iccm_lock.yml
         - ../test_suites/c_intr_handler/c_intr_handler.yml
-        - ../test_suites/smoke_test_ecc/smoke_test_ecc.yml
+        - ../test_suites/smoke_test_ecc_keygen_sign/smoke_test_ecc_keygen_sign.yml
+        - ../test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
         - ../test_suites/smoke_test_aes/smoke_test_aes.yml
