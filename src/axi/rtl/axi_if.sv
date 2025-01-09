@@ -35,6 +35,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     logic [DW-1:0]                 rdata;
     logic [$bits(axi_resp_e)-1:0]  rresp;
     logic [IW-1:0]                 rid;
+    logic [UW-1:0]                 ruser;
     logic                          rlast;
     logic                          rvalid;
     logic                          rready;
@@ -53,6 +54,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     // AXI W
     logic [DW-1:0]                 wdata;
     logic [DW/8-1:0]               wstrb;
+    logic [UW-1:0]                 wuser;
     logic                          wvalid;
     logic                          wready;
     logic                          wlast;
@@ -60,6 +62,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     // AXI B
     logic [$bits(axi_resp_e)-1:0]  bresp;
     logic [IW-1:0]                 bid;
+    logic [UW-1:0]                 buser;
     logic                          bvalid;
     logic                          bready;
 
@@ -79,6 +82,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         input  rdata,
         input  rresp,
         input  rid,
+        input  ruser,
         input  rlast,
         input  rvalid,
         output rready
@@ -99,12 +103,14 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         // W
         output wdata,
         output wstrb,
+        output wuser,
         output wvalid,
         input  wready,
         output wlast,
         // B
         input  bresp,
         input  bid,
+        input  buser,
         input  bvalid,
         output bready
     );
@@ -125,6 +131,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         output rdata,
         output rresp,
         output rid,
+        output ruser,
         output rlast,
         output rvalid,
         input  rready
@@ -145,12 +152,14 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         // W
         input  wdata,
         input  wstrb,
+        input  wuser,
         input  wvalid,
         output wready,
         input  wlast,
         // B
         output bresp,
         output bid,
+        output buser,
         output bvalid,
         input  bready
     );
@@ -188,6 +197,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
 
         wdata   `EQ__ '0;
         wstrb   `EQ__ '0;
+        wuser   `EQ__ '0;
         wvalid  `EQ__ '0;
         wlast   `EQ__ '0;
 
@@ -196,6 +206,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
 
     // TODO: handle IDs?
     task get_read_beat(output logic [DW-1:0] data,
+                       output logic [UW-1:0] user,
                        output axi_resp_e     resp);
         `TIME_ALGN
         rready `EQ__ 1;
@@ -203,6 +214,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
             @(posedge clk);
         while (!rvalid);
         data   `EQ__ rdata;
+        user   `EQ__ ruser;
         resp   `EQ__ axi_resp_e'(rresp);
         `TIME_ALGN
         rready `EQ__ 0;
@@ -218,8 +230,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                   input  logic [IW-1:0] id    = IW'(0),
                   input  logic          lock  = 1'b0,
                   output logic [DW-1:0] data [],
+                  output logic [UW-1:0] resp_user [],
                   output axi_resp_e     resp []);
         axi_resp_e     beat_resp;
+        logic [UW-1:0] beat_user;
         logic [DW-1:0] beat_data;
         while(!rst_n) @(posedge clk);
         do begin
@@ -246,9 +260,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         data = new[len+1];
         resp = new[len+1];
         for (int beat=0; beat <= len; beat++) begin
-            get_read_beat(beat_data, beat_resp);
-            data[beat] = beat_data;
-            resp[beat] = beat_resp;
+            get_read_beat(beat_data, beat_user, beat_resp);
+            data[beat]      = beat_data;
+            resp_user[beat] = beat_user;
+            resp[beat]      = beat_resp;
         end
     endtask
 
@@ -257,27 +272,33 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                          input  logic [IW-1:0] id    = IW'(0),
                          input  logic          lock  = 1'b0,
                          output logic [DW-1:0] data,
+                         output logic [UW-1:0] resp_user,
                          output axi_resp_e     resp);
         automatic axi_resp_e     burst_resp[];
+        automatic logic [UW-1:0] burst_ruser[];
         automatic logic [DW-1:0] burst_data[];
-        axi_read(.addr(addr),
-                 .user(user),
-                 .id  (id  ),
-                 .lock(lock),
-                 .data(burst_data),
-                 .resp(burst_resp));
-        data = burst_data[0];
-        resp = burst_resp[0];
+        axi_read(.addr     (addr       ),
+                 .user     (user       ),
+                 .id       (id         ),
+                 .lock     (lock       ),
+                 .data     (burst_data ),
+                 .resp_user(burst_ruser),
+                 .resp     (burst_resp ));
+        data      = burst_data[0];
+        resp_user = burst_ruser[0];
+        resp      = burst_resp[0];
     endtask
 
     task send_write_beat(input logic last,
                          input logic [DW-1:0] data,
+                         input logic [UW-1:0] user,
                          input logic [DW/8-1:0] strb);
         `TIME_ALGN
         wvalid `EQ__ 1;
         wlast  `EQ__ last;
         wdata  `EQ__ data;
         wstrb  `EQ__ strb;
+        wuser  `EQ__ user;
         do
             @(posedge clk);
         while (!wready);
@@ -286,17 +307,20 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         wlast  `EQ__ '0;
         wdata  `EQ__ '0;
         wstrb  `EQ__ '0;
+        wuser  `EQ__ '0;
         wait(!wvalid);
     endtask
 
     // TODO handle ID
-    task get_write_resp(output axi_resp_e resp);
+    task get_write_resp(output axi_resp_e     resp,
+                        output logic [UW-1:0] user);
         `TIME_ALGN
         bready `EQ__ 1;
         do
             @(posedge clk);
         while(!bvalid);
         resp `EQ__ axi_resp_e'(bresp);
+        user `EQ__ buser;
         `TIME_ALGN
         bready `EQ__ 0;
         wait(!bready);
@@ -312,7 +336,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                    input  logic [DW-1:0]   data [],
                    input  logic            use_strb = 0,
                    input  logic [DW/8-1:0] strb [],
-                   output axi_resp_e       resp);
+                   input  logic            use_write_user = 0,
+                   input  logic [UW-1:0]   write_user [],
+                   output axi_resp_e       resp,
+                   output logic [UW-1:0]   resp_user);
         while(!rst_n) @(posedge clk);
         do begin
             `TIME_ALGN
@@ -337,8 +364,8 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         awvalid `EQ__ '0;
         fork
             for (int beat=0; beat <= len; beat++)
-                send_write_beat(beat == len, data[beat], use_strb ? strb[beat] : {DW/8{1'b1}});
-            get_write_resp(resp);
+                send_write_beat(beat == len, data[beat], use_write_user ? write_user[beat] : UW'(0), use_strb ? strb[beat] : {DW/8{1'b1}});
+            get_write_resp(resp, resp_user);
         join
     endtask
 
@@ -347,8 +374,11 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                           input  logic [IW-1:0] id    = IW'(0),
                           input  logic          lock  = 1'b0,
                           input  logic [DW-1:0] data,
-                          output axi_resp_e     resp);
+                          input  logic [UW-1:0] write_user,
+                          output axi_resp_e     resp,
+                          output logic [UW-1:0] resp_user);
         automatic logic [DW/8-1:0] burst_strb[] = new[1]('{{DW/8{1'b1}}});
+        automatic logic [UW  -1:0] burst_user[] = new[1]('{write_user});
         automatic logic [DW  -1:0] burst_data[] = new[1]('{data});
         axi_write(.addr(addr),
                   .user(user),
@@ -357,7 +387,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                   .data(burst_data),
                   .use_strb(0),
                   .strb(burst_strb),
-                  .resp(resp));
+                  .use_write_user(0),
+                  .write_user(burst_user),
+                  .resp(resp),
+                  .resp_user(resp_user));
     endtask
 
     `undef EQ__
