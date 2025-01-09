@@ -1,3 +1,0 @@
----
-seed: ${PLAYBOOK_RANDOM_SEED}
-testname: smoke_test_mldsa_keygen_rand
