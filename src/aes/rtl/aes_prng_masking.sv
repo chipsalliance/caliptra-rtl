@@ -10,9 +10,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module aes_prng_masking 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_prng_masking import aes_pkg::*;
 #(
   parameter  int unsigned Width        = WidthPRDMasking,
   parameter  int unsigned EntropyWidth = edn_pkg::ENDPOINT_BUS_WIDTH,

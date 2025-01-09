@@ -13,7 +13,6 @@ module aes_mix_single_column (
   output logic [3:0][7:0]   data_o
 );
 
-  import aes_reg_pkg::*;
   import aes_pkg::*;
 
   logic [3:0][7:0] x;

@@ -10,6 +10,8 @@ module caliptra_prim_subreg_arb
   parameter int         DW       = 32,
   parameter sw_access_e SwAccess = SwAccessRW,
   parameter bit         Mubi     = 1'b0
+  parameter sw_access_e SwAccess = SwAccessRW,
+  parameter bit         Mubi     = 1'b0
 ) (
   // From SW: valid for RW, WO, W1C, W1S, W0C, RC.
   // In case of RC, top connects read pulse to we.
@@ -28,6 +30,7 @@ module caliptra_prim_subreg_arb
   output logic [DW-1:0] wr_data
 );
   import caliptra_prim_mubi_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
 
   if (SwAccess inside {SwAccessRW, SwAccessWO}) begin : gen_w
     assign wr_en   = we | de;
@@ -36,7 +39,11 @@ module caliptra_prim_subreg_arb
     logic [DW-1:0] unused_q;
     //VCS coverage off
     // pragma coverage off
+    //VCS coverage off
+    // pragma coverage off
     assign unused_q = q;
+    //VCS coverage on
+    // pragma coverage on
     //VCS coverage on
     // pragma coverage on
   end else if (SwAccess == SwAccessRO) begin : gen_ro
@@ -48,9 +55,13 @@ module caliptra_prim_subreg_arb
     logic [DW-1:0] unused_q;
     //VCS coverage off
     // pragma coverage off
+    //VCS coverage off
+    // pragma coverage off
     assign unused_we = we;
     assign unused_wd = wd;
     assign unused_q  = q;
+    //VCS coverage on
+    // pragma coverage on
     //VCS coverage on
     // pragma coverage on
   end else if (SwAccess == SwAccessW1S) begin : gen_w1s
@@ -165,7 +176,11 @@ module caliptra_prim_subreg_arb
     logic [DW-1:0] unused_wd;
     //VCS coverage off
     // pragma coverage off
+    //VCS coverage off
+    // pragma coverage off
     assign unused_wd = wd;
+    //VCS coverage on
+    // pragma coverage on
     //VCS coverage on
     // pragma coverage on
   end else begin : gen_hw
@@ -177,9 +192,13 @@ module caliptra_prim_subreg_arb
     logic [DW-1:0] unused_q;
     //VCS coverage off
     // pragma coverage off
+    //VCS coverage off
+    // pragma coverage off
     assign unused_we = we;
     assign unused_wd = wd;
     assign unused_q  = q;
+    //VCS coverage on
+    // pragma coverage on
     //VCS coverage on
     // pragma coverage on
   end

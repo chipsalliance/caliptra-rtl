@@ -40,7 +40,6 @@ module aes_masked_inverse_gf2p4 (
   output logic [3:0] b_inv
 );
 
-  import aes_reg_pkg::*;
   import aes_pkg::*;
   import aes_sbox_canright_pkg::*;
 

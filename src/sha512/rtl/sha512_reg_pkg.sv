@@ -172,7 +172,7 @@ package sha512_reg_pkg;
         kv_write_ctrl_reg__in_t SHA512_KV_WR_CTRL;
         kv_status_reg__in_t SHA512_KV_WR_STATUS;
         sha512_reg__SHA512_GEN_PCR_HASH_STATUS__in_t SHA512_GEN_PCR_HASH_STATUS;
-        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t [12-1:0]SHA512_GEN_PCR_HASH_DIGEST;
+        sha512_reg__SHA512_GEN_PCR_HASH_DIGEST__in_t [16-1:0]SHA512_GEN_PCR_HASH_DIGEST;
         sha512_reg__intr_block_t__in_t intr_block_rf;
     } sha512_reg__in_t;
 
@@ -277,7 +277,11 @@ package sha512_reg_pkg;
     } kv_write_ctrl_reg__ecc_seed_dest_valid__out_t;
 
     typedef struct packed{
-        logic [20:0] value;
+        logic value;
+    } kv_write_ctrl_reg__aes_key_dest_valid__out_t;
+
+    typedef struct packed{
+        logic [19:0] value;
     } kv_write_ctrl_reg__rsvd__out_t;
 
     typedef struct packed{
@@ -288,6 +292,7 @@ package sha512_reg_pkg;
         kv_write_ctrl_reg__mldsa_seed_dest_valid__out_t mldsa_seed_dest_valid;
         kv_write_ctrl_reg__ecc_pkey_dest_valid__out_t ecc_pkey_dest_valid;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
+        kv_write_ctrl_reg__aes_key_dest_valid__out_t aes_key_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
     } kv_write_ctrl_reg__out_t;
 

@@ -20,18 +20,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_ram_1p_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_esc_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_count_pkg.sv
-  tb:
-    directories: [$COMPILE_ROOT/rtl]
-    files:
-      - $COMPILE_ROOT/rtl/caliptra_prim_util_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_alert_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_subreg_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_mubi_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_cipher_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_pkg.sv
-      - $COMPILE_ROOT/rtl/caliptra_prim_sparse_fsm_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_trivium_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_secded_pkg.sv
+      - $COMPILE_ROOT/rtl/keymgr_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_otp_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_ram_1p_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_esc_pkg.sv
@@ -107,6 +98,13 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_clock_mux2.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_async.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_async_simple.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sync_reqack_data.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_sync_reqack.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_39_32_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_39_32_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_64_57_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_secded_inv_64_57_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_gf_mult.sv
     tops: [caliptra_prim]
 ---
 provides: [caliptra_prim_secded]

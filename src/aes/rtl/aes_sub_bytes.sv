@@ -4,9 +4,7 @@
 //
 // AES SubBytes
 
-module aes_sub_bytes 
-  import aes_reg_pkg::*;
-  import aes_pkg::*;
+module aes_sub_bytes import aes_pkg::*;
 #(
   parameter sbox_impl_e SecSBoxImpl = SBoxImplDom
 ) (
