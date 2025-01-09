@@ -43,6 +43,8 @@ class ss_mode_status_monitor  extends uvmf_monitor_base #(
 `ss_mode_status_MONITOR_STRUCT
 
   // pragma uvmf custom class_item_additional begin
+  int unsigned txn_key = 0;
+  extern task handle_reset(string kind = "HARD");
   // pragma uvmf custom class_item_additional end
   
 // ****************************************************************************
@@ -86,6 +88,9 @@ class ss_mode_status_monitor  extends uvmf_monitor_base #(
  
  
     trans = new("trans");
+// pragma uvmf custom notify_transaction begin
+    trans.set_key(txn_key++);
+// pragma uvmf custom notify_transaction end
     trans.from_monitor_struct(ss_mode_status_monitor_struct);
     trans.start_time = time_stamp;                                                          
     trans.end_time = $time;                                                                 
@@ -97,5 +102,9 @@ class ss_mode_status_monitor  extends uvmf_monitor_base #(
 endclass
 
 // pragma uvmf custom external begin
+task ss_mode_status_monitor::handle_reset(string kind = "HARD");
+    if (kind inside {"HARD", "NONCORE"})
+        txn_key = 0;
+endtask
 // pragma uvmf custom external end
 

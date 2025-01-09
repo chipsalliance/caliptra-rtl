@@ -82,8 +82,8 @@ class ss_mode_status_transaction_coverage  extends uvm_subscriber #(.T(ss_mode_s
   //
   function void build_phase(uvm_phase phase);
     ss_mode_status_transaction_cg.set_inst_name($sformatf("ss_mode_status_transaction_cg_%s",get_full_name()));
-    foreach (coverage_trans.ss_soc_dbg_unlock_level[bt]) ss_soc_dbg_unlock_level_cg[bt].set_inst_name($sformat("ss_soc_dbg_unlock_level_cg_%d_%s",bt,get_full_name()));
-    foreach (coverage_trans.ss_generic_fw_exec_ctrl[bt]) ss_generic_fw_exec_ctrl_cg[bt].set_inst_name($sformat("ss_generic_fw_exec_ctrl_cg_%d_%s",bt,get_full_name()));
+    foreach (coverage_trans.ss_soc_dbg_unlock_level[bt]) ss_soc_dbg_unlock_level_cg[bt].set_inst_name($sformatf("ss_soc_dbg_unlock_level_cg_%d_%s",bt,get_full_name()));
+    foreach (coverage_trans.ss_generic_fw_exec_ctrl[bt]) ss_generic_fw_exec_ctrl_cg[bt].set_inst_name($sformatf("ss_generic_fw_exec_ctrl_cg_%d_%s",bt,get_full_name()));
   endfunction
 
   // ****************************************************************************

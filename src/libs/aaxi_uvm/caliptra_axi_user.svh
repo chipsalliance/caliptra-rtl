@@ -13,25 +13,33 @@
 // limitations under the License.
 
 //---------------------------------------------------------------
-// CLASS: caliptra_apb_user
+// CLASS: caliptra_axi_user
 //
-// This defines user sideband signals used for APB transactions
+// This defines user sideband signals used for AXI transactions
 // in Caliptra soc_ifc environment.
-// This is used to furnish PAUSER value to reg2apb adapter when invoking
+// This is used to furnish AxUSER value to reg2axi adapter when invoking
 // reg write/read calls.
 // This class is derived from uvm_object, and used to populate the
 // uvm_reg_item.extension member
 //
 //---------------------------------------------------------------
-class caliptra_apb_user extends uvm_object;
+class caliptra_axi_user extends uvm_object;
 
-  rand bit unsigned [apb5_master_0_params::PAUSER_WIDTH-1:0] addr_user = '1;
+  rand bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1;
 
-  function void set_addr_user(bit unsigned [apb5_master_0_params::PAUSER_WIDTH-1:0] value);
+  function new (string name="");
+      super.new(name);
+      if (aaxi_pkg::AAXI_AWUSER_WIDTH != aaxi_pkg::AAXI_ARUSER_WIDTH)
+          `uvm_fatal("CALIPTRA_AXI_USER", $sformatf("AWUSER WIDTH [%0d] does not match ARUSER WIDTH [%0d]!", aaxi_pkg::AAXI_AWUSER_WIDTH, aaxi_pkg::AAXI_ARUSER_WIDTH))
+      if (aaxi_pkg::AAXI_AWUSER_WIDTH != 32)
+          `uvm_fatal("CALIPTRA_AXI_USER", $sformatf("AxUSER WIDTH [%0d] is invalid - expected [%0d]!", aaxi_pkg::AAXI_AWUSER_WIDTH, 32))
+  endfunction
+
+  function void set_addr_user(bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] value);
     this.addr_user = value;
   endfunction
 
-  function bit unsigned [apb5_master_0_params::PAUSER_WIDTH-1:0] get_addr_user();
+  function bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] get_addr_user();
     return this.addr_user;
   endfunction
 

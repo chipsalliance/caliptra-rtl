@@ -39,8 +39,18 @@ module hdl_top;
 
 import soc_ifc_parameters_pkg::*;
 import qvip_ahb_lite_slave_params_pkg::*;
-import qvip_apb5_slave_params_pkg::*;
+//import qvip_apb5_slave_params_pkg::*;
 import uvmf_base_pkg_hdl::*;
+`include "avery_defines.svh"
+import aaxi_pkg::*;
+import aaxi_pkg_xactor::*;
+import aaxi_pkg_test::*;
+import aaxi_pll::*;
+
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+import aaxi_uvm_pkg::*;
+`include "config_defines.svh"
 
   // pragma attribute hdl_top partition_module_xrtl                                            
   hdl_qvip_ahb_lite_slave 
@@ -50,12 +60,12 @@ import uvmf_base_pkg_hdl::*;
         .EXT_CLK_RESET(1)
        ) uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl();
 
-  hdl_qvip_apb5_slave 
-      #(
-        .APB5_MASTER_0_ACTIVE(1),
-        .UNIQUE_ID("uvm_test_top.environment.qvip_apb5_slave_subenv."),
-        .EXT_CLK_RESET(1)
-       ) uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl();
+//  hdl_qvip_apb5_slave 
+//      #(
+//        .APB5_MASTER_0_ACTIVE(1),
+//        .UNIQUE_ID("uvm_test_top.environment.qvip_apb5_slave_subenv."),
+//        .EXT_CLK_RESET(1)
+//       ) uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl();
 
 // pragma uvmf custom clock_generator begin
   bit clk;
@@ -82,6 +92,35 @@ import uvmf_base_pkg_hdl::*;
 // pragma uvmf custom reset_generator end
 
   // pragma uvmf custom module_item_additional begin
+  //uc
+  aaxi_uvm_container  uc;             //VAR: UVM container
+
+  aaxi_intf #(
+      .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
+      .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
+      .SCB_INPUT (aaxi_pkg::AAXI_SCB_INPUT ),
+      .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
+  ) ports[1] (
+      .ACLK   (clk                               ),
+      .ARESETn(soc_ifc_ctrl_agent_bus.cptra_rst_b),
+      .CACTIVE(                                  ),
+      .CSYSREQ(1'b0                              ),
+      .CSYSACK(                                  )
+  );
+  aaxi_monitor_wrapper monitor0 (ports[0]);
+  defparam monitor0.ID_WIDTH= AAXI_ID_WIDTH;
+  defparam monitor0.BUS_DATA_WIDTH=aaxi_pkg::AAXI_DATA_WIDTH;
+  // enable the support of all user-defined signaling
+  defparam monitor0.USER_SUPPORT= 5'b11111;
+  defparam monitor0.VER= "AXI4";
+
+  initial begin
+    uc = new();
+    uvm_config_db #(aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
+
+    uc.ports = ports[0];
+    //uvm_config_db #(virtual aaxi_intf)::set(uvm_root::get(), "intf_uc", "ports", ports[0]);
+  end
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
@@ -100,7 +139,7 @@ import uvmf_base_pkg_hdl::*;
      );
   ss_mode_ctrl_if  ss_mode_ctrl_agent_bus(
      // pragma uvmf custom ss_mode_ctrl_agent_bus_connections begin
-     .clk(clk), .dummy(rst)
+     .clk(clk), .dummy(1'b1)
      // pragma uvmf custom ss_mode_ctrl_agent_bus_connections end
      );
   soc_ifc_status_if  soc_ifc_status_agent_bus(
@@ -115,7 +154,7 @@ import uvmf_base_pkg_hdl::*;
      );
   ss_mode_status_if  ss_mode_status_agent_bus(
      // pragma uvmf custom ss_mode_status_agent_bus_connections begin
-     .clk(clk), .dummy(rst)
+     .clk(clk), .dummy(1'b1)
      // pragma uvmf custom ss_mode_status_agent_bus_connections end
      );
   mbox_sram_if  mbox_sram_agent_bus(
@@ -142,8 +181,8 @@ import uvmf_base_pkg_hdl::*;
   // AHB Clock/reset
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_clk_gen_CLK     = clk;
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_reset_gen_RESET = cptra_status_agent_bus.cptra_noncore_rst_b;
-  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_clk_gen_CLK         = clk;
-  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = cptra_status_agent_bus.cptra_noncore_rst_b;
+//  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_clk_gen_CLK         = clk;
+//  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = cptra_status_agent_bus.cptra_noncore_rst_b;
 
     // AXI Interface
     axi_if #(
@@ -199,18 +238,18 @@ import uvmf_base_pkg_hdl::*;
         .generic_output_wires(soc_ifc_status_agent_bus.generic_output_wires),
 
         //AXI Interface with SoC
-        .s_axi_w_if(),
-        .s_axi_r_if(),
+        .s_axi_w_if(s_axi_if.w_sub),
+        .s_axi_r_if(s_axi_if.r_sub),
 
-        .paddr_i  (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR[17:0]),
-        .psel_i   (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSEL       ),
-        .penable_i(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLE    ),
-        .pwrite_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
-        .pwdata_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATA     ),
-        .pauser_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSER     ),
-        .pready_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADY     ),
-        .prdata_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATA     ),
-        .pslverr_o(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERR    ),
+//        .paddr_i  (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR[17:0]),
+//        .psel_i   (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSEL       ),
+//        .penable_i(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLE    ),
+//        .pwrite_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
+//        .pwdata_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATA     ),
+//        .pauser_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSER     ),
+//        .pready_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADY     ),
+//        .prdata_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATA     ),
+//        .pslverr_o(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERR    ),
 
         //AHB Interface with uC
         .haddr_i    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[17:0]),
@@ -225,8 +264,8 @@ import uvmf_base_pkg_hdl::*;
         .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
 
         // AXI Manager INF
-        .m_axi_w_if(),
-        .m_axi_r_if(),
+        .m_axi_w_if(m_axi_if.w_mgr),
+        .m_axi_r_if(m_axi_if.r_mgr),
 
         //SoC Interrupts
         .cptra_error_fatal    (soc_ifc_status_agent_bus.cptra_error_fatal    ),
@@ -315,24 +354,122 @@ import uvmf_base_pkg_hdl::*;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXCL     = 1'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTER   = 16'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXOKAY   = 1'b0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSER           = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSER           = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSER           = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUP          = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDRCHK         = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PCTRLCHK         = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSELxCHK         = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLECHK       = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATACHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSTRBCHK         = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUPCHK       = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSERCHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSERCHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADYCHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATACHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
-    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSER           = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSER           = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSER           = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUP          = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDRCHK         = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PCTRLCHK         = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSELxCHK         = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLECHK       = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATACHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSTRBCHK         = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUPCHK       = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSERCHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSERCHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADYCHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATACHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
+//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
+    always_comb begin
+        // Clock control placeholders
+        ports[0].CACTIVE_m = 1'b0;
+        ports[0].CACTIVE_s = 1'b0;
+        ports[0].CSYSACK_m = 1'b0;
+        ports[0].CSYSACK_s = 1'b0;
+
+        // AXI AR
+        s_axi_if.araddr  = ports[0].ARADDR;
+        s_axi_if.arburst = ports[0].ARBURST;
+        s_axi_if.arsize  = ports[0].ARSIZE;
+        s_axi_if.arlen   = ports[0].ARLEN;
+        s_axi_if.aruser  = ports[0].ARUSER;
+        s_axi_if.arid    = ports[0].ARID;
+        s_axi_if.arlock  = ports[0].ARLOCK;
+        s_axi_if.arvalid = ports[0].ARVALID;
+        ports[0].ARREADY = s_axi_if.arready;
+
+        // AXI R
+        ports[0].RDATA  = s_axi_if.rdata ;
+        ports[0].RRESP  = s_axi_if.rresp ;
+        ports[0].RID    = s_axi_if.rid   ;
+        ports[0].RUSER  = s_axi_if.ruser ;
+        ports[0].RLAST  = s_axi_if.rlast ;
+        ports[0].RVALID = s_axi_if.rvalid;
+        s_axi_if.rready = ports[0].RREADY;
+
+        // AXI AW
+        s_axi_if.awaddr  = ports[0].AWADDR;
+        s_axi_if.awburst = ports[0].AWBURST;
+        s_axi_if.awsize  = ports[0].AWSIZE;
+        s_axi_if.awlen   = ports[0].AWLEN;
+        s_axi_if.awuser  = ports[0].AWUSER;
+        s_axi_if.awid    = ports[0].AWID;
+        s_axi_if.awlock  = ports[0].AWLOCK;
+        s_axi_if.awvalid = ports[0].AWVALID;
+        ports[0].AWREADY = s_axi_if.awready;
+
+        // AXI W
+        s_axi_if.wdata  = ports[0].WDATA;
+        s_axi_if.wstrb  = ports[0].WSTRB;
+        s_axi_if.wuser  = ports[0].WUSER;
+        s_axi_if.wvalid = ports[0].WVALID;
+        s_axi_if.wlast  = ports[0].WLAST;
+        ports[0].WREADY = s_axi_if.wready;
+
+        // AXI B
+        ports[0].BRESP  = s_axi_if.bresp ;
+        ports[0].BID    = s_axi_if.bid   ;
+        ports[0].BUSER  = s_axi_if.buser ;
+        ports[0].BVALID = s_axi_if.bvalid;
+        s_axi_if.bready = ports[0].BREADY;
+    end
+    // TODO
+    always_comb begin
+        // AXI AR
+//        ports[0].ARADDR  = m_axi_if.araddr;
+//        ports[0].ARBURST = m_axi_if.arburst;
+//        ports[0].ARSIZE  = m_axi_if.arsize;
+//        ports[0].ARLEN   = m_axi_if.arlen;
+//        ports[0].ARUSER  = m_axi_if.aruser;
+//        ports[0].ARID    = m_axi_if.arid;
+//        ports[0].ARLOCK  = m_axi_if.arlock;
+//        ports[0].ARVALID = m_axi_if.arvalid;
+        m_axi_if.arready = '0;//ports[0].ARREADY;
+
+        // AXI R
+        m_axi_if.rdata  = '0; //ports[0].RDATA;
+        m_axi_if.rresp  = '0; //ports[0].RRESP;
+        m_axi_if.rid    = '0; //ports[0].RID;
+        m_axi_if.rlast  = '0; //ports[0].RLAST;
+        m_axi_if.rvalid = '0; //ports[0].RVALID;
+//        ports[0].RREADY = s_axi_if.rready;
+
+        // AXI AW
+//        ports[0].AWADDR  = m_axi_if.awaddr;
+//        ports[0].AWBURST = m_axi_if.awburst;
+//        ports[0].AWSIZE  = m_axi_if.awsize;
+//        ports[0].AWLEN   = m_axi_if.awlen;
+//        ports[0].AWUSER  = m_axi_if.awuser;
+//        ports[0].AWID    = m_axi_if.awid;
+//        ports[0].AWLOCK  = m_axi_if.awlock;
+//        ports[0].AWVALID = m_axi_if.awvalid;
+        m_axi_if.awready = '0; //ports[0].AWREADY;
+
+        // AXI W
+//        ports[0].WDATA  = m_axi_if.wdata;
+//        ports[0].WSTRB  = m_axi_if.wstrb;
+//        ports[0].WVALID = m_axi_if.wvalid;
+//        ports[0].WLAST  = m_axi_if.wlast;
+        m_axi_if.wready = '0; //ports[0].WREADY;
+
+        // AXI B
+        m_axi_if.bresp  = '0; //ports[0].BRESP;
+        m_axi_if.bid    = '0; //ports[0].BID;
+        m_axi_if.bvalid = '0; //ports[0].BVALID;
+//        ports[0].BREADY = m_axi_if.bready;
+    end
 
 
   soc_ifc_cov_bind i_soc_ifc_cov_bind();  

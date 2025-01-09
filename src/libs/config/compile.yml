@@ -12,7 +12,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
       - $COMPILE_ROOT/rtl/ahb_defines_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
-      - $COMPILE_ROOT/rtl/apb_slv_sif.sv
+      #- $COMPILE_ROOT/rtl/apb_slv_sif.sv
       - $COMPILE_ROOT/rtl/ahb_slv_sif.sv
       - $COMPILE_ROOT/rtl/caliptra_icg.sv
       - $COMPILE_ROOT/rtl/clk_gate.sv
@@ -26,7 +26,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
       - $COMPILE_ROOT/rtl/ahb_defines_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
-      - $COMPILE_ROOT/rtl/apb_slv_sif.sv
+      #- $COMPILE_ROOT/rtl/apb_slv_sif.sv
       - $COMPILE_ROOT/rtl/ahb_slv_sif.sv
       - $COMPILE_ROOT/rtl/caliptra_icg.sv
       - $COMPILE_ROOT/rtl/clk_gate.sv
@@ -70,20 +70,20 @@ targets:
         $QUESTA_MVC_HOME/questa_mvc_src/sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/modules,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules,
       ]
     files:
       [
         $QUESTA_MVC_HOME/include/questa_mvc_svapi.svh,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/mvc_pkg.sv,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/mgc_apb3_v1_0_pkg.sv,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/mgc_apb3_v1_0_pkg.sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/mgc_ahb_v2_0_pkg.sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/modules/ahb_lite_slave.sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/modules/ahb_lite_monitor.sv,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb5_master.sv,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb_monitor.sv,
-        $QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb5_monitor.sv,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb5_master.sv,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb_monitor.sv,
+        #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules/apb5_monitor.sv,
       ]
     options:
       - +define+MAP_PROT_ATTR
@@ -96,52 +96,32 @@ targets:
   tb:
     directories:
       - $AVERY_AXI/src.uvm 
-#      - $AVERY_AXI/testsuite/examples.uvm 
+      - $AVERY_AXI/testsuite/examples.uvm 
       - $AVERY_AXI/src.axi.VCS 
       - $AVERY_AXI/src.axi 
-      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
-      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
       - $AVERY_AXI/testbench
+      - $AVERY_SIM/src
+      - $AVERY_SIM/src.IEEE
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
+      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
+      - $COMPILE_ROOT/aaxi_uvm
     files:
-      - $AVERY_AXI/src/avery_pkg.sv 
-      - $AVERY_AXI/src/avery_pkg_test.sv 
+      - $AVERY_SIM/src/avery_pkg.sv 
+      - $AVERY_SIM/src/avery_pkg_test.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_xactor.sv 
       - $AVERY_AXI/src.axi/aaxi_class_pll.sv 
-      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
-      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/aaxi_monitor_wrapper.sv 
-      - $AVERY_AXI/src.VCS/aaxi_busmonitor.v \
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
+      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
+      - $AVERY_AXI/checker/monitor_wrapper/BP063/aaxi_monitor_wrapper.sv
+      - $AVERY_AXI/src.VCS/aaxi_busmonitor.v
       - $AVERY_AXI/src.axi/aaxi_coverage_metrics.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_test.sv 
       - $AVERY_AXI/src.axi/aaxi_intf.sv 
       - $AVERY_AXI/src.uvm/aaxi_uvm_pkg.sv 
       - $AVERY_AXI/src.uvm/aaxi_uvm_test_top.sv 
     tops: []
-global:
-  tool:
-    vcs:
-      default:
-        - '-assert svaext'
-        - '-full64'
-        - +define+AVERY_VCS
-        - +define+AVERY_ASSERT_ON
-        - +define+AVERY_COVERAGE_ON
-        - +define+AVERY_MONITOR_ON
-        - +define+AVERY_CLOCK=5
-        - +define+AVERY_NAMED_CONSTRUCTOR
-        - +define+AVERY_AXI_UVM+AVERY_UVM
-        - +define+FOUR_OUTSTANDING
-        - +define+AAXI_MAX_DATA_WIDTH=32
-        - +define+AAXI_MAX_ADDR_WIDTH=64
-        - +define+AAXI_MAX_ID_WIDTH=5
-        #- +define+AAXI_TOP_PATH=aaxi_uvm_test_top
-        - "$AVERY_PLI/lib.linux/libtb_vcs64.a"
-        - "-P $AVERY_PLI/tb_vcs64.tab"
-      elab:
-        - '+libext+.v+.sv+.svh'
-        - +warn=noUII-L
-      sim:
-        - '+vpi'
 ---
 provides: [uvmf_lib]
 schema_version: 2.4.0
@@ -154,7 +134,7 @@ targets:
       [
         $QUESTA_MVC_HOME/questa_mvc_src/sv,
         $UVMF_HOME/common/mgc_vip/ahb,
-        $UVMF_HOME/common/mgc_vip/apb,
+        #$UVMF_HOME/common/mgc_vip/apb,
         $UVMF_HOME/common/modules,
         $UVMF_HOME/common/utility_packages/qvip_utils_pkg,
         $UVMF_HOME/common/uvm_co_emulation_utilities/uvm_co-emulation_utilities/utils,
@@ -164,8 +144,8 @@ targets:
         $UVMF_HOME/uvmf_base_pkg,
         $COMPILE_ROOT/uvmf/qvip_ahb_lite_slave_dir/uvmf,
         $COMPILE_ROOT/uvmf/qvip_ahb_lite_slave_dir/config_policies,
-        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf,
-        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/config_policies,
+        #$COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf,
+        #$COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/config_policies,
       ]
     files:
       [
@@ -183,11 +163,11 @@ targets:
         $UVMF_HOME/common/modules/ahb_memory_slave_module_hvl.sv,
         $UVMF_HOME/common/modules/ahb_memory_slave_module.sv,
         $UVMF_HOME/common/modules/ahb_slave.v,
-        $UVMF_HOME/common/modules/apb3_memory_slave_module.sv,
-        $UVMF_HOME/common/mgc_vip/apb/apb_master_hdl_wrapper.sv,
-        $UVMF_HOME/common/mgc_vip/apb/apb_master_hvl_wrapper.sv,
-        $UVMF_HOME/common/mgc_vip/apb/apb_monitor_hdl_wrapper.sv,
-        $UVMF_HOME/common/mgc_vip/apb/apb_monitor_hvl_wrapper.sv,
+        #$UVMF_HOME/common/modules/apb3_memory_slave_module.sv,
+        #$UVMF_HOME/common/mgc_vip/apb/apb_master_hdl_wrapper.sv,
+        #$UVMF_HOME/common/mgc_vip/apb/apb_master_hvl_wrapper.sv,
+        #$UVMF_HOME/common/mgc_vip/apb/apb_monitor_hdl_wrapper.sv,
+        #$UVMF_HOME/common/mgc_vip/apb/apb_monitor_hvl_wrapper.sv,
         $UVMF_HOME/common/uvm_co_emulation_utilities/uvm_co-emulation_utilities/utils/clock/clock_pkg.sv,
         $UVMF_HOME/common/uvm_co_emulation_utilities/uvm_co-emulation_utilities/utils/clock/clock_bfm.sv,
         $UVMF_HOME/common/uvm_co_emulation_utilities/uvm_co-emulation_utilities/utils/memload/memload_pkg.sv,
@@ -199,9 +179,9 @@ targets:
         $COMPILE_ROOT/uvmf/qvip_ahb_lite_slave_dir/uvmf/hdl_qvip_ahb_lite_slave.sv,
         $COMPILE_ROOT/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_clk_gen.sv,
         $COMPILE_ROOT/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_reset_gen.sv,
-        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/config_policies/qvip_apb5_slave_params_pkg.sv,
-        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/qvip_apb5_slave_pkg.sv,
-        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/hdl_qvip_apb5_slave.sv,
+        #$COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/config_policies/qvip_apb5_slave_params_pkg.sv,
+        #$COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/qvip_apb5_slave_pkg.sv,
+        #$COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/hdl_qvip_apb5_slave.sv,
 #        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/default_clk_gen.sv,
 #        $COMPILE_ROOT/uvmf/qvip_apb5_slave_dir/uvmf/default_reset_gen.sv,
       ]

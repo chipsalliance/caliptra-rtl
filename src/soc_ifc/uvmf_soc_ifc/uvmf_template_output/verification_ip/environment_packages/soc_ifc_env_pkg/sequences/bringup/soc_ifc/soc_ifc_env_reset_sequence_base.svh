@@ -32,12 +32,14 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
     typedef soc_ifc_ctrl_reset_sequence_base soc_ifc_ctrl_sequence_t;
     soc_ifc_ctrl_sequence_t soc_ifc_ctrl_seq;
+    typedef ss_mode_ctrl_random_sequence ss_mode_ctrl_sequence_t;
+    ss_mode_ctrl_sequence_t ss_mode_ctrl_seq;
 
   localparam        CPTRA_CLK_PERIOD_PS = 10000; // 100MHz clk = 10ns. FIXME derive from system?
   localparam [63:0] CPTRA_WDT_TIMEOUT_IN_PS = 64'd250_000_000_000; // 250ms
   localparam [63:0] CPTRA_WDT_CFG_VALUE = CPTRA_WDT_TIMEOUT_IN_PS / CPTRA_CLK_PERIOD_PS; // clock cycles
 
-  caliptra_apb_user apb_user_obj;
+  caliptra_axi_user axi_user_obj;
 
   typedef struct packed {
       bit              set_bootfsm_breakpoint;
@@ -57,7 +59,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     bit [0:11] owner_pk_hash;
     bit soc_stepping_id;
     bit [0:23] idevid_cert_attr;
-    bit lms_verify;
+//    bit lms_verify;
   } fuses_to_set;
 
 
@@ -68,9 +70,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   function new(string name = "" );
     super.new(name);
     soc_ifc_ctrl_seq = soc_ifc_ctrl_sequence_t::type_id::create("soc_ifc_ctrl_seq");
+    ss_mode_ctrl_seq = ss_mode_ctrl_sequence_t::type_id::create("ss_mode_ctrl_seq");
 
-    // Setup a User object to override PAUSER
-    apb_user_obj = new();
+    // Setup a User object to override AxUSER
+    axi_user_obj = new();
 
   endfunction
 
@@ -123,7 +126,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     if (this.fuses_to_set.uds) begin
         `uvm_info("SOC_IFC_RST", "Writing obfuscated UDS to fuse bank", UVM_LOW)
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_uds_seed); ii++) begin
-            reg_model.soc_ifc_reg_rm.fuse_uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            reg_model.soc_ifc_reg_rm.fuse_uds_seed[ii].write(sts, uds_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to fuse_uds_seed index %0d", ii))
         end
     end
@@ -132,7 +135,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     if (this.fuses_to_set.field_entropy) begin
         `uvm_info("SOC_IFC_RST", "Writing obfuscated Field Entropy to fuse bank", UVM_LOW)
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_field_entropy); ii++) begin
-            reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %0d", ii))
         end
     end
@@ -141,24 +144,15 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     foreach (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
         if (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
             `uvm_info("SOC_IFC_RST", $sformatf("Writing Key Manifest PK Hash [%d] to fuse bank with value 0x%0x", ii, key_manifest_pk_hash_rand[ii]), UVM_LOW)
-            reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].write(sts, key_manifest_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].write(sts, key_manifest_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Key Manifest PK Hash [%d]", ii))
-        end
-    end
-
-    // Owner PK Hash
-    foreach (this.fuses_to_set.owner_pk_hash[ii]) begin
-        if (this.fuses_to_set.owner_pk_hash[ii]) begin
-            `uvm_info("SOC_IFC_RST", $sformatf("Writing Owner PK Hash [%d] to fuse bank with value 0x%0x", ii, owner_pk_hash_rand[ii]), UVM_LOW)
-            reg_model.soc_ifc_reg_rm.fuse_owner_pk_hash[ii].write(sts, owner_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Owner PK Hash [%d]", ii))
         end
     end
 
     // Write SoC Stepping ID
     if (this.fuses_to_set.soc_stepping_id) begin
       `uvm_info("SOC_IFC_RST", "Writing SOC Stepping ID to fuse bank", UVM_LOW)
-      reg_model.soc_ifc_reg_rm.fuse_soc_stepping_id.write(sts, {16'h0, soc_stepping_id_rand[15:0]}, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      reg_model.soc_ifc_reg_rm.fuse_soc_stepping_id.write(sts, {16'h0, soc_stepping_id_rand[15:0]}, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to soc_stepping_id")
     end
 
@@ -166,32 +160,43 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     foreach (this.fuses_to_set.idevid_cert_attr[ii]) begin
         if (this.fuses_to_set.idevid_cert_attr[ii]) begin
             `uvm_info("SOC_IFC_RST", $sformatf("Writing iDevID Certificate Attribute [%d] to fuse bank", ii), UVM_LOW)
-            reg_model.soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].write(sts, idevid_cert_attr_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            reg_model.soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].write(sts, idevid_cert_attr_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to iDevID Certificate Attribute [%d]", ii))
         end
     end
 
-    // Write LMS Verify Bit
-    if (this.fuses_to_set.lms_verify) begin
-      uvm_reg_data_t lms_verify_data = 1 << reg_model.soc_ifc_reg_rm.fuse_lms_verify.lms_verify.get_lsb_pos();
-      `uvm_info("SOC_IFC_RST", "Writing LMS Verify=1 to fuse bank", UVM_LOW)
-      reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
-      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
+//    // Write LMS Verify Bit
+//    if (this.fuses_to_set.lms_verify) begin
+//      uvm_reg_data_t lms_verify_data = 1 << reg_model.soc_ifc_reg_rm.fuse_lms_verify.lms_verify.get_lsb_pos();
+//      `uvm_info("SOC_IFC_RST", "Writing LMS Verify=1 to fuse bank", UVM_LOW)
+//      reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+//      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
+//    end
+
+    // Owner PK Hash (No longer a 'FUSE', but lockable)
+    foreach (this.fuses_to_set.owner_pk_hash[ii]) begin
+        if (this.fuses_to_set.owner_pk_hash[ii]) begin
+            `uvm_info("SOC_IFC_RST", $sformatf("Writing Owner PK Hash [%d] to reg bank with value 0x%0x", ii, owner_pk_hash_rand[ii]), UVM_LOW)
+            reg_model.soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii].write(sts, owner_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Owner PK Hash [%d]", ii))
+        end
     end
+    reg_model.soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH_LOCK.write(sts, 1, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+    if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Owner PK Hash Lock"))
 
     // Not a 'FUSE', but WDT timeout is configured by SoC... do it here anyway.
     `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_CLK_PERIOD_PS [%d] to CPTRA_TIMER_CONFIG", CPTRA_CLK_PERIOD_PS), UVM_LOW)
-    reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG.write(sts, uvm_reg_data_t'(CPTRA_CLK_PERIOD_PS), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG.write(sts, uvm_reg_data_t'(CPTRA_CLK_PERIOD_PS), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_TIMER_CONFIG")
 
     `uvm_info("SOC_IFC_RST", $sformatf("Writing CPTRA_WDT_CFG_VALUE [0x%x_%x] to CPTRA_WDT_CFG", CPTRA_WDT_CFG_VALUE[63:32], CPTRA_WDT_CFG_VALUE[31:0]), UVM_LOW)
-    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[31:0]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[31:0]), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_WDT_CFG[0]")
-    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[63:32]), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1].write(sts, uvm_reg_data_t'(CPTRA_WDT_CFG_VALUE[63:32]), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to CPTRA_WDT_CFG[1]")
 
     // Set Fuse Done
-    reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     `uvm_info("SOC_IFC_RST", $sformatf("Fuse download completed, status: %p", sts), UVM_MEDIUM)
   endtask
 
@@ -217,13 +222,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
     if (ctrl_rst_ctx.set_bootfsm_breakpoint && (!ctrl_rst_ctx.security_state.debug_locked || (ctrl_rst_ctx.security_state.debug_locked && ctrl_rst_ctx.security_state.device_lifecycle == DEVICE_MANUFACTURING))) begin
       //Poll boot status until we are in FSM state BOOT_WAIT
-      reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       while ((data & data_mask) != data_check) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(20);
-        reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       end
       `uvm_info("SOC_IFC_RST", "BootFSM Breakpoint is set, writing GO", UVM_MEDIUM)
-      reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.write(sts, `UVM_REG_DATA_WIDTH'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       `uvm_info("SOC_IFC_RST", $sformatf("Write to BootFSM GO completed, status: %p", sts), UVM_MEDIUM)
     end
     else begin
@@ -244,7 +249,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     reg_model = configuration.soc_ifc_rm;
     if (soc_ifc_status_agent_rsp_seq == null)
         `uvm_fatal("SOC_IFC_RST", "SOC_IFC ENV reset sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
-    apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"));
+    axi_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset("HARD"));
   endtask
 
 
@@ -256,8 +261,16 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
     ctrl_reset_seq_context_t ctrl_rst_ctx;
 
-    // Run ctrl seq
-    run_ctrl_reset_seq(ctrl_rst_ctx);
+    fork
+        // Initialize SS Mode straps at startup (before reset)
+        if ( configuration.ss_mode_ctrl_agent_config.sequencer != null )
+            ss_mode_ctrl_seq.start(configuration.ss_mode_ctrl_agent_config.sequencer);
+        else
+            `uvm_error("SOC_IFC_RST", "ss_mode_ctrl_agent_config.sequencer is null!")
+
+        // Run ctrl seq
+        run_ctrl_reset_seq(ctrl_rst_ctx);
+    join
 
     // Download Fuses when ready
     download_fuses();

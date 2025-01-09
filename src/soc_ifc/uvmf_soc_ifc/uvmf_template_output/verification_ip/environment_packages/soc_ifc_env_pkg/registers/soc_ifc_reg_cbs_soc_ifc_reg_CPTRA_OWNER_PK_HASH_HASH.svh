@@ -14,9 +14,9 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
-class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
+class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH extends uvm_reg_cbs;
 
-    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_secret)
+    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH)
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
@@ -39,15 +39,17 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
         soc_ifc_reg_ext rm; /* soc_ifc_reg_rm */
         uvm_reg_block blk = fld.get_parent().get_parent(); /* soc_ifc_reg_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
-        if (map.get_name() == this.AHB_map_name ||
-            map.get_name() == this.AXI_map_name) begin
+        if (map.get_name() == this.AHB_map_name) begin
+            `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on register field %s, which is only modifiable by SoC (via AXI)", kind, map.get_name(), fld.get_full_name()), UVM_FULL)
+        end
+        if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
-                    if (rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_FUSE_WR_DONE. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                    if (rm.CPTRA_OWNER_PK_HASH_LOCK.lock.get_mirrored_value()) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_OWNER_PK_HASH_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin

@@ -124,14 +124,14 @@ class soc_ifc_env_cov_subscriber #(
     which_cmd_rd         : cross step_cmd_rd         , is_ahb;
     which_dlen_rd        : cross step_dlen_rd        , is_ahb;
     which_dataout_rd     : cross step_dataout_rd     , is_ahb;
-    which_resp_datain_wr : cross step_resp_datain_wr , is_ahb { ignore_bins ignore_apb = binsof(is_ahb) intersect {1'b0}; }
-    which_resp_dlen_wr   : cross step_resp_dlen_wr   , is_ahb { ignore_bins ignore_apb = binsof(is_ahb) intersect {1'b0}; }
+    which_resp_datain_wr : cross step_resp_datain_wr , is_ahb { ignore_bins ignore_axi = binsof(is_ahb) intersect {1'b0}; }
+    which_resp_dlen_wr   : cross step_resp_dlen_wr   , is_ahb { ignore_bins ignore_axi = binsof(is_ahb) intersect {1'b0}; }
     which_resp_dlen_rd   : cross step_resp_dlen_rd   , is_ahb { ignore_bins ignore_ahb = binsof(is_ahb) intersect {1'b1}; }
     which_resp_dataout_rd: cross step_resp_dataout_rd, is_ahb { ignore_bins ignore_ahb = binsof(is_ahb) intersect {1'b1}; }
     which_status_wr      : cross step_status_wr      , is_ahb;
     which_status_rd      : cross step_status_rd      , is_ahb;
     which_exec_clr       : cross step_exec_clr       , is_ahb;
-    which_force_unlock   : cross step_force_unlock   , is_ahb { ignore_bins ignore_apb = binsof(is_ahb) intersect {1'b0}; }
+    which_force_unlock   : cross step_force_unlock   , is_ahb { ignore_bins ignore_axi = binsof(is_ahb) intersect {1'b0}; }
   endgroup
 
   covergroup soc_ifc_env_mbox_scenarios_cg with function sample (mbox_steps_by_if_s step_by_if);
@@ -151,19 +151,19 @@ class soc_ifc_env_cov_subscriber #(
         bins step_status_rd_ahb       = {{    AHB_REQ,MBOX_STEP_STATUS_RD}};
         bins step_exec_clr_ahb        = {{    AHB_REQ,MBOX_STEP_EXEC_CLR}};
         bins step_force_unlock_ahb    = {{    AHB_REQ,MBOX_STEP_FORCE_UNLOCK}};
-        bins step_lock_acquire_apb    = {{NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}};
-        bins step_cmd_wr_apb          = {{NOT_AHB_REQ,MBOX_STEP_CMD_WR}};
-        bins step_dlen_wr_apb         = {{NOT_AHB_REQ,MBOX_STEP_DLEN_WR}};
-        bins step_datain_wr_apb       = {{NOT_AHB_REQ,MBOX_STEP_DATAIN_WR}};
-        bins step_exec_set_apb        = {{NOT_AHB_REQ,MBOX_STEP_EXEC_SET}};
-        bins step_cmd_rd_apb          = {{NOT_AHB_REQ,MBOX_STEP_CMD_RD}};
-        bins step_dlen_rd_apb         = {{NOT_AHB_REQ,MBOX_STEP_DLEN_RD}};
-        bins step_dataout_rd_apb      = {{NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD}};
-        bins step_resp_dlen_rd_apb    = {{NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD}};
-        bins step_resp_dataout_rd_apb = {{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD}};
-        bins step_status_wr_apb       = {{NOT_AHB_REQ,MBOX_STEP_STATUS_WR}};
-        bins step_status_rd_apb       = {{NOT_AHB_REQ,MBOX_STEP_STATUS_RD}};
-        bins step_exec_clr_apb        = {{NOT_AHB_REQ,MBOX_STEP_EXEC_CLR}};
+        bins step_lock_acquire_axi    = {{NOT_AHB_REQ,MBOX_STEP_LOCK_ACQUIRE}};
+        bins step_cmd_wr_axi          = {{NOT_AHB_REQ,MBOX_STEP_CMD_WR}};
+        bins step_dlen_wr_axi         = {{NOT_AHB_REQ,MBOX_STEP_DLEN_WR}};
+        bins step_datain_wr_axi       = {{NOT_AHB_REQ,MBOX_STEP_DATAIN_WR}};
+        bins step_exec_set_axi        = {{NOT_AHB_REQ,MBOX_STEP_EXEC_SET}};
+        bins step_cmd_rd_axi          = {{NOT_AHB_REQ,MBOX_STEP_CMD_RD}};
+        bins step_dlen_rd_axi         = {{NOT_AHB_REQ,MBOX_STEP_DLEN_RD}};
+        bins step_dataout_rd_axi      = {{NOT_AHB_REQ,MBOX_STEP_DATAOUT_RD}};
+        bins step_resp_dlen_rd_axi    = {{NOT_AHB_REQ,MBOX_STEP_RESP_DLEN_RD}};
+        bins step_resp_dataout_rd_axi = {{NOT_AHB_REQ,MBOX_STEP_RESP_DATAOUT_RD}};
+        bins step_status_wr_axi       = {{NOT_AHB_REQ,MBOX_STEP_STATUS_WR}};
+        bins step_status_rd_axi       = {{NOT_AHB_REQ,MBOX_STEP_STATUS_RD}};
+        bins step_exec_clr_axi        = {{NOT_AHB_REQ,MBOX_STEP_EXEC_CLR}};
         bins step_reset               = {{NOT_AHB_REQ,MBOX_STEP_RESET}};
     }
     /*
@@ -417,15 +417,16 @@ class soc_ifc_env_cov_subscriber #(
                                       ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                                       ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                                       ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_transaction_t;
-  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_transaction_t;
+//  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
+//                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
+//                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
+//                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_transaction_t;
 
   // Instantiate the analysis exports
   uvm_analysis_imp_cov_soc_ifc_ctrl_ae   #(soc_ifc_ctrl_transaction,   this_type) soc_ifc_ctrl_ae;
   uvm_analysis_imp_cov_soc_ifc_status_ae #(soc_ifc_status_transaction, this_type) soc_ifc_status_ae;
-  uvm_analysis_imp_cov_apb_ae            #(mvc_sequence_item_base,     this_type) apb_ae;
+//  uvm_analysis_imp_cov_apb_ae            #(mvc_sequence_item_base,     this_type) apb_ae;
+  uvm_analysis_imp_cov_axi_ae            #(aaxi_master_tr,             this_type) axi_ae;
   uvm_analysis_imp_cov_cptra_ctrl_ae     #(cptra_ctrl_transaction,     this_type) cptra_ctrl_ae;
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;
   uvm_analysis_imp_cov_ahb_ae            #(mvc_sequence_item_base,     this_type) ahb_ae;
@@ -448,7 +449,7 @@ class soc_ifc_env_cov_subscriber #(
   virtual function void build_phase (uvm_phase phase);
     soc_ifc_ctrl_ae   = new("soc_ifc_ctrl_ae"  , this);
     soc_ifc_status_ae = new("soc_ifc_status_ae", this);
-    apb_ae            = new("apb_ae"           , this);
+    axi_ae            = new("axi_ae"           , this);
     cptra_ctrl_ae     = new("cptra_ctrl_ae"    , this);
     cptra_status_ae   = new("cptra_status_ae"  , this);
     ahb_ae            = new("ahb_ae"           , this);
@@ -582,22 +583,22 @@ class soc_ifc_env_cov_subscriber #(
   endfunction
 
   //------------------------------------------------------------------------------------------
-  //                                   APB - write
+  //                                   AXI - write
   //------------------------------------------------------------------------------------------
-  virtual function void write_cov_apb_ae(mvc_sequence_item_base txn);
-    apb_transaction_t apb_txn;
+  virtual function void write_cov_axi_ae(aaxi_master_tr txn);
+    aaxi_master_tr    axi_txn;
     uvm_reg           axs_reg;
 
     // Extract info
-    if (!$cast(apb_txn,txn)) `uvm_fatal("SOC_IFC_COV_APB", "APB coverage analysis import received invalid transaction")
-    axs_reg = c_soc_ifc_rm.soc_ifc_APB_map.get_reg_by_offset(apb_txn.addr);
+    if (!$cast(axi_txn,txn)) `uvm_fatal("SOC_IFC_COV_AXI", "AXI coverage analysis import received invalid transaction")
+    axs_reg = c_soc_ifc_rm.soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
     // Calculate coverage impact from register access
     if (axs_reg == null) begin
-        `uvm_error("SOC_IFC_COV_APB", $sformatf("APB transaction to address: 0x%x decodes to null from soc_ifc_APB_map", apb_txn.addr))
+        `uvm_error("SOC_IFC_COV_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
     end
     else begin: REG_AXS
-        `uvm_info("SOC_IFC_COV_APB", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_HIGH)
+        `uvm_info("SOC_IFC_COV_AXI", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_HIGH)
         case (axs_reg.get_name()) inside
             "mbox_lock",
             "mbox_user",
@@ -608,7 +609,7 @@ class soc_ifc_env_cov_subscriber #(
             "mbox_execute",
             "mbox_status",
             "mbox_unlock": begin
-                `uvm_info("SOC_IFC_COV_APB", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
+                `uvm_info("SOC_IFC_COV_AXI", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
                 // Skip coverage on repeated steps, as a memory optimization (large rep. operators are onerous)
                 if (pred.next_step inside {MBOX_STEP_DATAIN_WR,
                                            MBOX_STEP_DATAOUT_RD,
@@ -617,7 +618,7 @@ class soc_ifc_env_cov_subscriber #(
                                            MBOX_STEP_RESP_DATAOUT_RD} &&
                     pred.next_step == prev_step_sampled.step &&
                     !prev_step_sampled.is_ahb) begin
-                    `uvm_info("SOC_IFC_COV_APB", "Skipping sample for step [%p] as it is a repetition", UVM_DEBUG)
+                    `uvm_info("SOC_IFC_COV_AXI", "Skipping sample for step [%p] as it is a repetition", UVM_DEBUG)
                 end
                 else begin
                     soc_ifc_env_mbox_steps_cg.sample(.is_ahb(NOT_AHB_REQ), .next_step(pred.next_step));

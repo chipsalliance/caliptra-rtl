@@ -88,11 +88,11 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 // The mailbox_data_q is reset for each new mailbox command to represent
                 // desired DUT behavior.
-                // Pushes are only allowed on APB when:
+                // Pushes are only allowed on AXI when:
                 //  - SOC has lock (checked in soc_ifc_predictor)
                 //  - mbox state is in MBOX_RDY_FOR_DATA
                 //  - if mbox state is EXECUTE_SOC, pushes not allowed because there is never resp data SOC->uC

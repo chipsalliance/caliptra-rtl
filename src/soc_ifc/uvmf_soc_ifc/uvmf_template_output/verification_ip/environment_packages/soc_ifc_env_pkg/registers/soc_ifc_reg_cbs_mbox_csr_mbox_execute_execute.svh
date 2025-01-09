@@ -196,7 +196,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     // Check for protocol violations

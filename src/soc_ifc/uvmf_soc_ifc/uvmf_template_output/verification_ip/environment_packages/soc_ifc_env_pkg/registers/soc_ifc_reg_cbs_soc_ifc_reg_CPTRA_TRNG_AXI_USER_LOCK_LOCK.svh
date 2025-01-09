@@ -14,9 +14,9 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
-class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
+class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_AXI_USER_LOCK_LOCK extends uvm_reg_cbs;
 
-    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_secret)
+    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_AXI_USER_LOCK_LOCK)
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
@@ -46,8 +46,12 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
-                    if (rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_FUSE_WR_DONE. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                    if (value & ~previous) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] sets register value.", kind), UVM_LOW)
+                    end
+                    else if (~value & previous) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] attempts to clear register value but is blocked. value: 0x%x previous: 0x%x", kind, value, previous), UVM_LOW)
+                        // RO access to TRNG_AXI_USER_LOCK once locked
                         value = previous;
                     end
                     else begin

@@ -133,6 +133,8 @@ end
   reg  soc_ifc_notif_intr_o = 'b0;
   reg  sha_error_intr_o = 'b0;
   reg  sha_notif_intr_o = 'b0;
+  reg  dma_error_intr_o = 'b0;
+  reg  dma_notif_intr_o = 'b0;
   reg  timer_intr_o = 'b0;
   reg [31:0] nmi_vector_o = 'b0;
   reg  nmi_intr_o = 'b0;
@@ -154,6 +156,8 @@ end
                  |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
                  |(sha_error_intr_i       & !sha_error_intr_o           ) ||
                  |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
+                 |(dma_error_intr_i       & !dma_error_intr_o           ) ||
+                 |(dma_notif_intr_i       & !dma_notif_intr_o           ) ||
                  |(timer_intr_i           & !timer_intr_o               ) ||
                  |(nmi_vector_i           ^  nmi_vector_o               ) ||
                  |(nmi_intr_i             & !nmi_intr_o                 ) ||

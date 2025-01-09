@@ -18,21 +18,25 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
-//              Tests large sized mailbox commands with PAUSER randomization.
+// DESCRIPTION: Extended from mbox axi user sequence to exercise AxUSER filtering.
+//              Tests medium sized mailbox commands with AxUSER randomization.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_large_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
+class soc_ifc_env_mbox_rand_axi_user_medium_sequence extends soc_ifc_env_mbox_rand_axi_user_sequence;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_large_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_rand_axi_user_medium_sequence )
 
-  // Constrain size to a large command
-  // Min. size: 16KiB
-  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
-  // Constrain response data size to also be large
-  // Min. size: 16KiB
-  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
+  // Constrain dlen to be a medium command
+  // Max. size: 4096B
+  constraint mbox_dlen_max_medium_c { mbox_op_rand.dlen <= 32'h0000_1000; }
+  // Minimum 512B
+  constraint mbox_dlen_min_medium_c { mbox_op_rand.dlen >= 32'h0000_0200; }
+  // Constrain response data size to also be medium
+  // Max. size: 4096B
+  // Min. size: 512B
+  constraint mbox_resp_dlen_max_medium_c { mbox_resp_expected_dlen <= 32'h0000_1000; }
+  constraint mbox_resp_dlen_min_medium_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_0200; }
 
 endclass

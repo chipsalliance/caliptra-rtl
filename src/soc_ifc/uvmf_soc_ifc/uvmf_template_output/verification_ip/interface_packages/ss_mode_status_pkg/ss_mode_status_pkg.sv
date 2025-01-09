@@ -82,6 +82,9 @@ package ss_mode_status_pkg;
    //    be sure to add the sequence file here so that it will be
    //    compiled as part of the interface package.  Be sure to place
    //    the new sequence after any base sequences of the new sequence.
+   typedef ss_mode_status_sequence_base       ss_mode_status_agent_seq_base_t;
+   typedef ss_mode_status_random_sequence     ss_mode_status_agent_rand_seq_t;
+   typedef ss_mode_status_responder_sequence  ss_mode_status_agent_responder_seq_t;
    // pragma uvmf custom package_item_additional end
 
 endpackage

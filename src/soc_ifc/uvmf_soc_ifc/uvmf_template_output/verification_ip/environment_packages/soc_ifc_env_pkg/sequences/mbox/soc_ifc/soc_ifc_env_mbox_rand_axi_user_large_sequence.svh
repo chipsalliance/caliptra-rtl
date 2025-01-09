@@ -18,21 +18,21 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox pauser sequence to exercise PAUSER filtering.
-//              Tests small sized mailbox commands with PAUSER randomization.
+// DESCRIPTION: Extended from mbox axi user sequence to exercise AxUSER filtering.
+//              Tests large sized mailbox commands with AxUSER randomization.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_small_sequence extends soc_ifc_env_mbox_rand_pauser_sequence;
+class soc_ifc_env_mbox_rand_axi_user_large_sequence extends soc_ifc_env_mbox_rand_axi_user_sequence;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_small_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_rand_axi_user_large_sequence )
 
-  // Constrain dlen to be a small command
-  // Max. size: 512B
-  constraint mbox_dlen_max_small_c { mbox_op_rand.dlen <= 32'h0000_0200; }
-  // Constrain response data size to also be small
-  // Max. size: 512B
-  constraint mbox_resp_dlen_max_small_c { mbox_resp_expected_dlen < 32'h0000_0200; }
+  // Constrain size to a large command
+  // Min. size: 16KiB
+  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
+  // Constrain response data size to also be large
+  // Min. size: 16KiB
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
 
 endclass

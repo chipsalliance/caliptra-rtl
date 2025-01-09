@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL extends uvm_reg_cbs;
     `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     // Function: post_predict
     //
@@ -46,7 +46,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL extends uvm_reg_cbs;
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
 // SoC DOES have write privs
 //                UVM_PREDICT_WRITE: begin

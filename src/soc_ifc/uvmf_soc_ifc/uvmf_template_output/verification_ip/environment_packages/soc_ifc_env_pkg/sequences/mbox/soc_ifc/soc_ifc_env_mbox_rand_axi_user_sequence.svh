@@ -18,19 +18,19 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Extended from mbox sequence base to exercise PAUSER filtering.
+// DESCRIPTION: Extended from mbox sequence base to exercise AXI_USER filtering.
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_base;
+class soc_ifc_env_mbox_rand_axi_user_sequence extends soc_ifc_env_mbox_sequence_base;
 
-  `uvm_object_utils( soc_ifc_env_mbox_rand_pauser_sequence )
+  `uvm_object_utils( soc_ifc_env_mbox_rand_axi_user_sequence )
 
-  extern virtual function void              set_pauser_prob_vals();
+  extern virtual function void              set_axi_user_prob_vals();
 
-  // Force the lock check when deliberately testing APB accesses with invalid PAUSER values
-  constraint apb_reg_check_c {do_apb_lock_check == 1;}
+  // Force the lock check when deliberately testing AXI accesses with invalid AXI_USER values
+  constraint axi_reg_check_c {do_axi_lock_check == 1;}
   constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
 
   // Constrain command to undefined opcode
@@ -44,25 +44,25 @@ class soc_ifc_env_mbox_rand_pauser_sequence extends soc_ifc_env_mbox_sequence_ba
 
 endclass
 
-function void soc_ifc_env_mbox_rand_pauser_sequence::set_pauser_prob_vals();
+function void soc_ifc_env_mbox_rand_axi_user_sequence::set_axi_user_prob_vals();
   // ============ OVERRIDES for rand probability members ============
-  // Make it slightly more likely to randomly generate a valid PAUSER override
-  // for earlier calls, so the first occurrence of invalid PAUSER is later
+  // Make it slightly more likely to randomly generate a valid AXI_USER override
+  // for earlier calls, so the first occurrence of invalid AXI_USER is later
   // on (or, very rarely, never happens).
   // We want to stimulate the bad-actor scenario, but at varying points
   // throughout the sequence.
-  // It is occasionally interesting to let invalid PAUSER be generated on the
+  // It is occasionally interesting to let invalid AXI_USER be generated on the
   // first attempt though.
-  this.PAUSER_PROB_LOCK    = 350;
-  this.PAUSER_PROB_CMD     = PAUSER_PROB_LOCK;
-  // Wildly more likely to generate a valid PAUSER, since we do so many accesses
+  this.AXI_USER_PROB_LOCK    = 350;
+  this.AXI_USER_PROB_CMD     = AXI_USER_PROB_LOCK;
+  // Wildly more likely to generate a valid AXI_USER, since we do so many accesses
   // against datain it is almost certain at _some_ point to be invalid
-  this.PAUSER_PROB_DATAIN  = 25;
-  this.PAUSER_PROB_EXECUTE = PAUSER_PROB_LOCK;
-  // More likely to generate a valid PAUSER, since we do so many accesses
+  this.AXI_USER_PROB_DATAIN  = 25;
+  this.AXI_USER_PROB_EXECUTE = AXI_USER_PROB_LOCK;
+  // More likely to generate a valid AXI_USER, since we do so many accesses
   // against mbox_status while polling
-  this.PAUSER_PROB_STATUS  = 150;
-  // Wildly more likely to generate a valid PAUSER, since we do so many accesses
+  this.AXI_USER_PROB_STATUS  = 150;
+  // Wildly more likely to generate a valid AXI_USER, since we do so many accesses
   // against dataout it is almost certain at _some_ point to be invalid
-  this.PAUSER_PROB_DATAOUT = PAUSER_PROB_DATAIN;
+  this.AXI_USER_PROB_DATAOUT = AXI_USER_PROB_DATAIN;
 endfunction

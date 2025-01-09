@@ -51,8 +51,19 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   constraint strap_ss_recovery_ifc_base_addr_c { strap_ss_recovery_ifc_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_otp_fc_base_addr_c { strap_ss_otp_fc_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_uds_seed_base_addr_c { strap_ss_uds_seed_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
+  // All base address straps are configured to a different 4KiB region
+  constraint strap_ss_addr_unique_c { (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000); }
   constraint strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_c { strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
-  constraint strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_c { strap_ss_num_of_prod_debug_unlock_auth_pk_hashes dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
+  constraint strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_c { strap_ss_num_of_prod_debug_unlock_auth_pk_hashes dist {0 :/ 1, [1:32'hFFF] :/ 98, 32'h1000 :/ 1}; }
   constraint strap_ss_strap_generic_0_c { strap_ss_strap_generic_0 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint strap_ss_strap_generic_1_c { strap_ss_strap_generic_1 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint strap_ss_strap_generic_2_c { strap_ss_strap_generic_2 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }

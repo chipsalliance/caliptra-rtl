@@ -79,6 +79,7 @@ class soc_ifc_env_sequence_base #(
   // pragma uvmf custom class_item_additional begin
     soc_ifc_status_agent_responder_seq_t soc_ifc_status_agent_rsp_seq;
     cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
+    ss_mode_status_agent_responder_seq_t ss_mode_status_agent_rsp_seq;
 
   virtual task pre_start();
     `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_NONE)
