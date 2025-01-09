@@ -33,9 +33,9 @@ add wave -noupdate -group kv_ecc_privkey_read_agent_bus /hdl_top/kv_ecc_privkey_
 add wave -noupdate -divider kv_ecc_seed_read_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/kv_ecc_seed_read_agent/kv_ecc_seed_read_agent_monitor/txn_stream
 add wave -noupdate -group kv_ecc_seed_read_agent_bus /hdl_top/kv_ecc_seed_read_agent_bus/*
-add wave -noupdate -divider kv_ecc_msg_read_agent 
-add wave -noupdate /uvm_root/uvm_test_top/environment/kv_ecc_msg_read_agent/kv_ecc_msg_read_agent_monitor/txn_stream
-add wave -noupdate -group kv_ecc_msg_read_agent_bus /hdl_top/kv_ecc_msg_read_agent_bus/*
+add wave -noupdate -divider kv_aes_key_read_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/kv_aes_key_read_agent/kv_aes_key_read_agent_monitor/txn_stream
+add wave -noupdate -group kv_aes_key_read_agent_bus /hdl_top/kv_aes_key_read_agent_bus/*
 
 TreeUpdate [SetDefaultTree]
 quietly wave cursor active 0
