@@ -283,6 +283,11 @@ package lc_ctrl_state_pkg;
   // are not supported for virtual interfaces by Excelium yet
   // https://github.com/lowRISC/opentitan/issues/8884 (Cadence issue: cds_46570160)
   // The enumeration types lc_state_e and lc_cnt_e are still ok in other circumstances
+  // NOTE: Caliptra-SS required the following change in this decoding:
+  // LcStProd          = {XX, XX, XX, XX, A15 -> B15, XX, ...} This allows LC to switch from DEV to PROD
+  // LcStProdEnd       = {XX, XX, XX, A16->B16, A15 -> B15, XX, ...} This allows LC to switch from DEV to PROD_END or PROD to PROD_END
+  // However, PROD_END can branch only to SCARP and nothing else
+  // Note that the DEV state is being reused as MANUF state
 
   typedef logic [LcStateWidth-1:0] lc_state_t;
   typedef enum lc_state_t {
@@ -303,8 +308,8 @@ package lc_ctrl_state_pkg;
     LcStTestLocked6   = {A19, A18, A17, A16, A15, A14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
     LcStTestUnlocked7 = {A19, A18, A17, A16, A15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
     LcStDev           = {A19, A18, A17, A16, B15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
-    LcStProd          = {A19, A18, A17, B16, A15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
-    LcStProdEnd       = {A19, A18, B17, A16, A15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
+    LcStProd          = {A19, A18, A17, B16, B15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
+    LcStProdEnd       = {A19, A18, B17, B16, B15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
     LcStRma           = {B19, B18, A17, B16, B15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0},
     LcStScrap         = {B19, B18, B17, B16, B15, B14, B13, B12, B11, B10,  B9,  B8,  B7,  B6,  B5,  B4,  B3,  B2,  B1,  B0}
   } lc_state_e;
@@ -422,7 +427,7 @@ package lc_ctrl_state_pkg;
     128'h3852305BAECF5FF1D5C1D25F6DB9058D
   };
   parameter lc_token_t RndCnstRawUnlockTokenHashed = {
-    128'hF8FE11B88C36C8140252F036D23804DB
+    128'hd714_17dc_4be9_28f6_33dd_1e38_b9be_ec48
   };
 
 endpackage : lc_ctrl_state_pkg

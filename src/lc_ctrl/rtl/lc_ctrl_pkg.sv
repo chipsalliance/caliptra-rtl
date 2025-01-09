@@ -333,7 +333,13 @@ package lc_ctrl_pkg;
     // DEV
     ZeroTokenIdx,          // -> SCRAP
     RmaTokenIdx,           // -> RMA
-    {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
+    // {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
+    // ============== This is how we enable from DEV to PROD ==============================
+    InvalidTokenIdx, // -> PROD_END
+    TestExitTokenIdx, // -> PROD
+    {17{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV
+    // ====================================================================================
+
     // TEST_UNLOCKED0-7, TEST_LOCKED0-6
     `TEST_UNLOCKED(7),
     `TEST_LOCKED(6),

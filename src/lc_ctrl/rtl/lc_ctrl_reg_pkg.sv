@@ -299,7 +299,7 @@ package lc_ctrl_reg_pkg;
   parameter logic [31:0] LC_CTRL_MANUF_STATE_7_RESVAL = 32'h 0;
 
   // Register index
-  typedef enum logic [31:0] {
+  typedef enum int {
     LC_CTRL_ALERT_TEST,
     LC_CTRL_STATUS,
     LC_CTRL_CLAIM_TRANSITION_IF_REGWEN,
