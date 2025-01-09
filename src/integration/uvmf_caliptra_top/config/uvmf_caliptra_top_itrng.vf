@@ -26,6 +26,7 @@
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/rtl
++incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
@@ -53,7 +54,6 @@
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/norm_check/rtl
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
-+incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512/coverage
 +incdir+${CALIPTRA_ROOT}/src/sha256/coverage
 +incdir+${CALIPTRA_ROOT}/src/hmac/coverage
@@ -175,6 +175,8 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
@@ -257,8 +259,6 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_sparse_fsm_pk
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/norm_check/rtl/norm_check_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
-${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
-${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_if.sv
 ${CALIPTRA_ROOT}/src/sha512/coverage/sha512_ctrl_cov_bind.sv
 ${CALIPTRA_ROOT}/src/sha256/coverage/sha256_ctrl_cov_if.sv

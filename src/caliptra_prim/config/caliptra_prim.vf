@@ -3,6 +3,7 @@
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/rtl
++incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
@@ -38,6 +39,8 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
+${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/caliptra_prim_generic_flop_en.sv
