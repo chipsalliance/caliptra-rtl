@@ -262,8 +262,8 @@ soc_ifc_reg__in_t soc_ifc_reg_hwif_in;
 soc_ifc_reg__out_t soc_ifc_reg_hwif_out;
 
 //WDT signals
-logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer1_timeout_period;
-logic [WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer2_timeout_period;
+logic [SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer1_timeout_period;
+logic [SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS-1:0][31:0] timer2_timeout_period;
 logic timer1_en;
 logic timer2_en;
 logic timer1_restart;
@@ -974,7 +974,6 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
-assign nmi_intr = t2_timeout && !timer2_en;             //Only issue nmi if WDT timers are cascaded and t2 times out
 
 // Interrupt output is set, for any enabled conditions, when a new write
 // sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
@@ -1159,7 +1158,7 @@ assign timer2_en = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_EN.timer2_en.value;
 assign timer1_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value;
 assign timer2_restart = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_CTRL.timer2_restart.value;
 
-for (genvar i = 0; i < WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
+for (genvar i = 0; i < SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS; i++) begin
   assign timer1_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[i].timer1_timeout_period.value;
   assign timer2_timeout_period[i] = soc_ifc_reg_hwif_out.CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[i].timer2_timeout_period.value;
 end
@@ -1196,8 +1195,8 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
         wdt_error_t2_intr_serviced <= 1'b0;
     end
     else if (soc_ifc_reg_req_dv && soc_ifc_reg_req_data.write && (soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0] == SOC_IFC_REG_ADDR_WIDTH'(`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R))) begin
-        wdt_error_t1_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW] && t1_timeout;
-        wdt_error_t2_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW] && t2_timeout && timer2_en;
+        wdt_error_t1_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW];
+        wdt_error_t2_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW];
     end
     else begin
         wdt_error_t1_intr_serviced <= 1'b0;
@@ -1205,7 +1204,9 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     end
 end
 
-wdt i_wdt (
+wdt #(
+    .WDT_TIMEOUT_PERIOD_NUM_DWORDS(SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS)
+)i_wdt (
     .clk(rdc_clk_cg),
     .cptra_rst_b(cptra_noncore_rst_b),
     .timer1_en(timer1_en),
@@ -1217,7 +1218,8 @@ wdt i_wdt (
     .wdt_timer1_timeout_serviced(wdt_error_t1_intr_serviced),
     .wdt_timer2_timeout_serviced(wdt_error_t2_intr_serviced),
     .t1_timeout(t1_timeout),
-    .t2_timeout(t2_timeout)
+    .t2_timeout(t2_timeout), 
+    .fatal_timeout(nmi_intr)   //Only issue nmi if WDT timers are cascaded and t2 times out
 );
 
 ////////////////////////////////////////////////////////
