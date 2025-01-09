@@ -414,7 +414,8 @@ package lc_ctrl_state_pkg;
   parameter lc_token_t AllZeroToken = {
     128'h0
   };
-  parameter lc_token_t RndCnstRawUnlockToken = {
+  //TODO: Temporary rename of RndCnstRawUnlockToken to RndCnstRawUnlockTokenDefault
+  parameter lc_token_t RndCnstRawUnlockTokenDefault = {
     128'hEA2B3F32CBE77554E43C8EA7EBF197C2
   };
   parameter lc_token_t AllZeroTokenHashed = {
