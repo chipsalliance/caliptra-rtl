@@ -37,6 +37,7 @@ import "DPI-C" function string getenv(input string env_name);
 
 module soc_ifc_tb
   import soc_ifc_pkg::*;
+  import mbox_pkg::*;
   import soc_ifc_tb_pkg::*;
   ();
 

@@ -15,17 +15,10 @@
 `include "caliptra_sva.svh"
 
 module mbox 
-    import soc_ifc_pkg::*;
+    import mbox_pkg::*;
     import mbox_csr_pkg::*;
     #(
-     parameter MBOX_DATA_W = 32
-    ,parameter MBOX_ECC_DATA_W = 7
-    ,parameter MBOX_SIZE_KB = 128
-    ,localparam MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024
-    ,localparam MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4
-    ,localparam MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W
-    ,localparam MBOX_ADDR_W = $clog2(MBOX_DEPTH)
-    ,localparam MBOX_DEPTH_LOG2 = $clog2(MBOX_DEPTH)
+     parameter DMI_REG_MBOX_DLEN_ADDR = 7'h50
     )
     (
     input logic         clk,
@@ -35,7 +28,7 @@ module mbox
     input logic         req_dv,
     output logic        req_hold,
     input logic         dir_req_dv,
-    input soc_ifc_req_t req_data,
+    input mbox_req_t    req_data,
     output logic        mbox_error,
 
     output logic [MBOX_DATA_W-1:0] rdata,
@@ -47,7 +40,7 @@ module mbox
     output logic sha_sram_hold, // Throttle the SRAM requests when writing corrected ECC
 
     input logic dma_sram_req_dv,
-    input soc_ifc_req_t dma_sram_req_data,
+    input mbox_req_t dma_sram_req_data,
     output logic [MBOX_DATA_W-1:0] dma_sram_rdata,
     output logic dma_sram_hold, // Throttle the SRAM requests when SHA accel has access.
     output logic dma_sram_error,
@@ -79,11 +72,6 @@ module mbox
     output mbox_dmi_reg_t dmi_reg
 
 );
-
-
-
-
-
 
 //this module is used to instantiate a single mailbox instance
 //requests within the address space of this mailbox are routed here from the top level
@@ -177,7 +165,7 @@ assign tap_mode = hwif_out.tap_mode.enabled.value;
 //2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data.soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
-                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value[SOC_IFC_USER_W-1:0])));
+                               ( req_data.soc_req & soc_has_lock & (req_data.user == hwif_out.mbox_user.user.value[MBOX_IFC_USER_W-1:0])));
 
 //Determine if this is a valid request from the receiver side
 always_comb valid_receiver = hwif_out.mbox_lock.lock.value &
@@ -633,7 +621,7 @@ always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
 always_comb hwif_in.mbox_status.mbox_rdptr.next = mbox_rdptr;
 
-always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN);
+always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR);
 always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
@@ -657,7 +645,7 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv & (req_data.addr[SOC_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH] == MBOX_REG_START_ADDR[SOC_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH])),
+    .s_cpuif_req(req_dv),
     .s_cpuif_req_is_wr(req_data.write),
     .s_cpuif_addr(req_data.addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data.wdata),

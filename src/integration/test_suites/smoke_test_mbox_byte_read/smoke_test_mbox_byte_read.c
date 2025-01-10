@@ -16,7 +16,7 @@
 #include "riscv_hw_if.h"
 #include "soc_ifc.h"
 #include <stdint.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include "printf.h"
 #include "caliptra_isr.h"
 

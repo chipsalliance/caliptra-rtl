@@ -24,15 +24,6 @@ package soc_ifc_pkg;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
     parameter SOC_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
-    
-    parameter CPTRA_MBOX_SIZE_KB = 256;
-    parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;
-    parameter CPTRA_MBOX_SIZE_DWORDS = CPTRA_MBOX_SIZE_BYTES/4;
-    parameter CPTRA_MBOX_DATA_W = SOC_IFC_DATA_W;
-    parameter CPTRA_MBOX_ECC_DATA_W = 7;
-    parameter CPTRA_MBOX_DATA_AND_ECC_W = CPTRA_MBOX_DATA_W + CPTRA_MBOX_ECC_DATA_W;
-    parameter CPTRA_MBOX_DEPTH = (CPTRA_MBOX_SIZE_KB * 1024 * 8) / CPTRA_MBOX_DATA_W;
-    parameter CPTRA_MBOX_ADDR_W = $clog2(CPTRA_MBOX_DEPTH);
 
     parameter CPTRA_AXI_DMA_DATA_WIDTH = 32;
     parameter CPTRA_AXI_DMA_ID_WIDTH   = 5; // FIXME related to CALIPTRA_AXI_ID_WIDTH?
@@ -54,8 +45,8 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
-    parameter MBOX_DIR_START_ADDR     = CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
-    parameter MBOX_DIR_END_ADDR       = CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
 
     //Valid AXI_USER
@@ -121,17 +112,7 @@ package soc_ifc_pkg;
         BOOT_DONE   = 3'b100
     } boot_fsm_state_e;
 
-    //MAILBOX FSM
-    typedef enum logic [2:0] {
-        MBOX_IDLE         = 3'b000,
-        MBOX_RDY_FOR_CMD  = 3'b001,
-        MBOX_RDY_FOR_DLEN = 3'b011,
-        MBOX_RDY_FOR_DATA = 3'b010,
-        MBOX_EXECUTE_UC   = 3'b110,
-        MBOX_EXECUTE_SOC  = 3'b100,
-        MBOX_EXECUTE_TAP  = 3'b101,
-        MBOX_ERROR        = 3'b111
-    } mbox_fsm_state_e;
+
 
     //SHA FSM
     typedef enum logic [2:0] {
@@ -143,14 +124,6 @@ package soc_ifc_pkg;
         SHA_DONE    = 3'b100
       } sha_fsm_state_e;
 
-    //MAILBOX Status
-    typedef enum logic [3:0] {
-        CMD_BUSY      = 4'd0,
-        DATA_READY    = 4'd1,
-        CMD_COMPLETE  = 4'd2,
-        CMD_FAILURE   = 4'd3
-    } mbox_status_e;
-
     //Any request into soc ifc block
     typedef struct packed {
         logic   [SOC_IFC_ADDR_W-1:0]   addr;
@@ -161,22 +134,6 @@ package soc_ifc_pkg;
         logic                          write;
         logic                          soc_req;
     } soc_ifc_req_t;
-    // ECC protected data
-    typedef struct packed {
-        logic [CPTRA_MBOX_ECC_DATA_W-1:0] ecc;
-        logic [CPTRA_MBOX_DATA_W-1:0]     data;
-    } mbox_sram_data_t;
-    //Request to mbox sram
-    typedef struct packed {
-        logic cs;
-        logic we;
-        logic [CPTRA_MBOX_ADDR_W-1:0] addr;
-        mbox_sram_data_t wdata;
-    } mbox_sram_req_t;
-    //Response from mbox sram
-    typedef struct packed {
-        mbox_sram_data_t rdata;
-    } mbox_sram_resp_t;
 
     typedef struct packed {
         logic cptra_iccm_ecc_single_error;
@@ -184,11 +141,6 @@ package soc_ifc_pkg;
         logic cptra_dccm_ecc_single_error;
         logic cptra_dccm_ecc_double_error;
     } rv_ecc_sts_t;
-
-    typedef struct packed {
-        logic axs_without_lock;
-        logic axs_incorrect_order;
-    } mbox_protocol_error_t;
 
     typedef enum logic [1:0] {
         DEVICE_UNPROVISIONED = 2'b00,
@@ -200,12 +152,6 @@ package soc_ifc_pkg;
         logic debug_locked;
         device_lifecycle_e device_lifecycle;
     } security_state_t;
-
-    typedef struct packed {
-        logic [31:0] MBOX_DLEN;
-        logic [31:0] MBOX_DOUT;
-        logic [31:0] MBOX_STATUS;
-    } mbox_dmi_reg_t;
 
 endpackage
 

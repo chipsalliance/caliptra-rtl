@@ -21,6 +21,7 @@
 module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
 import soc_ifc_pkg::*;
+import mbox_pkg::*;
 import caliptra_top_tb_pkg::*; #(
     parameter SKIP_BRINGUP = 0
 ) (

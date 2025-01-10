@@ -15,11 +15,12 @@
 
 package caliptra_top_tb_pkg;
 import soc_ifc_pkg::*;
+import mbox_pkg::*;
 
 `ifndef VERILATOR
-class bitflip_mask_generator #(int CPTRA_MBOX_DATA_AND_ECC_W = 39);
+class bitflip_mask_generator #(int MBOX_DATA_AND_ECC_W = 39);
 
-    rand logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] rand_sram_bitflip_mask;
+    rand logic [MBOX_DATA_AND_ECC_W-1:0] rand_sram_bitflip_mask;
     logic do_double_bitflip;
     constraint bitflip_c {
         if (do_double_bitflip) {
@@ -34,7 +35,7 @@ class bitflip_mask_generator #(int CPTRA_MBOX_DATA_AND_ECC_W = 39);
         this.do_double_bitflip = 1'b0;
     endfunction
 
-    function logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] get_mask(bit do_double_bit = 1'b0);
+    function logic [MBOX_DATA_AND_ECC_W-1:0] get_mask(bit do_double_bit = 1'b0);
         this.do_double_bitflip = do_double_bit;
         this.randomize();
         return this.rand_sram_bitflip_mask;
@@ -42,8 +43,8 @@ class bitflip_mask_generator #(int CPTRA_MBOX_DATA_AND_ECC_W = 39);
 
 endclass
 `else
-function static logic [soc_ifc_pkg::CPTRA_MBOX_DATA_AND_ECC_W-1:0] get_bitflip_mask(bit do_double_bit = 1'b0);
-    return 2<<($urandom%(soc_ifc_pkg::CPTRA_MBOX_DATA_AND_ECC_W-2)) | soc_ifc_pkg::CPTRA_MBOX_DATA_AND_ECC_W'(do_double_bit);
+function static logic [mbox_pkg::MBOX_DATA_AND_ECC_W-1:0] get_bitflip_mask(bit do_double_bit = 1'b0);
+    return 2<<($urandom%(mbox_pkg::MBOX_DATA_AND_ECC_W-2)) | mbox_pkg::MBOX_DATA_AND_ECC_W'(do_double_bit);
 endfunction
 `endif
 
