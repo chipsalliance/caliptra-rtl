@@ -274,6 +274,7 @@ module caliptra_top_tb_services
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
+    //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck failure during mldsa signing
     //         8'hd8        - Inject makehint failure during mldsa signing
     //         8'hd9        - Perform mldsa keygen
@@ -618,18 +619,23 @@ module caliptra_top_tb_services
     logic inject_makehint_failure, inject_normcheck_failure;
     logic reset_mldsa_failure;
     logic [1:0] normcheck_mode_random;
+    logic inject_mldsa_timeout;
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
             inject_makehint_failure <= 1'b0;
             inject_normcheck_failure <= 1'b0;
+            inject_mldsa_timeout <= 1'b0;
             reset_mldsa_failure <= 1'b0;
             normcheck_mode_random <= 'h0;
         end
-        else if (((WriteData[7:0] == 8'hd8) && mailbox_write) /*&& !caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid*/) begin
+        else if (((WriteData[7:0] == 8'hd6) && mailbox_write)) begin
+            inject_mldsa_timeout <= 1'b1;
+        end
+        else if (((WriteData[7:0] == 8'hd8) && mailbox_write)) begin
             inject_makehint_failure <= 1'b1;
         end
-        else if (((WriteData[7:0] == 8'hd7) && mailbox_write) /*&& (!caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid || !caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid)*/) begin
+        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin
             inject_normcheck_failure <= 1'b1;
             if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process)
                 normcheck_mode_random <= 'h0;
@@ -655,6 +661,9 @@ module caliptra_top_tb_services
             force caliptra_top_dut.mldsa.norm_check_inst.invalid = 'b1;
         else
             release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+        
+        if (inject_mldsa_timeout)
+            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
     end
 
     `ifndef VERILATOR
