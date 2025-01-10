@@ -1583,7 +1583,7 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
-                ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
+                ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
                     if (fuse_update_enabled) begin
                         `uvm_error("PRED_AHB", {"Unexpected write to ", axs_reg.get_name(), " should not occur when fuse_update_enabled == 1!"})
                         send_cptra_sts_txn       = 1'b1;
@@ -2620,13 +2620,15 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
-            ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
-                if (fuse_update_enabled) begin
+            ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
+                if (fuse_update_enabled && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-                if (fuse_update_enabled) begin
+                if (fuse_update_enabled && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
@@ -3020,8 +3022,8 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(aaxi_master_tr txn, uvm
     uvm_reg_field fld;
     bit is_error = 0;
     if (!p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() &&
-        txn.is_read() ? (txn.aruser inside {mbox_valid_users}) :
-                        (txn.awuser inside {mbox_valid_users})) begin
+        (txn.is_read() ? (txn.aruser inside {mbox_valid_users}) :
+                         (txn.awuser inside {mbox_valid_users}))) begin
         case (axs_reg.get_name()) inside
             "mbox_lock": begin
                 fld = axs_reg.get_field_by_name("lock");
@@ -3074,11 +3076,13 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(aaxi_master_tr txn, uvm
         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
         `uvm_info("MBOX_NO_LOCK_CHK",
-                  $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.",
+                  $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation (lock = %x). User (0x%x) and mbox_valid_users (%p). Delay job is queued to update DUT model.",
                             txn.kind.name(),
                             fld.get_name(),
                             p_soc_ifc_AXI_map.get_name(),
-                            txn.data[0]),
+                            txn.beatQ[0],
+                            p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
+                            txn.is_read() ? txn.aruser : txn.awuser, mbox_valid_users),
                   UVM_LOW)
     end
     return is_error;
@@ -3147,7 +3151,7 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(aaxi_master_tr txn, uvm_reg
                             txn.kind.name(),
                             fld.get_name(),
                             p_soc_ifc_AXI_map.get_name(),
-                            txn.data[0],
+                            txn.beatQ[0],
                             p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs),
                   UVM_LOW)
     end
@@ -3160,7 +3164,7 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(aaxi_master_tr txn, uvm_reg
         error_job.state_nxt = MBOX_ERROR;
         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
-        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.kind.name(), fld.get_name(), p_soc_ifc_AXI_map.get_name(), txn.data[0]), UVM_LOW)
+        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.kind.name(), fld.get_name(), p_soc_ifc_AXI_map.get_name(), txn.beatQ[0]), UVM_LOW)
         p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
     end
     return is_error;
