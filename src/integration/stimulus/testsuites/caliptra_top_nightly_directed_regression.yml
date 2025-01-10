@@ -26,7 +26,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc/smoke_test_ecc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen_sign/smoke_test_ecc_keygen_sign.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_rand.yml
