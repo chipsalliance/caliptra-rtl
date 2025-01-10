@@ -125,6 +125,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_sparse_fsm_pk
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/norm_check/rtl/norm_check_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
