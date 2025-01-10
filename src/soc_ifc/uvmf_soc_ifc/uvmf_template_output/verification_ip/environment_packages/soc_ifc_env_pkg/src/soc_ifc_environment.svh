@@ -326,10 +326,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
 //    qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(soc_ifc_pred.apb5_slave_0_ae);
 //    qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"].connect(soc_ifc_sb.actual_apb_analysis_export);
-    aaxi_tb.env0.master[0].ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0]. read_done_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
-    aaxi_tb.env0.master[0]. read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
+    aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
+    aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
 //    if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )
@@ -346,8 +346,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         ss_mode_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.ss_mode_status_ae);
         mbox_sram_agent     .monitored_ap.connect                                   (soc_ifc_env_cov_sub.mbox_sram_ae     );
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
-        aaxi_tb.env0.master[0].ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
-        aaxi_tb.env0.master[0]. read_done_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
+        aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
+        aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
 //        qvip_apb5_slave_subenv_apb5_master_0_ap       ["trans_ap_cov"]      .connect(soc_ifc_env_cov_sub.apb_ae           );
     end:connect_coverage
     // Create register model adapter if required
