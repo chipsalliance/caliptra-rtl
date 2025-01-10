@@ -61,6 +61,7 @@ module soc_ifc_axi_sha_acc_dis_test
   // Device Under Test.
   //----------------------------------------------------------------
   axi_if #(.AW(18), .DW(32), .IW(8), .UW(32)) axi_sub_if(clk_tb, cptra_rst_b_tb);
+  axi_if #(.AW(18), .DW(32), .IW(8), .UW(32)) axi_mgr_if(clk_tb, cptra_rst_b_tb);
 
   soc_ifc_top #(.AXI_ID_WIDTH(8)) dut (
     .clk(clk_tb),
@@ -102,8 +103,8 @@ module soc_ifc_axi_sha_acc_dis_test
     .hreadyout_o(),
     .hrdata_o(),
 
-    .m_axi_w_if(axi_sub_if.w_mgr),
-    .m_axi_r_if(axi_sub_if.r_mgr),
+    .m_axi_w_if(axi_mgr_if.w_mgr),
+    .m_axi_r_if(axi_mgr_if.r_mgr),
 
     .cptra_error_fatal(),
     .cptra_error_non_fatal(),
@@ -254,7 +255,15 @@ endtask // init_sim
 task soc_ifc_axi_test;
   axi_resp_e read_resp;
   $display("Reading SHA ACC LOCK reg\n");
-  axi_sub_if.axi_read_single(`CLP_SHA512_ACC_CSR_LOCK,0,0,0, rdata, read_resp);
+  //id = 0, user --> decoded in axi sub
+  axi_sub_if.axi_read_single(
+    .addr(`CLP_SHA512_ACC_CSR_LOCK),
+    .user(0),
+    .id(0),
+    .lock(0), 
+    .data(rdata), 
+    .resp(read_resp)
+  );
   $display("Return read data over axi = %h\n", rdata);
   $display("Test done\n");
 endtask
