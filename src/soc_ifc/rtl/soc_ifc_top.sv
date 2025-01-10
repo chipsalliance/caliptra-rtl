@@ -104,7 +104,9 @@ module soc_ifc_top
     input  logic scan_mode,
     input  logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
+    input  logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy,
     output logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
+    input  logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
     output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
     // Subsystem mode straps
@@ -489,11 +491,15 @@ always_comb begin
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
     end
     for (int i = 0; i < `CLP_OBF_UDS_DWORDS; i++) begin
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets; 
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.wel = ~Warm_Reset_Capture_Flag || ~security_state.debug_locked || scan_mode_f;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
     for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.wel = ~Warm_Reset_Capture_Flag || ~security_state.debug_locked || scan_mode_f;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
 

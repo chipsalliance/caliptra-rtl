@@ -198,7 +198,8 @@ caliptra_top caliptra_top_dut (
     .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
-
+    .cptra_obf_uds_seed         ('0),
+    .cptra_obf_field_entropy    ('0),
     .cptra_csr_hmac_key         (cptra_csr_hmac_key),
 
     .jtag_tck(jtag_tck),
