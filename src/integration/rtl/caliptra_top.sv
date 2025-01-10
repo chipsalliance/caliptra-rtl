@@ -290,7 +290,6 @@ module caliptra_top
                                (aes_busy & mldsa_busy)|
                                (doe_busy & mldsa_busy)|
                                (doe_busy & aes_busy)  |
-                               (ecc_busy & mldsa_busy)|
                                (ecc_busy & aes_busy)  |
                                (hmac_busy & mldsa_busy)|
                                (hmac_busy & aes_busy);
