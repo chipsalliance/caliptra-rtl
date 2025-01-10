@@ -46,8 +46,8 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
       security_state_t security_state;
   } ctrl_reset_seq_context_t;
 
-  rand uvm_reg_data_t uds_seed_rand      [12];
-  rand uvm_reg_data_t field_entropy_rand [32];
+  rand uvm_reg_data_t uds_seed_rand      [`CLP_OBF_UDS_DWORDS];
+  rand uvm_reg_data_t field_entropy_rand [`CLP_OBF_FE_DWORDS];
   rand uvm_reg_data_t owner_pk_hash_rand [12];
   rand uvm_reg_data_t key_manifest_pk_hash_rand [12];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
