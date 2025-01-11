@@ -36,7 +36,9 @@ module caliptra_top
 
     input logic [255:0]                              cptra_obf_key,
     input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,    
+    input logic                                      cptra_obf_field_entropy_vld,
     input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0]      cptra_obf_field_entropy,
+    input logic                                      cptra_obf_uds_seed_vld,
     input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]      cptra_obf_uds_seed,
 
 
@@ -1297,8 +1299,10 @@ soc_ifc_top1
     .scan_mode(scan_mode),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
+    .cptra_obf_field_entropy_vld(cptra_obf_field_entropy_vld),
     .cptra_obf_field_entropy(cptra_obf_field_entropy),
     .obf_field_entropy(obf_field_entropy),
+    .cptra_obf_uds_seed_vld(cptra_obf_uds_seed_vld),
     .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
 

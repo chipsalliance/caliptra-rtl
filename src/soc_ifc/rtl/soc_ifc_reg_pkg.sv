@@ -278,7 +278,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] next;
-        logic wel;
+        logic we;
         logic swwel;
         logic hwclr;
     } soc_ifc_reg__secret_w32__in_t;

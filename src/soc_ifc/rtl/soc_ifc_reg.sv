@@ -3557,7 +3557,7 @@ module soc_ifc_reg (
             if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else if(!hwif_in.fuse_uds_seed[i0].seed.wel) begin // HW Write - wel
+            end else if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_uds_seed[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_uds_seed[i0].seed.hwclr) begin // HW Clear
@@ -3586,7 +3586,7 @@ module soc_ifc_reg (
             if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else if(!hwif_in.fuse_field_entropy[i0].seed.wel) begin // HW Write - wel
+            end else if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_field_entropy[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_field_entropy[i0].seed.hwclr) begin // HW Clear
