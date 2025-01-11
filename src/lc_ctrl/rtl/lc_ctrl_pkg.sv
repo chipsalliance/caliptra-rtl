@@ -40,10 +40,16 @@ package lc_ctrl_pkg;
 
   // Note that changing this encoding has implications on isolation cell
   // values in RTL. Do not change this unless absolutely needed.
+  /*
   typedef enum logic [TxWidth-1:0] {
     On  = 4'b0101,
     Off = 4'b1010
   } lc_tx_t;
+  */
+  typedef logic [TxWidth-1:0] lc_tx_t;
+  parameter lc_tx_t On = 4'b0101;
+  parameter lc_tx_t Off = 4'b1010;
+
   parameter lc_tx_t LC_TX_DEFAULT = lc_tx_t'(Off);
 
   parameter int RmaSeedWidth = 32;

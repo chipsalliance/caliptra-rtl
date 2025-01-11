@@ -1132,7 +1132,7 @@ package caliptra_prim_secded_pkg;
   endfunction
 
   function automatic logic [38:0]
-      prim_secded_inv_39_32_enc (logic [31:0] data_i);
+      caliptra_prim_secded_inv_39_32_enc (logic [31:0] data_i);
     logic [38:0] data_o;
     data_o = 39'(data_i);
     data_o[32] = ^(data_o & 39'h002606BD25);
@@ -1147,7 +1147,7 @@ package caliptra_prim_secded_pkg;
   endfunction
 
   function automatic secded_inv_39_32_t
-      prim_secded_inv_39_32_dec (logic [38:0] data_i);
+      caliptra_prim_secded_inv_39_32_dec (logic [38:0] data_i);
     logic [31:0] data_o;
     logic [6:0] syndrome_o;
     logic [1:0]  err_o;
@@ -1209,7 +1209,7 @@ package caliptra_prim_secded_pkg;
   endfunction
 
   function automatic logic [63:0]
-      prim_secded_inv_64_57_enc (logic [56:0] data_i);
+      caliptra_prim_secded_inv_64_57_enc (logic [56:0] data_i);
     logic [63:0] data_o;
     data_o = 64'(data_i);
     data_o[57] = ^(data_o & 64'h0103FFF800007FFF);
@@ -1224,7 +1224,7 @@ package caliptra_prim_secded_pkg;
   endfunction
 
   function automatic secded_inv_64_57_t
-      prim_secded_inv_64_57_dec (logic [63:0] data_i);
+      caliptra_prim_secded_inv_64_57_dec (logic [63:0] data_i);
     logic [56:0] data_o;
     logic [6:0] syndrome_o;
     logic [1:0]  err_o;

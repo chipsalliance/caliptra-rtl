@@ -10,8 +10,6 @@ module caliptra_prim_subreg_arb
   parameter int         DW       = 32,
   parameter sw_access_e SwAccess = SwAccessRW,
   parameter bit         Mubi     = 1'b0
-  parameter sw_access_e SwAccess = SwAccessRW,
-  parameter bit         Mubi     = 1'b0
 ) (
   // From SW: valid for RW, WO, W1C, W1S, W0C, RC.
   // In case of RC, top connects read pulse to we.
