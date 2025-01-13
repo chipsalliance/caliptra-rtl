@@ -19,6 +19,9 @@
 // commit_i: Counter changes only take effect when `commit_i` is set. This does not effect the
 //           `cnt_after_commit_o` output which gives the next counter state if the change is
 //           committed.
+// commit_i: Counter changes only take effect when `commit_i` is set. This does not effect the
+//           `cnt_after_commit_o` output which gives the next counter state if the change is
+//           committed.
 //
 // Note that if both incr_en_i and decr_en_i are asserted at the same time, the counter remains
 // unchanged. The counter is also protected against under- and overflows.
@@ -51,8 +54,13 @@ module caliptra_prim_count
   input clr_i,
   input set_i,
   input [Width-1:0] set_cnt_i,                 // Set value for the counter.
+  input [Width-1:0] set_cnt_i,                 // Set value for the counter.
   input incr_en_i,
   input decr_en_i,
+  input [Width-1:0] step_i,                    // Increment/decrement step when enabled.
+  input commit_i,
+  output logic [Width-1:0] cnt_o,              // Current counter state
+  output logic [Width-1:0] cnt_after_commit_o, // Next counter state if committed
   input [Width-1:0] step_i,                    // Increment/decrement step when enabled.
   input commit_i,
   output logic [Width-1:0] cnt_o,              // Current counter state
@@ -122,6 +130,8 @@ module caliptra_prim_count
 
     assign cnt_d_committed[k] = commit_i ? cnt_d[k] : cnt_q[k];
 
+    assign cnt_d_committed[k] = commit_i ? cnt_d[k] : cnt_q[k];
+
     logic [Width-1:0] cnt_unforced_q;
     caliptra_prim_flop #(
       .Width(Width),
@@ -129,6 +139,7 @@ module caliptra_prim_count
     ) u_cnt_flop (
       .clk_i,
       .rst_ni,
+      .d_i(cnt_d_committed[k]),
       .d_i(cnt_d_committed[k]),
       .q_o(cnt_unforced_q)
     );
@@ -154,6 +165,8 @@ module caliptra_prim_count
   assign err_o = err_q;
 
   // Output count values
+  assign cnt_o              = cnt_q[0];
+  assign cnt_after_commit_o = cnt_d[0];
   assign cnt_o              = cnt_q[0];
   assign cnt_after_commit_o = cnt_d[0];
 
