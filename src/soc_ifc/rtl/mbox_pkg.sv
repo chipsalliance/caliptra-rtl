@@ -12,26 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-`include "config_defines.svh"
-
 package mbox_pkg;
-
-  //Match the mailbox client interface
-  parameter MBOX_IFC_DATA_W = 32;
-  parameter MBOX_IFC_USER_W = 32;
-  parameter MBOX_IFC_ADDR_W = 19;
-  parameter MBOX_IFC_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
-
-  //Mailbox size configuration
-  parameter MBOX_SIZE_KB = 256;
-  parameter MBOX_SIZE_BYTES = MBOX_SIZE_KB * 1024;
-  parameter MBOX_SIZE_DWORDS = MBOX_SIZE_BYTES/4;
-  parameter MBOX_DATA_W = 32;
-  parameter MBOX_ECC_DATA_W = 7;
-  parameter MBOX_DATA_AND_ECC_W = MBOX_DATA_W + MBOX_ECC_DATA_W;
-  parameter MBOX_DEPTH = (MBOX_SIZE_KB * 1024 * 8) / MBOX_DATA_W;
-  parameter MBOX_ADDR_W = $clog2(MBOX_DEPTH);
-  parameter MBOX_DEPTH_LOG2 = $clog2(MBOX_DEPTH);
 
   //MAILBOX FSM
   typedef enum logic [2:0] {
@@ -52,37 +33,6 @@ package mbox_pkg;
     CMD_COMPLETE  = 4'd2,
     CMD_FAILURE   = 4'd3
   } mbox_status_e;
-
-  //Any request into mbox
-  typedef struct packed {
-    logic   [MBOX_IFC_ADDR_W-1:0]   addr;
-    logic   [MBOX_IFC_DATA_W-1:0]   wdata;
-    logic   [MBOX_IFC_DATA_W/8-1:0] wstrb;
-    logic   [MBOX_IFC_USER_W-1:0]   user;
-    logic   [MBOX_IFC_ID_W  -1:0]   id;
-    logic                          write;
-    logic                          soc_req;
-  } mbox_req_t;
-
-  // ECC protected data
-  typedef struct packed {
-    logic [MBOX_ECC_DATA_W-1:0] ecc;
-    logic [MBOX_DATA_W-1:0]     data;
-  } mbox_sram_data_t;
-
-  //Request to mbox sram
-  typedef struct packed {
-    logic cs;
-    logic we;
-    logic [MBOX_ADDR_W-1:0] addr;
-    mbox_sram_data_t wdata;
-  } mbox_sram_req_t;
-
-  //Response from mbox sram
-  typedef struct packed {
-    mbox_sram_data_t rdata;
-  } mbox_sram_resp_t;
-
 
   typedef struct packed {
     logic axs_without_lock;

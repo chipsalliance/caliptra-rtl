@@ -111,8 +111,8 @@ interface soc_ifc_cov_if
     input wire              timer_intr,
 
     //SRAM interface
-    input mbox_sram_req_t  mbox_sram_req,
-    input mbox_sram_resp_t mbox_sram_resp,
+    input cptra_mbox_sram_req_t  mbox_sram_req,
+    input cptra_mbox_sram_resp_t mbox_sram_resp,
 
     // RV ECC Status Interface
     input rv_ecc_sts_t rv_ecc_sts,
@@ -368,9 +368,9 @@ interface soc_ifc_cov_if
         dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws {
           bins zero = {0};
           bins one = {1};
-          bins range[32] = {[2:MBOX_SIZE_DWORDS-2]};
-          bins almost_full = {MBOX_SIZE_DWORDS-1};
-          bins full = {MBOX_SIZE_DWORDS};}
+          bins range[32] = {[2:CPTRA_MBOX_SIZE_DWORDS-2]};
+          bins almost_full = {CPTRA_MBOX_SIZE_DWORDS-1};
+          bins full = {CPTRA_MBOX_SIZE_DWORDS};}
 
         sram_single_ecc_error_cp: coverpoint i_mbox.sram_single_ecc_error;
         sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
@@ -382,7 +382,7 @@ interface soc_ifc_cov_if
         sha_sram_hold_cp: coverpoint i_mbox.sha_sram_hold;
 
         //special scenarios - only care about bin of 1
-        dlen_gt_mbox_size_cp: coverpoint i_mbox.hwif_out.mbox_dlen.length.value > MBOX_SIZE_BYTES {
+        dlen_gt_mbox_size_cp: coverpoint i_mbox.hwif_out.mbox_dlen.length.value > CPTRA_MBOX_SIZE_BYTES {
             option.comment = "DLEN is programmed greater than mailbox size";
             bins one = {1};}
         req_wrptr_gt_dlen_cp: coverpoint (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & (i_mbox.mbox_wrptr > i_mbox.dlen_in_dws) {
@@ -397,7 +397,7 @@ interface soc_ifc_cov_if
         rdptr_gt_dlen_cp: coverpoint i_mbox.inc_rdptr & ~(i_mbox.mbox_rdptr <= i_mbox.dlen_in_dws) {
             option.comment = "Read pointer tried to increment passed DLEN";
             bins one = {1};}
-        rdptr_rollover_cp: coverpoint i_mbox.inc_rdptr & ~(i_mbox.mbox_rdptr < (MBOX_SIZE_DWORDS-1)) {
+        rdptr_rollover_cp: coverpoint i_mbox.inc_rdptr & ~(i_mbox.mbox_rdptr < (CPTRA_MBOX_SIZE_DWORDS-1)) {
             option.comment = "Read pointer tried to increment passed mailbox size";
             bins one = {1};}
 

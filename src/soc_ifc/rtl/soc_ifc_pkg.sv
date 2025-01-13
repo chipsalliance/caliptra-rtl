@@ -49,6 +49,17 @@ package soc_ifc_pkg;
     parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
 
+    //Mailbox size configuration
+    parameter CPTRA_MBOX_SIZE_KB = 256;
+    parameter CPTRA_MBOX_DATA_W = 32;
+    parameter CPTRA_MBOX_ECC_DATA_W = 7;
+    parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;
+    parameter CPTRA_MBOX_SIZE_DWORDS = CPTRA_MBOX_SIZE_BYTES/4;
+    parameter CPTRA_MBOX_DATA_AND_ECC_W = CPTRA_MBOX_DATA_W + CPTRA_MBOX_ECC_DATA_W;
+    parameter CPTRA_MBOX_DEPTH = (CPTRA_MBOX_SIZE_KB * 1024 * 8) / CPTRA_MBOX_DATA_W;
+    parameter CPTRA_MBOX_ADDR_W = $clog2(CPTRA_MBOX_DEPTH);
+    parameter CPTRA_MBOX_DEPTH_LOG2 = $clog2(CPTRA_MBOX_DEPTH);
+
     //Valid AXI_USER
     //Lock the AXI_USER values from integration time
     parameter [4:0] CPTRA_SET_MBOX_AXI_USER_INTEG   = { 1'b0,          1'b0,          1'b0,          1'b0,          1'b0};
@@ -112,8 +123,6 @@ package soc_ifc_pkg;
         BOOT_DONE   = 3'b100
     } boot_fsm_state_e;
 
-
-
     //SHA FSM
     typedef enum logic [2:0] {
         SHA_IDLE    = 3'b000,
@@ -152,6 +161,26 @@ package soc_ifc_pkg;
         logic debug_locked;
         device_lifecycle_e device_lifecycle;
     } security_state_t;
+
+    //Caliptra Mailbox
+    // ECC protected data
+    typedef struct packed {
+        logic [CPTRA_MBOX_ECC_DATA_W-1:0] ecc;
+        logic [CPTRA_MBOX_DATA_W-1:0]     data;
+    } cptra_mbox_sram_data_t;
+
+    //Request to mbox sram
+    typedef struct packed {
+        logic cs;
+        logic we;
+        logic [CPTRA_MBOX_ADDR_W-1:0] addr;
+        cptra_mbox_sram_data_t wdata;
+    } cptra_mbox_sram_req_t;
+
+    //Response from mbox sram
+    typedef struct packed {
+        cptra_mbox_sram_data_t rdata;
+    } cptra_mbox_sram_resp_t;
 
 endpackage
 

@@ -34,8 +34,7 @@
 
 
 module caliptra_top_tb_services 
-    import soc_ifc_pkg::*; 
-    import mbox_pkg::*;
+    import soc_ifc_pkg::*;
     import kv_defines_pkg::*;
     import caliptra_top_tb_pkg::*;
 #(
@@ -51,9 +50,9 @@ module caliptra_top_tb_services
     //SRAM interface for mbox
     input  wire logic mbox_sram_cs,
     input  wire logic mbox_sram_we,
-    input  wire logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    input  wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    output wire logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    input  wire logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr,
+    input  wire logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    output wire logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
     input  wire logic imem_cs,
@@ -141,7 +140,7 @@ module caliptra_top_tb_services
 
     string                      abi_reg[32]; // ABI register names
 
-    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
+    logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_bitflip;
     int cycleCntKillReq;
 
     int                         cycleCnt_ff;
@@ -1386,7 +1385,7 @@ endgenerate //IV_NO
 
     `ifndef VERILATOR
         initial begin
-            automatic bitflip_mask_generator #(MBOX_DATA_AND_ECC_W) bitflip_gen = new();
+            automatic bitflip_mask_generator #(CPTRA_MBOX_DATA_AND_ECC_W) bitflip_gen = new();
             forever begin
                 @(posedge clk)
                 if (~|inject_mbox_sram_error) begin
@@ -1663,8 +1662,8 @@ caliptra_veer_sram_export veer_sram_export_inst (
 //SRAM for mbox (preload raw data here)
 caliptra_sram 
 #(
-    .DATA_WIDTH(MBOX_DATA_W),
-    .DEPTH     (MBOX_DEPTH )
+    .DATA_WIDTH(CPTRA_MBOX_DATA_W),
+    .DEPTH     (CPTRA_MBOX_DEPTH )
 )
 dummy_mbox_preloader
 (
@@ -1680,8 +1679,8 @@ dummy_mbox_preloader
 // dummy_mbox_preloader with ECC bits appended
 caliptra_sram 
 #(
-    .DATA_WIDTH(MBOX_DATA_AND_ECC_W),
-    .DEPTH     (MBOX_DEPTH         )
+    .DATA_WIDTH(CPTRA_MBOX_DATA_AND_ECC_W),
+    .DEPTH     (CPTRA_MBOX_DEPTH         )
 )
 mbox_ram1
 (
@@ -1751,10 +1750,10 @@ caliptra_sram #(
    //=========================================================================-
 task static preload_mbox;
     // Variables
-    mbox_sram_data_t         ecc_data;
-    bit [MBOX_ADDR_W:0] addr;
+    cptra_mbox_sram_data_t         ecc_data;
+    bit [CPTRA_MBOX_ADDR_W:0] addr;
     int                      byt;
-    localparam NUM_BYTES = MBOX_DATA_AND_ECC_W / 8 + ((MBOX_DATA_AND_ECC_W%8) ? 1 : 0);
+    localparam NUM_BYTES = CPTRA_MBOX_DATA_AND_ECC_W / 8 + ((CPTRA_MBOX_DATA_AND_ECC_W%8) ? 1 : 0);
 
     // Init
     `ifndef VERILATOR
@@ -1762,8 +1761,8 @@ task static preload_mbox;
     `endif
 
     // Slam
-    $display("MBOX pre-load from %h to %h", 0, MBOX_DEPTH);
-    for (addr = 0; addr < MBOX_DEPTH; addr++) begin
+    $display("MBOX pre-load from %h to %h", 0, CPTRA_MBOX_DEPTH);
+    for (addr = 0; addr < CPTRA_MBOX_DEPTH; addr++) begin
         ecc_data.data = {dummy_mbox_preloader.ram[addr][3],
                          dummy_mbox_preloader.ram[addr][2],
                          dummy_mbox_preloader.ram[addr][1],
