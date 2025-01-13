@@ -133,6 +133,7 @@ module soc_ifc_tb
 
   reg [127 : 0] result_data;
   logic ready_for_fuses;
+  logic ready_for_mb_processing;
   logic [31:0]  generic_input_wires0; 
   logic [31:0]  generic_input_wires1; 
 
@@ -197,11 +198,19 @@ module soc_ifc_tb
   // Device Under Test.
   //----------------------------------------------------------------
   soc_ifc_top #(
+             .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+             .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+             .AXI_ID_WIDTH(AXI_ID_WIDTH),
+             .AXI_USER_WIDTH(AXI_USER_WIDTH),
+             .AXIM_ADDR_WIDTH(AXIM_ADDR_WIDTH),
+             .AXIM_DATA_WIDTH(AXIM_DATA_WIDTH),
+             .AXIM_ID_WIDTH(AXIM_ID_WIDTH),
+             .AXIM_USER_WIDTH(AXIM_USER_WIDTH),
              .AHB_DATA_WIDTH(AHB_DATA_WIDTH), 
              .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH), 
-             .APB_USER_WIDTH(APB_USER_WIDTH), 
-             .APB_ADDR_WIDTH(APB_ADDR_WIDTH), 
-             .APB_DATA_WIDTH(APB_DATA_WIDTH)  
+             //.APB_USER_WIDTH(APB_USER_WIDTH), 
+             //.APB_ADDR_WIDTH(APB_ADDR_WIDTH), 
+             //.APB_DATA_WIDTH(APB_DATA_WIDTH)  
             )
             dut (
              .clk(clk_tb),
@@ -215,12 +224,16 @@ module soc_ifc_tb
              .fw_update_rst_window(),
 
              .ready_for_fuses(ready_for_fuses),
-             .ready_for_fw_push(ready_for_fw_push),
+             .ready_for_mb_processing(ready_for_mb_processing),
+             //.ready_for_fw_push(ready_for_fw_push),
              .ready_for_runtime(),
 
              .mailbox_data_avail(),
              .mailbox_flow_done(),
 
+             .recovery_data_avail(),
+             .recovery_image_activated(),
+             
              .security_state(security_state),
 
              .generic_input_wires({generic_input_wires1, generic_input_wires0}),
