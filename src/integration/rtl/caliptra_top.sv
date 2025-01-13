@@ -286,13 +286,7 @@ module caliptra_top
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
                                (ecc_busy & doe_busy)  |
-                               (hmac_busy & doe_busy) |
-                               (aes_busy & mldsa_busy)|
-                               (doe_busy & mldsa_busy)|
-                               (doe_busy & aes_busy)  |
-                               (ecc_busy & aes_busy)  |
-                               (hmac_busy & mldsa_busy)|
-                               (hmac_busy & aes_busy);
+                               (hmac_busy & doe_busy);
 
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
