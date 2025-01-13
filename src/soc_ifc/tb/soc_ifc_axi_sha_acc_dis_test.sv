@@ -30,6 +30,15 @@ module soc_ifc_axi_sha_acc_dis_test
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
   parameter MAX_CYCLES = 20_0000;
 
+  parameter AHB_HTRANS_IDLE      = 0;
+  parameter AHB_HTRANS_BUSY      = 1;
+  parameter AHB_HTRANS_NONSEQ    = 2;
+  parameter AHB_HTRANS_SEQ       = 3;
+
+  parameter AHB_ADDR_WIDTH       = 32;
+  parameter AHB_DATA_WIDTH       = 32;
+
+
   parameter integer AW = 32;
   parameter integer DW = 32; 
   parameter integer IW = 8;
@@ -45,6 +54,23 @@ module soc_ifc_axi_sha_acc_dis_test
   reg           cptra_rst_b_tb;
 
   logic [31:0] rdata;
+
+  reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
+  reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
+  reg           hsel_i_tb;
+  reg           hwrite_i_tb; 
+  reg           hready_i_tb;
+  reg [1:0]     htrans_i_tb;
+  reg [2:0]     hsize_i_tb;
+
+  wire          hresp_o_tb;
+  wire          hreadyout_o_tb;
+  wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
+
+  typedef enum logic {
+    read = 0,
+    write = 1
+  } rw_e;
 
   // Component Signals
 // logic dv;
@@ -91,17 +117,17 @@ module soc_ifc_axi_sha_acc_dis_test
     .s_axi_w_if(axi_sub_if.w_sub),
     .s_axi_r_if(axi_sub_if.r_sub),
 
-    .haddr_i(),
-    .hwdata_i(),
-    .hsel_i(),
-    .hwrite_i(),
-    .hready_i(),
-    .htrans_i(),
-    .hsize_i(),
+    .haddr_i(haddr_i_tb),
+    .hwdata_i(hwdata_i_tb),
+    .hsel_i(hsel_i_tb),
+    .hwrite_i(hwrite_i_tb),
+    .hready_i(hready_i_tb),
+    .htrans_i(htrans_i_tb),
+    .hsize_i(hsize_i_tb),
 
-    .hresp_o(),
-    .hreadyout_o(),
-    .hrdata_o(),
+    .hresp_o(hresp_o_tb),
+    .hreadyout_o(hreadyout_o_tb),
+    .hrdata_o(hrdata_o_tb),
 
     .m_axi_w_if(axi_mgr_if.w_mgr),
     .m_axi_r_if(axi_mgr_if.r_mgr),
@@ -249,11 +275,103 @@ task display_test_results;
       clk_tb        = 0;
       cptra_pwrgood_tb = 0;
       cptra_rst_b_tb    = 0;
+
+      haddr_i_tb      = 0;
+      hwdata_i_tb     = 0;
+      hsel_i_tb       = 0;
+      hwrite_i_tb     = 0;
+      hready_i_tb     = 0;
+      htrans_i_tb     = AHB_HTRANS_IDLE;
+      hsize_i_tb      = 3'b011;
+
+      //reset w_mgr
+      axi_mgr_if.awready = 0;
+      axi_mgr_if.wready = 0;
+      axi_mgr_if.bvalid = 0;
+      axi_mgr_if.bid = 0;
+      axi_mgr_if.bresp = 0;
+
+      //reset r_mgr
+      axi_mgr_if.arready = 0;
+      axi_mgr_if.rdata = 0;
+      axi_mgr_if.rresp = 0;
+      axi_mgr_if.rid = 0;
+      axi_mgr_if.rlast = 0;
+      axi_mgr_if.rvalid = 0;
+      
+      //reset w_sub
+      axi_sub_if.awaddr = 0;
+      axi_sub_if.awburst = 0;
+      axi_sub_if.awsize = 0;
+      axi_sub_if.awlen = 0;
+      axi_sub_if.awuser = 0;
+      axi_sub_if.awid = 0;
+      axi_sub_if.awlock = 0;
+      axi_sub_if.awvalid = 0;
+      axi_sub_if.wdata = 0;
+      axi_sub_if.wstrb = 0;
+      axi_sub_if.wvalid = 0;
+      axi_sub_if.wlast = 0;
+      axi_sub_if.bready = 0;
+
+      //reset r_sub
+      axi_sub_if.araddr = 0;
+      axi_sub_if.arburst = 0;
+      axi_sub_if.arsize = 0;
+      axi_sub_if.arlen = 0;
+      axi_sub_if.aruser = 0;
+      axi_sub_if.arid = 0;
+      axi_sub_if.arlock = 0;
+      axi_sub_if.arvalid = 0;
+      axi_sub_if.rready = 0;
     end
 endtask // init_sim
 
+task axi_txn_check(input axi_resp_e resp, input rw_e rw);
+  logic error;
+  if ((resp == AXI_RESP_SLVERR) | (resp == AXI_RESP_DECERR))
+    error = 1;
+  else 
+    error = 0;
+
+  if (error & (rw == read)) begin //read
+    $error("AXI Read error");
+  end
+  else if (error & (rw == write)) begin //write
+    $error("AXI Write error");
+  end
+
+endtask
+
+//----------------------------------------------------------------
+  // write_single_word()
+  //
+  // Write the given word to the DUT using the DUT interface.
+  //----------------------------------------------------------------
+task write_single_word(input [31 : 0]  address,
+  input [31 : 0] word);
+begin
+hsel_i_tb       = 1;
+haddr_i_tb      = address;
+hwrite_i_tb     = 1;
+hready_i_tb     = 1;
+htrans_i_tb     = AHB_HTRANS_NONSEQ;
+hsize_i_tb      = 3'b010;
+#(CLK_PERIOD);
+
+haddr_i_tb      = 'Z;
+hwdata_i_tb     = word;
+hwrite_i_tb     = 0;
+htrans_i_tb     = AHB_HTRANS_IDLE;
+end
+endtask // write_single_word
+
 task soc_ifc_axi_test;
-  axi_resp_e read_resp;
+  axi_resp_e resp;
+
+  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 'h1);
+  $display("SHA LOCK cleared over ahb\n");
+
   $display("Reading SHA ACC LOCK reg\n");
   //id = 0, user --> decoded in axi sub
   axi_sub_if.axi_read_single(
@@ -262,9 +380,69 @@ task soc_ifc_axi_test;
     .id(0),
     .lock(0), 
     .data(rdata), 
-    .resp(read_resp)
+    .resp(resp)
   );
-  $display("Return read data over axi = %h\n", rdata);
+  axi_txn_check(resp, read);
+  $display("SHA Acc lock acquired over axi = %h\n", rdata);
+
+  axi_sub_if.axi_write_single(
+    .addr(`CLP_SHA512_ACC_CSR_MODE),
+    .user(0),
+    .id(0),
+    .lock(0),
+    .data('h1),
+    .resp(resp)
+  );
+  axi_txn_check(resp, write);
+  $display("SHA mode set to 1 over axi\n");
+
+  axi_sub_if.axi_write_single(
+    .addr(`CLP_SHA512_ACC_CSR_DLEN),
+    .user(0),
+    .id(0),
+    .lock(0),
+    .data('h1),
+    .resp(resp)
+  );
+  axi_txn_check(resp, write);
+  $display("SHA dlen set to 1 over axi\n");
+
+  axi_sub_if.axi_write_single(
+    .addr(`CLP_SHA512_ACC_CSR_DATAIN),
+    .user(0),
+    .id(0),
+    .lock(0),
+    .data('hABCD_1234),
+    .resp(resp)
+  );
+  axi_txn_check(resp, write);
+  $display("SHA datain written over axi\n");
+
+  axi_sub_if.axi_write_single(
+    .addr(`CLP_SHA512_ACC_CSR_EXECUTE),
+    .user(0),
+    .id(0),
+    .lock(0),
+    .data('h1),
+    .resp(resp)
+  );
+  axi_txn_check(resp, write);
+  $display("SHA execute written over axi\n");
+
+  // while (rdata == 0) begin
+    axi_sub_if.axi_read_single(
+      .addr(`CLP_SHA512_ACC_CSR_STATUS),
+      .user(0),
+      .id(0),
+      .lock(0), 
+      .data(rdata), 
+      .resp(resp)
+    );
+    axi_txn_check(resp, read);
+    $display("Waiting for SHA status\n");
+  // end
+  $display("SHA status read over axi = %h\n", rdata);
+
   $display("Test done\n");
 endtask
 
