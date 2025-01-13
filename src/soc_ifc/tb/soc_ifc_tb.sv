@@ -149,9 +149,9 @@ module soc_ifc_tb
   //SRAM interface for mbox
   logic mbox_sram_cs;
   logic mbox_sram_we;
-  logic [MBOX_ADDR_W-1:0] mbox_sram_addr;
-  logic [MBOX_DATA_W-1:0] mbox_sram_wdata;
-  logic [MBOX_DATA_W-1:0] mbox_sram_rdata;
+  logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr;
+  logic [CPTRA_MBOX_DATA_W-1:0] mbox_sram_wdata;
+  logic [CPTRA_MBOX_DATA_W-1:0] mbox_sram_rdata;
 
   logic [0:11][31:0]          cptra_uds_tb;
   logic [0:31][31:0]          cptra_fe_tb;
