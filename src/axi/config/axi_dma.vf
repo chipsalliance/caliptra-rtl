@@ -3,7 +3,6 @@
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
-
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
@@ -46,11 +45,6 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
-${CALIPTRA_ROOT}/src/axi/rtl/axi_pkg.sv
-${CALIPTRA_ROOT}/src/axi/rtl/axi_if.sv
-${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
-${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
-${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/caliptra_prim_generic_flop_en.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/caliptra_prim_generic_flop.sv
@@ -104,8 +98,6 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_ext.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_edge_detector.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_trivium.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_shadow.sv
-${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_sync_reqack_data.sv
-${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_sync_reqack.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_39_32_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_39_32_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_64_57_enc.sv
