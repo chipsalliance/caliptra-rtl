@@ -80,10 +80,18 @@ module soc_ifc_tb
 
   parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
   parameter AHB_DATA_WIDTH = `CALIPTRA_AHB_HDATA_SIZE; // 32 
-  parameter APB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
-  parameter APB_DATA_WIDTH = `CALIPTRA_APB_DATA_WIDTH; // 32 
-  parameter APB_USER_WIDTH = `CALIPTRA_APB_USER_WIDTH; // 32 
+  //parameter APB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  //parameter APB_DATA_WIDTH = `CALIPTRA_APB_DATA_WIDTH; // 32 
+  //parameter APB_USER_WIDTH = `CALIPTRA_APB_USER_WIDTH; // 32 
 
+  parameter AXI_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18;
+  parameter AXI_DATA_WIDTH = `CALIPTRA_AXI_DATA_WIDTH; // 32
+  parameter AXI_ID_WIDTH   = `CALIPTRA_AXI_ID_WIDTH; 32
+  parameter AXI_USER_WIDTH = `CALIPTRA_AXI_USER_WIDTH; // 32
+  parameter AXIM_ADDR_WIDTH = `CALIPTRA_AXI_DMA_ADDR_WIDTH; // 48
+  parameter AXIM_DATA_WIDTH = CPTRA_AXI_DMA_DATA_WIDTH;
+  parameter AXIM_ID_WIDTH   = CPTRA_AXI_DMA_ID_WIDTH;
+  parameter AXIM_USER_WIDTH = CPTRA_AXI_DMA_USER_WIDTH;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -210,6 +218,22 @@ module soc_ifc_tb
 
   assign hready_i_tb = hreadyout_o_tb;
 
+  // AXI Interface
+  axi_if #(
+      .AW(AXIM_ADDR_WIDTH),
+      .DW(AXIM_DATA_WIDTH),
+      .IW(AXIM_ID_WIDTH),
+      .UW(AXIM_USER_WIDTH)
+  ) m_axi_if (.clk(clk_tb), .rst_n(cptra_rst_b_tb));
+
+  // AXI Interface
+  axi_if #(
+      .AW(AXI_ADDR_WIDTH),
+      .DW(AXI_DATA_WIDTH),
+      .IW(AXI_ID_WIDTH),
+      .UW(AXI_USER_WIDTH)
+  ) s_axi_if (.clk(clk_tb), .rst_n(cptra_rst_b_tb));
+
   //bind coverage file
   soc_ifc_cov_bind i_soc_ifc_cov_bind();
 
@@ -269,8 +293,8 @@ module soc_ifc_tb
              //.prdata_o(prdata_o_tb),
              //.pslverr_o(pslverr_o_tb),
 
-             .s_axi_w_if(),
-             .s_axi_r_if(),
+             .s_axi_w_if(s_axi_if.w_sub),
+             .s_axi_r_if(s_axi_if.r_sub),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -284,8 +308,8 @@ module soc_ifc_tb
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
 
-             .m_axi_w_if(),
-             .m_axi_r_if(),
+             .m_axi_w_if(m_axi_if.w_mgr),
+             .m_axi_r_if(m_axi_if.r_mgr),
 
              .cptra_error_fatal(),
              .cptra_error_non_fatal(),
@@ -697,6 +721,13 @@ module soc_ifc_tb
       penable_i_tb    <= 0;
     end
   endtask // write_single_word_apb
+
+  task write_single_word_axi(input [31 : 0] address,
+                             input [31 : 0] word);
+    begin
+
+    end
+  endtask
 
 
   //----------------------------------------------------------------
