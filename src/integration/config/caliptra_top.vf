@@ -113,6 +113,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/norm_check/rtl/norm_check_defines_p
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_pkg.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_if.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
