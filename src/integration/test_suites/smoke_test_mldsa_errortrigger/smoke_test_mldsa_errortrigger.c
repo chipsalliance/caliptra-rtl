@@ -545,6 +545,8 @@ void main() {
             }
         }
 
+        printf("inject invalid coefficeint [%x] to index number %x!\n", invalid_s1s2_coeff, random_s1s2_index);
+
         // Program MLDSA PRIVKEY
         printf("Writing privkey\n");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
