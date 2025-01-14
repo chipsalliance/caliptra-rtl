@@ -18,6 +18,7 @@
 
 module soc_ifc_top 
     import soc_ifc_pkg::*;
+    import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
@@ -93,8 +94,8 @@ module soc_ifc_top
     output wire              timer_intr,
 
     //SRAM interface
-    output mbox_sram_req_t  mbox_sram_req,
-    input  mbox_sram_resp_t mbox_sram_resp,
+    output cptra_mbox_sram_req_t  mbox_sram_req,
+    input  cptra_mbox_sram_resp_t mbox_sram_resp,
 
     // RV ECC Status Interface
     input rv_ecc_sts_t rv_ecc_sts,
@@ -200,8 +201,8 @@ logic soc_ifc_reg_error, soc_ifc_reg_read_error, soc_ifc_reg_write_error;
 logic soc_ifc_reg_rdata_mask;
 
 logic sha_sram_req_dv;
-logic [MBOX_ADDR_W-1:0] sha_sram_req_addr;
-mbox_sram_resp_t sha_sram_resp;
+logic [CPTRA_MBOX_ADDR_W-1:0] sha_sram_req_addr;
+cptra_mbox_sram_resp_t sha_sram_resp;
 logic sha_sram_hold;
 
 //DMA SRAM direct inf
@@ -1061,35 +1062,52 @@ i_sha512_acc_top (
     .notif_intr(sha_notif_intr)
 );
 
-
 //Mailbox
 //This module contains the Caliptra Mailbox and associated control logic
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
-mbox #(
-    .DATA_W(SOC_IFC_DATA_W),
-    .SIZE_KB(MBOX_SIZE_KB)
-    )
+mbox
+#(
+    .DMI_REG_MBOX_DLEN_ADDR(soc_ifc_pkg::DMI_REG_MBOX_DLEN),
+    .MBOX_SIZE_KB(CPTRA_MBOX_SIZE_KB),
+    .MBOX_DATA_W(CPTRA_MBOX_DATA_W),
+    .MBOX_ECC_DATA_W(CPTRA_MBOX_ECC_DATA_W),
+    .MBOX_IFC_DATA_W(SOC_IFC_DATA_W),
+    .MBOX_IFC_USER_W(SOC_IFC_USER_W),
+    .MBOX_IFC_ADDR_W(SOC_IFC_ADDR_W)
+)
 i_mbox (
     .clk(soc_ifc_clk_cg),
     .rst_b(cptra_noncore_rst_b),
     .req_dv(mbox_req_dv), 
     .req_hold(mbox_req_hold),
     .dir_req_dv(mbox_dir_req_dv),
-    .req_data(mbox_req_data),
+    .req_data_addr(mbox_req_data.addr),
+    .req_data_wdata(mbox_req_data.wdata),
+    .req_data_user(mbox_req_data.user),
+    .req_data_write(mbox_req_data.write),
+    .req_data_soc_req(mbox_req_data.soc_req),
     .mbox_error(mbox_error),
     .rdata(mbox_rdata),
     .dir_rdata(mbox_dir_rdata),
     .sha_sram_req_dv(sha_sram_req_dv),
     .sha_sram_req_addr(sha_sram_req_addr),
-    .sha_sram_resp(sha_sram_resp),
+    .sha_sram_resp_ecc(sha_sram_resp.rdata.ecc),
+    .sha_sram_resp_data(sha_sram_resp.rdata.data),
     .sha_sram_hold(sha_sram_hold),
     .dma_sram_req_dv  (dma_sram_req_dv  ),
-    .dma_sram_req_data(dma_sram_req_data),
+    .dma_sram_req_write(dma_sram_req_data.write),
+    .dma_sram_req_addr(dma_sram_req_data.addr),
+    .dma_sram_req_wdata(dma_sram_req_data.wdata),
     .dma_sram_rdata   (dma_sram_rdata   ),
     .dma_sram_hold    (dma_sram_req_hold),
     .dma_sram_error   (dma_sram_error   ),
-    .mbox_sram_req(mbox_sram_req),
-    .mbox_sram_resp(mbox_sram_resp),
+    .mbox_sram_req_cs(mbox_sram_req.cs),
+    .mbox_sram_req_we(mbox_sram_req.we),
+    .mbox_sram_req_addr(mbox_sram_req.addr),
+    .mbox_sram_req_ecc(mbox_sram_req.wdata.ecc),
+    .mbox_sram_req_wdata(mbox_sram_req.wdata.data),
+    .mbox_sram_resp_ecc(mbox_sram_resp.rdata.ecc),
+    .mbox_sram_resp_data(mbox_sram_resp.rdata.data),
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),

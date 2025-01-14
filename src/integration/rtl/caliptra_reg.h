@@ -5317,8 +5317,6 @@
 #define ENTROPY_SRC_REG_MAIN_SM_STATE                                                               (0xe0)
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (0x1ff)
-#define CLP_MBOX_SRAM_BASE_ADDR                                                                     (0x30000000)
-#define CLP_MBOX_SRAM_END_ADDR                                                                      (0x3001ffff)
 #define CLP_MBOX_CSR_BASE_ADDR                                                                      (0x30020000)
 #define CLP_MBOX_CSR_MBOX_LOCK                                                                      (0x30020000)
 #define MBOX_CSR_MBOX_LOCK                                                                          (0x0)
@@ -5351,7 +5349,7 @@
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_LOW                                                       (9)
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (0x200)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
-#define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x1fffc00)
+#define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x3fffc00)
 #define CLP_MBOX_CSR_MBOX_UNLOCK                                                                    (0x30020020)
 #define MBOX_CSR_MBOX_UNLOCK                                                                        (0x20)
 #define MBOX_CSR_MBOX_UNLOCK_UNLOCK_LOW                                                             (0)
@@ -6554,6 +6552,8 @@
 #define SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R                             (0xa34)
 #define SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
 #define SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R_PULSE_MASK                  (0x1)
+#define CLP_MBOX_SRAM_BASE_ADDR                                                                     (0x30040000)
+#define CLP_MBOX_SRAM_END_ADDR                                                                      (0x3007ffff)
 
 
 #endif
