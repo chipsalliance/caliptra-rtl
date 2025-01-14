@@ -354,7 +354,7 @@ import soc_ifc_pkg::*;
         endcase
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
                               (hwif_out.byte_count.count.value > DMA_MAX_XFER_SIZE) ||
-                              (hwif_out.byte_count.count.value > MBOX_SIZE_BYTES &&
+                              (hwif_out.byte_count.count.value > CPTRA_MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)));
         // power of 2 and word-aligned
@@ -716,7 +716,7 @@ import soc_ifc_pkg::*;
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     // Proper configuration
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
-    `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == MBOX_DATA_W)
+    `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == CPTRA_MBOX_DATA_W)
     // FIFO must have space for all requested data
     `CALIPTRA_ASSERT(AXI_DMA_LIM_RD_CRED, rd_credits <= FIFO_BC/BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_OFL_RD_CRED, rd_req_hshake |-> rd_req_byte_count <= FIFO_BC, clk, !rst_n)

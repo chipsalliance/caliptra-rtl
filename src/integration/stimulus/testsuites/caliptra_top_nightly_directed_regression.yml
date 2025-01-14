@@ -26,7 +26,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc/smoke_test_ecc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen_sign/smoke_test_ecc_keygen_sign.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_rand/smoke_test_mldsa_rand.yml
@@ -50,7 +51,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger/smoke_test_ecc_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml

@@ -884,7 +884,7 @@ package soc_ifc_reg_model_top_pkg;
 
         // inst all soc_ifc register blocks and memory model as single reg block
         /*mbox_mem_ahb_apb*/
-        this.mbox_mem_rm = new("mbox_mem_rm", 18'h8000, 32, "RW", UVM_NO_COVERAGE);
+        this.mbox_mem_rm = new("mbox_mem_rm", 19'h1_0000, 32, "RW", UVM_NO_COVERAGE);
         this.mbox_mem_rm.configure(this);
 
         /*mbox_csr_ahb_apb*/
@@ -1125,13 +1125,13 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_reg_rm.build_ext_maps();
 
         /* Top register model APB map */
-        this.soc_ifc_APB_map.add_mem(this.mbox_mem_rm, 0, "RW");
+        this.soc_ifc_APB_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
         this.soc_ifc_APB_map.add_submap(this.mbox_csr_rm.mbox_csr_APB_map, 'h2_0000);
         this.soc_ifc_APB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_APB_map, 'h2_1000);
         this.soc_ifc_APB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_APB_map, 'h3_0000);
 
         /* Top register model AHB map */
-        this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, 0, "RW");
+        this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
         this.soc_ifc_AHB_map.add_submap(this.mbox_csr_rm.mbox_csr_AHB_map, 'h2_0000);
         this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
         this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
