@@ -103,7 +103,6 @@ module caliptra_prim_count
     // Saturation logic
     logic uflow, oflow;
     assign oflow = incr_en && ext_cnt[Width];
-    assign uflow = decr_en && ext_cnt[Width];
     logic [Width-1:0] cnt_sat;
     assign cnt_sat = (uflow) ? '0            :
                      (oflow) ? {Width{1'b1}} : ext_cnt[Width-1:0];
@@ -119,8 +118,6 @@ module caliptra_prim_count
     assign cnt_d[k] = (clr_i)  ? ResetValues[k] :
                       (set_i)  ? set_val        :
                       (cnt_en) ? cnt_sat        : cnt_q[k];
-
-    assign cnt_d_committed[k] = commit_i ? cnt_d[k] : cnt_q[k];
 
     assign cnt_d_committed[k] = commit_i ? cnt_d[k] : cnt_q[k];
 
