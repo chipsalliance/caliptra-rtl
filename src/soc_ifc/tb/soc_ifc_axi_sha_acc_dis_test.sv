@@ -370,7 +370,8 @@ task soc_ifc_axi_test;
   axi_resp_e resp;
 
   write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 'h1);
-  $display("SHA LOCK cleared over ahb\n");
+  $display("SHA LOCK cleared over AHB\n");
+  @(posedge clk_tb);
 
   $display("Reading SHA ACC LOCK reg\n");
   //id = 0, user --> decoded in axi sub
