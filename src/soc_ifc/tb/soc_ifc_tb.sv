@@ -145,7 +145,26 @@ module soc_ifc_tb
   logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
   logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
 
+/*
+  logic [63:0] strap_ss_caliptra_base_addr;
+  logic [63:0] strap_ss_mci_base_addr;
+  logic [63:0] strap_ss_recovery_ifc_base_addr;
+  logic [63:0] strap_ss_otp_fc_base_addr;
+  logic [63:0] strap_ss_uds_seed_base_addr;
+  logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
+  logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
+  logic [31:0] strap_ss_strap_generic_0;
+  logic [31:0] strap_ss_strap_generic_1;
+  logic [31:0] strap_ss_strap_generic_2;
+  logic [31:0] strap_ss_strap_generic_3;
+  logic        ss_debug_intent;
+  logic       cptra_ss_debug_intent;
 
+  logic        ss_dbg_manuf_enable;
+  logic [63:0] ss_soc_dbg_unlock_level;
+
+  logic [127:0] ss_generic_fw_exec_ctrl;
+*/
   //SRAM interface for mbox
   logic mbox_sram_cs;
   logic mbox_sram_we;
@@ -240,15 +259,18 @@ module soc_ifc_tb
              .BootFSM_BrkPoint(1'b0), // TODO
              .generic_output_wires(),
 
-             .paddr_i(paddr_i_tb),
-             .psel_i(psel_i_tb),
-             .penable_i(penable_i_tb),
-             .pwrite_i(pwrite_i_tb),
-             .pwdata_i(pwdata_i_tb),
-             .pauser_i(pauser_i_tb),
-             .pready_o(pready_o_tb),
-             .prdata_o(prdata_o_tb),
-             .pslverr_o(pslverr_o_tb),
+             //.paddr_i(paddr_i_tb),
+             //.psel_i(psel_i_tb),
+             //.penable_i(penable_i_tb),
+             //.pwrite_i(pwrite_i_tb),
+             //.pwdata_i(pwdata_i_tb),
+             //.pauser_i(pauser_i_tb),
+             //.pready_o(pready_o_tb),
+             //.prdata_o(prdata_o_tb),
+             //.pslverr_o(pslverr_o_tb),
+
+             .s_axi_w_if(),
+             .s_axi_r_if(),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -262,6 +284,9 @@ module soc_ifc_tb
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
 
+             .m_axi_w_if(),
+             .m_axi_r_if(),
+
              .cptra_error_fatal(),
              .cptra_error_non_fatal(),
              .trng_req(),
@@ -270,6 +295,8 @@ module soc_ifc_tb
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
+             .dma_error_intr(),
+             .dma_notif_intr(),
              .timer_intr(),
 
              .mbox_sram_req(mbox_sram_req),
@@ -283,6 +310,25 @@ module soc_ifc_tb
              .cptra_obf_key_reg(cptra_obf_key_reg),
              .obf_field_entropy(obf_field_entropy),
              .obf_uds_seed(obf_uds_seed),
+
+             .strap_ss_caliptra_base_addr(),
+             .strap_ss_mci_base_addr(),
+             .strap_ss_recovery_ifc_base_addr(),
+             .strap_ss_otp_fc_base_addr(),
+             .strap_ss_uds_seed_base_addr(),
+             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(),
+             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(),
+             .strap_ss_strap_generic_0(),
+             .strap_ss_strap_generic_1(),
+             .strap_ss_strap_generic_2(),
+             .strap_ss_strap_generic_3(),
+             .ss_debug_intent(),
+             .cptra_ss_debug_intent(),
+
+             .ss_dbg_manuf_enable(),
+             .ss_soc_dbg_unlock_level(),
+
+             .ss_generic_fw_exec_ctrl(),
 
              .nmi_vector(),
              .nmi_intr(),
