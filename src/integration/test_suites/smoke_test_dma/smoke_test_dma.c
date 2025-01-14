@@ -103,7 +103,7 @@ void main(void) {
         }
         // Write data into mailbox using direct-mode
         for (uint32_t dw = 0; dw < 16; dw++) {
-            lsu_write_32(MBOX_DIR_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
+            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
         VPRINTF(LOW, "Sending payload from Mailbox\n");
@@ -138,7 +138,7 @@ void main(void) {
             fail = 1;
         }
         for (uint32_t dw = 0; dw < 16; dw++) {
-            mbox_read_payload[dw] = lsu_read_32(MBOX_DIR_BASE_ADDR + 0x8800 + (dw << 2));
+            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
             if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
                 VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
                 fail = 1;
