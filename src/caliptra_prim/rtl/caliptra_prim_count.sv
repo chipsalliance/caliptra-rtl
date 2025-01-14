@@ -103,6 +103,7 @@ module caliptra_prim_count
     // Saturation logic
     logic uflow, oflow;
     assign oflow = incr_en && ext_cnt[Width];
+    assign uflow = decr_en && ext_cnt[Width];
     logic [Width-1:0] cnt_sat;
     assign cnt_sat = (uflow) ? '0            :
                      (oflow) ? {Width{1'b1}} : ext_cnt[Width-1:0];

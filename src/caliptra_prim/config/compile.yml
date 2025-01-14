@@ -111,6 +111,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_async_simple.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_gf_mult.sv
     tops: [caliptra_prim]
+  rtl_lint:
+    waiver_files:
+      - $MSFT_REPO_ROOT/src/caliptra_prim/config/design_lint/caliptra_prim/sglint_waivers
 ---
 provides: [caliptra_prim_secded]
 schema_version: 2.4.0

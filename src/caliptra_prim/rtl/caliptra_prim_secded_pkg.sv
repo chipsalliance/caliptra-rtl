@@ -7,7 +7,7 @@
 
 package caliptra_prim_secded_pkg;
 
-  typedef enum int {
+  typedef enum logic [31:0] {
     SecdedNone,
     Secded_22_16,
     Secded_28_22,

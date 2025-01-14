@@ -4,7 +4,7 @@
 
 package caliptra_prim_trivium_pkg;
 
-  typedef enum integer {
+  typedef enum logic [31:0] {
     SeedTypeKeyIv,        // 2 * 80 bits for key and IV, requires advancing the primitive
                           // 1152/OutputWidth (Trivium) or 708/OutputWidth (Bivium) times
                           // before the key stream becomes usable.

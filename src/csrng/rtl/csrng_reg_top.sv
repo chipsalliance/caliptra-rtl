@@ -2444,7 +2444,7 @@ module csrng_reg_top #(
       24'h000800: begin
         reg_rdata_next[1] = sw_cmd_sts_cmd_rdy_qs;
         reg_rdata_next[2] = sw_cmd_sts_cmd_ack_qs;
-        reg_rdata_next[4:3] = sw_cmd_sts_cmd_sts_qs;
+        reg_rdata_next[5:3] = sw_cmd_sts_cmd_sts_qs;
       end
 
       24'h001000: begin
@@ -2457,11 +2457,11 @@ module csrng_reg_top #(
       end
 
       24'h004000: begin
-        reg_rdata_next[3:0] = int_state_read_enable_qs;
+        reg_rdata_next[2:0] = int_state_read_enable_qs;
       end
 
       24'h008000: begin
-        reg_rdata_next[3:0] = int_state_read_enable_regwen_qs;
+        reg_rdata_next[0] = int_state_read_enable_regwen_qs;
       end
 
       24'h010000: begin
