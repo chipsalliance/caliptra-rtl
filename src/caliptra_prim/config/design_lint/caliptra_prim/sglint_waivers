@@ -1,0 +1,2 @@
+#TwoStateData-ML: Avoid using two state data type signals in RTL
+waive_lint -tag TwoStateData-ML -add waive_caliptra_prim_TwoStateData-ML -filter "FileName =~ caliptra_prim_mubi_pkg.sv"

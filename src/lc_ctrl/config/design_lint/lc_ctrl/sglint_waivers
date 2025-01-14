@@ -1,0 +1,2 @@
+#TwoStateData-ML: Avoid using two state data type signals in RTL
+waive_lint -tag TwoStateData-ML -add waive_lc_ctrl_pkg_TwoStateData-ML -filter "FileName =~ lc_ctrl_pkg.sv"

@@ -1,0 +1,2 @@
+#W444: Avoid using tristate values //FIXME
+waive_lint -tag W444 -add waive_csrng_W444 -filter "FileName =~ csrng_pkg.sv"
