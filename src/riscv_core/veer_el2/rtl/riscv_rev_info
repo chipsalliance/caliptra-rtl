@@ -1,8 +1,5 @@
-commit 2388ae0ccd41cbcb301bf452a3c87561596ff45d
-Merge: 3085254cc68 b6a17d0909b
-Author: Tomasz Michalak <tmichalak@antmicro.com>
-Date:   Mon Nov 18 10:44:23 2024 +0100
+commit c5c004589ee0a308b63278ee609e1597f61a4143
+Author: Karol Gugala <kgugala@antmicro.com>
+Date:   Tue Jan 14 14:36:27 2025 +0100
 
-    Merge pull request #269 from antmicro/kiryk/fix-custom-reports
-    
-    Fix custom report runs
+    This commit is tagged as release 2.0 as requested by Microsoft. Updated docs

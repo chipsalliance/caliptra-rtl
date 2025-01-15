@@ -213,6 +213,7 @@ module caliptra_top
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
 
+    el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
 
@@ -512,8 +513,7 @@ el2_veer_wrapper rvtop (
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
 
-    .ic_data_ext_in_pkt     (48'h0),
-    .ic_tag_ext_in_pkt      (24'h0),
+    .el2_icache_export      (el2_icache_stub.veer_icache_src),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
