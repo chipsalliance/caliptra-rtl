@@ -1,0 +1,38 @@
+ARM AMBA ASSERTIONS LICENCE
+
+THIS END USER LICENCE AGREEMENT ("LICENCE") IS A LEGAL AGREEMENT BETWEEN YOU (EITHER A SINGLE INDIVIDUAL, OR SINGLE LEGAL ENTITY) AND ARM LIMITED ("ARM") FOR THE USE OF THE RELEVANT AMBA ASSERTIONS ACCOMPANYING THIS LICENCE. ARM IS ONLY WILLING TO LICENSE THE RELEVANT AMBA ASSERTIONS TO YOU ON CONDITION THAT YOU ACCEPT ALL OF THE TERMS IN THIS LICENCE. BY CLICKING "I AGREE" OR OTHERWISE USING OR COPYING THE RELEVANT AMBA ASSERTIONS YOU INDICATE THAT YOU AGREE TO BE BOUND BY ALL THE TERMS OF THIS LICENCE. IF YOU DO NOT AGREE TO THE TERMS OF THIS LICENCE, ARM IS UNWILLING TO LICENSE THE RELEVANT AMBA ASSERTIONS TO YOU AND YOU MAY NOT USE OR COPY THE RELEVANT AMBA ASSERTIONS AND YOU SHOULD PROMPTLY RETURN THE RELEVANT AMBA ASSERTIONS TO ARM.
+
+"AMBA Assertions" means interface level protocol checkers written in system verilog with the associated documentation.
+
+"AMBA Specification" means any or all of the specifications available at http://infocenter.arm.com/help/topic/com.arm.doc.set.amba/index.html.
+
+"Checking Compatibility" means checking that LICENSEE product has not failed any protocol rules.
+
+"LICENSEE" means You and your Subsidiaries.
+
+"Subsidiary" means, if You are a single entity, any company the majority of whose voting shares is now or hereafter owned or controlled, directly or indirectly, by You. A company shall be a Subsidiary only for the period during which such control exists.
+
+1. Subject to the provisions of Clauses 2, 3 and 4, ARM hereby grants to LICENSEE a perpetual, non-exclusive, non-transferable, royalty free, worldwide licence to:
+
+(i) use and copy the documentation for the relevant AMBA Assertions for the purpose of Checking Compatibility of LICENSEE's product with the relevant AMBA Specification;
+
+(ii) use the source code for the AMBA Assertions for the purpose of Checking Compatibility of LICENSEE's product with the relevant AMBA Specification.
+
+2. LICENSEE hereby agrees that;
+
+(i) no right is granted to LICENSEE to sublicense the rights granted to LICENSEE under this Agreement; and
+
+(ii) ARM, in its sole discretion, reserves the right to update the AMBA Assertions at any time.
+
+3. Except as specifically licensed in accordance with Clause 1, LICENSEE acquires no right, title or interest in any ARM technology or any intellectual property embodied therein. In no event shall the licences granted in accordance with Clause 1 be construed as granting LICENSEE, expressly or by implication, estoppel or otherwise, a licence to use any ARM technology except the relevant documentation and source code for the AMBA Assertions.
+
+4. THE RELEVANT AMBA ASSERTIONS ARE PROVIDED "AS IS" WITH NO WARRANTIES EXPRESS, IMPLIED OR STATUTORY, INCLUDING BUT NOT LIMITED TO ANY WARRANTY OF SATISFACTORY QUALITY, MERCHANTABILITY, NONINFRINGEMENT OR FITNESS FOR A PARTICULAR PURPOSE.
+
+5. No licence, express, implied or otherwise, is granted to LICENSEE, under the provisions of Clause 1, to use the ARM tradename, or AMBA trademark in connection with the relevant AMBA Assertions or any products based thereon. Nothing in Clause 1 shall be construed as authority for LICENSEE to make any representations on behalf of ARM in respect of the relevant AMBA Assertions.
+
+6. This Licence shall remain in force until terminated by you or by ARM. Without prejudice to any of its other rights if LICENSEE is in breach of any of the terms and conditions of this Licence then ARM may terminate this Licence immediately upon giving written notice to You. You may terminate this Licence at any time. Upon expiry or termination of this Licence by You or by ARM LICENSEE shall stop using the relevant AMBA Assertions and destroy all copies of the relevant AMBA Assertions in your possession together with all documentation and related materials. Upon expiry or termination of this Licence, the provisions of clauses 6 and 7 shall survive.
+
+7. The validity, construction and performance of this Agreement shall be governed by English Law.
+
+ARM contract references: LEC-PRE-00526-V1.0, ARM AMBA Assertions Licence
+
