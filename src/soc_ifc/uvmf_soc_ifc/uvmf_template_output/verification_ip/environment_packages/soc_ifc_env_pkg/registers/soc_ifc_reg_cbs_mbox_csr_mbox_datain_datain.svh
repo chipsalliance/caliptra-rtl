@@ -42,7 +42,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_datain_datain extends soc_ifc_reg_cbs_mbox_c
         mm = blk.get_parent().get_mem_by_name("mbox_mem_rm");
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
         dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
-                                                                                      (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
+                                                                                      (mm.get_size() * mm.get_n_bytes()) >> ($clog2(CPTRA_MBOX_DATA_W/8));
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 // The mailbox_data_q is reset for each new mailbox command to represent

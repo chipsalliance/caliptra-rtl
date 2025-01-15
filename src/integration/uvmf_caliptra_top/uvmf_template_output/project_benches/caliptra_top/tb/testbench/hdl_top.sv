@@ -125,13 +125,13 @@ import aaxi_uvm_pkg::*;
     logic                       jtag_tdo;    // JTAG TDO
     logic                       jtag_tdoEn;  // JTAG TDO enable
 
-    mbox_sram_req_t mbox_sram_req;
-    mbox_sram_resp_t mbox_sram_resp;
+    cptra_mbox_sram_req_t mbox_sram_req;
+    cptra_mbox_sram_resp_t mbox_sram_resp;
     logic mbox_sram_cs_stub_inactive;
     logic mbox_sram_we_stub_inactive;
-    logic [14:0] mbox_sram_addr_stub_inactive;
-    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_stub_inactive;
-    logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata_stub_inactive;
+    logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr_stub_inactive;
+    logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata_stub_inactive;
+    logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata_stub_inactive;
 
     logic imem_cs;
     logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;

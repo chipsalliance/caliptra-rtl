@@ -46,9 +46,9 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
                               // TODO make this more comprehensive/intelligent about randomized error injection
   mbox_sts_exp_error_type_e mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
   bit saw_mbox_unlock = 1'b0;
-  int datain_ii = MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
-                                     // evaluated against specific offsets for some error checking cases. So give it an
-                                     // unambiguously invalid init value prior to use.
+  int datain_ii = CPTRA_MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
+                                           // evaluated against specific offsets for some error checking cases. So give it an
+                                           // unambiguously invalid init value prior to use.
 
   typedef enum byte {
     DLY_ZERO,
@@ -112,13 +112,13 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
-  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= MBOX_SIZE_BYTES; }
+  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= CPTRA_MBOX_SIZE_BYTES; }
   // Minimum 2 dwords to include dlen/mbox_resp_expected_dlen at the beginning
   // IFF the response data is required
   constraint mbox_dlen_min_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_op_rand.dlen >= 32'h8; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
-  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= MBOX_SIZE_BYTES;
+  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= CPTRA_MBOX_SIZE_BYTES;
                                 !mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen == 0;
                                  mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >  0; }
 

@@ -52,6 +52,7 @@ package mbox_sram_pkg;
    `include "uvm_macros.svh"
 
    // pragma uvmf custom package_imports_additional begin 
+   import mbox_pkg::*;
    import soc_ifc_pkg::*;
    // pragma uvmf custom package_imports_additional end
    `include "src/mbox_sram_macros.svh"

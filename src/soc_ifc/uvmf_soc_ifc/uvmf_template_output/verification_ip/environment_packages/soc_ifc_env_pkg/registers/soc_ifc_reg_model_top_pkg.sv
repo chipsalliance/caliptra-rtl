@@ -34,6 +34,7 @@ package soc_ifc_reg_model_top_pkg;
     import mbox_csr_uvm::*;
     import sha512_acc_csr_uvm::*;
     import axi_dma_reg_uvm::*;
+    import mbox_pkg::*;
     import soc_ifc_pkg::*;
     `include "avery_defines.svh"
     import aaxi_pkg::*;
@@ -1430,7 +1431,7 @@ package soc_ifc_reg_model_top_pkg;
         //       but we don't ever use the "default_map" -- instead use AHB/AXI maps to
         //       access registers
         this.default_map = create_map("soc_ifc_default_map", 0, 4, UVM_LITTLE_ENDIAN);
-        this.default_map.add_mem(this.mbox_mem_rm, 0, "RW");
+        this.default_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
         this.default_map.add_submap(this.mbox_csr_rm.default_map, 'h2_0000);
         this.default_map.add_submap(this.sha512_acc_csr_rm.default_map, 'h2_1000);
         this.default_map.add_submap(this.axi_dma_reg_rm.default_map, 'h2_2000);

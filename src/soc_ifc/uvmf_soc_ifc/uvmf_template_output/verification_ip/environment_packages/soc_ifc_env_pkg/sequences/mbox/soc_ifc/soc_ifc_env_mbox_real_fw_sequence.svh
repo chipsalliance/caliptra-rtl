@@ -30,7 +30,7 @@ class soc_ifc_env_mbox_real_fw_sequence extends soc_ifc_env_mbox_sequence_base;
   `uvm_object_utils( soc_ifc_env_mbox_real_fw_sequence )
 
   // 128KiB memory, with 32768 single-dword entries
-  bit [7:0] fw_img [soc_ifc_pkg::MBOX_DEPTH][soc_ifc_pkg::MBOX_DATA_W/8-1:0];    
+  bit [7:0] fw_img [soc_ifc_pkg::CPTRA_MBOX_DEPTH][soc_ifc_pkg::CPTRA_MBOX_DATA_W/8-1:0];    
   int firmware_iccm_length;
   int firmware_dccm_length;
   int firmware_iccm_end;

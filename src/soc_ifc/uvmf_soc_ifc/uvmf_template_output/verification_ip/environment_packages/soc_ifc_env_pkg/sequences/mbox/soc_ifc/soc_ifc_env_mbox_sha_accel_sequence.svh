@@ -145,12 +145,12 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     this.mbox_op_rand.dlen = 4 + this.dlen;
 
     // Ensure that the start address is after the data
-    if ( (this.start_addr <= this.mbox_op_rand.dlen) || ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES )) begin
+    if ( (this.start_addr <= this.mbox_op_rand.dlen) || ( (this.start_addr + this.dlen) > CPTRA_MBOX_SIZE_BYTES )) begin
         // Re-randomize start address to ensure it is after the valid data
         // and still meets alignment requirements.
         // Restrict the start addr so that we don't overflow the mailbox
         this.randomize(this.start_addr) with { this.start_addr >= this.mbox_op_rand.dlen + 4;
-                                               this.start_addr + this.dlen <= MBOX_SIZE_BYTES;
+                                               this.start_addr + this.dlen <= CPTRA_MBOX_SIZE_BYTES;
                                                this.start_addr[1:0] == 2'b00; };
     end
     // This shouldn't happen - if it does we bail out

@@ -103,6 +103,7 @@ package soc_ifc_env_pkg;
   import aaxi_pll::*;
   import aaxi_uvm_pkg::*;
 
+  import mbox_pkg::*;
   import soc_ifc_pkg::*;
   `include "caliptra_macros.svh"
   // pragma uvmf custom package_imports_additional end

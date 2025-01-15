@@ -70,9 +70,9 @@ typedef struct packed  { \
 //
   `define mbox_sram_MONITOR_STRUCT typedef struct packed  { \
   bit is_read ; \
-  bit [MBOX_ADDR_W-1:0] address ; \
-  bit [MBOX_DATA_W-1:0] data ; \
-  bit [MBOX_ECC_DATA_W-1:0] data_ecc ; \
+  bit [CPTRA_MBOX_ADDR_W-1:0] address ; \
+  bit [CPTRA_MBOX_DATA_W-1:0] data ; \
+  bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ; \
   bit ecc_single_bit_error ; \
   bit ecc_double_bit_error ; \
      } mbox_sram_monitor_s;
@@ -110,9 +110,9 @@ typedef struct packed  { \
 //
   `define mbox_sram_INITIATOR_STRUCT typedef struct packed  { \
   bit is_read ; \
-  bit [MBOX_ADDR_W-1:0] address ; \
-  bit [MBOX_DATA_W-1:0] data ; \
-  bit [MBOX_ECC_DATA_W-1:0] data_ecc ; \
+  bit [CPTRA_MBOX_ADDR_W-1:0] address ; \
+  bit [CPTRA_MBOX_DATA_W-1:0] data ; \
+  bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ; \
   bit ecc_single_bit_error ; \
   bit ecc_double_bit_error ; \
      } mbox_sram_initiator_s;
@@ -150,9 +150,9 @@ typedef struct packed  { \
 //
   `define mbox_sram_RESPONDER_STRUCT typedef struct packed  { \
   bit is_read ; \
-  bit [MBOX_ADDR_W-1:0] address ; \
-  bit [MBOX_DATA_W-1:0] data ; \
-  bit [MBOX_ECC_DATA_W-1:0] data_ecc ; \
+  bit [CPTRA_MBOX_ADDR_W-1:0] address ; \
+  bit [CPTRA_MBOX_DATA_W-1:0] data ; \
+  bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ; \
   bit ecc_single_bit_error ; \
   bit ecc_double_bit_error ; \
      } mbox_sram_responder_s;

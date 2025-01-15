@@ -26,11 +26,11 @@ uvmf:
       ports:
       - name: mbox_sram_req
         dir: output
-        width: '$bits(mbox_sram_req_t)'
+        width: '$bits(cptra_mbox_sram_req_t)'
         # cs (1) + we (1) + addr (15) + data (32) + ecc (7) = 56
       - name: mbox_sram_resp
         dir: input
-        width: '$bits(mbox_sram_resp_t)'
+        width: '$bits(cptra_mbox_sram_resp_t)'
         # data (32) + ecc (7) = 39
 
       transaction_constraints: []
