@@ -158,7 +158,8 @@ module caliptra_top_tb_services
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
     logic                       inject_random_data;
-    logic                       check_pcr_signing;
+    logic                       check_pcr_ecc_signing;
+    logic                       check_pcr_mldsa_signing;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -265,8 +266,10 @@ module caliptra_top_tb_services
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h90        - Issue PCR singing with fixed vector   
-    //         8'h91        - Issue PCR singing with randomized vector
-    //         8'h92        - Check PCR singing with randomized vector   
+    //         8'h91        - Issue PCR ECC singing with randomized vector
+    //         8'h92        - Check PCR ECC singing with randomized vector
+    //         8'h93        - Issue PCR MLDSA singing with randomized vector   
+    //         8'h94        - Check PCR MLDSA singing with randomized vector
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
@@ -428,8 +431,10 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
+    logic [0:15][31:0]   mldsa_seed_random;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
+    always_comb mldsa_seed_random = {{<<8 {mldsa_test_vector.seed}}, 256'h0};
 
     genvar dword_i, slot_id;
     generate 
@@ -475,6 +480,15 @@ module caliptra_top_tb_services
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
+                    end
+                    else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = mldsa_seed_random[dword_i][31 : 0];
                     end
                     //inject valid hmac_key dest and zero hmac_key value to key reg
                     else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
@@ -1204,7 +1218,9 @@ endgenerate //IV_NO
 
     logic [0:15][31:0]   pcr_to_be_signed    = 512'h_C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D_16e6009644e2a5f2c41fed22e703fb78;
     logic [0:15][31:0]   ecc_random_msg;
+    logic [0:15][31:0]   mldsa_random_msg;
     always_comb ecc_random_msg = {ecc_test_vector.hashed_msg, 128'h00000000000000000000000000000000};
+    always_comb mldsa_random_msg = {<<8 {mldsa_test_vector.msg}};  //swap the endian
 
     generate 
         for (genvar dword = 0; dword < 16; dword++) begin
@@ -1217,6 +1233,10 @@ endgenerate //IV_NO
                     force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
                     force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
                 end
+                else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = mldsa_random_msg[15-dword][31 : 0];
+                end
                 else begin
                     release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;
                     release caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword];
@@ -1227,9 +1247,13 @@ endgenerate //IV_NO
 
     always @(negedge clk) begin
         if((WriteData[7:0] == 8'h92) && mailbox_write)
-            check_pcr_signing <= 1'b1;
-        else
-            check_pcr_signing <= 1'b0;
+            check_pcr_ecc_signing <= 1'b1;
+        else if((WriteData[7:0] == 8'h94) && mailbox_write)
+            check_pcr_mldsa_signing <= 1'b1;
+        else begin
+            check_pcr_ecc_signing <= 1'b0;
+            check_pcr_mldsa_signing <= 1'b0;
+        end
     end
 
 
