@@ -52,6 +52,7 @@ class kv_wr_rd_lock_core_rst_sequence #(
     kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
+    kv_read_agent_key_entry_sequence_t aes_key_read_seq;
 
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     rand reg[2:0] lock_data;
@@ -59,7 +60,7 @@ class kv_wr_rd_lock_core_rst_sequence #(
     rand reg [1:0] write_id;
     rand reg [2:0] read_id;
     typedef enum {HMAC, MLDSA, ECC, DOE} write_agents;
-    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED} read_agents;
+    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED, AES_KEY} read_agents;
 
     uvm_event reset_phase;
     uvm_event active_phase;
@@ -91,6 +92,8 @@ class kv_wr_rd_lock_core_rst_sequence #(
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
+        if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
+        aes_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("aes_key_read_seq");
         if(!this.randomize()) `uvm_error("KV_WR_RD_LOCK", "Failed to randomize KV READ seq");
 
         
@@ -187,6 +190,11 @@ class kv_wr_rd_lock_core_rst_sequence #(
                         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_ecc_seed_read_agent.sequencer.ecc_seed_read_seq", "local_read_entry",read_entry);
                         uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_ecc_seed_read_agent.sequencer.ecc_seed_read_seq", "local_read_offset",read_offset);
                         ecc_seed_read_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
+                    end
+                    AES_KEY: begin
+                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_aes_key_read_agent.sequencer.aes_key_read_seq", "local_read_entry",read_entry);
+                        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null, "uvm_test_top.environment.kv_aes_key_read_agent.sequencer.aes_key_read_seq", "local_read_offset",read_offset);
+                        aes_key_read_seq.start(configuration.kv_aes_key_read_agent_config.sequencer);
                     end
                 endcase
             end

@@ -37,6 +37,7 @@
 //   kv_mldsa_key_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_privkey_read_agent_ae receives transactions of type  kv_read_transaction
 //   kv_ecc_seed_read_agent_ae receives transactions of type  kv_read_transaction
+//   kv_aes_key_read_agent_ae receives transactions of type  kv_read_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //
 //   This analysis component has the following analysis_ports that can broadcast 
@@ -120,6 +121,11 @@ class kv_predictor #(
                               .BASE_T(BASE_T)
                               )
 ) kv_ecc_seed_read_agent_ae;
+  uvm_analysis_imp_kv_aes_key_read_agent_ae #(kv_read_transaction, kv_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+) kv_aes_key_read_agent_ae;
   uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, kv_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -139,6 +145,7 @@ class kv_predictor #(
   uvm_analysis_port #(kv_read_transaction) kv_mldsa_key_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_privkey_read_sb_ap;
   uvm_analysis_port #(kv_read_transaction) kv_ecc_seed_read_sb_ap;
+  uvm_analysis_port #(kv_read_transaction) kv_aes_key_read_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) kv_sb_ahb_ap;
 
   // Transaction variable for predicted values to be sent out kv_sb_ap
@@ -177,6 +184,7 @@ class kv_predictor #(
   kv_read_transaction kv_mldsa_key_read_agent_ae_debug;
   kv_read_transaction kv_ecc_privkey_read_agent_ae_debug;
   kv_read_transaction kv_ecc_seed_read_agent_ae_debug;
+  kv_read_transaction kv_aes_key_read_agent_ae_debug;
 
   mvc_sequence_item_base ahb_slave_0_ae_debug;
 
@@ -199,6 +207,7 @@ class kv_predictor #(
   uvm_reg_map p_kv_mldsa_key_read_map;
   uvm_reg_map p_kv_ecc_privkey_read_map;
   uvm_reg_map p_kv_ecc_seed_read_map;
+  uvm_reg_map p_kv_aes_key_read_map;
 
   uvm_reg clear_secrets_reg;
   uvm_reg_data_t clear_secrets_data;
@@ -247,9 +256,10 @@ class kv_predictor #(
     kv_doe_write_agent_ae         = new("kv_doe_write_agent_ae", this);
     kv_hmac_key_read_agent_ae     = new("kv_hmac_key_read_agent_ae", this);
     kv_hmac_block_read_agent_ae   = new("kv_hmac_block_read_agent_ae", this);
-    kv_mldsa_key_read_agent_ae = new("kv_mldsa_key_read_agent_ae", this);
+    kv_mldsa_key_read_agent_ae    = new("kv_mldsa_key_read_agent_ae", this);
     kv_ecc_privkey_read_agent_ae  = new("kv_ecc_privkey_read_agent_ae", this);
     kv_ecc_seed_read_agent_ae     = new("kv_ecc_seed_read_agent_ae", this);
+    kv_aes_key_read_agent_ae      = new("kv_aes_key_read_agent_ae", this);
     ahb_slave_0_ae                = new("ahb_slave_0_ae", this);
 
     kv_hmac_write_sb_ap           = new("kv_hmac_write_sb_ap",this);
@@ -260,9 +270,10 @@ class kv_predictor #(
     kv_sb_ap                      = new("kv_sb_ap", this );
     kv_hmac_key_read_sb_ap        = new("kv_hmac_key_read_sb_ap", this );
     kv_hmac_block_read_sb_ap      = new("kv_hmac_block_read_sb_ap", this );
-    kv_mldsa_key_read_sb_ap    = new("kv_mldsa_key_read_sb_ap", this );
+    kv_mldsa_key_read_sb_ap       = new("kv_mldsa_key_read_sb_ap", this );
     kv_ecc_privkey_read_sb_ap     = new("kv_ecc_privkey_read_sb_ap", this );
     kv_ecc_seed_read_sb_ap        = new("kv_ecc_seed_read_sb_ap", this );
+    kv_aes_key_read_sb_ap         = new("kv_aes_key_read_sb_ap", this );
     kv_sb_ahb_ap                  = new("kv_sb_ahb_ap", this);
 
   // pragma uvmf custom build_phase begin
@@ -280,9 +291,10 @@ class kv_predictor #(
     //Read maps
     p_kv_hmac_key_read_map      = p_kv_rm.get_map_by_name("kv_hmac_key_read_map");
     p_kv_hmac_block_read_map    = p_kv_rm.get_map_by_name("kv_hmac_block_read_map");
-    p_kv_mldsa_key_read_map  = p_kv_rm.get_map_by_name("kv_mldsa_key_read_map");
+    p_kv_mldsa_key_read_map     = p_kv_rm.get_map_by_name("kv_mldsa_key_read_map");
     p_kv_ecc_privkey_read_map   = p_kv_rm.get_map_by_name("kv_ecc_privkey_read_map");
     p_kv_ecc_seed_read_map      = p_kv_rm.get_map_by_name("kv_ecc_seed_read_map");
+    p_kv_aes_key_read_map       = p_kv_rm.get_map_by_name("kv_aes_key_read_map");
 
     //Init last dword array
     for(int entry = 0; entry < KV_NUM_KEYS; entry++) begin
@@ -611,6 +623,27 @@ class kv_predictor #(
     // pragma uvmf custom kv_ecc_seed_read_agent_ae_predictor end
   endfunction
 
+  // FUNCTION: write_kv_aes_key_read_agent_ae
+  // Transactions received through kv_aes_key_read_agent_ae initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+    virtual function void write_kv_aes_key_read_agent_ae(kv_read_transaction t);
+    // pragma uvmf custom kv_aes_key_read_agent_ae_predictor begin
+    kv_aes_key_read_agent_ae_debug = t;
+    `uvm_info("PRED", "Transaction Received through kv_aes_key_read_agent_ae", UVM_MEDIUM)
+    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
+    // Construct one of each output transaction type.
+    kv_sb_ap_output_transaction = kv_sb_ap_output_transaction_t::type_id::create("kv_sb_ap_output_transaction");
+    client = "aes_key_read";
+    populate_expected_kv_read_txn(kv_sb_ap_output_transaction, t, client);
+ 
+    // Code for sending output transaction out through kv_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    kv_aes_key_read_sb_ap.write(kv_sb_ap_output_transaction);
+    // pragma uvmf custom kv_aes_key_read_agent_ae_predictor end
+  endfunction
 
   // FUNCTION: write_ahb_slave_0_ae
   // Transactions received through ahb_slave_0_ae initiate the execution of this function.
@@ -781,16 +814,17 @@ endclass
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
 
     lock_use = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.read_entry].lock_use.get_lsb_pos()];
-    dest_valid = kv_reg_data[13:9]; //[16:14] are rsvd
+    dest_valid = kv_reg_data[14:9]; //[16:15] are rsvd
     // dest_valid = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].dest_valid.get_lsb_pos()];
     
     case(client) inside
 
       "hmac_key_read"     : client_dest_valid = dest_valid[0];
       "hmac_block_read"   : client_dest_valid = dest_valid[1];
-      "mldsa_key_read" : client_dest_valid = dest_valid[2];
+      "mldsa_key_read"    : client_dest_valid = dest_valid[2];
       "ecc_privkey_read"  : client_dest_valid = dest_valid[3];
       "ecc_seed_read"     : client_dest_valid = dest_valid[4];
+      "aes_key_read"      : client_dest_valid = dest_valid[5];
       default: begin
         client_dest_valid = 0;
       end
