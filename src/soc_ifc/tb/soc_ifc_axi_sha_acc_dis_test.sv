@@ -35,7 +35,7 @@ module soc_ifc_axi_sha_acc_dis_test
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 32;
+  parameter AHB_ADDR_WIDTH       = 18;
   parameter AHB_DATA_WIDTH       = 32;
 
 
@@ -105,13 +105,13 @@ module soc_ifc_axi_sha_acc_dis_test
     .mailbox_data_avail(),
     .mailbox_flow_done(),
 
-    .recovery_data_avail(0),
-    .recovery_image_activated(0),
+    .recovery_data_avail(1'b0),
+    .recovery_image_activated(1'b0),
 
-    .security_state({2'b11, 0}),
+    .security_state({2'b11, 1'b0}),
 
-    .generic_input_wires(0),
-    .BootFSM_BrkPoint(0),
+    .generic_input_wires(64'h0),
+    .BootFSM_BrkPoint(1'b0),
     .generic_output_wires(),
 
     .s_axi_w_if(axi_sub_if.w_sub),
@@ -145,29 +145,29 @@ module soc_ifc_axi_sha_acc_dis_test
     .timer_intr(),
 
     .mbox_sram_req(),
-    .mbox_sram_resp(0),
+    .mbox_sram_resp(39'h0),
 
     .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
-    .clear_obf_secrets(0),
-    .scan_mode(0),
-    .cptra_obf_key(0),
+    .clear_obf_secrets(1'b0),
+    .scan_mode(1'b0),
+    .cptra_obf_key(256'h0),
     .cptra_obf_key_reg(),
     .obf_field_entropy(),
     .obf_uds_seed(),
 
-    .strap_ss_caliptra_base_addr(0),
-    .strap_ss_mci_base_addr(0),
-    .strap_ss_recovery_ifc_base_addr(0),
-    .strap_ss_otp_fc_base_addr(0),
-    .strap_ss_uds_seed_base_addr(0),
+    .strap_ss_caliptra_base_addr(64'h0),
+    .strap_ss_mci_base_addr(64'h0),
+    .strap_ss_recovery_ifc_base_addr(64'h0),
+    .strap_ss_otp_fc_base_addr(64'h0),
+    .strap_ss_uds_seed_base_addr(64'h0),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(0),
     .strap_ss_strap_generic_0(0),
     .strap_ss_strap_generic_1(0),
     .strap_ss_strap_generic_2(0),
     .strap_ss_strap_generic_3(0),
-    .ss_debug_intent(0),
+    .ss_debug_intent(1'b0),
     .cptra_ss_debug_intent(),
 
     .ss_dbg_manuf_enable(),
@@ -176,19 +176,19 @@ module soc_ifc_axi_sha_acc_dis_test
     .nmi_vector(),
     .nmi_intr(),
     .iccm_lock(),
-    .iccm_axs_blocked(0),
+    .iccm_axs_blocked(1'b0),
 
     .cptra_noncore_rst_b(),
     .cptra_uc_rst_b(),
     .clk_gating_en(),
     .rdc_clk_dis(),
     .fw_update_rst_window(),
-    .crypto_error(0),
+    .crypto_error(1'b0),
     
-    .cptra_uncore_dmi_reg_en(0),
-    .cptra_uncore_dmi_reg_wr_en(0),
+    .cptra_uncore_dmi_reg_en(1'b0),
+    .cptra_uncore_dmi_reg_wr_en(1'b0),
     .cptra_uncore_dmi_reg_rdata(),
-    .cptra_uncore_dmi_reg_addr(0),
+    .cptra_uncore_dmi_reg_addr(7'h0),
     .cptra_uncore_dmi_reg_wdata(0) 
   );
 
@@ -351,29 +351,64 @@ endtask
 task write_single_word(input [31 : 0]  address,
   input [31 : 0] word);
 begin
-hsel_i_tb       = 1;
-haddr_i_tb      = address;
-hwrite_i_tb     = 1;
-hready_i_tb     = 1;
-htrans_i_tb     = AHB_HTRANS_NONSEQ;
-hsize_i_tb      = 3'b010;
-#(CLK_PERIOD);
+  hsel_i_tb       = 1;
+  haddr_i_tb      = address;
+  hwrite_i_tb     = 1;
+  hready_i_tb     = 1;
+  htrans_i_tb     = AHB_HTRANS_NONSEQ;
+  hsize_i_tb      = 3'b010;
+  #(CLK_PERIOD);
 
-haddr_i_tb      = 'Z;
-hwdata_i_tb     = word;
-hwrite_i_tb     = 0;
-htrans_i_tb     = AHB_HTRANS_IDLE;
+  haddr_i_tb      = 'Z;
+  hwdata_i_tb     = word;
+  hwrite_i_tb     = 0;
+  htrans_i_tb     = AHB_HTRANS_IDLE;
 end
 endtask // write_single_word
+
+//----------------------------------------------------------------
+  // read_single_word()
+  //
+  // Read a data word from the given address in the DUT.
+  // the word read will be available in the global variable
+  // read_data.
+  //----------------------------------------------------------------
+logic [63:0] read_data;
+task read_single_word(input [31 : 0]  address);
+  begin
+    hsel_i_tb       = 1;
+    haddr_i_tb      = address;
+    hwrite_i_tb     = 0;
+    hready_i_tb     = 1;
+    htrans_i_tb     = AHB_HTRANS_NONSEQ;
+    hsize_i_tb      = 3'b010;
+    #(CLK_PERIOD);
+    
+    hwdata_i_tb     = 0;
+    haddr_i_tb     = 'Z;
+    htrans_i_tb     = AHB_HTRANS_IDLE;
+    read_data = hrdata_o_tb;
+  end
+endtask // read_single_word
+
 
 task soc_ifc_axi_test;
   axi_resp_e resp;
 
-  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 'h1);
+  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
   $display("SHA LOCK cleared over AHB\n");
   @(posedge clk_tb);
 
-  $display("Reading SHA ACC LOCK reg\n");
+  //TODO: figure out how to remove this. Single write not working
+  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
+  $display("SHA LOCK cleared over AHB\n");
+  @(posedge clk_tb);
+
+  //wait for write to go through
+  // #(CLK_PERIOD);
+  // hsel_i_tb       = 0;
+  
+  $display("Attempt to acquire SHA ACC LOCK reg\n");
   //id = 0, user --> decoded in axi sub
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_LOCK),
@@ -384,7 +419,25 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, read);
-  $display("SHA Acc lock acquired over axi = %h\n", rdata);
+  $display("SHA Acc lock acquired over AXI = %h\n", rdata);
+
+  $display("Read SHA ACC LOCK reg");
+  axi_sub_if.axi_read_single(
+    .addr(`CLP_SHA512_ACC_CSR_LOCK),
+    .user(0),
+    .id(0),
+    .lock(0), 
+    .data(rdata), 
+    .resp(resp)
+  );
+  axi_txn_check(resp, read);
+
+  //TODO: comment this part back in when RTL is ready
+  // if (rdata == 'h1) begin
+  //   $error("SHA Acc Lock acquired over AXI unexpectedly!");
+  //   $display("* TESTCASE FAILED");
+  //   $finish;
+  // end
 
   axi_sub_if.axi_write_single(
     .addr(`CLP_SHA512_ACC_CSR_MODE),
@@ -395,7 +448,7 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, write);
-  $display("SHA mode set to 1 over axi\n");
+  $display("SHA mode set to 1 over AXI\n");
 
   axi_sub_if.axi_write_single(
     .addr(`CLP_SHA512_ACC_CSR_DLEN),
@@ -406,7 +459,7 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, write);
-  $display("SHA dlen set to 1 over axi\n");
+  $display("SHA dlen set to 1 over AXI\n");
 
   axi_sub_if.axi_write_single(
     .addr(`CLP_SHA512_ACC_CSR_DATAIN),
@@ -417,7 +470,7 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, write);
-  $display("SHA datain written over axi\n");
+  $display("SHA datain written over AXI\n");
 
   axi_sub_if.axi_write_single(
     .addr(`CLP_SHA512_ACC_CSR_EXECUTE),
@@ -428,9 +481,10 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, write);
-  $display("SHA execute written over axi\n");
+  $display("SHA execute written over AXI\n");
 
-  // while (rdata == 0) begin
+  $display("Waiting for SHA status\n");
+  while (rdata[1] != 1) begin
     axi_sub_if.axi_read_single(
       .addr(`CLP_SHA512_ACC_CSR_STATUS),
       .user(0),
@@ -440,9 +494,8 @@ task soc_ifc_axi_test;
       .resp(resp)
     );
     axi_txn_check(resp, read);
-    $display("Waiting for SHA status\n");
-  // end
-  $display("SHA status read over axi = %h\n", rdata);
+  end
+  $display("SHA status read over AXI = %h\n", rdata);
 
   $display("Test done\n");
 endtask
