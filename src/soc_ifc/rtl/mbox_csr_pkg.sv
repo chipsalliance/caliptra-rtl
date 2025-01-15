@@ -70,7 +70,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__soc_has_lock__in_t;
 
     typedef struct packed{
-        logic [14:0] next;
+        logic [15:0] next;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__in_t;
 
     typedef struct packed{
@@ -178,7 +178,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__soc_has_lock__out_t;
 
     typedef struct packed{
-        logic [14:0] value;
+        logic [15:0] value;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__out_t;
 
     typedef struct packed{

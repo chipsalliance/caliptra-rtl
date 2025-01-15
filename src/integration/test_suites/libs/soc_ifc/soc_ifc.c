@@ -270,7 +270,7 @@ uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_coun
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, notif_intr_en & ~(SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_SOC_REQ_LOCK_EN_MASK |
                                                                                   SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MBOX_ECC_COR_EN_MASK));
     for (uint32_t ii=0; ii < byte_count; ii+=4) {
-        lsu_write_32(MBOX_DIR_BASE_ADDR+ii, 0x0);
+        lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR+ii, 0x0);
     }
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, notif_intr_en);

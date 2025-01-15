@@ -291,7 +291,7 @@ void run_mbox_sram_ecc(enum ecc_error_mode_type type, enum mask_config test_mask
     }
 
     // Allocate an array in Mailbox SRAM
-    volatile uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
+    volatile uint32_t* myarray = (uint32_t*) CLP_MBOX_SRAM_BASE_ADDR;
     for (uint32_t ii; ii < 64; ii++) {
         myarray[ii] = 64-ii;
     }
@@ -607,7 +607,7 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config re
     enum test_list cur_test;
 
     uint32_t array_in_dccm [10]; // stack is in DCCM, so this automatically goes there
-    uint32_t* safe_iter = (uint32_t*) MBOX_DIR_BASE_ADDR; // Pointer to mailbox memory allows us to define an iteration variable that will not be corrupted by DCCM error injection
+    uint32_t* safe_iter = (uint32_t*) CLP_MBOX_SRAM_BASE_ADDR; // Pointer to mailbox memory allows us to define an iteration variable that will not be corrupted by DCCM error injection
 
     uint32_t resp = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
 
