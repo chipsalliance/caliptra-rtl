@@ -64,9 +64,9 @@ module caliptra_top
     //SRAM interface for mbox
     output logic mbox_sram_cs,
     output logic mbox_sram_we,
-    output logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    output logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr,
+    output logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    input  logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
     output logic imem_cs,
@@ -257,8 +257,8 @@ module caliptra_top
     pcr_signing_t pcr_signing_data;
 
     //mailbox sram gasket
-    mbox_sram_req_t mbox_sram_req;
-    mbox_sram_resp_t mbox_sram_resp;
+    cptra_mbox_sram_req_t mbox_sram_req;
+    cptra_mbox_sram_resp_t mbox_sram_resp;
 
     logic clear_obf_secrets;
     logic scan_mode_switch;
@@ -286,7 +286,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, mldsa_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -994,6 +994,7 @@ mldsa_top #(
      .kv_read           (kv_read[2]),
      .kv_rd_resp        (kv_rd_resp[2]),
      .pcr_signing_data  (pcr_signing_data),
+     .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
      .notif_intr        (mldsa_notif_intr)
 );
