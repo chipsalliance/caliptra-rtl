@@ -13,3 +13,5 @@ contents:
       templates:
         $CALIPTRA_ROOT/src/integration/test_suites/randomized_pcr_signing/randomized_pcr_signing              : { weight 100 }
         $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand    : { weight 100 }
+        $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_mldsa_keygen_sign_vfy_rand/smoke_test_mldsa_keygen_sign_vfy_rand    : { weight 100 }
+        $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_mldsa_keygen_standalone_sign_vfy_rand/smoke_test_mldsa_keygen_standalone_sign_vfy_rand    : { weight 100 }

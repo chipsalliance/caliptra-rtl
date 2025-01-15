@@ -281,7 +281,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, mldsa_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -989,6 +989,7 @@ mldsa_top #(
      .kv_read           (kv_read[2]),
      .kv_rd_resp        (kv_rd_resp[2]),
      .pcr_signing_data  (pcr_signing_data),
+     .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
      .notif_intr        (mldsa_notif_intr)
 );
