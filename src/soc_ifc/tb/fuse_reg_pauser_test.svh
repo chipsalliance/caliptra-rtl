@@ -20,7 +20,7 @@
 logic [31:0] fuse_uds_seed [0:11]; 
 logic [31:0] fuse_field_entropy [0:7]; 
 logic [31:0] fuse_key_manifest_pk_hash [0:11]; 
-logic [3:0]  fuse_key_manifest_pk_hash_mask; 
+logic [3:0]  fuse_key_manifest_pk_hash_mask[0:7]; 
 logic [31:0] fuse_fmc_key_manifest_svn; 
 logic [31:0] fuse_runtime_svn [0:3]; 
 logic        fuse_anti_rollback_disable; 
@@ -33,7 +33,8 @@ logic [31:0] fuse_mldsa_revocation;
 `FORLOOP_COMB( 12 ) fuse_uds_seed[j]                  = `REG_HIER_PFX.fuse_uds_seed[j].seed.value;
 `FORLOOP_COMB( 8 )  fuse_field_entropy[j]             = `REG_HIER_PFX.fuse_field_entropy[j].seed.value;
 `FORLOOP_COMB( 12 ) fuse_key_manifest_pk_hash[j]      = `REG_HIER_PFX.fuse_key_manifest_pk_hash[j].hash.value;
-  always_comb       fuse_key_manifest_pk_hash_mask    = `REG_HIER_PFX.fuse_key_manifest_pk_hash_mask.mask.value;
+`FORLOOP_COMB( 8 )  fuse_key_manifest_pk_hash_mask[j] = `REG_HIER_PFX.fuse_key_manifest_pk_hash_mask[j].mask.value;
+  //always_comb       fuse_key_manifest_pk_hash_mask    = `REG_HIER_PFX.fuse_key_manifest_pk_hash_mask.mask.value;
   always_comb       fuse_fmc_key_manifest_svn         = `REG_HIER_PFX.fuse_fmc_key_manifest_svn.svn.value;
 `FORLOOP_COMB( 4 )  fuse_runtime_svn[j]               = `REG_HIER_PFX.fuse_runtime_svn[j].svn.value;
   always_comb       fuse_anti_rollback_disable        = `REG_HIER_PFX.fuse_anti_rollback_disable.dis.value;
@@ -274,7 +275,7 @@ function dword_t get_fuse_regval(string rname);
 
   begin
     case (rname) 
-      "FUSE_KEY_MANIFEST_PK_HASH_MASK"      :  regval = fuse_key_manifest_pk_hash_mask; 
+      //"FUSE_KEY_MANIFEST_PK_HASH_MASK"      :  regval = fuse_key_manifest_pk_hash_mask; 
       "FUSE_FMC_KEY_MANIFEST_SVN"           :  regval = fuse_fmc_key_manifest_svn; 
       "FUSE_ANTI_ROLLBACK_DISABLE"          :  regval = fuse_anti_rollback_disable; 
       "FUSE_LMS_REVOCATION"                 :  regval = fuse_lms_revocation; 
@@ -297,6 +298,7 @@ function dword_t get_fuse_regval(string rname);
           regval =  (pfx == "FUSE_UDS_SEED"            ) ? fuse_uds_seed[j]:
                     (pfx == "FUSE_FIELD_ENTROPY"       ) ? fuse_field_entropy[j] :
                     (pfx == "FUSE_KEY_MANIFEST_PK_HASH") ? fuse_key_manifest_pk_hash[j] :
+                    (pfx == "FUSE_KEY_MANIFEST_PK_HASH_MASK") ? fuse_key_manifest_pk_hash_mask[j] :
                     (pfx == "FUSE_RUNTIME_SVN"         ) ? fuse_runtime_svn[j] :
                     (pfx == "FUSE_IDEVID_CERT_ATTR"    ) ? fuse_idevid_cert_attr[j] :
                     (pfx == "FUSE_IDEVID_MANUF_HSM_ID" ) ? fuse_idevid_manuf_hsm_id[j] : 'x;
