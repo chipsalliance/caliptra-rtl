@@ -47,7 +47,7 @@ uint32_t test_mbox_sram_ecc() {
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0);
 
     // Allocate a large array in Mailbox SRAM
-    volatile uint32_t* myarray = (uint32_t*) MBOX_DIR_BASE_ADDR;
+    volatile uint32_t* myarray = (uint32_t*) CLP_MBOX_SRAM_BASE_ADDR;
     for (uint32_t ii; ii < 64; ii++) {
         myarray[ii] = 64-ii;
     }
