@@ -33,6 +33,7 @@ package soc_ifc_reg_model_top_pkg;
     import soc_ifc_reg_uvm::*;
     import mbox_csr_uvm::*;
     import sha512_acc_csr_uvm::*;
+    import axi_dma_reg_uvm::*;
     import soc_ifc_pkg::*;
     `include "avery_defines.svh"
     import aaxi_pkg::*;
@@ -69,6 +70,13 @@ package soc_ifc_reg_model_top_pkg;
         bit soc_done_stage;
         bit mbox_error;
     } mbox_fn_state_s;
+
+    typedef struct packed {
+        bit dma_idle;
+        bit dma_wait_data;
+        bit dma_done;
+        bit dma_error;
+    } axi_dma_fn_state_s;
 
 // pragma uvmf custom additional_imports end
 
@@ -674,6 +682,201 @@ package soc_ifc_reg_model_top_pkg;
 
     endclass : sha512_acc_csr_ext
 
+    class axi_dma_reg__intr_block_t_ext extends axi_dma_reg__intr_block_t;
+        uvm_reg_map axi_dma_reg_intr_AHB_map;
+        uvm_reg_map axi_dma_reg_intr_AXI_map;
+
+        // HWSET has precedence over SW W1C, so use these variables to track
+        // active hwset activity in case contention must be resolved
+        bit [31:0] notif_internal_intr_r_hwset_active = 0;
+        bit [31:0] error_internal_intr_r_hwset_active = 0;
+
+        function new(string name = "axi_dma_reg__intr_block_t_ext");
+            super.new(name);
+        endfunction : new
+
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       or noncore-resettable (i.e. cptra_noncore_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void configure_reset_values();
+            // Track reset configuration against a queue of all registers in this block, to ensure each register is handled
+            uvm_reg_field blk_flds[$];
+            get_fields(blk_flds, UVM_NO_HIER);
+            `REG____CP_NONCORE_RST(this.global_intr_en_r                           )
+            `REG____CP_NONCORE_RST(this.error_intr_en_r                            )
+            `REG____CP_NONCORE_RST(this.notif_intr_en_r                            )
+            `REG____CP_NONCORE_RST(this.error_global_intr_r                        )
+            `REG____CP_NONCORE_RST(this.notif_global_intr_r                        )
+            `REG_NO_CP_NONCORE_RST(this.error_internal_intr_r                      )
+            `REG____CP_NONCORE_RST(this.notif_internal_intr_r                      )
+            `REG____CP_NONCORE_RST(this.error_intr_trig_r                          )
+            `REG____CP_NONCORE_RST(this.notif_intr_trig_r                          )
+            `REG_NO_CP_NONCORE_RST(this.error_cmd_dec_intr_count_r                 )
+            `REG_NO_CP_NONCORE_RST(this.error_axi_rd_intr_count_r                  )
+            `REG_NO_CP_NONCORE_RST(this.error_axi_wr_intr_count_r                  )
+            `REG_NO_CP_NONCORE_RST(this.error_mbox_lock_intr_count_r               )
+            `REG_NO_CP_NONCORE_RST(this.error_sha_lock_intr_count_r                )
+            `REG_NO_CP_NONCORE_RST(this.error_fifo_oflow_intr_count_r              )
+            `REG_NO_CP_NONCORE_RST(this.error_fifo_uflow_intr_count_r              )
+            `REG____CP_NONCORE_RST(this.notif_txn_done_intr_count_r                )
+            `REG____CP_NONCORE_RST(this.notif_fifo_empty_intr_count_r              )
+            `REG____CP_NONCORE_RST(this.notif_fifo_not_empty_intr_count_r          )
+            `REG____CP_NONCORE_RST(this.notif_fifo_full_intr_count_r               )
+            `REG____CP_NONCORE_RST(this.notif_fifo_not_full_intr_count_r           )
+            `REG____CP_NONCORE_RST(this.error_cmd_dec_intr_count_incr_r            )
+            `REG____CP_NONCORE_RST(this.error_axi_rd_intr_count_incr_r             )
+            `REG____CP_NONCORE_RST(this.error_axi_wr_intr_count_incr_r             )
+            `REG____CP_NONCORE_RST(this.error_mbox_lock_intr_count_incr_r          )
+            `REG____CP_NONCORE_RST(this.error_sha_lock_intr_count_incr_r           )
+            `REG____CP_NONCORE_RST(this.error_fifo_oflow_intr_count_incr_r         )
+            `REG____CP_NONCORE_RST(this.error_fifo_uflow_intr_count_incr_r         )
+            `REG____CP_NONCORE_RST(this.notif_txn_done_intr_count_incr_r           )
+            `REG____CP_NONCORE_RST(this.notif_fifo_empty_intr_count_incr_r         )
+            `REG____CP_NONCORE_RST(this.notif_fifo_not_empty_intr_count_incr_r     )
+            `REG____CP_NONCORE_RST(this.notif_fifo_full_intr_count_incr_r          )
+            `REG____CP_NONCORE_RST(this.notif_fifo_not_full_intr_count_incr_r      )
+            while (blk_flds.size() != 0) begin
+                uvm_reg_field cur_fld = blk_flds.pop_front();
+                `uvm_error("AXI_DMA_REG__INTR_BLOCK_T_EXT", {"No extended reset configuration defined for ", cur_fld.get_full_name()})
+            end
+        endfunction
+
+        virtual function void build();
+            super.build();
+            this.configure_reset_values();
+            this.axi_dma_reg_intr_AHB_map = create_map("intr_AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+            this.axi_dma_reg_intr_AXI_map = create_map("intr_AXI_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+        endfunction
+
+        virtual function void build_ext_maps();
+            uvm_reg regs[$];
+
+            this.default_map.get_registers(regs, UVM_NO_HIER);
+            foreach(regs[c_reg]) begin
+                this.axi_dma_reg_intr_AHB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+                this.axi_dma_reg_intr_AXI_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            end
+        endfunction
+
+    endclass : axi_dma_reg__intr_block_t_ext
+
+    class axi_dma_reg_ext extends axi_dma_reg;
+        // default_map_ext has intr_block_rf_ext.default_map as a submap; the
+        // native this.default_map adds intr_block_rf.default_map as submap
+        // We need this additional map so that the new intr_block_rf_ext can be
+        // initialized, and the default_map assigned to a parent. This allows
+        // get_offset methods to work on member registers, so we can then add
+        // them to the AHB/AXI maps
+        uvm_reg_map default_map_ext;
+        uvm_reg_map axi_dma_reg_AHB_map;
+        uvm_reg_map axi_dma_reg_AXI_map;
+
+        // This coexists with intr_block_rf (from the parent class), but
+        // intr_block_rf is only added as a submap to default_map and
+        // should never be used in practice
+        rand axi_dma_reg__intr_block_t_ext intr_block_rf_ext;
+
+        // Tracks functional state of AXI DMA FSM internally, without reference to
+        // the value read from STATUS0
+        axi_dma_fn_state_s axi_dma_fn_state_sigs;
+
+        // Tracks when a register field is being actively updated by hardware, so
+        // prediction and scoreboard logic can detect transitions
+//        struct {
+//            // TODO
+//        } hwset_active;
+
+        extern virtual function void reset(string kind = "HARD");
+        function new(string name = "axi_dma_reg_ext");
+            super.new(name);
+            axi_dma_fn_state_sigs = '{dma_idle: 1'b1, default: 1'b0};
+//            hwset_active = '{default: '0};
+        endfunction : new
+
+        // FIXME Manually maintaining a list here of registers that are configured
+        //       as soft-resettable (i.e. cptra_rst_b instead of cptra_pwrgood)
+        //       or noncore-resettable (i.e. cptra_noncore_rst_b instead of cptra_pwrgood)
+        //       Ideally would be auto-generated.
+        virtual function void configure_reset_values();
+            // Track reset configuration against a queue of all fields in this block, to ensure each register is handled
+            uvm_reg_field blk_flds[$];
+            get_fields(blk_flds, UVM_NO_HIER);
+            `REG____CP_NONCORE_RST(this.id        )
+            `REG____CP_NONCORE_RST(this.cap       )
+            `REG____CP_NONCORE_RST(this.ctrl      )
+            `REG____CP_NONCORE_RST(this.status0   )
+            `REG____CP_NONCORE_RST(this.status1   )
+            `REG____CP_NONCORE_RST(this.src_addr_l)
+            `REG____CP_NONCORE_RST(this.src_addr_h)
+            `REG____CP_NONCORE_RST(this.dst_addr_l)
+            `REG____CP_NONCORE_RST(this.dst_addr_h)
+            `REG____CP_NONCORE_RST(this.byte_count)
+            `REG____CP_NONCORE_RST(this.block_size)
+            `REG____CP_NONCORE_RST(this.write_data)
+            `REG____CP_NONCORE_RST(this.read_data )
+            while (blk_flds.size() != 0) begin
+                uvm_reg_field cur_fld = blk_flds.pop_front();
+                `uvm_error("AXI_DMA_REG_EXT", {"No extended reset configuration defined for ", cur_fld.get_full_name()})
+            end
+        endfunction
+
+        virtual function void build();
+            super.build();
+            this.configure_reset_values();
+            this.intr_block_rf_ext = new("intr_block_rf_ext");
+            this.intr_block_rf_ext.configure(this);
+            this.intr_block_rf_ext.build(); // This configures the default_map, which is used to find reg offsets for other maps
+            this.default_map_ext     = create_map("default_map_ext", 0, 4, UVM_LITTLE_ENDIAN);
+            this.axi_dma_reg_AHB_map = create_map("AHB_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+            this.axi_dma_reg_AXI_map = create_map("AXI_reg_map", 0, 4, UVM_LITTLE_ENDIAN);
+        endfunction
+
+        virtual function void build_ext_maps();
+            uvm_reg        regs[$];
+            uvm_reg_map    submaps[$];
+            uvm_reg_addr_t intr_block_offset;
+
+            this.default_map.get_registers(regs,    UVM_NO_HIER);
+            this.default_map.get_submaps  (submaps, UVM_NO_HIER); // <-- these submaps are from this.intr_block_rf.default_map, per the inherited build() method
+
+            foreach(regs[c_reg]) begin
+                this.default_map_ext    .add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+                this.axi_dma_reg_AHB_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+                this.axi_dma_reg_AXI_map.add_reg(regs[c_reg], regs[c_reg].get_offset(this.default_map));
+            end
+            // Find offset used to add intr_block_rf.default_map to this.default_map, so we can
+            // use the same offset to add submaps to intr_block_rf_ext
+            foreach(submaps[c_submap]) begin
+                if (submaps[c_submap].get_name() == "reg_map") begin
+                    intr_block_offset = this.default_map.get_submap_offset(submaps[c_submap]);
+                end
+            end
+
+            this.default_map_ext    .add_submap(this.intr_block_rf_ext.default_map, intr_block_offset);
+            this.intr_block_rf_ext.build_ext_maps(); // This configures the AHB/AXI maps
+            this.axi_dma_reg_AHB_map.add_submap(this.intr_block_rf_ext.axi_dma_reg_intr_AHB_map, intr_block_offset);
+            this.axi_dma_reg_AXI_map.add_submap(this.intr_block_rf_ext.axi_dma_reg_intr_AXI_map, intr_block_offset);
+
+        endfunction
+
+    endclass : axi_dma_reg_ext
+
+    function void axi_dma_reg_ext::reset(string kind = "HARD");
+        super.reset(kind);
+        // BOOT FSM State Changes
+        // "SOFT" does not cause a state change - it causes "NONCORE" reset
+        // TODO what to do for FW update?
+        if (kind inside {"HARD", "NONCORE"}) begin
+            axi_dma_fn_state_sigs = '{dma_idle: 1'b1, default: 1'b0};
+        end
+//        if (kind inside {"HARD"}) begin TODO
+//            // Some signals may also be reset by a noncore reset, but all of the
+//            // initial hwset_active members may be driven during warm resets
+//            hwset_active = '{default: '0};
+//        end
+    endfunction
+
     // Scheduling helper class for delayed callback tasks
     `include "soc_ifc_reg_delay_job.svh"
     `include "soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error.svh"
@@ -810,6 +1013,7 @@ package soc_ifc_reg_model_top_pkg;
         rand mbox_csr_ext       mbox_csr_rm;
         rand sha512_acc_csr_ext sha512_acc_csr_rm;
         rand soc_ifc_reg_ext    soc_ifc_reg_rm;
+        rand axi_dma_reg_ext    axi_dma_reg_rm;
 
         uvm_reg_map default_map; // Block map
         uvm_reg_map soc_ifc_AXI_map; // Block map
@@ -832,6 +1036,15 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb;
         soc_ifc_reg_cbs_intr_block_rf_ext_internal                   sha512_acc_csr_intr_block_rf_ext_internal_cb;
+
+        soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base      axi_dma_reg_intr_block_rf_ext_global_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base axi_dma_reg_intr_block_rf_ext_error_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base       axi_dma_reg_intr_block_rf_ext_error_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base     axi_dma_reg_intr_block_rf_ext_error_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base axi_dma_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base       axi_dma_reg_intr_block_rf_ext_notif_intr_en_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base     axi_dma_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb;
+        soc_ifc_reg_cbs_intr_block_rf_ext_internal                   axi_dma_reg_intr_block_rf_ext_internal_cb;
 
 
         soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock          mbox_csr_mbox_lock_lock_cb;
@@ -939,6 +1152,11 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_reg_rm.configure(this);
         this.soc_ifc_reg_rm.build();
 
+        /*axi_dma_reg_ahb_axi*/
+        this.axi_dma_reg_rm = new("axi_dma_reg_rm");
+        this.axi_dma_reg_rm.configure(this);
+        this.axi_dma_reg_rm.build();
+
         soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb      = soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base     ::type_id::create("soc_ifc_reg_intr_block_rf_ext_global_intr_en_r_base_cb"     );
         soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base::type_id::create("soc_ifc_reg_intr_block_rf_ext_error_internal_intr_r_base_cb");
         soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base      ::type_id::create("soc_ifc_reg_intr_block_rf_ext_error_intr_en_r_base_cb"      );
@@ -956,6 +1174,15 @@ package soc_ifc_reg_model_top_pkg;
         sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
         sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("sha512_acc_csr_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
         sha512_acc_csr_intr_block_rf_ext_internal_cb                   = soc_ifc_reg_cbs_intr_block_rf_ext_internal                  ::type_id::create("sha512_acc_csr_intr_block_rf_ext_internal_cb"                  );
+
+        axi_dma_reg_intr_block_rf_ext_global_intr_en_r_base_cb      = soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base     ::type_id::create("axi_dma_reg_intr_block_rf_ext_global_intr_en_r_base_cb"     );
+        axi_dma_reg_intr_block_rf_ext_error_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base::type_id::create("axi_dma_reg_intr_block_rf_ext_error_internal_intr_r_base_cb");
+        axi_dma_reg_intr_block_rf_ext_error_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base      ::type_id::create("axi_dma_reg_intr_block_rf_ext_error_intr_en_r_base_cb"      );
+        axi_dma_reg_intr_block_rf_ext_error_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_trig_r_base    ::type_id::create("axi_dma_reg_intr_block_rf_ext_error_intr_trig_r_base_cb"    );
+        axi_dma_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb = soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base::type_id::create("axi_dma_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb");
+        axi_dma_reg_intr_block_rf_ext_notif_intr_en_r_base_cb       = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_en_r_base      ::type_id::create("axi_dma_reg_intr_block_rf_ext_notif_intr_en_r_base_cb"      );
+        axi_dma_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb     = soc_ifc_reg_cbs_intr_block_rf_ext_notif_intr_trig_r_base    ::type_id::create("axi_dma_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb"    );
+        axi_dma_reg_intr_block_rf_ext_internal_cb                   = soc_ifc_reg_cbs_intr_block_rf_ext_internal                  ::type_id::create("axi_dma_reg_intr_block_rf_ext_internal_cb"                  );
 
         mbox_csr_mbox_lock_lock_cb          = soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock         ::type_id::create("mbox_csr_mbox_lock_lock_cb"         );
         mbox_csr_mbox_cmd_command_cb        = soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command       ::type_id::create("mbox_csr_mbox_cmd_command_cb"       );
@@ -1072,6 +1299,52 @@ package soc_ifc_reg_model_top_pkg;
         uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.error3_intr_count_incr_r         .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
         uvm_reg_field_cb::add(this.sha512_acc_csr_rm.intr_block_rf_ext.notif_cmd_done_intr_count_incr_r .pulse, sha512_acc_csr_intr_block_rf_ext_internal_cb);
 
+        /* -- axi_dma_reg interrupts -- */
+        uvm_reg_field_cb::add(axi_dma_reg_rm.intr_block_rf_ext.global_intr_en_r.error_en, axi_dma_reg_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        uvm_reg_field_cb::add(axi_dma_reg_rm.intr_block_rf_ext.global_intr_en_r.notif_en, axi_dma_reg_intr_block_rf_ext_global_intr_en_r_base_cb     );
+        error_en_flds  .delete(); 
+        notif_en_flds  .delete(); 
+        error_sts_flds .delete(); 
+        notif_sts_flds .delete(); 
+        error_trig_flds.delete(); 
+        notif_trig_flds.delete(); 
+        this.axi_dma_reg_rm.intr_block_rf_ext.error_intr_en_r      .get_fields(error_en_flds  );
+        this.axi_dma_reg_rm.intr_block_rf_ext.notif_intr_en_r      .get_fields(notif_en_flds  );
+        this.axi_dma_reg_rm.intr_block_rf_ext.error_internal_intr_r.get_fields(error_sts_flds );
+        this.axi_dma_reg_rm.intr_block_rf_ext.notif_internal_intr_r.get_fields(notif_sts_flds );
+        this.axi_dma_reg_rm.intr_block_rf_ext.error_intr_trig_r    .get_fields(error_trig_flds);
+        this.axi_dma_reg_rm.intr_block_rf_ext.notif_intr_trig_r    .get_fields(notif_trig_flds);
+        foreach (error_en_flds  [ii]) uvm_reg_field_cb::add(error_en_flds  [ii], axi_dma_reg_intr_block_rf_ext_error_intr_en_r_base_cb      );
+        foreach (notif_en_flds  [ii]) uvm_reg_field_cb::add(notif_en_flds  [ii], axi_dma_reg_intr_block_rf_ext_notif_intr_en_r_base_cb      );
+        foreach (error_sts_flds [ii]) uvm_reg_field_cb::add(error_sts_flds [ii], axi_dma_reg_intr_block_rf_ext_error_internal_intr_r_base_cb);
+        foreach (notif_sts_flds [ii]) uvm_reg_field_cb::add(notif_sts_flds [ii], axi_dma_reg_intr_block_rf_ext_notif_internal_intr_r_base_cb);
+        foreach (error_trig_flds[ii]) uvm_reg_field_cb::add(error_trig_flds[ii], axi_dma_reg_intr_block_rf_ext_error_intr_trig_r_base_cb    );
+        foreach (notif_trig_flds[ii]) uvm_reg_field_cb::add(notif_trig_flds[ii], axi_dma_reg_intr_block_rf_ext_notif_intr_trig_r_base_cb    );
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_cmd_dec_intr_count_r                  .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_axi_rd_intr_count_r                   .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_axi_wr_intr_count_r                   .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_mbox_lock_intr_count_r                .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_sha_lock_intr_count_r                 .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_oflow_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_uflow_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_txn_done_intr_count_r                 .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_empty_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_empty_intr_count_r           .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_full_intr_count_r                .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_full_intr_count_r            .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_cmd_dec_intr_count_incr_r           .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_axi_rd_intr_count_incr_r            .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_axi_wr_intr_count_incr_r            .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_mbox_lock_intr_count_incr_r         .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_sha_lock_intr_count_incr_r          .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_oflow_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_uflow_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_txn_done_intr_count_incr_r          .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_empty_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_empty_intr_count_incr_r    .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_full_intr_count_incr_r         .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+        uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_full_intr_count_incr_r     .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+
         /* -- mbox_csr -- */
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_lock   .lock       , mbox_csr_mbox_lock_lock_cb         );
         uvm_reg_field_cb::add(mbox_csr_rm.mbox_cmd    .command    , mbox_csr_mbox_cmd_command_cb       );
@@ -1103,28 +1376,41 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii].hash, soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH_LOCK.lock, soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb);
 
-        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed                      , soc_ifc_reg_secret_cb);
-        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed                 , soc_ifc_reg_secret_cb);
-        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].hash          , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii].mask, soc_ifc_reg_fuse_cb); // FIXME back to single-element
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn               , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn                    , soc_ifc_reg_fuse_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis              , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert              , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id         , soc_ifc_reg_fuse_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation          , soc_ifc_reg_fuse_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation      , soc_ifc_reg_fuse_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_stepping_id.soc_stepping_id        , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.internal_obf_key[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                    , soc_ifc_reg_key_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock                     , soc_ifc_reg_internal_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst           , soc_ifc_reg_internal_fw_update_reset_cb) ;
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_l.count_l                 , soc_ifc_reg_internal_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_h.count_h                 , soc_ifc_reg_internal_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_l.compare_l            , soc_ifc_reg_internal_cb);
-                                                               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_h.compare_h            , soc_ifc_reg_internal_cb);
+        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])                  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed                        , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed                   , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii])      uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].hash            , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii].mask       , soc_ifc_reg_fuse_cb); // FIXME back to single-element
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn                 , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn                      , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis                , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert                , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])       uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id           , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation            , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation        , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_stepping_id.soc_stepping_id          , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii])    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii].token         , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.internal_obf_key[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                      , soc_ifc_reg_key_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock                       , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst             , soc_ifc_reg_internal_fw_update_reset_cb) ;
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_nmi_vector.vec                       , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_iccm_ecc_unc, soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_dccm_ecc_unc, soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_nmi_pin     , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock, soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo    , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc     , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_fatal_mask.mask             , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.mask         , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_l.count_l                   , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_h.count_h                   , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_l.compare_l              , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_h.compare_h              , soc_ifc_reg_internal_cb);
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
         uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
+
+        /* -- axi_dma_reg -- */
+        // TODO
 
         /* -- Coverage sampling callback for all registers */
         // Add this callback after all other callbacks so it runs AFTER the prediction is finalized
@@ -1147,6 +1433,7 @@ package soc_ifc_reg_model_top_pkg;
         this.default_map.add_mem(this.mbox_mem_rm, 0, "RW");
         this.default_map.add_submap(this.mbox_csr_rm.default_map, 'h2_0000);
         this.default_map.add_submap(this.sha512_acc_csr_rm.default_map, 'h2_1000);
+        this.default_map.add_submap(this.axi_dma_reg_rm.default_map, 'h2_2000);
         this.default_map.add_submap(this.soc_ifc_reg_rm.default_map, 'h3_0000);
 
         this.soc_ifc_AXI_map = create_map("soc_ifc_AXI_map", 0, 4, UVM_LITTLE_ENDIAN);
@@ -1161,18 +1448,21 @@ package soc_ifc_reg_model_top_pkg;
         // Also requires block.is_locked() to be true
         this.mbox_csr_rm.build_ext_maps();
         this.sha512_acc_csr_rm.build_ext_maps();
+        this.axi_dma_reg_rm.build_ext_maps();
         this.soc_ifc_reg_rm.build_ext_maps();
 
         /* Top register model AXI map */
         this.soc_ifc_AXI_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
         this.soc_ifc_AXI_map.add_submap(this.mbox_csr_rm.mbox_csr_AXI_map, 'h2_0000);
         this.soc_ifc_AXI_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AXI_map, 'h2_1000);
+        this.soc_ifc_AXI_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AXI_map, 'h2_2000);
         this.soc_ifc_AXI_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AXI_map, 'h3_0000);
 
         /* Top register model AHB map */
         this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
         this.soc_ifc_AHB_map.add_submap(this.mbox_csr_rm.mbox_csr_AHB_map, 'h2_0000);
         this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
+        this.soc_ifc_AHB_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AHB_map, 'h2_2000);
         this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
 
         void'(set_coverage(get_coverage() | UVM_CVR_REG_BITS | UVM_CVR_FIELD_VALS));

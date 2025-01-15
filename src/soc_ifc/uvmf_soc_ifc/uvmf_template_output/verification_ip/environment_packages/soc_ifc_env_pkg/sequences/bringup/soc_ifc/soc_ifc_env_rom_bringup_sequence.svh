@@ -47,9 +47,15 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
 //  constraint randomly_set_lms_verify_c { this.fuses_to_set.lms_verify dist {0 :/ 50, 1 :/ 50}; }
   constraint always_set_key_manifest_pk_hash_c { this.fuses_to_set.key_manifest_pk_hash == {12{1'b1}}; }
   constraint always_set_owner_pk_hash_c { this.fuses_to_set.owner_pk_hash == {12{1'b1}}; }
-  constraint always_set_idevid_c  { this.fuses_to_set.idevid_cert_attr[0] == 1'b1;
-                                    this.fuses_to_set.idevid_cert_attr[6] == 1'b1;
-                                    this.fuses_to_set.idevid_cert_attr[7] == 1'b1; }
+  constraint always_set_key_revocation_c { this.fuses_to_set.ecc_revocation   == 1'b1;
+                                           this.fuses_to_set.lms_revocation   == 1'b1;
+                                           this.fuses_to_set.mldsa_revocation == 1'b1; }
+  constraint always_set_idevid_c  { this.fuses_to_set.idevid_cert_attr[0 ] == 1'b1;
+                                    this.fuses_to_set.idevid_cert_attr[11] == 1'b1;
+                                    this.fuses_to_set.idevid_cert_attr[12] == 1'b1;
+                                    this.fuses_to_set.idevid_cert_attr[13] == 1'b1;
+                                    this.fuses_to_set.idevid_cert_attr[14] == 1'b1;
+                                    this.fuses_to_set.idevid_cert_attr[15] == 1'b1; }
   // Configure the values to set to initialized fuses
   constraint key_manifest_pk_hash_values_c { key_manifest_pk_hash_rand[0]  == this.key_manifest_pk_hash_val[0] ; //32'h6DC8DE16;
                                              key_manifest_pk_hash_rand[1]  == this.key_manifest_pk_hash_val[1] ; //32'hD559D129;
@@ -77,9 +83,18 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                       owner_pk_hash_rand[10] == owner_pk_hash_val[10];//32'h962E4B7A;
                                       owner_pk_hash_rand[11] == owner_pk_hash_val[11];//32'h50214999;
                                       solve this.fuses_to_set before this.owner_pk_hash_rand; }
-  constraint idevid_values_c { idevid_cert_attr_rand[0] == '0; /* SHA1 */
-                               idevid_cert_attr_rand[6] == 32'hFFFF_FFFF; /* UEID LSWord */
-                               idevid_cert_attr_rand[7] == 32'hFFFF_FFFF; /* MSWord */}
+  constraint ecc_revocation_value_c { ecc_revocation_rand  == 0;
+                                      solve this.fuses_to_set before this.ecc_revocation_rand; }
+  constraint lms_revocation_value_c { lms_revocation_rand == 0;
+                                      solve this.fuses_to_set before this.lms_revocation_rand; }
+  constraint mldsa_revocation_value_c { mldsa_revocation_rand == 0;
+                                      solve this.fuses_to_set before this.mldsa_revocation_rand; }
+  constraint idevid_values_c { idevid_cert_attr_rand[0]  == '0; /* SHA1 */
+                               idevid_cert_attr_rand[11] == 32'hFFFF_FFFF; /* UEID LSWord */
+                               idevid_cert_attr_rand[12] == 32'h0202_0101; /* Manuf Serial Num */
+                               idevid_cert_attr_rand[13] == 32'h3030_4040; /* Manuf Serial Num */
+                               idevid_cert_attr_rand[14] == 32'h0505_0606; /* Manuf Serial Num */
+                               idevid_cert_attr_rand[15] == 32'h7070_8080; /* Manuf Serial Num */}
 
   //==========================================
   // Function:    new

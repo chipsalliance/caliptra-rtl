@@ -51,12 +51,18 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand uvm_reg_data_t owner_pk_hash_rand [12];
   rand uvm_reg_data_t key_manifest_pk_hash_rand [12];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
+  rand uvm_reg_data_t ecc_revocation_rand;
+  rand uvm_reg_data_t lms_revocation_rand;
+  rand uvm_reg_data_t mldsa_revocation_rand;
   rand uvm_reg_data_t soc_stepping_id_rand;
   rand struct packed {
     bit uds;
     bit field_entropy;
     bit [0:11] key_manifest_pk_hash;
     bit [0:11] owner_pk_hash;
+    bit ecc_revocation;
+    bit lms_revocation;
+    bit mldsa_revocation;
     bit soc_stepping_id;
     bit [0:23] idevid_cert_attr;
 //    bit lms_verify;
@@ -102,6 +108,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     uvm_status_e sts;
     bit fuse_ready = 1'b0;
     int sts_rsp_count = 0;
+    uvm_reg_data_t reg_mask;
 
     fork
         forever begin
@@ -172,6 +179,30 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 //      reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
 //      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
 //    end
+    // ECC Revocation
+    if (this.fuses_to_set.ecc_revocation) begin
+      `uvm_info("SOC_IFC_RST", "Writing ECC Revocation to fuse bank", UVM_LOW)
+      reg_mask = ((1 << reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].mask/*ecc_revocation*/.get_n_bits()) - 1) << reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].mask/*ecc_revocation*/.get_lsb_pos();
+      reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].write(sts, uvm_reg_data_t'(ecc_revocation_rand & reg_mask), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to ecc_revocation")
+    end
+
+    // LMS Revocation
+    if (this.fuses_to_set.lms_revocation) begin
+      `uvm_info("SOC_IFC_RST", "Writing LMS Revocation to fuse bank", UVM_LOW)
+      reg_mask = ((1 << reg_model.soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation.get_n_bits()) - 1) << reg_model.soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation.get_lsb_pos();
+      reg_model.soc_ifc_reg_rm.fuse_lms_revocation.write(sts, uvm_reg_data_t'(lms_revocation_rand & reg_mask), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_revocation")
+    end
+
+    // MLDSA Revocation
+    if (this.fuses_to_set.mldsa_revocation) begin
+      `uvm_info("SOC_IFC_RST", "Writing MLDSA Revocation to fuse bank", UVM_LOW)
+      reg_mask = ((1 << reg_model.soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation.get_n_bits()) - 1) << reg_model.soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation.get_lsb_pos();
+      reg_model.soc_ifc_reg_rm.fuse_mldsa_revocation.write(sts, uvm_reg_data_t'(mldsa_revocation_rand & reg_mask), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to mldsa_revocation")
+    end
+
 
     // Owner PK Hash (No longer a 'FUSE', but lockable)
     foreach (this.fuses_to_set.owner_pk_hash[ii]) begin

@@ -22,7 +22,8 @@ targets:
 ---
 provides: [soc_ifc_uvm_pkg]
 schema_version: 2.4.0
-requires: []
+requires:
+  - axi_dma_uvm_pkg
 targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]

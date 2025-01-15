@@ -205,6 +205,8 @@ class soc_ifc_predictor #(
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
   bit sha_notif_intr_pending = 1'b0; // TODO
+  bit dma_err_intr_pending = 1'b0; // TODO
+  bit dma_notif_intr_pending = 1'b0; // TODO
   bit timer_intr_pending = 1'b1;
   bit nmi_intr_pending = 1'b0;
   bit cptra_error_fatal = 1'b0;
@@ -1314,6 +1316,29 @@ class soc_ifc_predictor #(
                 "CONTROL": begin
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
                 end
+                // axi_dma_reg registers
+                // TODO
+                "id",
+                "cap",
+                "ctrl",
+                "status0",
+                "status1",
+                "src_addr_l",
+                "src_addr_h",
+                "dst_addr_l",
+                "dst_addr_h",
+                "byte_count",
+                "block_size",
+                "write_data",
+                "read_data": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to AXI DMA reg %s with value %d (0x%x) has no effect on system prediction.", axs_reg.get_name(), data_active, data_active), UVM_LOW)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
+                end
+                // soc_ifc_reg registers
                 "CPTRA_HW_ERROR_FATAL": begin
                     if (ahb_txn.RnW == AHB_WRITE && |data_active && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
                         `uvm_info("PRED_AHB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
@@ -1574,6 +1599,15 @@ class soc_ifc_predictor #(
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
+                "CPTRA_HW_CAPABILITIES": begin
+                    `uvm_error("TODO", "FIXME")
+                end
+                "CPTRA_FW_CAPABILITIES": begin
+                    `uvm_error("TODO", "FIXME")
+                end
+                "CPTRA_CAP_LOCK": begin
+                    `uvm_error("TODO", "FIXME")
+                end
                 ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
                 ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
                     // Handled in callbacks via reg predictor
@@ -1608,10 +1642,46 @@ class soc_ifc_predictor #(
                 "fuse_lms_revocation",
                 "fuse_mldsa_revocation",
                 "fuse_soc_stepping_id",
+                ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
+                // subsystem regs/straps
+                // TODO
+                "SS_CALIPTRA_BASE_ADDR_L",
+                "SS_CALIPTRA_BASE_ADDR_H",
+                "SS_MCI_BASE_ADDR_L",
+                "SS_MCI_BASE_ADDR_H",
+                "SS_RECOVERY_IFC_BASE_ADDR_L",
+                "SS_RECOVERY_IFC_BASE_ADDR_H",
+                "SS_OTP_FC_BASE_ADDR_L",
+                "SS_OTP_FC_BASE_ADDR_H",
+                "SS_UDS_SEED_BASE_ADDR_L",
+                "SS_UDS_SEED_BASE_ADDR_H",
+                "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
+                "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
+                "SS_DEBUG_INTENT",
+                "SS_STRAP_GENERIC[4]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_SOC_DBG_UNLOCK_LEVEL[0]",
+                "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_GENERIC_FW_EXEC_CTRL[0]",
+                "SS_GENERIC_FW_EXEC_CTRL[1]",
+                "SS_GENERIC_FW_EXEC_CTRL[2]",
+                "SS_GENERIC_FW_EXEC_CTRL[3]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                // Caliptra Internal Registers
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
                         iccm_locked = 1'b1;
@@ -1848,6 +1918,77 @@ class soc_ifc_predictor #(
                 "error2_intr_count_incr_r",
                 "error3_intr_count_incr_r",
                 "notif_cmd_done_intr_count_incr_r": begin
+                    `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                end
+                default: begin
+                    `uvm_warning("PRED_AHB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
+                end
+            endcase
+        end
+        // Interrupt registers have 3-levels of ancestry back to reg_model top
+        //                          2-levels of ancestry back to unique parent
+        else if (axs_reg.get_parent().get_parent().get_name() == "axi_dma_reg_rm") begin
+            case (axs_reg.get_name()) inside
+                "global_intr_en_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_cptra_sts_txn = (!this.sha_err_intr_pending   && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value()) ||
+                                             (!this.sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value());
+                        this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value();
+                        this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value();
+                    end
+                end
+                "error_intr_en_r",
+                "notif_intr_en_r",
+                "error_intr_trig_r",
+                "notif_intr_trig_r": begin
+                    `uvm_info("PRED_AHB", $sformatf("Write to %s handled in callback", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "error_global_intr_r",
+                "notif_global_intr_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", $sformatf("Unexpected write to %s will have no effect", axs_reg.get_name()))
+                    end
+                end
+                "error_internal_intr_r",
+                "notif_internal_intr_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE && |data_active) begin
+                        // If the write clears ALL pending interrupts, global intr signal will deassert
+                        // but this does not result in a cptra status transaction because we only
+                        // capture rising edges as a transaction
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " attempts to clear an interrupt"}, UVM_HIGH)
+                    end
+                end
+                "error_cmd_dec_intr_count_r",
+                "error_axi_rd_intr_count_r",
+                "error_axi_wr_intr_count_r",
+                "error_mbox_lock_intr_count_r",
+                "error_sha_lock_intr_count_r",
+                "error_fifo_oflow_intr_count_r",
+                "error_fifo_uflow_intr_count_r",
+                "notif_txn_done_intr_count_r",
+                "notif_fifo_empty_intr_count_r",
+                "notif_fifo_not_empty_intr_count_r",
+                "notif_fifo_full_intr_count_r",
+                "notif_fifo_not_full_intr_count_r" : begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                    end
+                end
+                "error_cmd_dec_intr_count_incr_r",
+                "error_axi_rd_intr_count_incr_r",
+                "error_axi_wr_intr_count_incr_r",
+                "error_mbox_lock_intr_count_incr_r",
+                "error_sha_lock_intr_count_incr_r",
+                "error_fifo_oflow_intr_count_incr_r",
+                "error_fifo_uflow_intr_count_incr_r",
+                "notif_txn_done_intr_count_incr_r",
+                "notif_fifo_empty_intr_count_incr_r",
+                "notif_fifo_not_empty_intr_count_incr_r",
+                "notif_fifo_full_intr_count_incr_r",
+                "notif_fifo_not_full_intr_count_incr_r" : begin
                     `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
                 end
                 default: begin
@@ -2611,6 +2752,15 @@ class soc_ifc_predictor #(
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
+            "CPTRA_HW_CAPABILITIES": begin
+                `uvm_error("TODO", "FIXME")
+            end
+            "CPTRA_FW_CAPABILITIES": begin
+                `uvm_error("TODO", "FIXME")
+            end
+            "CPTRA_CAP_LOCK": begin
+                `uvm_error("TODO", "FIXME")
+            end
             ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
             ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
                 // Handled in callbacks via reg predictor
@@ -2645,9 +2795,44 @@ class soc_ifc_predictor #(
             "fuse_lms_revocation",
             "fuse_mldsa_revocation",
             "fuse_soc_stepping_id",
+            ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            // subsystem regs/straps
+            // TODO
+            "SS_CALIPTRA_BASE_ADDR_L",
+            "SS_CALIPTRA_BASE_ADDR_H",
+            "SS_MCI_BASE_ADDR_L",
+            "SS_MCI_BASE_ADDR_H",
+            "SS_RECOVERY_IFC_BASE_ADDR_L",
+            "SS_RECOVERY_IFC_BASE_ADDR_H",
+            "SS_OTP_FC_BASE_ADDR_L",
+            "SS_OTP_FC_BASE_ADDR_H",
+            "SS_UDS_SEED_BASE_ADDR_L",
+            "SS_UDS_SEED_BASE_ADDR_H",
+            "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
+            "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
+            "SS_DEBUG_INTENT",
+            "SS_STRAP_GENERIC[4]": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_SOC_DBG_UNLOCK_LEVEL[0]",
+            "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_GENERIC_FW_EXEC_CTRL[0]",
+            "SS_GENERIC_FW_EXEC_CTRL[1]",
+            "SS_GENERIC_FW_EXEC_CTRL[2]",
+            "SS_GENERIC_FW_EXEC_CTRL[3]": begin
+                `uvm_warning("TODO", "FIXME")
             end
             "internal_iccm_lock": begin
                 // Handled in callbacks via reg predictor
@@ -2699,7 +2884,31 @@ class soc_ifc_predictor #(
             "error1_intr_count_incr_r",
             "error2_intr_count_incr_r",
             "error3_intr_count_incr_r",
-            "notif_cmd_done_intr_count_incr_r": begin
+            "notif_cmd_done_intr_count_incr_r",
+            "error_cmd_dec_intr_count_r",
+            "error_axi_rd_intr_count_r",
+            "error_axi_wr_intr_count_r",
+            "error_mbox_lock_intr_count_r",
+            "error_sha_lock_intr_count_r",
+            "error_fifo_oflow_intr_count_r",
+            "error_fifo_uflow_intr_count_r",
+            "notif_txn_done_intr_count_r",
+            "notif_fifo_empty_intr_count_r",
+            "notif_fifo_not_empty_intr_count_r",
+            "notif_fifo_full_intr_count_r",
+            "notif_fifo_not_full_intr_count_r",
+            "error_cmd_dec_intr_count_incr_r",
+            "error_axi_rd_intr_count_incr_r",
+            "error_axi_wr_intr_count_incr_r",
+            "error_mbox_lock_intr_count_incr_r",
+            "error_sha_lock_intr_count_incr_r",
+            "error_fifo_oflow_intr_count_incr_r",
+            "error_fifo_uflow_intr_count_incr_r",
+            "notif_txn_done_intr_count_incr_r",
+            "notif_fifo_empty_intr_count_incr_r",
+            "notif_fifo_not_empty_intr_count_incr_r",
+            "notif_fifo_full_intr_count_incr_r",
+            "notif_fifo_not_full_intr_count_incr_r" : begin
                 if (axi_txn.is_write()) begin
                     `uvm_info("PRED_AXI", {"Write to interrupt register ", axs_reg.get_name(), " is unsupported via AXI interface and will be dropped"}, UVM_HIGH)
                 end
