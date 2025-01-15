@@ -51,13 +51,14 @@ class kv_wr_rd_cold_rst_sequence #(
     kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
+    kv_read_agent_key_entry_sequence_t aes_key_read_seq;
 
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     //constraint valid_entry {hmac_write_entry != sha512_write_entry != ecc_write_entry != doe_write_entry;}
     rand reg [1:0] write_id;
     rand reg [2:0] read_id;
     typedef enum {HMAC, MLDSA, ECC, DOE} write_agents;
-    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED} read_agents;
+    typedef enum {HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED, AES_KEY} read_agents;
 
     uvm_event active_phase;
     uvm_event write_event;
@@ -90,6 +91,8 @@ class kv_wr_rd_cold_rst_sequence #(
         ecc_privkey_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_privkey_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        aes_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("aes_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         
     endfunction
@@ -136,7 +139,7 @@ class kv_wr_rd_cold_rst_sequence #(
         // std::randomize(write_id) with {write_id inside [0:3]};
         // std::randomize(read_id) with {read_id inside [0:5]};
         write_id = $urandom_range(0,3);
-        read_id = $urandom_range(0,4);
+        read_id = $urandom_range(0,5);
 
         fork
             begin
@@ -308,6 +311,7 @@ class kv_wr_rd_cold_rst_sequence #(
         configuration.kv_mldsa_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_aes_key_read_agent_config.wait_for_num_clocks(1000);
     endtask
 
 endclass

@@ -43,7 +43,7 @@
         // rsvd0_cp : coverpoint rsvd0;
         // rsvd1_cp : coverpoint rsvd1;
         dest_valid_cp : coverpoint dest_valid {
-            illegal_bins dest_valid_bit5to7 = {['d32:'d255]};
+            illegal_bins dest_valid_bit6to7 = {['d64:'d255]};
         }
         last_dword_cp : coverpoint last_dword;
         wrXuseXclear: cross lock_wr_cp, lock_use_cp, clear_cp;
