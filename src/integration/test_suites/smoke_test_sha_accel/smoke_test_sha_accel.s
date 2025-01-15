@@ -295,9 +295,9 @@ _start:
         and x5, x5, x1
         beq x5, x1, acquire_lock_loop0
     // Load test vector from hw_data and write to Mailbox
-    li x8, MBOX_DIR_BASE_ADDR
+    li x8, CLP_MBOX_SRAM_BASE_ADDR
     add x8, x8, x7 /* ending destination address of test vector */
-    li x6, MBOX_DIR_BASE_ADDR /* destination address to write in mailbox */
+    li x6, CLP_MBOX_SRAM_BASE_ADDR /* destination address to write in mailbox */
     cp_to_mbox_loop0:
         lw x5, 0(t3)
         sw x5, 0(x6)
@@ -306,7 +306,7 @@ _start:
         bltu x6, x8, cp_to_mbox_loop0
     //store the start address of the test vector
     //first shift it into a dword address
-    li x6, MBOX_DIR_BASE_ADDR
+    li x6, CLP_MBOX_SRAM_BASE_ADDR
     srli x6, x6, 2
     sw x6, 0(x3)
 
@@ -385,9 +385,9 @@ _start:
         and x5, x5, x1
         beq x5, x1, acquire_lock_loop1
     // Load test vector from hw_data and write to Mailbox
-    li x8, MBOX_DIR_BASE_ADDR
+    li x8, CLP_MBOX_SRAM_BASE_ADDR
     add x8, x8, x7 /* ending destination address of test vector */
-    li x6, MBOX_DIR_BASE_ADDR /* destination address to write in mailbox */
+    li x6, CLP_MBOX_SRAM_BASE_ADDR /* destination address to write in mailbox */
     cp_to_mbox_loop1:
         lw x5, 0(t3)
         sw x5, 0(x6)
@@ -396,7 +396,7 @@ _start:
         bltu x6, x8, cp_to_mbox_loop1
     //store the start address of the test vector
     //first shift it into a dword address
-    li x6, MBOX_DIR_BASE_ADDR
+    li x6, CLP_MBOX_SRAM_BASE_ADDR
     srli x6, x6, 2
     sw x6, 0(x3)
 

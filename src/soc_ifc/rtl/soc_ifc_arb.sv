@@ -221,16 +221,16 @@ always_comb dma_reg_req_data = ({$bits(soc_ifc_req_t){soc_dma_gnt}} & soc_req_da
 
 //drive the appropriate read data back to uc or soc
 //AND/OR mux here, assert that requests are always mutex
-always_comb uc_rdata = ({MBOX_DATA_W{uc_mbox_reg_req}} & mbox_rdata) |
-                       ({MBOX_DATA_W{uc_mbox_dir_req}} & mbox_dir_rdata) |
-                       ({MBOX_DATA_W{uc_reg_req}} & soc_ifc_reg_rdata) | 
-                       ({MBOX_DATA_W{uc_sha_req}} & sha_rdata) | 
-                       ({MBOX_DATA_W{uc_dma_req}} & dma_reg_rdata);
+always_comb uc_rdata = ({SOC_IFC_DATA_W{uc_mbox_reg_req}} & mbox_rdata) |
+                       ({SOC_IFC_DATA_W{uc_mbox_dir_req}} & mbox_dir_rdata) |
+                       ({SOC_IFC_DATA_W{uc_reg_req}} & soc_ifc_reg_rdata) | 
+                       ({SOC_IFC_DATA_W{uc_sha_req}} & sha_rdata) | 
+                       ({SOC_IFC_DATA_W{uc_dma_req}} & dma_reg_rdata);
 
-always_comb soc_rdata = ({MBOX_DATA_W{soc_mbox_req}} & mbox_rdata) | 
-                        ({MBOX_DATA_W{soc_reg_req}} & soc_ifc_reg_rdata) | 
-                        ({MBOX_DATA_W{soc_sha_req}} & sha_rdata) | 
-                        ({MBOX_DATA_W{soc_dma_req}} & dma_reg_rdata);
+always_comb soc_rdata = ({SOC_IFC_DATA_W{soc_mbox_req}} & mbox_rdata) | 
+                        ({SOC_IFC_DATA_W{soc_reg_req}} & soc_ifc_reg_rdata) | 
+                        ({SOC_IFC_DATA_W{soc_sha_req}} & sha_rdata) | 
+                        ({SOC_IFC_DATA_W{soc_dma_req}} & dma_reg_rdata);
 
 //drive the appropraite holds back to uc or soc
 //AND/OR mux here, assert that requests are always mutex

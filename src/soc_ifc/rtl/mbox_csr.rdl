@@ -184,7 +184,7 @@ addrmap mbox_csr {
                     [br]Caliptra Access: RO
                     [br]SOC Access:      RO
                     [br]TAP Access [in debug/manuf mode]: RO";
-            sw=r; hw=rw;} mbox_rdptr[15] = 0;
+            sw=r; hw=rw;} mbox_rdptr[16] = 0;
     } mbox_status;
 
     reg {

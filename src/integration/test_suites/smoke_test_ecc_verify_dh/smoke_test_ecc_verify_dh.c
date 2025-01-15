@@ -251,12 +251,6 @@ void main() {
     for (int i = 0; i < 12; i++)
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
-    cptra_intr_rcv.ecc_notif = 0;
-
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
-    cptra_intr_rcv.ecc_notif = 0;
-
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
