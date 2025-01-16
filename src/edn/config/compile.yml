@@ -2,9 +2,15 @@
 provides: [edn_pkg]
 requires:
   - entropy_src_pkg
+  - csrng_pkg
 schema_version: 2.4.0
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/edn_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/edn_pkg.sv
+  

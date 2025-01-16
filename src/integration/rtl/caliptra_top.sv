@@ -35,7 +35,12 @@ module caliptra_top
     input logic                        cptra_rst_b,
 
     input logic [255:0]                              cptra_obf_key,
-    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
+    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,    
+    input logic                                      cptra_obf_field_entropy_vld,
+    input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0]      cptra_obf_field_entropy,
+    input logic                                      cptra_obf_uds_seed_vld,
+    input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]      cptra_obf_uds_seed,
+
 
     //JTAG Interface
     input logic                        jtag_tck,    // JTAG clk
@@ -282,7 +287,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, mldsa_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -989,6 +994,7 @@ mldsa_top #(
      .kv_read           (kv_read[2]),
      .kv_rd_resp        (kv_rd_resp[2]),
      .pcr_signing_data  (pcr_signing_data),
+     .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
      .notif_intr        (mldsa_notif_intr)
 );
@@ -1294,7 +1300,11 @@ soc_ifc_top1
     .scan_mode(scan_mode),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
+    .cptra_obf_field_entropy_vld(cptra_obf_field_entropy_vld),
+    .cptra_obf_field_entropy(cptra_obf_field_entropy),
     .obf_field_entropy(obf_field_entropy),
+    .cptra_obf_uds_seed_vld(cptra_obf_uds_seed_vld),
+    .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
 
     // Subsystem mode straps

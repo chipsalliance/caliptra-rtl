@@ -6,8 +6,6 @@ uvmf:
         value: ACTIVE
       - bfm_name: kv_hmac_write_agent
         value: ACTIVE
-      - bfm_name: kv_sha512_write_agent
-        value: ACTIVE
       - bfm_name: kv_ecc_write_agent
         value: ACTIVE
       - bfm_name: kv_doe_write_agent
@@ -21,6 +19,8 @@ uvmf:
       - bfm_name: kv_ecc_privkey_read_agent
         value: ACTIVE
       - bfm_name: kv_ecc_seed_read_agent
+        value: ACTIVE
+      - bfm_name: kv_aes_key_read_agent
         value: ACTIVE
       active_passive_default: ACTIVE
       clock_half_period: 5ns

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -41,14 +41,40 @@
   end                                                                                \
 
 `define CALIPTRA_ASSERT_FINAL(__name, __prop)                                         \
+`ifndef FPV_ON                                                               \
   final begin                                                                \
     __name: assert (__prop || $test$plusargs("disable_assert_final_checks")) \
       else begin                                                             \
         `CALIPTRA_ASSERT_ERROR(__name)                                                \
       end                                                                    \
-  end
+  end                                                                        \
+`endif
+
+`define CALIPTRA_ASSERT_AT_RESET(__name, __prop, __rst = `CALIPTRA_ASSERT_DEFAULT_RST)          \
+  // `__rst` is active-high for these macros, so trigger on its posedge.      \
+  // The values inside the property are sampled just before the trigger,      \
+  // which is necessary to make the evaluation of `__prop` on a reset edge    \
+  // meaningful.  On any reset posedge at the start of time, `__rst` itself   \
+  // is unknown, and at that time `__prop` is likely not initialized either,  \
+  // so this assertion does not evaluate `__prop` when `__rst` is unknown.    \
+  //                                                                          \
+  // This extra behaviour is not used for FPV, because Jasper doesn't support \
+  // it and instead prints the WNL038 warning. Avoid the check and warning    \
+  // message in this case.                                                    \
+`ifndef FPV_ON                                                                \
+  __name: assert property (@(posedge __rst) $isunknown(__rst) || (__prop))    \
+`else                                                                         \
+  __name: assert property (@(posedge __rst) (__prop))                         \
+`endif                                                                        \
+    else begin                                                                \
+      `CALIPTRA_ASSERT_ERROR(__name)                                                   \
+    end
 
 `ifndef CALIPTRA_SVA
+`define CALIPTRA_ASSERT_AT_RESET_AND_FINAL(__name, __prop, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
+    `CALIPTRA_ASSERT_AT_RESET(AtReset_``__name``, __prop, __rst)                        \
+    `CALIPTRA_ASSERT_FINAL(Final_``__name``, __prop)
+
 `define CALIPTRA_ASSERT(__name, __prop, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
   __name: assert property (@(posedge __clk) disable iff ((__rst) !== '0) (__prop))       \
     else begin                                                                           \

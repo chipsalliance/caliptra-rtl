@@ -68,6 +68,8 @@ rand kv_env_sequence_base_t kv_env_seq;
   kv_ecc_privkey_read_agent_random_seq_t kv_ecc_privkey_read_agent_random_seq;
   typedef kv_read_random_sequence  kv_ecc_seed_read_agent_random_seq_t;
   kv_ecc_seed_read_agent_random_seq_t kv_ecc_seed_read_agent_random_seq;
+  typedef kv_read_random_sequence  kv_aes_key_read_agent_random_seq_t;
+  kv_aes_key_read_agent_random_seq_t kv_aes_key_read_agent_random_seq;  
   // pragma uvmf custom sequences end
 
   // Sequencer handles for each active interface in the environment
@@ -91,6 +93,8 @@ rand kv_env_sequence_base_t kv_env_seq;
   uvm_sequencer #(kv_ecc_privkey_read_agent_transaction_t)  kv_ecc_privkey_read_agent_sequencer; 
   typedef kv_read_transaction  kv_ecc_seed_read_agent_transaction_t;
   uvm_sequencer #(kv_ecc_seed_read_agent_transaction_t)  kv_ecc_seed_read_agent_sequencer; 
+  typedef kv_read_transaction  kv_aes_key_read_agent_transaction_t;
+  uvm_sequencer #(kv_aes_key_read_agent_transaction_t)  kv_aes_key_read_agent_sequencer; 
 
   // Sequencer handles for each QVIP interface
   mvc_sequencer uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr;
@@ -109,6 +113,7 @@ rand kv_env_sequence_base_t kv_env_seq;
   kv_read_configuration  kv_mldsa_key_read_agent_config;
   kv_read_configuration  kv_ecc_privkey_read_agent_config;
   kv_read_configuration  kv_ecc_seed_read_agent_config;
+  kv_read_configuration  kv_aes_key_read_agent_config;
   // Local handle to register model for convenience
   kv_reg_model_top reg_model;
   uvm_status_e status;
@@ -148,6 +153,8 @@ rand kv_env_sequence_base_t kv_env_seq;
       `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_ecc_privkey_read_agent_BFM" )
     if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_ecc_seed_read_agent_BFM , kv_ecc_seed_read_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_ecc_seed_read_agent_BFM" )
+    if( !uvm_config_db #( kv_read_configuration )::get( null , UVMF_CONFIGURATIONS , kv_aes_key_read_agent_BFM , kv_aes_key_read_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( kv_read_configuration )::get cannot find resource kv_aes_key_read_agent_BFM" )
 
     // Assign the sequencer handles from the handles within agent configurations
     kv_rst_agent_sequencer = kv_rst_agent_config.get_sequencer();
@@ -160,6 +167,7 @@ rand kv_env_sequence_base_t kv_env_seq;
     kv_mldsa_key_read_agent_sequencer = kv_mldsa_key_read_agent_config.get_sequencer();
     kv_ecc_privkey_read_agent_sequencer = kv_ecc_privkey_read_agent_config.get_sequencer();
     kv_ecc_seed_read_agent_sequencer = kv_ecc_seed_read_agent_config.get_sequencer();
+    kv_aes_key_read_agent_sequencer = kv_aes_key_read_agent_config.get_sequencer();
 
     // Retrieve QVIP sequencer handles from the uvm_config_db
     if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0", uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr) ) 
@@ -190,6 +198,7 @@ rand kv_env_sequence_base_t kv_env_seq;
     kv_mldsa_key_read_agent_random_seq     = kv_mldsa_key_read_agent_random_seq_t::type_id::create("kv_mldsa_key_read_agent_random_seq");
     kv_ecc_privkey_read_agent_random_seq     = kv_ecc_privkey_read_agent_random_seq_t::type_id::create("kv_ecc_privkey_read_agent_random_seq");
     kv_ecc_seed_read_agent_random_seq     = kv_ecc_seed_read_agent_random_seq_t::type_id::create("kv_ecc_seed_read_agent_random_seq");
+    kv_aes_key_read_agent_random_seq     = kv_aes_key_read_agent_random_seq_t::type_id::create("kv_aes_key_read_agent_random_seq");
 
     fork
       kv_rst_agent_config.wait_for_reset();
@@ -202,6 +211,7 @@ rand kv_env_sequence_base_t kv_env_seq;
       kv_mldsa_key_read_agent_config.wait_for_reset();
       kv_ecc_privkey_read_agent_config.wait_for_reset();
       kv_ecc_seed_read_agent_config.wait_for_reset();
+      kv_aes_key_read_agent_config.wait_for_reset();
     join
     reg_model.reset();
     // Start RESPONDER sequences here
@@ -219,6 +229,7 @@ rand kv_env_sequence_base_t kv_env_seq;
       repeat (25) kv_mldsa_key_read_agent_random_seq.start(kv_mldsa_key_read_agent_sequencer);
       repeat (25) kv_ecc_privkey_read_agent_random_seq.start(kv_ecc_privkey_read_agent_sequencer);
       repeat (25) kv_ecc_seed_read_agent_random_seq.start(kv_ecc_seed_read_agent_sequencer);
+      repeat (25) kv_aes_key_read_agent_random_seq.start(kv_aes_key_read_agent_sequencer);
     join
 
 kv_env_seq.start(top_configuration.vsqr);
@@ -237,6 +248,7 @@ kv_env_seq.start(top_configuration.vsqr);
       kv_mldsa_key_read_agent_config.wait_for_num_clocks(400);
       kv_ecc_privkey_read_agent_config.wait_for_num_clocks(400);
       kv_ecc_seed_read_agent_config.wait_for_num_clocks(400);
+      kv_aes_key_read_agent_config.wait_for_num_clocks(400);
     join
 
     // pragma uvmf custom body end

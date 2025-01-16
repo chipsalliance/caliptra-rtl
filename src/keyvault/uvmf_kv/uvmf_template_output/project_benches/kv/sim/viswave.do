@@ -64,11 +64,11 @@ wave group kv_ecc_seed_read_agent_bus
 wave add -group kv_ecc_seed_read_agent_bus hdl_top.kv_ecc_seed_read_agent_bus.* -radix hexadecimal -tag F0
 wave group kv_ecc_seed_read_agent_bus -collapse
 wave insertion [expr [wave index insertpoint] +1]
-wave spacer -backgroundcolor Salmon { kv_ecc_msg_read_agent }
-wave add uvm_test_top.environment.kv_ecc_msg_read_agent.kv_ecc_msg_read_agent_monitor.txn_stream -radix string -tag F0
-wave group kv_ecc_msg_read_agent_bus
-wave add -group kv_ecc_msg_read_agent_bus hdl_top.kv_ecc_msg_read_agent_bus.* -radix hexadecimal -tag F0
-wave group kv_ecc_msg_read_agent_bus -collapse
+wave spacer -backgroundcolor Salmon { kv_aes_key_read_agent }
+wave add uvm_test_top.environment.kv_aes_key_read_agent.kv_aes_key_read_agent_monitor.txn_stream -radix string -tag F0
+wave group kv_aes_key_read_agent_bus
+wave add -group kv_aes_key_read_agent_bus hdl_top.kv_aes_key_read_agent_bus.* -radix hexadecimal -tag F0
+wave group kv_aes_key_read_agent_bus -collapse
 wave insertion [expr [wave index insertpoint] +1]
 
 wave update on
