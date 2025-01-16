@@ -154,7 +154,7 @@ always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_S
 //SoC requests to mailbox
 always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
-//Ensure that requests to fuse block match the appropriate id value
+//Ensure that requests to fuse block match the appropriate user value
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
 always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}) &
                                         (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_user));
