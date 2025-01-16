@@ -327,7 +327,7 @@ module caliptra_prim_sync_reqack #(
   // Assertions //
   ////////////////
 
-  `ifdef INC_ASSERT
+  `ifdef CALIPTRA_INC_ASSERT
     //VCS coverage off
     // pragma coverage off
 
@@ -355,7 +355,7 @@ module caliptra_prim_sync_reqack #(
       dst_req_o, clk_dst_i, !rst_src_ni || !rst_dst_ni)
 
   if (EnRstChks) begin : gen_assert_en_rst_chks
-  `ifdef INC_ASSERT
+  `ifdef CALIPTRA_INC_ASSERT
 
     //VCS coverage off
     // pragma coverage off

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -34,11 +34,10 @@ module caliptra_prim_cdc_rand_delay #(
 
     function automatic bit [DataWidth-1:0] fast_randomize();
       bit [DataWidth-1:0] data;
-      bit [31:0]          urandom_result;
-      for (int i = 0; i < DataWidth; i += 32) begin
-        data = data << 32;
-        urandom_result = $urandom();
-        data = data | urandom_result;
+      if (DataWidth <= 32) begin
+        data = $urandom();
+      end else begin
+        if (!std::randomize(data)) $fatal(1, "%t: [%m] Failed to randomize data", $time);
       end
       return data;
     endfunction
@@ -51,6 +50,11 @@ module caliptra_prim_cdc_rand_delay #(
     // Set data_sel at random combinationally when the input changes.
     always @(src_data_i) begin
       data_sel = cdc_instrumentation_enabled ? fast_randomize() : 0;
+    end
+
+    // Clear data_del on any cycle start.
+    always @(posedge clk_i or negedge rst_ni) begin
+      data_sel <= 0;
     end
 
     always_comb dst_data_o = (prev_data_i & data_sel) | (src_data_i & ~data_sel);

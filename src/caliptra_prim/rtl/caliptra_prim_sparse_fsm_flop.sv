@@ -1,14 +1,12 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
 `include "caliptra_prim_assert.sv"
 
-module caliptra_prim_sparse_fsm_flop
-  import caliptra_prim_sparse_fsm_pkg::*;
-#(
+module caliptra_prim_sparse_fsm_flop #(
   parameter int               Width      = 1,
-  parameter type              StateEnumT = state_t,
+  parameter type              StateEnumT = logic [Width-1:0],
   parameter logic [Width-1:0] ResetValue = '0,
   // This should only be disabled in special circumstances, for example
   // in non-comportable IPs where an error does not trigger an alert.
