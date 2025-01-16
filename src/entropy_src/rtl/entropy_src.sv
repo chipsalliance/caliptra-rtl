@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -14,7 +14,8 @@ module entropy_src
 #(
   parameter bit Stub = 1'b0,
   parameter logic [NumAlerts-1:0] AlertAsyncOn = {NumAlerts{1'b1}},
-  parameter int EsFifoDepth = 4,
+  parameter int EsFifoDepth = 3,
+  parameter int DistrFifoDepth = 2,
   parameter AHBDataWidth = 64,
   parameter AHBAddrWidth = 32
 ) (
@@ -88,8 +89,6 @@ module entropy_src
   entropy_src_xht_req_t core_xht;
   logic core_intr_es_entropy_valid;
   logic core_intr_es_health_test_failed;
-  // TODO: add intrp
-//  logic core_intr_es_ebus_check_failed;
   logic core_intr_es_observe_fifo_ready;
   logic core_intr_es_fatal_err;
   logic [NumAlerts-1:0] core_alert_test;
@@ -150,12 +149,12 @@ module entropy_src
     .hrdata_o,
     .reg2hw,
     .hw2reg(hw2reg),
-    .intg_err_o(intg_err_alert[1]), // Assign this alert to the fatal alert index.
-    .devmode_i(1'b1)
+    .intg_err_o(intg_err_alert[1]) // Assign this alert to the fatal alert index.
   );
 
   entropy_src_core #(
-    .EsFifoDepth(EsFifoDepth)
+    .EsFifoDepth(EsFifoDepth),
+    .DistrFifoDepth(DistrFifoDepth)
   ) u_entropy_src_core (
     .clk_i,
     .rst_ni(core_rst_n),
@@ -269,14 +268,17 @@ module entropy_src
 
   // Entropy Interface
   `CALIPTRA_ASSERT_KNOWN(EsHwIfEsAckKnownO_A, entropy_src_hw_if_o.es_ack)
-  `CALIPTRA_ASSERT_KNOWN(EsHwIfEsBitsKnownO_A, entropy_src_hw_if_o.es_bits)
-  `CALIPTRA_ASSERT_KNOWN(EsHwIfEsFipsKnownO_A, entropy_src_hw_if_o.es_fips)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsHwIfEsBitsKnownO_A, entropy_src_hw_if_o.es_bits,
+      entropy_src_hw_if_o.es_ack)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsHwIfEsFipsKnownO_A, entropy_src_hw_if_o.es_fips,
+      entropy_src_hw_if_o.es_ack)
 
   // RNG Interface
   `CALIPTRA_ASSERT_KNOWN(EsRngEnableKnownO_A, entropy_src_rng_o.rng_enable)
 
   // External Health Test Interface
-  `CALIPTRA_ASSERT_KNOWN(EsXhtEntropyBitKnownO_A, entropy_src_xht_o.entropy_bit)
+  `CALIPTRA_ASSERT_KNOWN_IF(EsXhtEntropyBitKnownO_A, entropy_src_xht_o.entropy_bit,
+      entropy_src_xht_o.entropy_bit_valid)
   `CALIPTRA_ASSERT_KNOWN(EsXhtEntropyBitValidKnownO_A, entropy_src_xht_o.entropy_bit_valid)
   `CALIPTRA_ASSERT_KNOWN(EsXhtClearKnownO_A, entropy_src_xht_o.clear)
   `CALIPTRA_ASSERT_KNOWN(EsXhtActiveKnownO_A, entropy_src_xht_o.active)
@@ -425,6 +427,35 @@ module entropy_src
     u_entropy_src_core.u_entropy_src_cntr_reg_extht_lo_alert_fails.u_caliptra_prim_count_cntr_reg,
     alert_tx_o[1])
 
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(EsrngFifoWptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_esrng.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_wptr,
+    alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(EsrngFifoRptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_esrng.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_rptr,
+    alert_tx_o[1])
+
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(DistrFifoWptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_distr.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_wptr,
+    alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(DistrFifoRptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_distr.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_rptr,
+    alert_tx_o[1])
+
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(ObserveFifoWptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_observe.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_wptr,
+    alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(ObserveFifoRptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_observe.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_rptr,
+    alert_tx_o[1])
+
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(EsfinalFifoWptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_esfinal.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_wptr,
+    alert_tx_o[1])
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(EsfinalFifoRptrCheck_A,
+    u_entropy_src_core.u_caliptra_prim_fifo_sync_esfinal.gen_normal_fifo.u_fifo_cnt.gen_secure_ptrs.u_rptr,
+    alert_tx_o[1])
+
   // Alert assertions for reg_we onehot check
   `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[1])
+
 endmodule

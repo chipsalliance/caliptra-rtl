@@ -61,6 +61,7 @@ class kv_wr_rd_debug_sequence #(
     kv_read_agent_key_entry_sequence_t mldsa_key_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
+    kv_read_agent_key_entry_sequence_t aes_key_read_seq;
 
     rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
     rand int unsigned wait_cycles_from_seq;
@@ -107,6 +108,8 @@ class kv_wr_rd_debug_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        aes_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("aes_key_read_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");        
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
     endfunction
 
@@ -178,6 +181,7 @@ class kv_wr_rd_debug_sequence #(
         configuration.kv_mldsa_key_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_aes_key_read_agent_config.wait_for_num_clocks(1000);
 
         `uvm_info("DEBUG_WR_RD", "Scan mode and queue writes", UVM_MEDIUM)
         `uvm_info("DEBUG_WR_RD", "Turning on scan mode", UVM_MEDIUM)

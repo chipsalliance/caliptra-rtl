@@ -66,7 +66,7 @@ module caliptra_prim_dom_and_2share #(
   // Resharing of cross-domain terms
 
   // Preserve the logic sequence for XOR not to proceed cross-domain AND.
-  caliptra_prim_xor2 #(
+  caliptra_prim_generic_xor2 #(
     .Width ( DW*2 )
   ) u_caliptra_prim_xor_t01 (
     .in0_i ( {t_a0b1, t_a1b0} ),
@@ -125,7 +125,7 @@ module caliptra_prim_dom_and_2share #(
   /////////////////
 
   // Preserve the logic sequence for XOR not to proceed the inner-domain AND.
-  caliptra_prim_xor2 #(
+  caliptra_prim_generic_xor2 #(
     .Width ( DW*2 )
   ) u_caliptra_prim_xor_q01 (
     .in0_i ( {t_a0b0, t_a1b1} ),
