@@ -246,6 +246,12 @@ module caliptra_top_tb_services
 
     mldsa_test_vector_t mldsa_test_vector;
 
+    logic inject_makehint_failure, inject_normcheck_failure;
+    logic reset_mldsa_failure;
+    logic [1:0] normcheck_mode_random;
+    logic inject_mldsa_timeout;
+    logic random_mldsa_failure_injection;
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -275,8 +281,7 @@ module caliptra_top_tb_services
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hd6        - Inject mldsa timeout
-    //         8'hd7        - Inject normcheck failure during mldsa signing
-    //         8'hd8        - Inject makehint failure during mldsa signing
+    //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
     //         8'hdb        - Perform mldsa verify
@@ -428,6 +433,7 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac384_key_tb = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
+    logic [0:15][31:0]   mldsa_seed_2_tb= 512'h_fdc431e57c4325899e48d6daa9b7b5cfa23bc560ffd58e06b8c0c4b9e1e842e0_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
@@ -466,7 +472,7 @@ module caliptra_top_tb_services
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
                         force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
+                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = (inject_makehint_failure | inject_normcheck_failure) ? mldsa_seed_2_tb[dword_i][31:0] : mldsa_seed_tb[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
@@ -616,10 +622,9 @@ module caliptra_top_tb_services
     end
 
     //MLDSA
-    logic inject_makehint_failure, inject_normcheck_failure;
-    logic reset_mldsa_failure;
-    logic [1:0] normcheck_mode_random;
-    logic inject_mldsa_timeout;
+    always @(negedge clk) begin
+        random_mldsa_failure_injection <= $urandom();
+    end
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
@@ -629,18 +634,24 @@ module caliptra_top_tb_services
             reset_mldsa_failure <= 1'b0;
             normcheck_mode_random <= 'h0;
         end
+        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin
+            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
+                inject_normcheck_failure <= 1'b1;
+                normcheck_mode_random <= 'h0;
+                $display("Verify: Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
+            end
+            else if (random_mldsa_failure_injection) begin
+                inject_makehint_failure <= 1'b1;
+                $display("Injecting makehint failure\n");
+            end
+            else begin
+                inject_normcheck_failure <= 1'b1;
+                normcheck_mode_random <= $urandom_range(0,2);
+                $display("Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
+            end
+        end
         else if (((WriteData[7:0] == 8'hd6) && mailbox_write)) begin
             inject_mldsa_timeout <= 1'b1;
-        end
-        else if (((WriteData[7:0] == 8'hd8) && mailbox_write)) begin
-            inject_makehint_failure <= 1'b1;
-        end
-        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin
-            inject_normcheck_failure <= 1'b1;
-            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process)
-                normcheck_mode_random <= 'h0;
-            else
-                normcheck_mode_random <= $urandom_range(0,2);
         end
         else if ((caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid))
             reset_mldsa_failure <= 1'b1;
