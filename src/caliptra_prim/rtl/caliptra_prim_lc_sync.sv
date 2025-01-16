@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -10,11 +10,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module caliptra_prim_lc_sync 
-  import lc_ctrl_state_pkg::*;
-  import lc_ctrl_reg_pkg::*;
-  import lc_ctrl_pkg::*;
-#(
+module caliptra_prim_lc_sync #(
   // Number of separately buffered output signals.
   // The buffer cells have a don't touch constraint
   // on them such that synthesis tools won't collapse
@@ -73,8 +69,7 @@ module caliptra_prim_lc_sync
       end
     `CALIPTRA_ASSERT(OutputDelay_A,
             rst_ni |-> ##3 lc_en_o == {NumCopies{$past(lc_en_in_sva_q, 2)}} ||
-                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)) ||
-                           !rst_ni)
+                           ($past(lc_en_in_sva_q, 2) != $past(lc_en_in_sva_q, 1)))
 `endif
   end else begin : gen_no_flops
     //VCS coverage off

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -33,6 +33,7 @@ module sha3
   input                     rand_early_i,
   input      [StateW/2-1:0] rand_data_i,
   input                     rand_aux_i,
+  output logic              rand_update_o,
   output logic              rand_consumed_o,
 
   // N, S: Used in cSHAKE mode only
@@ -67,6 +68,12 @@ module sha3
   // leakage.
   output logic              state_valid_o,
   output logic [StateW-1:0] state_o [Share],
+
+  // REQ/ACK interface for the Keccak core. This can be used to delay the
+  // processing e.g. to avoid power spikes at the chip level due to too many
+  // blocks being active simultaneously.
+  output logic run_req_o,
+  input        run_ack_i,
 
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
@@ -157,9 +164,34 @@ module sha3
   // operation after absorbing is completed when output length is longer than
   // the block size.
   logic keccak_run, sha3pad_keccak_run, sw_keccak_run;
+  logic keccak_run_req_d, keccak_run_req_q;
+  logic keccak_triggered_d, keccak_triggered_q;
   logic keccak_complete;
 
-  assign keccak_run = sha3pad_keccak_run | sw_keccak_run;
+  // Announce that we want to run the Keccak core and tell other blocks to go
+  // quiet. Keep holding the REQ until the Keccak core is done with the
+  // processing. The keccak_complete signal is received once the Keccak core
+  // is back in the Idle state and again susceptible to keccak_run.
+  assign run_req_o = keccak_run_req_d;
+  assign keccak_run_req_d =
+      sha3pad_keccak_run || sw_keccak_run ? 1'b 1 :
+      keccak_complete                     ? 1'b 0 : keccak_run_req_q;
+
+  // Trigger the Keccak engine with a single pulse upon receiving the ACK.
+  assign keccak_run = run_req_o & run_ack_i & ~keccak_triggered_q;
+  assign keccak_triggered_d =
+      keccak_run      ? 1'b 1 :
+      keccak_complete ? 1'b 0 : keccak_triggered_q;
+
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      keccak_run_req_q <= 1'b 0;
+      keccak_triggered_q <= 1'b 0;
+    end else begin
+      keccak_run_req_q <= keccak_run_req_d;
+      keccak_triggered_q <= keccak_triggered_d;
+    end
+  end
 
   // Absorb pulse output : used to generate interrupts
   // Latch absorbed signal as kmac_keymgr asserts `CmdDone` when it sees
@@ -289,7 +321,7 @@ module sha3
     // SEC_CM: FSM.GLOBAL_ESC, FSM.LOCAL_ESC
     // Unconditionally jump into the terminal error state
     // if the life cycle controller triggers an escalation.
-    if (lc_escalate_en_i != lc_ctrl_pkg::Off) begin
+    if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i)) begin
       st_d = StTerminalError_sparse;
     end
   end
@@ -444,6 +476,7 @@ module sha3
     .rand_early_i,
     .rand_data_i,
     .rand_aux_i,
+    .rand_update_o,
     .rand_consumed_o,
 
     .run_i      (keccak_run     ),
@@ -464,6 +497,15 @@ module sha3
   ////////////////
   // Assertions //
   ////////////////
+
+  // The Keccak core can only be active when the run REQ is ACKed.
+  `CALIPTRA_ASSERT(KeccakIdleWhenNoRunHs_A,
+      u_keccak.keccak_st inside {KeccakStActive,
+                                 KeccakStPhase1,
+                                 KeccakStPhase2Cycle1,
+                                 KeccakStPhase2Cycle2,
+                                 KeccakStPhase2Cycle3} |->
+      run_req_o && run_ack_i)
 
   // Unknown check for case statement
   `CALIPTRA_ASSERT(MuxSelKnown_A, mux_sel inside {MuxGuard, MuxRelease})

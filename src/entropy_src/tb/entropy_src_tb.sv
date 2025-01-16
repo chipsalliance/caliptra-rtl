@@ -357,12 +357,14 @@ module entropy_src_tb
 
     // Configure Register
     // 3:0 FIPS_ENABLE
-    // 7:4 ENTROPY_DATA_REG_ENABLE
-    // 15:12 THRESHOLD_SCOPE
-    // 23:20 RNG_BIT_ENABLE
-    // 25:24 RNG_BIT_SEL
+    // 7:4 FIPS_FLAG
+    // 11:8 RNG_FIPS
+    // 15:12 RNG_BIT_ENABLE
+    // 17:16 RNG_BIT_SEL
+    // 21:18 THRESHOLD_SCOPE
+    // 25:22 ENTROPY_DATA_REG_ENABLE
     // 6 = True, 9 = False
-    write_single_word(ADDR_CONF, 32'h909099);
+    write_single_word(ADDR_CONF, 32'h2649999);
 
     // Enable
     write_single_word(ADDR_MODULE_ENABLE, 32'h6);

@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -6,7 +6,7 @@
 //
 //  - handles all app cmd requests from all requesting interfaces
 
-module csrng_main_sm import csrng_pkg::*; #() (
+module csrng_main_sm import csrng_pkg::*; (
   input logic                         clk_i,
   input logic                         rst_ni,
 
@@ -28,7 +28,6 @@ module csrng_main_sm import csrng_pkg::*; #() (
   input logic                         cmd_complete_i,
   input logic                         local_escalate_i,
   output logic [MainSmStateWidth-1:0] main_sm_state_o,
-  output logic                        main_sm_alert_o,
   output logic                        main_sm_err_o
 );
 
@@ -47,7 +46,6 @@ module csrng_main_sm import csrng_pkg::*; #() (
     update_req_o       = 1'b0;
     uninstant_req_o    = 1'b0;
     clr_adata_packer_o = 1'b0;
-    main_sm_alert_o    = 1'b0;
     main_sm_err_o      = 1'b0;
 
     if (state_q == MainSmError) begin
@@ -78,30 +76,20 @@ module csrng_main_sm import csrng_pkg::*; #() (
           end
         end
         MainSmParseCmd: begin
-          if (ctr_drbg_cmd_req_rdy_i) begin
+          if (ctr_drbg_cmd_req_rdy_i && acmd_eop_i) begin
             if (acmd_i == INS) begin
-              if (acmd_eop_i) begin
-                state_d = MainSmInstantPrep;
-              end
+              state_d = MainSmInstantPrep;
             end else if (acmd_i == RES) begin
-              if (acmd_eop_i) begin
-                state_d = MainSmReseedPrep;
-              end
+              state_d = MainSmReseedPrep;
             end else if (acmd_i == GEN) begin
-              if (acmd_eop_i) begin
-                state_d = MainSmGeneratePrep;
-              end
+              state_d = MainSmGeneratePrep;
             end else if (acmd_i == UPD) begin
-              if (acmd_eop_i) begin
-                state_d = MainSmUpdatePrep;
-              end
+              state_d = MainSmUpdatePrep;
             end else if (acmd_i == UNI) begin
-              if (acmd_eop_i) begin
-                state_d = MainSmUninstantPrep;
-              end
+              state_d = MainSmUninstantPrep;
             end else begin
               // Command was not supported.
-              main_sm_alert_o = 1'b1;
+              state_d = MainSmIdle;
             end
           end
         end

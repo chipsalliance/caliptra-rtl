@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -66,7 +66,7 @@ module caliptra_prim_mubi8_sync
       );
 
       logic [MuBi8Width-1:0] sig_unstable;
-      caliptra_prim_xor2 #(
+      caliptra_prim_generic_xor2 #(
         .Width(MuBi8Width)
       ) u_mubi_xor (
         .in0_i(mubi_sync),
@@ -129,8 +129,7 @@ module caliptra_prim_mubi8_sync
       end
       `CALIPTRA_ASSERT(OutputDelay_A,
               rst_ni |-> ##3 (mubi_o == {NumCopies{$past(mubi_in_sva_q, 2)}} ||
-                             ($past(mubi_in_sva_q, 2) != $past(mubi_in_sva_q, 1)) ||
-                             !rst_ni))
+                              $past(mubi_in_sva_q, 2) != $past(mubi_in_sva_q, 1)))
 `endif
     end
   end else begin : gen_no_flops

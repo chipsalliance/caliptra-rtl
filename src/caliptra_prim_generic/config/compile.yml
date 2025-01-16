@@ -8,3 +8,9 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop_en.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_flop.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_generic_buf.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_ram_1p.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_and2.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_clock_mux2.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_clock_inv.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_xor2.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_generic_xnor2.sv
