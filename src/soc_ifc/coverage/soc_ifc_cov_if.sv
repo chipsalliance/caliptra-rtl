@@ -138,14 +138,14 @@ interface soc_ifc_cov_if
     input logic [31:0] strap_ss_strap_generic_2,
     input logic [31:0] strap_ss_strap_generic_3,
     input logic        ss_debug_intent,
-    output logic       cptra_ss_debug_intent,
+    input logic        cptra_ss_debug_intent,
 
     // Subsystem mode debug outputs
-    output logic        ss_dbg_manuf_enable,
-    output logic [63:0] ss_soc_dbg_unlock_level,
+    input logic        ss_dbg_manuf_enable,
+    input logic [63:0] ss_soc_dbg_unlock_level,
 
     // Subsystem mode firmware execution control
-    output logic [127:0] ss_generic_fw_exec_ctrl,
+    input logic [127:0] ss_generic_fw_exec_ctrl,
 
     // NMI Vector 
     input logic [31:0] nmi_vector,
@@ -376,7 +376,7 @@ interface soc_ifc_cov_if
         sram_double_ecc_error_cp: coverpoint i_mbox.sram_double_ecc_error;
 
         //req hold varieties
-        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.sha_sram_req_dv & ~i_mbox.req_data.write);
+        req_hold0_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv_q & ~i_mbox.sha_sram_req_dv & ~i_mbox.req_data_write);
         req_hold1_cp: coverpoint i_mbox.req_dv & (i_mbox.dir_req_dv & ~i_mbox.dir_req_rd_phase & i_mbox.sha_sram_req_dv);
         req_hold2_cp: coverpoint i_mbox.req_dv & (i_mbox.hwif_out.mbox_dataout.dataout.swacc & i_mbox.mbox_protocol_sram_rd_f);
         sha_sram_hold_cp: coverpoint i_mbox.sha_sram_hold;
