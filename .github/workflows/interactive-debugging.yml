@@ -195,13 +195,13 @@ jobs:
             libpython3.8
 
       - name: Download Verilator binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: verilator
           path: /opt
 
       - name: Download OpenOCD binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: openocd
           path: /opt
@@ -274,13 +274,13 @@ jobs:
           tar -xzf toolchain.tar.gz -C /opt/
 
       - name: Download Verilator binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: verilator
           path: /opt
 
       - name: Download OpenOCD binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: openocd
           path: /opt
