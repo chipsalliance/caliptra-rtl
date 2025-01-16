@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -19,15 +19,20 @@ package caliptra_prim_mubi_pkg;
   //////////////////////////////////////////////
 
   parameter int MuBi4Width = 4;
+  /* 
   typedef enum logic [MuBi4Width-1:0] {
     MuBi4True = 4'h6, // enabled
     MuBi4False = 4'h9  // disabled
   } mubi4_t;
+  */
+  typedef logic [MuBi4Width-1:0] mubi4_t;
+  localparam mubi4_t MuBi4True = 4'h6;
+  localparam mubi4_t MuBi4False = 4'h9;
 
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi4ValsComplementary_A, MuBi4True == ~MuBi4False)
 
-  // Test whether the value is supplied is one of the valid enumerations
+  // Test whether the multibit value is one of the valid enumerations
   function automatic logic mubi4_test_invalid(mubi4_t val);
     return ~(val inside {MuBi4True, MuBi4False});
   endfunction : mubi4_test_invalid
@@ -140,7 +145,7 @@ package caliptra_prim_mubi_pkg;
   endfunction : mubi4_or_lo
 
   // Performs a logical AND operation between two multibit values.
-  // Tlos treats "False" as logical 1, and all other values are
+  // This treats "False" as logical 1, and all other values are
   // treated as 0.
   function automatic mubi4_t mubi4_and_lo(mubi4_t a, mubi4_t b);
     return mubi4_and(a, b, MuBi4False);
@@ -159,7 +164,7 @@ package caliptra_prim_mubi_pkg;
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi8ValsComplementary_A, MuBi8True == ~MuBi8False)
 
-  // Test whether the value is supplied is one of the valid enumerations
+  // Test whether the multibit value is one of the valid enumerations
   function automatic logic mubi8_test_invalid(mubi8_t val);
     return ~(val inside {MuBi8True, MuBi8False});
   endfunction : mubi8_test_invalid
@@ -272,7 +277,7 @@ package caliptra_prim_mubi_pkg;
   endfunction : mubi8_or_lo
 
   // Performs a logical AND operation between two multibit values.
-  // Tlos treats "False" as logical 1, and all other values are
+  // This treats "False" as logical 1, and all other values are
   // treated as 0.
   function automatic mubi8_t mubi8_and_lo(mubi8_t a, mubi8_t b);
     return mubi8_and(a, b, MuBi8False);
@@ -291,7 +296,7 @@ package caliptra_prim_mubi_pkg;
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi12ValsComplementary_A, MuBi12True == ~MuBi12False)
 
-  // Test whether the value is supplied is one of the valid enumerations
+  // Test whether the multibit value is one of the valid enumerations
   function automatic logic mubi12_test_invalid(mubi12_t val);
     return ~(val inside {MuBi12True, MuBi12False});
   endfunction : mubi12_test_invalid
@@ -404,7 +409,7 @@ package caliptra_prim_mubi_pkg;
   endfunction : mubi12_or_lo
 
   // Performs a logical AND operation between two multibit values.
-  // Tlos treats "False" as logical 1, and all other values are
+  // This treats "False" as logical 1, and all other values are
   // treated as 0.
   function automatic mubi12_t mubi12_and_lo(mubi12_t a, mubi12_t b);
     return mubi12_and(a, b, MuBi12False);
@@ -423,7 +428,7 @@ package caliptra_prim_mubi_pkg;
   // This is a prerequisite for the multibit functions below to work.
   `CALIPTRA_ASSERT_STATIC_IN_PACKAGE(CheckMuBi16ValsComplementary_A, MuBi16True == ~MuBi16False)
 
-  // Test whether the value is supplied is one of the valid enumerations
+  // Test whether the multibit value is one of the valid enumerations
   function automatic logic mubi16_test_invalid(mubi16_t val);
     return ~(val inside {MuBi16True, MuBi16False});
   endfunction : mubi16_test_invalid
@@ -536,7 +541,7 @@ package caliptra_prim_mubi_pkg;
   endfunction : mubi16_or_lo
 
   // Performs a logical AND operation between two multibit values.
-  // Tlos treats "False" as logical 1, and all other values are
+  // This treats "False" as logical 1, and all other values are
   // treated as 0.
   function automatic mubi16_t mubi16_and_lo(mubi16_t a, mubi16_t b);
     return mubi16_and(a, b, MuBi16False);

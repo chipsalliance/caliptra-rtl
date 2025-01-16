@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -40,10 +40,16 @@ package lc_ctrl_pkg;
 
   // Note that changing this encoding has implications on isolation cell
   // values in RTL. Do not change this unless absolutely needed.
+  /*
   typedef enum logic [TxWidth-1:0] {
     On  = 4'b0101,
     Off = 4'b1010
   } lc_tx_t;
+  */
+  typedef logic [TxWidth-1:0] lc_tx_t;
+  parameter lc_tx_t On = 4'b0101;
+  parameter lc_tx_t Off = 4'b1010;
+
   parameter lc_tx_t LC_TX_DEFAULT = lc_tx_t'(Off);
 
   parameter int RmaSeedWidth = 32;
@@ -54,8 +60,10 @@ package lc_ctrl_pkg;
   typedef logic [LcKeymgrDivWidth-1:0] lc_keymgr_div_t;
 
   typedef struct packed {
-    logic [lc_ctrl_reg_pkg::HwRevFieldWidth-1:0] chip_gen;
-    logic [lc_ctrl_reg_pkg::HwRevFieldWidth-1:0] chip_rev;
+    logic [lc_ctrl_reg_pkg::SiliconCreatorIdWidth-1:0] silicon_creator_id;
+    logic [lc_ctrl_reg_pkg::ProductIdWidth-1:0]        product_id;
+    logic [lc_ctrl_reg_pkg::RevisionIdWidth-1:0]       revision_id;
+    logic [32-lc_ctrl_reg_pkg::RevisionIdWidth-1:0]    reserved;
   } lc_hw_rev_t;
 
   /////////////////////////////////////////////
@@ -331,7 +339,13 @@ package lc_ctrl_pkg;
     // DEV
     ZeroTokenIdx,          // -> SCRAP
     RmaTokenIdx,           // -> RMA
-    {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
+    // {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
+    // ============== This is how we enable from DEV to PROD ==============================
+    InvalidTokenIdx, // -> PROD_END
+    TestExitTokenIdx, // -> PROD
+    {17{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV
+    // ====================================================================================
+
     // TEST_UNLOCKED0-7, TEST_LOCKED0-6
     `TEST_UNLOCKED(7),
     `TEST_LOCKED(6),

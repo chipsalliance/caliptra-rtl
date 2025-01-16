@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -99,8 +99,7 @@ module csrng
     .hrdata_o,
     .reg2hw,
     .hw2reg,
-    .intg_err_o(intg_err_alert[1]),
-    .devmode_i(1'b1)
+    .intg_err_o(intg_err_alert[1])
   );
 
   csrng_core #(
@@ -175,8 +174,10 @@ module csrng
     `CALIPTRA_ASSERT_KNOWN(CsrngRspAckKnownO_A, csrng_cmd_o[i].csrng_rsp_ack)
     `CALIPTRA_ASSERT_KNOWN(CsrngRspStsKnownO_A, csrng_cmd_o[i].csrng_rsp_sts)
     `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsValidKnownO_A, csrng_cmd_o[i].genbits_valid)
-    `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsFipsKnownO_A, csrng_cmd_o[i].genbits_fips)
-    `CALIPTRA_ASSERT_KNOWN(CsrngGenbitsBusKnownO_A, csrng_cmd_o[i].genbits_bus)
+    `CALIPTRA_ASSERT_KNOWN_IF(CsrngGenbitsFipsKnownO_A, csrng_cmd_o[i].genbits_fips,
+        csrng_cmd_o[i].genbits_valid)
+    `CALIPTRA_ASSERT_KNOWN_IF(CsrngGenbitsBusKnownO_A, csrng_cmd_o[i].genbits_bus,
+        csrng_cmd_o[i].genbits_valid)
   end : gen_app_if_asserts
 
   // Alerts
