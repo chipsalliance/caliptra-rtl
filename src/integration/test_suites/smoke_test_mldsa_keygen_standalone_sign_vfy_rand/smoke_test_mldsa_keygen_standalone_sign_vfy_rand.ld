@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /* custom linker to facilitate MLDSA tests */
+
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
@@ -27,8 +30,8 @@ SECTIONS {
    * when copying to DCCM */
   /* Only upper half of DCCM is used for ROM image */
   _data_lma_start = ALIGN(4);
-  _data_vma_start = 0x50010000;
-  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
+  _data_vma_start = 0x50000000;
+  .data _data_vma_start : AT(_data_lma_start) { *(.*data.*) ; . = ALIGN(4);} =0x0000,
   _data_lma_end = _data_lma_start + SIZEOF(.data);
   _data_vma_end = _data_vma_start + SIZEOF(.data);
 
@@ -39,13 +42,13 @@ SECTIONS {
   _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
 
   _end = _bss_lma_end;
-  ASSERT( _end < 0x0000C000, "ERROR: ROM size exceeds 48KiB")
+  ASSERT( _end < 0x00018000, "ERROR: ROM size exceeds 96KiB")
 
   /* DCCM as VMA and LMA */
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) *(.*data) *(.rodata*) *(.srodata*) . = ALIGN(4); } =0x0000,
   iccm_code0_start = .;
 
   /* ICCM as VMA */
@@ -65,5 +68,5 @@ SECTIONS {
   /* Stack is at the end of DCCM after .data_iccm2 */
   . = ALIGN(iccm_code2_end,16);
   STACK = ALIGN(16) + 0x8000;
-  ASSERT( (STACK < 0x50020000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
+  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
 }
