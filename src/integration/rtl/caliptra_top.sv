@@ -429,6 +429,14 @@ always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locke
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
+// I-Cache is disabled, leave pins connected to 0/unloaded
+always_comb begin
+  el2_icache_stub.wb_packeddout_pre = '0;
+  el2_icache_stub.wb_dout_pre_up = '0;
+  el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
+  el2_icache_stub.ic_tag_data_raw_pre = '0;
+end
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
