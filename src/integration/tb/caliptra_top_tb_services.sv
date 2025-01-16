@@ -265,11 +265,11 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
-    //         8'h90        - Issue PCR singing with fixed vector   
-    //         8'h91        - Issue PCR ECC singing with randomized vector
-    //         8'h92        - Check PCR ECC singing with randomized vector
-    //         8'h93        - Issue PCR MLDSA singing with randomized vector   
-    //         8'h94        - Check PCR MLDSA singing with randomized vector
+    //         8'h90        - Issue PCR signing with fixed vector   
+    //         8'h91        - Issue PCR ECC signing with randomized vector
+    //         8'h92        - Check PCR ECC signing with randomized vector
+    //         8'h93        - Issue PCR MLDSA signing with randomized vector   
+    //         8'h94        - Check PCR MLDSA signing with randomized vector
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
