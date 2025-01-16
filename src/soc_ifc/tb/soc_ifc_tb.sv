@@ -537,6 +537,7 @@ module soc_ifc_tb
       set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1);  // after reset deassertion 
 
       repeat (5) @(posedge clk_tb);
+      $display("Waited 5 clock cycles");
 
       socregs.unlock_fuses();
 
@@ -1646,9 +1647,12 @@ module soc_ifc_tb
 
         set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
 
+        $display("Initialize simulation");
         init_sim();
+        $display("Reset DUT");
         reset_dut();
 
+        $display("Wait for ready_for_fuses to be asserted");
         wait (ready_for_fuses == 1'b1);
         //load_fuses();
         //write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
