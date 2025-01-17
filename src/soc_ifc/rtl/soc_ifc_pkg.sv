@@ -47,7 +47,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
-    parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
+    parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;
 
     //Mailbox size configuration
     parameter CPTRA_MBOX_SIZE_KB = 256;
