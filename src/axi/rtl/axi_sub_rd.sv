@@ -149,7 +149,7 @@ module axi_sub_rd import axi_pkg::*; #(
         if (!rst_n) begin
             txn_active <= 1'b0;
         end
-        else if (s_axi_if.arvalid && FIXME) begin
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_active <= 1'b1;
         end
         else if (txn_final_beat) begin
