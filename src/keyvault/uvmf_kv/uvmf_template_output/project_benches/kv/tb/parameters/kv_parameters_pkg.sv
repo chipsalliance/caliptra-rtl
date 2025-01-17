@@ -50,7 +50,7 @@ package kv_parameters_pkg;
   parameter string kv_mldsa_key_read_agent_BFM  = "kv_mldsa_key_read_agent_BFM"; /* [8] */
   parameter string kv_ecc_privkey_read_agent_BFM  = "kv_ecc_privkey_read_agent_BFM"; /* [9] */
   parameter string kv_ecc_seed_read_agent_BFM  = "kv_ecc_seed_read_agent_BFM"; /* [10] */
-  parameter string kv_ecc_msg_read_agent_BFM  = "kv_ecc_msg_read_agent_BFM"; /* [11] */
+  parameter string kv_aes_key_read_agent_BFM  = "kv_aes_key_read_agent_BFM"; /* [11] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

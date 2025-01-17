@@ -188,7 +188,7 @@ module caliptra_prim_subreg_shadow
   assign q  = committed_q;
   assign qs = committed_qs;
 
-  // caliptra_prim_subreg_shadow does not support multi-bit software access yet
+  // prim_subreg_shadow does not support multi-bit software access yet
   `CALIPTRA_ASSERT_NEVER(MubiIsNotYetSupported_A, Mubi)
   logic unused_mubi;
   assign unused_mubi = Mubi;

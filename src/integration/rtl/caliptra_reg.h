@@ -8275,6 +8275,8 @@
 #define CSRNG_REG_CTRL_SW_APP_ENABLE_MASK                                                           (0xf0)
 #define CSRNG_REG_CTRL_READ_INT_STATE_LOW                                                           (8)
 #define CSRNG_REG_CTRL_READ_INT_STATE_MASK                                                          (0xf00)
+#define CSRNG_REG_CTRL_FIPS_FORCE_ENABLE_LOW                                                        (12)
+#define CSRNG_REG_CTRL_FIPS_FORCE_ENABLE_MASK                                                       (0xf000)
 #endif
 #define CLP_CSRNG_REG_CMD_REQ                                                                       (0x20002018)
 #ifndef CSRNG_REG_CMD_REQ
@@ -8288,61 +8290,103 @@
 #define CSRNG_REG_CMD_REQ_GLEN_LOW                                                                  (12)
 #define CSRNG_REG_CMD_REQ_GLEN_MASK                                                                 (0x1fff000)
 #endif
-#define CLP_CSRNG_REG_SW_CMD_STS                                                                    (0x2000201c)
-#ifndef CSRNG_REG_SW_CMD_STS
-#define CSRNG_REG_SW_CMD_STS                                                                        (0x1c)
-#define CSRNG_REG_SW_CMD_STS_CMD_RDY_LOW                                                            (0)
-#define CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK                                                           (0x1)
-#define CSRNG_REG_SW_CMD_STS_CMD_STS_LOW                                                            (1)
-#define CSRNG_REG_SW_CMD_STS_CMD_STS_MASK                                                           (0x2)
+#define CLP_CSRNG_REG_RESEED_INTERVAL                                                               (0x2000201c)
+#ifndef CSRNG_REG_RESEED_INTERVAL
+#define CSRNG_REG_RESEED_INTERVAL                                                                   (0x1c)
 #endif
-#define CLP_CSRNG_REG_GENBITS_VLD                                                                   (0x20002020)
+#define CLP_CSRNG_REG_RESEED_COUNTER_0                                                              (0x20002020)
+#ifndef CSRNG_REG_RESEED_COUNTER_0
+#define CSRNG_REG_RESEED_COUNTER_0                                                                  (0x20)
+#endif
+#define CLP_CSRNG_REG_RESEED_COUNTER_1                                                              (0x20002024)
+#ifndef CSRNG_REG_RESEED_COUNTER_1
+#define CSRNG_REG_RESEED_COUNTER_1                                                                  (0x24)
+#endif
+#define CLP_CSRNG_REG_RESEED_COUNTER_2                                                              (0x20002028)
+#ifndef CSRNG_REG_RESEED_COUNTER_2
+#define CSRNG_REG_RESEED_COUNTER_2                                                                  (0x28)
+#endif
+#define CLP_CSRNG_REG_SW_CMD_STS                                                                    (0x2000202c)
+#ifndef CSRNG_REG_SW_CMD_STS
+#define CSRNG_REG_SW_CMD_STS                                                                        (0x2c)
+#define CSRNG_REG_SW_CMD_STS_CMD_RDY_LOW                                                            (1)
+#define CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK                                                           (0x2)
+#define CSRNG_REG_SW_CMD_STS_CMD_ACK_LOW                                                            (2)
+#define CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK                                                           (0x4)
+#define CSRNG_REG_SW_CMD_STS_CMD_STS_LOW                                                            (3)
+#define CSRNG_REG_SW_CMD_STS_CMD_STS_MASK                                                           (0x38)
+#endif
+#define CLP_CSRNG_REG_GENBITS_VLD                                                                   (0x20002030)
 #ifndef CSRNG_REG_GENBITS_VLD
-#define CSRNG_REG_GENBITS_VLD                                                                       (0x20)
+#define CSRNG_REG_GENBITS_VLD                                                                       (0x30)
 #define CSRNG_REG_GENBITS_VLD_GENBITS_VLD_LOW                                                       (0)
 #define CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK                                                      (0x1)
 #define CSRNG_REG_GENBITS_VLD_GENBITS_FIPS_LOW                                                      (1)
 #define CSRNG_REG_GENBITS_VLD_GENBITS_FIPS_MASK                                                     (0x2)
 #endif
-#define CLP_CSRNG_REG_GENBITS                                                                       (0x20002024)
+#define CLP_CSRNG_REG_GENBITS                                                                       (0x20002034)
 #ifndef CSRNG_REG_GENBITS
-#define CSRNG_REG_GENBITS                                                                           (0x24)
+#define CSRNG_REG_GENBITS                                                                           (0x34)
 #endif
-#define CLP_CSRNG_REG_INT_STATE_NUM                                                                 (0x20002028)
+#define CLP_CSRNG_REG_INT_STATE_READ_ENABLE                                                         (0x20002038)
+#ifndef CSRNG_REG_INT_STATE_READ_ENABLE
+#define CSRNG_REG_INT_STATE_READ_ENABLE                                                             (0x38)
+#define CSRNG_REG_INT_STATE_READ_ENABLE_INT_STATE_READ_ENABLE_LOW                                   (0)
+#define CSRNG_REG_INT_STATE_READ_ENABLE_INT_STATE_READ_ENABLE_MASK                                  (0x7)
+#endif
+#define CLP_CSRNG_REG_INT_STATE_READ_ENABLE_REGWEN                                                  (0x2000203c)
+#ifndef CSRNG_REG_INT_STATE_READ_ENABLE_REGWEN
+#define CSRNG_REG_INT_STATE_READ_ENABLE_REGWEN                                                      (0x3c)
+#define CSRNG_REG_INT_STATE_READ_ENABLE_REGWEN_INT_STATE_READ_ENABLE_REGWEN_LOW                     (0)
+#define CSRNG_REG_INT_STATE_READ_ENABLE_REGWEN_INT_STATE_READ_ENABLE_REGWEN_MASK                    (0x1)
+#endif
+#define CLP_CSRNG_REG_INT_STATE_NUM                                                                 (0x20002040)
 #ifndef CSRNG_REG_INT_STATE_NUM
-#define CSRNG_REG_INT_STATE_NUM                                                                     (0x28)
+#define CSRNG_REG_INT_STATE_NUM                                                                     (0x40)
 #define CSRNG_REG_INT_STATE_NUM_INT_STATE_NUM_LOW                                                   (0)
 #define CSRNG_REG_INT_STATE_NUM_INT_STATE_NUM_MASK                                                  (0xf)
 #endif
-#define CLP_CSRNG_REG_INT_STATE_VAL                                                                 (0x2000202c)
+#define CLP_CSRNG_REG_INT_STATE_VAL                                                                 (0x20002044)
 #ifndef CSRNG_REG_INT_STATE_VAL
-#define CSRNG_REG_INT_STATE_VAL                                                                     (0x2c)
+#define CSRNG_REG_INT_STATE_VAL                                                                     (0x44)
 #endif
-#define CLP_CSRNG_REG_HW_EXC_STS                                                                    (0x20002030)
+#define CLP_CSRNG_REG_FIPS_FORCE                                                                    (0x20002048)
+#ifndef CSRNG_REG_FIPS_FORCE
+#define CSRNG_REG_FIPS_FORCE                                                                        (0x48)
+#define CSRNG_REG_FIPS_FORCE_FIPS_FORCE_LOW                                                         (0)
+#define CSRNG_REG_FIPS_FORCE_FIPS_FORCE_MASK                                                        (0x7)
+#endif
+#define CLP_CSRNG_REG_HW_EXC_STS                                                                    (0x2000204c)
 #ifndef CSRNG_REG_HW_EXC_STS
-#define CSRNG_REG_HW_EXC_STS                                                                        (0x30)
+#define CSRNG_REG_HW_EXC_STS                                                                        (0x4c)
 #define CSRNG_REG_HW_EXC_STS_HW_EXC_STS_LOW                                                         (0)
 #define CSRNG_REG_HW_EXC_STS_HW_EXC_STS_MASK                                                        (0xffff)
 #endif
-#define CLP_CSRNG_REG_RECOV_ALERT_STS                                                               (0x20002034)
+#define CLP_CSRNG_REG_RECOV_ALERT_STS                                                               (0x20002050)
 #ifndef CSRNG_REG_RECOV_ALERT_STS
-#define CSRNG_REG_RECOV_ALERT_STS                                                                   (0x34)
+#define CSRNG_REG_RECOV_ALERT_STS                                                                   (0x50)
 #define CSRNG_REG_RECOV_ALERT_STS_ENABLE_FIELD_ALERT_LOW                                            (0)
 #define CSRNG_REG_RECOV_ALERT_STS_ENABLE_FIELD_ALERT_MASK                                           (0x1)
 #define CSRNG_REG_RECOV_ALERT_STS_SW_APP_ENABLE_FIELD_ALERT_LOW                                     (1)
 #define CSRNG_REG_RECOV_ALERT_STS_SW_APP_ENABLE_FIELD_ALERT_MASK                                    (0x2)
 #define CSRNG_REG_RECOV_ALERT_STS_READ_INT_STATE_FIELD_ALERT_LOW                                    (2)
 #define CSRNG_REG_RECOV_ALERT_STS_READ_INT_STATE_FIELD_ALERT_MASK                                   (0x4)
-#define CSRNG_REG_RECOV_ALERT_STS_ACMD_FLAG0_FIELD_ALERT_LOW                                        (3)
-#define CSRNG_REG_RECOV_ALERT_STS_ACMD_FLAG0_FIELD_ALERT_MASK                                       (0x8)
+#define CSRNG_REG_RECOV_ALERT_STS_FIPS_FORCE_ENABLE_FIELD_ALERT_LOW                                 (3)
+#define CSRNG_REG_RECOV_ALERT_STS_FIPS_FORCE_ENABLE_FIELD_ALERT_MASK                                (0x8)
+#define CSRNG_REG_RECOV_ALERT_STS_ACMD_FLAG0_FIELD_ALERT_LOW                                        (4)
+#define CSRNG_REG_RECOV_ALERT_STS_ACMD_FLAG0_FIELD_ALERT_MASK                                       (0x10)
 #define CSRNG_REG_RECOV_ALERT_STS_CS_BUS_CMP_ALERT_LOW                                              (12)
 #define CSRNG_REG_RECOV_ALERT_STS_CS_BUS_CMP_ALERT_MASK                                             (0x1000)
-#define CSRNG_REG_RECOV_ALERT_STS_CS_MAIN_SM_ALERT_LOW                                              (13)
-#define CSRNG_REG_RECOV_ALERT_STS_CS_MAIN_SM_ALERT_MASK                                             (0x2000)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_INVALID_ACMD_ALERT_LOW                                  (13)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_INVALID_ACMD_ALERT_MASK                                 (0x2000)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_INVALID_CMD_SEQ_ALERT_LOW                               (14)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_INVALID_CMD_SEQ_ALERT_MASK                              (0x4000)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_RESEED_CNT_ALERT_LOW                                    (15)
+#define CSRNG_REG_RECOV_ALERT_STS_CMD_STAGE_RESEED_CNT_ALERT_MASK                                   (0x8000)
 #endif
-#define CLP_CSRNG_REG_ERR_CODE                                                                      (0x20002038)
+#define CLP_CSRNG_REG_ERR_CODE                                                                      (0x20002054)
 #ifndef CSRNG_REG_ERR_CODE
-#define CSRNG_REG_ERR_CODE                                                                          (0x38)
+#define CSRNG_REG_ERR_CODE                                                                          (0x54)
 #define CSRNG_REG_ERR_CODE_SFIFO_CMD_ERR_LOW                                                        (0)
 #define CSRNG_REG_ERR_CODE_SFIFO_CMD_ERR_MASK                                                       (0x1)
 #define CSRNG_REG_ERR_CODE_SFIFO_GENBITS_ERR_LOW                                                    (1)
@@ -8396,15 +8440,15 @@
 #define CSRNG_REG_ERR_CODE_FIFO_STATE_ERR_LOW                                                       (30)
 #define CSRNG_REG_ERR_CODE_FIFO_STATE_ERR_MASK                                                      (0x40000000)
 #endif
-#define CLP_CSRNG_REG_ERR_CODE_TEST                                                                 (0x2000203c)
+#define CLP_CSRNG_REG_ERR_CODE_TEST                                                                 (0x20002058)
 #ifndef CSRNG_REG_ERR_CODE_TEST
-#define CSRNG_REG_ERR_CODE_TEST                                                                     (0x3c)
+#define CSRNG_REG_ERR_CODE_TEST                                                                     (0x58)
 #define CSRNG_REG_ERR_CODE_TEST_ERR_CODE_TEST_LOW                                                   (0)
 #define CSRNG_REG_ERR_CODE_TEST_ERR_CODE_TEST_MASK                                                  (0x1f)
 #endif
-#define CLP_CSRNG_REG_MAIN_SM_STATE                                                                 (0x20002040)
+#define CLP_CSRNG_REG_MAIN_SM_STATE                                                                 (0x2000205c)
 #ifndef CSRNG_REG_MAIN_SM_STATE
-#define CSRNG_REG_MAIN_SM_STATE                                                                     (0x40)
+#define CSRNG_REG_MAIN_SM_STATE                                                                     (0x5c)
 #define CSRNG_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                                   (0)
 #define CSRNG_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                                  (0xff)
 #endif
@@ -8492,14 +8536,18 @@
 #define ENTROPY_SRC_REG_CONF                                                                        (0x24)
 #define ENTROPY_SRC_REG_CONF_FIPS_ENABLE_LOW                                                        (0)
 #define ENTROPY_SRC_REG_CONF_FIPS_ENABLE_MASK                                                       (0xf)
-#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                            (4)
-#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                           (0xf0)
-#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_LOW                                                    (12)
-#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_MASK                                                   (0xf000)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_LOW                                                     (20)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_MASK                                                    (0xf00000)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_LOW                                                        (24)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_MASK                                                       (0x3000000)
+#define ENTROPY_SRC_REG_CONF_FIPS_FLAG_LOW                                                          (4)
+#define ENTROPY_SRC_REG_CONF_FIPS_FLAG_MASK                                                         (0xf0)
+#define ENTROPY_SRC_REG_CONF_RNG_FIPS_LOW                                                           (8)
+#define ENTROPY_SRC_REG_CONF_RNG_FIPS_MASK                                                          (0xf00)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_LOW                                                     (12)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_MASK                                                    (0xf000)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_LOW                                                        (16)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_MASK                                                       (0x30000)
+#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_LOW                                                    (18)
+#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_MASK                                                   (0x3c0000)
+#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                            (22)
+#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                           (0x3c00000)
 #endif
 #define CLP_ENTROPY_SRC_REG_ENTROPY_CONTROL                                                         (0x20003028)
 #ifndef ENTROPY_SRC_REG_ENTROPY_CONTROL
@@ -8779,19 +8827,19 @@
 #ifndef ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH                                                         (0xc8)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_LOW                                 (0)
-#define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_MASK                                (0x7f)
+#define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_MASK                                (0x3f)
 #endif
 #define CLP_ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                      (0x200030cc)
 #ifndef ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                          (0xcc)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_LOW                                   (0)
-#define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_MASK                                  (0x7f)
+#define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_MASK                                  (0x3f)
 #endif
 #define CLP_ENTROPY_SRC_REG_DEBUG_STATUS                                                            (0x200030d0)
 #ifndef ENTROPY_SRC_REG_DEBUG_STATUS
 #define ENTROPY_SRC_REG_DEBUG_STATUS                                                                (0xd0)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_LOW                                         (0)
-#define ENTROPY_SRC_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_MASK                                        (0x7)
+#define ENTROPY_SRC_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_MASK                                        (0x3)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_SHA3_FSM_LOW                                                   (3)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_SHA3_FSM_MASK                                                  (0x38)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_SHA3_BLOCK_PR_LOW                                              (6)
@@ -8840,16 +8888,24 @@
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_ES_FW_OV_WR_ALERT_MASK                                      (0x8000)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_ES_FW_OV_DISABLE_ALERT_LOW                                  (16)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_ES_FW_OV_DISABLE_ALERT_MASK                                 (0x10000)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_FIPS_FLAG_FIELD_ALERT_LOW                                   (17)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_FIPS_FLAG_FIELD_ALERT_MASK                                  (0x20000)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_RNG_FIPS_FIELD_ALERT_LOW                                    (18)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_RNG_FIPS_FIELD_ALERT_MASK                                   (0x40000)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_LOW                               (31)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_MASK                              (0x80000000)
 #endif
 #define CLP_ENTROPY_SRC_REG_ERR_CODE                                                                (0x200030d8)
 #ifndef ENTROPY_SRC_REG_ERR_CODE
 #define ENTROPY_SRC_REG_ERR_CODE                                                                    (0xd8)
 #define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESRNG_ERR_LOW                                                (0)
 #define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESRNG_ERR_MASK                                               (0x1)
-#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_OBSERVE_ERR_LOW                                              (1)
-#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_OBSERVE_ERR_MASK                                             (0x2)
-#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESFINAL_ERR_LOW                                              (2)
-#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESFINAL_ERR_MASK                                             (0x4)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_DISTR_ERR_LOW                                                (1)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_DISTR_ERR_MASK                                               (0x2)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_OBSERVE_ERR_LOW                                              (2)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_OBSERVE_ERR_MASK                                             (0x4)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESFINAL_ERR_LOW                                              (3)
+#define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESFINAL_ERR_MASK                                             (0x8)
 #define ENTROPY_SRC_REG_ERR_CODE_ES_ACK_SM_ERR_LOW                                                  (20)
 #define ENTROPY_SRC_REG_ERR_CODE_ES_ACK_SM_ERR_MASK                                                 (0x100000)
 #define ENTROPY_SRC_REG_ERR_CODE_ES_MAIN_SM_ERR_LOW                                                 (21)

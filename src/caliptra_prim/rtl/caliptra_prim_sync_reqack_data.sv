@@ -11,8 +11,8 @@
 // from the destination (DST) to the source (SRC) domain, an additional register stage can be
 // inserted for data buffering.
 //
-// Under the hood, this module uses a caliptra_prim_sync_reqack primitive for synchronizing the
-// REQ/ACK handshake. See caliptra_prim_sync_reqack.sv for more details.
+// Under the hood, this module uses a prim_sync_reqack primitive for synchronizing the
+// REQ/ACK handshake. See prim_sync_reqack.sv for more details.
 
 `include "caliptra_prim_assert.sv"
 
@@ -50,7 +50,7 @@ module caliptra_prim_sync_reqack_data #(
   caliptra_prim_sync_reqack #(
     .EnRstChks(EnRstChks),
     .EnRzHs(EnRzHs)
-  ) u_caliptra_prim_sync_reqack (
+  ) u_prim_sync_reqack (
     .clk_src_i,
     .rst_src_ni,
     .clk_dst_i,
@@ -97,7 +97,7 @@ module caliptra_prim_sync_reqack_data #(
   // Assertions //
   ////////////////
   if (DataSrc2Dst == 1'b1) begin : gen_assert_data_src2dst
-`ifdef INC_CALIPTRA_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
     //VCS coverage off
     // pragma coverage off
     logic effective_rst_n;
@@ -146,7 +146,7 @@ module caliptra_prim_sync_reqack_data #(
     // assertion into two pieces. The first (SyncReqAckDataHoldDst2SrcA) checks that data doesn't
     // change in a way that could cause data corruption. The second (SyncReqAckDataHoldDst2SrcB)
     // checks that the DST side doesn't do anything that it shouldn't know is safe.
-`ifdef INC_CALIPTRA_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
     //VCS coverage off
     // pragma coverage off
     logic effective_rst_n;

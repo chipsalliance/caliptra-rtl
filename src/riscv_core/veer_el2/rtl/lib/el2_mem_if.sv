@@ -22,8 +22,6 @@ import el2_pkg::*;
 interface el2_mem_if #(
     `include "el2_param.vh"
 ) ();
-  localparam DCCM_ECC_WIDTH = pt.DCCM_FDATA_WIDTH - pt.DCCM_DATA_WIDTH;
-
   //////////////////////////////////////////
   // Clock
   logic                                                               clk;
@@ -47,10 +45,30 @@ interface el2_mem_if #(
   logic [pt.DCCM_NUM_BANKS-1:0]                                       dccm_wren_bank;
   logic [pt.DCCM_NUM_BANKS-1:0][pt.DCCM_BITS-1:(pt.DCCM_BANK_BITS+2)] dccm_addr_bank;
   logic [pt.DCCM_NUM_BANKS-1:0][              pt.DCCM_DATA_WIDTH-1:0] dccm_wr_data_bank;
-  logic [pt.DCCM_NUM_BANKS-1:0][                  DCCM_ECC_WIDTH-1:0] dccm_wr_ecc_bank;
+  logic [pt.DCCM_NUM_BANKS-1:0][               pt.DCCM_ECC_WIDTH-1:0] dccm_wr_ecc_bank;
   logic [pt.DCCM_NUM_BANKS-1:0][              pt.DCCM_DATA_WIDTH-1:0] dccm_bank_dout;
-  logic [pt.DCCM_NUM_BANKS-1:0][                  DCCM_ECC_WIDTH-1:0] dccm_bank_ecc;
+  logic [pt.DCCM_NUM_BANKS-1:0][               pt.DCCM_ECC_WIDTH-1:0] dccm_bank_ecc;
 
+  //////////////////////////////////////////
+  // ICACHE DATA
+  logic [pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_WAYS-1:0]                       ic_b_sb_wren;
+  logic [pt.ICACHE_BANKS_WAY-1:0][(71*pt.ICACHE_NUM_WAYS)-1:0]                  ic_b_sb_bit_en_vec;
+  logic [pt.ICACHE_BANKS_WAY-1:0][(71*pt.ICACHE_NUM_WAYS)-1:0]                  wb_packeddout_pre;
+  logic [pt.ICACHE_BANKS_WAY-1:0][70:0]                                         ic_sb_wr_data;
+  logic [pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_INDEX_HI : pt.ICACHE_DATA_INDEX_LO] ic_rw_addr_bank_q;
+  logic [pt.ICACHE_BANKS_WAY-1:0]                                               ic_bank_way_clken_final;
+  logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                       ic_bank_way_clken_final_up;
+  logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][71-1:0]               wb_dout_pre_up;
+
+  //////////////////////////////////////////
+  // ICACHE TAG
+  logic [pt.ICACHE_NUM_WAYS-1:0]                     ic_tag_clken_final;
+  logic [pt.ICACHE_NUM_WAYS-1:0]                     ic_tag_wren_q;
+  logic [(26*pt.ICACHE_NUM_WAYS)-1 :0]               ic_tag_wren_biten_vec;
+  logic [(26*pt.ICACHE_NUM_WAYS)-1 :0]               ic_tag_data_raw_packed_pre;
+  logic [25:0]                                       ic_tag_wr_data;
+  logic [pt.ICACHE_INDEX_HI: pt.ICACHE_TAG_INDEX_LO] ic_rw_addr_q;
+  logic [pt.ICACHE_NUM_WAYS-1:0] [25:0]              ic_tag_data_raw_pre;
 
   //////////////////////////////////////////
   // MODPORTS
@@ -86,6 +104,28 @@ interface el2_mem_if #(
       // DCCM
       input dccm_clken, dccm_wren_bank, dccm_addr_bank, dccm_wr_data_bank, dccm_wr_ecc_bank,
       output dccm_bank_dout, dccm_bank_ecc
+  );
+
+  modport veer_icache_data(
+      // data
+      output ic_b_sb_wren, ic_b_sb_bit_en_vec, ic_sb_wr_data, ic_rw_addr_bank_q, ic_bank_way_clken_final, ic_bank_way_clken_final_up,
+      input wb_packeddout_pre, wb_dout_pre_up
+  );
+
+  modport veer_icache_tag(
+      // tag
+      output ic_tag_clken_final, ic_tag_wren_q, ic_tag_wren_biten_vec, ic_tag_wr_data, ic_rw_addr_q,
+      input ic_tag_data_raw_packed_pre,ic_tag_data_raw_pre
+  );
+
+  modport veer_icache_src(
+      output clk,
+      // data
+      output ic_b_sb_wren, ic_b_sb_bit_en_vec, ic_sb_wr_data, ic_rw_addr_bank_q, ic_bank_way_clken_final, ic_bank_way_clken_final_up,
+      input wb_packeddout_pre, wb_dout_pre_up,
+      // tag
+      output ic_tag_clken_final, ic_tag_wren_q, ic_tag_wren_biten_vec, ic_tag_wr_data, ic_rw_addr_q,
+      input ic_tag_data_raw_packed_pre,ic_tag_data_raw_pre
   );
 
 endinterface

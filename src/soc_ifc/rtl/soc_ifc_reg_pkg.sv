@@ -277,6 +277,8 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t;
 
     typedef struct packed{
+        logic [31:0] next;
+        logic we;
         logic swwel;
         logic hwclr;
     } soc_ifc_reg__secret_w32__in_t;
