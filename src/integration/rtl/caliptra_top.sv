@@ -35,7 +35,12 @@ module caliptra_top
     input logic                        cptra_rst_b,
 
     input logic [255:0]                              cptra_obf_key,
-    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
+    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,    
+    input logic                                      cptra_obf_field_entropy_vld,
+    input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0]      cptra_obf_field_entropy,
+    input logic                                      cptra_obf_uds_seed_vld,
+    input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]      cptra_obf_uds_seed,
+
 
     //JTAG Interface
     input logic                        jtag_tck,    // JTAG clk
@@ -59,9 +64,9 @@ module caliptra_top
     //SRAM interface for mbox
     output logic mbox_sram_cs,
     output logic mbox_sram_we,
-    output logic [MBOX_ADDR_W-1:0] mbox_sram_addr,
-    output logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
-    input  logic [MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
+    output logic [CPTRA_MBOX_ADDR_W-1:0] mbox_sram_addr,
+    output logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_wdata,
+    input  logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_sram_rdata,
 
     //SRAM interface for imem
     output logic imem_cs,
@@ -213,6 +218,7 @@ module caliptra_top
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
 
+    el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
 
@@ -252,8 +258,8 @@ module caliptra_top
     pcr_signing_t pcr_signing_data;
 
     //mailbox sram gasket
-    mbox_sram_req_t mbox_sram_req;
-    mbox_sram_resp_t mbox_sram_resp;
+    cptra_mbox_sram_req_t mbox_sram_req;
+    cptra_mbox_sram_resp_t mbox_sram_resp;
 
     logic clear_obf_secrets;
     logic scan_mode_switch;
@@ -281,7 +287,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, mldsa_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -423,6 +429,14 @@ always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locke
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
+// I-Cache is disabled, leave pins connected to 0/unloaded
+always_comb begin
+  el2_icache_stub.wb_packeddout_pre = '0;
+  el2_icache_stub.wb_dout_pre_up = '0;
+  el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
+  el2_icache_stub.ic_tag_data_raw_pre = '0;
+end
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -512,8 +526,7 @@ el2_veer_wrapper rvtop (
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
 
-    .ic_data_ext_in_pkt     (48'h0),
-    .ic_tag_ext_in_pkt      (24'h0),
+    .el2_icache_export      (el2_icache_stub.veer_icache_src),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
@@ -989,6 +1002,7 @@ mldsa_top #(
      .kv_read           (kv_read[2]),
      .kv_rd_resp        (kv_rd_resp[2]),
      .pcr_signing_data  (pcr_signing_data),
+     .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
      .notif_intr        (mldsa_notif_intr)
 );
@@ -1294,7 +1308,11 @@ soc_ifc_top1
     .scan_mode(scan_mode),
     .cptra_obf_key(cptra_obf_key),
     .cptra_obf_key_reg(cptra_obf_key_reg),
+    .cptra_obf_field_entropy_vld(cptra_obf_field_entropy_vld),
+    .cptra_obf_field_entropy(cptra_obf_field_entropy),
     .obf_field_entropy(obf_field_entropy),
+    .cptra_obf_uds_seed_vld(cptra_obf_uds_seed_vld),
+    .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
 
     // Subsystem mode straps

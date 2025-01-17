@@ -1,8 +1,8 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-`ifndef PRIM_FLOP_MACROS_SV
+`ifndef CALIPTRA_PRIM_FLOP_MACROS_SV
 `define CALIPTRA_PRIM_FLOP_MACROS_SV
 
 /////////////////////////////////////

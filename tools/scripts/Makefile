@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-SHELL=/bin/bash
+SHELL = /usr/bin/env bash
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration
@@ -137,42 +137,54 @@ $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+i
 #defines += $(BUILD_DIR)/el2_pdef.vh
 includes = -I$(BUILD_DIR)
 #
-#         .--------------------------------------------------------------------------------.
-#         | Verilator does not support unpacked structs/unions - waive this warning so     |
-#         | that unpacked structs are treated as packed. This should only impact files     |
-#         | generated from RDL register files, which use unpacked structs liberally.       |
-#         '-----------------------------------------------------------------------------+--'
-#                                                                                       |
-#         .---------------------------------------------------------------------.       |
-#         | This is flagged for every generated SystemVerilog file defining a   |       |
-#         | register block. The field_storage signal is the target of the       |       |
-#         | warning, indicating multiple drivers/different clocking.            |       |
-#         '----------------------------------------------------------------+----'       |
-#                                                                          |            |
-#         .------------------------------------------------------.         |            |
-#         | PeakRDL implements the default incrsaturate behavior |         |            |
-#         | for counter registers by performing a > comparison   |         |            |
-#         | with an all-ones value (i.e. cnt > 32'hFFFFFFFF)     |         |            |
-#         | which, by definition, can never be true. Verilator   |         |            |
-#         | warns that this will compile to a constant 0.        |         |            |
-#         '------------------------------------------------+-----'         |            |
-#                                                          |               |            |
-#         .--------------------------------------------.   |               |            |
-#         | Vectors that are little bit-endian are not |   |               |            |
-#         | supported by Verilator, according to a     |   |               |            |
-#         | warning that is thrown. This is supposedly |   |               |            |
-#         | resolved as of version 3.720, according    |   |               |            |
-#         | to the release notes.                      |   |               |            |
-#         '-----------------------------------+--------'   |               |            |
-#                                             |            |               |            |
-#         .------------------------------.    |            |               |            |
-#         | Inherited from ChipsAlliance |    |            |               |            |
-#         | VeeR repository provided     |    |            |               |            |
-#         | Makefile                     |    |            |               |            |
-#         '-----+------------+-----------'    |            |               |            |
-#               |            |                |            |               |            |
-#               v            v                v            v               v            v
-suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED
+#         .------------------------------------------------------------------------------------------------------------.
+#         | Necessary to avoid a warning that is thrown in reference to a change in beh_lib.sv. beh_lib clkhdr         |
+#         | definition was upgraded to remove an `ifdef VERILATOR, with a special negedge-triggered always block,      |
+#         | which produces a latch element that Verilator warns about.                                                 |
+#         '---------------------------------------------------------------------------------------------------------+--'
+#                                                                                                                   |
+#         .---------------------------------------------------------------------------------------------.           |
+#         | Addresses a warning thrown in newer versions of Verilator regarding 'force' statements      |           |
+#         | used in caliptra_top_tb_services.                                                           |           |
+#         '------------------------------------------------------------------------------------------+--'           |
+#                                                                                                    |              |
+#         .--------------------------------------------------------------------------------.         |              |
+#         | Verilator does not support unpacked structs/unions - waive this warning so     |         |              |
+#         | that unpacked structs are treated as packed. This should only impact files     |         |              |
+#         | generated from RDL register files, which use unpacked structs liberally.       |         |              |
+#         '-----------------------------------------------------------------------------+--'         |              |
+#                                                                                       |            |              |
+#         .---------------------------------------------------------------------.       |            |              |
+#         | This is flagged for every generated SystemVerilog file defining a   |       |            |              |
+#         | register block. The field_storage signal is the target of the       |       |            |              |
+#         | warning, indicating multiple drivers/different clocking.            |       |            |              |
+#         '----------------------------------------------------------------+----'       |            |              |
+#                                                                          |            |            |              |
+#         .------------------------------------------------------.         |            |            |              |
+#         | PeakRDL implements the default incrsaturate behavior |         |            |            |              |
+#         | for counter registers by performing a > comparison   |         |            |            |              |
+#         | with an all-ones value (i.e. cnt > 32'hFFFFFFFF)     |         |            |            |              |
+#         | which, by definition, can never be true. Verilator   |         |            |            |              |
+#         | warns that this will compile to a constant 0.        |         |            |            |              |
+#         '------------------------------------------------+-----'         |            |            |              |
+#                                                          |               |            |            |              |
+#         .--------------------------------------------.   |               |            |            |              |
+#         | Vectors that are little bit-endian are not |   |               |            |            |              |
+#         | supported by Verilator, according to a     |   |               |            |            |              |
+#         | warning that is thrown. This is supposedly |   |               |            |            |              |
+#         | resolved as of version 3.720, according    |   |               |            |            |              |
+#         | to the release notes.                      |   |               |            |            |              |
+#         '-----------------------------------+--------'   |               |            |            |              |
+#                                             |            |               |            |            |              |
+#         .------------------------------.    |            |               |            |            |              |
+#         | Inherited from ChipsAlliance |    |            |               |            |            |              |
+#         | VeeR repository provided     |    |            |               |            |            |              |
+#         | Makefile                     |    |            |               |            |            |              |
+#         '-----+------------+-----------'    |            |               |            |            |              |
+#               |            |                |            |               |            |            |              |
+#               v            v                v            v               v            v            v              v
+#                                                                                                -Wno-SIDEEFFECT
+suppress = -Wno-WIDTH -Wno-UNOPTFLAT -Wno-LITENDIAN -Wno-CMPCONST -Wno-MULTIDRIVEN -Wno-UNPACKED                 -Wno-LATCH
 
 # CFLAGS for verilator generated Makefiles. Without -std=c++17 it
 # complains for `auto` variables
@@ -275,18 +287,18 @@ else ifneq (,$(wildcard $(TEST_DIR)/$(TESTNAME)))
 # Build program.hex from RUST executable
 program.hex:
 	@echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .rodata -R .bss -R .sbss -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .rodata -j .bss -j .sbss -j .dccm \
 			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma     .rodata-0x50000000 \
 			      --change-section-lma        .bss-0x50000000 \
 			      --change-section-lma       .sbss-0x50000000 \
 			      --change-section-lma       .dccm-0x50000000 \
-			      --pad-to 0x20000 \
+			      --pad-to 0x40000 \
 			      --no-change-warnings \
 			      $(TEST_DIR)/$(TESTNAME) dccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) iccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) mailbox.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x40000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x40000 --no-change-warnings $(TEST_DIR)/$(TESTNAME) mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TEST_DIR)/$(TESTNAME) > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TEST_DIR)/$(TESTNAME) | tee $(TESTNAME).size
 
@@ -295,17 +307,17 @@ else
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0xC000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --no-change-warnings $(TESTNAME).exe program.hex
 	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
 			      --change-section-lma .data_iccm2-0x50000000 \
 			      --change-section-lma       .dccm-0x50000000 \
-			      --pad-to 0x20000 \
+			      --pad-to 0x40000 \
 			      --no-change-warnings \
 			      $(TESTNAME).exe dccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe iccm.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe mailbox.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .iccm                       --change-section-address .iccm=0 --pad-to 0x40000 --no-change-warnings $(TESTNAME).exe iccm.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .mailbox --gap-fill 0x0     --change-section-address .mailbox=0 --pad-to 0x40000 --no-change-warnings $(TESTNAME).exe mailbox.hex
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)
@@ -315,7 +327,7 @@ program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 %.hex: $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to 0x20000 --no-change-warnings $(TESTNAME).exe $@
+	-$(GCC_PREFIX)-objcopy -O verilog -R .eh_frame --pad-to 0x40000 --no-change-warnings $(TESTNAME).exe $@
 	$(GCC_PREFIX)-objdump -S  $(TESTNAME).exe > $(TESTNAME).dis
 	$(GCC_PREFIX)-size        $(TESTNAME).exe | tee $(TESTNAME).size
 	@echo Completed building $(TESTNAME)

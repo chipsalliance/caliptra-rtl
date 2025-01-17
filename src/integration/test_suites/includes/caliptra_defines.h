@@ -73,8 +73,7 @@
 #define HMAC512_MODE              0x1
 
 /* ---- Mailbox ---- */
-#define MBOX_DIR_BASE_ADDR        0x30000000
-#define MBOX_DIR_SPAN             0x00020000 /* 128 KiB */
+#define MBOX_DIR_SPAN             CLP_MBOX_SRAM_END_ADDR - CLP_MBOX_SRAM_BASE_ADDR + 1 /* 256 KiB */
 #define STDOUT                    CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0
 
 /* ---- ECC ----*/

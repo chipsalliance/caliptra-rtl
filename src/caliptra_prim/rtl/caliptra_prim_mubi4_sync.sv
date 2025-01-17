@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -66,7 +66,7 @@ module caliptra_prim_mubi4_sync
       );
 
       logic [MuBi4Width-1:0] sig_unstable;
-      caliptra_prim_xor2 #(
+      caliptra_prim_generic_xor2 #(
         .Width(MuBi4Width)
       ) u_mubi_xor (
         .in0_i(mubi_sync),
