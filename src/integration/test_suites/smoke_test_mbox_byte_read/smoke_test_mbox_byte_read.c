@@ -34,7 +34,7 @@ void main () {
 
     uint32_t data;
     uint8_t* read_addr;
-    uint8_t odd_offset;
+//    uint8_t odd_offset;
 
     // Message
     VPRINTF(LOW, "----------------------------------\n");
@@ -48,22 +48,26 @@ void main () {
         while(1);
     }
 
-    //Randomize odd or even entries to shorten test run time
-    odd_offset = (rand() % 2) * 4;
+//    //Randomize odd or even entries to shorten test run time
+//    odd_offset = (rand() % 2) * 4;
 
     // Write data to fill mailbox
-    for (data = CLP_MBOX_SRAM_BASE_ADDR + odd_offset; data < CLP_MBOX_SRAM_END_ADDR; data+=8) {
+    // Only write 1 dword on either side of the 1KiB boundaries to reduce sim-time
+    // This should catch any interesting edge-cases
+    for (data = CLP_MBOX_SRAM_BASE_ADDR; data < CLP_MBOX_SRAM_END_ADDR; data+=1024) {
         // Data written is the address being written to
-        lsu_write_32((uintptr_t) data, data);
-        if ((data & 0xfff) == odd_offset) {
+        if (((data & 0x3fff) == 0) || (verbosity_g > MEDIUM)) {
             VPRINTF(MEDIUM, "Writing [0x%x] to addr [0x%x]\n", data, data)
         }
+        lsu_write_32((uintptr_t) data, data);
+        VPRINTF(HIGH, "Writing [0x%x] to addr [0x%x]\n", data + 1020, data + 1020)
+        lsu_write_32((uintptr_t) data + 1020, data + 1020);
     }
 
     // Read back one byte at a time and check values
-    read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR + odd_offset;
+    read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR;
     while(read_addr <= (uint8_t*) CLP_MBOX_SRAM_END_ADDR) {
-        if (((uintptr_t)read_addr & 0xfff) == odd_offset) {
+        if ((((uintptr_t)read_addr & 0x3fff) == 0) || (verbosity_g > MEDIUM)) {
             VPRINTF(MEDIUM, "Reading from addr [0x%x]\n", read_addr)
         }
         // Data should match the address being read from
@@ -91,7 +95,32 @@ void main () {
             while(1);
         }
         read_addr++;
-        read_addr += 4;
+        read_addr += 1016;
+        // Data should match the address being read from
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr)      )) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 0 ), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >>  8)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 8 ), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >> 16)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 16), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
+        if (*read_addr != (uint8_t)(((uintptr_t) read_addr) >> 24)) {
+            VPRINTF(ERROR, "ERROR: Data mismatch at addr [0x%x]. Exp [0x%x] got [0x%x]\n", (uintptr_t) read_addr, (uint8_t)(((uintptr_t) read_addr) >> 24), *read_addr);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        }
+        read_addr++;
     }
 
     // Force unlock
