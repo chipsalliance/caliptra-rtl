@@ -258,6 +258,14 @@ module caliptra_top_tb_services
 
     mldsa_test_vector_t mldsa_test_vector;
 
+    function automatic logic [511:0] change_endian(input logic [511:0] data);
+        logic [511:0] result;
+        for (int i = 0; i < 512; i = i + 8) begin
+            result[i +: 8] = data[511 - i -: 8];
+        end
+        return result;
+    endfunction
+
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC caliptra_top_dut.rvtop.veer.dec
 
@@ -445,7 +453,7 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   mldsa_seed_random;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
-    always_comb mldsa_seed_random = {{<<8 {mldsa_test_vector.seed}}, 256'h0};
+    always_comb mldsa_seed_random = change_endian({256'h0, mldsa_test_vector.seed});
 
     genvar dword_i, slot_id;
     generate 
@@ -1231,7 +1239,7 @@ endgenerate //IV_NO
     logic [0:15][31:0]   ecc_random_msg;
     logic [0:15][31:0]   mldsa_random_msg;
     always_comb ecc_random_msg = {ecc_test_vector.hashed_msg, 128'h00000000000000000000000000000000};
-    always_comb mldsa_random_msg = {<<8 {mldsa_test_vector.msg}};  //swap the endian
+    always_comb mldsa_random_msg = change_endian(mldsa_test_vector.msg);  //swap the endian
 
     generate 
         for (genvar dword = 0; dword < 16; dword++) begin
