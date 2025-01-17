@@ -35,7 +35,7 @@ module soc_ifc_axi_sha_acc_dis_test
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 32;
+  parameter AHB_ADDR_WIDTH       = 18;
   parameter AHB_DATA_WIDTH       = 32;
 
 
@@ -414,8 +414,8 @@ task soc_ifc_axi_test;
   //id = 0, user --> decoded in axi sub
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_LOCK),
-    .user(0),
-    .id(0),
+    .user($urandom()),
+    .id($urandom()),
     .lock(0), 
     .data(rdata), 
     .resp(resp)
