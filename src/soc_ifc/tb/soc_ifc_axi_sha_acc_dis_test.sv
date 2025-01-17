@@ -35,7 +35,7 @@ module soc_ifc_axi_sha_acc_dis_test
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 18;
+  parameter AHB_ADDR_WIDTH       = 32;
   parameter AHB_DATA_WIDTH       = 32;
 
 
@@ -86,10 +86,13 @@ module soc_ifc_axi_sha_acc_dis_test
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  axi_if #(.AW(18), .DW(32), .IW(8), .UW(32)) axi_sub_if(clk_tb, cptra_rst_b_tb);
-  axi_if #(.AW(18), .DW(32), .IW(8), .UW(32)) axi_mgr_if(clk_tb, cptra_rst_b_tb);
+  axi_if #(.AW(SOC_IFC_ADDR_W), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_sub_if(clk_tb, cptra_rst_b_tb);
+  axi_if #(.AW(SOC_IFC_ADDR_W), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_mgr_if(clk_tb, cptra_rst_b_tb);
 
-  soc_ifc_top #(.AXI_ID_WIDTH(8)) dut (
+  soc_ifc_top #(
+    .AXI_ADDR_WIDTH(SOC_IFC_ADDR_W),
+    .AXI_ID_WIDTH(8)
+    ) dut (
     .clk(clk_tb),
     .clk_cg(clk_tb),
     .soc_ifc_clk_cg(clk_tb),
@@ -153,7 +156,11 @@ module soc_ifc_axi_sha_acc_dis_test
     .scan_mode(1'b0),
     .cptra_obf_key(256'h0),
     .cptra_obf_key_reg(),
+    .cptra_obf_field_entropy_vld(1'b0),
+    .cptra_obf_field_entropy(256'h0),
     .obf_field_entropy(),
+    .cptra_obf_uds_seed_vld(1'b0),
+    .cptra_obf_uds_seed(512'h0),
     .obf_uds_seed(),
 
     .strap_ss_caliptra_base_addr(64'h0),
@@ -229,11 +236,11 @@ module soc_ifc_axi_sha_acc_dis_test
       $display("*** Toggle reset.");
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
-      repeat (5) @(posedge clk_tb);
+      #(2*CLK_PERIOD);
       cptra_pwrgood_tb = 1;
-      
+      #(2*CLK_PERIOD);
       cptra_rst_b_tb = 1;
-      repeat (10) @(posedge clk_tb);
+      // repeat (2) @(posedge clk_tb);
       $display("");
     end
 endtask // reset_dut
@@ -395,18 +402,13 @@ endtask // read_single_word
 task soc_ifc_axi_test;
   axi_resp_e resp;
 
+  #(10*CLK_PERIOD);
   write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
   $display("SHA LOCK cleared over AHB\n");
-  @(posedge clk_tb);
-
-  //TODO: figure out how to remove this. Single write not working
-  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
-  $display("SHA LOCK cleared over AHB\n");
-  @(posedge clk_tb);
 
   //wait for write to go through
-  // #(CLK_PERIOD);
-  // hsel_i_tb       = 0;
+  #(CLK_PERIOD);
+  hsel_i_tb       = 0;
   
   $display("Attempt to acquire SHA ACC LOCK reg\n");
   //id = 0, user --> decoded in axi sub
@@ -419,7 +421,6 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, read);
-  $display("SHA Acc lock acquired over AXI = %h\n", rdata);
 
   $display("Read SHA ACC LOCK reg");
   axi_sub_if.axi_read_single(
@@ -431,6 +432,10 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, read);
+  if (rdata == 1)
+    $display("SHA Acc lock acquired over AXI = %h\n", rdata);
+  else  
+    $display("SHA Acc lock not acquired over AXI\n");
 
   //TODO: comment this part back in when RTL is ready
   // if (rdata == 'h1) begin
