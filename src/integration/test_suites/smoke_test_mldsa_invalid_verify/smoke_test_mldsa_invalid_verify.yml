@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+FW_TESTNAME=smoke_test_mldsa_invalid_verify'
+testname: smoke_test_mldsa_invalid_verify
