@@ -38,6 +38,7 @@ import "DPI-C" function string getenv(input string env_name);
 module soc_ifc_tb
   import soc_ifc_pkg::*;
   import soc_ifc_tb_pkg::*;
+  import axi_pkg::*;
   ();
 
 
@@ -204,6 +205,16 @@ module soc_ifc_tb
 
   logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
 
+  typedef enum logic {
+    read = 0,
+    write = 1
+  } rw_e;
+
+  typedef enum logic {
+    MGR = 0, 
+    SUB = 1 
+  } mgr_sub_e;
+
 
   always @(negedge clk_tb) begin
     prdata_o_latched <= prdata_o_tb;
@@ -275,8 +286,8 @@ module soc_ifc_tb
              .mailbox_data_avail(),
              .mailbox_flow_done(),
 
-             .recovery_data_avail(),
-             .recovery_image_activated(),
+             .recovery_data_avail(1'b0),
+             .recovery_image_activated(1'b0),
              
              .security_state(security_state),
 
@@ -336,18 +347,18 @@ module soc_ifc_tb
              .obf_field_entropy(obf_field_entropy),
              .obf_uds_seed(obf_uds_seed),
 
-             .strap_ss_caliptra_base_addr(),
-             .strap_ss_mci_base_addr(),
-             .strap_ss_recovery_ifc_base_addr(),
-             .strap_ss_otp_fc_base_addr(),
-             .strap_ss_uds_seed_base_addr(),
-             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(),
-             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(),
-             .strap_ss_strap_generic_0(),
-             .strap_ss_strap_generic_1(),
-             .strap_ss_strap_generic_2(),
-             .strap_ss_strap_generic_3(),
-             .ss_debug_intent(),
+             .strap_ss_caliptra_base_addr(64'h0),
+             .strap_ss_mci_base_addr(64'h0),
+             .strap_ss_recovery_ifc_base_addr(64'h0),
+             .strap_ss_otp_fc_base_addr(64'h0),
+             .strap_ss_uds_seed_base_addr(64'h0),
+             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(0),
+             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(0),
+             .strap_ss_strap_generic_0(0),
+             .strap_ss_strap_generic_1(0),
+             .strap_ss_strap_generic_2(0),
+             .strap_ss_strap_generic_3(0),
+             .ss_debug_intent(1'b0),
              .cptra_ss_debug_intent(),
 
              .ss_dbg_manuf_enable(),
@@ -528,7 +539,7 @@ module soc_ifc_tb
     begin
       $display("*** Toggle reset.");
 
-      set_generic_input_wires(-1, -1);
+      //set_generic_input_wires(-1, -1);
 
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
@@ -540,6 +551,7 @@ module soc_ifc_tb
       $display("Waited 5 clock cycles");
 
       socregs.unlock_fuses();
+      $display("Fuses unlocked");
 
       cptra_pwrgood_tb = 1;
 
@@ -581,18 +593,22 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task load_fuses;
     begin
+      $display("Loading Fuses");
       for (int i = 0; i < `CLP_OBF_UDS_DWORDS; i++)begin
-        write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
-      end
-      
+        $display("Loading fuse #%d", i);
+        //write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+        write_single_word_axi(SUB, MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+      end     
       $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
       for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++)begin
-          write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+          //write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+          write_single_word_axi(SUB, MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
       end
       
       $display ("SoC: Writing fuse done register\n");
       //set fuse done
-      write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
+      //write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
+      write_single_word_axi(SUB, MBOX_FUSE_DONE_ADDR, 32'h00000001); 
       
       /*
       wait (ready_for_fw_push == 1'b1);
@@ -657,6 +673,47 @@ module soc_ifc_tb
       pwrite_i_tb     = 0;
       pwdata_i_tb     = 0;
       pauser_i_tb     = 0;
+
+      //reset w_mgr
+      m_axi_if.awready = 0;
+      m_axi_if.wready = 0;
+      m_axi_if.bvalid = 0;
+      m_axi_if.bid = 0;
+      m_axi_if.bresp = 0;
+
+      //reset r_mgr
+      m_axi_if.arready = 0;
+      m_axi_if.rdata = 0;
+      m_axi_if.rresp = 0;
+      m_axi_if.rid = 0;
+      m_axi_if.rlast = 0;
+      m_axi_if.rvalid = 0;
+      
+      //reset w_sub
+      s_axi_if.awaddr = 0;
+      s_axi_if.awburst = 0;
+      s_axi_if.awsize = 0;
+      s_axi_if.awlen = 0;
+      s_axi_if.awuser = 0;
+      s_axi_if.awid = 0;
+      s_axi_if.awlock = 0;
+      s_axi_if.awvalid = 0;
+      s_axi_if.wdata = 0;
+      s_axi_if.wstrb = 0;
+      s_axi_if.wvalid = 0;
+      s_axi_if.wlast = 0;
+      s_axi_if.bready = 0;
+
+      //reset r_sub
+      s_axi_if.araddr = 0;
+      s_axi_if.arburst = 0;
+      s_axi_if.arsize = 0;
+      s_axi_if.arlen = 0;
+      s_axi_if.aruser = 0;
+      s_axi_if.arid = 0;
+      s_axi_if.arlock = 0;
+      s_axi_if.arvalid = 0;
+      s_axi_if.rready = 0;
 
       //Key for UDS 
       cptra_uds_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
@@ -724,12 +781,65 @@ module soc_ifc_tb
     end
   endtask // write_single_word_apb
 
-  task write_single_word_axi(input [31 : 0] address,
-                             input [31 : 0] word);
+  //----------------------------------------------------------------
+  // axi_txn_check())
+  //
+  // Check if the AXI transaction was successful.
+  //----------------------------------------------------------------
+  task axi_txn_check(input axi_resp_e resp, input rw_e rw);
     begin
+      logic error;
+      if ((resp == AXI_RESP_SLVERR) | (resp == AXI_RESP_DECERR)) begin
+        error = 1;
+        error_ctr += 1;
+      end
+      else begin
+        error = 0;
+      end 
 
+      if (error & (rw == read)) begin //read
+        $error("AXI Read error");
+      end
+      else if (error & (rw == write)) begin //write
+        $error("AXI Write error");
+      end
     end
   endtask
+
+  //----------------------------------------------------------------
+  // write_single_word_axi())
+  //
+  // Write the given word to the DUT using the AXI interface.
+  //----------------------------------------------------------------
+  task write_single_word_axi(input mgr_sub_e mgr_sub,
+                             input [31 : 0] address,
+                             input [31 : 0] word);
+    begin
+      axi_resp_e resp;
+      $display("AXI Write transaction");
+      if (mgr_sub == MGR) begin // AXI manager
+        m_axi_if.axi_write_single(
+          .addr(address),
+          .user(0),
+          .id(0),
+          .lock(0),
+          .data(word),
+          .resp(resp));
+      end
+      else if (mgr_sub == SUB) begin // AXI subordinate
+        s_axi_if.axi_write_single(
+          .addr(address),
+          .user(0),
+          .id(0),
+          .lock(0),
+          .data(word),
+          .resp(resp));
+      end
+      $display("Checking if AXI write was successful");
+      axi_txn_check(resp, write);
+    end
+  endtask
+
 
 
   //----------------------------------------------------------------
@@ -1654,13 +1764,15 @@ module soc_ifc_tb
 
         $display("Wait for ready_for_fuses to be asserted");
         wait (ready_for_fuses == 1'b1);
-        //load_fuses();
+        $display("Ready for fuses has been asserted. Moving on");
+        load_fuses();
+        write_single_word_axi(SUB, MBOX_FUSE_DONE_ADDR, 32'h00000001);
         //write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
         repeat (5) @(posedge clk_tb);
         
         //mbox_test();
 
-        //display_test_results();
+        display_test_results();
         
         $display("");
         $display("*** MBOX simulation done. ***");
