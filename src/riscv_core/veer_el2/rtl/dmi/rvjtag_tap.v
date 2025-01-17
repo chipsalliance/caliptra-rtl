@@ -30,14 +30,18 @@ output              wr_en,
 output              rd_en,
 
 input   [31:0]      rd_data,
+/*pragma coverage off*/
 input   [1:0]       rd_status,
+/*pragma coverage on*/
 
 output  reg         dmi_reset,
 output  reg         dmi_hard_reset,
 
+/*pragma coverage off*/
 input   [2:0]       idle,
 input   [1:0]       dmi_stat,
 input   [3:0]       version
+/*pragma coverage on*/
 );
 
 localparam USER_DR_LENGTH = AWIDTH + 34;
