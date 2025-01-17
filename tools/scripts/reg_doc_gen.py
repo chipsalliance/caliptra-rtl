@@ -92,7 +92,11 @@ class HeaderPrintingListener(RDLListener):
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
         if self.do_rel == 1:
+            self.file.write( self.tick + "ifndef " + register_name.upper() + "\n")
             self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+    def exit_Reg(self, node):
+        if self.do_rel == 1:
+            self.file.write( self.tick + "endif\n")
     def enter_Field(self, node):
         field_name = node.get_rel_path(self.top_node.parent,"^","_",'_{index:d}')
         if node.width == 1:
