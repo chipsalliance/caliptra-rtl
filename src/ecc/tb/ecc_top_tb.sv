@@ -23,6 +23,7 @@
 
 `default_nettype none
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 
 module ecc_top_tb 
     import kv_defines_pkg::*;

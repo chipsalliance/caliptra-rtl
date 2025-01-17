@@ -7,11 +7,12 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
       - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_field_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_field_defines.svh
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0

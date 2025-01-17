@@ -17,6 +17,7 @@
 
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 
 package soc_ifc_pkg;
     
