@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +6,7 @@
 //  - Provides default clk and rst options to simplify code
 //  - Provides boiler plate template for common assertions
 
-`ifndef PRIM_ASSERT_SV
+`ifndef CALIPTRA_PRIM_ASSERT_SV
 `define CALIPTRA_PRIM_ASSERT_SV
 
 ///////////////////
@@ -40,19 +40,19 @@
 // on a non-default value. This may be required for pre-silicon/FPGA evaluation but we don't want
 // to allow this for tapeout.
 `define CALIPTRA_ASSERT_STATIC_LINT_ERROR(__name, __prop)     \
-  localparam int __name = (__prop) ? 1 : 2;                   \
-  always_comb begin                                           \
-    logic unused_assert_static_lint_error;                    \
-    unused_assert_static_lint_error = __name'(1'b1);          \
+  localparam int __name = (__prop) ? 1 : 2;          \
+  always_comb begin                                  \
+    logic unused_assert_static_lint_error;           \
+    unused_assert_static_lint_error = __name'(1'b1); \
   end
 
 // Static assertions for checks inside SV packages. If the conditions is not true, this will
 // trigger an error during elaboration.
 `define CALIPTRA_ASSERT_STATIC_IN_PACKAGE(__name, __prop)              \
-  function automatic logic assert_static_in_package_``__name();        \
-    logic unused_bit [((__prop) ? 1 : -1)];                            \
-    unused_bit = '{default: 1'b0};                                     \
-    return unused_bit[0];                                              \
+  function automatic bit assert_static_in_package_``__name(); \
+    bit unused_bit [((__prop) ? 1 : -1)];                     \
+    unused_bit = '{default: 1'b0};                            \
+    return unused_bit[0];                                     \
   endfunction
 
 // The basic helper macros are actually defined in "implementation headers". The macros should do
@@ -74,13 +74,22 @@
 //  CALIPTRA_ASSERT_FINAL: Assertion in final block. Can be used for things like queues being empty at end of
 //                         sim, all credits returned at end of sim, state machines in idle at end of sim.
 //
-//  CALIPTRA_ASSERT:       Assert a concurrent property directly. It can be called as a module (or
-//                         interface) body item.
+//  CALIPTRA_ASSERT_AT_RESET: Assertion just before reset. Can be used to check sum-like properties that get
+//                   cleared at reset.
+//                   Note that unless your simulation ends with a reset, the property does not get
+//                   checked at end of simulation; use CALIPTRA_ASSERT_AT_RESET_AND_FINAL if the property
+//                   should also get checked at end of simulation.
 //
-//                         Note: We use (__rst !== '0) in the disable iff statements instead of (__rst ==
-//                         '1). This properly disables the assertion in cases when reset is X at the
-//                         beginning of a simulation. For that case, (reset == '1) does not disable the
-//                         assertion.
+//  CALIPTRA_ASSERT_AT_RESET_AND_FINAL: Assertion just before reset and in final block. Can be used to check
+//                             sum-like properties before every reset and at the end of simulation.
+//
+//  CALIPTRA_ASSERT:       Assert a concurrent property directly. It can be called as a module caliptra_(or
+//                interface) body item.
+//
+//                Note: We use (__rst !== '0) in the disable iff statements instead of (__rst ==
+//                '1). This properly disables the assertion in cases when reset is X at the
+//                beginning of a simulation. For that case, (reset == '1) does not disable the
+//                assertion.
 //
 //  CALIPTRA_ASSERT_NEVER: Assert a concurrent property NEVER happens
 //
@@ -179,4 +188,4 @@
 `include "caliptra_prim_assert_sec_cm.svh"
 `include "caliptra_prim_flop_macros.sv"
 
-`endif // PRIM_ASSERT_SV
+`endif // CALIPTRA_PRIM_ASSERT_SV

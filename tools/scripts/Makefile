@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-SHELL=/bin/bash
+SHELL = /usr/bin/env bash
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration

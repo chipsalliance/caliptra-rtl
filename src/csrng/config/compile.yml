@@ -44,7 +44,7 @@ targets:
   rtl_lint:
     directories: []
     waiver_files:
-      - $MSFT_REPO_ROOT/src/csrng/config/design_lint/sglint_waivers
+      - $MSFT_REPO_ROOT/src/csrng/config/design_lint/csrng/sglint_waivers
     tops: [csrng]
 ---
 provides: [csrng_tb]
