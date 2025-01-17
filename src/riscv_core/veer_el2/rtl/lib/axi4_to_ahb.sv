@@ -31,9 +31,9 @@ import el2_pkg::*;
    input                   free_clk,
    input                   rst_l,
    // Excluding scan_mode from coverage as its usage is determined by the integrator of the VeeR core.
-   /*verilator coverage_off*/
+   /*pragma coverage off*/
    input                   scan_mode,
-   /*verilator coverage_on*/
+   /*pragma coverage on*/
    input                   bus_clk_en,
    input                   clk_override,
    input                   dec_tlu_force_halt,
@@ -76,10 +76,10 @@ import el2_pkg::*;
    // AHB-Lite signals
    output logic [31:0]     ahb_haddr,       // ahb bus address
    /* exclude signals that are tied to constant value in this file */
-   /*verilator coverage_off*/
+   /*pragma coverage off*/
    output logic [2:0]      ahb_hburst,      // tied to 0
    output logic            ahb_hmastlock,   // tied to 0
-   /*verilator coverage_on*/
+   /*pragma coverage on*/
    output logic [3:0]      ahb_hprot,       // [3:1] are tied to 3'b001
    output logic [2:0]      ahb_hsize,       // size of bus transaction (possible values 0,1,2,3)
    output logic [1:0]      ahb_htrans,      // Transaction type (possible values 0,2 only right now)
@@ -327,7 +327,7 @@ import el2_pkg::*;
                   cmd_done        = buf_state_en & ~master_valid;                     // last one of the stream should not send a htrans
                   bypass_en       = master_ready & master_valid & (buf_nxtstate == STREAM_RD) & buf_state_en;
                   buf_cmd_byte_ptr[2:0] = bypass_en ? master_addr[2:0] : buf_addr[2:0];
-                  ahb_htrans[1:0] = 2'b10 & {2{~((buf_nxtstate != STREAM_RD) & buf_state_en)}};
+                  ahb_htrans[1:0] = {2{~((buf_nxtstate != STREAM_RD) & buf_state_en)}};
                   slvbuf_wr_en    = buf_wr_en;                                         // shifting the contents from the buf to slv_buf for streaming cases
          end // case: STREAM_RD
          STREAM_ERR_RD: begin
@@ -393,10 +393,13 @@ import el2_pkg::*;
                   slvbuf_error_en = 1'b1;
                   slave_valid_pre = 1'b1;
          end
+         // `buf_state` is an enum and all the members are handled above, so the default case is excluded from coverge.
+         /*pragma coverage off*/
          default: begin
                   buf_nxtstate = IDLE;
                   buf_state_en = 1'b1;
          end
+         /*pragma coverage on*/
       endcase
    end
 

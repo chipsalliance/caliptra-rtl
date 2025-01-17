@@ -48,7 +48,7 @@ $RV_ROOT/configs/veer.config    \
 -set=dccm_num_banks=4            \
 -set=dccm_region=0x5             \
 -set=dccm_offset=0x00000         \
--set=dccm_size=128               \
+-set=dccm_size=256               \
 -set=dma_buf_depth=5             \
 -set=fast_interrupt_redirect=1   \
 -set=icache_enable=0             \
@@ -65,7 +65,7 @@ $RV_ROOT/configs/veer.config    \
 -set=iccm_num_banks=4            \
 -set=iccm_region=0x4             \
 -set=iccm_offset=0x0             \
--set=iccm_size=128               \
+-set=iccm_size=256               \
 -set=lsu_stbuf_depth=4           \
 -set=lsu_num_nbload=4            \
 -set=load_to_use_plus1=0         \

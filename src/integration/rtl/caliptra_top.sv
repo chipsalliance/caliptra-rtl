@@ -218,6 +218,7 @@ module caliptra_top
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
 
+    el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
 
@@ -428,6 +429,14 @@ always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locke
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
+// I-Cache is disabled, leave pins connected to 0/unloaded
+always_comb begin
+  el2_icache_stub.wb_packeddout_pre = '0;
+  el2_icache_stub.wb_dout_pre_up = '0;
+  el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
+  el2_icache_stub.ic_tag_data_raw_pre = '0;
+end
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -517,8 +526,7 @@ el2_veer_wrapper rvtop (
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
 
-    .ic_data_ext_in_pkt     (48'h0),
-    .ic_tag_ext_in_pkt      (24'h0),
+    .el2_icache_export      (el2_icache_stub.veer_icache_src),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
