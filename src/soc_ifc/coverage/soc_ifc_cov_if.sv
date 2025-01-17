@@ -701,25 +701,25 @@ interface soc_ifc_cov_if
   assign         full_addr_fuse_field_entropy[6] = `CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_6;
   assign         full_addr_fuse_field_entropy[7] = `CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_7;
 
-  logic          hit_fuse_key_manifest_pk_hash[0:11];
-  logic [3:0]    bus_fuse_key_manifest_pk_hash[0:11];
-  logic [31:0]   full_addr_fuse_key_manifest_pk_hash[0:11];
-  assign         full_addr_fuse_key_manifest_pk_hash[0] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0;
-  assign         full_addr_fuse_key_manifest_pk_hash[1] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_1;
-  assign         full_addr_fuse_key_manifest_pk_hash[2] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_2;
-  assign         full_addr_fuse_key_manifest_pk_hash[3] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_3;
-  assign         full_addr_fuse_key_manifest_pk_hash[4] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_4;
-  assign         full_addr_fuse_key_manifest_pk_hash[5] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_5;
-  assign         full_addr_fuse_key_manifest_pk_hash[6] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_6;
-  assign         full_addr_fuse_key_manifest_pk_hash[7] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_7;
-  assign         full_addr_fuse_key_manifest_pk_hash[8] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_8;
-  assign         full_addr_fuse_key_manifest_pk_hash[9] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_9;
-  assign         full_addr_fuse_key_manifest_pk_hash[10] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_10;
-  assign         full_addr_fuse_key_manifest_pk_hash[11] = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_11;
+  logic          hit_fuse_vendor_pk_hash[0:11];
+  logic [3:0]    bus_fuse_vendor_pk_hash[0:11];
+  logic [31:0]   full_addr_fuse_vendor_pk_hash[0:11];
+  assign         full_addr_fuse_vendor_pk_hash[0] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_0;
+  assign         full_addr_fuse_vendor_pk_hash[1] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_1;
+  assign         full_addr_fuse_vendor_pk_hash[2] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_2;
+  assign         full_addr_fuse_vendor_pk_hash[3] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_3;
+  assign         full_addr_fuse_vendor_pk_hash[4] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_4;
+  assign         full_addr_fuse_vendor_pk_hash[5] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_5;
+  assign         full_addr_fuse_vendor_pk_hash[6] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_6;
+  assign         full_addr_fuse_vendor_pk_hash[7] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_7;
+  assign         full_addr_fuse_vendor_pk_hash[8] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_8;
+  assign         full_addr_fuse_vendor_pk_hash[9] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_9;
+  assign         full_addr_fuse_vendor_pk_hash[10] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_10;
+  assign         full_addr_fuse_vendor_pk_hash[11] = `CLP_SOC_IFC_REG_FUSE_VENDOR_PK_HASH_11;
 
-  logic          hit_fuse_key_manifest_pk_hash_mask;
-  logic [3:0]    bus_fuse_key_manifest_pk_hash_mask;
-  logic [31:0]   full_addr_fuse_key_manifest_pk_hash_mask = `CLP_SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK;
+  logic          hit_fuse_ecc_revocation;
+  logic [3:0]    bus_fuse_ecc_revocation;
+  logic [31:0]   full_addr_fuse_ecc_revocation = `CLP_SOC_IFC_REG_FUSE_ECC_REVOCATION;
 
   logic          hit_fuse_fmc_key_manifest_svn;
   logic [3:0]    bus_fuse_fmc_key_manifest_svn;
@@ -792,6 +792,22 @@ interface soc_ifc_cov_if
   assign         full_addr_fuse_manuf_dbg_unlock_token[1] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_1;
   assign         full_addr_fuse_manuf_dbg_unlock_token[2] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_2;
   assign         full_addr_fuse_manuf_dbg_unlock_token[3] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3;
+
+  logic          hit_fuse_pqc_key_type;
+  logic [3:0]    bus_fuse_pqc_key_type;
+  logic [31:0]   full_addr_fuse_pqc_key_type = `CLP_SOC_IFC_REG_FUSE_PQC_KEY_TYPE;
+
+  logic          hit_fuse_soc_manifest_svn[0:3];
+  logic [3:0]    bus_fuse_soc_manifest_svn[0:3];
+  logic [31:0]   full_addr_fuse_soc_manifest_svn[0:3];
+  assign         full_addr_fuse_soc_manifest_svn[0] = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0;
+  assign         full_addr_fuse_soc_manifest_svn[1] = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1;
+  assign         full_addr_fuse_soc_manifest_svn[2] = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2;
+  assign         full_addr_fuse_soc_manifest_svn[3] = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3;
+
+  logic          hit_fuse_soc_manifest_max_svn;
+  logic [3:0]    bus_fuse_soc_manifest_max_svn;
+  logic [31:0]   full_addr_fuse_soc_manifest_max_svn = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN;
 
   logic          hit_SS_CALIPTRA_BASE_ADDR_L;
   logic [3:0]    bus_SS_CALIPTRA_BASE_ADDR_L;
@@ -1426,44 +1442,44 @@ interface soc_ifc_cov_if
   assign hit_fuse_field_entropy[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_field_entropy[7][18-1:0]);
   assign bus_fuse_field_entropy[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_field_entropy[7]}};
 
-  assign hit_fuse_key_manifest_pk_hash[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[0][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[0]}};
+  assign hit_fuse_vendor_pk_hash[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[0][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[0]}};
 
-  assign hit_fuse_key_manifest_pk_hash[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[1][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[1]}};
+  assign hit_fuse_vendor_pk_hash[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[1][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[1]}};
 
-  assign hit_fuse_key_manifest_pk_hash[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[2][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[2]}};
+  assign hit_fuse_vendor_pk_hash[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[2][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[2]}};
 
-  assign hit_fuse_key_manifest_pk_hash[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[3][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[3]}};
+  assign hit_fuse_vendor_pk_hash[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[3][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[3]}};
 
-  assign hit_fuse_key_manifest_pk_hash[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[4][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[4]}};
+  assign hit_fuse_vendor_pk_hash[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[4][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[4]}};
 
-  assign hit_fuse_key_manifest_pk_hash[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[5][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[5]}};
+  assign hit_fuse_vendor_pk_hash[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[5][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[5]}};
 
-  assign hit_fuse_key_manifest_pk_hash[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[6][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[6]}};
+  assign hit_fuse_vendor_pk_hash[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[6][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[6]}};
 
-  assign hit_fuse_key_manifest_pk_hash[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[7][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[7]}};
+  assign hit_fuse_vendor_pk_hash[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[7][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[7]}};
 
-  assign hit_fuse_key_manifest_pk_hash[8] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[8][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[8]}};
+  assign hit_fuse_vendor_pk_hash[8] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[8][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[8]}};
 
-  assign hit_fuse_key_manifest_pk_hash[9] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[9][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[9]}};
+  assign hit_fuse_vendor_pk_hash[9] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[9][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[9]}};
 
-  assign hit_fuse_key_manifest_pk_hash[10] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[10][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[10]}};
+  assign hit_fuse_vendor_pk_hash[10] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[10][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[10]}};
 
-  assign hit_fuse_key_manifest_pk_hash[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash[11][18-1:0]);
-  assign bus_fuse_key_manifest_pk_hash[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash[11]}};
+  assign hit_fuse_vendor_pk_hash[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_vendor_pk_hash[11][18-1:0]);
+  assign bus_fuse_vendor_pk_hash[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_vendor_pk_hash[11]}};
 
-  assign hit_fuse_key_manifest_pk_hash_mask = (soc_ifc_reg_req_data.addr == full_addr_fuse_key_manifest_pk_hash_mask[AXI_ADDR_WIDTH-1:0]);
-  assign bus_fuse_key_manifest_pk_hash_mask = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_key_manifest_pk_hash_mask}};
+  assign hit_fuse_ecc_revocation = (soc_ifc_reg_req_data.addr == full_addr_fuse_ecc_revocation[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_ecc_revocation = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_ecc_revocation}};
 
   assign hit_fuse_fmc_key_manifest_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_fmc_key_manifest_svn[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_fmc_key_manifest_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_fmc_key_manifest_svn}};
@@ -1587,6 +1603,24 @@ interface soc_ifc_cov_if
 
   assign hit_fuse_manuf_dbg_unlock_token[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[3][18-1:0]);
   assign bus_fuse_manuf_dbg_unlock_token[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[3]}};
+
+  assign hit_fuse_pqc_key_type = (soc_ifc_reg_req_data.addr == full_addr_fuse_pqc_key_type[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_pqc_key_type = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_pqc_key_type}};
+
+  assign hit_fuse_soc_manifest_svn[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_svn[0][18-1:0]);
+  assign bus_fuse_soc_manifest_svn[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_svn[0]}};
+
+  assign hit_fuse_soc_manifest_svn[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_svn[1][18-1:0]);
+  assign bus_fuse_soc_manifest_svn[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_svn[1]}};
+
+  assign hit_fuse_soc_manifest_svn[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_svn[2][18-1:0]);
+  assign bus_fuse_soc_manifest_svn[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_svn[2]}};
+
+  assign hit_fuse_soc_manifest_svn[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_svn[3][18-1:0]);
+  assign bus_fuse_soc_manifest_svn[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_svn[3]}};
+
+  assign hit_fuse_soc_manifest_max_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_max_svn[AXI_ADDR_WIDTH-1:0]);
+  assign bus_fuse_soc_manifest_max_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_max_svn}};
 
   assign hit_SS_CALIPTRA_BASE_ADDR_L = (soc_ifc_reg_req_data.addr == full_addr_SS_CALIPTRA_BASE_ADDR_L[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_CALIPTRA_BASE_ADDR_L = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_CALIPTRA_BASE_ADDR_L}};
@@ -2596,74 +2630,74 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_key_manifest_pk_hash [0:11] -----------------------
-  covergroup soc_ifc_fuse_key_manifest_pk_hash_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
-    fuse_key_manifest_pk_hash0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[0];
-    bus_fuse_key_manifest_pk_hash0_cp : coverpoint bus_event[0] {
+  // ----------------------- COVERGROUP fuse_vendor_pk_hash [0:11] -----------------------
+  covergroup soc_ifc_fuse_vendor_pk_hash_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
+    fuse_vendor_pk_hash0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[0];
+    bus_fuse_vendor_pk_hash0_cp : coverpoint bus_event[0] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[1];
-    bus_fuse_key_manifest_pk_hash1_cp : coverpoint bus_event[1] {
+    fuse_vendor_pk_hash1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[1];
+    bus_fuse_vendor_pk_hash1_cp : coverpoint bus_event[1] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[2];
-    bus_fuse_key_manifest_pk_hash2_cp : coverpoint bus_event[2] {
+    fuse_vendor_pk_hash2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[2];
+    bus_fuse_vendor_pk_hash2_cp : coverpoint bus_event[2] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[3];
-    bus_fuse_key_manifest_pk_hash3_cp : coverpoint bus_event[3] {
+    fuse_vendor_pk_hash3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[3];
+    bus_fuse_vendor_pk_hash3_cp : coverpoint bus_event[3] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[4];
-    bus_fuse_key_manifest_pk_hash4_cp : coverpoint bus_event[4] {
+    fuse_vendor_pk_hash4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[4];
+    bus_fuse_vendor_pk_hash4_cp : coverpoint bus_event[4] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[5];
-    bus_fuse_key_manifest_pk_hash5_cp : coverpoint bus_event[5] {
+    fuse_vendor_pk_hash5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[5];
+    bus_fuse_vendor_pk_hash5_cp : coverpoint bus_event[5] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[6];
-    bus_fuse_key_manifest_pk_hash6_cp : coverpoint bus_event[6] {
+    fuse_vendor_pk_hash6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[6];
+    bus_fuse_vendor_pk_hash6_cp : coverpoint bus_event[6] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[7];
-    bus_fuse_key_manifest_pk_hash7_cp : coverpoint bus_event[7] {
+    fuse_vendor_pk_hash7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[7];
+    bus_fuse_vendor_pk_hash7_cp : coverpoint bus_event[7] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash8_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[8];
-    bus_fuse_key_manifest_pk_hash8_cp : coverpoint bus_event[8] {
+    fuse_vendor_pk_hash8_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[8];
+    bus_fuse_vendor_pk_hash8_cp : coverpoint bus_event[8] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash9_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[9];
-    bus_fuse_key_manifest_pk_hash9_cp : coverpoint bus_event[9] {
+    fuse_vendor_pk_hash9_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[9];
+    bus_fuse_vendor_pk_hash9_cp : coverpoint bus_event[9] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash10_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[10];
-    bus_fuse_key_manifest_pk_hash10_cp : coverpoint bus_event[10] {
+    fuse_vendor_pk_hash10_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[10];
+    bus_fuse_vendor_pk_hash10_cp : coverpoint bus_event[10] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_key_manifest_pk_hash11_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash[11];
-    bus_fuse_key_manifest_pk_hash11_cp : coverpoint bus_event[11] {
+    fuse_vendor_pk_hash11_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_vendor_pk_hash[11];
+    bus_fuse_vendor_pk_hash11_cp : coverpoint bus_event[11] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_key_manifest_pk_hash_mask -----------------------
-  covergroup soc_ifc_fuse_key_manifest_pk_hash_mask_cg (ref logic [3:0] bus_event) @(posedge clk);
-    fuse_key_manifest_pk_hash_mask_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_key_manifest_pk_hash_mask;
-    bus_fuse_key_manifest_pk_hash_mask_cp : coverpoint bus_event {
+  // ----------------------- COVERGROUP fuse_ecc_revocation -----------------------
+  covergroup soc_ifc_fuse_ecc_revocation_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_ecc_revocation_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_ecc_revocation;
+    bus_fuse_ecc_revocation_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -2905,6 +2939,48 @@ interface soc_ifc_cov_if
     }
     fuse_manuf_dbg_unlock_token3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[3];
     bus_fuse_manuf_dbg_unlock_token3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_pqc_key_type -----------------------
+  covergroup soc_ifc_fuse_pqc_key_type_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_pqc_key_type_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_pqc_key_type;
+    bus_fuse_pqc_key_type_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_soc_manifest_svn [0:3] -----------------------
+  covergroup soc_ifc_fuse_soc_manifest_svn_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
+    fuse_soc_manifest_svn0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_manifest_svn[0];
+    bus_fuse_soc_manifest_svn0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_soc_manifest_svn1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_manifest_svn[1];
+    bus_fuse_soc_manifest_svn1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_soc_manifest_svn2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_manifest_svn[2];
+    bus_fuse_soc_manifest_svn2_cp : coverpoint bus_event[2] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_soc_manifest_svn3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_manifest_svn[3];
+    bus_fuse_soc_manifest_svn3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP fuse_soc_manifest_max_svn -----------------------
+  covergroup soc_ifc_fuse_soc_manifest_max_svn_cg (ref logic [3:0] bus_event) @(posedge clk);
+    fuse_soc_manifest_max_svn_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_soc_manifest_max_svn;
+    bus_fuse_soc_manifest_max_svn_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -3643,8 +3719,8 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_OWNER_PK_HASH_LOCK_cg CPTRA_OWNER_PK_HASH_LOCK_cg = new(bus_CPTRA_OWNER_PK_HASH_LOCK);
   soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
   soc_ifc_fuse_field_entropy_cg fuse_field_entropy_cg = new(bus_fuse_field_entropy);
-  soc_ifc_fuse_key_manifest_pk_hash_cg fuse_key_manifest_pk_hash_cg = new(bus_fuse_key_manifest_pk_hash);
-  soc_ifc_fuse_key_manifest_pk_hash_mask_cg fuse_key_manifest_pk_hash_mask_cg = new(bus_fuse_key_manifest_pk_hash_mask);
+  soc_ifc_fuse_vendor_pk_hash_cg fuse_vendor_pk_hash_cg = new(bus_fuse_vendor_pk_hash);
+  soc_ifc_fuse_ecc_revocation_cg fuse_ecc_revocation_cg = new(bus_fuse_ecc_revocation);
   soc_ifc_fuse_fmc_key_manifest_svn_cg fuse_fmc_key_manifest_svn_cg = new(bus_fuse_fmc_key_manifest_svn);
   soc_ifc_fuse_runtime_svn_cg fuse_runtime_svn_cg = new(bus_fuse_runtime_svn);
   soc_ifc_fuse_anti_rollback_disable_cg fuse_anti_rollback_disable_cg = new(bus_fuse_anti_rollback_disable);
@@ -3654,6 +3730,9 @@ interface soc_ifc_cov_if
   soc_ifc_fuse_mldsa_revocation_cg fuse_mldsa_revocation_cg = new(bus_fuse_mldsa_revocation);
   soc_ifc_fuse_soc_stepping_id_cg fuse_soc_stepping_id_cg = new(bus_fuse_soc_stepping_id);
   soc_ifc_fuse_manuf_dbg_unlock_token_cg fuse_manuf_dbg_unlock_token_cg = new(bus_fuse_manuf_dbg_unlock_token);
+  soc_ifc_fuse_pqc_key_type_cg fuse_pqc_key_type_cg = new(bus_fuse_pqc_key_type);
+  soc_ifc_fuse_soc_manifest_svn_cg fuse_soc_manifest_svn_cg = new(bus_fuse_soc_manifest_svn);
+  soc_ifc_fuse_soc_manifest_max_svn_cg fuse_soc_manifest_max_svn_cg = new(bus_fuse_soc_manifest_max_svn);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_L_cg SS_CALIPTRA_BASE_ADDR_L_cg = new(bus_SS_CALIPTRA_BASE_ADDR_L);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_H_cg SS_CALIPTRA_BASE_ADDR_H_cg = new(bus_SS_CALIPTRA_BASE_ADDR_H);
   soc_ifc_SS_MCI_BASE_ADDR_L_cg SS_MCI_BASE_ADDR_L_cg = new(bus_SS_MCI_BASE_ADDR_L);

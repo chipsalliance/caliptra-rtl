@@ -1569,17 +1569,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_field_entropy
 
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash
-    class soc_ifc_reg__fuse_key_manifest_pk_hash extends uvm_reg;
+    // Reg - soc_ifc_reg::fuse_vendor_pk_hash
+    class soc_ifc_reg__fuse_vendor_pk_hash extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__fuse_key_manifest_pk_hash_bit_cg hash_bit_cg[32];
-        soc_ifc_reg__fuse_key_manifest_pk_hash_fld_cg fld_cg;
+        soc_ifc_reg__fuse_vendor_pk_hash_bit_cg hash_bit_cg[32];
+        soc_ifc_reg__fuse_vendor_pk_hash_fld_cg fld_cg;
         rand uvm_reg_field hash;
 
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash");
+        function new(string name = "soc_ifc_reg__fuse_vendor_pk_hash");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1597,19 +1597,19 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash
+    endclass : soc_ifc_reg__fuse_vendor_pk_hash
 
-    // Reg - soc_ifc_reg::fuse_key_manifest_pk_hash_mask
-    class soc_ifc_reg__fuse_key_manifest_pk_hash_mask extends uvm_reg;
+    // Reg - soc_ifc_reg::fuse_ecc_revocation
+    class soc_ifc_reg__fuse_ecc_revocation extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg mask_bit_cg[4];
-        soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg fld_cg;
-        rand uvm_reg_field mask;
+        soc_ifc_reg__fuse_ecc_revocation_bit_cg ecc_revocation_bit_cg[4];
+        soc_ifc_reg__fuse_ecc_revocation_fld_cg fld_cg;
+        rand uvm_reg_field ecc_revocation;
 
-        function new(string name = "soc_ifc_reg__fuse_key_manifest_pk_hash_mask");
+        function new(string name = "soc_ifc_reg__fuse_ecc_revocation");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -1619,15 +1619,15 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.mask = new("mask");
-            this.mask.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_revocation = new("ecc_revocation");
+            this.ecc_revocation.configure(this, 4, 0, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(mask_bit_cg[bt]) mask_bit_cg[bt] = new();
+                foreach(ecc_revocation_bit_cg[bt]) ecc_revocation_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__fuse_key_manifest_pk_hash_mask
+    endclass : soc_ifc_reg__fuse_ecc_revocation
 
     // Reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
     class soc_ifc_reg__fuse_fmc_key_manifest_svn extends uvm_reg;
@@ -1898,6 +1898,96 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__fuse_manuf_dbg_unlock_token
+
+    // Reg - soc_ifc_reg::fuse_pqc_key_type
+    class soc_ifc_reg__fuse_pqc_key_type extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_pqc_key_type_bit_cg key_type_bit_cg[2];
+        soc_ifc_reg__fuse_pqc_key_type_fld_cg fld_cg;
+        rand uvm_reg_field key_type;
+
+        function new(string name = "soc_ifc_reg__fuse_pqc_key_type");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.key_type = new("key_type");
+            this.key_type.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(key_type_bit_cg[bt]) key_type_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_pqc_key_type
+
+    // Reg - soc_ifc_reg::fuse_soc_manifest_svn
+    class soc_ifc_reg__fuse_soc_manifest_svn extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_soc_manifest_svn_bit_cg svn_bit_cg[32];
+        soc_ifc_reg__fuse_soc_manifest_svn_fld_cg fld_cg;
+        rand uvm_reg_field svn;
+
+        function new(string name = "soc_ifc_reg__fuse_soc_manifest_svn");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.svn = new("svn");
+            this.svn.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(svn_bit_cg[bt]) svn_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_soc_manifest_svn
+
+    // Reg - soc_ifc_reg::fuse_soc_manifest_max_svn
+    class soc_ifc_reg__fuse_soc_manifest_max_svn extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_soc_manifest_max_svn_bit_cg svn_bit_cg[8];
+        soc_ifc_reg__fuse_soc_manifest_max_svn_fld_cg fld_cg;
+        rand uvm_reg_field svn;
+
+        function new(string name = "soc_ifc_reg__fuse_soc_manifest_max_svn");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.svn = new("svn");
+            this.svn.configure(this, 8, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(svn_bit_cg[bt]) svn_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_soc_manifest_max_svn
 
     // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_L
     class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L extends uvm_reg;
@@ -4493,8 +4583,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK CPTRA_OWNER_PK_HASH_LOCK;
         rand soc_ifc_reg__fuse_uds_seed fuse_uds_seed[16];
         rand soc_ifc_reg__fuse_field_entropy fuse_field_entropy[8];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash fuse_key_manifest_pk_hash[12];
-        rand soc_ifc_reg__fuse_key_manifest_pk_hash_mask fuse_key_manifest_pk_hash_mask;
+        rand soc_ifc_reg__fuse_vendor_pk_hash fuse_vendor_pk_hash[12];
+        rand soc_ifc_reg__fuse_ecc_revocation fuse_ecc_revocation;
         rand soc_ifc_reg__fuse_fmc_key_manifest_svn fuse_fmc_key_manifest_svn;
         rand soc_ifc_reg__fuse_runtime_svn fuse_runtime_svn[4];
         rand soc_ifc_reg__fuse_anti_rollback_disable fuse_anti_rollback_disable;
@@ -4504,6 +4594,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_mldsa_revocation fuse_mldsa_revocation;
         rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
         rand soc_ifc_reg__fuse_manuf_dbg_unlock_token fuse_manuf_dbg_unlock_token[4];
+        rand soc_ifc_reg__fuse_pqc_key_type fuse_pqc_key_type;
+        rand soc_ifc_reg__fuse_soc_manifest_svn fuse_soc_manifest_svn[4];
+        rand soc_ifc_reg__fuse_soc_manifest_max_svn fuse_soc_manifest_max_svn;
         rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L SS_CALIPTRA_BASE_ADDR_L;
         rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H SS_CALIPTRA_BASE_ADDR_H;
         rand soc_ifc_reg__SS_MCI_BASE_ADDR_L SS_MCI_BASE_ADDR_L;
@@ -4811,18 +4904,18 @@ package soc_ifc_reg_uvm;
                 this.fuse_field_entropy[i0].build();
                 this.default_map.add_reg(this.fuse_field_entropy[i0], 'h240 + i0*'h4);
             end
-            foreach(this.fuse_key_manifest_pk_hash[i0]) begin
-                this.fuse_key_manifest_pk_hash[i0] = new($sformatf("fuse_key_manifest_pk_hash[%0d]", i0));
-                this.fuse_key_manifest_pk_hash[i0].configure(this);
+            foreach(this.fuse_vendor_pk_hash[i0]) begin
+                this.fuse_vendor_pk_hash[i0] = new($sformatf("fuse_vendor_pk_hash[%0d]", i0));
+                this.fuse_vendor_pk_hash[i0].configure(this);
                 
-                this.fuse_key_manifest_pk_hash[i0].build();
-                this.default_map.add_reg(this.fuse_key_manifest_pk_hash[i0], 'h260 + i0*'h4);
+                this.fuse_vendor_pk_hash[i0].build();
+                this.default_map.add_reg(this.fuse_vendor_pk_hash[i0], 'h260 + i0*'h4);
             end
-            this.fuse_key_manifest_pk_hash_mask = new("fuse_key_manifest_pk_hash_mask");
-            this.fuse_key_manifest_pk_hash_mask.configure(this);
+            this.fuse_ecc_revocation = new("fuse_ecc_revocation");
+            this.fuse_ecc_revocation.configure(this);
 
-            this.fuse_key_manifest_pk_hash_mask.build();
-            this.default_map.add_reg(this.fuse_key_manifest_pk_hash_mask, 'h290);
+            this.fuse_ecc_revocation.build();
+            this.default_map.add_reg(this.fuse_ecc_revocation, 'h290);
             this.fuse_fmc_key_manifest_svn = new("fuse_fmc_key_manifest_svn");
             this.fuse_fmc_key_manifest_svn.configure(this);
 
@@ -4876,6 +4969,23 @@ package soc_ifc_reg_uvm;
                 this.fuse_manuf_dbg_unlock_token[i0].build();
                 this.default_map.add_reg(this.fuse_manuf_dbg_unlock_token[i0], 'h34c + i0*'h4);
             end
+            this.fuse_pqc_key_type = new("fuse_pqc_key_type");
+            this.fuse_pqc_key_type.configure(this);
+
+            this.fuse_pqc_key_type.build();
+            this.default_map.add_reg(this.fuse_pqc_key_type, 'h35c);
+            foreach(this.fuse_soc_manifest_svn[i0]) begin
+                this.fuse_soc_manifest_svn[i0] = new($sformatf("fuse_soc_manifest_svn[%0d]", i0));
+                this.fuse_soc_manifest_svn[i0].configure(this);
+                
+                this.fuse_soc_manifest_svn[i0].build();
+                this.default_map.add_reg(this.fuse_soc_manifest_svn[i0], 'h360 + i0*'h4);
+            end
+            this.fuse_soc_manifest_max_svn = new("fuse_soc_manifest_max_svn");
+            this.fuse_soc_manifest_max_svn.configure(this);
+
+            this.fuse_soc_manifest_max_svn.build();
+            this.default_map.add_reg(this.fuse_soc_manifest_max_svn, 'h370);
             this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
             this.SS_CALIPTRA_BASE_ADDR_L.configure(this);
 
