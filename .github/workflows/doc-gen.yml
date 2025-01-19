@@ -52,7 +52,7 @@ jobs:
   deploy:
     name: Deploy
     needs: build
-    #if: github.event_name == 'push' FIXME
+    if: github.event_name == 'push'
 
     permissions:
       pages: write
