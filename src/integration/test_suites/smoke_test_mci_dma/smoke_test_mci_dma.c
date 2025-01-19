@@ -23,7 +23,7 @@
 #include "soc_ifc.h"
 
 // FIXME should be from some macro
-`define MCU_SRAM_SIZE_BYTES
+#define MCU_SRAM_SIZE_BYTES 0x40000
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
@@ -91,10 +91,10 @@ void main(void) {
                                                                             AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_FULL_EN_MASK |
                                                                             AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_FULL_EN_MASK));
 
-        // Get MCI addr from straps
-        mci_addr = (uint64_t) ((lsu_read_32(CLP_SOC_IFC_REG_SS_MCI_BASE_ADDR_H) << 32) |
-                               (lsu_read_32(CLP_SOC_IFC_REG_SS_MCI_BASE_ADDR_L)));
-        mcu_sram_addr = mci_addr + 0x00200000; // FIXME magic number should be param
+        // Get MCI addr from straps FIXME
+//        mci_addr = (uint64_t) (((uint64_t) lsu_read_32(CLP_SOC_IFC_REG_SS_MCI_BASE_ADDR_H) << 32) |
+//                               ((uint64_t) lsu_read_32(CLP_SOC_IFC_REG_SS_MCI_BASE_ADDR_L)));
+        mcu_sram_addr = /*mci_addr*/0x21000000 + 0x00200000; // FIXME magic number should be param
 
         // Send data through AHB interface to AXI_DMA, target the MCI
         VPRINTF(LOW, "Sending payload via AHB i/f\n");
