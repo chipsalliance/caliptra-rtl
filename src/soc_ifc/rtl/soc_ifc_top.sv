@@ -714,8 +714,8 @@ always_comb cptra_uncore_dmi_unlocked_reg_wr_en = (cptra_uncore_dmi_reg_wr_en & 
 always_comb cptra_uncore_dmi_locked_reg_wr_en   = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en);
 
 // Subsystem straps capture the initial value from input port on rising edge of cptra_pwrgood
-always_ff @(posedge clk or negedge cptra_pwrgood) begin
-     if(~cptra_pwrgood) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+     if(~cptra_noncore_rst_b) begin
         strap_we <= 1'b1;
     end
     else begin
