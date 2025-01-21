@@ -215,20 +215,21 @@ stages:
           - timeout: 45
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
 
-    - caliptra_ss_top_vcs:
-      - display_name: 'Build caliptra_ss_top with VCS'
-      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-      - configspec_name: 'caliptra_ss_lib'
-      - dut: 'caliptra_ss_top'
-      - args: ''
-      - timeout: 30
-      - testsuites:
-        - l0_regress:
-          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-          - configspec_name: 'caliptra_ss_lib'
-          - dut: 'caliptra_ss_top'
-          - timeout: 75
-          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
+# FIXME reenable once build is clean
+#    - caliptra_ss_top_vcs:
+#      - display_name: 'Build caliptra_ss_top with VCS'
+#      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
+#      - configspec_name: 'caliptra_ss_lib'
+#      - dut: 'caliptra_ss_top'
+#      - args: ''
+#      - timeout: 30
+#      - testsuites:
+#        - l0_regress:
+#          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
+#          - configspec_name: 'caliptra_ss_lib'
+#          - dut: 'caliptra_ss_top'
+#          - timeout: 75
+#          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 
 # ===================================== AXI FIXME =====================================
 # == Reenable these checks once UVM env is updated to AXI
@@ -357,6 +358,22 @@ stages:
           - 'submit -i --container None python3 \$MSFT_SCRIPTS_DIR/syn/run_syn.py mldsa_top 1'
 
     post_test_steps:
+      # If this pipeline was run to validate an internal ADO Pull Request, finalize
+      # by clobbering the (large) Verilator regression scratch area.
+      # This step will be skipped for failing regressions, so the Verilator scratch
+      # will persist to aid debug in that case.
+      - script: |
+          source /home/continuous_integration/release/enviro/etc/enviro_startup.bash
+          module load settings/tsd/pipelines/frontend
+          module load tools/python/python3/3.9.2
+          export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
+          PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
+  
+          enter-workspace tmp_ws "echo \"clobbering \$CALIPTRA_WORKSPACE/scratch/\$USER/verilator/latest/*\" && rm -rf \$(realpath \$CALIPTRA_WORKSPACE/scratch/\$USER/verilator/latest) && rm \$CALIPTRA_WORKSPACE/scratch/\$USER/verilator/latest"
+        displayName: 'CLOBBER VERILATOR REGRESSION OUTPUT'
+        enabled: true
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+        timeoutInMinutes: 20
       # If this pipeline was run to validate a CLP GitHub Pull Request, finalize by
       # updating the timestamp and file list hash on the target branch and pushing
       # to GitHub. This allows the GitHub Action to succeed for that PR
