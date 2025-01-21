@@ -81,11 +81,11 @@ owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
 
 # Extract compiled FW from latest retrieved release
 $(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0.zip
-	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
-	 7z x -o"$(TEST_DIR)" $< image-bundle.bin
-	 rm $<
-	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
-	 mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
+#	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
+#	 7z x -o"$(TEST_DIR)" $< image-bundle.bin
+#	 rm $<
+#	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
+#	 mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
 	 touch $(TEST_DIR)/$(TESTNAME).extracted
 
 # Retrieve latest build from caliptra-sw repo
