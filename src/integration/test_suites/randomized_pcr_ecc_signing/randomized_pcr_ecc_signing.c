@@ -34,9 +34,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 void main(){
     volatile uint32_t * reg_ptr;
 
-    printf("----------------------------------\n");
-    printf(" Randomized PCR Signing flow !!\n");
-    printf("----------------------------------\n");
+    printf("-----------------------------------\n");
+    printf(" Randomized PCR ECC Signing flow !!\n");
+    printf("-----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -73,7 +73,6 @@ void main(){
     }
     printf("\n");
     
-    //inject seed to kv key reg (in RTL)
     printf("Check the signing results\n");
     printf("%c", 0x92);
 

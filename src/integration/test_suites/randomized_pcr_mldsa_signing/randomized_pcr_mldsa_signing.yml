@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+FW_TESTNAME=randomized_pcr_mldsa_signing'
+testname: randomized_pcr_mldsa_signing
