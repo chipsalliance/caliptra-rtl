@@ -257,7 +257,7 @@ caliptra_top caliptra_top_dut (
 `endif
 
     // Subsystem mode straps TODO
-    .strap_ss_caliptra_base_addr                            (64'h0),
+    .strap_ss_caliptra_base_addr                            (64'hba5e_ba11),
     .strap_ss_mci_base_addr                                 (64'h0),
     .strap_ss_recovery_ifc_base_addr                        (64'h0),
     .strap_ss_otp_fc_base_addr                              (64'h0),

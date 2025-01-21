@@ -228,14 +228,14 @@ module caliptra_top_sva
         //ecc sign r
         pcr_ecc_sign_r:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.ecc_test_vector.R[dword] == `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
+                                              `SERVICES_PATH.check_pcr_ecc_signing |-> (`SERVICES_PATH.ecc_test_vector.R[dword] == `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
                                               )
                                   else $display("SVA ERROR: PCR SIGNING SIGN_R mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.ecc_test_vector.R[dword], `ECC_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value);                     
         
         //ecc sign s
         pcr_ecc_sign_s:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `SERVICES_PATH.check_pcr_signing |-> (`SERVICES_PATH.ecc_test_vector.S[dword] == `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value)
+                                              `SERVICES_PATH.check_pcr_ecc_signing |-> (`SERVICES_PATH.ecc_test_vector.S[dword] == `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value)
                                               )
                                   else $display("SVA ERROR: PCR SIGNING SIGN_S mismatch!, 0x%04x, 0x%04x", `SERVICES_PATH.ecc_test_vector.S[dword], `ECC_PATH.hwif_out.ECC_SIGN_S[dword].SIGN_S.value); 
       end
@@ -387,6 +387,39 @@ module caliptra_top_sva
       end
     end
   endgenerate
+
+  generate
+    begin: PCR_MLDSA_Signing
+      //MLDSA_signature_data_check
+      for (genvar dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
+        PCR_MLDSA_signature_0_15_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            (`SERVICES_PATH.check_pcr_mldsa_signing |->  (`MLDSA_PATH.signature_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
+        )
+        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
+      end
+
+      for (genvar dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
+        PCR_MLDSA_signature_16_36_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+            (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword] == {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}))
+        )
+        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword], {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}, SIGNATURE_C_NUM_DWORDS+dword);
+      end
+
+     //MLDSA_sig_z_data_check
+      for (genvar i = 0; i < 224; i++) begin
+        for (genvar j = 0; j < 5; j++) begin
+          PCR_MLDSA_sig_37_1135_data_check: assert property (
+            @(posedge `SVA_RDC_CLK)
+           (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`MLDSA_PATH.mldsa_sig_z_ram.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
+          )
+          else $display("SVA ERROR: [PCR MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `MLDSA_PATH.mldsa_sig_z_ram.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
+        end
+      end
+    end
+  endgenerate
+
   `endif
   //Generate disable signal for fuse_wr_check sva when hwclr is asserted. The disable needs to be for 3 clks in order to ignore the fuses being cleared
   logic clear_obf_secrets_f;
@@ -661,11 +694,11 @@ module caliptra_top_sva
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         
-  // MLDSA_valid_flag:     assert property (
-  //                                   @(posedge `SVA_RDC_CLK)
-  //                                   `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready 
-  //                                   )
-  //                       else $display("SVA ERROR: MLDSA VALID flag mismatch!");
+  MLDSA_valid_flag:     assert property (
+                                    @(posedge `SVA_RDC_CLK)
+                                    `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready 
+                                    )
+                        else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 
