@@ -247,7 +247,7 @@ jobs:
         id: do_git_diff
         if: ${{ env.DO_EVAL == 'true' }}
         run: |
-          if [[ -n "$(git diff --name-only --merge-base ${{ github.event.pull_request.base_ref }} | grep -v '\\.md\\|\\.png')" ]]; then
+          if [[ -n "$(git diff --name-only --merge-base '${{ github.event.pull_request.base_ref }}' | grep -v '\\.md\\|\\.png')" ]]; then
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "src_mods=false" >> "${GITHUB_OUTPUT}"
