@@ -105,6 +105,7 @@ package soc_ifc_pkg;
     parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP = 7'h71;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;
+    parameter DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER = 7'h74;
 
     
     // This parameter describes the hard-coded implementation in the BOOT FSM

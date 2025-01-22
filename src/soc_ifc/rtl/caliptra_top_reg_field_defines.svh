@@ -747,6 +747,9 @@
 `define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT_DEBUG_INTENT_LOW                                       (0)
 `define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK                                      (32'h1)
 `endif
+`ifndef GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER
+`define GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER                                               (32'h534)
+`endif
 `ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0
 `define GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0                                                     (32'h5a0)
 `endif

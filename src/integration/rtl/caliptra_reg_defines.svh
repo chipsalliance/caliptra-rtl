@@ -2145,6 +2145,7 @@
 `define CLP_SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                           (32'h30030528)
 `define CLP_SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                  (32'h3003052c)
 `define CLP_SOC_IFC_REG_SS_DEBUG_INTENT                                                             (32'h30030530)
+`define CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                    (32'h30030534)
 `define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_0                                                          (32'h300305a0)
 `define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_1                                                          (32'h300305a4)
 `define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_2                                                          (32'h300305a8)

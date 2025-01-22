@@ -125,6 +125,7 @@ module soc_ifc_top
     input logic [31:0] strap_ss_strap_generic_1,
     input logic [31:0] strap_ss_strap_generic_2,
     input logic [31:0] strap_ss_strap_generic_3,
+    input logic [31:0] strap_ss_caliptra_dma_axi_user,
     input logic        ss_debug_intent,
     output logic       cptra_ss_debug_intent,
 
@@ -793,6 +794,7 @@ always_comb begin : ss_reg_next_vals
     soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next                       = strap_we ? strap_ss_recovery_ifc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next                             = strap_we ? strap_ss_otp_fc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next                             = strap_we ? strap_ss_otp_fc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.next                            = strap_we ? strap_ss_caliptra_dma_axi_user : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[0].data.next                                 = strap_we ? strap_ss_strap_generic_0 : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[1].data.next                                 = strap_we ? strap_ss_strap_generic_1 : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[2].data.next                                 = strap_we ? strap_ss_strap_generic_2 : cptra_uncore_dmi_reg_wdata;
@@ -845,6 +847,7 @@ always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.swwel            
 always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[0].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[1].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[2].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -1378,6 +1381,7 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER)}} & soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_0)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[0].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_1)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[1].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_2)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[2].data.value ) |

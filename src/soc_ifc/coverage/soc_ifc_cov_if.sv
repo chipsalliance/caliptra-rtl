@@ -122,7 +122,11 @@ interface soc_ifc_cov_if
     input logic scan_mode,
     input logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key,
     input logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
+    input logic                                 cptra_obf_field_entropy_vld,
+    input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy,
     input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
+    input logic                                 cptra_obf_uds_seed_vld,
+    input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
     input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
     // Subsystem mode straps
@@ -137,6 +141,7 @@ interface soc_ifc_cov_if
     input logic [31:0] strap_ss_strap_generic_1,
     input logic [31:0] strap_ss_strap_generic_2,
     input logic [31:0] strap_ss_strap_generic_3,
+    input logic [31:0] strap_ss_caliptra_dma_axi_user,
     input logic        ss_debug_intent,
     input logic        cptra_ss_debug_intent,
 
@@ -222,7 +227,11 @@ interface soc_ifc_cov_if
         clear_obf_secrets_cp: coverpoint clear_obf_secrets;
         scan_mode_cp: coverpoint scan_mode;
         cptra_obf_key_reg_cp: coverpoint cptra_obf_key_reg;
+        cptra_obf_field_entropy_vld_cp: coverpoint cptra_obf_field_entropy_vld;
+        cptra_obf_field_entropy_cp: coverpoint cptra_obf_field_entropy;
         obf_field_entropy_cp: coverpoint obf_field_entropy;
+        cptra_obf_uds_seed_vld_cp: coverpoint cptra_obf_uds_seed_vld;
+        cptra_obf_uds_seed_cp: coverpoint cptra_obf_uds_seed;
         obf_uds_seed_cp: coverpoint obf_uds_seed;
         strap_ss_caliptra_base_addr_cp: coverpoint strap_ss_caliptra_base_addr;
         strap_ss_mci_base_addr_cp: coverpoint strap_ss_mci_base_addr;
@@ -231,6 +240,7 @@ interface soc_ifc_cov_if
         strap_ss_uds_seed_base_addr_cp: coverpoint strap_ss_uds_seed_base_addr;
         strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_cp: coverpoint strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
         strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_cp: coverpoint strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
+        strap_ss_caliptra_dma_axi_user_cp: coverpoint strap_ss_caliptra_dma_axi_user;
         strap_ss_strap_generic_0_cp: coverpoint strap_ss_strap_generic_0;
         strap_ss_strap_generic_1_cp: coverpoint strap_ss_strap_generic_1;
         strap_ss_strap_generic_2_cp: coverpoint strap_ss_strap_generic_2;
@@ -860,6 +870,10 @@ interface soc_ifc_cov_if
   logic          hit_SS_DEBUG_INTENT;
   logic [3:0]    bus_SS_DEBUG_INTENT;
   logic [31:0]   full_addr_SS_DEBUG_INTENT = `CLP_SOC_IFC_REG_SS_DEBUG_INTENT;
+
+  logic          hit_SS_CALIPTRA_DMA_AXI_USER;
+  logic [3:0]    bus_SS_CALIPTRA_DMA_AXI_USER;
+  logic [31:0]   full_addr_SS_CALIPTRA_DMA_AXI_USER = `CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER;
 
   logic          hit_SS_STRAP_GENERIC[0:3];
   logic [3:0]    bus_SS_STRAP_GENERIC[0:3];
@@ -1660,6 +1674,9 @@ interface soc_ifc_cov_if
 
   assign hit_SS_DEBUG_INTENT = (soc_ifc_reg_req_data.addr == full_addr_SS_DEBUG_INTENT[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_DEBUG_INTENT = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_DEBUG_INTENT}};
+
+  assign hit_SS_CALIPTRA_DMA_AXI_USER = (soc_ifc_reg_req_data.addr == full_addr_SS_CALIPTRA_DMA_AXI_USER[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_CALIPTRA_DMA_AXI_USER = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_CALIPTRA_DMA_AXI_USER}};
 
   assign hit_SS_STRAP_GENERIC[0] = (soc_ifc_reg_req_data.addr == full_addr_SS_STRAP_GENERIC[0][18-1:0]);
   assign bus_SS_STRAP_GENERIC[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_STRAP_GENERIC[0]}};
@@ -3103,6 +3120,15 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP SS_CALIPTRA_DMA_AXI_USER -----------------------
+  covergroup soc_ifc_SS_CALIPTRA_DMA_AXI_USER_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_CALIPTRA_DMA_AXI_USER_cp : coverpoint i_soc_ifc_reg.field_storage.SS_CALIPTRA_DMA_AXI_USER;
+    bus_SS_CALIPTRA_DMA_AXI_USER_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP SS_STRAP_GENERIC [0:3] -----------------------
   covergroup soc_ifc_SS_STRAP_GENERIC_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
     SS_STRAP_GENERIC0_cp : coverpoint i_soc_ifc_reg.field_storage.SS_STRAP_GENERIC[0];
@@ -3746,6 +3772,7 @@ interface soc_ifc_cov_if
   soc_ifc_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET_cg SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET_cg = new(bus_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET);
   soc_ifc_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES_cg SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES_cg = new(bus_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES);
   soc_ifc_SS_DEBUG_INTENT_cg SS_DEBUG_INTENT_cg = new(bus_SS_DEBUG_INTENT);
+  soc_ifc_SS_CALIPTRA_DMA_AXI_USER_cg SS_CALIPTRA_DMA_AXI_USER_cg = new(bus_SS_CALIPTRA_DMA_AXI_USER);
   soc_ifc_SS_STRAP_GENERIC_cg SS_STRAP_GENERIC_cg = new(bus_SS_STRAP_GENERIC);
   soc_ifc_SS_DBG_MANUF_SERVICE_REG_REQ_cg SS_DBG_MANUF_SERVICE_REG_REQ_cg = new(bus_SS_DBG_MANUF_SERVICE_REG_REQ);
   soc_ifc_SS_DBG_MANUF_SERVICE_REG_RSP_cg SS_DBG_MANUF_SERVICE_REG_RSP_cg = new(bus_SS_DBG_MANUF_SERVICE_REG_RSP);

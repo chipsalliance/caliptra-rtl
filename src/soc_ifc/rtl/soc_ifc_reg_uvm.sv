@@ -2379,6 +2379,36 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_DEBUG_INTENT
 
+    // Reg - soc_ifc_reg::SS_CALIPTRA_DMA_AXI_USER
+    class soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER_bit_cg user_bit_cg[32];
+        soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER_fld_cg fld_cg;
+        rand uvm_reg_field user;
+
+        function new(string name = "soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.user = new("user");
+            this.user.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(user_bit_cg[bt]) user_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER
+
     // Reg - soc_ifc_reg::SS_STRAP_GENERIC
     class soc_ifc_reg__SS_STRAP_GENERIC extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -4610,6 +4640,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         rand soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         rand soc_ifc_reg__SS_DEBUG_INTENT SS_DEBUG_INTENT;
+        rand soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER SS_CALIPTRA_DMA_AXI_USER;
         rand soc_ifc_reg__SS_STRAP_GENERIC SS_STRAP_GENERIC[4];
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ SS_DBG_MANUF_SERVICE_REG_REQ;
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP SS_DBG_MANUF_SERVICE_REG_RSP;
@@ -5051,6 +5082,11 @@ package soc_ifc_reg_uvm;
 
             this.SS_DEBUG_INTENT.build();
             this.default_map.add_reg(this.SS_DEBUG_INTENT, 'h530);
+            this.SS_CALIPTRA_DMA_AXI_USER = new("SS_CALIPTRA_DMA_AXI_USER");
+            this.SS_CALIPTRA_DMA_AXI_USER.configure(this);
+
+            this.SS_CALIPTRA_DMA_AXI_USER.build();
+            this.default_map.add_reg(this.SS_CALIPTRA_DMA_AXI_USER, 'h534);
             foreach(this.SS_STRAP_GENERIC[i0]) begin
                 this.SS_STRAP_GENERIC[i0] = new($sformatf("SS_STRAP_GENERIC[%0d]", i0));
                 this.SS_STRAP_GENERIC[i0].configure(this);
