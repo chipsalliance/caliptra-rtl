@@ -31,6 +31,8 @@ jobs:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
     needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    # Force to run even if the prerequisites are skipped for any reason
+    if: ${{ !cancelled() }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
