@@ -1165,6 +1165,9 @@ axi_dma_top #(
     .mbox_lock(uc_mbox_lock),
     .sha_lock (1'b0 /*FIXME*/ ),
 
+    // Configuration for requests
+    .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value));
+
     // AXI INF
     .m_axi_w_if(m_axi_w_if),
     .m_axi_r_if(m_axi_r_if),
@@ -1381,7 +1384,7 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value ) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER)}} & soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER)}} & soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_0)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[0].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_1)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[1].data.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_2)}} & soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[2].data.value ) |
