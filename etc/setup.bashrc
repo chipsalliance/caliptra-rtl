@@ -12,8 +12,8 @@ export TOOLS=${MSFT_TOOLS}
 
 export CHIPS=${WORKSPACE}/chipsalliance
 
-export CALIPTRA_WORKSPACE=${CHIPS}
-export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
+export CALIPTRA_WORKSPACE=${WORKSPACE}
+export CALIPTRA_ROOT=${CHIPS}/caliptra-rtl
 export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
 export CALIPTRA_SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
 
