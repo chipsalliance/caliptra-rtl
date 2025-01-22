@@ -20,9 +20,51 @@ env:
   SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1e
 
 jobs:
+  # Verilator is always run outside of the Pull Request context.
+  # For Pull Requests, conditionally run based on evaluation
+  evaluate_if_run:
+    name: Evaluate if Verilator Will Run
+    runs-on: ubuntu-22.04
+    outputs:
+      run_vltr: ${{ steps.do_decide.outputs.run }}
+    env:
+      DO_EVAL: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ env.DO_EVAL == 'true' }}
+        with:
+          submodules: 'true'
+
+      # If any non-documentation files have been modified as part of a
+      # Pull Request, run the Verilator checks
+      # Otherwise, skip Verilator
+      - name: Do Git Diff
+        id: do_git_diff
+        if: ${{ env.DO_EVAL == 'true' }}
+        run: |
+          if [[ -n "$(git diff --name-only --merge-base ${{ github.event.pull_request.base_ref }} | grep -v '\\.md\\|\\.png\\|\\.github\\/workflows')" ]]; then
+            echo "src_mods=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "src_mods=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Decide
+        id: do_decide
+        run: |
+          if [[ "${{ env.DO_EVAL }}" == "false" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ steps.do_git_diff.outputs.src_mods }}" == "true" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "run=false" >> "${GITHUB_OUTPUT}"
+          fi
+
   build_tools:
     name: Build Tools
     runs-on: ubuntu-22.04
+    needs: evaluate_if_run
+    if: ${{ needs.evaluate_if_run.outputs.run_vltr == 'true' }}
     
     steps:
       - uses: actions/checkout@v3
@@ -117,7 +159,10 @@ jobs:
   build_matrix:
     name: Build Smoke Test matrix
     runs-on: ubuntu-22.04
-    needs: build_tools
+    needs:
+      - build_tools
+      - evaluate_if_run
+    if: ${{ needs.evaluate_if_run.outputs.run_vltr == 'true' }}
     outputs:
       test_names: ${{ steps.output-matrix.outputs.test_names  }}
     env:
@@ -136,7 +181,10 @@ jobs:
   build_and_test:
     name: Verilator
     runs-on: ubuntu-22.04
-    needs: build_matrix
+    needs:
+      - build_matrix
+      - evaluate_if_run
+    if: ${{ needs.evaluate_if_run.outputs.run_vltr == 'true' }}
 
     strategy:
       fail-fast: false
@@ -199,12 +247,18 @@ jobs:
   verify_test_results:
     name: Verify Verilator Test Results
     runs-on: ubuntu-22.04
-    needs: build_and_test
-    # Force to run even if the build_and_test job is skipped for some reason
+    needs:
+      - build_and_test
+      - evaluate_if_run
+    # Force to run even if the build_and_test job is skipped for any reason
     if: ${{ !cancelled() }}
     steps:
       - name: Print Verilator Aggregated Result
         run: |
+          echo "Run Verilator check has a result of [${{ needs.evaluate_if_run.outputs.run_vltr }}]"
+          if [[ "${{ needs.evaluate_if_run.outputs.run_vltr }}" != "true" ]]; then
+            exit 0
+          fi
           echo "build_and_test has a result of [${{ needs.build_and_test.result }}]"
           if [[ "${{ needs.build_and_test.result }}" != "success" ]]; then
             exit 1
