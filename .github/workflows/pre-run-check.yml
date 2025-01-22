@@ -81,6 +81,14 @@ jobs:
 
       - name: Gen File List
         run: |
+            # Search for all source code files, scripts, and configuration
+            # files used to build/validate Caliptra RTL.
+            # File type exclusions:
+            # - *.md
+            # - *.png
+            # - any files inside
+            #   - .git
+            #   - .github/workflows
             find "$GITHUB_WORKSPACE" -type f ( -name "*.sv" \
                                             -o -name "*.svh" \
                                             -o -name "*.rdl" \
