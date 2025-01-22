@@ -747,6 +747,8 @@ always_comb begin : ss_reg_hwwe
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L));
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.we       = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.we      = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en &
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER));
     soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[0].data.we           = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_GENERIC_0));
     soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[1].data.we           = strap_we | (cptra_uncore_dmi_unlocked_reg_wr_en & 
@@ -1166,7 +1168,7 @@ axi_dma_top #(
     .sha_lock (1'b0 /*FIXME*/ ),
 
     // Configuration for requests
-    .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value));
+    .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value)),
 
     // AXI INF
     .m_axi_w_if(m_axi_w_if),
