@@ -16,6 +16,10 @@ on:
         type: string
         default: 'main'
   workflow_call:
+    outputs:
+      run_vltr:
+        description: "Control parameter indicating if Verilator tests should be run or skipped"
+        value: ${{ jobs.evaluate_if_run.outputs.run_vltr }}
 
 env:
   MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" )
@@ -218,3 +222,45 @@ jobs:
             export CALIPTRA_ROOT=$GITHUB_WORKSPACE
             export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
             $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"
+
+  # Verilator is always run outside of the Pull Request context.
+  # For Pull Requests, conditionally run based on evaluation of
+  # modified file set
+  evaluate_if_run:
+    name: Evaluate if Verilator Will Run
+    runs-on: ubuntu-22.04
+    outputs:
+      run_vltr: ${{ steps.do_decide.outputs.run }}
+    env:
+      DO_EVAL: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ env.DO_EVAL == 'true' }}
+        with:
+          submodules: 'true'
+
+      # If only documentation files have been modified as part of a
+      # Pull Request, skip the Verilator checks
+      # Otherwise, run Verilator
+      - name: Do Git Diff
+        id: do_git_diff
+        if: ${{ env.DO_EVAL == 'true' }}
+        run: |
+          if [[ -n "$(git diff --name-only --merge-base ${{ github.event.pull_request.base_ref }} | grep -v '\\.md\\|\\.png\\|\\.github\\/workflows')" ]]; then
+            echo "src_mods=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "src_mods=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Decide
+        id: do_decide
+        run: |
+          if [[ "${{ env.DO_EVAL }}" == "false" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ steps.do_git_diff.outputs.src_mods }}" == "true" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "run=false" >> "${GITHUB_OUTPUT}"
+          fi
+
