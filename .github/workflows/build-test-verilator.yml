@@ -21,7 +21,8 @@ env:
 
 jobs:
   # Verilator is always run outside of the Pull Request context.
-  # For Pull Requests, conditionally run based on evaluation
+  # For Pull Requests, conditionally run based on evaluation of
+  # modified file set
   evaluate_if_run:
     name: Evaluate if Verilator Will Run
     runs-on: ubuntu-22.04
