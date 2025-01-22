@@ -110,23 +110,26 @@ elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
     echo "$cmd"
     $clean
     $cmd
+# This is any FW-based testing that is run on the Caliptra-SS
+elif [[ "${CONFIG}" == "caliptra_ss_top_tb" ]]; then
+    export CALIPTRA_ROOT="$CALIPTRA_SS/third_party/caliptra-rtl"
+    cptra_build_args="CALIPTRA_INTERNAL_TRNG=0 TESTNAME=smoke_test_mbox"
+    cmd="make -f $CALIPTRA_ROOT/tools/scripts/Makefile ${cptra_build_args} program.hex"
+    echo "$cmd"
+    $cmd
+
+    # Build MCU Firmware for Subsystem Tests
+    cmd="make -f $CALIPTRA_SS_SCRIPTS_DIR/Makefile mcu_program.hex"
+    echo "$cmd"
+    $cmd
 # This is any other FW-based smoke test running on the basic caliptra top SV bench
 else
     if [[ "${CONFIG}" == "caliptra_top_trng_tb" ]]; then
         cptra_build_args="CALIPTRA_INTERNAL_TRNG=1"
-    elif [[ "${CONFIG}" == "caliptra_ss_top_tb" ]]; then
-        cptra_build_args="CALIPTRA_INTERNAL_TRNG=0 TESTNAME=smoke_test_mbox"
     else
         cptra_build_args="CALIPTRA_INTERNAL_TRNG=0"
     fi
     cmd="make -f $CALIPTRA_SCRIPTS_DIR/Makefile ${cptra_build_args} program.hex"
     echo "$cmd"
     $cmd
-
-    if [[ "${CONFIG}" == "caliptra_ss_top_tb" ]]; then
-        # Build MCU Firmware for Subsystem Tests
-        cmd="make -f $CALIPTRA_SS_SCRIPTS_DIR/Makefile mcu_program.hex"
-        echo "$cmd"
-        $cmd
-    fi
 fi
