@@ -22,6 +22,7 @@
 //======================================================================
 
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 
 module sha512_ctrl_32bit_tb 
   import kv_defines_pkg::*;
