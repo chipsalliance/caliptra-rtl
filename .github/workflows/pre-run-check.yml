@@ -63,7 +63,7 @@ jobs:
             fi
             echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
             echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-            compiles=$(git diff --name-only $(git merge-base $(git show-ref --hash "origin/$TARGET_BR") $(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))..$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
+            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
@@ -261,7 +261,7 @@ jobs:
           fi
           echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
           echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-          mods=$(git diff --name-only $(git merge-base "$(git show-ref --hash \"origin/$TARGET_BR\") $(git show-ref --hash \"${SOURCE_OWN}/${SOURCE_BR}\"))..$(git show-ref --hash \"${SOURCE_OWN}/${SOURCE_BR}\")")
+          mods=$(git diff --name-only $(git show-ref --hash "origin/${TARGET_BR}")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
           if [[ $(IFS='\n' grep -c -v '\\.md\\|\\.png' <<< "$mods") -gt 0 ]]; then
             echo "Found modified source files in ${SOURCE_BR}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
