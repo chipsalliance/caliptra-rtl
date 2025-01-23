@@ -253,7 +253,7 @@ jobs:
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
-          if [[ -n "$(git diff --name-only --merge-base ${TARGET_BR} | grep -v '\\.md\\|\\.png')" ]]; then
+          if [[ -n "$(git diff --name-only --merge-base origin/${TARGET_BR} | grep -v '\\.md\\|\\.png')" ]]; then
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "src_mods=false" >> "${GITHUB_OUTPUT}"
