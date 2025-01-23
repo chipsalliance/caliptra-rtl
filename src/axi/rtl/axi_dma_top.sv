@@ -42,6 +42,9 @@ import soc_ifc_pkg::*;
     input logic mbox_lock,
     input logic sha_lock,
 
+    // Configuration for requests
+    input logic [UW-1:0] axuser,
+
     // AXI INF
     axi_if.w_mgr m_axi_w_if,
     axi_if.r_mgr m_axi_r_if,
@@ -161,6 +164,9 @@ import soc_ifc_pkg::*;
         // REQ INF
         .req_if(r_req_if.snk),
 
+        // Static req USER value
+        .axuser(axuser),
+
         // FIFO INF
         .ready_i(r_ready),
         .valid_o(r_valid),
@@ -184,6 +190,9 @@ import soc_ifc_pkg::*;
 
         // REQ INF
         .req_if(w_req_if.snk),
+
+        // Static req USER value
+        .axuser(axuser),
 
         // FIFO INF
         .valid_i(w_valid),

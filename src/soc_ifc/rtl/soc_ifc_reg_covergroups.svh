@@ -1073,8 +1073,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__FUSE_KEY_MANIFEST_PK_HASH COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__fuse_key_manifest_pk_hash_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__FUSE_VENDOR_PK_HASH COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_vendor_pk_hash_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1085,7 +1085,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__fuse_key_manifest_pk_hash_fld_cg with function sample(
+    covergroup soc_ifc_reg__fuse_vendor_pk_hash_fld_cg with function sample(
     input bit [32-1:0] hash
     );
         option.per_instance = 1;
@@ -1099,8 +1099,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__FUSE_KEY_MANIFEST_PK_HASH_MASK COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__fuse_key_manifest_pk_hash_mask_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__FUSE_ECC_REVOCATION COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_ecc_revocation_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1111,11 +1111,11 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__fuse_key_manifest_pk_hash_mask_fld_cg with function sample(
-    input bit [32-1:0] mask
+    covergroup soc_ifc_reg__fuse_ecc_revocation_fld_cg with function sample(
+    input bit [4-1:0] ecc_revocation
     );
         option.per_instance = 1;
-        mask_cp : coverpoint mask {
+        ecc_revocation_cp : coverpoint ecc_revocation {
             bins zero_val = {32'h0};
             bins rand_val[64] = {[1:32'hFFFF_FFFE]};
             bins ones_val = {{32{1'b1}}};
@@ -1326,6 +1326,66 @@
     );
         option.per_instance = 1;
         token_cp : coverpoint token;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_PQC_KEY_TYPE COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_pqc_key_type_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_pqc_key_type_fld_cg with function sample(
+    input bit [2-1:0] key_type
+    );
+        option.per_instance = 1;
+        key_type_cp : coverpoint key_type;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_MANIFEST_SVN COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_soc_manifest_svn_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_soc_manifest_svn_fld_cg with function sample(
+    input bit [32-1:0] svn
+    );
+        option.per_instance = 1;
+        svn_cp : coverpoint svn;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_MANIFEST_MAX_SVN COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_soc_manifest_max_svn_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_soc_manifest_max_svn_fld_cg with function sample(
+    input bit [8-1:0] svn
+    );
+        option.per_instance = 1;
+        svn_cp : coverpoint svn;
 
     endgroup
 
@@ -1586,6 +1646,26 @@
     );
         option.per_instance = 1;
         debug_intent_cp : coverpoint debug_intent;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_DMA_AXI_USER COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER_fld_cg with function sample(
+    input bit [32-1:0] user
+    );
+        option.per_instance = 1;
+        user_cp : coverpoint user;
 
     endgroup
 

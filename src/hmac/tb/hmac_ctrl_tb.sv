@@ -23,6 +23,7 @@
 //======================================================================
 
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
 
 module hmac_ctrl_tb();

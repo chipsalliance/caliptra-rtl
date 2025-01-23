@@ -21,7 +21,7 @@ reg {
     name = "Subsystem Caliptra Base Address (Low)";
     desc = "Subsystem Caliptra Base Address Lower 32 bits (from AXI).
             [br]Indicates base address of Caliptra register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_l[32]=32'h0;
@@ -31,7 +31,7 @@ reg {
     name = "Subsystem Caliptra Base Address (High)";
     desc = "Subsystem Caliptra Base Address Upper 32 bits (from AXI).
             [br]Indicates base address of Caliptra register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
@@ -41,7 +41,7 @@ reg {
     name = "Subsystem MCI Base Address (Low)";
     desc = "Subsystem MCI Base Address Lower 32 bits (from AXI).
             [br]Indicates base address of MCI register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_l[32]=32'h0;
@@ -51,7 +51,7 @@ reg {
     name = "Subsystem MCI Base Address (High)";
     desc = "Subsystem MCI Base Address Upper 32 bits (from AXI).
             [br]Indicates base address of MCI register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
@@ -61,7 +61,7 @@ reg {
     name = "Subsystem Recovery Interface Base Address (Low)";
     desc = "Subsystem Recovery Interface Base Address Lower 32 bits (from AXI).
             [br]Indicates base address of OCP Recovery Interface register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_l[32]=32'h0;
@@ -71,7 +71,7 @@ reg {
     name = "Subsystem Recovery Interface Base Address (High)";
     desc = "Subsystem Recovery Interface Base Address Upper 32 bits (from AXI).
             [br]Indicates base address of OCP Recovery Interface register set from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
@@ -81,7 +81,7 @@ reg {
     name = "Subsystem Fuse Controller Base Address (Low)";
     desc = "Subsystem Fuse Controller Base Address Lower 32 bits (from AXI).
             [br]Indicates base address of OTP Fuse Controller from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_l[32]=32'h0;
@@ -91,7 +91,7 @@ reg {
     name = "Subsystem Fuse Controller Base Address (High)";
     desc = "Subsystem Fuse Controller Base Address Upper 32 bits (from AXI).
             [br]Indicates base address of OTP Fuse Controller from AXI fabric.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
@@ -100,7 +100,7 @@ reg {
 reg {
     name = "Subsystem UDS Seed Destination Base Address (Low)";
     desc = "Subsystem UDS Seed Destination Base Address Lower 32 bits (from AXI). Used as the write address when programming the UDS seed during manufacturing.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_l[32]=32'h0;
@@ -109,7 +109,7 @@ reg {
 reg {
     name = "Subsystem UDS Seed Destination Base Address (High)";
     desc = "Subsystem UDS Seed Destination Base Address Upper 32 bits (from AXI). Used as the write address when programming the UDS seed during manufacturing.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
@@ -119,7 +119,7 @@ reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Offset";
     desc = "Provides an offset in the destination register bank at which a set of Public Key Hashes may be found. The number of hashes available at this offset is indicated by
             SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.
-           [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+           [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
            [br]Caliptra Access: RO
            [br]SOC Access:      RWL-S";
     strap offset[32]=32'h0;
@@ -128,7 +128,7 @@ reg {
 reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Number";
     desc = "Provides the number of Public Key Hashes that may be found at the offset in the destination register bank, specified in SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.
-           [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+           [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
            [br]Caliptra Access: RO
            [br]SOC Access:      RWL-S";
     strap num[32]=32'h8;
@@ -144,9 +144,19 @@ reg {
 } SS_DEBUG_INTENT;
 
 reg {
+    name = "Subsystem Caliptra DMA AXI Manager User";
+    desc = "Specifies which AXI User value is used by the AXI DMA module when initiating transfers on the AXI interface. This value is presented on the ARUSER signal for read
+            requests, and on the AWUSER signal for write requests.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    strap user[32]=32'h0;
+} SS_CALIPTRA_DMA_AXI_USER;
+
+reg {
     name = "GENERIC STRAP";
     desc = "Straps reserved for late-binding features for survivability.
-            [br]Strap that is initialized from Caliptra input port at cptra_pwrgood deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     strap data[32]=32'h0;
