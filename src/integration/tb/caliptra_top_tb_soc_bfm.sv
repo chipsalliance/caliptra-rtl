@@ -16,6 +16,7 @@
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 `include "caliptra_macros.svh"
 
 module caliptra_top_tb_soc_bfm

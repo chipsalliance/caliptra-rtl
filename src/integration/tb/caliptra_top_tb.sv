@@ -17,6 +17,7 @@
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 `include "caliptra_macros.svh"
 
 `ifndef VERILATOR
@@ -264,6 +265,7 @@ caliptra_top caliptra_top_dut (
     .strap_ss_uds_seed_base_addr                            (64'h0),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
+    .strap_ss_caliptra_dma_axi_user                         (32'h0),
     .strap_ss_strap_generic_0                               (32'h0),
     .strap_ss_strap_generic_1                               (32'h0),
     .strap_ss_strap_generic_2                               (32'h0),

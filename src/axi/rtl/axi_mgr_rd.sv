@@ -36,6 +36,9 @@ module axi_mgr_rd import axi_pkg::*; #(
     // REQ INF
     axi_dma_req_if.snk req_if,
 
+    // Static req USER value
+    input  logic [UW-1:0] axuser,
+
     // FIFO INF
     input  logic          ready_i,
     output logic          valid_o,
@@ -123,7 +126,7 @@ module axi_mgr_rd import axi_pkg::*; #(
         m_axi_if.arburst = axi_ctx.fixed ? AXI_BURST_FIXED : AXI_BURST_INCR;
         m_axi_if.arsize  = BW;
         m_axi_if.arlen   = axi_ctx.len;
-        m_axi_if.aruser  = '0; // TODO ?
+        m_axi_if.aruser  = axuser;
         m_axi_if.arid    = IW'(0);
         m_axi_if.arlock  = axi_ctx.lock;
     end
