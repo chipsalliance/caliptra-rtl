@@ -272,7 +272,6 @@ module caliptra_top_tb_services
 `define DEC `CPTRA_TOP_PATH.rvtop.veer.dec
 
 `define LMEM mbox_ram1.ram 
-`define MLDSA_RAMS mldsa_mem_top_inst
 
    //=========================================================================-
    // STDOUT and Trace Logic
@@ -788,15 +787,15 @@ module caliptra_top_tb_services
             always @(negedge clk) begin
                 if (mldsa_signing) begin
                     if ((mldsa_dword % 2) == 0) begin
-                        force `MLDSA_RAMS.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                     else begin
-                        force `MLDSA_RAMS.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                 end
                 else begin
-                    release `MLDSA_RAMS.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2];
-                    release `MLDSA_RAMS.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2];
                 end
             end
         end
@@ -816,10 +815,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 10; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force `MLDSA_RAMS.mldsa_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
                     end
                     else begin
-                        release `MLDSA_RAMS.mldsa_pk_mem_inst.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
@@ -850,10 +849,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 5; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force `MLDSA_RAMS.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
                     end
                     else begin
-                        release `MLDSA_RAMS.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
