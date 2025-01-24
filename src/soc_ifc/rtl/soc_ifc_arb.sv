@@ -123,8 +123,10 @@ always_ff @(posedge clk or negedge rst_b) begin
 end
 //Assign priority - first to the client who's already in progress and held
 //                  second to the client with priority pointing to them, unless there is a req ip
-assign uc_has_priority  = uc_req_ip  | (~soc_priority & ~soc_req_ip);
-assign soc_has_priority = soc_req_ip | ( soc_priority & ~uc_req_ip);
+//                  This condition only matters for collisions. Simultaneous transactions to different
+//                  destinations can result in both signals being asserted together.
+always_comb uc_has_priority  = uc_req_ip  | (~soc_priority & ~soc_req_ip);
+always_comb soc_has_priority = soc_req_ip | ( soc_priority & ~uc_req_ip);
 
 //toggle the priority when collision is detected
 always_comb toggle_priority = req_collision;
@@ -245,5 +247,6 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_ACCESS_MUTEX, {uc_mbox_gnt,soc_mbox_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_REG_ACCESS_MUTEX , {uc_reg_gnt,soc_reg_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_sha_gnt,soc_sha_gnt}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, rst_b)
 
 endmodule
