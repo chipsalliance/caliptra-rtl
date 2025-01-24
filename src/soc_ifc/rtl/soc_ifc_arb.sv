@@ -64,6 +64,7 @@ module soc_ifc_arb
     
 );
 //track priority
+logic soc_priority;
 logic uc_has_priority;
 logic soc_has_priority;
 logic toggle_priority;
@@ -94,15 +95,9 @@ logic uc_sha_gnt;
 logic uc_dma_gnt;
 
 //track in-progress grants
-logic soc_mbox_req_ip;
-logic soc_reg_req_ip;
-logic soc_sha_req_ip;
-logic soc_dma_req_ip;
+logic soc_req_ip;
 
-logic uc_mbox_req_ip;
-logic uc_reg_req_ip;
-logic uc_sha_req_ip;
-logic uc_dma_req_ip;
+logic uc_req_ip;
 
 //filter mailbox requests by user
 logic valid_mbox_req;
@@ -112,34 +107,24 @@ logic valid_mbox_req;
 //give priority in case of collision to the least recently granted client
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
-        soc_has_priority <= '0;
+        soc_priority <= '0;
 
-        soc_mbox_req_ip <= '0;
-        soc_reg_req_ip <= '0;
-        soc_sha_req_ip <= '0;
-        soc_dma_req_ip <= '0;
+        soc_req_ip <= '0;
 
-        uc_mbox_req_ip <= '0;
-        uc_reg_req_ip <= '0;
-        uc_sha_req_ip <= '0;
-        uc_dma_req_ip <= '0;
+        uc_req_ip <= '0;
     end
     else begin
-        soc_has_priority <= toggle_priority ? ~soc_has_priority : soc_has_priority;
+        soc_priority <= toggle_priority ? ~soc_priority : soc_priority;
 
-        soc_mbox_req_ip <= soc_mbox_gnt & mbox_req_hold;
-        soc_reg_req_ip <= soc_reg_gnt & soc_ifc_reg_req_hold;
-        soc_sha_req_ip <= soc_sha_gnt & sha_req_hold;
-        soc_dma_req_ip <= soc_dma_gnt & dma_reg_req_hold;
+        soc_req_ip <= (soc_mbox_gnt & mbox_req_hold) | (soc_reg_gnt & soc_ifc_reg_req_hold) | (soc_sha_gnt & sha_req_hold) | (soc_dma_gnt & dma_reg_req_hold);
 
-        uc_mbox_req_ip <= uc_mbox_gnt & mbox_req_hold;
-        uc_reg_req_ip <= uc_reg_gnt & soc_ifc_reg_req_hold;
-        uc_sha_req_ip <= uc_sha_gnt & sha_req_hold;
-        uc_dma_req_ip <= uc_dma_gnt & dma_reg_req_hold;
+        uc_req_ip <= (uc_mbox_gnt & mbox_req_hold) | (uc_reg_gnt & soc_ifc_reg_req_hold) | (uc_sha_gnt & sha_req_hold) | (uc_dma_gnt & dma_reg_req_hold);
     end
 end
-
-assign uc_has_priority = ~soc_has_priority;
+//Assign priority - first to the client who's already in progress and held
+//                  second to the client with priority pointing to them, unless there is a req ip
+assign uc_has_priority  = uc_req_ip  | (~soc_priority & ~soc_req_ip);
+assign soc_has_priority = soc_req_ip | ( soc_priority & ~uc_req_ip);
 
 //toggle the priority when collision is detected
 always_comb toggle_priority = req_collision;
@@ -154,7 +139,7 @@ always_comb uc_mbox_dir_req = (uc_req_dv & (uc_req_data.addr inside {[MBOX_DIR_S
 //SoC requests to mailbox
 always_comb soc_mbox_req = (valid_mbox_req & (soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}));
 //Requests to arch/fuse register block
-//Ensure that requests to fuse block match the appropriate id value
+//Ensure that requests to fuse block match the appropriate user value
 always_comb uc_reg_req = (uc_req_dv & (uc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}));
 always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_START_ADDR:SOC_IFC_REG_END_ADDR]}) &
                                         (~(soc_req_data.addr inside {[SOC_IFC_FUSE_START_ADDR:SOC_IFC_FUSE_END_ADDR]}) | valid_fuse_user));
@@ -196,15 +181,15 @@ always_comb dma_reg_req_dv = uc_dma_req | soc_dma_req;
 //if a request is colliding with another, grant the one with priority
 //ignore priority if one of the requests was already in progress
 //this prevents the "priority" request from interrupting an in progress request
-always_comb soc_mbox_gnt = soc_mbox_req & (~uc_mbox_req | soc_has_priority) & ~uc_mbox_req_ip;
-always_comb soc_reg_gnt  = soc_reg_req  & (~uc_reg_req | soc_has_priority)  & ~uc_reg_req_ip;
-always_comb soc_sha_gnt  = soc_sha_req  & (~uc_sha_req | soc_has_priority)  & ~uc_sha_req_ip;
-always_comb soc_dma_gnt  = soc_dma_req  & (~uc_dma_req | soc_has_priority)  & ~uc_dma_req_ip;
+always_comb soc_mbox_gnt = soc_mbox_req & (~uc_mbox_req | soc_has_priority);
+always_comb soc_reg_gnt  = soc_reg_req  & (~uc_reg_req  | soc_has_priority);
+always_comb soc_sha_gnt  = soc_sha_req  & (~uc_sha_req  | soc_has_priority);
+always_comb soc_dma_gnt  = soc_dma_req  & (~uc_dma_req  | soc_has_priority);
 
-always_comb uc_mbox_gnt = uc_mbox_req & (~soc_mbox_req | uc_has_priority) & ~soc_mbox_req_ip;
-always_comb uc_reg_gnt  = uc_reg_req  & (~soc_reg_req | uc_has_priority)  & ~soc_reg_req_ip;
-always_comb uc_sha_gnt  = uc_sha_req  & (~soc_sha_req | uc_has_priority)  & ~soc_sha_req_ip;
-always_comb uc_dma_gnt  = uc_dma_req  & (~soc_dma_req | uc_has_priority)  & ~soc_dma_req_ip;
+always_comb uc_mbox_gnt = uc_mbox_req & (~soc_mbox_req | uc_has_priority);
+always_comb uc_reg_gnt  = uc_reg_req  & (~soc_reg_req  | uc_has_priority);
+always_comb uc_sha_gnt  = uc_sha_req  & (~soc_sha_req  | uc_has_priority);
+always_comb uc_dma_gnt  = uc_dma_req  & (~soc_dma_req  | uc_has_priority);
 
 //drive the appropriate request to each destination
 always_comb mbox_req_data = ({$bits(soc_ifc_req_t){soc_mbox_gnt}} & soc_req_data) |
@@ -256,5 +241,9 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
                         (soc_sha_gnt & sha_error) |
                         (soc_dma_gnt & dma_reg_error) |
                         (soc_req_dv & ~(soc_mbox_req | soc_reg_req | soc_sha_req | soc_dma_req));
+
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_ACCESS_MUTEX, {uc_mbox_gnt,soc_mbox_gnt}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_REG_ACCESS_MUTEX , {uc_reg_gnt,soc_reg_gnt}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_sha_gnt,soc_sha_gnt}, clk, rst_b)
 
 endmodule
