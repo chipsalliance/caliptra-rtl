@@ -47,6 +47,7 @@ module caliptra_top_tb_services
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_sink          el2_mem_export,
+    mldsa_mem_if.resp                  mldsa_memory_export,
 
     //SRAM interface for mbox
     input  wire logic mbox_sram_cs,
@@ -786,15 +787,15 @@ module caliptra_top_tb_services
             always @(negedge clk) begin
                 if (mldsa_signing) begin
                     if ((mldsa_dword % 2) == 0) begin
-                        force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                     else begin
-                        force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                 end
                 else begin
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2];
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2];
                 end
             end
         end
@@ -814,10 +815,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 10; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
                     end
                     else begin
-                        release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
@@ -848,10 +849,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 5; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
                     end
                     else begin
-                        release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
@@ -1698,6 +1699,12 @@ endgenerate //IV_NO
    //=========================================================================-
    // SRAM instances
    //=========================================================================-
+  // SRAM module
+mldsa_mem_top mldsa_mem_top_inst (
+    .clk_i(clk),
+    .mldsa_memory_export
+);
+
 caliptra_veer_sram_export veer_sram_export_inst (
     .sram_error_injection_mode(sram_error_injection_mode),
     .el2_mem_export(el2_mem_export)

@@ -126,6 +126,7 @@ module caliptra_top_tb (
     logic deassert_rst_flag_from_service;
 
     el2_mem_if el2_mem_export ();
+    mldsa_mem_if mldsa_memory_export();
 
 `ifndef VERILATOR
     always
@@ -221,7 +222,8 @@ caliptra_top caliptra_top_dut (
     .m_axi_r_if(m_axi_if.r_mgr),
 
     .el2_mem_export(el2_mem_export.veer_sram_src),
-
+    .mldsa_memory_export(mldsa_memory_export.req),
+    
     .ready_for_fuses(ready_for_fuses),
     .ready_for_mb_processing(ready_for_mb_processing),
     .ready_for_runtime(),
@@ -311,6 +313,7 @@ caliptra_top_tb_services #(
 
     // Caliptra Memory Export Interface
     .el2_mem_export (el2_mem_export.veer_sram_sink),
+    .mldsa_memory_export (mldsa_memory_export.resp),
 
     //SRAM interface for mbox
     .mbox_sram_cs   (mbox_sram_cs   ),
