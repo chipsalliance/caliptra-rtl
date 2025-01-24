@@ -374,7 +374,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                           input  logic [IW-1:0] id    = IW'(0),
                           input  logic          lock  = 1'b0,
                           input  logic [DW-1:0] data,
-                          input  logic [UW-1:0] write_user,
+                          input  logic [UW-1:0] write_user = UW'(0),
                           output axi_resp_e     resp,
                           output logic [UW-1:0] resp_user);
         automatic logic [DW/8-1:0] burst_strb[] = new[1]('{{DW/8{1'b1}}});
