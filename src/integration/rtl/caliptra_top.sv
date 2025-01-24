@@ -60,6 +60,7 @@ module caliptra_top
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
+    mldsa_mem_if.req                   mldsa_memory_export,
 
     //SRAM interface for mbox
     output logic mbox_sram_cs,
@@ -1005,7 +1006,9 @@ mldsa_top #(
      .pcr_signing_data  (pcr_signing_data),
      .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
-     .notif_intr        (mldsa_notif_intr)
+     .notif_intr        (mldsa_notif_intr),
+     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
+     .mldsa_memory_export(mldsa_memory_export)
 );
 
 aes_clp_wrapper #(
