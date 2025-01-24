@@ -22,6 +22,7 @@
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
@@ -30,14 +31,18 @@ volatile uint32_t intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-
 // ALL TEST VECTORS IN BIG-ENDIAN PRESENTATION
 
 const uint32_t mldsa_msg[] = {
 0xc8f518d4, 0xf3aa1bd4, 0x6ed56c1c, 0x3c9e16fb, 0x800af504, 0xdb988435, 0x48c5f623, 0xee115f73,
 0xd4c62abc, 0x06d303b5, 0xd90d9a17, 0x5087290d, 0x16e60096, 0x44e2a5f2, 0xc41fed22, 0xe703fb78
 };
-    
+
+const uint32_t mldsa_external_mu[] = {
+0x769d3deb, 0xb1833ef7, 0xe64ca44f, 0xf0bbb717, 0xcca119c2, 0xb4ff5671, 0xabe18725, 0x359ff31f, 
+0x0d063a6d, 0x871dae66, 0x3c9bef06, 0xa24ed769, 0xf54c20a5, 0x3ad97d2b, 0xc8612189, 0x102e8003
+};
+
 const uint32_t mldsa_privkey[] = {
 0xa79ff050, 0xba5d1eb1, 0x8fa9f173, 0x0404ab6e, 0x0434e13d, 0x13f8112d, 0xc8d03393, 0xa0b2b8bb,
 0xbc884065, 0xa81a8fca, 0x5bc1dcaa, 0x0cd4dd46, 0xd7665ca7, 0xbc8526c3, 0xd059b91d, 0xcff6d854,
@@ -466,14 +471,14 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running MLDSA Smoke Test !!\n");
-    printf("----------------------------------\n");
+    printf("-----------------------------------------------\n");
+    printf(" Running MLDSA Smoke Test in ExternalMu mode !!\n");
+    printf("-----------------------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
     mldsa_io seed;
-    uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], privkey[MLDSA87_PRIVKEY_SIZE], pubkey[MLDSA87_PUBKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE], verify_res[MLDSA_VERIFY_RES_SIZE];
+    uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], privkey[MLDSA87_PRIVKEY_SIZE], pubkey[MLDSA87_PUBKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE], verify_res[MLDSA_VERIFY_RES_SIZE], external_mu[MLDSA87_EXTERNAL_MU_SIZE];
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < MLDSA87_SEED_SIZE; i++)
@@ -488,6 +493,9 @@ void main() {
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
         msg[i] = mldsa_msg[i];
     
+    for (int i = 0; i < MLDSA87_EXTERNAL_MU_SIZE; i++)
+        external_mu[i] = mldsa_external_mu[i];
+    
     for (int i = 0; i < MLDSA87_PRIVKEY_SIZE; i++)
         privkey[i] = mldsa_privkey[i];
 
@@ -500,20 +508,16 @@ void main() {
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
         verify_res[i] = mldsa_verify_res[i];
 
-    
-    mldsa_keygen_flow(seed, entropy, privkey, pubkey);
+
+    mldsa_keygen_signing_external_mu_flow(seed, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
 
-    mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
-    mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
-
-    mldsa_signing_flow(privkey, msg, sign_rnd, entropy, sign);
+    mldsa_signing_external_mu_flow(privkey, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
     
-    mldsa_verifying_flow(msg, pubkey, sign, verify_res);
+    mldsa_verifying_external_mu_flow(external_mu, pubkey, sign, verify_res);
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
 
