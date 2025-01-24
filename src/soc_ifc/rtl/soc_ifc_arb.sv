@@ -247,6 +247,6 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_ACCESS_MUTEX, {uc_mbox_gnt,soc_mbox_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_REG_ACCESS_MUTEX , {uc_reg_gnt,soc_reg_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_sha_gnt,soc_sha_gnt}, clk, rst_b)
-`CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_DMA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, rst_b)
 
 endmodule
