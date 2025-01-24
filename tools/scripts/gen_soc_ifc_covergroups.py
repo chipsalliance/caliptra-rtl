@@ -70,8 +70,8 @@ soc_regs_txt = """
     CPTRA_OWNER_PK_HASH_LOCK
     fuse_uds_seed 16
     fuse_field_entropy 8
-    fuse_key_manifest_pk_hash 12
-    fuse_key_manifest_pk_hash_mask 8
+    fuse_vendor_pk_hash 12
+    fuse_ecc_revocation
     fuse_fmc_key_manifest_svn
     fuse_runtime_svn 4
     fuse_anti_rollback_disable
@@ -81,6 +81,9 @@ soc_regs_txt = """
     fuse_mldsa_revocation
     fuse_soc_stepping_id
     fuse_manuf_dbg_unlock_token 4
+    fuse_pqc_key_type
+    fuse_soc_manifest_svn 4
+    fuse_soc_manifest_max_svn
     SS_CALIPTRA_BASE_ADDR_L
     SS_CALIPTRA_BASE_ADDR_H
     SS_MCI_BASE_ADDR_L
@@ -94,6 +97,7 @@ soc_regs_txt = """
     SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
     SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
     SS_DEBUG_INTENT
+    SS_CALIPTRA_DMA_AXI_USER
     SS_STRAP_GENERIC 4
     SS_DBG_MANUF_SERVICE_REG_REQ
     SS_DBG_MANUF_SERVICE_REG_RSP

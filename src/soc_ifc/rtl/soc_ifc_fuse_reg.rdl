@@ -16,7 +16,7 @@
 // FUSE Registers
 // All fuses persist across caliptra reset. Locked by Fuse WR done. "Read/Write Lock - Sticky" => RWL-S
 
-field secret {sw = w1; hw = r; swwel; hwclr; resetsignal = cptra_pwrgood;};
+field secret {sw = w1; hw = rw; we; swwel; hwclr; resetsignal = cptra_pwrgood;};
 field key    {sw = w; swwe; hw = rw; wel; hwclr;};
 field Fuse   {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;};
 
@@ -35,43 +35,50 @@ reg {
     secret seed[32]=0;
 } fuse_field_entropy[8];
 reg {
-    desc = "Key Manifest PK hash Fuse.
+    name = "Vendor PK hash Fuse";
+    desc = "Vendor PK hash Fuse.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse hash[32]=0;
-} fuse_key_manifest_pk_hash[12];
+} fuse_vendor_pk_hash[12];
 reg {
-    desc = "Key Manifest Mask Fuse (ECC Revocation).
+    name = "ECC Revocation Fuse";
+    desc = "ECC Revocation Fuse.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
-     Fuse mask[32]=0;
-} fuse_key_manifest_pk_hash_mask[8];
+     Fuse ecc_revocation[4]=0;
+} fuse_ecc_revocation;
 
 reg {
+    name = "FMC Security Version Number Fuse";
     desc = "FMC Security Version Number.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
 } fuse_fmc_key_manifest_svn @0x2b4;
 reg {
+    name = "Runtime SVN Fuse";
     desc = "Runtime SVN Fuse.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse svn[32]=0;
 } fuse_runtime_svn[4];
 reg {
+    name = "Anti Rollback Disable Fuse";
     desc = "Anti Rollback Disable Fuse.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse dis[1]=0;
 } fuse_anti_rollback_disable;
 reg {
+    name = "Manufacturer IEEE IDevID Certificate Gen Attributes Fuse";
     desc = "Manufacturer IEEE IDevID Certificate Gen Attributes.
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse cert[32]=0;
 } fuse_idevid_cert_attr[24];
 reg {
+    name = "Manufacturer IDevID HSM ID Fuse";
     desc = " Manufacturer IDEVID Manufacturer’s HSM identifier (this is used to find the certificate chain from the boot media)
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
@@ -79,26 +86,56 @@ reg {
 } fuse_idevid_manuf_hsm_id[4];
 
 reg {
+    name = "LMS Revocation Fuse";
     desc = "One-hot encoded list of revoked Vendor LMS Public Keys (up to 32 keys)
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse lms_revocation[32]=0;
 } fuse_lms_revocation @0x340;
 reg {
+    name = "ML-DSA Revocation Fuse";
     desc = "One-hot encoded list of revoked Vendor MLDSA Public Keys (up to 4 keys)
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse mldsa_revocation[4]=0;
 } fuse_mldsa_revocation;
 reg {
+    name = "SOC stepping ID Fuse";
     desc = "SOC stepping ID
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse soc_stepping_id[16]=0;
 } fuse_soc_stepping_id;
 reg {
+    name = "Manufacturing Debug Unlock Token Fuse";
     desc = "Manufacturing debug unlock token
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse token[32]=0;
 } fuse_manuf_dbg_unlock_token[4];
+reg {
+    name = "PQC Key Type Fuse";
+    desc = "One-hot encoded selection of PQC key type for firmware validation.
+            [br]
+            [br]Field decode:
+            [br] [lb]0[rb] - MLDSA
+            [br] [lb]1[rb] - LMS
+            [br]
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    Fuse key_type[2]=2'b0;
+} fuse_pqc_key_type;
+reg {
+    name = "SOC Manifest SVN Fuse";
+    desc = "One-hot encoded value for the SOC authorization manifest minimum supported SVN.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    Fuse svn[32]=32'b0;
+} fuse_soc_manifest_svn[4];
+reg {
+    name = "SOC Manifest Max SVN Fuse";
+    desc = "Maximum value for the SOC authorization manifest SVN.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    Fuse svn[8]=8'b0;
+} fuse_soc_manifest_max_svn;

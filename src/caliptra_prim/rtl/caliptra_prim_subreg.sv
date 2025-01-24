@@ -1,4 +1,4 @@
-// Copyright lowRISC contributors.
+// Copyright lowRISC contributors (OpenTitan project).
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -9,7 +9,7 @@ module caliptra_prim_subreg
 #(
   parameter int            DW       = 32,
   parameter sw_access_e    SwAccess = SwAccessRW,
-  parameter logic [DW-1:0] RESVAL   = '0 ,   // reset value
+  parameter logic [DW-1:0] RESVAL   = '0,   // reset value
   parameter bit            Mubi     = 1'b0
 ) (
   input clk_i,

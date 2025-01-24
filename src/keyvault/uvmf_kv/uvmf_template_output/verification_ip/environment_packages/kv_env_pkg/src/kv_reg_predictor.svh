@@ -115,7 +115,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //Read CTRL reg data
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
-            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:21], last_dword, kv_reg_ctrl_data[16:14], /*5'h1F*/write_dest_valid, kv_reg_ctrl_data[8:0]};
+            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:21], last_dword, kv_reg_ctrl_data[16:15], /*6'h3F*/write_dest_valid, kv_reg_ctrl_data[8:0]};
             rw_ctrl.data = kv_reg_ctrl_data;
 
             //-----------------------------------------------

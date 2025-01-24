@@ -61,6 +61,7 @@ module axi_sub_wr import axi_pkg::*; #(
     output logic [IW-1:0] id,
     output logic [DW-1:0] wdata, // Requires: Component dwidth == AXI dwidth
     output logic [BC-1:0] wstrb, // Requires: Component dwidth == AXI dwidth
+    output logic [2:0]    wsize,
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
     input  logic          err
@@ -93,6 +94,10 @@ module axi_sub_wr import axi_pkg::*; #(
     // --------------------------------------- //
 
     genvar ex; // Exclusive contexts
+
+    logic axi_out_of_rst;
+    logic axi_awvalid_q;
+    logic axi_awready_q;
 
     logic dv_pre;
 
@@ -129,6 +134,17 @@ module axi_sub_wr import axi_pkg::*; #(
     // Address Request I/F                     //
     // --------------------------------------- //
 
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            axi_out_of_rst <= 1'b0;
+        end
+        else begin
+            axi_out_of_rst <= 1'b1;
+        end
+    end
+    always_comb axi_awvalid_q    = s_axi_if.awvalid & axi_out_of_rst;
+    always_comb s_axi_if.awready = axi_awready_q    & axi_out_of_rst;
+
     always_comb begin
         s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
         s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
@@ -153,8 +169,8 @@ module axi_sub_wr import axi_pkg::*; #(
     ) i_req_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),
-        .i_valid(s_axi_if.awvalid),
-        .o_ready(s_axi_if.awready),
+        .i_valid(axi_awvalid_q   ),
+        .o_ready(axi_awready_q   ),
         .i_data (s_axi_if_ctx    ),
         .o_valid(req_valid       ),
         .i_ready(req_ready       ),
@@ -238,6 +254,7 @@ module axi_sub_wr import axi_pkg::*; #(
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
     always_comb user = txn_ctx.user;
     always_comb id   = txn_ctx.id;
+    always_comb wsize = txn_ctx.size;
 
     // Use full address to calculate next address (in case of AxSIZE < data width)
     axi_addr #(

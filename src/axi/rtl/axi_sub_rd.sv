@@ -62,6 +62,7 @@ module axi_sub_rd import axi_pkg::*; #(
     output logic [AW-1:0] addr, // Byte address
     output logic [UW-1:0] user,
     output logic [IW-1:0] id,
+    output logic [2:0]    size,
     output logic          last, // Asserted with final 'dv' of a burst
     input  logic          hld,
     input  logic          err,
@@ -107,6 +108,8 @@ module axi_sub_rd import axi_pkg::*; #(
     genvar ex; // Exclusive contexts
     `endif
 
+    logic axi_out_of_rst;
+
     // Active transaction signals
     // track requests as they are sent to component
     axi_ctx_t            txn_ctx;
@@ -129,7 +132,16 @@ module axi_sub_rd import axi_pkg::*; #(
     // Address Request I/F                     //
     // --------------------------------------- //
 
-    assign s_axi_if.arready = !txn_active || txn_final_beat;
+    assign s_axi_if.arready = axi_out_of_rst && (!txn_active || txn_final_beat);
+
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            axi_out_of_rst <= 1'b0;
+        end
+        else begin
+            axi_out_of_rst <= 1'b1;
+        end
+    end
 
     // Indicates there are still reqs to be issued towards component.
     // This active signal deasserts after final dv to component, meaning data is
@@ -138,7 +150,7 @@ module axi_sub_rd import axi_pkg::*; #(
         if (!rst_n) begin
             txn_active <= 1'b0;
         end
-        else if (s_axi_if.arvalid) begin
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_active <= 1'b1;
         end
         else if (txn_final_beat) begin
@@ -196,6 +208,7 @@ module axi_sub_rd import axi_pkg::*; #(
     always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
     always_comb user = txn_ctx.user;
     always_comb id   = txn_ctx.id;
+    always_comb size = txn_ctx.size;
     always_comb last = txn_cnt == 0;
 
     // Use full address to calculate next address (in case of arsize < data width)

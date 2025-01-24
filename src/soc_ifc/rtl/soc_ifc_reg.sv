@@ -114,8 +114,8 @@ module soc_ifc_reg (
         logic CPTRA_OWNER_PK_HASH_LOCK;
         logic [16-1:0]fuse_uds_seed;
         logic [8-1:0]fuse_field_entropy;
-        logic [12-1:0]fuse_key_manifest_pk_hash;
-        logic [8-1:0]fuse_key_manifest_pk_hash_mask;
+        logic [12-1:0]fuse_vendor_pk_hash;
+        logic fuse_ecc_revocation;
         logic fuse_fmc_key_manifest_svn;
         logic [4-1:0]fuse_runtime_svn;
         logic fuse_anti_rollback_disable;
@@ -125,6 +125,9 @@ module soc_ifc_reg (
         logic fuse_mldsa_revocation;
         logic fuse_soc_stepping_id;
         logic [4-1:0]fuse_manuf_dbg_unlock_token;
+        logic fuse_pqc_key_type;
+        logic [4-1:0]fuse_soc_manifest_svn;
+        logic fuse_soc_manifest_max_svn;
         logic SS_CALIPTRA_BASE_ADDR_L;
         logic SS_CALIPTRA_BASE_ADDR_H;
         logic SS_MCI_BASE_ADDR_L;
@@ -138,6 +141,7 @@ module soc_ifc_reg (
         logic SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         logic SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         logic SS_DEBUG_INTENT;
+        logic SS_CALIPTRA_DMA_AXI_USER;
         logic [4-1:0]SS_STRAP_GENERIC;
         logic SS_DBG_MANUF_SERVICE_REG_REQ;
         logic SS_DBG_MANUF_SERVICE_REG_RSP;
@@ -280,11 +284,9 @@ module soc_ifc_reg (
             decoded_reg_strb.fuse_field_entropy[i0] = cpuif_req_masked & (cpuif_addr == 12'h240 + i0*12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.fuse_key_manifest_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h260 + i0*12'h4);
+            decoded_reg_strb.fuse_vendor_pk_hash[i0] = cpuif_req_masked & (cpuif_addr == 12'h260 + i0*12'h4);
         end
-        for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] = cpuif_req_masked & (cpuif_addr == 12'h290 + i0*12'h4);
-        end
+        decoded_reg_strb.fuse_ecc_revocation = cpuif_req_masked & (cpuif_addr == 12'h290);
         decoded_reg_strb.fuse_fmc_key_manifest_svn = cpuif_req_masked & (cpuif_addr == 12'h2b4);
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.fuse_runtime_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h2b8 + i0*12'h4);
@@ -302,6 +304,11 @@ module soc_ifc_reg (
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] = cpuif_req_masked & (cpuif_addr == 12'h34c + i0*12'h4);
         end
+        decoded_reg_strb.fuse_pqc_key_type = cpuif_req_masked & (cpuif_addr == 12'h35c);
+        for(int i0=0; i0<4; i0++) begin
+            decoded_reg_strb.fuse_soc_manifest_svn[i0] = cpuif_req_masked & (cpuif_addr == 12'h360 + i0*12'h4);
+        end
+        decoded_reg_strb.fuse_soc_manifest_max_svn = cpuif_req_masked & (cpuif_addr == 12'h370);
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h500);
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h504);
         decoded_reg_strb.SS_MCI_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h508);
@@ -315,6 +322,7 @@ module soc_ifc_reg (
         decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET = cpuif_req_masked & (cpuif_addr == 12'h528);
         decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES = cpuif_req_masked & (cpuif_addr == 12'h52c);
         decoded_reg_strb.SS_DEBUG_INTENT = cpuif_req_masked & (cpuif_addr == 12'h530);
+        decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h534);
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.SS_STRAP_GENERIC[i0] = cpuif_req_masked & (cpuif_addr == 12'h5a0 + i0*12'h4);
         end
@@ -721,13 +729,13 @@ module soc_ifc_reg (
                 logic [31:0] next;
                 logic load_next;
             } hash;
-        } [12-1:0]fuse_key_manifest_pk_hash;
+        } [12-1:0]fuse_vendor_pk_hash;
         struct packed{
             struct packed{
-                logic [31:0] next;
+                logic [3:0] next;
                 logic load_next;
-            } mask;
-        } [8-1:0]fuse_key_manifest_pk_hash_mask;
+            } ecc_revocation;
+        } fuse_ecc_revocation;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -782,6 +790,24 @@ module soc_ifc_reg (
                 logic load_next;
             } token;
         } [4-1:0]fuse_manuf_dbg_unlock_token;
+        struct packed{
+            struct packed{
+                logic [1:0] next;
+                logic load_next;
+            } key_type;
+        } fuse_pqc_key_type;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } svn;
+        } [4-1:0]fuse_soc_manifest_svn;
+        struct packed{
+            struct packed{
+                logic [7:0] next;
+                logic load_next;
+            } svn;
+        } fuse_soc_manifest_max_svn;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -860,6 +886,12 @@ module soc_ifc_reg (
                 logic load_next;
             } debug_intent;
         } SS_DEBUG_INTENT;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } user;
+        } SS_CALIPTRA_DMA_AXI_USER;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1731,12 +1763,12 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] value;
             } hash;
-        } [12-1:0]fuse_key_manifest_pk_hash;
+        } [12-1:0]fuse_vendor_pk_hash;
         struct packed{
             struct packed{
-                logic [31:0] value;
-            } mask;
-        } [8-1:0]fuse_key_manifest_pk_hash_mask;
+                logic [3:0] value;
+            } ecc_revocation;
+        } fuse_ecc_revocation;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1782,6 +1814,21 @@ module soc_ifc_reg (
                 logic [31:0] value;
             } token;
         } [4-1:0]fuse_manuf_dbg_unlock_token;
+        struct packed{
+            struct packed{
+                logic [1:0] value;
+            } key_type;
+        } fuse_pqc_key_type;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } svn;
+        } [4-1:0]fuse_soc_manifest_svn;
+        struct packed{
+            struct packed{
+                logic [7:0] value;
+            } svn;
+        } fuse_soc_manifest_max_svn;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -1847,6 +1894,11 @@ module soc_ifc_reg (
                 logic value;
             } debug_intent;
         } SS_DEBUG_INTENT;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } user;
+        } SS_CALIPTRA_DMA_AXI_USER;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -3557,6 +3609,9 @@ module soc_ifc_reg (
             if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
+            end else if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
+                next_c = hwif_in.fuse_uds_seed[i0].seed.next;
+                load_next_c = '1;
             end else if(hwif_in.fuse_uds_seed[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
                 load_next_c = '1;
@@ -3583,6 +3638,9 @@ module soc_ifc_reg (
             if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
                 next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
+            end else if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
+                next_c = hwif_in.fuse_field_entropy[i0].seed.next;
+                load_next_c = '1;
             end else if(hwif_in.fuse_field_entropy[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
                 load_next_c = '1;
@@ -3600,51 +3658,49 @@ module soc_ifc_reg (
         assign hwif_out.fuse_field_entropy[i0].seed.value = field_storage.fuse_field_entropy[i0].seed.value;
     end
     for(genvar i0=0; i0<12; i0++) begin
-        // Field: soc_ifc_reg.fuse_key_manifest_pk_hash[].hash
+        // Field: soc_ifc_reg.fuse_vendor_pk_hash[].hash
         always_comb begin
             automatic logic [31:0] next_c;
             automatic logic load_next_c;
-            next_c = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
+            next_c = field_storage.fuse_vendor_pk_hash[i0].hash.value;
             load_next_c = '0;
-            if(decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash[i0].hash.swwel)) begin // SW write
-                next_c = (field_storage.fuse_key_manifest_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            if(decoded_reg_strb.fuse_vendor_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_vendor_pk_hash[i0].hash.swwel)) begin // SW write
+                next_c = (field_storage.fuse_vendor_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
-            field_combo.fuse_key_manifest_pk_hash[i0].hash.next = next_c;
-            field_combo.fuse_key_manifest_pk_hash[i0].hash.load_next = load_next_c;
+            field_combo.fuse_vendor_pk_hash[i0].hash.next = next_c;
+            field_combo.fuse_vendor_pk_hash[i0].hash.load_next = load_next_c;
         end
         always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
             if(~hwif_in.cptra_pwrgood) begin
-                field_storage.fuse_key_manifest_pk_hash[i0].hash.value <= 32'h0;
-            end else if(field_combo.fuse_key_manifest_pk_hash[i0].hash.load_next) begin
-                field_storage.fuse_key_manifest_pk_hash[i0].hash.value <= field_combo.fuse_key_manifest_pk_hash[i0].hash.next;
+                field_storage.fuse_vendor_pk_hash[i0].hash.value <= 32'h0;
+            end else if(field_combo.fuse_vendor_pk_hash[i0].hash.load_next) begin
+                field_storage.fuse_vendor_pk_hash[i0].hash.value <= field_combo.fuse_vendor_pk_hash[i0].hash.next;
             end
         end
-        assign hwif_out.fuse_key_manifest_pk_hash[i0].hash.value = field_storage.fuse_key_manifest_pk_hash[i0].hash.value;
+        assign hwif_out.fuse_vendor_pk_hash[i0].hash.value = field_storage.fuse_vendor_pk_hash[i0].hash.value;
     end
-    for(genvar i0=0; i0<8; i0++) begin
-        // Field: soc_ifc_reg.fuse_key_manifest_pk_hash_mask[].mask
-        always_comb begin
-            automatic logic [31:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] && decoded_req_is_wr && !(hwif_in.fuse_key_manifest_pk_hash_mask[i0].mask.swwel)) begin // SW write
-                next_c = (field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end
-            field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.next = next_c;
-            field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.load_next = load_next_c;
+    // Field: soc_ifc_reg.fuse_ecc_revocation.ecc_revocation
+    always_comb begin
+        automatic logic [3:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.fuse_ecc_revocation.ecc_revocation.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.fuse_ecc_revocation && decoded_req_is_wr && !(hwif_in.fuse_ecc_revocation.ecc_revocation.swwel)) begin // SW write
+            next_c = (field_storage.fuse_ecc_revocation.ecc_revocation.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
+            load_next_c = '1;
         end
-        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-            if(~hwif_in.cptra_pwrgood) begin
-                field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value <= 32'h0;
-            end else if(field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.load_next) begin
-                field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value <= field_combo.fuse_key_manifest_pk_hash_mask[i0].mask.next;
-            end
-        end
-        assign hwif_out.fuse_key_manifest_pk_hash_mask[i0].mask.value = field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value;
+        field_combo.fuse_ecc_revocation.ecc_revocation.next = next_c;
+        field_combo.fuse_ecc_revocation.ecc_revocation.load_next = load_next_c;
     end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.fuse_ecc_revocation.ecc_revocation.value <= 4'h0;
+        end else if(field_combo.fuse_ecc_revocation.ecc_revocation.load_next) begin
+            field_storage.fuse_ecc_revocation.ecc_revocation.value <= field_combo.fuse_ecc_revocation.ecc_revocation.next;
+        end
+    end
+    assign hwif_out.fuse_ecc_revocation.ecc_revocation.value = field_storage.fuse_ecc_revocation.ecc_revocation.value;
     // Field: soc_ifc_reg.fuse_fmc_key_manifest_svn.svn
     always_comb begin
         automatic logic [31:0] next_c;
@@ -3842,6 +3898,71 @@ module soc_ifc_reg (
         end
         assign hwif_out.fuse_manuf_dbg_unlock_token[i0].token.value = field_storage.fuse_manuf_dbg_unlock_token[i0].token.value;
     end
+    // Field: soc_ifc_reg.fuse_pqc_key_type.key_type
+    always_comb begin
+        automatic logic [1:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.fuse_pqc_key_type.key_type.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.fuse_pqc_key_type && decoded_req_is_wr && !(hwif_in.fuse_pqc_key_type.key_type.swwel)) begin // SW write
+            next_c = (field_storage.fuse_pqc_key_type.key_type.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
+            load_next_c = '1;
+        end
+        field_combo.fuse_pqc_key_type.key_type.next = next_c;
+        field_combo.fuse_pqc_key_type.key_type.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.fuse_pqc_key_type.key_type.value <= 2'h0;
+        end else if(field_combo.fuse_pqc_key_type.key_type.load_next) begin
+            field_storage.fuse_pqc_key_type.key_type.value <= field_combo.fuse_pqc_key_type.key_type.next;
+        end
+    end
+    assign hwif_out.fuse_pqc_key_type.key_type.value = field_storage.fuse_pqc_key_type.key_type.value;
+    for(genvar i0=0; i0<4; i0++) begin
+        // Field: soc_ifc_reg.fuse_soc_manifest_svn[].svn
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.fuse_soc_manifest_svn[i0].svn.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.fuse_soc_manifest_svn[i0] && decoded_req_is_wr && !(hwif_in.fuse_soc_manifest_svn[i0].svn.swwel)) begin // SW write
+                next_c = (field_storage.fuse_soc_manifest_svn[i0].svn.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.fuse_soc_manifest_svn[i0].svn.next = next_c;
+            field_combo.fuse_soc_manifest_svn[i0].svn.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
+                field_storage.fuse_soc_manifest_svn[i0].svn.value <= 32'h0;
+            end else if(field_combo.fuse_soc_manifest_svn[i0].svn.load_next) begin
+                field_storage.fuse_soc_manifest_svn[i0].svn.value <= field_combo.fuse_soc_manifest_svn[i0].svn.next;
+            end
+        end
+        assign hwif_out.fuse_soc_manifest_svn[i0].svn.value = field_storage.fuse_soc_manifest_svn[i0].svn.value;
+    end
+    // Field: soc_ifc_reg.fuse_soc_manifest_max_svn.svn
+    always_comb begin
+        automatic logic [7:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.fuse_soc_manifest_max_svn.svn.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.fuse_soc_manifest_max_svn && decoded_req_is_wr && !(hwif_in.fuse_soc_manifest_max_svn.svn.swwel)) begin // SW write
+            next_c = (field_storage.fuse_soc_manifest_max_svn.svn.value & ~decoded_wr_biten[7:0]) | (decoded_wr_data[7:0] & decoded_wr_biten[7:0]);
+            load_next_c = '1;
+        end
+        field_combo.fuse_soc_manifest_max_svn.svn.next = next_c;
+        field_combo.fuse_soc_manifest_max_svn.svn.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.fuse_soc_manifest_max_svn.svn.value <= 8'h0;
+        end else if(field_combo.fuse_soc_manifest_max_svn.svn.load_next) begin
+            field_storage.fuse_soc_manifest_max_svn.svn.value <= field_combo.fuse_soc_manifest_max_svn.svn.next;
+        end
+    end
+    assign hwif_out.fuse_soc_manifest_max_svn.svn.value = field_storage.fuse_soc_manifest_max_svn.svn.value;
     // Field: soc_ifc_reg.SS_CALIPTRA_BASE_ADDR_L.addr_l
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4151,6 +4272,30 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_DEBUG_INTENT.debug_intent.value = field_storage.SS_DEBUG_INTENT.debug_intent.value;
+    // Field: soc_ifc_reg.SS_CALIPTRA_DMA_AXI_USER.user
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && decoded_req_is_wr && !(hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.swwel)) begin // SW write
+            next_c = (field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.we) begin // HW Write - we
+            next_c = hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_CALIPTRA_DMA_AXI_USER.user.next = next_c;
+        field_combo.SS_CALIPTRA_DMA_AXI_USER.user.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value <= 32'h0;
+        end else if(field_combo.SS_CALIPTRA_DMA_AXI_USER.user.load_next) begin
+            field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value <= field_combo.SS_CALIPTRA_DMA_AXI_USER.user.next;
+        end
+    end
+    assign hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value = field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.SS_STRAP_GENERIC[].data
         always_comb begin
@@ -7010,45 +7155,52 @@ module soc_ifc_reg (
     assign readback_array[89][0:0] = (decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value : '0;
     assign readback_array[89][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.fuse_vendor_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_vendor_pk_hash[i0].hash.value : '0;
     end
-    for(genvar i0=0; i0<8; i0++) begin
-        assign readback_array[i0*1 + 102][31:0] = (decoded_reg_strb.fuse_key_manifest_pk_hash_mask[i0] && !decoded_req_is_wr) ? field_storage.fuse_key_manifest_pk_hash_mask[i0].mask.value : '0;
-    end
-    assign readback_array[110][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
+    assign readback_array[102][3:0] = (decoded_reg_strb.fuse_ecc_revocation && !decoded_req_is_wr) ? field_storage.fuse_ecc_revocation.ecc_revocation.value : '0;
+    assign readback_array[102][31:4] = '0;
+    assign readback_array[103][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 111][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 104][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
     end
-    assign readback_array[115][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
-    assign readback_array[115][31:1] = '0;
+    assign readback_array[108][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
+    assign readback_array[108][31:1] = '0;
     for(genvar i0=0; i0<24; i0++) begin
-        assign readback_array[i0*1 + 116][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
+        assign readback_array[i0*1 + 109][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 140][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
+        assign readback_array[i0*1 + 133][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
     end
-    assign readback_array[144][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
-    assign readback_array[145][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
-    assign readback_array[145][31:4] = '0;
-    assign readback_array[146][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
-    assign readback_array[146][31:16] = '0;
+    assign readback_array[137][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
+    assign readback_array[138][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
+    assign readback_array[138][31:4] = '0;
+    assign readback_array[139][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
+    assign readback_array[139][31:16] = '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 147][31:0] = (decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && !decoded_req_is_wr) ? field_storage.fuse_manuf_dbg_unlock_token[i0].token.value : '0;
+        assign readback_array[i0*1 + 140][31:0] = (decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && !decoded_req_is_wr) ? field_storage.fuse_manuf_dbg_unlock_token[i0].token.value : '0;
     end
-    assign readback_array[151][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[152][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[153][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[154][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[155][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[156][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[157][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[158][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[159][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[160][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[161][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
-    assign readback_array[162][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
-    assign readback_array[163][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
-    assign readback_array[163][31:1] = '0;
+    assign readback_array[144][1:0] = (decoded_reg_strb.fuse_pqc_key_type && !decoded_req_is_wr) ? field_storage.fuse_pqc_key_type.key_type.value : '0;
+    assign readback_array[144][31:2] = '0;
+    for(genvar i0=0; i0<4; i0++) begin
+        assign readback_array[i0*1 + 145][31:0] = (decoded_reg_strb.fuse_soc_manifest_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_svn[i0].svn.value : '0;
+    end
+    assign readback_array[149][7:0] = (decoded_reg_strb.fuse_soc_manifest_max_svn && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_max_svn.svn.value : '0;
+    assign readback_array[149][31:8] = '0;
+    assign readback_array[150][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[151][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[152][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[153][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[154][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[155][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[156][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[157][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[158][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[159][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[160][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
+    assign readback_array[161][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
+    assign readback_array[162][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
+    assign readback_array[162][31:1] = '0;
+    assign readback_array[163][31:0] = (decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
         assign readback_array[i0*1 + 164][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
     end
