@@ -7843,6 +7843,8 @@
 #define MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK                                                           (0x8)
 #define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_LOW                                                           (4)
 #define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK                                                          (0x10)
+#define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_LOW                                                        (5)
+#define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK                                                       (0x20)
 #endif
 #define CLP_MLDSA_REG_MLDSA_STATUS                                                                  (0x10030014)
 #ifndef MLDSA_REG_MLDSA_STATUS
@@ -8107,6 +8109,70 @@
 #define CLP_MLDSA_REG_MLDSA_VERIFY_RES_15                                                           (0x10030114)
 #ifndef MLDSA_REG_MLDSA_VERIFY_RES_15
 #define MLDSA_REG_MLDSA_VERIFY_RES_15                                                               (0x114)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0                                                           (0x10030118)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_0
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_0                                                               (0x118)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_1                                                           (0x1003011c)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_1
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_1                                                               (0x11c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_2                                                           (0x10030120)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_2
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_2                                                               (0x120)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_3                                                           (0x10030124)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_3
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_3                                                               (0x124)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_4                                                           (0x10030128)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_4
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_4                                                               (0x128)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_5                                                           (0x1003012c)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_5
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_5                                                               (0x12c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_6                                                           (0x10030130)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_6
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_6                                                               (0x130)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_7                                                           (0x10030134)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_7
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_7                                                               (0x134)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_8                                                           (0x10030138)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_8
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_8                                                               (0x138)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_9                                                           (0x1003013c)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_9
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_9                                                               (0x13c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_10                                                          (0x10030140)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_10
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_10                                                              (0x140)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_11                                                          (0x10030144)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_11
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_11                                                              (0x144)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_12                                                          (0x10030148)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_12
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_12                                                              (0x148)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_13                                                          (0x1003014c)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_13
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_13                                                              (0x14c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_14                                                          (0x10030150)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_14
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_14                                                              (0x150)
+#endif
+#define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15                                                          (0x10030154)
+#ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_15
+#define MLDSA_REG_MLDSA_EXTERNAL_MU_15                                                              (0x154)
 #endif
 #define CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR                                                        (0x10031000)
 #define CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR                                                         (0x10031a1f)
