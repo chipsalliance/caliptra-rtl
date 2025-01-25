@@ -46,6 +46,9 @@ uvmf:
       - name: strap_ss_strap_generic_3
         dir: output
         width: '32'
+      - name: strap_ss_caliptra_dma_axi_user
+        dir: output
+        width: '32'
 
       # Debug Intent
       - name: ss_debug_intent
@@ -89,6 +92,8 @@ uvmf:
         value: "{ strap_ss_strap_generic_2 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }"
       - name: strap_ss_strap_generic_3_c
         value: "{ strap_ss_strap_generic_3 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }"
+      - name: strap_ss_caliptra_dma_axi_user_c
+        value: "{ strap_ss_caliptra_dma_axi_user dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }"
       - name: debug_intent_c
         value: '{ ss_debug_intent dist {1 :/ 1, 0 :/ 9}; }'
 
@@ -134,6 +139,10 @@ uvmf:
         iscompare: 'False'
         isrand: 'True'
       - name: strap_ss_strap_generic_3
+        type: bit [31:0]
+        iscompare: 'False'
+        isrand: 'True'
+      - name: strap_ss_caliptra_dma_axi_user
         type: bit [31:0]
         iscompare: 'False'
         isrand: 'True'

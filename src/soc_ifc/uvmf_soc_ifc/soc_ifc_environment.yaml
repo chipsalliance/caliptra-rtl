@@ -5,6 +5,9 @@ uvmf:
       - name: "rw_txn_pkg"
 
       agents:
+      - name: dummy_avery_aaxi_agent
+        type: dummy_avery_aaxi
+        initiator_responder: "INITIATOR"
       - name: soc_ifc_ctrl_agent
         type: soc_ifc_ctrl
         initiator_responder: "INITIATOR"
@@ -79,6 +82,8 @@ uvmf:
         receiver: soc_ifc_pred.ss_mode_ctrl_agent_ae               #
       - driver: mbox_sram_agent.monitored_ap                       # Mailbox SRAM i/f
         receiver: soc_ifc_pred.mbox_sram_agent_ae                  #
+      - driver: dummy_avery_aaxi_agent.monitored_ap                # Dummy AXI placeholder
+        receiver: soc_ifc_pred.axi_sub_0_ae                        #
 #      - driver: qvip_ahb_lite_master_subenv.ahb_master_0.export_rw # AHB
 #        receiver: soc_ifc_pred.ahb_master_0_ae                     #
 #      - driver: qvip_apb5_master_subenv.apb5_master_0.export_rw    # APB

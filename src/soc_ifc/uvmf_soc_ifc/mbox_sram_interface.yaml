@@ -43,18 +43,18 @@ uvmf:
         iscompare: 'True'
         isrand: 'True'
       - name: address
-        type: bit [MBOX_ADDR_W-1:0]
+        type: bit [CPTRA_MBOX_ADDR_W-1:0]
         iscompare: 'True'
         isrand: 'True'
       - name: data
-        type: bit [MBOX_DATA_W-1:0]
+        type: bit [CPTRA_MBOX_DATA_W-1:0]
         iscompare: 'True'
         isrand: 'True'
         # ECC would be generated based on data, post_randomize, in the case where
         # this transaction is generated as stimulus.
         # We mostly expect to use this i/f as an observer though.
       - name: data_ecc
-        type: bit [MBOX_ECC_DATA_W-1:0]
+        type: bit [CPTRA_MBOX_ECC_DATA_W-1:0]
         iscompare: 'True'
         isrand: 'False'
       - name: ecc_single_bit_error

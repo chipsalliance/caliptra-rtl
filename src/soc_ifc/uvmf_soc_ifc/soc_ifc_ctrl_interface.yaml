@@ -37,6 +37,20 @@ uvmf:
         dir: output
         width: ["`CLP_OBF_KEY_DWORDS","32"]
 
+      # UDS/FE initialization signals
+      - name: cptra_obf_field_entropy_vld
+        dir: output
+        width: '1'
+      - name: cptra_obf_field_entropy
+        dir: output
+        width: ["`CLP_OBF_FE_DWORDS","32"]
+      - name: cptra_obf_uds_seed_vld
+        dir: output
+        width: '1'
+      - name: cptra_obf_uds_seed
+        dir: output
+        width: ["`CLP_OBF_UDS_DWORDS","32"]
+
       # Security State
       - name: security_state
         dir: output

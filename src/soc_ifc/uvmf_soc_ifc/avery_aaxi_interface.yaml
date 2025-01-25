@@ -1,0 +1,25 @@
+uvmf:
+  interfaces:
+    dummy_avery_aaxi:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      ports:
+      - name: fixme_hshake
+        dir: output
+        width: '1'
+
+      transaction_constraints: []
+
+      transaction_vars:
+      - name: dummy_var
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
