@@ -54,8 +54,8 @@ class ss_mode_ctrl_transaction_coverage  extends uvm_subscriber #(.T(ss_mode_ctr
     strap_ss_strap_generic_1: coverpoint coverage_trans.strap_ss_strap_generic_1;
     strap_ss_strap_generic_2: coverpoint coverage_trans.strap_ss_strap_generic_2;
     strap_ss_strap_generic_3: coverpoint coverage_trans.strap_ss_strap_generic_3;
+    strap_ss_caliptra_dma_axi_user: coverpoint coverage_trans.strap_ss_caliptra_dma_axi_user;
     ss_debug_intent: coverpoint coverage_trans.ss_debug_intent;
-    fixme_new;
     // pragma uvmf custom covergroup end
   endgroup
 

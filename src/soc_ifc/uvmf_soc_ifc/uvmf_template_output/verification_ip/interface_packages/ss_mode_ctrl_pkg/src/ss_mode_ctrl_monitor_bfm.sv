@@ -117,19 +117,19 @@ end
   // pragma tbx oneway proxy.notify_transaction
 
   // pragma uvmf custom interface_item_additional begin
-  logic [63:0] strap_ss_caliptra_base_addr_r                             = 1'b0;
-  logic [63:0] strap_ss_mci_base_addr_r                                  = 1'b0;
-  logic [63:0] strap_ss_recovery_ifc_base_addr_r                         = 1'b0;
-  logic [63:0] strap_ss_otp_fc_base_addr_r                               = 1'b0;
-  logic [63:0] strap_ss_uds_seed_base_addr_r                             = 1'b0;
-  logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_r = 1'b0;
-  logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_r        = 1'b0;
-  logic [31:0] strap_ss_strap_generic_0_r                                = 1'b0;
-  logic [31:0] strap_ss_strap_generic_1_r                                = 1'b0;
-  logic [31:0] strap_ss_strap_generic_2_r                                = 1'b0;
-  logic [31:0] strap_ss_strap_generic_3_r                                = 1'b0;
+  logic [63:0] strap_ss_caliptra_base_addr_r                             = 64'h0;
+  logic [63:0] strap_ss_mci_base_addr_r                                  = 64'h0;
+  logic [63:0] strap_ss_recovery_ifc_base_addr_r                         = 64'h0;
+  logic [63:0] strap_ss_otp_fc_base_addr_r                               = 64'h0;
+  logic [63:0] strap_ss_uds_seed_base_addr_r                             = 64'h0;
+  logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_r = 32'h0;
+  logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_r        = 32'h0;
+  logic [31:0] strap_ss_strap_generic_0_r                                = 32'h0;
+  logic [31:0] strap_ss_strap_generic_1_r                                = 32'h0;
+  logic [31:0] strap_ss_strap_generic_2_r                                = 32'h0;
+  logic [31:0] strap_ss_strap_generic_3_r                                = 32'h0;
   logic        ss_debug_intent_r                                         = 1'b0;
-  logic fixme_new;
+  logic [31:0] strap_ss_caliptra_dma_axi_user_r                          = 32'h0;
   function bit any_signal_changed();
       return |(strap_ss_caliptra_base_addr_i                             ^ strap_ss_caliptra_base_addr_r                            ) ||
              |(strap_ss_mci_base_addr_i                                  ^ strap_ss_mci_base_addr_r                                 ) ||
@@ -142,8 +142,8 @@ end
              |(strap_ss_strap_generic_1_i                                ^ strap_ss_strap_generic_1_r                               ) ||
              |(strap_ss_strap_generic_2_i                                ^ strap_ss_strap_generic_2_r                               ) ||
              |(strap_ss_strap_generic_3_i                                ^ strap_ss_strap_generic_3_r                               ) ||
-             |(ss_debug_intent_i                                         ^ ss_debug_intent_r                                        )
-             |fixme_new;
+             |(strap_ss_caliptra_dma_axi_user_i                          ^ strap_ss_caliptra_dma_axi_user_r                         ) ||
+             |(ss_debug_intent_i                                         ^ ss_debug_intent_r                                        );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -266,7 +266,7 @@ end
     strap_ss_strap_generic_2_r                                <= strap_ss_strap_generic_2_i;
     strap_ss_strap_generic_3_r                                <= strap_ss_strap_generic_3_i;
     ss_debug_intent_r                                         <= ss_debug_intent_i;
-    fixme
+    strap_ss_caliptra_dma_axi_user_r                          <= strap_ss_caliptra_dma_axi_user_i;
     begin: build_return_struct
     // Available struct members:
         ss_mode_ctrl_monitor_struct.strap_ss_caliptra_base_addr                             <= strap_ss_caliptra_base_addr_i;
@@ -281,7 +281,7 @@ end
         ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_2                                <= strap_ss_strap_generic_2_i;
         ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_3                                <= strap_ss_strap_generic_3_i;
         ss_mode_ctrl_monitor_struct.ss_debug_intent                                         <= ss_debug_intent_i;
-        fixme
+        ss_mode_ctrl_monitor_struct.strap_ss_caliptra_dma_axi_user                          <= strap_ss_caliptra_dma_axi_user_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

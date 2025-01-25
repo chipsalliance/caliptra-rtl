@@ -66,6 +66,10 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit cptra_obf_field_entropy_vld ; \
+  bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ; \
+  bit cptra_obf_uds_seed_vld ; \
+  bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ; \
   int unsigned wait_cycles ; \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
@@ -81,6 +85,10 @@ typedef struct packed  { \
             this.cptra_obf_key_rand , \
             this.set_pwrgood , \
             this.assert_rst , \
+            this.cptra_obf_field_entropy_vld , \
+            this.cptra_obf_field_entropy , \
+            this.cptra_obf_uds_seed_vld , \
+            this.cptra_obf_uds_seed , \
             this.wait_cycles , \
             this.security_state , \
             this.set_bootfsm_breakpoint , \
@@ -97,6 +105,10 @@ typedef struct packed  { \
             this.cptra_obf_key_rand , \
             this.set_pwrgood , \
             this.assert_rst , \
+            this.cptra_obf_field_entropy_vld , \
+            this.cptra_obf_field_entropy , \
+            this.cptra_obf_uds_seed_vld , \
+            this.cptra_obf_uds_seed , \
             this.wait_cycles , \
             this.security_state , \
             this.set_bootfsm_breakpoint , \
@@ -115,6 +127,10 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit cptra_obf_field_entropy_vld ; \
+  bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ; \
+  bit cptra_obf_uds_seed_vld ; \
+  bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ; \
   int unsigned wait_cycles ; \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
@@ -130,6 +146,10 @@ typedef struct packed  { \
            this.cptra_obf_key_rand , \
            this.set_pwrgood , \
            this.assert_rst , \
+           this.cptra_obf_field_entropy_vld , \
+           this.cptra_obf_field_entropy , \
+           this.cptra_obf_uds_seed_vld , \
+           this.cptra_obf_uds_seed , \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
@@ -146,6 +166,10 @@ typedef struct packed  { \
            this.cptra_obf_key_rand , \
            this.set_pwrgood , \
            this.assert_rst , \
+           this.cptra_obf_field_entropy_vld , \
+           this.cptra_obf_field_entropy , \
+           this.cptra_obf_uds_seed_vld , \
+           this.cptra_obf_uds_seed , \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
@@ -164,6 +188,10 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ; \
   bit set_pwrgood ; \
   bit assert_rst ; \
+  bit cptra_obf_field_entropy_vld ; \
+  bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ; \
+  bit cptra_obf_uds_seed_vld ; \
+  bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ; \
   int unsigned wait_cycles ; \
   security_state_t security_state ; \
   bit set_bootfsm_breakpoint ; \
@@ -179,6 +207,10 @@ typedef struct packed  { \
            this.cptra_obf_key_rand , \
            this.set_pwrgood , \
            this.assert_rst , \
+           this.cptra_obf_field_entropy_vld , \
+           this.cptra_obf_field_entropy , \
+           this.cptra_obf_uds_seed_vld , \
+           this.cptra_obf_uds_seed , \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \
@@ -195,6 +227,10 @@ typedef struct packed  { \
            this.cptra_obf_key_rand , \
            this.set_pwrgood , \
            this.assert_rst , \
+           this.cptra_obf_field_entropy_vld , \
+           this.cptra_obf_field_entropy , \
+           this.cptra_obf_uds_seed_vld , \
+           this.cptra_obf_uds_seed , \
            this.wait_cycles , \
            this.security_state , \
            this.set_bootfsm_breakpoint , \

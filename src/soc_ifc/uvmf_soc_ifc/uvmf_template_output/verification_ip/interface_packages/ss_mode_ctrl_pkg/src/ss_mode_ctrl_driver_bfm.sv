@@ -213,8 +213,8 @@ end
        strap_ss_strap_generic_1_o <= 'bz;
        strap_ss_strap_generic_2_o <= 'bz;
        strap_ss_strap_generic_3_o <= 'bz;
+       strap_ss_caliptra_dma_axi_user_o <= 'bz;
        ss_debug_intent_o <= 'bz;
-    fixme_new
        // Bi-directional signals
  
      end    
@@ -265,6 +265,7 @@ end
        //   bit [31:0] strap_ss_strap_generic_1 ;
        //   bit [31:0] strap_ss_strap_generic_2 ;
        //   bit [31:0] strap_ss_strap_generic_3 ;
+       //   bit [31:0] strap_ss_caliptra_dma_axi_user ;
        //   bit ss_debug_intent ;
        // Members within the ss_mode_ctrl_responder_struct:
        //   bit [63:0] strap_ss_caliptra_base_addr ;
@@ -278,6 +279,7 @@ end
        //   bit [31:0] strap_ss_strap_generic_1 ;
        //   bit [31:0] strap_ss_strap_generic_2 ;
        //   bit [31:0] strap_ss_strap_generic_3 ;
+       //   bit [31:0] strap_ss_caliptra_dma_axi_user ;
        //   bit ss_debug_intent ;
        initiator_struct = ss_mode_ctrl_initiator_struct;
        //
@@ -304,6 +306,7 @@ end
        //      strap_ss_strap_generic_1_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
        //      strap_ss_strap_generic_2_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
        //      strap_ss_strap_generic_3_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
+       //      strap_ss_caliptra_dma_axi_user_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
        //      ss_debug_intent_o <= ss_mode_ctrl_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
@@ -320,7 +323,7 @@ end
     strap_ss_strap_generic_2_o                                <= ss_mode_ctrl_initiator_struct.strap_ss_strap_generic_2                               ;
     strap_ss_strap_generic_3_o                                <= ss_mode_ctrl_initiator_struct.strap_ss_strap_generic_3                               ;
     ss_debug_intent_o                                         <= ss_mode_ctrl_initiator_struct.ss_debug_intent                                        ;
-    fixme_new
+    strap_ss_caliptra_dma_axi_user_o                          <= ss_mode_ctrl_initiator_struct.strap_ss_caliptra_dma_axi_user                         ;
     // Wait for the responder to complete the transfer then place the responder data into 
     // ss_mode_ctrl_responder_struct.
     @(posedge clk_i);
@@ -336,8 +339,8 @@ end
     ss_mode_ctrl_responder_struct.strap_ss_strap_generic_2                                <= strap_ss_strap_generic_2_i                               ;
     ss_mode_ctrl_responder_struct.strap_ss_strap_generic_3                                <= strap_ss_strap_generic_3_i                               ;
     ss_mode_ctrl_responder_struct.ss_debug_intent                                         <= ss_debug_intent_i                                        ;
+    ss_mode_ctrl_responder_struct.strap_ss_caliptra_dma_axi_user                          <= strap_ss_caliptra_dma_axi_user_i                         ;
     responder_struct = ss_mode_ctrl_responder_struct;
-    fixme_new
   endtask        
 // pragma uvmf custom initiate_and_get_response end
 
@@ -371,6 +374,7 @@ bit first_transfer=1;
   //   bit [31:0] strap_ss_strap_generic_1 ;
   //   bit [31:0] strap_ss_strap_generic_2 ;
   //   bit [31:0] strap_ss_strap_generic_3 ;
+  //   bit [31:0] strap_ss_caliptra_dma_axi_user ;
   //   bit ss_debug_intent ;
   // Variables within the ss_mode_ctrl_responder_struct:
   //   bit [63:0] strap_ss_caliptra_base_addr ;
@@ -384,6 +388,7 @@ bit first_transfer=1;
   //   bit [31:0] strap_ss_strap_generic_1 ;
   //   bit [31:0] strap_ss_strap_generic_2 ;
   //   bit [31:0] strap_ss_strap_generic_3 ;
+  //   bit [31:0] strap_ss_caliptra_dma_axi_user ;
   //   bit ss_debug_intent ;
        // Reference code;
        //    How to wait for signal value
@@ -403,6 +408,7 @@ bit first_transfer=1;
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_strap_generic_1_i;  //    [31:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_strap_generic_2_i;  //    [31:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_strap_generic_3_i;  //    [31:0] 
+       //      ss_mode_ctrl_responder_struct.xyz = strap_ss_caliptra_dma_axi_user_i;  //    [31:0] 
        //      ss_mode_ctrl_responder_struct.xyz = ss_debug_intent_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   

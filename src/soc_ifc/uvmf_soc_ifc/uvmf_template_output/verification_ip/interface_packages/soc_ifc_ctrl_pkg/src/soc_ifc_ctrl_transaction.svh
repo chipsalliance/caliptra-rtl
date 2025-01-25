@@ -35,6 +35,10 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   rand bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   bit set_pwrgood ;
   bit assert_rst ;
+  rand bit cptra_obf_field_entropy_vld ;
+  rand bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ;
+  rand bit cptra_obf_uds_seed_vld ;
+  rand bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ;
   rand int unsigned wait_cycles ;
   rand security_state_t security_state ;
   rand bit set_bootfsm_breakpoint ;
@@ -54,6 +58,8 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
                                             ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
                                             {set_bootfsm_breakpoint == 0;}
                                           solve security_state before set_bootfsm_breakpoint; }
+  constraint obf_fe_load_c { cptra_obf_field_entropy_vld dist {0 :/ 80, 1 :/ 20}; }
+  constraint obf_uds_load_c { cptra_obf_uds_seed_vld dist {0 :/ 80, 1 :/ 20}; }
 
   // pragma uvmf custom class_item_additional begin
   static device_lifecycle_e device_lifecycle_static = 'X;
@@ -137,7 +143,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x wait_cycles:0x%x security_state:%p set_bootfsm_breakpoint:0x%x generic_input_val:0x%x recovery_data_avail:0x%x recovery_image_activated:0x%x %s",cptra_obf_key_rand,set_pwrgood,assert_rst,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val,recovery_data_avail,recovery_image_activated,super.convert2string());
+    return $sformatf("cptra_obf_key_rand:0x%x set_pwrgood:0x%x assert_rst:0x%x cptra_obf_field_entropy_vld:0x%x cptra_obf_field_entropy:0x%x cptra_obf_uds_seed_vld:0x%x cptra_obf_uds_seed:0x%x wait_cycles:0x%x security_state:0x%x set_bootfsm_breakpoint:0x%x generic_input_val:0x%x recovery_data_avail:0x%x recovery_image_activated:0x%x %s",cptra_obf_key_rand,set_pwrgood,assert_rst,cptra_obf_field_entropy_vld,cptra_obf_field_entropy,cptra_obf_uds_seed_vld,cptra_obf_uds_seed,wait_cycles,security_state,set_bootfsm_breakpoint,generic_input_val,recovery_data_avail,recovery_image_activated,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -168,6 +174,13 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
             &&(this.cptra_obf_key_rand == RHS.cptra_obf_key_rand)
             &&(this.recovery_data_avail == RHS.recovery_data_avail)
             &&(this.recovery_image_activated == RHS.recovery_image_activated)
+            &&(this.cptra_obf_field_entropy_vld == RHS.cptra_obf_field_entropy_vld)
+            &&(this.cptra_obf_field_entropy == RHS.cptra_obf_field_entropy)
+            &&(this.cptra_obf_uds_seed_vld == RHS.cptra_obf_uds_seed_vld)
+            &&(this.cptra_obf_uds_seed == RHS.cptra_obf_uds_seed)
+            &&(this.security_state == RHS.security_state)
+            &&(this.set_bootfsm_breakpoint == RHS.set_bootfsm_breakpoint)
+            &&(this.generic_input_val == RHS.generic_input_val)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -185,6 +198,10 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     this.cptra_obf_key_rand = RHS.cptra_obf_key_rand;
     this.set_pwrgood = RHS.set_pwrgood;
     this.assert_rst = RHS.assert_rst;
+    this.cptra_obf_field_entropy_vld = RHS.cptra_obf_field_entropy_vld;
+    this.cptra_obf_field_entropy = RHS.cptra_obf_field_entropy;
+    this.cptra_obf_uds_seed_vld = RHS.cptra_obf_uds_seed_vld;
+    this.cptra_obf_uds_seed = RHS.cptra_obf_uds_seed;
     this.wait_cycles = RHS.wait_cycles;
     this.security_state = RHS.security_state;
     this.set_bootfsm_breakpoint = RHS.set_bootfsm_breakpoint;
@@ -217,6 +234,10 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,cptra_obf_key_rand,"cptra_obf_key_rand");
     $add_attribute(transaction_view_h,set_pwrgood,"set_pwrgood");
     $add_attribute(transaction_view_h,assert_rst,"assert_rst");
+    $add_attribute(transaction_view_h,cptra_obf_field_entropy_vld,"cptra_obf_field_entropy_vld");
+    $add_attribute(transaction_view_h,cptra_obf_field_entropy,"cptra_obf_field_entropy");
+    $add_attribute(transaction_view_h,cptra_obf_uds_seed_vld,"cptra_obf_uds_seed_vld");
+    $add_attribute(transaction_view_h,cptra_obf_uds_seed,"cptra_obf_uds_seed");
     $add_attribute(transaction_view_h,wait_cycles,"wait_cycles");
     $add_attribute(transaction_view_h,security_state,"security_state");
     $add_attribute(transaction_view_h,set_bootfsm_breakpoint,"set_bootfsm_breakpoint");

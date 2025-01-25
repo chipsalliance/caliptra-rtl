@@ -119,6 +119,10 @@ end
   logic  cptra_pwrgood_r = 1'bx;
   logic  cptra_rst_b_r = 1'bx;
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_r;
+  logic                                 cptra_obf_field_entropy_vld_r;
+  logic [`CLP_OBF_FE_DWORDS-1:0][31:0]  cptra_obf_field_entropy_r;
+  logic                                 cptra_obf_uds_seed_vld_r;
+  logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_r;
   logic [63:0] generic_input_wires_r;
   security_state_t security_state_r;
   logic BootFSM_BrkPoint_r;
@@ -132,14 +136,18 @@ end
       else if (cptra_rst_b_r !== 1'b1)
           return (cptra_rst_b_i !== cptra_rst_b_r);
       else
-          return |(cptra_pwrgood_i            ^  cptra_pwrgood_r      ) ||
-                 |(cptra_rst_b_i              ^  cptra_rst_b_r        ) ||
-                 |(cptra_obf_key_i            ^  cptra_obf_key_r      ) ||
-                 |(security_state_i           ^  security_state_r     ) ||
-                 |(BootFSM_BrkPoint_i         ^  BootFSM_BrkPoint_r   ) ||
-                 |(generic_input_wires_i      ^  generic_input_wires_r) ||
-                 |(recovery_data_avail_i      ^  recovery_data_avail_r) ||
-                 |(recovery_image_activated_i ^  recovery_image_activated_r) fixme_new;
+          return |(cptra_pwrgood_i               ^  cptra_pwrgood_r              ) ||
+                 |(cptra_rst_b_i                 ^  cptra_rst_b_r                ) ||
+                 |(cptra_obf_key_i               ^  cptra_obf_key_r              ) ||
+                 |(security_state_i              ^  security_state_r             ) ||
+                 |(BootFSM_BrkPoint_i            ^  BootFSM_BrkPoint_r           ) ||
+                 |(generic_input_wires_i         ^  generic_input_wires_r        ) ||
+                 |(recovery_data_avail_i         ^  recovery_data_avail_r        ) ||
+                 |(recovery_image_activated_i    ^  recovery_image_activated_r   ) ||
+                 |(cptra_obf_field_entropy_vld_i ^  cptra_obf_field_entropy_vld_r) ||
+                 |(cptra_obf_field_entropy_i     ^  cptra_obf_field_entropy_r    ) ||
+                 |(cptra_obf_uds_seed_vld_i      ^  cptra_obf_uds_seed_vld_r     ) ||
+                 |(cptra_obf_uds_seed_i          ^  cptra_obf_uds_seed_r         );
   endfunction
   
   //******************************************************************                         
@@ -248,6 +256,10 @@ end
     //     //    soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand
     //     //    soc_ifc_ctrl_monitor_struct.set_pwrgood
     //     //    soc_ifc_ctrl_monitor_struct.assert_rst
+    //     //    soc_ifc_ctrl_monitor_struct.cptra_obf_field_entropy_vld
+    //     //    soc_ifc_ctrl_monitor_struct.cptra_obf_field_entropy
+    //     //    soc_ifc_ctrl_monitor_struct.cptra_obf_uds_seed_vld
+    //     //    soc_ifc_ctrl_monitor_struct.cptra_obf_uds_seed
     //     //    soc_ifc_ctrl_monitor_struct.wait_cycles
     //     //    soc_ifc_ctrl_monitor_struct.security_state
     //     //    soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint
@@ -284,26 +296,34 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_ctrl_monitor_struct.
-    while (!any_signal_changed()) @(posedge clk_i); fixme_new
-    cptra_pwrgood_r            = cptra_pwrgood_i;
-    cptra_rst_b_r              = cptra_rst_b_i;
-    cptra_obf_key_r            = cptra_obf_key_i;
-    security_state_r           = security_state_i;
-    BootFSM_BrkPoint_r         = BootFSM_BrkPoint_i;
-    generic_input_wires_r      = generic_input_wires_i;
-    recovery_data_avail_r      = recovery_data_avail_i;
-    recovery_image_activated_r = recovery_image_activated_i;
+    while (!any_signal_changed()) @(posedge clk_i);
+    cptra_pwrgood_r               = cptra_pwrgood_i;
+    cptra_rst_b_r                 = cptra_rst_b_i;
+    cptra_obf_key_r               = cptra_obf_key_i;
+    security_state_r              = security_state_i;
+    BootFSM_BrkPoint_r            = BootFSM_BrkPoint_i;
+    generic_input_wires_r         = generic_input_wires_i;
+    recovery_data_avail_r         = recovery_data_avail_i;
+    recovery_image_activated_r    = recovery_image_activated_i;
+    cptra_obf_field_entropy_vld_r = cptra_obf_field_entropy_vld_i;
+    cptra_obf_field_entropy_r     = cptra_obf_field_entropy_i;
+    cptra_obf_uds_seed_vld_r      = cptra_obf_uds_seed_vld_i;
+    cptra_obf_uds_seed_r          = cptra_obf_uds_seed_i;
     begin: build_return_struct
          // Variables within the soc_ifc_ctrl_monitor_struct:
-         soc_ifc_ctrl_monitor_struct.set_pwrgood              = cptra_pwrgood_i;
-         soc_ifc_ctrl_monitor_struct.assert_rst               = !cptra_rst_b_i;
-         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand       = cptra_obf_key_i;
-         soc_ifc_ctrl_monitor_struct.security_state           = security_state_i;
-         soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint   = BootFSM_BrkPoint_i;
-         soc_ifc_ctrl_monitor_struct.recovery_data_avail      = recovery_data_avail_i;
-         soc_ifc_ctrl_monitor_struct.recovery_image_activated = recovery_image_activated_i;
-         soc_ifc_ctrl_monitor_struct.generic_input_val        = generic_input_wires_i;
-         soc_ifc_ctrl_monitor_struct.wait_cycles              = 0; fixme_new
+         soc_ifc_ctrl_monitor_struct.set_pwrgood                 = cptra_pwrgood_i;
+         soc_ifc_ctrl_monitor_struct.assert_rst                  = !cptra_rst_b_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_key_rand          = cptra_obf_key_i;
+         soc_ifc_ctrl_monitor_struct.security_state              = security_state_i;
+         soc_ifc_ctrl_monitor_struct.set_bootfsm_breakpoint      = BootFSM_BrkPoint_i;
+         soc_ifc_ctrl_monitor_struct.recovery_data_avail         = recovery_data_avail_i;
+         soc_ifc_ctrl_monitor_struct.recovery_image_activated    = recovery_image_activated_i;
+         soc_ifc_ctrl_monitor_struct.generic_input_val           = generic_input_wires_i;
+         soc_ifc_ctrl_monitor_struct.wait_cycles                 = 0;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_field_entropy_vld = cptra_obf_field_entropy_vld_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_field_entropy     = cptra_obf_field_entropy_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_uds_seed_vld      = cptra_obf_uds_seed_vld_i;
+         soc_ifc_ctrl_monitor_struct.cptra_obf_uds_seed          = cptra_obf_uds_seed_i;
     end
     // pragma uvmf custom do_monitor end
   endtask         

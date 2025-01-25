@@ -78,6 +78,12 @@ uvmf:
       - comment: ''
         name: set_bootfsm_breakpoint_c
         value: '{ if ((security_state.debug_locked) & ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING))) {set_bootfsm_breakpoint == 0;} solve security_state before set_bootfsm_breakpoint; }'
+      - comment: ''
+        name: obf_fe_load_c
+        value: '{ cptra_obf_field_entropy_vld dist {0 :/ 80, 1 :/ 20}; }'
+      - comment: ''
+        name: obf_uds_load_c
+        value: '{ cptra_obf_uds_seed_vld dist {0 :/ 80, 1 :/ 20}; }'
       transaction_vars:
       - comment: ''
         iscompare: 'True'
@@ -96,6 +102,30 @@ uvmf:
         isrand: 'False'
         name: assert_rst
         type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: cptra_obf_field_entropy_vld
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: cptra_obf_field_entropy
+        type: bit [`CLP_OBF_FE_DWORDS-1:0] [31:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: cptra_obf_uds_seed_vld
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: cptra_obf_uds_seed
+        type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'

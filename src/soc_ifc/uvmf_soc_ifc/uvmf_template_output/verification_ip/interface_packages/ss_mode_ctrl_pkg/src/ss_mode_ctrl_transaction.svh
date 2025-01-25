@@ -151,7 +151,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("strap_ss_caliptra_base_addr:0x%x strap_ss_mci_base_addr:0x%x strap_ss_recovery_ifc_base_addr:0x%x strap_ss_otp_fc_base_addr:0x%x strap_ss_uds_seed_base_addr:0x%x strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset:0x%x strap_ss_num_of_prod_debug_unlock_auth_pk_hashes:0x%x strap_ss_strap_generic_0:0x%x strap_ss_strap_generic_1:0x%x strap_ss_strap_generic_2:0x%x strap_ss_strap_generic_3:0x%x ss_debug_intent:0x%x %s",strap_ss_caliptra_base_addr,strap_ss_mci_base_addr,strap_ss_recovery_ifc_base_addr,strap_ss_otp_fc_base_addr,strap_ss_uds_seed_base_addr,strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,strap_ss_strap_generic_0,strap_ss_strap_generic_1,strap_ss_strap_generic_2,strap_ss_strap_generic_3,ss_debug_intent,super.convert2string);
+    return $sformatf("strap_ss_caliptra_base_addr:0x%x strap_ss_mci_base_addr:0x%x strap_ss_recovery_ifc_base_addr:0x%x strap_ss_otp_fc_base_addr:0x%x strap_ss_uds_seed_base_addr:0x%x strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset:0x%x strap_ss_num_of_prod_debug_unlock_auth_pk_hashes:0x%x strap_ss_strap_generic_0:0x%x strap_ss_strap_generic_1:0x%x strap_ss_strap_generic_2:0x%x strap_ss_strap_generic_3:0x%x strap_ss_caliptra_dma_axi_user:0x%x ss_debug_intent:0x%x %s",strap_ss_caliptra_base_addr,strap_ss_mci_base_addr,strap_ss_recovery_ifc_base_addr,strap_ss_otp_fc_base_addr,strap_ss_uds_seed_base_addr,strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,strap_ss_strap_generic_0,strap_ss_strap_generic_1,strap_ss_strap_generic_2,strap_ss_strap_generic_3,strap_ss_caliptra_dma_axi_user,ss_debug_intent,super.convert2string);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -204,8 +204,8 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     this.strap_ss_strap_generic_1 = RHS.strap_ss_strap_generic_1;
     this.strap_ss_strap_generic_2 = RHS.strap_ss_strap_generic_2;
     this.strap_ss_strap_generic_3 = RHS.strap_ss_strap_generic_3;
+    this.strap_ss_caliptra_dma_axi_user = RHS.strap_ss_caliptra_dma_axi_user;
     this.ss_debug_intent = RHS.ss_debug_intent;
-    fixme_new;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -240,7 +240,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,strap_ss_strap_generic_1,"strap_ss_strap_generic_1");
     $add_attribute(transaction_view_h,strap_ss_strap_generic_2,"strap_ss_strap_generic_2");
     $add_attribute(transaction_view_h,strap_ss_strap_generic_3,"strap_ss_strap_generic_3");
-    fixme_new
+    $add_attribute(transaction_view_h,strap_ss_caliptra_dma_axi_user,"strap_ss_caliptra_dma_axi_user");
     $add_attribute(transaction_view_h,ss_debug_intent,"ss_debug_intent");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

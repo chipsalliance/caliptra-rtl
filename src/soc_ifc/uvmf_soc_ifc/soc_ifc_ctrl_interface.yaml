@@ -89,6 +89,10 @@ uvmf:
         value: "{ if ((security_state.debug_locked) & ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
                       {set_bootfsm_breakpoint == 0;}
                   solve security_state before set_bootfsm_breakpoint; }"
+      - name: obf_fe_load_c
+        value: '{ cptra_obf_field_entropy_vld dist {0 :/ 80, 1 :/ 20}; }'
+      - name: obf_uds_load_c
+        value: '{ cptra_obf_uds_seed_vld dist {0 :/ 80, 1 :/ 20}; }'
 
       transaction_vars:
       - name: cptra_obf_key_rand
@@ -103,6 +107,24 @@ uvmf:
         type: bit
         iscompare: 'False'
         isrand: 'False'
+      # UDS/FE initialization signals
+      - name: cptra_obf_field_entropy_vld
+        type: bit
+        iscompare: 'False'
+        isrand: 'True'
+      - name: cptra_obf_field_entropy
+        type: bit [`CLP_OBF_FE_DWORDS-1:0] [31:0]
+        iscompare: 'False'
+        isrand: 'True'
+      - name: cptra_obf_uds_seed_vld
+        type: bit
+        iscompare: 'False'
+        isrand: 'True'
+      - name: cptra_obf_uds_seed
+        type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
+        iscompare: 'False'
+        isrand: 'True'
+
       - name: wait_cycles
         type: 'int unsigned'
         iscompare: 'False'

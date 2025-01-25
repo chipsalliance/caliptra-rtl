@@ -202,12 +202,15 @@ end
        cptra_pwrgood_o <= 'b0;
        cptra_rst_b_o <= 'b0;
        cptra_obf_key_o <= 'b0;
+       cptra_obf_field_entropy_vld_o <= 'b0;
+       cptra_obf_field_entropy_o <= '0;
+       cptra_obf_uds_seed_vld_o <= 'b0;
+       cptra_obf_uds_seed_o <= '0;
        security_state_o <= '0;
        BootFSM_BrkPoint_o <= 1'b0;
        generic_input_wires_o <= 'b0;
        recovery_data_avail_o <= 'b0;
        recovery_image_activated_o <= 'b0;
-       fixme_new
        // Bi-directional signals
 
      end
@@ -250,6 +253,10 @@ end
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit cptra_obf_field_entropy_vld ;
+       //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ;
+       //   bit cptra_obf_uds_seed_vld ;
+       //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ;
        //   int unsigned wait_cycles ;
        //   security_state_t security_state ;
        //   bit set_bootfsm_breakpoint ;
@@ -260,6 +267,10 @@ end
        //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
        //   bit set_pwrgood ;
        //   bit assert_rst ;
+       //   bit cptra_obf_field_entropy_vld ;
+       //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ;
+       //   bit cptra_obf_uds_seed_vld ;
+       //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ;
        //   int unsigned wait_cycles ;
        //   security_state_t security_state ;
        //   bit set_bootfsm_breakpoint ;
@@ -283,6 +294,10 @@ end
        //      cptra_pwrgood_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_rst_b_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      cptra_obf_key_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+       //      cptra_obf_field_entropy_vld_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
+       //      cptra_obf_field_entropy_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+       //      cptra_obf_uds_seed_vld_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
+       //      cptra_obf_uds_seed_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
        //      security_state_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [2:0] 
        //      BootFSM_BrkPoint_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //      generic_input_wires_o <= soc_ifc_ctrl_initiator_struct.xyz;  //    [63:0] 
@@ -290,13 +305,16 @@ end
        //      recovery_image_activated_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
-       fixme_new
-    generic_input_wires_o <= initiator_struct.generic_input_val;
-    cptra_obf_key_o <= initiator_struct.cptra_obf_key_rand;
-    security_state_o <= initiator_struct.security_state;
-    BootFSM_BrkPoint_o <= initiator_struct.set_bootfsm_breakpoint;
-    recovery_data_avail_o      <= initiator_struct.recovery_data_avail;
-    recovery_image_activated_o <= initiator_struct.recovery_image_activated;
+    generic_input_wires_o         <= initiator_struct.generic_input_val;
+    cptra_obf_key_o               <= initiator_struct.cptra_obf_key_rand;
+    cptra_obf_field_entropy_vld_o <= initiator_struct.cptra_obf_field_entropy_vld;
+    cptra_obf_field_entropy_o     <= initiator_struct.cptra_obf_field_entropy;
+    cptra_obf_uds_seed_vld_o      <= initiator_struct.cptra_obf_uds_seed_vld;
+    cptra_obf_uds_seed_o          <= initiator_struct.cptra_obf_uds_seed;
+    security_state_o              <= initiator_struct.security_state;
+    BootFSM_BrkPoint_o            <= initiator_struct.set_bootfsm_breakpoint;
+    recovery_data_avail_o         <= initiator_struct.recovery_data_avail;
+    recovery_image_activated_o    <= initiator_struct.recovery_image_activated;
     // Asynchronously drop pwrgood
     if (!initiator_struct.set_pwrgood)
         cptra_pwrgood_o <= 1'b0;
@@ -313,16 +331,19 @@ end
     // Wait for the responder to complete the transfer then place the responder data into 
     // soc_ifc_ctrl_responder_struct.
     repeat(initiator_struct.wait_cycles) @(posedge clk_i);
-    soc_ifc_ctrl_responder_struct.cptra_obf_key_rand       = cptra_obf_key_i;
-    soc_ifc_ctrl_responder_struct.set_pwrgood              = cptra_pwrgood_i;
-    soc_ifc_ctrl_responder_struct.assert_rst               = !cptra_rst_b_i;
-    soc_ifc_ctrl_responder_struct.security_state           = security_state_i;
-    soc_ifc_ctrl_responder_struct.set_bootfsm_breakpoint   = BootFSM_BrkPoint_i;
-    soc_ifc_ctrl_responder_struct.generic_input_val        = generic_input_wires_i;
-    soc_ifc_ctrl_responder_struct.recovery_data_avail      = recovery_data_avail_i;
-    soc_ifc_ctrl_responder_struct.recovery_image_activated = recovery_image_activated_i;
+    soc_ifc_ctrl_responder_struct.cptra_obf_key_rand          = cptra_obf_key_i;
+    soc_ifc_ctrl_responder_struct.cptra_obf_field_entropy_vld = cptra_obf_field_entropy_vld_i;
+    soc_ifc_ctrl_responder_struct.cptra_obf_field_entropy     = cptra_obf_field_entropy_i;
+    soc_ifc_ctrl_responder_struct.cptra_obf_uds_seed_vld      = cptra_obf_uds_seed_vld_i;
+    soc_ifc_ctrl_responder_struct.cptra_obf_uds_seed          = cptra_obf_uds_seed_i;
+    soc_ifc_ctrl_responder_struct.set_pwrgood                 = cptra_pwrgood_i;
+    soc_ifc_ctrl_responder_struct.assert_rst                  = !cptra_rst_b_i;
+    soc_ifc_ctrl_responder_struct.security_state              = security_state_i;
+    soc_ifc_ctrl_responder_struct.set_bootfsm_breakpoint      = BootFSM_BrkPoint_i;
+    soc_ifc_ctrl_responder_struct.generic_input_val           = generic_input_wires_i;
+    soc_ifc_ctrl_responder_struct.recovery_data_avail         = recovery_data_avail_i;
+    soc_ifc_ctrl_responder_struct.recovery_image_activated    = recovery_image_activated_i;
     responder_struct = soc_ifc_ctrl_responder_struct;
-       fixme_new
   endtask        
 // pragma uvmf custom initiate_and_get_response end
 
@@ -348,6 +369,10 @@ bit first_transfer=1;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   //   bit set_pwrgood ;
   //   bit assert_rst ;
+  //   bit cptra_obf_field_entropy_vld ;
+  //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ;
+  //   bit cptra_obf_uds_seed_vld ;
+  //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ;
   //   int unsigned wait_cycles ;
   //   security_state_t security_state ;
   //   bit set_bootfsm_breakpoint ;
@@ -358,6 +383,10 @@ bit first_transfer=1;
   //   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_rand ;
   //   bit set_pwrgood ;
   //   bit assert_rst ;
+  //   bit cptra_obf_field_entropy_vld ;
+  //   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] cptra_obf_field_entropy ;
+  //   bit cptra_obf_uds_seed_vld ;
+  //   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] cptra_obf_uds_seed ;
   //   int unsigned wait_cycles ;
   //   security_state_t security_state ;
   //   bit set_bootfsm_breakpoint ;
@@ -374,6 +403,10 @@ bit first_transfer=1;
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_pwrgood_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_rst_b_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_key_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_field_entropy_vld_i;  //     
+       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_uds_seed_vld_i;  //     
+       //      soc_ifc_ctrl_responder_struct.xyz = cptra_obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
        //      soc_ifc_ctrl_responder_struct.xyz = security_state_i;  //    [2:0] 
        //      soc_ifc_ctrl_responder_struct.xyz = BootFSM_BrkPoint_i;  //     
        //      soc_ifc_ctrl_responder_struct.xyz = generic_input_wires_i;  //    [63:0] 
