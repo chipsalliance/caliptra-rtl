@@ -52,7 +52,7 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   //we'll never set bootfsm breakpoint unless we are in the appropriate debug/device lifecycle state to latch it in RTL
   constraint set_bootfsm_breakpoint_c { if ((security_state.debug_locked) & 
                                             ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
-                                            {set_bootfsm_breakpoint == 0;} 
+                                            {set_bootfsm_breakpoint == 0;}
                                           solve security_state before set_bootfsm_breakpoint; }
 
   // pragma uvmf custom class_item_additional begin

@@ -87,6 +87,10 @@ end
   tri  cptra_pwrgood_i;
   tri  cptra_rst_b_i;
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_i;
+  tri  cptra_obf_field_entropy_vld_i;
+  tri [`CLP_OBF_FE_DWORDS-1:0][31:0] cptra_obf_field_entropy_i;
+  tri  cptra_obf_uds_seed_vld_i;
+  tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_i;
   tri [2:0] security_state_i;
   tri  BootFSM_BrkPoint_i;
   tri [63:0] generic_input_wires_i;
@@ -97,6 +101,10 @@ end
   assign cptra_pwrgood_i = bus.cptra_pwrgood;
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign cptra_obf_key_i = bus.cptra_obf_key;
+  assign cptra_obf_field_entropy_vld_i = bus.cptra_obf_field_entropy_vld;
+  assign cptra_obf_field_entropy_i = bus.cptra_obf_field_entropy;
+  assign cptra_obf_uds_seed_vld_i = bus.cptra_obf_uds_seed_vld;
+  assign cptra_obf_uds_seed_i = bus.cptra_obf_uds_seed;
   assign security_state_i = bus.security_state;
   assign BootFSM_BrkPoint_i = bus.BootFSM_BrkPoint;
   assign generic_input_wires_i = bus.generic_input_wires;
@@ -131,7 +139,7 @@ end
                  |(BootFSM_BrkPoint_i         ^  BootFSM_BrkPoint_r   ) ||
                  |(generic_input_wires_i      ^  generic_input_wires_r) ||
                  |(recovery_data_avail_i      ^  recovery_data_avail_r) ||
-                 |(recovery_image_activated_i ^  recovery_image_activated_r);
+                 |(recovery_image_activated_i ^  recovery_image_activated_r) fixme_new;
   endfunction
   
   //******************************************************************                         
@@ -187,7 +195,7 @@ end
   endtask    
 
   // pragma uvmf custom wait_for_num_clocks begin
-  //****************************************************************************                         
+  //****************************************************************************
   // Inject pragmas's here to throw a warning on regeneration.
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
@@ -256,6 +264,10 @@ end
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_pwrgood_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_rst_b_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_key_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_field_entropy_vld_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_uds_seed_vld_i;  //     
+    //      soc_ifc_ctrl_monitor_struct.xyz = cptra_obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = security_state_i;  //    [2:0] 
     //      soc_ifc_ctrl_monitor_struct.xyz = BootFSM_BrkPoint_i;  //     
     //      soc_ifc_ctrl_monitor_struct.xyz = generic_input_wires_i;  //    [63:0] 
@@ -272,7 +284,7 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the soc_ifc_ctrl_monitor_struct.
-    while (!any_signal_changed()) @(posedge clk_i);
+    while (!any_signal_changed()) @(posedge clk_i); fixme_new
     cptra_pwrgood_r            = cptra_pwrgood_i;
     cptra_rst_b_r              = cptra_rst_b_i;
     cptra_obf_key_r            = cptra_obf_key_i;
@@ -291,7 +303,7 @@ end
          soc_ifc_ctrl_monitor_struct.recovery_data_avail      = recovery_data_avail_i;
          soc_ifc_ctrl_monitor_struct.recovery_image_activated = recovery_image_activated_i;
          soc_ifc_ctrl_monitor_struct.generic_input_val        = generic_input_wires_i;
-         soc_ifc_ctrl_monitor_struct.wait_cycles              = 0;
+         soc_ifc_ctrl_monitor_struct.wait_cycles              = 0; fixme_new
     end
     // pragma uvmf custom do_monitor end
   endtask         

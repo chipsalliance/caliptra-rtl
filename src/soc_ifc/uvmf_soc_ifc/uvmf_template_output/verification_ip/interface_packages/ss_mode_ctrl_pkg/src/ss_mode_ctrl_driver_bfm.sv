@@ -128,6 +128,8 @@ end
   reg [31:0] strap_ss_strap_generic_2_o = 'bz;
   tri [31:0] strap_ss_strap_generic_3_i;
   reg [31:0] strap_ss_strap_generic_3_o = 'bz;
+  tri [31:0] strap_ss_caliptra_dma_axi_user_i;
+  reg [31:0] strap_ss_caliptra_dma_axi_user_o = 'bz;
   tri  ss_debug_intent_i;
   reg  ss_debug_intent_o = 'bz;
 
@@ -165,6 +167,8 @@ end
   assign strap_ss_strap_generic_2_i = bus.strap_ss_strap_generic_2;
   assign bus.strap_ss_strap_generic_3 = (initiator_responder == INITIATOR) ? strap_ss_strap_generic_3_o : 'bz;
   assign strap_ss_strap_generic_3_i = bus.strap_ss_strap_generic_3;
+  assign bus.strap_ss_caliptra_dma_axi_user = (initiator_responder == INITIATOR) ? strap_ss_caliptra_dma_axi_user_o : 'bz;
+  assign strap_ss_caliptra_dma_axi_user_i = bus.strap_ss_caliptra_dma_axi_user;
   assign bus.ss_debug_intent = (initiator_responder == INITIATOR) ? ss_debug_intent_o : 'bz;
   assign ss_debug_intent_i = bus.ss_debug_intent;
 
@@ -210,6 +214,7 @@ end
        strap_ss_strap_generic_2_o <= 'bz;
        strap_ss_strap_generic_3_o <= 'bz;
        ss_debug_intent_o <= 'bz;
+    fixme_new
        // Bi-directional signals
  
      end    
@@ -315,6 +320,7 @@ end
     strap_ss_strap_generic_2_o                                <= ss_mode_ctrl_initiator_struct.strap_ss_strap_generic_2                               ;
     strap_ss_strap_generic_3_o                                <= ss_mode_ctrl_initiator_struct.strap_ss_strap_generic_3                               ;
     ss_debug_intent_o                                         <= ss_mode_ctrl_initiator_struct.ss_debug_intent                                        ;
+    fixme_new
     // Wait for the responder to complete the transfer then place the responder data into 
     // ss_mode_ctrl_responder_struct.
     @(posedge clk_i);
@@ -331,6 +337,7 @@ end
     ss_mode_ctrl_responder_struct.strap_ss_strap_generic_3                                <= strap_ss_strap_generic_3_i                               ;
     ss_mode_ctrl_responder_struct.ss_debug_intent                                         <= ss_debug_intent_i                                        ;
     responder_struct = ss_mode_ctrl_responder_struct;
+    fixme_new
   endtask        
 // pragma uvmf custom initiate_and_get_response end
 

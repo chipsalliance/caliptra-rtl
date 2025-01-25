@@ -44,6 +44,7 @@
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_strap_generic_1), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_strap_generic_2), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_strap_generic_3), // Agent output 
+// .dut_signal_port(ss_mode_ctrl_bus.strap_ss_caliptra_dma_axi_user), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.ss_debug_intent), // Agent output 
 
 import uvmf_base_pkg_hdl::*;
@@ -65,6 +66,7 @@ interface  ss_mode_ctrl_if
   inout tri [31:0] strap_ss_strap_generic_1,
   inout tri [31:0] strap_ss_strap_generic_2,
   inout tri [31:0] strap_ss_strap_generic_3,
+  inout tri [31:0] strap_ss_caliptra_dma_axi_user,
   inout tri  ss_debug_intent
   );
 
@@ -83,6 +85,7 @@ modport monitor_port
   input strap_ss_strap_generic_1,
   input strap_ss_strap_generic_2,
   input strap_ss_strap_generic_3,
+  input strap_ss_caliptra_dma_axi_user,
   input ss_debug_intent
   );
 
@@ -101,6 +104,7 @@ modport initiator_port
   output strap_ss_strap_generic_1,
   output strap_ss_strap_generic_2,
   output strap_ss_strap_generic_3,
+  output strap_ss_caliptra_dma_axi_user,
   output ss_debug_intent
   );
 
@@ -119,6 +123,7 @@ modport responder_port
   input strap_ss_strap_generic_1,
   input strap_ss_strap_generic_2,
   input strap_ss_strap_generic_3,
+  input strap_ss_caliptra_dma_axi_user,
   input ss_debug_intent
   );
   

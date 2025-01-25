@@ -97,7 +97,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   soc_ifc_reg_cov_sub_t soc_ifc_reg_cov_sub;
 
 
-// UVMF_CHANGE_ME: QVIP_AGENT_USED_FOR_REG_MAP: 
 // Identify the UVM reg adapter in the QVIP installation for the protocol agent.
 // Change the typedef below to reflect the reg adapter class type and any parameters.
 // Be sure to modify the envioronment package to import the QVIP protocol package 

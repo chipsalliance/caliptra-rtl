@@ -74,6 +74,7 @@ typedef struct packed  { \
   bit [31:0] strap_ss_strap_generic_1 ; \
   bit [31:0] strap_ss_strap_generic_2 ; \
   bit [31:0] strap_ss_strap_generic_3 ; \
+  bit [31:0] strap_ss_caliptra_dma_axi_user ; \
   bit ss_debug_intent ; \
      } ss_mode_ctrl_monitor_s;
 
@@ -92,6 +93,7 @@ typedef struct packed  { \
             this.strap_ss_strap_generic_1 , \
             this.strap_ss_strap_generic_2 , \
             this.strap_ss_strap_generic_3 , \
+            this.strap_ss_caliptra_dma_axi_user , \
             this.ss_debug_intent  \
             };\
     return ( ss_mode_ctrl_monitor_struct);\
@@ -111,6 +113,7 @@ typedef struct packed  { \
             this.strap_ss_strap_generic_1 , \
             this.strap_ss_strap_generic_2 , \
             this.strap_ss_strap_generic_3 , \
+            this.strap_ss_caliptra_dma_axi_user , \
             this.ss_debug_intent  \
             } = ss_mode_ctrl_monitor_struct;\
   endfunction
@@ -132,6 +135,7 @@ typedef struct packed  { \
   bit [31:0] strap_ss_strap_generic_1 ; \
   bit [31:0] strap_ss_strap_generic_2 ; \
   bit [31:0] strap_ss_strap_generic_3 ; \
+  bit [31:0] strap_ss_caliptra_dma_axi_user ; \
   bit ss_debug_intent ; \
      } ss_mode_ctrl_initiator_s;
 
@@ -150,6 +154,7 @@ typedef struct packed  { \
            this.strap_ss_strap_generic_1 , \
            this.strap_ss_strap_generic_2 , \
            this.strap_ss_strap_generic_3 , \
+           this.strap_ss_caliptra_dma_axi_user , \
            this.ss_debug_intent  \
            };\
     return ( ss_mode_ctrl_initiator_struct);\
@@ -169,6 +174,7 @@ typedef struct packed  { \
            this.strap_ss_strap_generic_1 , \
            this.strap_ss_strap_generic_2 , \
            this.strap_ss_strap_generic_3 , \
+           this.strap_ss_caliptra_dma_axi_user , \
            this.ss_debug_intent  \
            } = ss_mode_ctrl_initiator_struct;\
   endfunction
@@ -190,6 +196,7 @@ typedef struct packed  { \
   bit [31:0] strap_ss_strap_generic_1 ; \
   bit [31:0] strap_ss_strap_generic_2 ; \
   bit [31:0] strap_ss_strap_generic_3 ; \
+  bit [31:0] strap_ss_caliptra_dma_axi_user ; \
   bit ss_debug_intent ; \
      } ss_mode_ctrl_responder_s;
 
@@ -208,6 +215,7 @@ typedef struct packed  { \
            this.strap_ss_strap_generic_1 , \
            this.strap_ss_strap_generic_2 , \
            this.strap_ss_strap_generic_3 , \
+           this.strap_ss_caliptra_dma_axi_user , \
            this.ss_debug_intent  \
            };\
     return ( ss_mode_ctrl_responder_struct);\
@@ -227,6 +235,7 @@ typedef struct packed  { \
            this.strap_ss_strap_generic_1 , \
            this.strap_ss_strap_generic_2 , \
            this.strap_ss_strap_generic_3 , \
+           this.strap_ss_caliptra_dma_axi_user , \
            this.ss_debug_intent  \
            } = ss_mode_ctrl_responder_struct;\
   endfunction

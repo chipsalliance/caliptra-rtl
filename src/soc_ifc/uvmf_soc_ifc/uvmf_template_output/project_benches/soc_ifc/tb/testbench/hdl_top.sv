@@ -289,12 +289,16 @@ import aaxi_uvm_pkg::*;
         .rv_ecc_sts(cptra_ctrl_agent_bus.rv_ecc_sts),
 
         //Obfuscated UDS and FE
-        .clear_obf_secrets(cptra_ctrl_agent_bus.clear_obf_secrets  ),
-        .scan_mode        (1'b0                                    ),
-        .cptra_obf_key    (soc_ifc_ctrl_agent_bus.cptra_obf_key    ),
-        .cptra_obf_key_reg(cptra_status_agent_bus.cptra_obf_key_reg),
-        .obf_field_entropy(cptra_status_agent_bus.obf_field_entropy),
-        .obf_uds_seed     (cptra_status_agent_bus.obf_uds_seed     ),
+        .clear_obf_secrets          (cptra_ctrl_agent_bus.clear_obf_secrets          ),
+        .scan_mode                  (1'b0                                            ),
+        .cptra_obf_key              (soc_ifc_ctrl_agent_bus.cptra_obf_key            ),
+        .cptra_obf_key_reg          (cptra_status_agent_bus.cptra_obf_key_reg        ),
+        .cptra_obf_field_entropy_vld(cptra_ctrl_agent_bus.cptra_obf_field_entropy_vld),
+        .cptra_obf_field_entropy    (cptra_ctrl_agent_bus.cptra_obf_field_entropy    ),
+        .obf_field_entropy          (cptra_status_agent_bus.obf_field_entropy        ),
+        .cptra_obf_uds_seed_vld     (cptra_ctrl_agent_bus.cptra_obf_uds_seed_vld     ),
+        .cptra_obf_uds_seed         (cptra_ctrl_agent_bus.cptra_obf_uds_seed         ),
+        .obf_uds_seed               (cptra_status_agent_bus.obf_uds_seed             ),
 
         // Subsystem mode straps
         .strap_ss_caliptra_base_addr                            (ss_mode_ctrl_agent_bus.strap_ss_caliptra_base_addr                            ),
@@ -308,6 +312,7 @@ import aaxi_uvm_pkg::*;
         .strap_ss_strap_generic_1                               (ss_mode_ctrl_agent_bus.strap_ss_strap_generic_1                               ),
         .strap_ss_strap_generic_2                               (ss_mode_ctrl_agent_bus.strap_ss_strap_generic_2                               ),
         .strap_ss_strap_generic_3                               (ss_mode_ctrl_agent_bus.strap_ss_strap_generic_3                               ),
+        .strap_ss_caliptra_dma_axi_user                         (ss_mode_ctrl_agent_bus.strap_ss_caliptra_dma_axi_user                         ),
         .ss_debug_intent                                        (ss_mode_ctrl_agent_bus.ss_debug_intent                                        ),
         .cptra_ss_debug_intent                                  (ss_mode_status_agent_bus.cptra_ss_debug_intent                                ),
 

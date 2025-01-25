@@ -80,6 +80,7 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     }
     recovery_data_avail: coverpoint coverage_trans.recovery_data_avail;
     recovery_image_activated: coverpoint coverage_trans.recovery_image_activated;
+    fixme_new_cp
 
     cross_rst : cross set_pwrgood, assert_rst;
     cross_brk : cross assert_rst, set_bootfsm_breakpoint {
@@ -97,6 +98,7 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     soc_ifc_ctrl_transaction_cg=new;
     foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt] = new;
     foreach (coverage_trans.generic_input_val[bt]     ) generic_input_val_bit_cg[bt]     = new;
+    fixme_new
   endfunction
 
   // ****************************************************************************
@@ -107,6 +109,7 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     soc_ifc_ctrl_transaction_cg.set_inst_name($sformatf("soc_ifc_ctrl_transaction_cg_%s",get_full_name()));
     foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt].set_inst_name($sformatf("cptra_obf_key_rand_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
     foreach (coverage_trans. generic_input_val[bt])     generic_input_val_bit_cg[bt]    .set_inst_name($sformatf( "generic_input_val_bit_cg_%d_%s",       bt, get_full_name()));
+    fixme_new
   endfunction
 
   // ****************************************************************************
@@ -121,6 +124,7 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     soc_ifc_ctrl_transaction_cg.sample();
     foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_key_rand[dw][bt]);
     foreach (coverage_trans. generic_input_val[bt])     generic_input_val_bit_cg[bt]    .sample(coverage_trans.generic_input_val[bt]);
+    fixme_new
   endfunction
 
 endclass

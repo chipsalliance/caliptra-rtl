@@ -3,6 +3,9 @@ uvmf:
     soc_ifc:
       agents:
       - initiator_responder: INITIATOR
+        name: dummy_avery_aaxi_agent
+        type: dummy_avery_aaxi
+      - initiator_responder: INITIATOR
         name: soc_ifc_ctrl_agent
         type: soc_ifc_ctrl
       - initiator_responder: INITIATOR
@@ -39,7 +42,6 @@ uvmf:
       imports:
       - name: mvc_pkg
       - name: mgc_ahb_v2_0_pkg
-      - name: mgc_apb3_v1_0_pkg
       - name: rw_txn_pkg
       non_uvmf_components: []
       parameters: []
@@ -48,16 +50,10 @@ uvmf:
         driver: qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
         receiver: soc_ifc_pred.ahb_slave_0_ae
         validate: 'false'
-      - ap_key: trans_ap
-        driver: qvip_apb5_slave_subenv_apb5_master_0
-        receiver: soc_ifc_pred.apb5_slave_0_ae
-        validate: 'false'
       qvip_memory_agents: []
       qvip_subenvs:
       - name: qvip_ahb_lite_slave_subenv
         type: qvip_ahb_lite_slave
-      - name: qvip_apb5_slave_subenv
-        type: qvip_apb5_slave
       register_model:
         maps:
         - interface: qvip_ahb_lite_slave_subenv.ahb_lite_slave_0
@@ -82,6 +78,9 @@ uvmf:
       - driver: mbox_sram_agent.monitored_ap
         receiver: soc_ifc_pred.mbox_sram_agent_ae
         validate: 'True'
+      - driver: dummy_avery_aaxi_agent.monitored_ap
+        receiver: soc_ifc_pred.axi_sub_0_ae
+        validate: 'True'
       - driver: soc_ifc_pred.soc_ifc_sb_ap
         receiver: soc_ifc_sb.expected_analysis_export
         validate: 'True'
@@ -94,8 +93,8 @@ uvmf:
       - driver: soc_ifc_pred.soc_ifc_sb_ahb_ap
         receiver: soc_ifc_sb.expected_ahb_analysis_export
         validate: 'True'
-      - driver: soc_ifc_pred.soc_ifc_sb_apb_ap
-        receiver: soc_ifc_sb.expected_apb_analysis_export
+      - driver: soc_ifc_pred.soc_ifc_sb_axi_ap
+        receiver: soc_ifc_sb.expected_axi_analysis_export
         validate: 'True'
       - driver: soc_ifc_status_agent.monitored_ap
         receiver: soc_ifc_sb.actual_analysis_export

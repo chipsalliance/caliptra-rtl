@@ -94,6 +94,7 @@ end
   tri [31:0] strap_ss_strap_generic_1_i;
   tri [31:0] strap_ss_strap_generic_2_i;
   tri [31:0] strap_ss_strap_generic_3_i;
+  tri [31:0] strap_ss_caliptra_dma_axi_user_i;
   tri        ss_debug_intent_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
@@ -108,6 +109,7 @@ end
   assign strap_ss_strap_generic_1_i = bus.strap_ss_strap_generic_1;
   assign strap_ss_strap_generic_2_i = bus.strap_ss_strap_generic_2;
   assign strap_ss_strap_generic_3_i = bus.strap_ss_strap_generic_3;
+  assign strap_ss_caliptra_dma_axi_user_i = bus.strap_ss_caliptra_dma_axi_user;
   assign ss_debug_intent_i = bus.ss_debug_intent;
 
   // Proxy handle to UVM monitor
@@ -127,6 +129,7 @@ end
   logic [31:0] strap_ss_strap_generic_2_r                                = 1'b0;
   logic [31:0] strap_ss_strap_generic_3_r                                = 1'b0;
   logic        ss_debug_intent_r                                         = 1'b0;
+  logic fixme_new;
   function bit any_signal_changed();
       return |(strap_ss_caliptra_base_addr_i                             ^ strap_ss_caliptra_base_addr_r                            ) ||
              |(strap_ss_mci_base_addr_i                                  ^ strap_ss_mci_base_addr_r                                 ) ||
@@ -139,7 +142,8 @@ end
              |(strap_ss_strap_generic_1_i                                ^ strap_ss_strap_generic_1_r                               ) ||
              |(strap_ss_strap_generic_2_i                                ^ strap_ss_strap_generic_2_r                               ) ||
              |(strap_ss_strap_generic_3_i                                ^ strap_ss_strap_generic_3_r                               ) ||
-             |(ss_debug_intent_i                                         ^ ss_debug_intent_r                                        );
+             |(ss_debug_intent_i                                         ^ ss_debug_intent_r                                        )
+             |fixme_new;
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -219,6 +223,7 @@ end
     //     //    ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_1
     //     //    ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_2
     //     //    ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_3
+    //     //    ss_mode_ctrl_monitor_struct.strap_ss_caliptra_dma_axi_user
     //     //    ss_mode_ctrl_monitor_struct.ss_debug_intent
     //     //
     // Reference code;
@@ -238,6 +243,7 @@ end
     //      ss_mode_ctrl_monitor_struct.xyz = strap_ss_strap_generic_1_i;  //    [31:0]
     //      ss_mode_ctrl_monitor_struct.xyz = strap_ss_strap_generic_2_i;  //    [31:0]
     //      ss_mode_ctrl_monitor_struct.xyz = strap_ss_strap_generic_3_i;  //    [31:0]
+    //      ss_mode_ctrl_monitor_struct.xyz = strap_ss_caliptra_dma_axi_user_i;  //    [31:0] 
     //      ss_mode_ctrl_monitor_struct.xyz = ss_debug_intent_i;  //
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
@@ -260,6 +266,7 @@ end
     strap_ss_strap_generic_2_r                                <= strap_ss_strap_generic_2_i;
     strap_ss_strap_generic_3_r                                <= strap_ss_strap_generic_3_i;
     ss_debug_intent_r                                         <= ss_debug_intent_i;
+    fixme
     begin: build_return_struct
     // Available struct members:
         ss_mode_ctrl_monitor_struct.strap_ss_caliptra_base_addr                             <= strap_ss_caliptra_base_addr_i;
@@ -274,6 +281,7 @@ end
         ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_2                                <= strap_ss_strap_generic_2_i;
         ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_3                                <= strap_ss_strap_generic_3_i;
         ss_mode_ctrl_monitor_struct.ss_debug_intent                                         <= ss_debug_intent_i;
+        fixme
     end
     // pragma uvmf custom do_monitor end
   endtask

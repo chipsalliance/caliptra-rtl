@@ -40,7 +40,7 @@
 //  soc_ifc_sb_ap broadcasts transactions of type soc_ifc_status_transaction
 //  cptra_sb_ap broadcasts transactions of type cptra_status_transaction
 //  soc_ifc_sb_ahb_ap broadcasts transactions of type mvc_sequence_item_base
-//  soc_ifc_sb_axi_ap broadcasts transactions of type mvc_sequence_item_base
+//  soc_ifc_sb_axi_ap broadcasts transactions of type aaxi_master_tr
 //  ss_mode_sb_ap broadcasts transactions of type ss_mode_status_transaction
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -155,7 +155,13 @@ class soc_ifc_predictor #(
 //  soc_ifc_sb_apb_ap_output_transaction_t soc_ifc_sb_apb_ap_output_transaction;
 //  // Code for sending output transaction out through soc_ifc_sb_apb_ap
 //  // soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
+
+  // Transaction variable for predicted values to be sent out soc_ifc_sb_axi_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
   aaxi_master_tr soc_ifc_sb_axi_ap_output_transaction;
+  // Code for sending output transaction out through soc_ifc_sb_axi_ap
+  // soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
 
   // Transaction variable for predicted values to be sent out ss_mode_sb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
@@ -181,11 +187,11 @@ class soc_ifc_predictor #(
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
 //  mvc_sequence_item_base apb5_slave_0_ae_debug;
-  aaxi_master_tr axi_sub_0_ae_debug;
   mbox_sram_transaction mbox_sram_agent_ae_debug;
   cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
   ss_mode_ctrl_transaction ss_mode_ctrl_agent_ae_debug;
   mvc_sequence_item_base ahb_slave_0_ae_debug;
+  aaxi_master_tr axi_sub_0_ae_debug;
 
 
   // pragma uvmf custom class_item_additional begin

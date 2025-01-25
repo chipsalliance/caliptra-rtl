@@ -2,6 +2,8 @@ uvmf:
   benches:
     soc_ifc:
       active_passive:
+      - bfm_name: dummy_avery_aaxi_agent
+        value: ACTIVE
       - bfm_name: soc_ifc_ctrl_agent
         value: ACTIVE
       - bfm_name: cptra_ctrl_agent
@@ -23,7 +25,6 @@ uvmf:
       imports:
       - name: mvc_pkg
       - name: mgc_ahb_v2_0_pkg
-      - name: mgc_apb3_v1_0_pkg
       interface_params: []
       reset_assertion_level: 'False'
       reset_duration: 200ns

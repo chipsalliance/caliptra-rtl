@@ -83,6 +83,7 @@ include $(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/Makefile
 
 
 # Include all requisite interface package targets for this bench
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/dummy_avery_aaxi_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_ctrl_pkg/Makefile
@@ -187,8 +188,6 @@ comp_soc_ifc_dut: comp_soc_ifc_vhdl_dut comp_soc_ifc_verilog_dut
 comp_qvip: 
 	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $(QVIP_AHB_LITE_SLAVE_DIR_NAME)/qvip_ahb_lite_slave_filelist.f
 	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QVIP_AHB_LITE_SLAVE_DIR_NAME) $(QVIP_AHB_LITE_SLAVE_DIR_NAME)/hdl_qvip_ahb_lite_slave.sv
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $(QVIP_APB5_SLAVE_DIR_NAME)/qvip_apb5_slave_filelist.f
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QVIP_APB5_SLAVE_DIR_NAME) $(QVIP_APB5_SLAVE_DIR_NAME)/hdl_qvip_apb5_slave.sv
 
 BUILD_TGT_0 = make_build
 BUILD_TGT_1 = vinfo_build

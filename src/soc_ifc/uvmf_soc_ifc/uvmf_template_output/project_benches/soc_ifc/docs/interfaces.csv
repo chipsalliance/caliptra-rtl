@@ -23,6 +23,7 @@
 
 ,
 Interface Description, Interface Type, Interface Transaction, Interface Name,
+dummy_avery_aaxi_agent, dummy_avery_aaxi_driver_bfm dummy_avery_aaxi_monitor_bfm, dummy_avery_aaxi_transaction, dummy_avery_aaxi_pkg_dummy_avery_aaxi_agent_BFM,
 soc_ifc_ctrl_agent, soc_ifc_ctrl_driver_bfm soc_ifc_ctrl_monitor_bfm, soc_ifc_ctrl_transaction, soc_ifc_ctrl_pkg_soc_ifc_ctrl_agent_BFM,
 cptra_ctrl_agent, cptra_ctrl_driver_bfm cptra_ctrl_monitor_bfm, cptra_ctrl_transaction, cptra_ctrl_pkg_cptra_ctrl_agent_BFM,
 ss_mode_ctrl_agent, ss_mode_ctrl_driver_bfm ss_mode_ctrl_monitor_bfm, ss_mode_ctrl_transaction, ss_mode_ctrl_pkg_ss_mode_ctrl_agent_BFM,

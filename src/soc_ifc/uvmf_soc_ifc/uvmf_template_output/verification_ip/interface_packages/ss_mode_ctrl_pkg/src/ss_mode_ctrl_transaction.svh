@@ -43,6 +43,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   rand bit [31:0] strap_ss_strap_generic_1 ;
   rand bit [31:0] strap_ss_strap_generic_2 ;
   rand bit [31:0] strap_ss_strap_generic_3 ;
+  rand bit [31:0] strap_ss_caliptra_dma_axi_user ;
   rand bit ss_debug_intent ;
 
   //Constraints for the transaction variables:
@@ -68,6 +69,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   constraint strap_ss_strap_generic_1_c { strap_ss_strap_generic_1 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint strap_ss_strap_generic_2_c { strap_ss_strap_generic_2 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint strap_ss_strap_generic_3_c { strap_ss_strap_generic_3 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
+  constraint strap_ss_caliptra_dma_axi_user_c { strap_ss_caliptra_dma_axi_user dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint debug_intent_c { ss_debug_intent dist {1 :/ 1, 0 :/ 9}; }
 
   // pragma uvmf custom class_item_additional begin
@@ -203,6 +205,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     this.strap_ss_strap_generic_2 = RHS.strap_ss_strap_generic_2;
     this.strap_ss_strap_generic_3 = RHS.strap_ss_strap_generic_3;
     this.ss_debug_intent = RHS.ss_debug_intent;
+    fixme_new;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -237,6 +240,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,strap_ss_strap_generic_1,"strap_ss_strap_generic_1");
     $add_attribute(transaction_view_h,strap_ss_strap_generic_2,"strap_ss_strap_generic_2");
     $add_attribute(transaction_view_h,strap_ss_strap_generic_3,"strap_ss_strap_generic_3");
+    fixme_new
     $add_attribute(transaction_view_h,ss_debug_intent,"ss_debug_intent");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

@@ -8,6 +8,7 @@ ${UVMF_HOME}/uvmf_base_pkg/uvmf_base_pkg_hdl.sv
 -f ${UVMF_HOME}/common/common_sve.f
 
 // BFM Files
+-F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/dummy_avery_aaxi_pkg/dummy_avery_aaxi_pkg_sve.F
 -F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg_sve.F
 -F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/cptra_ctrl_pkg/cptra_ctrl_pkg_sve.F
 -F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/ss_mode_ctrl_pkg/ss_mode_ctrl_pkg_sve.F

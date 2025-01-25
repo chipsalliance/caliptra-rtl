@@ -113,6 +113,14 @@ end
   reg  cptra_rst_b_o = 'bz;
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_i;
   reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_o = 'bz;
+  tri  cptra_obf_field_entropy_vld_i;
+  reg  cptra_obf_field_entropy_vld_o = 'bz;
+  tri [`CLP_OBF_FE_DWORDS-1:0][31:0] cptra_obf_field_entropy_i;
+  reg [`CLP_OBF_FE_DWORDS-1:0][31:0] cptra_obf_field_entropy_o = 'bz;
+  tri  cptra_obf_uds_seed_vld_i;
+  reg  cptra_obf_uds_seed_vld_o = 'bz;
+  tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_i;
+  reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_o = 'bz;
   tri [2:0] security_state_i;
   reg [2:0] security_state_o = 'bz;
   tri  BootFSM_BrkPoint_i;
@@ -142,6 +150,14 @@ end
   assign cptra_rst_b_i = bus.cptra_rst_b;
   assign bus.cptra_obf_key = (initiator_responder == INITIATOR) ? cptra_obf_key_o : 'bz;
   assign cptra_obf_key_i = bus.cptra_obf_key;
+  assign bus.cptra_obf_field_entropy_vld = (initiator_responder == INITIATOR) ? cptra_obf_field_entropy_vld_o : 'bz;
+  assign cptra_obf_field_entropy_vld_i = bus.cptra_obf_field_entropy_vld;
+  assign bus.cptra_obf_field_entropy = (initiator_responder == INITIATOR) ? cptra_obf_field_entropy_o : 'bz;
+  assign cptra_obf_field_entropy_i = bus.cptra_obf_field_entropy;
+  assign bus.cptra_obf_uds_seed_vld = (initiator_responder == INITIATOR) ? cptra_obf_uds_seed_vld_o : 'bz;
+  assign cptra_obf_uds_seed_vld_i = bus.cptra_obf_uds_seed_vld;
+  assign bus.cptra_obf_uds_seed = (initiator_responder == INITIATOR) ? cptra_obf_uds_seed_o : 'bz;
+  assign cptra_obf_uds_seed_i = bus.cptra_obf_uds_seed;
   assign bus.security_state = (initiator_responder == INITIATOR) ? security_state_o : 'bz;
   assign security_state_i = bus.security_state;
   assign bus.BootFSM_BrkPoint = (initiator_responder == INITIATOR) ? BootFSM_BrkPoint_o : 'bz;
@@ -191,6 +207,7 @@ end
        generic_input_wires_o <= 'b0;
        recovery_data_avail_o <= 'b0;
        recovery_image_activated_o <= 'b0;
+       fixme_new
        // Bi-directional signals
 
      end
@@ -273,6 +290,7 @@ end
        //      recovery_image_activated_o <= soc_ifc_ctrl_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
+       fixme_new
     generic_input_wires_o <= initiator_struct.generic_input_val;
     cptra_obf_key_o <= initiator_struct.cptra_obf_key_rand;
     security_state_o <= initiator_struct.security_state;
@@ -304,6 +322,7 @@ end
     soc_ifc_ctrl_responder_struct.recovery_data_avail      = recovery_data_avail_i;
     soc_ifc_ctrl_responder_struct.recovery_image_activated = recovery_image_activated_i;
     responder_struct = soc_ifc_ctrl_responder_struct;
+       fixme_new
   endtask        
 // pragma uvmf custom initiate_and_get_response end
 

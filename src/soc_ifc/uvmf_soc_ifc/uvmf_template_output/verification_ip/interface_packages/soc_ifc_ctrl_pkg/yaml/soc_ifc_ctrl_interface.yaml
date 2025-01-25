@@ -25,6 +25,22 @@ uvmf:
         reset_value: '''bz'
         width: '[''`CLP_OBF_KEY_DWORDS'', ''32'']'
       - dir: output
+        name: cptra_obf_field_entropy_vld
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: cptra_obf_field_entropy
+        reset_value: '''bz'
+        width: '[''`CLP_OBF_FE_DWORDS'', ''32'']'
+      - dir: output
+        name: cptra_obf_uds_seed_vld
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: cptra_obf_uds_seed
+        reset_value: '''bz'
+        width: '[''`CLP_OBF_UDS_DWORDS'', ''32'']'
+      - dir: output
         name: security_state
         reset_value: '''bz'
         width: '3'
