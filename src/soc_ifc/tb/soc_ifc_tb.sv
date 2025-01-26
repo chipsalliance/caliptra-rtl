@@ -962,7 +962,7 @@ module soc_ifc_tb
 
     end
   endtask // read_single_word_ahb
-  tc_ctr
+  
   task read_single_word_apb(input [31 : 0] address);
     begin
       paddr_i_tb      <= address;
@@ -1001,7 +1001,7 @@ module soc_ifc_tb
           .id(0),
           .lock(0), 
           .data(rdata), 
-          .resp(resp)
+          .resp(resp));
       end
       else if (mgr_sub == SUB) begin // AXI subordinate
         s_axi_if.axi_read_single(
