@@ -93,6 +93,10 @@ module axi_sub_wr import axi_pkg::*; #(
 
     genvar ex; // Exclusive contexts
 
+    logic axi_out_of_rst;
+    logic axi_awvalid_q;
+    logic axi_awready_q;
+
     logic dv_pre;
 
     // Active transaction signals
@@ -128,6 +132,17 @@ module axi_sub_wr import axi_pkg::*; #(
     // Address Request I/F                     //
     // --------------------------------------- //
 
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            axi_out_of_rst <= 1'b0;
+        end
+        else begin
+            axi_out_of_rst <= 1'b1;
+        end
+    end
+    always_comb axi_awvalid_q    = s_axi_if.awvalid & axi_out_of_rst;
+    always_comb s_axi_if.awready = axi_awready_q    & axi_out_of_rst;
+
     always_comb begin
         s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
         s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
@@ -152,8 +167,8 @@ module axi_sub_wr import axi_pkg::*; #(
     ) i_req_skd (
         .i_clk  (clk             ),
         .i_reset(rst_n           ),
-        .i_valid(s_axi_if.awvalid),
-        .o_ready(s_axi_if.awready),
+        .i_valid(axi_awvalid_q   ),
+        .o_ready(axi_awready_q   ),
         .i_data (s_axi_if_ctx    ),
         .o_valid(req_valid       ),
         .i_ready(req_ready       ),

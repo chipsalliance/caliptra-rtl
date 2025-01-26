@@ -34,9 +34,11 @@ doc_output_dir = os.path.join(rtl_output_dir, '..', 'docs')
 
 # Listener block will print register name and address into C Header file
 class HeaderPrintingListener(RDLListener):
-    def __init__(self, file_path, filename, ext, tick):
+    def __init__(self, file_path, filename, ext, tick, do_global=1, do_rel=1):
         self.regfile_offset = 0
         self.tick = tick
+        self.do_global = do_global
+        self.do_rel = do_rel
         self.file_path = file_path
         header_file_path = os.path.join(self.file_path, filename + ext)
         self.file = open(header_file_path, 'w')
@@ -64,14 +66,16 @@ class HeaderPrintingListener(RDLListener):
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
         #print the base address of each address map
-        self.file.write((self.tick + "define " + register_name.upper() + "_BASE_ADDR" + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_global == 1:
+            self.file.write((self.tick + "define " + register_name.upper() + "_BASE_ADDR" + "\t(" + address + ")\n").expandtabs(100))
     def enter_Regfile(self, node):
         self.regfile_offset = node.address_offset
         register_name = node.get_path("_",'_{index:d}')
         address = hex(node.absolute_address)
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
-        self.file.write((self.tick + "define " + register_name.upper() + "_START" + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_global == 1:
+            self.file.write((self.tick + "define " + register_name.upper() + "_START" + "\t(" + address + ")\n").expandtabs(100))
     def exit_Regfile(self, node):
         self.regfile_offset = 0
     def enter_Reg(self, node):
@@ -80,39 +84,49 @@ class HeaderPrintingListener(RDLListener):
         address = hex(node.absolute_address)
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
-        self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_global == 1:
+            self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
         #getting and printing the relative address and path for each register (relative to the addr map it belongs to)
         register_name = node.get_rel_path(self.top_node.parent,"^","_",'_{index:d}')
         address = hex(node.address_offset + self.regfile_offset)
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
-        self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_rel == 1:
+            self.file.write( self.tick + "ifndef " + register_name.upper() + "\n")
+            self.file.write((self.tick + "define " + register_name.upper() + "\t(" + address + ")\n").expandtabs(100))
+    def exit_Reg(self, node):
+        if self.do_rel == 1:
+            self.file.write( self.tick + "endif\n")
     def enter_Field(self, node):
         field_name = node.get_rel_path(self.top_node.parent,"^","_",'_{index:d}')
         if node.width == 1:
             field_mask = hex(1 << node.low)
             if self.tick == "`":
                 field_mask = field_mask.replace("0x", "32'h", 1)
-            self.file.write((self.tick + "define " + field_name.upper() + "_LOW" + "\t(" + str(node.low) + ")\n").expandtabs(100))
-            self.file.write((self.tick + "define " + field_name.upper() + "_MASK" + "\t(" + field_mask + ")\n").expandtabs(100))
+            if self.do_rel == 1:
+                self.file.write((self.tick + "define " + field_name.upper() + "_LOW" + "\t(" + str(node.low) + ")\n").expandtabs(100))
+                self.file.write((self.tick + "define " + field_name.upper() + "_MASK" + "\t(" + field_mask + ")\n").expandtabs(100))
         elif node.low != 0 or node.high != 31:
             field_mask = hex(((2 << node.high) - 1) & ~((1 << node.low) -1))
             if self.tick == "`":
                 field_mask = field_mask.replace("0x", "32'h", 1)
-            self.file.write((self.tick + "define " + field_name.upper() + "_LOW" + "\t(" + str(node.low) + ")\n").expandtabs(100))
-            self.file.write((self.tick + "define " + field_name.upper() + "_MASK" + "\t(" + field_mask + ")\n").expandtabs(100))
+            if self.do_rel == 1:
+                self.file.write((self.tick + "define " + field_name.upper() + "_LOW" + "\t(" + str(node.low) + ")\n").expandtabs(100))
+                self.file.write((self.tick + "define " + field_name.upper() + "_MASK" + "\t(" + field_mask + ")\n").expandtabs(100))
     def enter_Mem(self, node):
         #getting and printing the absolute address and path for each register
         mem_name = node.get_path("_",'_{index:d}')
         address = hex(node.absolute_address)
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
-        self.file.write((self.tick + "define " + mem_name.upper() + "_BASE_ADDR" + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_global == 1:
+            self.file.write((self.tick + "define " + mem_name.upper() + "_BASE_ADDR" + "\t(" + address + ")\n").expandtabs(100))
         #getting and printing the end address for the memory
         address = hex(node.absolute_address + node.size - 1)
         if self.tick == "`":
             address = address.replace("0x", "32'h", 1)
-        self.file.write((self.tick + "define " + mem_name.upper() + "_END_ADDR" + "\t(" + address + ")\n").expandtabs(100))
+        if self.do_global == 1:
+            self.file.write((self.tick + "define " + mem_name.upper() + "_END_ADDR" + "\t(" + address + ")\n").expandtabs(100))
 
 
 #list of address map files to compile
@@ -153,7 +167,11 @@ try:
     walker.walk(root, listener)
     listener.file.write("\n\n#endif")
     listener.file.close()
-    listener = HeaderPrintingListener(rtl_output_dir, filename + "_defines", ".svh", "`")
+    listener = HeaderPrintingListener(rtl_output_dir, filename + "_defines", ".svh", "`", 1, 0)
+    walker.walk(root, listener)
+    listener.file.write("\n\n`endif")
+    listener.file.close()
+    listener = HeaderPrintingListener(rtl_output_dir, filename + "_field_defines", ".svh", "`", 0, 1)
     walker.walk(root, listener)
     listener.file.write("\n\n`endif")
     listener.file.close()

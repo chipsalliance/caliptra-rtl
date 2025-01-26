@@ -346,3 +346,219 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     }
 
 }
+
+void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[MLDSA87_EXTERNAL_MU_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE])
+{
+    uint16_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t mldsa_sign     [MLDSA87_SIGN_SIZE];
+    
+    // wait for MLDSA to be ready
+    printf("Waiting for mldsa status ready in keygen\n");
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+
+    //Program mldsa seed
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+
+        // Try to overwrite MLDSA SEED from keyvault
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+             *reg_ptr++ = 0;
+        }
+
+         // Check that MLDSA SEED is loaded
+         while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+     }
+     else{
+        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+            *reg_ptr++ = seed.data[offset++];
+        }
+    }
+
+    // Program MLDSA EXTERNAL_MU
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
+        *reg_ptr++ = external_mu[offset++];
+    }
+
+    // Program MLDSA Sign Rnd
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
+        *reg_ptr++ = sign_rnd[offset++];
+    }
+
+    // Write MLDSA ENTROPY
+    printf("Writing entropy\n");
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+        *reg_ptr++ = entropy[offset++];
+    }
+
+    // Enable MLDSA KEYGEN + SIGNING core
+    printf("\nMLDSA KEYGEN + SIGNING in ExternalMu mode\n");
+    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
+                                           MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
+
+    // wait for MLDSA SIGNING process to be done
+    wait_for_mldsa_intr();
+
+    // Read the data back from MLDSA register
+    printf("Load SIGN data from MLDSA\n");
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_SIGN_SIZE) {
+        mldsa_sign[offset] = *reg_ptr;
+        if (mldsa_sign[offset] != sign[offset]) {
+            printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Expected data: 0x%x\n", sign[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+}
+
+
+void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t external_mu[MLDSA87_EXTERNAL_MU_SIZE], uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE])
+{
+    uint16_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t mldsa_sign [MLDSA87_SIGN_SIZE];
+
+//  wait for MLDSA to be ready
+    printf("Waiting for mldsa status ready\n");
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+
+    // Program MLDSA PRIVKEY
+    printf("Writing privkey\n");
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_PRIVKEY_SIZE) {
+        // printf("offset = %0d, value = %x, reg ptr = %0d\n", offset++, privkey[offset++], reg_ptr);
+        *reg_ptr++ = privkey[offset++];
+    }
+    
+    printf("Writing ExternalMu\n");
+    // Program MLDSA EXTERNAL_MU
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
+        *reg_ptr++ = external_mu[offset++];
+    }
+
+    // Program MLDSA Sign Rnd
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
+        *reg_ptr++ = sign_rnd[offset++];
+    }
+
+    // Program MLDSA ENTROPY
+    printf("Writing entropy\n");
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+        *reg_ptr++ = entropy[offset++];
+    }
+
+    // Enable MLDSA SIGNING core
+    printf("\nMLDSA SIGNING in ExternalMu mode\n");
+    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING | 
+                                           MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
+    
+    // wait for MLDSA SIGNING process to be done
+    wait_for_mldsa_intr();
+        
+    // // Read the data back from MLDSA register
+    printf("Load SIGN data from MLDSA\n");
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_SIGN_SIZE) {
+        mldsa_sign[offset] = *reg_ptr;
+        if (mldsa_sign[offset] != sign[offset]) {
+            printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Expected data: 0x%x\n", sign[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+}
+
+void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE])
+{
+    uint16_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t mldsa_verify_res [MLDSA_VERIFY_RES_SIZE];
+
+    // wait for MLDSA to be ready
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    
+    printf("Writing ExternalMu\n");
+    // Program MLDSA EXTERNAL_MU
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
+        *reg_ptr++ = external_mu[offset++];
+    }
+
+    // Program MLDSA PUBKEY
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_PUBKEY_SIZE) {
+        *reg_ptr++ = pubkey[offset++];
+    }
+
+    // Program MLDSA SIGNATURE
+    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_SIGN_SIZE) {
+        *reg_ptr++ = sign[offset++];
+    }
+
+    // Enable MLDSA VERIFYING core
+    printf("\nMLDSA VERIFYING in ExternalMu mode\n");
+    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING | 
+                                           MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
+    
+    // wait for MLDSA VERIFYING process to be done
+    wait_for_mldsa_intr();
+    
+    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
+    // Read the data back from MLDSA register
+    printf("Load VERIFY_RES data from MLDSA\n");
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
+        mldsa_verify_res[offset] = *reg_ptr;
+        if (mldsa_verify_res[offset] != verify_res[offset]) {
+            printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", mldsa_verify_res[offset]);
+            printf("Expected data: 0x%x\n", verify_res[offset]);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+}

@@ -31,6 +31,7 @@
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 
 
 module caliptra_top_tb_services 
@@ -46,6 +47,7 @@ module caliptra_top_tb_services
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_sink          el2_mem_export,
+    mldsa_mem_if.resp                  mldsa_memory_export,
 
     //SRAM interface for mbox
     input  wire logic mbox_sram_cs,
@@ -123,6 +125,17 @@ module caliptra_top_tb_services
     parameter DATA_WIDTH = 32;
     localparam IV_NO = 128 / DATA_WIDTH;
 
+    localparam ICCM_BYTE_SIZE = `RV_ICCM_SIZE*1024; // 256KiB
+    localparam ICCM_PRELOADER_WIDTH = 64;
+    localparam ICCM_PRELOADER_BYTE_WIDTH = ICCM_PRELOADER_WIDTH/8;
+    localparam ICCM_PRELOADER_DEPTH = ICCM_BYTE_SIZE / ICCM_PRELOADER_BYTE_WIDTH;
+    localparam ICCM_PRELOADER_ADDR_WIDTH = $clog2(ICCM_PRELOADER_DEPTH);
+    localparam DCCM_BYTE_SIZE = `RV_DCCM_SIZE*1024; // 256KiB
+    localparam DCCM_PRELOADER_WIDTH = 64;
+    localparam DCCM_PRELOADER_BYTE_WIDTH = DCCM_PRELOADER_WIDTH/8;
+    localparam DCCM_PRELOADER_DEPTH = DCCM_BYTE_SIZE / DCCM_PRELOADER_BYTE_WIDTH;
+    localparam DCCM_PRELOADER_ADDR_WIDTH = $clog2(DCCM_PRELOADER_DEPTH);
+
    //=========================================================================-
    // Signals
    //=========================================================================-
@@ -158,7 +171,8 @@ module caliptra_top_tb_services
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
     logic                       inject_random_data;
-    logic                       check_pcr_signing;
+    logic                       check_pcr_ecc_signing;
+    logic                       check_pcr_mldsa_signing;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -251,9 +265,16 @@ module caliptra_top_tb_services
     logic [1:0] normcheck_mode_random;
     logic inject_mldsa_timeout;
     logic random_mldsa_failure_injection;
+    function automatic logic [511:0] change_endian(input logic [511:0] data);
+        logic [511:0] result;
+        for (int i = 0; i < 512; i = i + 8) begin
+            result[i +: 8] = data[511 - i -: 8];
+        end
+        return result;
+    endfunction
 
 // Upwards name referencing per 23.8 of IEEE 1800-2017
-`define DEC caliptra_top_dut.rvtop.veer.dec
+`define DEC `CPTRA_TOP_PATH.rvtop.veer.dec
 
 `define LMEM mbox_ram1.ram 
 
@@ -270,9 +291,11 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
-    //         8'h90        - Issue PCR singing with fixed vector   
-    //         8'h91        - Issue PCR singing with randomized vector
-    //         8'h92        - Check PCR singing with randomized vector   
+    //         8'h90        - Issue PCR signing with fixed vector   
+    //         8'h91        - Issue PCR ECC signing with randomized vector
+    //         8'h92        - Check PCR ECC signing with randomized vector
+    //         8'h93        - Issue PCR MLDSA signing with randomized vector   
+    //         8'h94        - Check PCR MLDSA signing with randomized vector
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
@@ -321,8 +344,8 @@ module caliptra_top_tb_services
     //         8'hfd        - Set random Mailbox SRAM single bit error injection
     //         8'hfe        - Set random Mailbox SRAM double bit error injection
     //         8'hff        - End the simulation with a Success status
-    assign mailbox_write = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.load_next;
-    assign WriteData = caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.next;
+    assign mailbox_write = `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.load_next;
+    assign WriteData = `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_combo.CPTRA_GENERIC_OUTPUT_WIRES[0].generic_wires.next;
     assign mailbox_data_val = WriteData[7:0] > 8'h5 && WriteData[7:0] < 8'h7f;
 
     integer fd, tp, el, sm, i;
@@ -390,7 +413,7 @@ module caliptra_top_tb_services
         else if((WriteData[7:0] == 8'hde) && mailbox_write) begin
             ras_test_ctrl.iccm_read_burst.start <= 1'b1;
             ras_test_ctrl.iccm_read_burst.count <= WriteData[31:12];
-            ras_test_ctrl.iccm_read_burst.addr  <= caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+            ras_test_ctrl.iccm_read_burst.addr  <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
             ras_test_ctrl.dccm_read_burst.start <= 1'b0;
             ras_test_ctrl.dccm_read_burst.count <=   '0;
             ras_test_ctrl.dccm_read_burst.addr  <=   '0;
@@ -401,7 +424,7 @@ module caliptra_top_tb_services
             ras_test_ctrl.iccm_read_burst.addr  <=   '0;
             ras_test_ctrl.dccm_read_burst.start <= 1'b1;
             ras_test_ctrl.dccm_read_burst.count <= WriteData[31:12];
-            ras_test_ctrl.dccm_read_burst.addr  <= caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+            ras_test_ctrl.dccm_read_burst.addr  <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
         end
         else begin
             ras_test_ctrl.iccm_read_burst.start <= 1'b0;
@@ -435,8 +458,10 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   mldsa_seed_2_tb= 512'h_fdc431e57c4325899e48d6daa9b7b5cfa23bc560ffd58e06b8c0c4b9e1e842e0_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
+    logic [0:15][31:0]   mldsa_seed_random;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
+    always_comb mldsa_seed_random = change_endian({256'h0, mldsa_test_vector.seed});
 
     genvar dword_i, slot_id;
     generate 
@@ -448,96 +473,105 @@ module caliptra_top_tb_services
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b10000;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b10000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
                         end
                     end
                     //inject privkey value to key reg
                     else if((WriteData[7:0] == 8'h90) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
 
                         inject_mldsa_seed <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = (inject_makehint_failure | inject_normcheck_failure) ? mldsa_seed_2_tb[dword_i][31:0] : mldsa_seed_tb[dword_i][31 : 0];
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = (inject_makehint_failure | inject_normcheck_failure) ? mldsa_seed_2_tb[dword_i][31:0] : mldsa_seed_tb[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].dest_valid.next = 5'b1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_ECC_SIGNING].last_dword.next = 'd11;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
+                    end
+                    else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = mldsa_seed_random[dword_i][31 : 0];
                     end
                     //inject valid hmac_key dest and zero hmac_key value to key reg
                     else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                        force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
                     end
                     //inject valid hmac_key dest and hmac384_key value to key reg
                     else if((WriteData[7:0] >= 8'ha0) && (WriteData[7:0] < 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac384_key_tb[dword_i][31 : 0];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac384_key_tb[dword_i][31 : 0];
                         end
                     end
                     //inject valid hmac_key dest and hmac512_key value to key reg
                     else if((WriteData[7:0] > 8'ha8) && (WriteData[7:0] <= 8'haf) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
                     else if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
                         inject_random_data <= '1;
                         if (slot_id == 0) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = (32'b10000 << `KV_REG_KEY_CTRL_0_DEST_VALID_LOW);
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
                     end
                     //inject valid mldsa seed dest and mldsa_seed value to key reg
                     else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
                         inject_mldsa_seed <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
                         end
                     end
                     else begin
@@ -546,12 +580,12 @@ module caliptra_top_tb_services
                         inject_hmac_key <= '0;
                         inject_mldsa_seed <= '0;
                         inject_random_data <= '0;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
-                        release caliptra_top_dut.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
                     end
                 end
             end // inject_dword_loop
@@ -573,8 +607,8 @@ module caliptra_top_tb_services
             inject_zero_sign_s <= 1'b1;
         end
         else if(inject_zero_sign_r) begin
-            if (caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd21) begin //R_ID
-                force caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '0;
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd21) begin //R_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '0;
                 inject_zero_sign_r_needs_release <= 1'b1;
             end
             else if (inject_zero_sign_r_needs_release) begin
@@ -582,8 +616,8 @@ module caliptra_top_tb_services
             end
         end
         else if(inject_zero_sign_s) begin
-            if (caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd22) begin //S_ID
-                force caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '0;
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd22) begin //S_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '0;
                 inject_zero_sign_s_needs_release <= 1'b1;
             end
             else if (inject_zero_sign_s_needs_release) begin
@@ -591,7 +625,7 @@ module caliptra_top_tb_services
             end
         end
         else begin
-            release caliptra_top_dut.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o;
+            release `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o;
         end
     end
 
@@ -653,9 +687,9 @@ module caliptra_top_tb_services
         else if (((WriteData[7:0] == 8'hd6) && mailbox_write)) begin
             inject_mldsa_timeout <= 1'b1;
         end
-        else if ((caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_signature_valid))
+        else if ((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid))
             reset_mldsa_failure <= 1'b1;
-        else if (((caliptra_top_dut.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || caliptra_top_dut.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
+        else if (((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
             reset_mldsa_failure <= 1'b0;
             inject_makehint_failure <= 1'b0;
             inject_normcheck_failure <= 1'b0;
@@ -663,13 +697,13 @@ module caliptra_top_tb_services
     end
 
     always_ff @(negedge clk) begin
-        if (inject_makehint_failure & caliptra_top_dut.mldsa.makehint_inst.hintgen_enable)
-            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
+        if (inject_makehint_failure & `CPTRA_TOP_PATH.mldsa.makehint_inst.hintgen_enable)
+            force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
         else
-            release caliptra_top_dut.mldsa.makehint_inst.hintsum;
+            release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
         
-        if (inject_normcheck_failure & caliptra_top_dut.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable & (caliptra_top_dut.mldsa.norm_check_inst.mode == normcheck_mode_random))
-            force caliptra_top_dut.mldsa.norm_check_inst.invalid = 'b1;
+        if (inject_normcheck_failure & `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable & (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
+            force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
         else
             release caliptra_top_dut.mldsa.norm_check_inst.invalid;
         
@@ -720,10 +754,10 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_keygen | mldsa_keygen_signing) begin
-                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value;
                 end
             end
         end
@@ -732,10 +766,10 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < MSG_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing | mldsa_verify | mldsa_keygen_signing) begin
-                    force caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value;
                 end
             end
         end
@@ -744,14 +778,14 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < PRIVKEY_REG_RHO_NUM_DWORDS/2; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing) begin
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][31:24],
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1)][31:24],
                                                                                                         mldsa_test_vector.privkey[(mldsa_dword*2)][7:0], mldsa_test_vector.privkey[(mldsa_dword*2)][15:8], mldsa_test_vector.privkey[(mldsa_dword*2)][23:16], mldsa_test_vector.privkey[(mldsa_dword*2)][31:24]};
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][31:24],
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][31:24],
                                                                                                       mldsa_test_vector.privkey[((mldsa_dword*2)+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword];
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.rho[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.K[mldsa_dword];
                 end
             end
         end
@@ -759,11 +793,11 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing) begin
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][31:24],
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][31:24],
                                                                                                        mldsa_test_vector.privkey[((mldsa_dword*2)+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.privatekey_reg.enc.tr[mldsa_dword];
                 end
             end
         end
@@ -772,15 +806,15 @@ module caliptra_top_tb_services
             always @(negedge clk) begin
                 if (mldsa_signing) begin
                     if ((mldsa_dword % 2) == 0) begin
-                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                     else begin
-                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank0.ram[(mldsa_dword-32)/2];
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sk_ram_bank1.ram[(mldsa_dword-33)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2];
+                    release mldsa_mem_top_inst.mldsa_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2];
                 end
             end
         end
@@ -789,10 +823,10 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < 8; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_verify) begin
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.pubkey[mldsa_dword][7:0], mldsa_test_vector.pubkey[mldsa_dword][15:8], mldsa_test_vector.pubkey[mldsa_dword][23:16], mldsa_test_vector.pubkey[mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword] = {mldsa_test_vector.pubkey[mldsa_dword][7:0], mldsa_test_vector.pubkey[mldsa_dword][15:8], mldsa_test_vector.pubkey[mldsa_dword][23:16], mldsa_test_vector.pubkey[mldsa_dword][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.publickey_reg.enc.rho[mldsa_dword];
                 end
             end
         end
@@ -800,10 +834,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 10; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
                     end
                     else begin
-                        release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_pubkey_ram.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_pk_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
@@ -813,20 +847,20 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < VERIFY_RES_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_verify) begin
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.signature_reg.enc.c[mldsa_dword];
                 end
             end
         end
         for (mldsa_dword = 0; mldsa_dword < SIGNATURE_H_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_verify) begin
-                    force caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
                 end
                 else begin
-                    release caliptra_top_dut.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword];
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.signature_reg.enc.h[mldsa_dword];
                 end
             end
         end
@@ -834,10 +868,10 @@ module caliptra_top_tb_services
             for (genvar b = 0; b < 5; b++) begin
                 always @(negedge clk) begin
                     if (mldsa_verify) begin
-                        force caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
+                        force mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
                     end
                     else begin
-                        release caliptra_top_dut.mldsa.mldsa_ctrl_inst.mldsa_sig_z_ram.ram[a][b*4+3:b*4];
+                        release mldsa_mem_top_inst.mldsa_sig_z_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
             end
@@ -850,20 +884,20 @@ module caliptra_top_tb_services
         for (genvar dword = 15; dword >= 0; dword--) begin
             always@(negedge clk) begin
                 if ((WriteData[7:0] == 8'hdd) && mailbox_write) begin
-                    force caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value = sha256_wntz_test_vector.sha256_wntz_block_tb[15-dword];
-                    force caliptra_top_dut.sha256.sha256_inst.wntz_mode = 1'b1; //single pulse
-                    force caliptra_top_dut.sha256.sha256_inst.wntz_n_mode = sha256_wntz_test_vector.wntz_n;
-                    force caliptra_top_dut.sha256.sha256_inst.wntz_w = sha256_wntz_test_vector.wntz_w;
-                    force caliptra_top_dut.sha256.sha256_inst.init_reg = 1'b1;
-                    force caliptra_top_dut.sha256.sha256_inst.mode_reg = 1'b1;
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value = sha256_wntz_test_vector.sha256_wntz_block_tb[15-dword];
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.wntz_mode = 1'b1; //single pulse
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.wntz_n_mode = sha256_wntz_test_vector.wntz_n;
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.wntz_w = sha256_wntz_test_vector.wntz_w;
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.init_reg = 1'b1;
+                    force `CPTRA_TOP_PATH.sha256.sha256_inst.mode_reg = 1'b1;
                 end //if 'hdd
-                else if (caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_CTRL.ZEROIZE.value) begin
-                    release caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
+                else if (`CPTRA_TOP_PATH.sha256.sha256_inst.hwif_out.SHA256_CTRL.ZEROIZE.value) begin
+                    release `CPTRA_TOP_PATH.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
                 end
                 else begin
-                    // release caliptra_top_dut.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
-                    release caliptra_top_dut.sha256.sha256_inst.wntz_mode;
-                    release caliptra_top_dut.sha256.sha256_inst.init_reg;
+                    // release `CPTRA_TOP_PATH.sha256.sha256_inst.hwif_out.SHA256_BLOCK[dword].BLOCK.value;
+                    release `CPTRA_TOP_PATH.sha256.sha256_inst.wntz_mode;
+                    release `CPTRA_TOP_PATH.sha256.sha256_inst.init_reg;
                 end //else
             end //always
         end //for
@@ -873,16 +907,16 @@ module caliptra_top_tb_services
         for(genvar dword = 0; dword < IV_NO; dword++) begin
     always@(negedge clk) begin
         if ((WriteData[7:0] == 8'hec) && mailbox_write) begin
-            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
-            force caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_uds[dword];
+            force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_uds[dword];
         end
         else if ((WriteData[7:0] == 8'hed) && mailbox_write) begin
-            force caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
-            force caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_fe[dword];
+            force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_fe[dword];
         end
         else begin
-            release caliptra_top_dut.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
-            release caliptra_top_dut.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value;
+            release `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
+            release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value;
         end
     end
 end //for
@@ -905,7 +939,7 @@ endgenerate //IV_NO
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
-        else if (assert_scan_mode_doe_done && (caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
+        else if (assert_scan_mode_doe_done && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
@@ -918,7 +952,7 @@ endgenerate //IV_NO
     
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf2) && mailbox_write) begin
-            force caliptra_top_dut.soc_ifc_top1.clk_gating_en = 1;
+            force `CPTRA_TOP_PATH.soc_ifc_top1.clk_gating_en = 1;
         end
     end
 
@@ -928,10 +962,10 @@ endgenerate //IV_NO
             en_jtag_access <= 'b1;
         end
         else if(en_jtag_access && (cycleCnt == (cycleCnt_ff + 'd100))) begin
-            force caliptra_top_dut.cptra_dmi_reg_en_preQ = 1;
+            force `CPTRA_TOP_PATH.cptra_dmi_reg_en_preQ = 1;
         end
         else if(en_jtag_access && (cycleCnt == (cycleCnt_ff + 'd150))) begin
-            release caliptra_top_dut.cptra_dmi_reg_en_preQ;
+            release `CPTRA_TOP_PATH.cptra_dmi_reg_en_preQ;
             en_jtag_access <= 'b0;
         end
     end
@@ -949,7 +983,7 @@ endgenerate //IV_NO
             inject_zeroize_to_hmac_cmd <= 1'b1;
         end
         else if (inject_zeroize_to_hmac_cmd) begin
-            if (caliptra_top_dut.hmac.hmac_inst.core_tag_we) begin
+            if (`CPTRA_TOP_PATH.hmac.hmac_inst.core_tag_we) begin
                 inject_zeroize_to_hmac <= 1'b1;
             end
             if (inject_zeroize_to_hmac) begin
@@ -962,10 +996,10 @@ endgenerate //IV_NO
     always@(negedge clk) begin
         if (inject_zeroize_to_hmac) begin
             if (inject_zeroize_to_hmac_cnt == 4'h5) begin
-                force caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value = 1'b1;
+                force `CPTRA_TOP_PATH.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value = 1'b1;
             end
             else begin
-                release caliptra_top_dut.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value;
+                release `CPTRA_TOP_PATH.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value;
             end
         end
     end
@@ -978,10 +1012,10 @@ endgenerate //IV_NO
             inject_fatal_error <= 'b1;
         end
         else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd100)) begin
-            force caliptra_top_dut.cptra_error_fatal = 'b1;
+            force `CPTRA_TOP_PATH.cptra_error_fatal = 'b1;
         end
         else if(inject_fatal_error && (cycleCnt == cycleCnt_ff + 'd200)) begin
-            release caliptra_top_dut.cptra_error_fatal;
+            release `CPTRA_TOP_PATH.cptra_error_fatal;
             inject_fatal_error <= 'b0;
         end
     end
@@ -1009,13 +1043,13 @@ endgenerate //IV_NO
                 end
                 else if((WriteData[7:0] == 8'hf3) && mailbox_write) begin
                     pcr_vault_needs_release <= 1'b1;
-                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we = 1'b1;
-                    force caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next = pv_hash_value[dword];
+                    force `CPTRA_TOP_PATH.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we = 1'b1;
+                    force `CPTRA_TOP_PATH.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next = pv_hash_value[dword];
                 end
                 else if (pcr_vault_needs_release) begin
                     pcr_vault_needs_release <= 1'b0;
-                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we;
-                    release caliptra_top_dut.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next;
+                    release `CPTRA_TOP_PATH.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.we;
+                    release `CPTRA_TOP_PATH.pcr_vault1.pv_reg_hwif_in.PCR_ENTRY[31][dword].data.next;
                 end
             end
         end
@@ -1224,22 +1258,28 @@ endgenerate //IV_NO
 
     logic [0:15][31:0]   pcr_to_be_signed    = 512'h_C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D_16e6009644e2a5f2c41fed22e703fb78;
     logic [0:15][31:0]   ecc_random_msg;
+    logic [0:15][31:0]   mldsa_random_msg;
     always_comb ecc_random_msg = {ecc_test_vector.hashed_msg, 128'h00000000000000000000000000000000};
+    always_comb mldsa_random_msg = change_endian(mldsa_test_vector.msg);  //swap the endian
 
     generate 
         for (genvar dword = 0; dword < 16; dword++) begin
             always@(posedge clk) begin
                 if((WriteData[7:0] == 8'h90) && mailbox_write) begin
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = pcr_to_be_signed[15-dword][31 : 0];
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = pcr_to_be_signed[15-dword][31 : 0];
                 end
                 else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign_we = 1'b1;
-                    force caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
+                end
+                else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
+                    force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = mldsa_random_msg[15-dword][31 : 0];
                 end
                 else begin
-                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign_we;
-                    release caliptra_top_dut.sha512.sha512_inst.pcr_sign[dword];
+                    release `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we;
+                    release `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword];
                 end
             end
         end
@@ -1247,9 +1287,13 @@ endgenerate //IV_NO
 
     always @(negedge clk) begin
         if((WriteData[7:0] == 8'h92) && mailbox_write)
-            check_pcr_signing <= 1'b1;
-        else
-            check_pcr_signing <= 1'b0;
+            check_pcr_ecc_signing <= 1'b1;
+        else if((WriteData[7:0] == 8'h94) && mailbox_write)
+            check_pcr_mldsa_signing <= 1'b1;
+        else begin
+            check_pcr_ecc_signing <= 1'b0;
+            check_pcr_mldsa_signing <= 1'b0;
+        end
     end
 
 
@@ -1306,7 +1350,7 @@ endgenerate //IV_NO
             end
         end
         else if(timed_warm_rst) begin
-            if((caliptra_top_dut.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 'h5)) begin
+            if((`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 'h5)) begin
                 assert_rst_flag <= 'b1;
                 deassert_rst_flag <= 'b0;
                 rst_cyclecnt <= cycleCnt;
@@ -1363,10 +1407,10 @@ endgenerate //IV_NO
         end
         else begin
             if (!UVM_TB) begin
-                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced_qual) begin
+                if(`CPTRA_TOP_PATH.soc_ifc_top1.i_wdt.wdt_timer1_timeout_serviced_qual) begin
                     set_wdt_timer1_period <= 'b1;
                 end
-                if(caliptra_top_dut.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced_qual) begin
+                if(`CPTRA_TOP_PATH.soc_ifc_top1.i_wdt.wdt_timer2_timeout_serviced_qual) begin
                     set_wdt_timer2_period <= 'b1;
                 end
             end
@@ -1379,25 +1423,25 @@ endgenerate //IV_NO
 
     always @(negedge clk) begin
         if(set_wdt_timer1_period) begin
-            force caliptra_top_dut.soc_ifc_top1.timer1_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
         end
         else if(reset_wdt_timer_period) begin
-            release caliptra_top_dut.soc_ifc_top1.timer1_timeout_period;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period;
         end
 
         if(set_wdt_timer2_period) begin
-            force caliptra_top_dut.soc_ifc_top1.timer2_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = 64'hFFFFFFFF_FFFFFFFF;
         end
         else if(reset_wdt_timer_period) begin
-            release caliptra_top_dut.soc_ifc_top1.timer2_timeout_period;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period;
         end
 
     end
 
     always @(negedge clk) begin
         if((WriteData[7:0] == 8'hea) && mailbox_write) begin
-            force caliptra_top_dut.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
-            force caliptra_top_dut.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
         end
         //Use 'hF1 code to reset these values in the test
     end
@@ -1499,18 +1543,18 @@ endgenerate //IV_NO
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;
         wb_data   <= `DEC.dec_i0_wdata_r;
-        if (caliptra_top_dut.trace_rv_i_valid_ip && $test$plusargs("CLP_BUS_LOGS")) begin
+        if (`CPTRA_TOP_PATH.trace_rv_i_valid_ip && $test$plusargs("CLP_BUS_LOGS")) begin
 
-           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", caliptra_top_dut.trace_rv_i_valid_ip, 0, caliptra_top_dut.trace_rv_i_address_ip,
-                  0, caliptra_top_dut.trace_rv_i_insn_ip,caliptra_top_dut.trace_rv_i_exception_ip,caliptra_top_dut.trace_rv_i_ecause_ip,
-                  caliptra_top_dut.trace_rv_i_tval_ip,caliptra_top_dut.trace_rv_i_interrupt_ip);
+           $fwrite(tp,"%b,%h,%h,%0h,%0h,3,%b,%h,%h,%b\n", `CPTRA_TOP_PATH.trace_rv_i_valid_ip, 0, `CPTRA_TOP_PATH.trace_rv_i_address_ip,
+                  0, `CPTRA_TOP_PATH.trace_rv_i_insn_ip,`CPTRA_TOP_PATH.trace_rv_i_exception_ip,`CPTRA_TOP_PATH.trace_rv_i_ecause_ip,
+                  `CPTRA_TOP_PATH.trace_rv_i_tval_ip,`CPTRA_TOP_PATH.trace_rv_i_interrupt_ip);
            // Basic trace - no exception register updates
            // #1 0 ee000000 b0201073 c 0b02       00000000
            commit_count++;
            $fwrite (el, "%10d : %8s 0 %h %h%13s ; %s\n", cycleCnt, $sformatf("#%0d",commit_count),
-                        caliptra_top_dut.trace_rv_i_address_ip, caliptra_top_dut.trace_rv_i_insn_ip,
+                        `CPTRA_TOP_PATH.trace_rv_i_address_ip, `CPTRA_TOP_PATH.trace_rv_i_insn_ip,
                         (wb_dest !=0 && wb_valid)?  $sformatf("%s=%h", abi_reg[wb_dest], wb_data) : "             ",
-                        dasm(caliptra_top_dut.trace_rv_i_insn_ip, caliptra_top_dut.trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
+                        dasm(`CPTRA_TOP_PATH.trace_rv_i_insn_ip, `CPTRA_TOP_PATH.trace_rv_i_address_ip, wb_dest & {5{wb_valid}}, wb_data)
                    );
         end
         if(`DEC.dec_nonblock_load_wen) begin
@@ -1527,20 +1571,20 @@ endgenerate //IV_NO
     always @(posedge clk) begin
         if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
-                        caliptra_top_dut.ic_haddr, caliptra_top_dut.ic_hburst, caliptra_top_dut.ic_hmastlock, 
-                        caliptra_top_dut.ic_hprot, caliptra_top_dut.ic_hsize, caliptra_top_dut.ic_htrans, 
-                        caliptra_top_dut.ic_hwrite, caliptra_top_dut.ic_hrdata[63:32], caliptra_top_dut.ic_hrdata[31:0], 
-                        caliptra_top_dut.ic_hready, caliptra_top_dut.ic_hresp);
+                        `CPTRA_TOP_PATH.ic_haddr, `CPTRA_TOP_PATH.ic_hburst, `CPTRA_TOP_PATH.ic_hmastlock, 
+                        `CPTRA_TOP_PATH.ic_hprot, `CPTRA_TOP_PATH.ic_hsize, `CPTRA_TOP_PATH.ic_htrans, 
+                        `CPTRA_TOP_PATH.ic_hwrite, `CPTRA_TOP_PATH.ic_hrdata[63:32], `CPTRA_TOP_PATH.ic_hrdata[31:0], 
+                        `CPTRA_TOP_PATH.ic_hready, `CPTRA_TOP_PATH.ic_hresp);
     end
 
     // LSU Initiator monitor
     always @(posedge clk) begin
         if ($test$plusargs("CLP_BUS_LOGS"))
         $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
-                        caliptra_top_dut.initiator_inst.haddr, caliptra_top_dut.initiator_inst.hsize, caliptra_top_dut.initiator_inst.htrans, 
-                        caliptra_top_dut.initiator_inst.hwrite, caliptra_top_dut.initiator_inst.hrdata[63:32], caliptra_top_dut.initiator_inst.hrdata[31:0], 
-                        caliptra_top_dut.initiator_inst.hwdata[63:32], caliptra_top_dut.initiator_inst.hwdata[31:0], 
-                        caliptra_top_dut.initiator_inst.hready, caliptra_top_dut.initiator_inst.hresp);
+                        `CPTRA_TOP_PATH.initiator_inst.haddr, `CPTRA_TOP_PATH.initiator_inst.hsize, `CPTRA_TOP_PATH.initiator_inst.htrans, 
+                        `CPTRA_TOP_PATH.initiator_inst.hwrite, `CPTRA_TOP_PATH.initiator_inst.hrdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hrdata[31:0], 
+                        `CPTRA_TOP_PATH.initiator_inst.hwdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hwdata[31:0], 
+                        `CPTRA_TOP_PATH.initiator_inst.hready, `CPTRA_TOP_PATH.initiator_inst.hresp);
     end
 
     // AHB responder interfaces monitor
@@ -1550,10 +1594,10 @@ endgenerate //IV_NO
             always @(posedge clk) begin
                 if ($test$plusargs("CLP_BUS_LOGS"))
                 $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
-                        caliptra_top_dut.responder_inst[sl_i].haddr, caliptra_top_dut.responder_inst[sl_i].hsize, caliptra_top_dut.responder_inst[sl_i].htrans, 
-                        caliptra_top_dut.responder_inst[sl_i].hwrite, caliptra_top_dut.responder_inst[sl_i].hrdata[63:32], caliptra_top_dut.responder_inst[sl_i].hrdata[31:0], 
-                        caliptra_top_dut.responder_inst[sl_i].hwdata[63:32], caliptra_top_dut.responder_inst[sl_i].hwdata[31:0], 
-                        caliptra_top_dut.responder_inst[sl_i].hready, caliptra_top_dut.responder_inst[sl_i].hreadyout, caliptra_top_dut.responder_inst[sl_i].hresp, caliptra_top_dut.responder_inst[sl_i].hsel);
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].haddr, `CPTRA_TOP_PATH.responder_inst[sl_i].hsize, `CPTRA_TOP_PATH.responder_inst[sl_i].htrans, 
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwrite, `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[31:0], 
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[31:0], 
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].hready, `CPTRA_TOP_PATH.responder_inst[sl_i].hreadyout, `CPTRA_TOP_PATH.responder_inst[sl_i].hresp, `CPTRA_TOP_PATH.responder_inst[sl_i].hsel);
             end
         end
     endgenerate
@@ -1602,11 +1646,11 @@ endgenerate //IV_NO
         hex_file_is_empty = $system("test -s program.hex");
         if (!hex_file_is_empty) $readmemh("program.hex",  imem_inst1.ram,0,`CALIPTRA_IMEM_BYTE_SIZE-1);
         hex_file_is_empty = $system("test -s mailbox.hex");
-        if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,MBOX_DIR_MEM_SIZE);
+        if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,MBOX_DIR_MEM_SIZE-1);
         hex_file_is_empty = $system("test -s dccm.hex");
-        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,32'h0003_FFFF);
+        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
         hex_file_is_empty = $system("test -s iccm.hex");
-        if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,32'h0003_FFFF);
+        if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
@@ -1674,6 +1718,12 @@ endgenerate //IV_NO
    //=========================================================================-
    // SRAM instances
    //=========================================================================-
+  // SRAM module
+mldsa_mem_top mldsa_mem_top_inst (
+    .clk_i(clk),
+    .mldsa_memory_export
+);
+
 caliptra_veer_sram_export veer_sram_export_inst (
     .sram_error_injection_mode(sram_error_injection_mode),
     .el2_mem_export(el2_mem_export)
@@ -1732,9 +1782,9 @@ caliptra_sram #(
 // This is used to load the generated ICCM hexfile prior to
 // running slam_iccm_ram
 caliptra_sram #(
-     .DEPTH     (32768        ), // 256KiB
-     .DATA_WIDTH(64           ),
-     .ADDR_WIDTH($clog2(32768))
+     .DEPTH     (ICCM_PRELOADER_DEPTH     ),
+     .DATA_WIDTH(ICCM_PRELOADER_WIDTH     ),
+     .ADDR_WIDTH(ICCM_PRELOADER_ADDR_WIDTH)
 
 ) dummy_iccm_preloader (
     .clk_i   (clk),
@@ -1750,9 +1800,9 @@ caliptra_sram #(
 // This is used to load the generated DCCM hexfile prior to
 // running slam_dccm_ram
 caliptra_sram #(
-     .DEPTH     (32768        ), // 256KiB
-     .DATA_WIDTH(64           ),
-     .ADDR_WIDTH($clog2(32768))
+     .DEPTH     (DCCM_PRELOADER_DEPTH     ),
+     .DATA_WIDTH(DCCM_PRELOADER_WIDTH     ),
+     .ADDR_WIDTH(DCCM_PRELOADER_ADDR_WIDTH)
 
 ) dummy_dccm_preloader (
     .clk_i   (clk),
@@ -1815,11 +1865,11 @@ task static preload_iccm;
 
     for(addr= saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h3}],
-                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h2}],
-                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h1}],
-                dummy_iccm_preloader.ram [addr[17:3]] [{addr[2],2'h0}]};
-        //data = {caliptra_top_dut.imem.mem[addr+3],caliptra_top_dut.imem.mem[addr+2],caliptra_top_dut.imem.mem[addr+1],caliptra_top_dut.imem.mem[addr]};
+        data = {dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h3}],
+                dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h2}],
+                dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h1}],
+                dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h0}]};
+        //data = {`CPTRA_TOP_PATH.imem.mem[addr+3],`CPTRA_TOP_PATH.imem.mem[addr+2],`CPTRA_TOP_PATH.imem.mem[addr+1],`CPTRA_TOP_PATH.imem.mem[addr]};
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("ICCM pre-load completed");
@@ -1847,10 +1897,10 @@ task static preload_dccm;
 
     for(addr=saddr; addr <= eaddr; addr+=4) begin
         // FIXME hardcoded address indices?
-        data = {dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h3}],
-                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h2}],
-                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h1}],
-                dummy_dccm_preloader.ram [addr[17:3]] [{addr[2],2'h0}]};
+        data = {dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h3}],
+                dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h2}],
+                dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h1}],
+                dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h0}]};
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");

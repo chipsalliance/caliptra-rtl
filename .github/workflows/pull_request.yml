@@ -14,8 +14,14 @@ jobs:
     uses: ./.github/workflows/pre-run-check.yml
   verilator:
     uses: ./.github/workflows/build-test-verilator.yml
+    needs: pre_run
+    with:
+      run_vltr: ${{ needs.pre_run.outputs.run_vltr }}
   interactive_dbg:
     uses: ./.github/workflows/interactive-debugging.yml
+    needs: pre_run
+    with:
+      run_vltr: ${{ needs.pre_run.outputs.run_vltr }}
   doc_gen:
     uses: ./.github/workflows/doc-gen.yml
     permissions:
@@ -25,6 +31,8 @@ jobs:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
     needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    # Force to run even if the prerequisites are skipped for any reason
+    if: ${{ !cancelled() }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4

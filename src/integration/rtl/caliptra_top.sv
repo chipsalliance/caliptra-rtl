@@ -60,6 +60,7 @@ module caliptra_top
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
+    mldsa_mem_if.req                   mldsa_memory_export,
 
     //SRAM interface for mbox
     output logic mbox_sram_cs,
@@ -104,6 +105,7 @@ module caliptra_top
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
+    input logic [31:0] strap_ss_caliptra_dma_axi_user,
     input logic [31:0] strap_ss_strap_generic_0,
     input logic [31:0] strap_ss_strap_generic_1,
     input logic [31:0] strap_ss_strap_generic_2,
@@ -218,6 +220,7 @@ module caliptra_top
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
 
+    el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
 
@@ -428,6 +431,14 @@ always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locke
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
+// I-Cache is disabled, leave pins connected to 0/unloaded
+always_comb begin
+  el2_icache_stub.wb_packeddout_pre = '0;
+  el2_icache_stub.wb_dout_pre_up = '0;
+  el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
+  el2_icache_stub.ic_tag_data_raw_pre = '0;
+end
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -517,8 +528,7 @@ el2_veer_wrapper rvtop (
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
 
-    .ic_data_ext_in_pkt     (48'h0),
-    .ic_tag_ext_in_pkt      (24'h0),
+    .el2_icache_export      (el2_icache_stub.veer_icache_src),
 
     .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
     .trace_rv_i_address_ip  (trace_rv_i_address_ip),
@@ -996,7 +1006,9 @@ mldsa_top #(
      .pcr_signing_data  (pcr_signing_data),
      .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
-     .notif_intr        (mldsa_notif_intr)
+     .notif_intr        (mldsa_notif_intr),
+     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
+     .mldsa_memory_export(mldsa_memory_export)
 );
 
 aes_clp_wrapper #(
@@ -1315,6 +1327,7 @@ soc_ifc_top1
     .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
+    .strap_ss_caliptra_dma_axi_user                         (strap_ss_caliptra_dma_axi_user                         ),
     .strap_ss_strap_generic_0                               (strap_ss_strap_generic_0                               ),
     .strap_ss_strap_generic_1                               (strap_ss_strap_generic_1                               ),
     .strap_ss_strap_generic_2                               (strap_ss_strap_generic_2                               ),

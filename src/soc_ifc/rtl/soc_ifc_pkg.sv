@@ -17,6 +17,7 @@
 
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 
 package soc_ifc_pkg;
     
@@ -47,7 +48,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
-    parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR - MBOX_DIR_START_ADDR;
+    parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;
 
     //Mailbox size configuration
     parameter CPTRA_MBOX_SIZE_KB = 256;
@@ -104,6 +105,7 @@ package soc_ifc_pkg;
     parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP = 7'h71;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;
+    parameter DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER = 7'h74;
 
     
     // This parameter describes the hard-coded implementation in the BOOT FSM

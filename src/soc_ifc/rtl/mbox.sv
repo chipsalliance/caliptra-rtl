@@ -648,7 +648,13 @@ always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
 always_comb hwif_in.mbox_status.soc_has_lock.next = soc_has_lock;
-always_comb hwif_in.mbox_status.mbox_rdptr.next = mbox_rdptr;
+//Assign valid read pointer bits to status register
+always_comb begin
+    hwif_in.mbox_status.mbox_rdptr.next = '0;
+    for (int i = 0; i < MBOX_DEPTH_LOG2; i++) begin //rdptr status register is hardcoded to 256KB depth
+        hwif_in.mbox_status.mbox_rdptr.next[i] = mbox_rdptr[i];
+    end
+end
 
 always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR);
 always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;

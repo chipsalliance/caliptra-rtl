@@ -16,6 +16,7 @@
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 `include "caliptra_macros.svh"
 
 module caliptra_top_tb_soc_bfm
@@ -453,30 +454,30 @@ import caliptra_top_tb_pkg::*; #(
 
                     if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        force caliptra_top_dut.soft_int = 1'b1;
+                        force `CPTRA_TOP_PATH.soft_int = 1'b1;
                         for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        release caliptra_top_dut.soft_int;
+                        release `CPTRA_TOP_PATH.soft_int;
                     end
 
                     for (int rpt=0; rpt<5000; rpt++) @(negedge core_clk);
 
                     if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing timer_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        force caliptra_top_dut.timer_int = 1'b1;
+                        force `CPTRA_TOP_PATH.timer_int = 1'b1;
                         for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing timer_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        release caliptra_top_dut.timer_int;
+                        release `CPTRA_TOP_PATH.timer_int;
                     end
 
                     for (int rpt=0; rpt<8000; rpt++) @(negedge core_clk);
 
                     if (int_flag) begin
                         $display("SoC (clk_gate_flow): Forcing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        force caliptra_top_dut.soft_int = 1'b1;
+                        force `CPTRA_TOP_PATH.soft_int = 1'b1;
                         for (int rpt=0; rpt<2; rpt++) @(negedge core_clk);
                         $display("SoC (clk_gate_flow): Releasing soft_int = 1. cycleCnt [%d]\n", cycleCnt);
-                        release caliptra_top_dut.soft_int;
+                        release `CPTRA_TOP_PATH.soft_int;
                     end
 
                     wait(cptra_rst_b == 0);
@@ -516,9 +517,9 @@ import caliptra_top_tb_pkg::*; #(
         end
     end
 
-`define RV_INST caliptra_top_dut.rvtop
-`define RV_IDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]
-`define RV_DDMA_RESP_INST caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_DDMA]
+`define RV_INST `CPTRA_TOP_PATH.rvtop
+`define RV_IDMA_RESP_INST `CPTRA_TOP_PATH.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]
+`define RV_DDMA_RESP_INST `CPTRA_TOP_PATH.responder_inst[`CALIPTRA_SLAVE_SEL_DDMA]
 task force_ahb_dma_read(input logic [31:0] address);
     while(`RV_INST.dma_hsel) @(posedge core_clk);
     force `RV_IDMA_RESP_INST.hreadyout = 1'b0;
