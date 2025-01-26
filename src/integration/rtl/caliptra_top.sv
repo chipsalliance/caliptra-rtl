@@ -60,6 +60,7 @@ module caliptra_top
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
+    mldsa_mem_if.req                   mldsa_memory_export,
 
     //SRAM interface for mbox
     output logic mbox_sram_cs,
@@ -104,6 +105,7 @@ module caliptra_top
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
+    input logic [31:0] strap_ss_caliptra_dma_axi_user,
     input logic [31:0] strap_ss_strap_generic_0,
     input logic [31:0] strap_ss_strap_generic_1,
     input logic [31:0] strap_ss_strap_generic_2,
@@ -1004,7 +1006,9 @@ mldsa_top #(
      .pcr_signing_data  (pcr_signing_data),
      .busy_o            (mldsa_busy),
      .error_intr        (mldsa_error_intr),
-     .notif_intr        (mldsa_notif_intr)
+     .notif_intr        (mldsa_notif_intr),
+     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
+     .mldsa_memory_export(mldsa_memory_export)
 );
 
 aes_clp_wrapper #(
@@ -1323,6 +1327,7 @@ soc_ifc_top1
     .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
+    .strap_ss_caliptra_dma_axi_user                         (strap_ss_caliptra_dma_axi_user                         ),
     .strap_ss_strap_generic_0                               (strap_ss_strap_generic_0                               ),
     .strap_ss_strap_generic_1                               (strap_ss_strap_generic_1                               ),
     .strap_ss_strap_generic_2                               (strap_ss_strap_generic_2                               ),

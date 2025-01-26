@@ -15,7 +15,7 @@
 // Description:
 //      Signals for internal transaction requests inside the Caliptra DMA
 //      hardware assist block
-//      Does not include any datapath signals (data, strb, user)
+//      Does not include any datapath signals (data, strb, wuser, ruser)
 //      as these flow separately through the FIFO.
 //
 
