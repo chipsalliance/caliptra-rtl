@@ -130,8 +130,8 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     coverage_trans = t;
     soc_ifc_ctrl_transaction_cg.sample();
     foreach (coverage_trans.cptra_obf_key_rand[dw,bt])      cptra_obf_key_rand_bit_cg[dw][bt]     .sample(coverage_trans.cptra_obf_key_rand[dw][bt]);
-    foreach (coverage_trans.cptra_obf_field_entropy[dw,bt]) cptra_obf_field_entropy_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_field_entropy_bit_cg[dw][bt]);
-    foreach (coverage_trans.cptra_obf_uds_seed[dw,bt])      cptra_obf_uds_seed_bit_cg[dw][bt]     .sample(coverage_trans.cptra_obf_uds_seed_bit_cg[dw][bt]);
+    foreach (coverage_trans.cptra_obf_field_entropy[dw,bt]) cptra_obf_field_entropy_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_field_entropy[dw][bt]);
+    foreach (coverage_trans.cptra_obf_uds_seed[dw,bt])      cptra_obf_uds_seed_bit_cg[dw][bt]     .sample(coverage_trans.cptra_obf_uds_seed[dw][bt]);
     foreach (coverage_trans. generic_input_val[bt])         generic_input_val_bit_cg[bt]          .sample(coverage_trans.generic_input_val[bt]);
   endfunction
 

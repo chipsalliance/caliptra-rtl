@@ -37,7 +37,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
 
   // 384-bit (12 dwords) vector to store calculated hash of Key Manifest and Owner
   // public keys from ROM image
-  bit [0:SHA384_DIGEST_SIZE/4-1]                                     [31:0] key_manifest_pk_hash_val;
+  bit [0:SHA384_DIGEST_SIZE/4-1]                                     [31:0] vendor_pk_hash_val;
   bit [0:SHA384_DIGEST_SIZE/4-1]                                     [31:0] owner_pk_hash_val;
 
   // Decide which fuses to initialize
@@ -45,7 +45,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
   constraint always_set_fe_c  { this.fuses_to_set.field_entropy == 1'b1; }
 //  // Roughly 50% of the tests
 //  constraint randomly_set_lms_verify_c { this.fuses_to_set.lms_verify dist {0 :/ 50, 1 :/ 50}; }
-  constraint always_set_key_manifest_pk_hash_c { this.fuses_to_set.key_manifest_pk_hash == {12{1'b1}}; }
+  constraint always_set_vendor_pk_hash_c { this.fuses_to_set.vendor_pk_hash == {12{1'b1}}; }
   constraint always_set_owner_pk_hash_c { this.fuses_to_set.owner_pk_hash == {12{1'b1}}; }
   constraint always_set_key_revocation_c { this.fuses_to_set.ecc_revocation   == 1'b1;
                                            this.fuses_to_set.lms_revocation   == 1'b1;
@@ -57,19 +57,19 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                     this.fuses_to_set.idevid_cert_attr[14] == 1'b1;
                                     this.fuses_to_set.idevid_cert_attr[15] == 1'b1; }
   // Configure the values to set to initialized fuses
-  constraint key_manifest_pk_hash_values_c { key_manifest_pk_hash_rand[0]  == this.key_manifest_pk_hash_val[0] ; //32'h6DC8DE16;
-                                             key_manifest_pk_hash_rand[1]  == this.key_manifest_pk_hash_val[1] ; //32'hD559D129;
-                                             key_manifest_pk_hash_rand[2]  == this.key_manifest_pk_hash_val[2] ; //32'h7BAB1E43;
-                                             key_manifest_pk_hash_rand[3]  == this.key_manifest_pk_hash_val[3] ; //32'hEBD7C533;
-                                             key_manifest_pk_hash_rand[4]  == this.key_manifest_pk_hash_val[4] ; //32'hDFE57001;
-                                             key_manifest_pk_hash_rand[5]  == this.key_manifest_pk_hash_val[5] ; //32'h1AA56220;
-                                             key_manifest_pk_hash_rand[6]  == this.key_manifest_pk_hash_val[6] ; //32'h0F66AD6D;
-                                             key_manifest_pk_hash_rand[7]  == this.key_manifest_pk_hash_val[7] ; //32'h87051086;
-                                             key_manifest_pk_hash_rand[8]  == this.key_manifest_pk_hash_val[8] ; //32'hC785E930;
-                                             key_manifest_pk_hash_rand[9]  == this.key_manifest_pk_hash_val[9] ; //32'hD3D947B4;
-                                             key_manifest_pk_hash_rand[10] == this.key_manifest_pk_hash_val[10]; //32'h7495822E;
-                                             key_manifest_pk_hash_rand[11] == this.key_manifest_pk_hash_val[11]; //32'hCB643FF1;
-                                             solve this.fuses_to_set before this.key_manifest_pk_hash_rand; }
+  constraint vendor_pk_hash_values_c { vendor_pk_hash_rand[0]  == this.vendor_pk_hash_val[0] ; //32'h6DC8DE16;
+                                       vendor_pk_hash_rand[1]  == this.vendor_pk_hash_val[1] ; //32'hD559D129;
+                                       vendor_pk_hash_rand[2]  == this.vendor_pk_hash_val[2] ; //32'h7BAB1E43;
+                                       vendor_pk_hash_rand[3]  == this.vendor_pk_hash_val[3] ; //32'hEBD7C533;
+                                       vendor_pk_hash_rand[4]  == this.vendor_pk_hash_val[4] ; //32'hDFE57001;
+                                       vendor_pk_hash_rand[5]  == this.vendor_pk_hash_val[5] ; //32'h1AA56220;
+                                       vendor_pk_hash_rand[6]  == this.vendor_pk_hash_val[6] ; //32'h0F66AD6D;
+                                       vendor_pk_hash_rand[7]  == this.vendor_pk_hash_val[7] ; //32'h87051086;
+                                       vendor_pk_hash_rand[8]  == this.vendor_pk_hash_val[8] ; //32'hC785E930;
+                                       vendor_pk_hash_rand[9]  == this.vendor_pk_hash_val[9] ; //32'hD3D947B4;
+                                       vendor_pk_hash_rand[10] == this.vendor_pk_hash_val[10]; //32'h7495822E;
+                                       vendor_pk_hash_rand[11] == this.vendor_pk_hash_val[11]; //32'hCB643FF1;
+                                       solve this.fuses_to_set before this.vendor_pk_hash_rand; }
   constraint owner_pk_hash_values_c { owner_pk_hash_rand[0]  == owner_pk_hash_val[0] ;//32'hF58D4920;
                                       owner_pk_hash_rand[1]  == owner_pk_hash_val[1] ;//32'hBA65DA44;
                                       owner_pk_hash_rand[2]  == owner_pk_hash_val[2] ;//32'hB0F728BC;
@@ -110,14 +110,14 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
         `uvm_fatal("SOC_IFC_BRINGUP", "Failed to cast object as poweron sequence!")
 
     // Read the PK Hash values extracted/calculated from the ROM image
-    fd = $fopen("key_manifest_pk_hash_val.hex", "r");
+    fd = $fopen("vendor_pk_hash_val.hex", "r");
     if (!fd) begin
         integer errno;
         string str;
         errno = $ferror(fd, str);
-        `uvm_fatal("SOC_IFC_BRINGUP", $sformatf("fopen failed to open key_manifest_pk_hash_val.hex with code [0x%x] message [%s]", errno, str))
+        `uvm_fatal("SOC_IFC_BRINGUP", $sformatf("fopen failed to open vendor_pk_hash_val.hex with code [0x%x] message [%s]", errno, str))
     end
-    void'($fscanf(fd, "%x", key_manifest_pk_hash_val));
+    void'($fscanf(fd, "%x", vendor_pk_hash_val));
     $fclose(fd);
 
     fd = $fopen("owner_pk_hash_val.hex", "r");
@@ -130,7 +130,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
     void'($fscanf(fd, "%x", owner_pk_hash_val       ));
     $fclose(fd);
 
-    `uvm_info("SOC_IFC_BRINGUP", $sformatf("Using Vendor Public Key Hash of 0x%x %p from ROM image", key_manifest_pk_hash_val, key_manifest_pk_hash_val), UVM_LOW)
+    `uvm_info("SOC_IFC_BRINGUP", $sformatf("Using Vendor Public Key Hash of 0x%x %p from ROM image", vendor_pk_hash_val, vendor_pk_hash_val), UVM_LOW)
     `uvm_info("SOC_IFC_BRINGUP", $sformatf("Using Owner Public Key Hash of 0x%x %p from ROM image", owner_pk_hash_val, owner_pk_hash_val), UVM_LOW)
 
   endfunction

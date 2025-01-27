@@ -293,11 +293,11 @@ import aaxi_uvm_pkg::*;
         .scan_mode                  (1'b0                                            ),
         .cptra_obf_key              (soc_ifc_ctrl_agent_bus.cptra_obf_key            ),
         .cptra_obf_key_reg          (cptra_status_agent_bus.cptra_obf_key_reg        ),
-        .cptra_obf_field_entropy_vld(cptra_ctrl_agent_bus.cptra_obf_field_entropy_vld),
-        .cptra_obf_field_entropy    (cptra_ctrl_agent_bus.cptra_obf_field_entropy    ),
+        .cptra_obf_field_entropy_vld(soc_ifc_ctrl_agent_bus.cptra_obf_field_entropy_vld),
+        .cptra_obf_field_entropy    (soc_ifc_ctrl_agent_bus.cptra_obf_field_entropy    ),
         .obf_field_entropy          (cptra_status_agent_bus.obf_field_entropy        ),
-        .cptra_obf_uds_seed_vld     (cptra_ctrl_agent_bus.cptra_obf_uds_seed_vld     ),
-        .cptra_obf_uds_seed         (cptra_ctrl_agent_bus.cptra_obf_uds_seed         ),
+        .cptra_obf_uds_seed_vld     (soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed_vld     ),
+        .cptra_obf_uds_seed         (soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed         ),
         .obf_uds_seed               (cptra_status_agent_bus.obf_uds_seed             ),
 
         // Subsystem mode straps

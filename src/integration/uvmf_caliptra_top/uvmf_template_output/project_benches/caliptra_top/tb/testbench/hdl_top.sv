@@ -145,6 +145,7 @@ import aaxi_uvm_pkg::*;
     security_state_t security_state_stub_inactive;
 
     el2_mem_if el2_mem_export ();
+    mldsa_mem_if mldsa_memory_export();
 
    //=========================================================================-
    // END Custom Signals
@@ -296,6 +297,7 @@ import aaxi_uvm_pkg::*;
 //        .PWRITE (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
 
         .el2_mem_export(el2_mem_export.veer_sram_src),
+        .mldsa_memory_export(mldsa_memory_export.req),
 
         .ready_for_fuses        (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fuses         ),
         .ready_for_mb_processing(soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_mb_processing ),
@@ -552,6 +554,7 @@ import aaxi_uvm_pkg::*;
 
         // Caliptra Memory Export Interface
         .el2_mem_export (el2_mem_export.veer_sram_sink),
+        .mldsa_memory_export (mldsa_memory_export.resp),
 
         //SRAM interface for mbox
         .mbox_sram_cs   (mbox_sram_cs_stub_inactive   ),

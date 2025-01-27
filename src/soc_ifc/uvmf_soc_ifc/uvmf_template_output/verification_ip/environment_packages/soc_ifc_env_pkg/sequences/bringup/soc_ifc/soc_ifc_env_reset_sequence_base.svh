@@ -49,7 +49,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand uvm_reg_data_t uds_seed_rand      [`CLP_OBF_UDS_DWORDS];
   rand uvm_reg_data_t field_entropy_rand [`CLP_OBF_FE_DWORDS];
   rand uvm_reg_data_t owner_pk_hash_rand [12];
-  rand uvm_reg_data_t key_manifest_pk_hash_rand [12];
+  rand uvm_reg_data_t vendor_pk_hash_rand [12];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
   rand uvm_reg_data_t ecc_revocation_rand;
   rand uvm_reg_data_t lms_revocation_rand;
@@ -58,7 +58,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand struct packed {
     bit uds;
     bit field_entropy;
-    bit [0:11] key_manifest_pk_hash;
+    bit [0:11] vendor_pk_hash;
     bit [0:11] owner_pk_hash;
     bit ecc_revocation;
     bit lms_revocation;
@@ -148,10 +148,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     end
 
     // Key Manifest PK Hash (Vendor)
-    foreach (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
-        if (this.fuses_to_set.key_manifest_pk_hash[ii]) begin
-            `uvm_info("SOC_IFC_RST", $sformatf("Writing Key Manifest PK Hash [%d] to fuse bank with value 0x%0x", ii, key_manifest_pk_hash_rand[ii]), UVM_LOW)
-            reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].write(sts, key_manifest_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+    foreach (this.fuses_to_set.vendor_pk_hash[ii]) begin
+        if (this.fuses_to_set.vendor_pk_hash[ii]) begin
+            `uvm_info("SOC_IFC_RST", $sformatf("Writing Vendor PK Hash [%d] to fuse bank with value 0x%0x", ii, vendor_pk_hash_rand[ii]), UVM_LOW)
+            reg_model.soc_ifc_reg_rm.fuse_vendor_pk_hash[ii].write(sts, vendor_pk_hash_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to Key Manifest PK Hash [%d]", ii))
         end
     end
@@ -182,8 +182,8 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     // ECC Revocation
     if (this.fuses_to_set.ecc_revocation) begin
       `uvm_info("SOC_IFC_RST", "Writing ECC Revocation to fuse bank", UVM_LOW)
-      reg_mask = ((1 << reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].mask/*ecc_revocation*/.get_n_bits()) - 1) << reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].mask/*ecc_revocation*/.get_lsb_pos();
-      reg_model.soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[0].write(sts, uvm_reg_data_t'(ecc_revocation_rand & reg_mask), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+      reg_mask = ((1 << reg_model.soc_ifc_reg_rm.fuse_ecc_revocation.ecc_revocation.get_n_bits()) - 1) << reg_model.soc_ifc_reg_rm.fuse_ecc_revocation.ecc_revocation.get_lsb_pos();
+      reg_model.soc_ifc_reg_rm.fuse_ecc_revocation.write(sts, uvm_reg_data_t'(ecc_revocation_rand & reg_mask), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to ecc_revocation")
     end
 

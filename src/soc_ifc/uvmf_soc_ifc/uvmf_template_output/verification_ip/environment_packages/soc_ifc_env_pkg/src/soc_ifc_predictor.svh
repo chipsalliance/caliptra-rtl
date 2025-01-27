@@ -4006,12 +4006,12 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 reset_wdt_count = 1'b0;
                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
                 if (cptra_obf_field_entropy_vld) begin
-                    for (ii=0; ii < `CLP_OBF_FE_DWORDS; ii++) begin
+                    for (int ii=0; ii < `CLP_OBF_FE_DWORDS; ii++) begin
                         p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.predict(cptra_obf_field_entropy[ii]);
                     end
                 end
                 if (cptra_obf_uds_seed_vld) begin
-                    for (ii=0; ii < `CLP_OBF_UDS_DWORDS; ii++) begin
+                    for (int ii=0; ii < `CLP_OBF_UDS_DWORDS; ii++) begin
                         p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.predict(cptra_obf_uds_seed[ii]);
                     end
                 end
