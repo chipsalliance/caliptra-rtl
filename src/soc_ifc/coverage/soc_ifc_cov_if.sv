@@ -260,21 +260,14 @@ interface soc_ifc_cov_if
 
     covergroup soc_ifc_arb_cov_grp @(posedge clk iff (cptra_rst_b & valid_arb_cycle));
         req_collision_cp: coverpoint i_soc_ifc_arb.req_collision;
+        soc_priority_cp: coverpoint i_soc_ifc_arb.soc_priority;
         soc_has_priority_cp: coverpoint i_soc_ifc_arb.soc_has_priority;
+        uc_has_priority_cp: coverpoint i_soc_ifc_arb.uc_has_priority;
         valid_mbox_req_cp: coverpoint i_soc_ifc_arb.valid_mbox_req;
         soc_mbox_addr_cp: coverpoint i_soc_ifc_arb.soc_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]};
 
-        soc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.soc_mbox_req_ip;
-        soc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.soc_sha_req_ip;
-        soc_dma_req_ip_cp: coverpoint i_soc_ifc_arb.soc_dma_req_ip;
-        //No stall here, so arbiter never hits these. We can put these back if we ever introduce a stall 
-        //soc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.soc_reg_req_ip;
-
-        uc_mbox_req_ip_cp: coverpoint i_soc_ifc_arb.uc_mbox_req_ip;
-        uc_sha_req_ip_cp: coverpoint i_soc_ifc_arb.uc_sha_req_ip;
-        uc_dma_req_ip_cp: coverpoint i_soc_ifc_arb.uc_dma_req_ip;
-        //No stall here, so arbiter never hits these. We can put these back if we ever introduce a stall 
-        //uc_reg_req_ip_cp: coverpoint i_soc_ifc_arb.uc_reg_req_ip;
+        soc_req_ip_cp: coverpoint i_soc_ifc_arb.soc_req_ip;
+        uc_req_ip_cp: coverpoint i_soc_ifc_arb.uc_req_ip;
 
         uc_mbox_reg_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_reg_req;
         uc_mbox_dir_req_cp: coverpoint i_soc_ifc_arb.uc_mbox_dir_req;
@@ -291,9 +284,9 @@ interface soc_ifc_cov_if
 
         //Cover soc req to mbox addr range with and without valid pauser.
         soc_mbox_reqXvalid_mbox_req: cross soc_mbox_addr_cp, valid_mbox_req_cp;
-
-
-
+        //Collision crosses
+        collisionXuc_prioXprio_flag: cross req_collision_cp, uc_has_priority_cp, soc_priority_cp;
+        collisionXsoc_prioXprio_Flag: cross req_collision_cp, soc_has_priority_cp, soc_priority_cp;
     endgroup
 
     covergroup soc_ifc_boot_fsm_cov_grp @(posedge clk iff cptra_rst_b);
