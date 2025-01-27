@@ -316,8 +316,8 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.CPTRA_OWNER_PK_HASH_LOCK                 )
             foreach(this.fuse_uds_seed[ii])                   `REG_NO_CP_NONCORE_RST(this.fuse_uds_seed[ii]                        )
             foreach(this.fuse_field_entropy[ii])              `REG_NO_CP_NONCORE_RST(this.fuse_field_entropy[ii]                   )
-            foreach(this.fuse_key_manifest_pk_hash[ii])       `REG_NO_CP_NONCORE_RST(this.fuse_key_manifest_pk_hash[ii]            )
-            foreach(this.fuse_key_manifest_pk_hash_mask[ii])  `REG_NO_CP_NONCORE_RST(this.fuse_key_manifest_pk_hash_mask[ii]       )
+            foreach(this.fuse_vendor_pk_hash[ii])             `REG_NO_CP_NONCORE_RST(this.fuse_vendor_pk_hash[ii]                  )
+                                                              `REG_NO_CP_NONCORE_RST(this.fuse_ecc_revocation                      )
                                                               `REG_NO_CP_NONCORE_RST(this.fuse_fmc_key_manifest_svn                )
             foreach(this.fuse_runtime_svn[ii])                `REG_NO_CP_NONCORE_RST(this.fuse_runtime_svn[ii]                     )
                                                               `REG_NO_CP_NONCORE_RST(this.fuse_anti_rollback_disable               )
@@ -327,6 +327,9 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.fuse_mldsa_revocation                    )
                                                               `REG_NO_CP_NONCORE_RST(this.fuse_soc_stepping_id                     )
             foreach(this.fuse_manuf_dbg_unlock_token[ii])     `REG_NO_CP_NONCORE_RST(this.fuse_manuf_dbg_unlock_token[ii]          )
+                                                              `REG_NO_CP_NONCORE_RST(this.fuse_pqc_key_type                        )
+            foreach(this.fuse_soc_manifest_svn[ii])           `REG_NO_CP_NONCORE_RST(this.fuse_soc_manifest_svn[ii]                )
+                                                              `REG_NO_CP_NONCORE_RST(this.fuse_soc_manifest_max_svn                )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_CALIPTRA_BASE_ADDR_L                                  )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_CALIPTRA_BASE_ADDR_H                                  )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_MCI_BASE_ADDR_L                                       )
@@ -340,6 +343,7 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET        )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_DEBUG_INTENT                                          )
+                                                              `REG_NO_CP_NONCORE_RST(this.SS_CALIPTRA_DMA_AXI_USER                                 )
             foreach(this.SS_STRAP_GENERIC[ii])                `REG_NO_CP_NONCORE_RST(this.SS_STRAP_GENERIC[ii]                                     )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ        )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ         )
@@ -1135,7 +1139,7 @@ package soc_ifc_reg_model_top_pkg;
 
         // inst all soc_ifc register blocks and memory model as single reg block
         /*mbox_mem_ahb_axi*/
-        this.mbox_mem_rm = new("mbox_mem_rm", 19'h1_0000, 32, "RW", UVM_NO_COVERAGE);
+        this.mbox_mem_rm = new("mbox_mem_rm", CPTRA_MBOX_DEPTH, 32, "RW", UVM_NO_COVERAGE);
         this.mbox_mem_rm.configure(this);
 
         /*mbox_csr_ahb_axi*/
@@ -1377,35 +1381,67 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii].hash, soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb);
         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH_LOCK.lock, soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb);
 
-        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])                  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed                        , soc_ifc_reg_secret_cb);
-        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed                   , soc_ifc_reg_secret_cb);
-        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii])      uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash[ii].hash            , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_key_manifest_pk_hash_mask[ii].mask       , soc_ifc_reg_fuse_cb); // FIXME back to single-element
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn                 , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn                      , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis                , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert                , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])       uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id           , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation            , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation        , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_stepping_id.soc_stepping_id          , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii])    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii].token         , soc_ifc_reg_fuse_cb);
-        foreach (soc_ifc_reg_rm.internal_obf_key[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                      , soc_ifc_reg_key_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock                       , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst             , soc_ifc_reg_internal_fw_update_reset_cb) ;
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_nmi_vector.vec                       , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_iccm_ecc_unc, soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_dccm_ecc_unc, soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_nmi_pin     , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock, soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo    , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc     , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_fatal_mask.mask             , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.mask         , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_l.count_l                   , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_h.count_h                   , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_l.compare_l              , soc_ifc_reg_internal_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_h.compare_h              , soc_ifc_reg_internal_cb);
+        foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])                  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed                                  , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed                             , soc_ifc_reg_secret_cb);
+        foreach (soc_ifc_reg_rm.fuse_vendor_pk_hash[ii])            uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_vendor_pk_hash[ii].hash                            , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_ecc_revocation.ecc_revocation                      , soc_ifc_reg_fuse_cb); // FIXME back to single-element
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn                           , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn                                , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis                          , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_cert_attr[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_cert_attr[ii].cert                          , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii])       uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_idevid_manuf_hsm_id[ii].hsm_id                     , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_lms_revocation.lms_revocation                      , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_mldsa_revocation.mldsa_revocation                  , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_stepping_id.soc_stepping_id                    , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii])    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_manuf_dbg_unlock_token[ii].token                   , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_pqc_key_type.key_type                              , soc_ifc_reg_fuse_cb);
+        foreach (soc_ifc_reg_rm.fuse_soc_manifest_svn[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_manifest_svn[ii].svn                           , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_manifest_max_svn.svn                           , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.addr_l                          , soc_ifc_reg_fuse_cb); //--\
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.addr_h                          , soc_ifc_reg_fuse_cb); //   \
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.addr_l                               , soc_ifc_reg_fuse_cb); //    \
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.addr_h                               , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l                      , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h                      , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.addr_l                            , soc_ifc_reg_fuse_cb); //  These are not 'fuses' per-se, but they are locked
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.addr_h                            , soc_ifc_reg_fuse_cb); //  by CPTRA_FUSE_WR_DONE, so they act the same
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.addr_l                          , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.addr_h                          , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset, soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num          , soc_ifc_reg_fuse_cb); //    /
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.user                           , soc_ifc_reg_fuse_cb); //   /
+        foreach (soc_ifc_reg_rm.SS_STRAP_GENERIC[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_STRAP_GENERIC[ii].data                               , soc_ifc_reg_fuse_cb); //--/
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DEBUG_INTENT.debug_intent                            , soc_ifc_reg_fuse_cb); // TODO needs a more sophisticated callback accounting for security states
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ       , soc_ifc_reg_fuse_cb); // TODO these all need better CB for we/swwe behavior
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ        , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ            , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS, soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     , soc_ifc_reg_fuse_cb);
+//        foreach (soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[ii].LEVEL                       , soc_ifc_reg_internal_cb); TODO needs a more sophisticated callback accounting for debug_intent
+        foreach (soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii].go                          , soc_ifc_reg_internal_cb);
+        foreach (soc_ifc_reg_rm.internal_obf_key[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                                , soc_ifc_reg_key_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock                                 , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst                       , soc_ifc_reg_internal_fw_update_reset_cb) ;
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_nmi_vector.vec                                 , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_iccm_ecc_unc          , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_dccm_ecc_unc          , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_nmi_pin               , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_no_lock , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_prot_ooo     , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.mask_mbox_ecc_unc      , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_fatal_mask.mask                       , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.mask                   , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_l.count_l                             , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtime_h.count_h                             , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_l.compare_l                        , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_rv_mtimecmp_h.compare_h                        , soc_ifc_reg_internal_cb);
         /* -- sha512_acc_csr -- */
         uvm_reg_field_cb::add(sha512_acc_csr_rm.LOCK.LOCK, sha512_acc_csr_LOCK_LOCK_cb);
         uvm_reg_field_cb::add(sha512_acc_csr_rm.EXECUTE.EXECUTE, sha512_acc_csr_EXECUTE_EXECUTE_cb);
@@ -1431,11 +1467,11 @@ package soc_ifc_reg_model_top_pkg;
         //       but we don't ever use the "default_map" -- instead use AHB/AXI maps to
         //       access registers
         this.default_map = create_map("soc_ifc_default_map", 0, 4, UVM_LITTLE_ENDIAN);
-        this.default_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
-        this.default_map.add_submap(this.mbox_csr_rm.default_map, 'h2_0000);
-        this.default_map.add_submap(this.sha512_acc_csr_rm.default_map, 'h2_1000);
-        this.default_map.add_submap(this.axi_dma_reg_rm.default_map, 'h2_2000);
-        this.default_map.add_submap(this.soc_ifc_reg_rm.default_map, 'h3_0000);
+        this.default_map.add_mem(this.mbox_mem_rm, MBOX_DIR_START_ADDR, "RW");
+        this.default_map.add_submap(this.mbox_csr_rm.default_map, MBOX_REG_START_ADDR);
+        this.default_map.add_submap(this.sha512_acc_csr_rm.default_map, SHA_REG_START_ADDR);
+        this.default_map.add_submap(this.axi_dma_reg_rm.default_map, DMA_REG_START_ADDR);
+        this.default_map.add_submap(this.soc_ifc_reg_rm.default_map, SOC_IFC_REG_START_ADDR);
 
         this.soc_ifc_AXI_map = create_map("soc_ifc_AXI_map", 0, 4, UVM_LITTLE_ENDIAN);
         this.soc_ifc_AHB_map = create_map("soc_ifc_AHB_map", 0, 4, UVM_LITTLE_ENDIAN);
@@ -1453,18 +1489,18 @@ package soc_ifc_reg_model_top_pkg;
         this.soc_ifc_reg_rm.build_ext_maps();
 
         /* Top register model AXI map */
-        this.soc_ifc_AXI_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
-        this.soc_ifc_AXI_map.add_submap(this.mbox_csr_rm.mbox_csr_AXI_map, 'h2_0000);
-        this.soc_ifc_AXI_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AXI_map, 'h2_1000);
-        this.soc_ifc_AXI_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AXI_map, 'h2_2000);
-        this.soc_ifc_AXI_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AXI_map, 'h3_0000);
+        this.soc_ifc_AXI_map.add_mem(this.mbox_mem_rm, MBOX_DIR_START_ADDR, "RW");
+        this.soc_ifc_AXI_map.add_submap(this.mbox_csr_rm.mbox_csr_AXI_map, MBOX_REG_START_ADDR);
+        this.soc_ifc_AXI_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AXI_map, SHA_REG_START_ADDR);
+        this.soc_ifc_AXI_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AXI_map, DMA_REG_START_ADDR);
+        this.soc_ifc_AXI_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AXI_map, SOC_IFC_REG_START_ADDR);
 
         /* Top register model AHB map */
-        this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, 'h4_0000, "RW");
-        this.soc_ifc_AHB_map.add_submap(this.mbox_csr_rm.mbox_csr_AHB_map, 'h2_0000);
-        this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, 'h2_1000);
-        this.soc_ifc_AHB_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AHB_map, 'h2_2000);
-        this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, 'h3_0000);
+        this.soc_ifc_AHB_map.add_mem(this.mbox_mem_rm, MBOX_DIR_START_ADDR, "RW");
+        this.soc_ifc_AHB_map.add_submap(this.mbox_csr_rm.mbox_csr_AHB_map, MBOX_REG_START_ADDR);
+        this.soc_ifc_AHB_map.add_submap(this.sha512_acc_csr_rm.sha512_acc_csr_AHB_map, SHA_REG_START_ADDR);
+        this.soc_ifc_AHB_map.add_submap(this.axi_dma_reg_rm.axi_dma_reg_AHB_map, DMA_REG_START_ADDR);
+        this.soc_ifc_AHB_map.add_submap(this.soc_ifc_reg_rm.soc_ifc_reg_AHB_map, SOC_IFC_REG_START_ADDR);
 
         void'(set_coverage(get_coverage() | UVM_CVR_REG_BITS | UVM_CVR_FIELD_VALS));
 // pragma uvmf custom add_registers_to_block_map end

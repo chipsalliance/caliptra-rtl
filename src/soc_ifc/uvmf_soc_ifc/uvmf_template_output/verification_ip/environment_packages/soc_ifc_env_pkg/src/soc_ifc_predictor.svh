@@ -239,6 +239,10 @@ class soc_ifc_predictor #(
   bit [31:0] nmi_vector = 32'h0;
   bit iccm_locked = 1'b0;
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
+  bit                                 cptra_obf_field_entropy_vld = 1'b0;
+  bit [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy = '{default:32'h0};
+  bit                                 cptra_obf_uds_seed_vld = 1'b0;
+  bit [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed = '{default:32'h0};
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
@@ -246,6 +250,19 @@ class soc_ifc_predictor #(
 
   bit [63:0] generic_output_wires      = 64'h0;
   bit        generic_output_wires_fall = 1'b0;
+
+  // Straps
+  struct packed {
+      bit [63:0] caliptra_base_addr;
+      bit [63:0] mci_base_addr;
+      bit [63:0] recovery_ifc_base_addr;
+      bit [63:0] otp_fc_base_addr;
+      bit [63:0] uds_seed_base_addr;
+      bit [31:0] prod_debug_unlock_auth_pk_hash_reg_bank_offset;
+      bit [31:0] num_of_prod_debug_unlock_auth_pk_hashes;
+      bit [31:0] caliptra_dma_axi_user;
+      bit [3:0] [31:0] generic;
+  } strap_ss_val = '{default: '0};
 
   bit        recovery_data_avail = 1'b0; // TODO
   bit        recovery_image_activated = 1'b0; // TODO
@@ -483,6 +500,14 @@ class soc_ifc_predictor #(
             soc_ifc_rst_in_asserted = 1'b0;
             cptra_in_dbg_or_manuf_mode = ~t.security_state.debug_locked || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
+            if (t.cptra_obf_field_entropy_vld) begin
+                cptra_obf_field_entropy_vld = 1'b1;
+                cptra_obf_field_entropy     = t.cptra_obf_field_entropy;
+            end
+            if (t.cptra_obf_uds_seed_vld) begin
+                cptra_obf_uds_seed_vld = 1'b1;
+                cptra_obf_uds_seed     = t.cptra_obf_uds_seed;
+            end
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
@@ -775,26 +800,21 @@ class soc_ifc_predictor #(
     soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     if (t.ss_debug_intent)
-        `uvm_error("PRED_SS_MODE_CTRL", "FIXME")
+        `uvm_error("PRED_SS_MODE_CTRL", "TODO")
 
-    if (1/*TODO*/) begin
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (t.strap_ss_caliptra_base_addr[31:00]                     );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (t.strap_ss_caliptra_base_addr[63:32]                     );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (t.strap_ss_mci_base_addr[31:00]                          );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (t.strap_ss_mci_base_addr[63:32]                          );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (t.strap_ss_recovery_ifc_base_addr[31:00]                 );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (t.strap_ss_recovery_ifc_base_addr[63:32]                 );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (t.strap_ss_otp_fc_base_addr[31:00]                       );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (t.strap_ss_otp_fc_base_addr[63:32]                       );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (t.strap_ss_uds_seed_base_addr[31:00]                     );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (t.strap_ss_uds_seed_base_addr[63:32]                     );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (t.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0].predict                              (t.strap_ss_strap_generic_0                               );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (t.strap_ss_strap_generic_1                               );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (t.strap_ss_strap_generic_2                               );
-        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (t.strap_ss_strap_generic_3                               );
-        `uvm_warning("PRED_SS_MODE_CTRL", "TODO")
+    if (1) begin
+        this.strap_ss_val.caliptra_base_addr                             = (t.strap_ss_caliptra_base_addr                            );
+        this.strap_ss_val.mci_base_addr                                  = (t.strap_ss_mci_base_addr                                 );
+        this.strap_ss_val.recovery_ifc_base_addr                         = (t.strap_ss_recovery_ifc_base_addr                        );
+        this.strap_ss_val.otp_fc_base_addr                               = (t.strap_ss_otp_fc_base_addr                              );
+        this.strap_ss_val.uds_seed_base_addr                             = (t.strap_ss_uds_seed_base_addr                            );
+        this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset = (t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
+        this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes        = (t.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       );
+        this.strap_ss_val.caliptra_dma_axi_user                          = (t.strap_ss_caliptra_dma_axi_user                         );
+        this.strap_ss_val.generic[0]                                     = (t.strap_ss_strap_generic_0                               );
+        this.strap_ss_val.generic[1]                                     = (t.strap_ss_strap_generic_1                               );
+        this.strap_ss_val.generic[2]                                     = (t.strap_ss_strap_generic_2                               );
+        this.strap_ss_val.generic[3]                                     = (t.strap_ss_strap_generic_3                               );
     end
     else begin
         `uvm_error("PRED_SS_MODE_CTRL", "FIXME")
@@ -1635,9 +1655,9 @@ class soc_ifc_predictor #(
                         send_cptra_sts_txn       = 1'b1;
                     end
                 end
-                ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
-                ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
-                "fuse_key_manifest_pk_hash_mask",
+                ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
+                ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
+                "fuse_ecc_revocation",
                 "fuse_fmc_key_manifest_svn",
                 ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
                 "fuse_anti_rollback_disable",
@@ -1649,6 +1669,9 @@ class soc_ifc_predictor #(
                 "fuse_mldsa_revocation",
                 "fuse_soc_stepping_id",
                 ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+                "fuse_pqc_key_type",
+                ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
+                "fuse_soc_manifest_max_svn",
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1665,6 +1688,7 @@ class soc_ifc_predictor #(
                 "SS_OTP_FC_BASE_ADDR_H",
                 "SS_UDS_SEED_BASE_ADDR_L",
                 "SS_UDS_SEED_BASE_ADDR_H",
+                "SS_CALIPTRA_DMA_AXI_USER",
                 "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
                 "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
                 "SS_DEBUG_INTENT",
@@ -2788,9 +2812,9 @@ class soc_ifc_predictor #(
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
-            ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
-            ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
-            "fuse_key_manifest_pk_hash_mask",
+            ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
+            ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
+            "fuse_ecc_revocation",
             "fuse_fmc_key_manifest_svn",
             ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
             "fuse_anti_rollback_disable",
@@ -2802,6 +2826,9 @@ class soc_ifc_predictor #(
             "fuse_mldsa_revocation",
             "fuse_soc_stepping_id",
             ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+            "fuse_pqc_key_type",
+            ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
+            "fuse_soc_manifest_max_svn",
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -2818,6 +2845,7 @@ class soc_ifc_predictor #(
             "SS_OTP_FC_BASE_ADDR_H",
             "SS_UDS_SEED_BASE_ADDR_L",
             "SS_UDS_SEED_BASE_ADDR_H",
+            "SS_CALIPTRA_DMA_AXI_USER",
             "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
             "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
             "SS_DEBUG_INTENT",
@@ -3977,6 +4005,35 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 noncore_rst_out_asserted = 1'b0;
                 reset_wdt_count = 1'b0;
                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
+                if (cptra_obf_field_entropy_vld) begin
+                    for (ii=0; ii < `CLP_OBF_FE_DWORDS; ii++) begin
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.predict(cptra_obf_field_entropy[ii]);
+                    end
+                end
+                if (cptra_obf_uds_seed_vld) begin
+                    for (ii=0; ii < `CLP_OBF_UDS_DWORDS; ii++) begin
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.predict(cptra_obf_uds_seed[ii]);
+                    end
+                end
+                if (!p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (this.strap_ss_val.caliptra_base_addr[31:00]                     );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (this.strap_ss_val.caliptra_base_addr[63:32]                     );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (this.strap_ss_val.mci_base_addr[31:00]                          );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (this.strap_ss_val.uds_seed_base_addr[63:32]                     );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset);
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes       );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.predict                         (this.strap_ss_val.caliptra_dma_axi_user                         );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0].predict                              (this.strap_ss_val.generic[0]                                    );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (this.strap_ss_val.generic[1]                                    );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
+                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
+                end
 
                 // Send predicted transactions
                 if (1) begin
