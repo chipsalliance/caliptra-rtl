@@ -153,18 +153,18 @@ The following tables describe the interface signals.
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :---------- | :--------- | :--------- | :----------------------------------------------- | :--------- |
-|  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | |
-|  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | |
-|  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | |
-|  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | |
-|  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | |
-|  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | |
-|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input Strap | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |
@@ -174,18 +174,18 @@ The following tables describe the interface signals.
 
 | Signal name | Width | Driver  | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CPTRA_OBF_KEY | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood assertion. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
-| CPTRA_CSR_HMAC_KEY | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
-| SECURITY_STATE | 3 | Input Strap | Synchronous to clk | Security state that Caliptra should take (for example, manufacturing, secure, unsecure, etc.). The key is latched by Caliptra on cptra_noncore_rst_b deassertion. Any time the state changes to debug mode, all keys, assets, and secrets stored in fuses or key vault are cleared. Cryptography core states are also flushed if they were being used. |
+| cptra_obf_key | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood deassertion. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
+| cptra_csr_hmac_key | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
+| security_state | 3 | Input Strap | Synchronous to clk | Security state that Caliptra should take (for example, manufacturing, secure, unsecure, etc.). The key is latched by Caliptra on cptra_noncore_rst_b deassertion. Any time the state changes to debug mode, all keys, assets, and secrets stored in fuses or key vault are cleared. Cryptography core states are also flushed if they were being used. |
 | scan_mode | 1 | Input Strap | Synchronous to clk | Must be set before entering scan mode. This is a separate signal than the scan chain enable signal that goes into scan cells. This allows Caliptra to flush any assets or secrets present in key vault and flops if the transition is happening from a secure state. |
-| GENERIC_INPUT_WIRES | 64 | Input | Synchronous to clk | Placeholder of input wires for late binding features. These values are reflected into registers that are exposed to firmware. |
-| GENERIC_OUTPUT_WIRES  | 64 | Output | Synchronous to clk | Placeholder of output wires for late binding features. Firmware can set the wires appropriately via register writes. |
-| CALIPTRA_ERROR_FATAL | 1 | Output | Synchronous to clk | Indicates a fatal error from Caliptra. |
-| CALIPTRA_ERROR_NON_FATAL | 1 | Output | Synchronous to clk | Indicates a non fatal error from Caliptra. |
+| generic_input_wires | 64 | Input | Synchronous to clk | Placeholder of input wires for late binding features. These values are reflected into registers that are exposed to firmware. |
+| generic_output_wires  | 64 | Output | Synchronous to clk | Placeholder of output wires for late binding features. Firmware can set the wires appropriately via register writes. |
+| cptra_error_fatal | 1 | Output | Synchronous to clk | Indicates a fatal error from Caliptra. |
+| cptra_error_non_fatal | 1 | Output | Synchronous to clk | Indicates a non fatal error from Caliptra. |
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
-| eTRNG_REQ | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into iTRNG_DATA/iTRNG_VALID. |
-| iTRNG_DATA | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when iTRNG_VALID is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
-| iTRNG_VALID | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. iTRNG_DATA can be sampled whenever this bit is high. The expected iTRNG_VALID output rate is about 50KHz. |
+| etrng_req | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into itrng_data/itrng_valid. |
+| itrng_data | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when itrng_valid is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
+| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is about 50KHz. |
 
 ## Architectural registers and fuses
 
@@ -240,7 +240,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 
 ### Straps
 
-Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either caliptra pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
+Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
 In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
@@ -261,17 +261,17 @@ SoC must ensure that there are no SCAN cells on the flops that latch this key in
 
 ## Late binding interface signals
 
-The interface signals GENERIC\_INPUT\_WIRES, GENERIC\_OUTPUT\_WIRES, and strap\_ss\_strap\_generic\_N are placeholders on the SoC interface reserved for late binding features. This may include any feature that is required for correct operation of the design in the final integrated SoC and that may not be accommodated through existing interface signaling (such as the mailbox).
+The interface signals generic\_input\_wires, generic\_output\_wires, and strap\_ss\_strap\_generic\_N are placeholders on the SoC interface reserved for late binding features. This may include any feature that is required for correct operation of the design in the final integrated SoC and that may not be accommodated through existing interface signaling (such as the mailbox).
 
-While these late binding interface pins are generic in nature until assigned a function, integrators must not define non-standard use cases for these pins. Defining standard use cases ensures that the security posture of Caliptra in the final implementation is not degraded relative to the consortium design intent. Bits in GENERIC\_INPUT\_WIRES and strap\_ss\_strap\_generic\_N that don't have a function defined in Caliptra must be tied to a 0-value. These undefined input bits shall not be connected to any flip flops (which would allow run-time transitions on the value).
+While these late binding interface pins are generic in nature until assigned a function, integrators must not define non-standard use cases for these pins. Defining standard use cases ensures that the security posture of Caliptra in the final implementation is not degraded relative to the consortium design intent. Bits in generic\_input\_wires and strap\_ss\_strap\_generic\_N that don't have a function defined in Caliptra must be tied to a 0-value. These undefined input bits shall not be connected to any flip flops (which would allow run-time transitions on the value).
 
 Each wire connects to a register in the SoC Interface register bank through which communication to the internal microprocessor may be facilitated. Each of the generic wire signals is 64 bits in size. The size of the generic strap is indicated in Table 10.
 
-Activity on any bit of the GENERIC\_INPUT\_WIRES triggers a notification interrupt to the microcontroller indicating a bit toggle.
+Activity on any bit of the generic\_input\_wires triggers a notification interrupt to the microcontroller indicating a bit toggle.
 
-The following table describes the allocation of functionality on GENERIC\_INPUT\_WIRES. All bits not listed in this table must be tied to 0.
+The following table describes the allocation of functionality on generic\_input\_wires. All bits not listed in this table must be tied to 0.
 
-*Table 12: GENERIC\_INPUT\_WIRES function binding*
+*Table 12: generic\_input\_wires function binding*
 
 | Bit  | Name               | Description                                         |
 | :--------- | :--------- | :--------- |
@@ -349,7 +349,8 @@ Upon receiving indication that mailbox has been populated, the appropriate devic
 Caliptra will not initiate any mailbox commands that require a response from the SoC. Caliptra initiated mailbox commands are “broadcast” and available to any user on the SoC. SoC will not be able to write the DLEN or DATAIN register while processing a Caliptra initiated mailbox command.
 
 **Receiving data from the mailbox:**
-1. 	On mailbox\_data\_avail assertion, the receiver reads the COMMAND register.
+
+1. On mailbox\_data\_avail assertion, the receiver reads the COMMAND register.
 2. Receiver reads the DLEN register.
 3. Receiver reads the CMD register.
 4. Receiver reads the MBOX DATAOUT register.
@@ -364,6 +365,11 @@ The following figure shows the receiver protocol flow.
 *Figure 5: Receiver protocol flowchart*
 
 ![](./images/Caliptra_mbox_receiver.png)
+
+## TAP mailbox mode
+
+When Caliptra sets the tap_mode register, the mailbox will transition from EXECUTE_UC to EXECUTE_TAP instead of EXECUTE_SOC.
+This will pass control of the mailbox to the TAP. TAP will follow the **Receiving data from the mailbox** protocol detailed above.
 
 ## Mailbox arbitration
 
