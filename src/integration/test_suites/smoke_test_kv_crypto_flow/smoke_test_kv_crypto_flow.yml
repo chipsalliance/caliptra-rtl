@@ -13,5 +13,7 @@
 # limitations under the License.
 #
 ---
-seed: 1
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+FW_TESTNAME=smoke_test_kv_crypto_flow'
 testname: smoke_test_kv_crypto_flow

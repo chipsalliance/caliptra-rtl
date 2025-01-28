@@ -83,7 +83,8 @@ module caliptra_top_tb_services
 
     output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
     output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
-    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
+    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb,
+    output logic                                 cptra_doe_input_sel
 
 );
 
@@ -286,6 +287,7 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h8f        - Select DOE fixed inputs  
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -646,6 +648,16 @@ module caliptra_top_tb_services
         else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
             security_state.debug_locked <= 1'b0;
             assert_ss_tran <= 'b0;
+        end
+    end
+
+    always @(negedge clk) begin
+        //doe fixed input select
+        if ((WriteData[7:0] == 8'h8f) && mailbox_write) begin
+            cptra_doe_input_sel <= 'b1;
+        end
+        else begin
+            cptra_doe_input_sel <= 'b0;
         end
     end
 

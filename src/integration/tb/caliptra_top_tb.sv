@@ -62,6 +62,8 @@ module caliptra_top_tb (
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
 
+    logic                                           cptra_doe_input_sel;
+
     //jtag interface
     logic                       jtag_tck;    // JTAG clk
     logic                       jtag_tms;    // JTAG TMS
@@ -151,6 +153,8 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
     .cptra_obf_key_tb(cptra_obf_key_tb),
+
+    .cptra_doe_input_sel(cptra_doe_input_sel),
 
     .m_axi_bfm_if(m_axi_bfm_if),
 
@@ -350,7 +354,9 @@ caliptra_top_tb_services #(
     
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
-    .cptra_obf_key_tb(cptra_obf_key_tb)
+    .cptra_obf_key_tb(cptra_obf_key_tb),
+
+    .cptra_doe_input_sel(cptra_doe_input_sel)
 
 );
 
