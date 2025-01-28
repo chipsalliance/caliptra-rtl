@@ -267,8 +267,12 @@ import aaxi_uvm_pkg::*;
         .cptra_rst_b                (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b  ),
         .clk                        (clk),
 
-        .cptra_obf_key              (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_key),
-        .cptra_csr_hmac_key         ('0/* TODO */),
+        .cptra_obf_key              (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_key              ),
+        .cptra_csr_hmac_key         ('0/* TODO */                                                     ),
+        .cptra_obf_field_entropy_vld(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_field_entropy_vld),
+        .cptra_obf_field_entropy    (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_field_entropy    ),
+        .cptra_obf_uds_seed_vld     (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed_vld     ),
+        .cptra_obf_uds_seed         (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed         ),
 
         .jtag_tck   (jtag_tck   ),
         .jtag_tdi   (jtag_tdi   ),
@@ -299,10 +303,6 @@ import aaxi_uvm_pkg::*;
         .el2_mem_export(el2_mem_export.veer_sram_src),
         .mldsa_memory_export(mldsa_memory_export.req),
 
-        .ready_for_fuses        (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fuses         ),
-        .ready_for_mb_processing(soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_mb_processing ),
-        .ready_for_runtime      (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_runtime       ),
-
         .mbox_sram_cs   (mbox_sram_req.cs   ),
         .mbox_sram_we   (mbox_sram_req.we   ),
         .mbox_sram_addr (mbox_sram_req.addr ),
@@ -313,12 +313,17 @@ import aaxi_uvm_pkg::*;
         .imem_addr      (imem_addr      ),
         .imem_rdata     (imem_rdata     ),
 
+        .ready_for_fuses        (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_fuses         ),
+        .ready_for_mb_processing(soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_mb_processing ),
+        .ready_for_runtime      (soc_ifc_subenv_soc_ifc_status_agent_bus.ready_for_runtime       ),
+
         .mailbox_data_avail(soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_data_avail),
         .mailbox_flow_done (soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_flow_done ),
-        .BootFSM_BrkPoint  (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
 
         .recovery_data_avail     (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_data_avail       ),
         .recovery_image_activated(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_image_activated  ),
+
+        .BootFSM_BrkPoint  (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
 
         //SoC Interrupts
         .cptra_error_fatal    (soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_fatal),
@@ -344,6 +349,7 @@ import aaxi_uvm_pkg::*;
         .strap_ss_uds_seed_base_addr                            (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_uds_seed_base_addr                            ),
         .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
         .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
+        .strap_ss_caliptra_dma_axi_user                         (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_caliptra_dma_axi_user                         ),
         .strap_ss_strap_generic_0                               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_strap_generic_0                               ),
         .strap_ss_strap_generic_1                               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_strap_generic_1                               ),
         .strap_ss_strap_generic_2                               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_strap_generic_2                               ),
