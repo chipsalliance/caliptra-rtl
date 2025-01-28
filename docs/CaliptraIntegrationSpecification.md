@@ -52,11 +52,11 @@ The following table describes integration parameters.
 
 | **Parameter name** | **Width** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- | :--------- |
-| CPTRA_SET_MBOX_PAUSER_INTEG | 5               | soc_ifc_pkg.sv | Each bit hardcodes the valid PAUSER for mailbox at integration time. |
-| CPTRA_MBOX_VALID_PAUSER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid PAUSER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_PAUSER_INTEG parameter for this valid pauser override to be used. |
-| CPTRA_DEF_MBOX_VALID_PAUSER | 32              | soc_ifc_pkg.sv | Sets the default valid PAUSER for mailbox accesses. This PAUSER is valid at all times. |
-| CPTRA_SET_FUSE_PAUSER_INTEG | 1               | soc_ifc_pkg.sv | Sets the valid PAUSER for fuse accesses at integration time. |
-| CPTRA_FUSE_VALID_PAUSER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid PAUSER for fuse accesses when CPTRA_SET_FUSE_PAUSER_INTEG is set to 1. |
+| CPTRA_SET_MBOX_AXI_USER_INTEG | 5               | soc_ifc_pkg.sv | Each bit hardcodes the valid AXI_USER for mailbox at integration time. |
+| CPTRA_MBOX_VALID_AXI_USER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid AXI_USER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_AXI_USER_INTEG parameter for this valid pauser override to be used. |
+| CPTRA_DEF_MBOX_VALID_AXI_USER | 32              | soc_ifc_pkg.sv | Sets the default valid AXI_USER for mailbox accesses. This AXI_USER is valid at all times. |
+| CPTRA_SET_FUSE_AXI_USER_INTEG | 1               | soc_ifc_pkg.sv | Sets the valid AXI_USER for fuse accesses at integration time. |
+| CPTRA_FUSE_VALID_AXI_USER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid AXI_USER for fuse accesses when CPTRA_SET_FUSE_AXI_USER_INTEG is set to 1. |
 
 *Table 3: Integration Defines*
 
@@ -216,9 +216,9 @@ Deassertion of cptra\_rst\_b indicates a warm reset cycle that resets all but th
 
 Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register allows the boot flow to proceed.
 
-### APB arbitration
+### AXI arbitration
 
-Caliptra is a client on the APB bus, incapable of initiating transfers. If SoCs have multiple APBs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+Caliptra is a client on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
 
 ### Undefined address accesses
 
@@ -226,8 +226,8 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * All reads to undefined addresses get completions with zero data.
 * All writes to undefined addresses are dropped.
 * All other undefined opcodes are silently dropped.
-* Access to mailbox memory region with invalid PAUSER are dropped.
-* Access to a fuse with invalid PAUSER are dropped.
+* Access to mailbox memory region with invalid AXI_USER are dropped.
+* Access to a fuse with invalid AXI_USER are dropped.
 * PSLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
@@ -282,9 +282,9 @@ The following table describes the allocation of functionality on GENERIC\_INPUT\
 
 The Caliptra mailbox is the primary communication method between Caliptra and the SoC that Caliptra is integrated into.
 
-The Caliptra mailbox uses an APB interface to communicate with the SoC. The SoC can write to and read from various memory mapped register locations over the APB interface in order to pass information to Caliptra.
+The Caliptra mailbox uses an AXI interface to communicate with the SoC. The SoC can write to and read from various memory mapped register locations over the AXI interface in order to pass information to Caliptra.
 
-Caliptra in turn also uses the mailbox to pass information back to the SoC. The interface does not author any transaction on the APB interface. The interface only signals to the SoC that data is available in the mailbox and it is the responsibility of the SoC to read that data from the mailbox.
+Caliptra in turn also uses the mailbox to pass information back to the SoC. The interface does not author any transaction on the AXI interface. The interface only signals to the SoC that data is available in the mailbox and it is the responsibility of the SoC to read that data from the mailbox.
 
 ## Boot FSM
 
@@ -301,13 +301,13 @@ BOOT\_DONE enables Caliptra reset deassertion through a two flip-flop synchroniz
 
 ## SoC access mechanism
 
-The SoC communicates with the mailbox through an APB Interface. The SoC acts as the requester with the Caliptra mailbox as the receiver.
+The SoC communicates with the mailbox through an AXI Interface. The SoC acts as the requester with the Caliptra mailbox as the receiver.
 
-The PAUSER bits are used by the SoC to identify which device is accessing the mailbox.
+The AXI_USER bits are used by the SoC to identify which device is accessing the mailbox.
 
 ## Mailbox
 
-The Caliptra mailbox is a 128 KiB buffer used for exchanging data between the SoC and the Caliptra microcontroller.
+The Caliptra mailbox is a 256 KiB buffer used for exchanging data between the SoC and the Caliptra microcontroller.
 
 When a mailbox is populated by the SoC, initiation of the operation by writing the execute bit triggers an interrupt to the microcontroller. This interrupt indicates that a command is available in the mailbox. The microcontroller is responsible for reading from and responding to the command.
 
@@ -367,39 +367,39 @@ The following figure shows the receiver protocol flow.
 
 ## Mailbox arbitration
 
-From a mailbox protocol perspective, as long as CPTRA\_VALID\_PAUSER registers carry valid requestors, mailbox lock can be obtained by any of those valid requestors but only one of them at any given time. While the mailbox flow is happening, all other requestors will not get a grant.
+From a mailbox protocol perspective, as long as CPTRA\_VALID\_AXI\_USER registers carry valid requestors, mailbox lock can be obtained by any of those valid requestors but only one of them at any given time. While the mailbox flow is happening, all other requestors will not get a grant.
 
 A request for lock that is denied due to firmware having the lock results in an interrupt to the firmware. Firmware can optionally use this interrupt to release the lock.
 
 There is no fair arbitration scheme between SoC and microcontroller. It is first come, first served. When the mailbox is locked for microcontroller use and SoC has unsuccessfully requested the mailbox (due to mailbox actively being used), the mailbox generates an interrupt to the microcontroller as a notification.
 
-Further, there is no arbitration between various PAUSER attributes. PAUSER attributes exist for security and filtering reasons only.
+Further, there is no arbitration between various AXI_USER attributes. AXI_USER attributes exist for security and filtering reasons only.
 
-## MAILBOX PAUSER attribute register
+## MAILBOX AXI USER attribute register
 
-It is strongly recommended that these PAUSER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable firmware or ROM patches are applied.
+It is strongly recommended that these AXI_USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable firmware or ROM patches are applied.
 
 ### Programmable registers
 
-Caliptra provides 5 programmable registers that SoC can set at boot time to limit access to the mailbox peripheral. The default PAUSER set by the integration parameter CPTRA\_DEF\_MBOX\_VALID\_PAUSER is valid at all times. CPTRA\_MBOX\_VALID\_PAUSER registers become valid once the corresponding lock bit CPTRA\_MBOX\_PAUSER\_LOCK is set.
+Caliptra provides 5 programmable registers that SoC can set at boot time to limit access to the mailbox peripheral. The default AXI_USER set by the integration parameter CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER is valid at all times. CPTRA\_MBOX\_VALID\_AXI\_USER registers become valid once the corresponding lock bit CPTRA\_MBOX\_AXI\_USER\_LOCK is set.
 
-*Table 13: PAUSER register definition*
+*Table 13: AXI\_USER register definition*
 
 | Register                               | Description |
 | :--------- | :--------- |
-| CPTRA_MBOX_VALID_PAUSER\[4:0\]\[31:0\] | 5 registers for programming PAUSER values that are considered valid for accessing the mailbox protocol. Requests with PAUSER attributes that are not in this list will be ignored. |
-| CPTRA_MBOX_PAUSER_LOCK\[4:0\]          | 5 registers, bit 0 of each will lock and mark VALID for the corresponding VALID_PAUSER register.                                                                                   |
+| CPTRA_MBOX_VALID_AXI_USER\[4:0\]\[31:0\] | 5 registers for programming AXI_USER values that are considered valid for accessing the mailbox protocol. Requests with AXI_USER attributes that are not in this list will be ignored. |
+| CPTRA_MBOX_AXI_USER_LOCK\[4:0\]          | 5 registers, bit 0 of each will lock and mark VALID for the corresponding VALID_AXI_USER register.                                                                                   |
 
 ### Parameter override
 
-Another option for limiting access to the mailbox peripheral are the integration time parameters that override the programmable PAUSER registers. At integration time, the CPTRA\_SET\_MBOX\_PAUSER\_INTEG parameters can be set to 1 which enables the corresponding CPTRA\_MBOX\_VALID\_PAUSER parameters to override the programmable register.
+Another option for limiting access to the mailbox peripheral are the integration time parameters that override the programmable AXI_USER registers. At integration time, the CPTRA\_SET\_MBOX\_AXI\_USER\_INTEG parameters can be set to 1 which enables the corresponding CPTRA\_MBOX\_VALID\_AXI\_USER parameters to override the programmable register.
 
-*Table 14: PAUSER Parameter definition*
+*Table 14: AXI_USER Parameter definition*
 
 | Parameter                          | Description                                                                                                                            |
 | :--------- | :--------- |
-| CPTRA_SET_MBOX_PAUSER_INTEG\[4:0\] | Setting to 1 enables the corresponding CPTRA_MBOX_VALID_PAUSER parameter.                                                              |
-| CPTRA_MBOX_VALID_PAUSER\[4:0\]     | Value to override programmable PAUSER register at integration time if corresponding CPTRA_SET_MBOX_PAUSER_INTEG parameter is set to 1. |
+| CPTRA_SET_MBOX_AXI_USER_INTEG\[4:0\] | Setting to 1 enables the corresponding CPTRA_MBOX_VALID_AXI_USER parameter.                                                              |
+| CPTRA_MBOX_VALID_AXI_USER\[4:0\]     | Value to override programmable AXI_USER register at integration time if corresponding CPTRA_SET_MBOX_AXI_USER_INTEG parameter is set to 1. |
 
 ## Caliptra mailbox protocol
 
@@ -430,11 +430,11 @@ After a mailbox protocol violation is flagged, it is reported to the system in s
 * Mailbox protocol violations are reported as fields in the HW ERROR non-fatal register. These events also cause assertion of the cptra\_error\_non\_fatal interrupt signal to SoC. Upon detection, SoC may acknowledge the error by clearing the error field in this register via bus write.
 * Mailbox protocol violations generate an internal interrupt to the Caliptra microcontroller.  Caliptra firmware is aware of the protocol violation.
 
-The following table describes APB transactions that cause the Mailbox FSM to enter the ERROR state, given that the register “mbox\_user” contains the value of the APB PAUSER that was used to originally acquire the mailbox lock.
+The following table describes AXI transactions that cause the Mailbox FSM to enter the ERROR state, given that the register “mbox\_user” contains the value of the AXI USER that was used to originally acquire the mailbox lock.
 
 *Table 15: Mailbox protocol error trigger conditions*
 
-| FSM state         | SoC HAS LOCK | APB PAUSER eq mbox_user | Error state trigger condition                                                        |
+| FSM state         | SoC HAS LOCK | AXI USER eq mbox_user | Error state trigger condition                                                        |
 | :--------- | :--------- | :--------- | :--------- |
 | MBOX_RDY_FOR_CMD  | 1            | true                    | Read from mbox_dataout. Write to any register other than mbox_cmd.                    |
 | MBOX_RDY_FOR_CMD  | 1            | false                   | \-                                                                                   |
@@ -458,7 +458,7 @@ The following table describes APB transactions that cause the Mailbox FSM to ent
 
 ## Overview
 
-The SHA acceleration block is in the SoC interface. The SoC can access the accelerator’s hardware API and stream data to be hashed over the APB interface.
+The SHA acceleration block is in the SoC interface. The SoC can access the accelerator’s hardware API and stream data to be hashed over the AXI interface.
 
 SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers.
 
@@ -502,7 +502,7 @@ TRNG if ROM glitch protection is important.**
 
 Having an interface that is separate from the SoC mailbox ensures that this request is not intercepted by any SoC firmware agents (which communicate with SoC mailbox). It is a requirement for FIPS compliance that this TRNG HW API is always handled by SoC hardware gasket logic (and not some SoC ROM or firmware code).
 
-TRNG DATA register is tied to TRNG VALID PAUSER. SoC can program the TRNG VALID PAUSER and lock the register using TRNG\_PAUSER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the PAUSER programmed into the TRNG\_VALID\_PAUSER register. If the CPTRA\_TNRG\_PAUSER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set, only an agent with a specific TRNG\_VALID\_PAUSER can write.
+TRNG DATA register is tied to TRNG VALID AXI USER. SoC can program the TRNG VALID AXI USER and lock the register using TRNG\_AXI\_USER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the AXI USER programmed into the TRNG\_VALID\_AXI\_USER register. If the CPTRA\_TNRG\_AXI\_USER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set, only an agent with a specific TRNG\_VALID\_AXI\_USER can write.
 
 The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
@@ -669,22 +669,22 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                                                               | Statement of conformance | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                                                             | Statement of conformance | Required for Caliptra threat model                |
-| PAUSER                           | SoC shall drive PAUSER input in accordance with the IP integration spec.                                                                                                                                                                                                       | Statement of conformance | Required for Caliptra threat model                |
+| AXI USER                           | SoC shall drive AXI USER input in accordance with the IP integration spec.                                                                                                                                                                                                       | Statement of conformance | Required for Caliptra threat model                |
 | Error reporting                  | SoC shall report Caliptra error outputs.                                                                                                                                                                                                                                       | Statement of conformance | Telemetry and monitoring                          |
 | Error reporting                  | SoC shall only recover Caliptra fatal errors via SoC power-good reset.                                                                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
-| TRNG PAUSER Programming rules    | If SoC doesn’t program the CPTRA\_TRNG\_PAUSER\_LOCK\[LOCK\], then Caliptra HW will not accept TRNG data from any SoC entity.                                                                                                                                                  | Security                 | Required for Caliptra threat model                |
-| TRNG PAUSER Programming rules    | If SoC programs CPTRA\_TRNG\_VALID\_PAUSER and sets CPTRA\_TRNG\_PAUSER\_LOCK\[LOCK\], then Caliptra HW will accept TRNG data only from the entity that is programmed into the PAUSER register.                                                                                | Security                 | Required for Caliptra threat model                |
-| TRNG PAUSER Programming rules    | It is strongly recommended that these PAUSER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed.                                                                    | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | 5 PAUSER attribute registers are implemented at SoC interface.                                                                                                                                                                                                                 | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | At boot time, a default SoC or PAUSER can access the mailbox. The value of this PAUSER is an integration parameter, CPTRA\_DEF\_MBOX\_VALID\_PAUSER.                                                                                                                           | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | The value of CPTRA\_MBOX\_VALID\_PAUSER\[4:0\] register can be programmed by SoC. After it is locked, it becomes a valid PAUSER for accessing the mailbox.                                                                                                                     | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | CPTRA\_SET\_MBOX\_PAUSER\_INTEG parameter can be set along with the corresponding CPTRA\_MBOX\_VALID\_PAUSER parameter at integration time. If set, these integration parameters take precedence over the CPTRA\_MBOX\_VALID\_PAUSER\[4:0\] register.                          | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | SoC logic (ROM, HW) that is using the Caliptra mailbox right out of cold reset, without first configuring the programmable mailbox PAUSER registers, must send the mailbox accesses with the default PAUSER, CPTRA\_DEF\_MBOX\_VALID\_PAUSER.                                  | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | For CPTRA\_MBOX\_VALID\_PAUSER\[4:0\], the corresponding lock bits MUST be programmed to ‘1. This enables the mailbox to accept transactions from non-default PAUSERS.                                                                                                         | Security                 | Required for Caliptra threat model                |
-| MAILBOX PAUSER programming rules | It is strongly recommended that mailbox PAUSER registers are either set at integration time through integration parameters or are programmed by the SoC ROM before any mutable FW or ROM patches are applied.                                                                  | Security                 | Required for Caliptra threat model                |
-| FUSE PAUSER programming rules    | 1 PAUSER attribute register is implemented at SoC interface: CPTRA\_FUSE\_VALID\_PAUSER.                                                                                                                                                                                       | Security                 | Required for Caliptra threat model                |
-| FUSE PAUSER programming rules    | CPTRA\_FUSE\_PAUSER\_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                                                               | Security                 | Required for Caliptra threat model                |
-| FUSE PAUSER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_PAUSER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_PAUSER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_PAUSER register. | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | If SoC doesn’t program the CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\], then Caliptra HW will not accept TRNG data from any SoC entity.                                                                                                                                                  | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | If SoC programs CPTRA\_TRNG\_VALID\_AXI\_USER and sets CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\], then Caliptra HW will accept TRNG data only from the entity that is programmed into the AXI USER register.                                                                                | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed.                                                                    | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | 5 AXI USER attribute registers are implemented at SoC interface.                                                                                                                                                                                                                 | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | At boot time, a default SoC or AXI USER can access the mailbox. The value of this AXI USER is an integration parameter, CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER.                                                                                                                           | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | The value of CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\] register can be programmed by SoC. After it is locked, it becomes a valid AXI USER for accessing the mailbox.                                                                                                                     | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | CPTRA\_SET\_MBOX\_AXI\_USER\_INTEG parameter can be set along with the corresponding CPTRA\_MBOX\_VALID\_AXI\_USER parameter at integration time. If set, these integration parameters take precedence over the CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\] register.                          | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | SoC logic (ROM, HW) that is using the Caliptra mailbox right out of cold reset, without first configuring the programmable mailbox AXI USER registers, must send the mailbox accesses with the default AXI USER, CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER.                                  | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | For CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\], the corresponding lock bits MUST be programmed to ‘1. This enables the mailbox to accept transactions from non-default AXI USERS.                                                                                                         | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules | It is strongly recommended that mailbox AXI USER registers are either set at integration time through integration parameters or are programmed by the SoC ROM before any mutable FW or ROM patches are applied.                                                                  | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER programming rules    | 1 AXI USER attribute register is implemented at SoC interface: CPTRA\_FUSE\_VALID\_AXI\_USER.                                                                                                                                                                                       | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER programming rules    | CPTRA\_FUSE\_AXI\_USER\_LOCK locks the programmable valid pauser register, and marks the programmed value as valid.                                                                                                                                                               | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER programming rules    | Integrators can choose to harden the valid pauser for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_AXI\_USER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_AXI\_USER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_AXI\_USER register. | Security                 | Required for Caliptra threat model                |
 | Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing).                  | Statement of conformance | Functionality                                     |
 | Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS\_SEED. It is strongly advised to implement manufacturing policies to protect UDS\_SEED as defense in depth measures. <br>1, Prevent leakage of UDS\_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS\_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra threat model |
 | Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model |
@@ -711,7 +711,7 @@ Several files contain code that may be specific to an integrator's implementatio
 | File                                                                                   | Description                                                            |
 | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
 | [config_defines.svh](../src/integration/rtl/config_defines.svh)                        | Enable Caliptra internal TRNG (if applicable).<br>Declare name of custom clock gate module by defining USER_ICG.<br>Enable custom clock gate by defining TECH_SPECIFIC_ICG.                |
-| [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define PAUSER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
+| [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define AXI USER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
 | [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with a technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
 | [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with a technology-specific clock gater.<br>Modifying this file may not be necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_EC_RV_ICG. |
 | [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvsyncss (and rvsyncss_fpga if the design will be implemented on an FPGA) with a technology-specific sync cell. |
@@ -952,11 +952,10 @@ The following terminology is used in this document.
 
 *Table 26: Terminology*
 
-
 | Abbreviation | Description                                                                                      |
 | :--------- | :--------- |
 | AHB          | AMBA Advanced High-Performance Bus                                                               |
-| APB          | AMBA Advanced Peripheral Bus                                                                     |
+| AXI          | AMBA Advanced eXtensible Interface                                                               |
 | AES          | Advanced Encryption Standard                                                                     |
 | BMD          | Boot Media Dependent                                                                             |
 | BMI          | Boot Media Integrated                                                                            |
