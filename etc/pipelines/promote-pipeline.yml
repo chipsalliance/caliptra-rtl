@@ -288,6 +288,36 @@ stages:
             - path: '${ADAMSBRIDGE_ROOT}/src/mldsa_top/stimulus/uvmf_mldsa_top_promote_regression.yml'
             - timeout: 1440
 
+    - uvmf_kv:
+      - display_name: 'UVMF_KV'
+      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - configspec_name: 'integration_lib'
+      - dut: 'uvmf_kv'
+      #- args: '--submit-resource-args RAM/28000'
+      - timeout: 25
+      - testsuites:
+        - l0_regress:
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'uvmf_kv'
+          - path: '${CALIPTRA_ROOT}/src/keyvault/stimulus/testsuites/kv_promote_regression.yml'
+          - timeout: 1440
+
+    - uvmf_pv:
+      - display_name: 'UVMF_PV'
+      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - configspec_name: 'integration_lib'
+      - dut: 'uvmf_pv'
+      #- args: '--submit-resource-args RAM/28000'
+      - timeout: 25
+      - testsuites:
+        - l0_regress:
+          - enabled: true
+          - configspec_name: 'integration_lib'
+          - dut: 'uvmf_pv'
+          - path: '${CALIPTRA_ROOT}/src/pcrvault/stimulus/testsuites/pv_promote_regression.yml'
+          - timeout: 1440
+
     design_lint_map:
     - caliptra_top_sglint:
       - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
