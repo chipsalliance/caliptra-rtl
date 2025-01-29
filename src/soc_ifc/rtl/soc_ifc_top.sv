@@ -475,9 +475,9 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.RSVD_en.next = 3'b0;
 // Hardcoded because all future revs will have LMS accelerator available
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
 `else
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
 `endif
 
 //SOC Stepping ID update
@@ -698,7 +698,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_HW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     soc_ifc_reg_hwif_in.CPTRA_FW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     for (int i=0; i<12; i++) begin
-        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value & ~soc_ifc_reg_req_data.soc_req;
+        soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
     end
 end
 
