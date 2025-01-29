@@ -173,6 +173,7 @@ module caliptra_top_tb_services
     logic                       inject_random_data;
     logic                       check_pcr_ecc_signing;
     logic                       check_pcr_mldsa_signing;
+    logic                       inject_single_msg_for_ecc_mldsa;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -291,6 +292,7 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -456,7 +458,7 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac384_key_tb = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
-    logic [0:15][31:0]   mldsa_seed_2_tb= 512'h_fdc431e57c4325899e48d6daa9b7b5cfa23bc560ffd58e06b8c0c4b9e1e842e0_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
+    // logic [0:15][31:0]   mldsa_seed_2_tb= 512'h_fdc431e57c4325899e48d6daa9b7b5cfa23bc560ffd58e06b8c0c4b9e1e842e0_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     
@@ -497,7 +499,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.next = 'd7;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = (inject_makehint_failure | inject_normcheck_failure) ? mldsa_seed_2_tb[dword_i][31:0] : mldsa_seed_tb[dword_i][31 : 0];
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h91) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
@@ -509,7 +511,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
-                        inject_ecc_privkey <= 1'b1;
+                        inject_mldsa_seed <= 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
@@ -653,6 +655,15 @@ module caliptra_top_tb_services
             security_state.debug_locked <= 1'b0;
             assert_ss_tran <= 'b0;
         end
+    end
+
+    always_ff @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b)
+            inject_single_msg_for_ecc_mldsa <= 'b0;
+        else if ((WriteData[7:0] == 8'h89) && mailbox_write && !inject_single_msg_for_ecc_mldsa)
+            inject_single_msg_for_ecc_mldsa <= 'b1; //set
+        else if ((WriteData[7:0] == 8'h89) && mailbox_write && inject_single_msg_for_ecc_mldsa)
+            inject_single_msg_for_ecc_mldsa <= 'b0; //reset
     end
 
     //MLDSA
@@ -1273,7 +1284,7 @@ endgenerate //IV_NO
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
                 end
-                else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                else if((WriteData[7:0] == 8'h93) && mailbox_write && !inject_single_msg_for_ecc_mldsa) begin //TODO: what if mldsa is trig'd first and then ecc?
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = mldsa_random_msg[15-dword][31 : 0];
                 end

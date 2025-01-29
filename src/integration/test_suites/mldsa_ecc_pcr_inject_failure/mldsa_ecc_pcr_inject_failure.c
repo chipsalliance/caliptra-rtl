@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mldsa.h"
+#include "ecc.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -32,16 +33,39 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
+    printf("-----------------------------------\n");
+    printf(" Randomized PCR ECC Signing flow !!\n");
+    printf("-----------------------------------\n");
+
+    //Call interrupt init
+    init_interrupts();
+
+    printf("Inject single msg for both ecc and mldsa\n");
+    printf("%c", 0x89);
+
+    //inject seed to kv key reg (in RTL)
+    printf("Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
+    printf("%c", 0x91);
+
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+    // Enable ECC PCR SIGNING core
+    printf("\nECC PCR SIGNING\n");
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+
+
     printf("-------------------------------------\n");
     printf(" Randomized PCR MLDSA Signing flow !!\n");
     printf("-------------------------------------\n");
 
     //Call interrupt init
-    init_interrupts();
+    // init_interrupts();
 
     //Inject mldsa failure
-    printf("Inject random failure into mldsa\n");
-    printf("%c", 0xd7);
+    // printf("Inject random failure into mldsa\n");
+    // printf("%c", 0xd7);
+    
     
     //inject seed to kv key reg (in RTL)
     printf("Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
@@ -61,6 +85,17 @@ void main() {
 
     printf("Check the signing results\n");
     printf("%c", 0x94);
+
+    // wait for ECC SIGNING process to be done
+    printf("ECC flow in progress...\n");
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    
+    printf("Check the signing results\n");
+    printf("%c", 0x92);
+
+    cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_zeroize();
 
     cptra_intr_rcv.mldsa_notif = 0;
     mldsa_zeroize();
