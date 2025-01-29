@@ -300,7 +300,7 @@ interface soc_ifc_cov_if
         arc_BOOT_DONE_BOOT_FWRST_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_DONE_BOOT_FWRST;
         arc_BOOT_FWRST_BOOT_WAIT_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_FWRST_BOOT_WAIT;
         arc_BOOT_WAIT_BOOT_DONE_cp: coverpoint i_soc_ifc_boot_fsm.arc_BOOT_WAIT_BOOT_DONE;
-        arc_IDLE_cp: coverpoint i_soc_ifc_boot_fsm.arc_IDLE & (i_soc_ifc_boot_fsm.boot_fsm_ps != BOOT_IDLE);
+        arc_IDLE_cp: coverpoint i_soc_ifc_boot_fsm.arc_IDLE & ($bits(boot_fsm_state_e)'(i_soc_ifc_boot_fsm.boot_fsm_ps) != BOOT_IDLE);
         fsm_iccm_unlock_cp: coverpoint i_soc_ifc_boot_fsm.fsm_iccm_unlock;
 
 
