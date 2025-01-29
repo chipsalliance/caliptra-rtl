@@ -49,21 +49,22 @@ logic [31:0] fuse_mldsa_revocation;
 // 
 // Checks fuse permission tests depending on PAUSER bit status 
 //----------------------------------------------------------------
-task fuse_reg_pauser_test;
-  // Fuse Register PA-USER Test 
+task fuse_reg_axi_user_test;
+  // Fuse Register AXI-USER Test 
 
   automatic word_addr_t addr; 
   automatic int tid = 0; // optional to increment UNLESS multiple writes to same address 
   automatic strq_t fuse_regnames;  // ordered list of fuse register names
   automatic dwordq_t fuse_regdata;  // corresponding data to fuse register names
-  automatic dword_t valid_pauser;  
+  automatic dword_t valid_axi_user;  
   automatic logic lock_status;
   automatic WordTransaction wrtrans, rdtrans;
   automatic string rname;
   automatic dword_t fuse_regval_actual;  
 
   begin
-    $display("Executing task fuse_reg_pauser_test"); 
+    $display("-----------------------------------\n");
+    $display("Executing task fuse_reg_axi_user_test"); 
     $display("-----------------------------------\n");
 
     $display("Current security state = 0b%03b", security_state);
@@ -74,50 +75,77 @@ task fuse_reg_pauser_test;
 
     fuse_regnames = get_fuse_regnames(); 
 
+    foreach (fuse_regnames[ix]) begin
+      $display("CUrrent fuse: %s", fuse_regnames[ix]);
+      $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
+      if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
+          (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
+          (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
+        $display("Found %s", fuse_regnames[ix]);
+        fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
+        continue; 
+      end
+    end 
+
+    // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
+    // Deleting it explicitly for now
+    del_from_strq(fuse_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
+
+    foreach (fuse_regnames[ix]) begin
+      if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
+          (fuse_regnames[ix] == "SS_SOC_DBG_UNLOCK_LEVEL") ||
+          (fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
+          (fuse_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
+          (fuse_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
+        fuse_regnames.delete(ix);  // SOC read-only
+        continue; 
+      end
+    end
+
     init_sim();
     reset_dut();
 
     wait (ready_for_fuses); 
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("1a. Default pauser and unlocked. APB write to registers, check values");
+    print_banner("1a. Default axi user and unlocked. AXI write to registers, check values");
     tphase = "1a";
 
-    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes & 
+    write_regs(SET_AXI, fuse_regnames, tid, 3);  // effect changes & 
     repeat (5) @(posedge clk_tb);
-    read_regs(GET_APB, fuse_regnames, tid, 3);  // expect same values on read
+    read_regs(GET_AXI, fuse_regnames, tid, 3);  // expect same values on read
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("1b. With unlocked non-default pauser, repeat 1a");
+    print_banner("1b. With unlocked non-default axi_user, repeat 1a");
     tphase = "1b";
 
     // NOTE. simulate_caliptra_boot() is necessary for noncore_rst_b to be deasserted
     //simulate_caliptra_boot();
     //wait (cptra_noncore_rst_b_tb == 1'b1);
 
-    // Set pauser valid to non-default
-    wrtrans.update_byname("CPTRA_FUSE_VALID_PAUSER", 0, tid); 
+    // Set axi_user valid to non-default
+    wrtrans.update_byname("CPTRA_FUSE_VALID_AXI_USER", 0, tid); 
     wrtrans.randomize();
-    valid_pauser = wrtrans.data;
-    write_reg_trans(SET_APB, wrtrans);
+    valid_axi_user = wrtrans.data;
+    write_reg_trans(SET_AXI, wrtrans);
     repeat (3) @(posedge clk_tb);
-    rdtrans.update_byname("CPTRA_FUSE_VALID_PAUSER", 0, tid); 
-    read_reg_trans(GET_APB, rdtrans);
+    rdtrans.update_byname("CPTRA_FUSE_VALID_AXI_USER", 0, tid); 
+    read_reg_trans(GET_AXI, rdtrans);
     $display ("Pauser value programmed = 0x%08x", rdtrans.data); 
-    assert (rdtrans.data == valid_pauser) else begin
+    assert (rdtrans.data == valid_axi_user) else begin
       $display("TB ERROR. fuse_pauser_valid modfication failed"); 
       error_ctr += 1;
     end 
 
-    write_regs(SET_APB, fuse_regnames, tid, 3);  // effect changes & 
+    write_regs(SET_AXI, fuse_regnames, tid, 3);  // effect changes & 
     repeat (5) @(posedge clk_tb);
-    read_regs(GET_APB, fuse_regnames, tid, 3);  // expect same values on read
+    read_regs(GET_AXI, fuse_regnames, tid, 3);  // expect same values on read
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("1c. Lock pauser with non-default value. repeat 1a but read with and w/o valid pauser"); 
+    print_banner("1c. Lock axi_user with non-default value. repeat 1a but read with and w/o valid axi_user"); 
     tphase = "1c";
 
-    set_fuse_pauser_lock(1'b1, tid, lock_status);
+    set_fuse_axi_user_lock(1'b1, tid, lock_status);
     if (lock_status == 1'b0) begin
       $display("TB ERROR. Setting fuse_pauser_lock failed!"); 
       error_ctr += 1;
@@ -131,7 +159,7 @@ task fuse_reg_pauser_test;
       $display ("TB INFO. For %-30s storing last modified value 0x%08x", rname, fuse_regval_actual);
     end 
 
-    write_regs(SET_APB, fuse_regnames, tid, 3);  // should be ineffectual 
+    write_regs(SET_AXI, fuse_regnames, tid, 3, FAIL);  // should be ineffectual 
     repeat (5) @(posedge clk_tb);
 
     // Read twice, with and without valid pauser
@@ -139,9 +167,9 @@ task fuse_reg_pauser_test;
       rname = fuse_regnames[i];
       rdtrans.update_byname(rname,  0, tid); 
       fuse_regval_actual = get_fuse_regval(rname);
-      read_reg_chk_inrange(GET_APB, rname, tid, '0, '0);  // get 0's on default pauser
+      read_reg_chk_inrange(GET_AXI, rname, tid, '0, '0, FAIL);  // get 0's on default pauser, and AXI read error
       repeat (3) @(posedge clk_tb);
-      read_reg_trans(GET_APB, rdtrans, valid_pauser); // expect older (stored) values
+      read_reg_trans(GET_AXI, rdtrans, valid_axi_user); // expect older (stored) values
       repeat (3) @(posedge clk_tb);
 
       if (str_startswith(rname, "FUSE_UDS_SEED") || str_startswith(rname, "FUSE_FIELD_ENTROPY")) 
@@ -149,7 +177,7 @@ task fuse_reg_pauser_test;
         continue;
 
       if (rdtrans.data != fuse_regval_actual) begin
-        $display("TB ERROR. Mismatch on APB read w/valid pauser for reg %-30s (0x%08x). Read value = 0x%08x | expected probed = 0x%08x", 
+        $display("TB ERROR. Mismatch on AXI read w/valid axi_user for reg %-30s (0x%08x). Read value = 0x%08x | expected probed = 0x%08x", 
           rname, rdtrans.addr, rdtrans.data, fuse_regval_actual) ;
         error_ctr += 1;
       end
@@ -158,18 +186,18 @@ task fuse_reg_pauser_test;
 
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("1d. With matching locked non-default pauser, repeat 1a"); 
+    print_banner("1d. With matching locked non-default axi_user, repeat 1a"); 
     tphase = "1d";
 
-    // Programming a non-default valid_pauser and locking it requires waiting for cptra_noncore_rst_b 
+    // Programming a non-default valid_axi_user and locking it requires waiting for cptra_noncore_rst_b 
     // to be deasserted after a reset, ie, Caliptra boot. 
     //  
     // At the same time ready_for_fuses drops low followed by cptra_noncore_rst_b goingh high, ergo 
     // writes to fuse regs no longer work (for any pauser value) until a warm reset occurs. 
-    // HOWEVER, a warm reset also resets the valid_pauser register. 
+    // HOWEVER, a warm reset also resets the valid_axi_user register. 
     // 
     // The net result (a bug) is that fuse registers can ONLY be written using a default pauser value; 
-    // fuse registers can be read out though using any programmed and locked valid_pauser.  
+    // fuse registers can be read out though using any programmed and locked valid_axi_user.  
    
     sb.del_all();  
 
@@ -179,16 +207,16 @@ task fuse_reg_pauser_test;
       wrtrans.randomize();
       rdtrans.update_byname(rname, 0, tid);
 
-      write_reg_trans(SET_APB, wrtrans, valid_pauser); 
+      write_reg_trans(SET_AXI, wrtrans, valid_axi_user); 
       @(posedge clk_tb);
-      read_reg_trans(GET_APB, rdtrans, valid_pauser); 
+      read_reg_trans(GET_AXI, rdtrans, valid_axi_user); 
       repeat (3) @(posedge clk_tb);
 
       if (str_startswith(rname, "FUSE_UDS_SEED") || str_startswith(rname, "FUSE_FIELD_ENTROPY")) 
         continue;
 
       if (rdtrans.data != (get_mask(rname) & wrtrans.data)) begin
-        $display("TB ERROR. Mismatch on APB write and read w/valid pauser for reg %-30s (0x%08x). Read value = 0x%08x | expected value = 0x%08x", 
+        $display("TB ERROR. Mismatch on AXI write and read w/valid axi_user for reg %-30s (0x%08x). Read value = 0x%08x | expected value = 0x%08x", 
           rname, rdtrans.addr, rdtrans.data, get_mask(rname) & wrtrans.data); 
         error_ctr += 1;
       end
@@ -198,18 +226,18 @@ task fuse_reg_pauser_test;
 
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("2a. for completeness try to unlock pauser by writing"); 
+    print_banner("2a. for completeness try to unlock axi user by writing"); 
     tphase = "2a";
 
-    set_fuse_pauser_lock(1'b0, tid, lock_status);
+    set_fuse_axi_user_lock(1'b0, tid, lock_status);
     assert (lock_status == 1'b1) else begin
-      $display("TB ERROR. Resetting of fuse_pauser_lock via APB was allowed!"); 
+      $display("TB ERROR. Resetting of fuse_axi_user_lock via AXI was allowed!"); 
       error_ctr += 1;
     end
 
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("2b. then attempt to unlock pauser by warm reseting"); 
+    print_banner("2b. then attempt to unlock axi user by warm resetting"); 
     tphase = "2b";
 
     warm_reset_dut(); 
@@ -225,12 +253,12 @@ task fuse_reg_pauser_test;
     //   $display("TB. DEBUG if status of cptra_noncore_rst_b_tb = 1'b%b", cptra_noncore_rst_b_tb); 
     // end
 
-    read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, 'd1, 'd1); 
+    read_reg_chk_inrange(GET_AXI, "CPTRA_FUSE_AXI_USER_LOCK", tid, 'd1, 'd1); 
     @(posedge clk_tb);
 
 
     //------------------------------------------------------------------------------------------- 
-    print_banner("2c. finally unlock pauser by cold reseting"); 
+    print_banner("2c. finally unlock axi user by cold reseting"); 
     tphase = "2c";
 
     reset_dut(); // expect to be clearing CPTRA_FUSE_WR_DONE effect 
@@ -239,6 +267,7 @@ task fuse_reg_pauser_test;
     sb.del_all();
 
     simulate_caliptra_boot();
+    $display("Wait for cptra_noncore_rst_b_tb == 1");
     wait (cptra_noncore_rst_b_tb == 1'b1);
 
     // if (cptra_noncore_rst_b_tb == 1'b0) begin
@@ -247,11 +276,12 @@ task fuse_reg_pauser_test;
     //   $display("TB. DEBUG if status of cptra_noncore_rst_b_tb = 1'b%b", cptra_noncore_rst_b_tb); 
     // end
 
-    read_reg_chk_inrange(GET_APB, "CPTRA_FUSE_PAUSER_LOCK", tid, '0, '0); 
+    read_reg_chk_inrange(GET_AXI, "CPTRA_FUSE_AXI_USER_LOCK", tid, '0, '0); 
     @(posedge clk_tb);
 
 
     error_ctr += sb.err_count;
+    //$display("End of fuse_reg_axi_user_test. Error count = %d", error_ctr);
 
   end
 
@@ -314,25 +344,25 @@ endfunction // get_fuse_regval
 
 
 //----------------------------------------------------------------
-// task set_fuse_pauser_lock()
+// task set_fuse_axi_user_lock()
 //
-// Sets fuse pauser lock register & checks value
+// Sets fuse axi user lock register & checks value
 //----------------------------------------------------------------
-task set_fuse_pauser_lock(input logic lock_value, input int tid, output logic lock_status); 
+task set_fuse_axi_user_lock(input logic lock_value, input int tid, output logic lock_status); 
 
   automatic WordTransaction wrtrans, rdtrans;
   begin
     wrtrans = new();
     rdtrans = new();
 
-    wrtrans.update_byname("CPTRA_FUSE_PAUSER_LOCK", lock_value, tid); 
-    write_reg_trans(SET_APB, wrtrans);
+    wrtrans.update_byname("CPTRA_FUSE_AXI_USER_LOCK", lock_value, tid); 
+    write_reg_trans(SET_AXI, wrtrans);
     repeat (3) @(posedge clk_tb);
-    rdtrans.update_byname("CPTRA_FUSE_PAUSER_LOCK", 0, tid); 
-    read_reg_trans(GET_APB, rdtrans); // FIXME.
-    $display ("Pauser lock status = 0x%08x", rdtrans.data); 
+    rdtrans.update_byname("CPTRA_FUSE_AXI_USER_LOCK", 0, tid); 
+    read_reg_trans(GET_AXI, rdtrans); // FIXME.
+    $display ("AXI user lock status = 0x%08x", rdtrans.data); 
 
     lock_status = rdtrans.data[0];
   end
-endtask // set_fuse_pauser_lock
+endtask // set_fuse_axi_user_lock
 

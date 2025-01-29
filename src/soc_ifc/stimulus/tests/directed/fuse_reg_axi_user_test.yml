@@ -14,7 +14,7 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='fuse_reg_pauser_test'
+  - +SOC_IFC_TEST='fuse_reg_axi_user_test'
 
-testname: fuse_reg_pauser_test 
+testname: fuse_reg_axi_user_test 
 seed: ${PLAYBOOK_RANDOM_SEED}

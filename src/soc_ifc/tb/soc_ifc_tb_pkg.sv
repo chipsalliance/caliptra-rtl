@@ -59,8 +59,8 @@ package soc_ifc_tb_pkg;
   typedef dword_t dwordq_t [$];  
   typedef enum {
     COLD_RESET, WARM_RESET,
-    SET_APB, SET_AHB, SET_DIRECT,
-    GET_APB, GET_AHB, GET_DIRECT
+    SET_AXI, SET_AHB, SET_DIRECT,
+    GET_AXI, GET_AHB, GET_DIRECT
   } access_t; 
 
   typedef struct {
@@ -97,8 +97,8 @@ package soc_ifc_tb_pkg;
 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
-    "CPTRA_MBOX_VALID_AXI_USER"               : 5,  
-    "CPTRA_MBOX_AXI_USER_LOCK"                : 5,  
+    "CPTRA_MBOX_VALID_AXI_USER"             : 5,  
+    "CPTRA_MBOX_AXI_USER_LOCK"              : 5,  
     "CPTRA_TRNG_DATA"                       : 12,
     "CPTRA_GENERIC_INPUT_WIRES"             : 2,  
     "CPTRA_GENERIC_OUTPUT_WIRES"            : 2,  
@@ -115,7 +115,8 @@ package soc_ifc_tb_pkg;
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
-    "INTERNAL_OBF_KEY"                      : 8  
+    "INTERNAL_OBF_KEY"                      : 8,
+    "SS_STRAP_GENERIC"                      : 4 
   };
 
 
@@ -183,7 +184,7 @@ package soc_ifc_tb_pkg;
     "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x340      -
     "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
-    "FUSE_MANUF_DBG_UNLOCK_TOKEN_0"                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0,                        // 0x34c [4]  Manufcturing Debug Unlock Token
+    "FUSE_MANUF_DBG_UNLOCK_TOKEN"                   : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0,                        // 0x34c [4]  Manufcturing Debug Unlock Token
     "SS_CPTRA_BASE_ADDR_L"                          : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                          : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
     "SS_MCI_BASE_ADDR_L"                            : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_L,                                    // 0x508
@@ -198,12 +199,12 @@ package soc_ifc_tb_pkg;
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : SOCIFC_BASE + `SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES,        // 0x52c
     "SS_DEBUG_INTENT"                               : SOCIFC_BASE + `SOC_IFC_REG_SS_DEBUG_INTENT,                                       // 0x530
     // 0x534..0x59c
-    "SS_STRAP_GENERIC_0"                            : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
+    "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_MANUF_SERVICE_REG_REQ"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ,                          // 0x5c0
     "SS_DBG_MANUF_SERVICE_REG_RSP"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP,                           // 0x5c4
-    "SS_SOC_DBG_UNLOCK_LEVEL_0"                     : SOCIFC_BASE + `SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0,                              // 0x5c8 [2]
-    "SS_GENERIC_FW_EXEC_CTRL_0"                     : SOCIFC_BASE + `SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_0,                              // 0x5d0 [4]
+    "SS_SOC_DBG_UNLOCK_LEVEL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0,                              // 0x5c8 [2]
+    "SS_GENERIC_FW_EXEC_CTRL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_0,                              // 0x5d0 [4]
     // 0x5e0..0x5fc           
     "INTERNAL_OBF_KEY"                              : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_OBF_KEY_0,                                   // 0x600 [8]  De-Obfuscation Key 
     "INTERNAL_ICCM_LOCK"                            : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_LOCK,                                   // 0x620      ICCM Lock 
@@ -310,7 +311,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
-    "CPTRA_FUSE_VALID_AXI_USER"              : 32'hffff_ffff
+    "CPTRA_FUSE_VALID_AXI_USER"              : 32'hffff_ffff, 
+    "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES": 32'h8
   };
 
 
@@ -329,6 +331,7 @@ package soc_ifc_tb_pkg;
     "FUSE_LMS_REVOCATION"                              : 32'hffff_ffff,
     "FUSE_MLDSA_REVOCATION"                            : 32'hf,
     "FUSE_SOC_STEPPING_ID"                             : 32'hffff,       // field 15:0
+    "FUSE_MANUF_DBG_UNLOCK_TOKEN"                      : 32'hffff_ffff,
     "CPTRA_HW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_EXTENDED_ERROR_INFO"                     : 32'hffff_ffff,
@@ -351,7 +354,20 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
-    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
+    "SS_CPTRA_BASE_ADDR_L"                             : 32'hffff_ffff,
+    "SS_CPTRA_BASE_ADDR_H"                             : 32'hffff_ffff,
+    "SS_MCI_BASE_ADDR_L"                               : 32'hffff_ffff,
+    "SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
+    "SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
+    "SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
+    "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
+    "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
+    "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
+    "SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
+    "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET": 32'hffff_ffff,
+    "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"       : 32'hffff_ffff,
+    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
   };
 
 
@@ -360,7 +376,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK    |
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK     |                                                  
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK  |
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_ACTIVE_MODE_EN_MASK  ),
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK  ),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
                                                           //`SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
@@ -417,8 +433,8 @@ package soc_ifc_tb_pkg;
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
     "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_ECC_UNC_MASK |
-                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK  |
-                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK), 
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK), 
+                                                       // `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK is AXI/AHB RO
     "INTERNAL_HW_ERROR_NON_FATAL_MASK"                 : (`SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_NO_LOCK_MASK | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_OOO_MASK     | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_ECC_UNC_MASK),      
@@ -641,23 +657,33 @@ package soc_ifc_tb_pkg;
   endfunction // update_INTR_BRF_NOTIF_INTERNAL_INTR_R
 
 
-  // Needs RMW of register without APB or AHB writes 
+  // Needs RMW of register without AXI or AHB writes 
   function automatic dword_t update_CPTRA_FLOW_STATUS(int fuse_ready_val, logic [2:0] boot_fsm_ps);
 
     dword_t tmp_data;
 
     begin
-
+      $display("In update_CPTRA_FLOW_STATUS");
       tmp_data = _exp_register_data_dict["CPTRA_FLOW_STATUS"]; // then preserve read-only bit fields per masks 
+      $display("Read back expected CPTRA_FLOW_STATUS: 0x%x", tmp_data);
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
+      $display(tmp_data);
       tmp_data = tmp_data | mask_shifted(fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
+      $display("fuse_ready_val = 0x%x, ready_for_fuses_mask = 0x%x, tmp_data = 0x%x", fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK, tmp_data);
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
+      $display("boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
       tmp_data = tmp_data | mask_shifted(boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
+      $display("boot_fsm_ps = 0x%x, boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
       // $display( "TB DEBUG. update_CPTRA_FLOW_STATUS(%x, %x) at time %t. new tmp_data = 0x%08x", fuse_ready_val, boot_fsm_ps, $realtime, tmp_data); 
 
+      $display("Final Temp_data = 0x%x", tmp_data);
+      //update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
       update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
 
+      $display("Back to update_CPTRA_FLOW_STATUS");
+
       $display( "TB INFO. Updated expected value of CPTRA_FLOW_STATUS = 0x%08x", _exp_register_data_dict["CPTRA_FLOW_STATUS"]);
+      $display("Done update_CPTRA_FLOW_STATUS");
       return _exp_register_data_dict["CPTRA_FLOW_STATUS"];
     end 
 
@@ -685,18 +711,20 @@ package soc_ifc_tb_pkg;
    
     word_addr_t addr; 
     dword_t curr_data, exp_data;
-    dword_t ahb_indata, apb_indata, apb_rodata, ahb_rodata;
+    dword_t ahb_indata, axi_indata, axi_rodata, ahb_rodata;
 
     string tmpstr; 
-    string pauser_suffix; 
-    string pauser_lock_regname; 
-    int pauser_locked, fuses_locked, lock_mask, iccm_locked; 
+    string axi_user_suffix; 
+    string axi_user_lock_regname; 
+    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked; 
 
     dword_t sscode;
     dword_t tmp_data;
     dword_t mask;
 
     begin
+
+      $display("In update_exp_regval: %s", addr_name);
 
       addr = _soc_register_dict[addr_name];
       sscode = _soc_register_initval_dict["CPTRA_SECURITY_STATE"];
@@ -738,26 +766,30 @@ package soc_ifc_tb_pkg;
 
       curr_data = _exp_register_data_dict[addr_name];
 
-      apb_indata = indata & {32{(modify == SET_APB)}}; // apb_mutable;
+      axi_indata = indata & {32{(modify == SET_AXI)}}; // axi_mutable;
       ahb_indata = indata & {32{(modify == SET_AHB)}}; // ahb_mutable;
 
-      apb_rodata = curr_data & {32{(modify == SET_APB)}}; // apb_readonly;
+      axi_rodata = curr_data & {32{(modify == SET_AXI)}}; // axi_readonly;
       ahb_rodata = curr_data & {32{(modify == SET_AHB)}}; // ahb_readonly;
+
+      $display("axi_indata = 0x%x", axi_indata);
+      $display("ahb_rodata = 0x%x", ahb_rodata);
+      $display("curr_data = 0x%x", curr_data);
 
       // handle wide registers first, then normal sized ones
 
       if (str_startswith(addr_name, "CPTRA_TRNG_DATA"))
-        exp_data = ahb_rodata | apb_indata;  // ahb-RO
+        exp_data = ahb_rodata | axi_indata;  // ahb-RO
 
       else if (str_startswith(addr_name, "CPTRA_FW_REV_ID")) begin
-        exp_data = ahb_indata | apb_rodata; // apb-RO
+        exp_data = ahb_indata | axi_rodata; // apb-RO
         // $display( "TB DEBUG. CPTRA_FW_REV_ID: addr %-30s, exp_data 0x%08x", addr_name, exp_data); 
       
       end else if ((str_startswith(addr_name, "FUSE_UDS_SEED")) || (str_startswith(addr_name, "FUSE_FIELD_ENTROPY")))
         exp_data = '0; // not accessible over APB or AHB 
 
       else if (addr_name == "FUSE_SOC_STEPPING_ID") begin // Normal fuse register operation + cross modification of register
-        exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); // ahb-RO 
+        exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name)); // ahb-RO 
         $display ("TB INFO: Cross modification - Updating FUSE_SOC_STEPPING_ID also updates CPTRA_HW_REV_ID"); 
 
         tmp_data = _exp_register_data_dict["CPTRA_HW_REV_ID"] & 
@@ -767,43 +799,50 @@ package soc_ifc_tb_pkg;
                     mask_shifted(exp_data, `SOC_IFC_REG_CPTRA_HW_REV_ID_SOC_STEPPING_ID_MASK);    // and new stepping_id 
 
       end else if (str_startswith(addr_name, "FUSE_"))
-        exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); // ahb-RO 
+        exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name)); // ahb-RO 
 
       else if (str_startswith(addr_name, "CPTRA_MBOX_VALID_AXI_USER")) begin    // find equivalent pauser lock & if set, apb-RO 
         tmpstr = "CPTRA_MBOX_VALID_AXI_USER";
-        pauser_suffix = addr_name.substr(tmpstr.len(), addr_name.len()-1);
-        pauser_lock_regname = {"CPTRA_MBOX_AXI_USER_LOCK", pauser_suffix};
-        pauser_locked = _exp_register_data_dict[pauser_lock_regname]; 
-        exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
+        axi_user_suffix = addr_name.substr(tmpstr.len(), addr_name.len()-1);
+        axi_user_lock_regname = {"CPTRA_MBOX_AXI_USER_LOCK", axi_user_suffix};
+        axi_user_locked = _exp_register_data_dict[axi_user_lock_regname]; 
+        exp_data = axi_user_locked ? curr_data : (ahb_indata | axi_indata); 
+        $display("DEBUG: addr_name: %s\naxi_user_lock_regname: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_lock_regname, axi_user_locked, exp_data);
 
-      end else if (str_startswith(addr_name, "CPTRA_MBOX_AXI_USER_LOCK")) begin //  if pauser locked, apb-RO
+      end else if (str_startswith(addr_name, "CPTRA_MBOX_AXI_USER_LOCK")) begin //  if axi_user locked, axi-RO
         tmpstr = "CPTRA_MBOX_AXI_USER_LOCK";
-        pauser_locked = _exp_register_data_dict[addr_name];
-        exp_data = pauser_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | apb_indata) & get_mask(tmpstr); 
+        axi_user_locked = _exp_register_data_dict[addr_name];
+        exp_data = axi_user_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | axi_indata) & get_mask(tmpstr); 
+        $display("DEBUG: addr_name: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_locked, exp_data);
 
       end else if (str_startswith(addr_name, "CPTRA_GENERIC_INPUT_WIRES")) 
         exp_data = curr_data; // all bits are RO 
 
       else if (str_startswith(addr_name, "CPTRA_GENERIC_OUTPUT_WIRES"))  
-        exp_data = ahb_indata | apb_rodata; // all bits are apb-RO 
+        exp_data = ahb_indata | axi_rodata; // all bits are axi-RO 
 
       else if (str_startswith(addr_name, "CPTRA_HW_CONFIG"))
         exp_data = curr_data & get_mask("CPTRA_HW_CONFIG"); // all bits are RO 
 
       else if (str_startswith(addr_name, "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD") ||           
                str_startswith(addr_name, "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD")) 
-        exp_data = ahb_indata | apb_rodata; 
+        exp_data = ahb_indata | axi_rodata; 
+
+      else if (str_startswith(addr_name, "CPTRA_OWNER_PK_HASH") & !str_endswith(addr_name, "LOCK")) begin
+        owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
+        exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : axi_indata; // all bits are ahb-RO
+      end
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
-        exp_data = '0;  // not accessible over APB or AHB 
+        exp_data = '0;  // not accessible over AXI or AHB 
 
       else if (str_startswith(addr_name, "SHA_ACC_INTR_BRF"))
         if (str_endswith(addr_name, "INCR_R"))
-          exp_data = ahb_rodata | apb_rodata; 
+          exp_data = ahb_rodata | axi_rodata; 
         else if ((addr_name == "SHA_ACC_INTR_BRF_ERROR_GLOBAL_INTR_R") || (addr_name == "SHA_ACC_INTR_BRF_NOTIF_GLOBAL_INTR_R"))
-          exp_data = ahb_rodata | apb_rodata; 
+          exp_data = ahb_rodata | axi_rodata; 
         else
-          exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; 
+          exp_data = ahb_indata & get_mask(addr_name) | axi_rodata; 
 
       else if (str_startswith(addr_name, "INTR_BRF_")) begin // Interrupt block has its own sub-cases
 
@@ -813,31 +852,33 @@ package soc_ifc_tb_pkg;
         end else begin
           case (addr_name)
 
-            "INTR_BRF_ERROR_GLOBAL_INTR_R":exp_data = ahb_rodata | apb_rodata; // set by HW  
-            "INTR_BRF_NOTIF_GLOBAL_INTR_R":exp_data = ahb_rodata | apb_rodata; // set by HW  
-            "INTR_BRF_ERROR_INTR_TRIG_R": exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg 
-            "INTR_BRF_NOTIF_INTR_TRIG_R": exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg 
-            "INTR_BRF_ERROR_INTERNAL_INTR_R": exp_data = apb_rodata | (~(ahb_indata & get_mask(addr_name)) & curr_data);
-            "INTR_BRF_NOTIF_INTERNAL_INTR_R": exp_data = apb_rodata | (~(ahb_indata & get_mask(addr_name)) & curr_data);
+            "INTR_BRF_ERROR_GLOBAL_INTR_R":exp_data = ahb_rodata | axi_rodata; // set by HW  
+            "INTR_BRF_NOTIF_GLOBAL_INTR_R":exp_data = ahb_rodata | axi_rodata; // set by HW  
+            "INTR_BRF_ERROR_INTR_TRIG_R": exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: axi_rodata; // TODO. Pulsed reg 
+            "INTR_BRF_NOTIF_INTR_TRIG_R": exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: axi_rodata; // TODO. Pulsed reg 
+            "INTR_BRF_ERROR_INTERNAL_INTR_R": exp_data = axi_rodata | (~(ahb_indata & get_mask(addr_name)) & curr_data);
+            "INTR_BRF_NOTIF_INTERNAL_INTR_R": exp_data = axi_rodata | (~(ahb_indata & get_mask(addr_name)) & curr_data);
 
-            default: exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
+            default: exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;
 
           endcase
 
         end
 
       end else begin    
+        $display("COntrol is in this block");
         
         case (addr_name)
     
           "CPTRA_HW_ERROR_FATAL", "CPTRA_HW_ERROR_NON_FATAL": begin
-            exp_data = ahb_indata | apb_indata;  
+            exp_data = ahb_indata | axi_indata;  
             exp_data = '0; // write-one to clear -- effectively always 0
           end
 
           "CPTRA_FLOW_STATUS" : begin
-            if (modify == SET_APB) //  apb-RO 
-              exp_data = apb_rodata;
+            $display("DEBUG: here");
+            if (modify == SET_AXI) //  apb-RO 
+              exp_data = axi_rodata;
             else if (modify == SET_AHB) begin // some fields are ro
               mask = get_mask(addr_name);
               exp_data = (mask & ahb_indata) | (~mask & curr_data); 
@@ -846,58 +887,66 @@ package soc_ifc_tb_pkg;
             end
           end
 
-          "CPTRA_RESET_REASON"                       : exp_data = ahb_rodata | apb_rodata; //  bit 1:0 is RO 
+          "CPTRA_RESET_REASON"                       : exp_data = ahb_rodata | axi_rodata; //  bit 1:0 is RO 
           "CPTRA_SECURITY_STATE"                     : exp_data = curr_data & get_mask(addr_name); // & sscode;  //  bit 3:0 is RO 
 
           "CPTRA_TRNG_VALID_AXI_USER" : begin // find equivalent pauser lock & if set, apb-RO 
-            pauser_locked = _exp_register_data_dict["CPTRA_TRNG_AXI_USER_LOCK"]; 
-            exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
+            axi_user_locked = _exp_register_data_dict["CPTRA_TRNG_AXI_USER_LOCK"]; 
+            exp_data = axi_user_locked ? curr_data : (ahb_indata | axi_indata); 
           end
 
           "CPTRA_TRNG_AXI_USER_LOCK": begin
             lock_mask = get_mask(addr_name); 
-            pauser_locked = curr_data & get_mask(addr_name); // TODO. TRNG registers may need exclusion 
-            exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
+            axi_user_locked = curr_data & get_mask(addr_name); // TODO. TRNG registers may need exclusion 
+            exp_data = axi_user_locked ? curr_data & lock_mask :  (ahb_indata | axi_indata) & lock_mask;  
           end
 
-          "CPTRA_TRNG_CTRL"                          : exp_data = apb_rodata; // pulsed w/ahb 
+          "CPTRA_TRNG_CTRL"                          : exp_data = axi_rodata; // pulsed w/ahb 
 
           "CPTRA_TRNG_STATUS": begin                                        //                   WR_DONE        REQ
             dword_t ahb_mask = get_mask("CPTRA_TRNG_STATUS.AHB"); 
             dword_t apb_mask = get_mask("CPTRA_TRNG_STATUS.APB"); 
             exp_data = (ahb_rodata & ~ahb_mask | ahb_indata & ahb_mask) |   // Caliptra Access:       RO         RW 
-                       (apb_rodata & ~apb_mask | apb_indata & apb_mask) ;   // SOC Access:            RW         RO
+                       (axi_rodata & ~apb_mask | axi_indata & apb_mask) ;   // SOC Access:            RW         RO
           end
 
           "CPTRA_HW_REV_ID"                          : exp_data = curr_data;  
-          "CPTRA_WDT_TIMER1_EN"                      : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
-          "CPTRA_WDT_TIMER1_CTRL"                    : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg
-          "CPTRA_WDT_TIMER2_EN"                      : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;
-          "CPTRA_WDT_TIMER2_CTRL"                    : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: apb_rodata; // TODO. Pulsed reg 
+          "CPTRA_WDT_TIMER1_EN"                      : exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;
+          "CPTRA_WDT_TIMER1_CTRL"                    : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: axi_rodata; // TODO. Pulsed reg
+          "CPTRA_WDT_TIMER2_EN"                      : exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;
+          "CPTRA_WDT_TIMER2_CTRL"                    : exp_data = ((ahb_indata & get_mask(addr_name)) != 0) ? '0: axi_rodata; // TODO. Pulsed reg 
           "CPTRA_WDT_STATUS"                         : exp_data = curr_data; 
-          "CPTRA_FUSE_WR_DONE"                       : exp_data = fuses_locked ? curr_data : (ahb_rodata | apb_indata & get_mask(addr_name)); 
-          "CPTRA_BOOTFSM_GO"                         : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
-          "CPTRA_BOOT_STATUS"                        : exp_data = ahb_indata | apb_rodata; 
-          "CPTRA_CLK_GATING_EN"                      : exp_data = ahb_rodata | apb_indata & get_mask(addr_name) ; 
+          "CPTRA_FUSE_WR_DONE"                       : begin 
+            $display("Found CPTRA_FUSE_WR_DONE");
+            exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name)); 
+          end
+          "CPTRA_BOOTFSM_GO"                         : exp_data = ahb_rodata | axi_indata & get_mask(addr_name) ; 
+          "CPTRA_BOOT_STATUS"                        : exp_data = ahb_indata | axi_rodata; 
+          "CPTRA_CLK_GATING_EN"                      : exp_data = ahb_rodata | axi_indata & get_mask(addr_name) ; 
 
           "CPTRA_FUSE_VALID_AXI_USER" : begin // find equivalent pauser lock & if set, apb-RO 
-            pauser_locked = _exp_register_data_dict["CPTRA_FUSE_AXI_USER_LOCK"]; 
-            exp_data = pauser_locked ? curr_data : (ahb_indata | apb_indata); 
+            axi_user_locked = _exp_register_data_dict["CPTRA_FUSE_AXI_USER_LOCK"]; 
+            exp_data = axi_user_locked ? curr_data : (ahb_indata | axi_indata); 
           end
 
           "CPTRA_FUSE_AXI_USER_LOCK": begin
             lock_mask = get_mask(addr_name); 
-            pauser_locked = curr_data & get_mask(addr_name); 
-            exp_data = pauser_locked ? curr_data & lock_mask :  (ahb_indata | apb_indata) & lock_mask;  
+            axi_user_locked = curr_data & get_mask(addr_name); 
+            exp_data = axi_user_locked ? curr_data & lock_mask :  (ahb_indata | axi_indata) & lock_mask;  
           end 
+
+          "CPTRA_OWNER_PK_HASH_LOCK": begin
+            exp_data = ahb_rodata | axi_indata & get_mask(addr_name);
+            $display("Expected data: 0x%x", exp_data);
+          end
 
           "INTERNAL_ICCM_LOCK"                              : begin
             iccm_locked = curr_data & get_mask(addr_name); 
-            exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | apb_rodata); 
+            exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata); 
           end 
 
           "INTERNAL_FW_UPDATE_RESET"                        : begin
-            exp_data = ahb_indata & get_mask(addr_name) | apb_rodata; 
+            exp_data = ahb_indata & get_mask(addr_name) | axi_rodata; 
 
             // $display ("TB DEBUG: ahb_indata = 0x%x and exp_data for INTERNAL_FW_UPDATE_RESET = 0x%x", ahb_indata, exp_data); 
             if (exp_data[0]) begin  // write-one to clear
@@ -912,25 +961,46 @@ package soc_ifc_tb_pkg;
             end
           end
 
-          "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"     : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
-          "INTERNAL_NMI_VECTOR"                      : exp_data = ahb_indata | apb_rodata;  
-          "INTERNAL_HW_ERROR_FATAL_MASK"             : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
-          "INTERNAL_HW_ERROR_NON_FATAL_MASK"         : exp_data = ahb_indata & get_mask(addr_name) | apb_rodata;  
-          "INTERNAL_FW_ERROR_FATAL_MASK"             : exp_data = ahb_indata | apb_rodata;  
-          "INTERNAL_FW_ERROR_NON_FATAL_MASK"         : exp_data = ahb_indata | apb_rodata;  
-          "INTERNAL_RV_MTIME_L"                      : exp_data = ahb_indata | apb_rodata;
-          "INTERNAL_RV_MTIME_H"                      : exp_data = ahb_indata | apb_rodata;
-          "INTERNAL_RV_MTIMECMP_L"                   : exp_data = ahb_indata | apb_rodata;
-          "INTERNAL_RV_MTIMECMP_H"                   : exp_data = ahb_indata | apb_rodata;
+          "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"     : exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;  
+          "INTERNAL_NMI_VECTOR"                      : exp_data = ahb_indata | axi_rodata;  
+          "INTERNAL_HW_ERROR_FATAL_MASK"             : exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;  
+          "INTERNAL_HW_ERROR_NON_FATAL_MASK"         : exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;  
+          "INTERNAL_FW_ERROR_FATAL_MASK"             : exp_data = ahb_indata | axi_rodata;  
+          "INTERNAL_FW_ERROR_NON_FATAL_MASK"         : exp_data = ahb_indata | axi_rodata;  
+          "INTERNAL_RV_MTIME_L"                      : exp_data = ahb_indata | axi_rodata;
+          "INTERNAL_RV_MTIME_H"                      : exp_data = ahb_indata | axi_rodata;
+          "INTERNAL_RV_MTIMECMP_L"                   : exp_data = ahb_indata | axi_rodata;
+          "INTERNAL_RV_MTIMECMP_H"                   : exp_data = ahb_indata | axi_rodata;
 
-          default: exp_data = indata & get_mask(addr_name); 
+          "SS_CPTRA_BASE_ADDR_L"                          : exp_data = axi_indata | ahb_rodata;
+          "SS_CPTRA_BASE_ADDR_H"                          : exp_data = axi_indata | ahb_rodata;
+          "SS_MCI_BASE_ADDR_L"                            : exp_data = axi_indata | ahb_rodata;
+          "SS_MCI_BASE_ADDR_H"                            : exp_data = axi_indata | ahb_rodata;
+          "SS_RECOVERY_IFC_BASE_ADDR_L"                   : exp_data = axi_indata | ahb_rodata;
+          "SS_RECOVERY_IFC_BASE_ADDR_H"                   : exp_data = axi_indata | ahb_rodata;
+          "SS_OTP_FC_BASE_ADDR_L"                         : exp_data = axi_indata | ahb_rodata;
+          "SS_OTP_FC_BASE_ADDR_H"                         : exp_data = axi_indata | ahb_rodata;
+          "SS_UDS_SEED_BASE_ADDR_L"                       : exp_data = axi_indata | ahb_rodata;
+          "SS_UDS_BASE_ADDR_H"                            : exp_data = axi_indata | ahb_rodata;
+          "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = axi_indata | ahb_rodata;
+          "SS_DEBUG_INTENT"                               : exp_data = axi_indata | ahb_rodata;
+          "SS_STRAP_GENERIC"                              : exp_data = axi_indata | ahb_rodata;
+          "SS_DBG_MANUF_SERVICE_REG_REQ"                  : exp_data = axi_indata | ahb_indata;
+          "SS_DBG_MANUF_SERVICE_REG_RSP"                  : exp_data = ahb_indata | axi_rodata;
+          "SS_SOC_DBG_UNLOCK_LEVEL"                       : exp_data = ahb_indata | axi_rodata;
+          "SS_GENERIC_FW_EXEC_CTRL"                       : exp_data = ahb_indata | axi_rodata;
 
+          default: begin
+            $display("DEBUG: Default: %s", addr_name);
+            exp_data = indata & get_mask(addr_name); 
+          end
         endcase
 
       end 
       _exp_register_data_dict[addr_name] = exp_data;
-      // $display ("TB DEBUG: Expected data for addr_name %s (addr 0x%08x) = 0x%08x", addr_name, addr, exp_data); 
+       $display ("TB DEBUG: Expected data for addr_name %s (addr 0x%08x) = 0x%08x", addr_name, addr, exp_data); 
     end
+    $display("Done update_exp_regval: %s", addr_name);
 
   endfunction // update_exp_regval
 
@@ -955,11 +1025,46 @@ package soc_ifc_tb_pkg;
     foreach (_soc_register_dict[rkey]) begin
       if (rkey.substr(0,3) == "FUSE")
         fuse_regs.push_back(rkey); 
+      // SS_* registers are straps that get their initial values from 
+      // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
+      // is set. After, they are locked for writes similar to fuses.
+      else if (rkey.substr(0,1) == "SS")
+        fuse_regs.push_back(rkey);
     end 
 
     return fuse_regs;
 
   endfunction // get_fuse_regnames
+
+  function automatic strq_t get_fuse_regnames_minus_ss_straps();
+
+    strq_t fuse_regs; 
+
+    foreach (_soc_register_dict[rkey]) begin
+      if (rkey.substr(0,3) == "FUSE")
+        fuse_regs.push_back(rkey); 
+    end 
+
+    return fuse_regs;
+
+  endfunction // get_fuse_regnames_minus_ss_straps
+
+  function automatic strq_t get_ss_strap_regnames();
+
+    strq_t ss_strap_regs; 
+
+    foreach (_soc_register_dict[rkey]) begin
+      // SS_* registers are straps that get their initial values from 
+      // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
+      // is set. After, they are locked for writes similar to fuses.
+      if (rkey.substr(0,1) == "SS")
+        ss_strap_regs.push_back(rkey); 
+      
+    end 
+
+    return ss_strap_regs;
+
+  endfunction // get_ss_strap_regnames
 
 
   function automatic strq_t get_intrblk_regnames();
@@ -1009,7 +1114,7 @@ package soc_ifc_tb_pkg;
     strq_t soc_regs; 
 
     foreach (_soc_register_dict[rkey]) begin
-      if (rkey.substr(0,3) != "FUSE")
+      if ((rkey.substr(0,3) != "FUSE") || (rkey.substr(0,1) != "SS"))
         soc_regs.push_back(rkey); 
     end 
 
@@ -1039,7 +1144,8 @@ package soc_ifc_tb_pkg;
     foreach (_soc_register_dict[rkey]) begin
       if (str_startswith(rkey, "INTR_BRF") || 
           str_startswith(rkey, "SHA_ACC_INTR_BRF") || 
-          str_startswith(rkey, "FUSE")) 
+          str_startswith(rkey, "FUSE") ||
+          str_startswith(rkey, "SS")) 
           continue;
       soc_regs.push_back(rkey); 
     end 
@@ -1102,17 +1208,17 @@ package soc_ifc_tb_pkg;
           if (str_startswith(rname, sticky_rname)) begin
             wrmrst_pfx_match = 1;
             _exp_register_data_dict[rname] = _exp_register_data_dict[rname] & _sticky_register_prefix_dict[sticky_rname];
-            // $display("assigning sticky value _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
+             $display("assigning sticky value _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
             break;
           end
         end
 
         if (!wrmrst_pfx_match) begin
           _exp_register_data_dict[rname] = get_initval(rname);
-          // $display("assigning init value   _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
+           $display("assigning init value   _exp_register_data_dict[%-30s] = 0x%08x", rname, _exp_register_data_dict[rname]); 
         end
-
       end
+      $display ("** Done updating expected reg values for warm reset **");
     end 
 
   endfunction // warm_reset_exp_data();
@@ -1135,7 +1241,7 @@ package soc_ifc_tb_pkg;
   // ---------------------------------------------------------------------------
   function automatic logic str_startswith(string s1, string s2);
 
-    return (s2 == s1.substr(0, s2.len() - 1));
+    return(s2 == s1.substr(0, s2.len() - 1));
 
   endfunction  // str_startswith
 
@@ -1405,9 +1511,10 @@ package soc_ifc_tb_pkg;
 
   function word_addr_t SocRegisters::get_addr(string name);
 
-    if (_soc_register_dict.exists(name))
+    if (_soc_register_dict.exists(name)) begin
+      $display("Address [%s] = 0x%x", name, _soc_register_dict[name]);
       return _soc_register_dict[name];
-    else begin
+    end else begin
       $display("TB WARNING. Address %s not found in reg name->addr map. Returning 0", name); 
       return '0; 
     end
