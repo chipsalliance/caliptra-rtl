@@ -918,12 +918,12 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg iTRNG_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg RSVD_en_bit_cg[3];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg LMS_acc_en_bit_cg[1];
-        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg ACTIVE_MODE_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg SUBSYSTEM_MODE_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field RSVD_en;
         rand uvm_reg_field LMS_acc_en;
-        rand uvm_reg_field ACTIVE_MODE_en;
+        rand uvm_reg_field SUBSYSTEM_MODE_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -941,13 +941,13 @@ package soc_ifc_reg_uvm;
             this.RSVD_en.configure(this, 3, 1, "RO", 1, 'h0, 0, 1, 0);
             this.LMS_acc_en = new("LMS_acc_en");
             this.LMS_acc_en.configure(this, 1, 4, "RO", 1, 'h0, 0, 1, 0);
-            this.ACTIVE_MODE_en = new("ACTIVE_MODE_en");
-            this.ACTIVE_MODE_en.configure(this, 1, 5, "RO", 1, 'h0, 0, 1, 0);
+            this.SUBSYSTEM_MODE_en = new("SUBSYSTEM_MODE_en");
+            this.SUBSYSTEM_MODE_en.configure(this, 1, 5, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
                 foreach(RSVD_en_bit_cg[bt]) RSVD_en_bit_cg[bt] = new();
                 foreach(LMS_acc_en_bit_cg[bt]) LMS_acc_en_bit_cg[bt] = new();
-                foreach(ACTIVE_MODE_en_bit_cg[bt]) ACTIVE_MODE_en_bit_cg[bt] = new();
+                foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) SUBSYSTEM_MODE_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
