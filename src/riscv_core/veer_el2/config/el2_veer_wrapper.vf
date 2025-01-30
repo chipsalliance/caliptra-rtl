@@ -33,6 +33,7 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/axi4_to_ahb.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_lib.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/mem_lib.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_mem_if.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_el2_regfile_if.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lsu/el2_lsu_addrcheck.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lsu/el2_lsu_bus_buffer.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lsu/el2_lsu_bus_intf.sv
@@ -49,4 +50,5 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_dma_ctrl.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pic_ctrl.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pmp.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_lockstep.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv
