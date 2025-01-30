@@ -140,6 +140,13 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Bit Size Exceeded" warning.
+        # VCS flags this during elab for ram signals (found under
+        # caliptra_top_tb_services) that are too large to collect
+        # coverage on.
+        # We don't want coverage on these, so disable the warning.
+        - '-suppress=VCM-BSZEX'
 
 ---
 provides: [caliptra_top_trng_tb]
