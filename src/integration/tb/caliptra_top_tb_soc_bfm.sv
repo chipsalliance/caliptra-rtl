@@ -38,7 +38,6 @@ import caliptra_top_tb_pkg::*; #(
     input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
     input  logic [0:`CLP_OBF_FE_DWORDS-1] [31:0]          cptra_fe_rand,
     input  logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb,
-    input  logic                                          cptra_doe_input_sel,
 
     axi_if m_axi_bfm_if,
 
@@ -155,7 +154,7 @@ import caliptra_top_tb_pkg::*; #(
             cptra_fe_tb = cptra_fe_rand;
         end
         else begin
-            if (cptra_doe_input_sel) begin
+            if ($test$plusargs("SECOND_DOE_KAT")) begin
                 //Key for DOE
                 cptra_obfkey_tb = 256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c;
                 cptra_uds_tb = 512'h32cd8a75b5e515bd7b0fe37a6de144696aeedb1f5e03225a71fc690f5b004ff593794db7a99ced97c376385149c4ecafd3afd70cb657a6f6434bfd911983f4ff;
