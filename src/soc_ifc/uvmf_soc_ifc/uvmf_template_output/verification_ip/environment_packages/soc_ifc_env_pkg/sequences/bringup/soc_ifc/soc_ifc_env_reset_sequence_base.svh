@@ -55,6 +55,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand uvm_reg_data_t lms_revocation_rand;
   rand uvm_reg_data_t mldsa_revocation_rand;
   rand uvm_reg_data_t soc_stepping_id_rand;
+  rand uvm_reg_data_t pqc_key_type_rand;
   rand struct packed {
     bit uds;
     bit field_entropy;
@@ -65,7 +66,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     bit mldsa_revocation;
     bit soc_stepping_id;
     bit [0:23] idevid_cert_attr;
-//    bit lms_verify;
+    bit pqc_key_type;
   } fuses_to_set;
 
 
@@ -172,13 +173,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         end
     end
 
-//    // Write LMS Verify Bit
-//    if (this.fuses_to_set.lms_verify) begin
-//      uvm_reg_data_t lms_verify_data = 1 << reg_model.soc_ifc_reg_rm.fuse_lms_verify.lms_verify.get_lsb_pos();
-//      `uvm_info("SOC_IFC_RST", "Writing LMS Verify=1 to fuse bank", UVM_LOW)
-//      reg_model.soc_ifc_reg_rm.fuse_lms_verify.write(sts, lms_verify_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
-//      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to lms_verify")
-//    end
+    // Write PQC Type bit
+    if (this.fuses_to_set.pqc_key_type) begin
+      `uvm_info("SOC_IFC_RST", $sformatf("Writing PQC Key Type [0x%x] to fuse bank", pqc_key_type_rand), UVM_LOW)
+      reg_model.soc_ifc_reg_rm.fuse_pqc_key_type.write(sts, pqc_key_type_rand, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+      if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", "Failed when writing to pqc_key_type")
+    end
+
     // ECC Revocation
     if (this.fuses_to_set.ecc_revocation) begin
       `uvm_info("SOC_IFC_RST", "Writing ECC Revocation to fuse bank", UVM_LOW)

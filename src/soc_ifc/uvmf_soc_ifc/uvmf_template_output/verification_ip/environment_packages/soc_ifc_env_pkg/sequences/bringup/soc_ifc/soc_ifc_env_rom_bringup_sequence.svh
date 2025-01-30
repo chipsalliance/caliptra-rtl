@@ -56,6 +56,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                     this.fuses_to_set.idevid_cert_attr[13] == 1'b1;
                                     this.fuses_to_set.idevid_cert_attr[14] == 1'b1;
                                     this.fuses_to_set.idevid_cert_attr[15] == 1'b1; }
+  constraint always_set_pqc_key_type_c { this.fuses_to_set.pqc_key_type == 1'b1; }
   // Configure the values to set to initialized fuses
   constraint vendor_pk_hash_values_c { vendor_pk_hash_rand[0]  == this.vendor_pk_hash_val[0] ; //32'h6DC8DE16;
                                        vendor_pk_hash_rand[1]  == this.vendor_pk_hash_val[1] ; //32'hD559D129;
@@ -95,6 +96,8 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                idevid_cert_attr_rand[13] == 32'h3030_4040; /* Manuf Serial Num */
                                idevid_cert_attr_rand[14] == 32'h0505_0606; /* Manuf Serial Num */
                                idevid_cert_attr_rand[15] == 32'h7070_8080; /* Manuf Serial Num */}
+  constraint pqc_key_type_value_c { pqc_key_type_rand <= 3; }
+  constraint tmp_force_pqc_key_type_value_c { pqc_key_type_rand == 1; } // MLDSA-only, unless explicitly running LMS image TODO extract this from image manifest
 
   //==========================================
   // Function:    new
@@ -103,7 +106,6 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
   function new(string name = "" );
     uvm_object obj;
     int fd;
-    string hex_val;
     super.new(name);
     obj = soc_ifc_ctrl_agent_poweron_sequence_t::get_type().create_object("soc_ifc_ctrl_agent_poweron_seq");
     if (!$cast(soc_ifc_ctrl_seq,obj))
