@@ -244,6 +244,9 @@
 `define RV_INST_ACCESS_MASK5 'hffffffff
 `define RV_INST_ACCESS_MASK6 'hffffffff
 `define RV_INST_ACCESS_MASK7 'hffffffff
+`define RV_LOCKSTEP_DELAY 3
+`define RV_LOCKSTEP_ENABLE 1
+`define RV_LOCKSTEP_REGFILE_ENABLE 1
 `define RV_PMP_ENTRIES 64
 `define REGWIDTH 32
 `define RV_RESET_VEC 'h00000000

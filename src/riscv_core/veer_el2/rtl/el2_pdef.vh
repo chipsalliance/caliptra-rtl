@@ -168,6 +168,9 @@ typedef struct packed {
 	logic [35:0]     INST_ACCESS_MASK6;
 	logic [35:0]     INST_ACCESS_MASK7;
 	logic [4:0]      LOAD_TO_USE_PLUS1;
+	logic [6:0]      LOCKSTEP_DELAY;
+	logic [4:0]      LOCKSTEP_ENABLE;
+	logic [4:0]      LOCKSTEP_REGFILE_ENABLE;
 	logic [4:0]      LSU2DMA;
 	logic [4:0]      LSU_BUS_ID;
 	logic [5:0]      LSU_BUS_PRTY;

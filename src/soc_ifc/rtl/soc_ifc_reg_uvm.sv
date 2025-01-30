@@ -14,12 +14,14 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg dccm_ecc_unc_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg nmi_pin_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg crypto_err_bit_cg[1];
-        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[28];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg dcls_error_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[27];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg fld_cg;
         rand uvm_reg_field iccm_ecc_unc;
         rand uvm_reg_field dccm_ecc_unc;
         rand uvm_reg_field nmi_pin;
         rand uvm_reg_field crypto_err;
+        rand uvm_reg_field dcls_error;
         rand uvm_reg_field rsvd;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_FATAL");
@@ -40,13 +42,16 @@ package soc_ifc_reg_uvm;
             this.nmi_pin.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.crypto_err = new("crypto_err");
             this.crypto_err.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            this.dcls_error = new("dcls_error");
+            this.dcls_error.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 28, 4, "RO", 1, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 27, 5, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
                 foreach(nmi_pin_bit_cg[bt]) nmi_pin_bit_cg[bt] = new();
                 foreach(crypto_err_bit_cg[bt]) crypto_err_bit_cg[bt] = new();
+                foreach(dcls_error_bit_cg[bt]) dcls_error_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
