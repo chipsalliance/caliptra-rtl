@@ -297,7 +297,7 @@ stages:
       - timeout: 25
       - testsuites:
         - l0_regress:
-          - enabled: true
+          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_kv'
           - path: '${CALIPTRA_ROOT}/src/keyvault/stimulus/testsuites/kv_promote_regression.yml'
@@ -312,7 +312,7 @@ stages:
       - timeout: 25
       - testsuites:
         - l0_regress:
-          - enabled: true
+          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_pv'
           - path: '${CALIPTRA_ROOT}/src/pcrvault/stimulus/testsuites/pv_promote_regression.yml'
