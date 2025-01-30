@@ -35,7 +35,7 @@ import el2_pkg::*;
    input logic [31:1]                      rst_vec,
    /*pragma coverage on*/
    input logic                             nmi_int,
-   // nmi_vec is supposed to be tied to constants in the top level
+   // nmi_vec are supposed to be tied to constants in the top level
    /*pragma coverage off*/
    input logic [31:1]                      nmi_vec,
    /*pragma coverage on*/
@@ -410,6 +410,13 @@ import el2_pkg::*;
 
    // Memory Export Interface
    el2_mem_if.veer_sram_src                el2_mem_export,
+
+`ifdef RV_LOCKSTEP_ENABLE
+   // Shadow Core control
+   input logic  disable_corruption_detection_i,
+   input logic  lockstep_err_injection_en_i,
+   output logic corruption_detected_o,
+`endif
 
    // external MPC halt/run interface
    input logic                             mpc_debug_halt_req, // Async halt request
@@ -868,11 +875,32 @@ import el2_pkg::*;
    logic [31:0]            dmi_reg_wdata;
    logic [31:0]            dmi_reg_rdata;
 
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+   el2_regfile_if regfile ();
+`endif
+
    // Instantiate the el2_veer core
    el2_veer #(.pt(pt)) veer (
                                 .clk(clk),
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+                                .regfile(regfile.veer_rf_src),
+`endif
                                 .*
                                 );
+
+`ifdef RV_LOCKSTEP_ENABLE
+   initial begin
+      $display("Dual Core Lockstep enabled!\n");
+   end
+
+   el2_veer_lockstep #(.pt(pt)) lockstep (
+                                .clk(clk),
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+                                .main_core_regfile(regfile.veer_rf_sink),
+`endif // `ifdef RV_LOCKSTEP_REGFILE_ENABLE
+                                .*
+                                );
+`endif // `ifdef RV_LOCKSTEP_ENABLE
 
    // Instantiate the mem
    el2_mem  #(.pt(pt)) mem (
@@ -884,6 +912,7 @@ import el2_pkg::*;
                              );
 
 
+   logic unused_dmi_hard_reset;
    //  JTAG/DMI instance
    dmi_wrapper  dmi_wrapper (
     // JTAG signals
@@ -901,7 +930,7 @@ import el2_pkg::*;
     .reg_wr_addr (dmi_addr),        // Write address to Processor
     .reg_en      (dmi_en),          // Write interface bit to Processor
     .reg_wr_en   (dmi_wr_en),       // Write enable to Processor
-    .dmi_hard_reset   ()
+    .dmi_hard_reset   (unused_dmi_hard_reset)
    );
 
    // DMI core/uncore mux
