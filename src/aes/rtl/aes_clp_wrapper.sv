@@ -131,6 +131,9 @@ ahb_slv_sif #(
 
 //TLUL Adapter
 caliptra_tlul_adapter_vh
+#(
+  .VH_REGISTER_ADDRESS_OFFSET(32'h0000_0800)
+)
 caliptra_tlul_adapter_vh_inst
 (
   .clk_i(clk),
@@ -292,8 +295,6 @@ generate
     always_ff @(posedge clk or negedge reset_n) begin
       if (~reset_n) begin
         kv_key_reg[g_dword] <= '0;
-      end else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin
-        kv_key_reg[g_dword] <= '0;
       end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
         kv_key_reg[g_dword] <= kv_key_write_data;
       end
@@ -307,9 +308,9 @@ always_ff @(posedge clk or negedge reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else if (kv_key_read_ctrl_reg.read_en) begin //new request, invalidate old key
+  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
-    keymgr_key.key[0] <= '0; //FIXME drive from kv
+    keymgr_key.key[0] <= '0;
     keymgr_key.key[1] <= '0;
   end
   else if (kv_key_done) begin //key is copied, drive valid to aes
