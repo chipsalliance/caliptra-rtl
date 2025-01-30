@@ -322,6 +322,7 @@ class soc_ifc_predictor #(
   extern function bit  cptra_status_txn_expected_after_warm_reset();
   extern function bit  soc_ifc_status_txn_expected_after_cold_reset();
   extern function bit  cptra_status_txn_expected_after_cold_reset();
+  extern function void predict_strap_values();
   extern function bit [`CLP_OBF_FE_DWORDS-1:0]  [31:0] get_expected_obf_field_entropy();
   extern function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] get_expected_obf_uds_seed();
   extern function void populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
@@ -410,6 +411,17 @@ class soc_ifc_predictor #(
 
     cptra_pwrgood_asserted = t.set_pwrgood;
 
+    // Regardless of reset state, capture the current input value for FE/UDS.
+    // They will be reflected into the reg-map (and a cptra_status_transaction) later
+    // once the RDC clock is active.
+    cptra_obf_field_entropy_vld = t.cptra_obf_field_entropy_vld;
+    if (t.cptra_obf_field_entropy_vld) begin
+        cptra_obf_field_entropy     = t.cptra_obf_field_entropy;
+    end
+    cptra_obf_uds_seed_vld = t.cptra_obf_uds_seed_vld;
+    if (t.cptra_obf_uds_seed_vld) begin
+        cptra_obf_uds_seed     = t.cptra_obf_uds_seed;
+    end
     // Initial boot
     if (!t.set_pwrgood && soc_ifc_rst_in_asserted) begin
         cptra_obf_key_reg = t.cptra_obf_key_rand;
@@ -500,14 +512,6 @@ class soc_ifc_predictor #(
             soc_ifc_rst_in_asserted = 1'b0;
             cptra_in_dbg_or_manuf_mode = ~t.security_state.debug_locked || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
-            if (t.cptra_obf_field_entropy_vld) begin
-                cptra_obf_field_entropy_vld = 1'b1;
-                cptra_obf_field_entropy     = t.cptra_obf_field_entropy;
-            end
-            if (t.cptra_obf_uds_seed_vld) begin
-                cptra_obf_uds_seed_vld = 1'b1;
-                cptra_obf_uds_seed     = t.cptra_obf_uds_seed;
-            end
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
             send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
@@ -617,12 +621,16 @@ class soc_ifc_predictor #(
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_iccm_blocked_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
     end
     if (t.assert_clear_secrets) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.reset();
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset();
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset;
         this.cptra_obf_key_reg = '{default:32'h0};
         send_cptra_sts_txn = 1'b1;
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
+    end
+    else begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b0;
     end
     if (t.pulse_rv_ecc_error) begin
         `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for signaling RISCV SRAM ECC Errors")
@@ -2801,13 +2809,13 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
-                if (fuse_update_enabled && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-                if (fuse_update_enabled && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
@@ -3917,7 +3925,13 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in immediate assertion of internal resets", kind), UVM_MEDIUM)
         noncore_rst_out_asserted = 1'b1;
         uc_rst_out_asserted = 1'b1;
-        rdc_clk_gate_active = 1'b1;
+        // FIXME need to implement clk gating features in uvmf_soc_ifc
+        if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE) begin
+            rdc_clk_gate_active = 1'b1;
+        end
+        else begin
+            rdc_clk_gate_active = 1'b0;
+        end
     end
     else if (kind == "SOFT") begin
         fork
@@ -4005,35 +4019,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 noncore_rst_out_asserted = 1'b0;
                 reset_wdt_count = 1'b0;
                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
-                if (cptra_obf_field_entropy_vld) begin
-                    for (int ii=0; ii < `CLP_OBF_FE_DWORDS; ii++) begin
-                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.predict(cptra_obf_field_entropy[ii]);
-                    end
-                end
-                if (cptra_obf_uds_seed_vld) begin
-                    for (int ii=0; ii < `CLP_OBF_UDS_DWORDS; ii++) begin
-                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.predict(cptra_obf_uds_seed[ii]);
-                    end
-                end
-                if (!p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (this.strap_ss_val.caliptra_base_addr[31:00]                     );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (this.strap_ss_val.caliptra_base_addr[63:32]                     );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (this.strap_ss_val.mci_base_addr[31:00]                          );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (this.strap_ss_val.uds_seed_base_addr[63:32]                     );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset);
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes       );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.predict                         (this.strap_ss_val.caliptra_dma_axi_user                         );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0].predict                              (this.strap_ss_val.generic[0]                                    );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (this.strap_ss_val.generic[1]                                    );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
-                    p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
-                end
+                predict_strap_values();
 
                 // Send predicted transactions
                 if (1) begin
@@ -4060,6 +4046,48 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     if (kind inside {"HARD", "SOFT"}) begin: RESET_VAL_CHANGES_HARD_SOFT
         soc_ifc_rst_in_asserted = 1'b1;
         p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
+        // Sample the incoming uds_seed/field_entropy wires after any hard/soft reset
+        // immediately upon the RDC clock being enabled. Sampling is enabled any
+        // time a warm reset is asserted
+        fork
+            begin: LATCH_FE_AND_UDS_INPUTS
+                cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                soc_ifc_sb_ap_output_transaction_t local_soc_ifc_sb_ap_txn;
+                bit send_local_cptra_sts_txn = 1'b0;
+
+                // NOTE: RDC clk gate not implemented in uvmf_soc_ifc, only occurs in caliptra_top. TODO
+                if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE) begin
+                    wait(rdc_clk_gate_active == 1'b1);
+                    wait(rdc_clk_gate_active == 1'b0);
+                end
+                else begin
+                    wait(cptra_pwrgood_asserted == 1'b1);
+                end
+
+                // Grab the values that were captured from soc_ifc_ctrl_transaction
+                if (cptra_obf_field_entropy_vld) begin
+                    foreach (cptra_obf_field_entropy[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                    end
+                end
+                if (cptra_obf_uds_seed_vld) begin
+                    foreach (cptra_obf_uds_seed[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                    end
+                end
+
+                // Send predicted transactions
+                if (send_local_cptra_sts_txn) begin
+                    // cptra status is for noncore reset deassertion
+                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                end
+            end
+        join_none
     end: RESET_VAL_CHANGES_HARD_SOFT
 
     // Signals that are tied to reg values are not reset by warm reset until it
@@ -4167,6 +4195,28 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         soc_ifc_status_txn_key = 0;
         cptra_status_txn_key = 0;
     end: RESET_TXN_KEY_HARD_NONCORE
+endfunction
+
+function void soc_ifc_predictor::predict_strap_values();
+    if (!p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (this.strap_ss_val.caliptra_base_addr[31:00]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (this.strap_ss_val.caliptra_base_addr[63:32]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (this.strap_ss_val.mci_base_addr[31:00]                          );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (this.strap_ss_val.uds_seed_base_addr[63:32]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset);
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.predict                         (this.strap_ss_val.caliptra_dma_axi_user                         );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0].predict                              (this.strap_ss_val.generic[0]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (this.strap_ss_val.generic[1]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
+    end
 endfunction
 
 function bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_field_entropy();

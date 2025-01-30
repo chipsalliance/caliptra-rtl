@@ -50,6 +50,10 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_FUSE_WR_DONE. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
+                    else if (rm.clear_obf_secrets) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to clear_obf_secrets. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        value = previous;
+                    end
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                     end

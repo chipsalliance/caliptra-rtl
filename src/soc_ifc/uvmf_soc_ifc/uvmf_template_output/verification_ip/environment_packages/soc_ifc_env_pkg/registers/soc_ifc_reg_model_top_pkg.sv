@@ -235,6 +235,10 @@ package soc_ifc_reg_model_top_pkg;
         // the value read from CPTRA_FLOW_STATUS
         boot_fn_state_s boot_fn_state_sigs;
 
+        // Tracks the clear secrets input value. When set, secrets/keys are not
+        // stored to the corresponding register on writes (cleared immediately).
+        bit clear_obf_secrets;
+
         // Tracks when a register field is being actively updated by hardware, so
         // prediction and scoreboard logic can detect transitions
         struct {
@@ -245,6 +249,7 @@ package soc_ifc_reg_model_top_pkg;
         function new(string name = "soc_ifc_reg_ext");
             super.new(name);
             boot_fn_state_sigs = '{boot_idle: 1'b1, default: 1'b0};
+            clear_obf_secrets = 1'b0;
             hwset_active = '{default: '0};
         endfunction : new
 
