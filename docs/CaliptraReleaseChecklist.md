@@ -27,7 +27,7 @@ When necessary, a patch release may be applied retroactively to earlier versions
 For each release, the following steps are followed to ensure code functionality and quality.
 
 - Ensure all critical [issues](https://github.com/chipsalliance/caliptra-rtl/issues) and [Pull Requests](https://github.com/chipsalliance/caliptra-rtl/pulls) are closed
-- Paranoia checks
+- Verify expected checks and scripts are in place
   - Audit pipelines: Coverage logging enabled
   - Audit pipelines: File list checks updated
   - Audit pipelines: License header check targets updated
