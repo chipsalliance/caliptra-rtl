@@ -45,7 +45,6 @@ volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-/* First vector set*/
 /* DOE test vector
     obf_key = 31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7
     uds_enc = e4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d
@@ -56,8 +55,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
     FE      = cfc155a3967de347f58fa2e8bbeb4183d6d32f7427155e6ab39cddf2e627c572
 */
 
-    const uint32_t iv_data_uds_0[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
-    const uint32_t iv_data_fe_0[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
+    const uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
+    const uint32_t iv_data_fe[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
 
 /* CDI HMAC512 test vector
     KEY =   dff9f0021e1ab0bda2781e1a709cafdb341953bdbd6836d9c1ea520a6043041daf7218b19ce98302a5f8f95a6b51f5c1219a09d73819e2ba0d2c4b932489c586
@@ -74,13 +73,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
     TAG_forMLDSA = 782728e2bfee2de7a4d12a8045fcc6537aa62f5075541c0f0ec0206bccaffd285c02325df422b4042cd71927ecd07217882641e2c0ed8c3024fe04c32dfdd029
 */
 
-    const uint32_t msg_tbs_0[]   = {0xBEB06525,0x1497FCE1,0xD4C43092,0x8BC09E14,
+    const uint32_t msg_tbs[]     = {0xBEB06525,0x1497FCE1,0xD4C43092,0x8BC09E14,
                                     0x7B250CF3,0x25A40258,0x784262F6,0x858B8056,
                                     0xD68C6A23,0xD4CC5CBD,0xCEAD7EBF,0x8F6A97E6,
                                     0x63711440,0xB7AD9A08,0xF9C15788,0xFF54875D};
 /* ECC test vector */
     //seed = 86c247003f3f4c6638defa2f9c53b39411c0cc97a1fd7938ebb70da1cadfb64e53b45ac2e53b2304a0401c21667d7847
-    const uint32_t ecc_privkey[]  = {0xb039c5b7,0xc97d4ddb,0xf09d273a,0x9e777ae2,0x35660a88,0xc7cac86f,0xde67abfb,0x86023f72,0x6095c7cc,0x47507bde,0x9c6b47b6,0x7743a575};
+    //const uint32_t ecc_privkey[]  = {0xb039c5b7,0xc97d4ddb,0xf09d273a,0x9e777ae2,0x35660a88,0xc7cac86f,0xde67abfb,0x86023f72,0x6095c7cc,0x47507bde,0x9c6b47b6,0x7743a575};
     const uint32_t ecc_pubkey_x[] = {0xfb5711c0,0xdb7df321,0x1fee8d69,0x47c3540f,0x50f37ebd,0x5e22284b,0x37956d3d,0xea19df46,0x3959a89f,0xc69235b1,0x076baeba,0x38c4b6d4};
     const uint32_t ecc_pubkey_y[] = {0x22ebd645,0xdebe1275,0x87709669,0x3d86642e,0x9ea09a78,0x79c0f817,0x7aac2020,0x0e4addcd,0xd3c6b0fa,0xab3493d1,0xedd215dc,0x9723258f};
     const uint32_t ecc_nonce[]    = {0x1B7EC5E5,0x48E8AAA9,0x2EC77097,0xCA9551C9,0x783CE682,0xCA18FB1E,0xDBD9F1E5,0x0BC382DB,0x8AB39496,0xC8EE423F,0x8CA105CB,0xBA7B6588};
@@ -322,52 +321,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
             0x69831642, 0x8e2a682d, 0x539a25d1, 0xd9a05aef, 0x77c4e670
             };
 
-
-/* Second vector set*/
-/* DOE test vector
-    obf_key = e1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c
-    uds_enc = 32cd8a75b5e515bd7b0fe37a6de144696aeedb1f5e03225a71fc690f5b004ff593794db7a99ced97c376385149c4ecafd3afd70cb657a6f6434bfd911983f4ff
-    fe_enc  = 7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b
-    IV_UDS  = F046BDE48AB68862484604A56024F793
-    UDS     = 96cff59db2e5fb5800da7f598e032d465e1db55a3d52c5108e60b64608a2c857de5ca4924a13134a2d93b337a832609ec74b26e881c37f4be2eb38aa6abd1e83
-    IV_FE   = 15CEB4E68F5D504D1D022FBA9EEEB655
-    FE      = 7a874800c351a20d0fdd8eef818f30e95e6018e9837c56da1ff2bd99249d9e53
-*/
-
-    const uint32_t iv_data_uds_1[]  = {0xF046BDE4,0x8AB68862,0x484604A5,0x6024F793};
-    const uint32_t iv_data_fe_1[]   = {0x15CEB4E6,0x8F5D504D,0x1D022FBA,0x9EEEB655};
-
-/* CDI HMAC512 test vector
-    KEY =   96cff59db2e5fb5800da7f598e032d465e1db55a3d52c5108e60b64608a2c857de5ca4924a13134a2d93b337a832609ec74b26e881c37f4be2eb38aa6abd1e83
-    BLOCK = 7a874800c351a20d0fdd8eef818f30e95e6018e9837c56da1ff2bd99249d9e53800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000500
-    TAG_forCDI = 4abaecefd122c4fd4ec4709c4999aab31850208e5fbaab24990003fcbc035f4fa6bbed8e46564ef467b675266c2e29b2cf2f634dd9d56c2de086baad355f024c
-*/
-
-/* DOMAIN SEPRATION HMAC512 test vector
-    KEY =   4abaecefd122c4fd4ec4709c4999aab31850208e5fbaab24990003fcbc035f4fa6bbed8e46564ef467b675266c2e29b2cf2f634dd9d56c2de086baad355f024c
-    BLOCK_forECC = 6964657669645F6563635F6B6579800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000470
-    TAG_forECC = 86c247003f3f4c6638defa2f9c53b39411c0cc97a1fd7938ebb70da1cadfb64e53b45ac2e53b2304a0401c21667d7847faf2f9156e7aa200ff7a187cea0c56e3
-
-    BLOCK_forMLDSA = 6964657669645F6D6C6473615F6B657980000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000480
-    TAG_forMLDSA = 0460a54d2fa8319a0d3d926a1ac8389242b0768fb015ddc35edfad5c20b277f2ae864ddd34295a1861c4a492aeaadbb52b2f6aae155368baa50cbe5d7e8ffc54
-*/
-
-    const uint32_t msg_tbs_1[]   = {0x5fcd5be8, 0xc6564caa, 0x85957069, 0x0096112a, 
-                                    0x7bb850ea, 0x9573af1b, 0x3fe2a423, 0xff8b4645,
-                                    0xfbe85d7f, 0xe05d3bf7, 0x6bbc42c3, 0x8d17c2c5, 
-                                    0x690672f6, 0x6da2654f, 0x4c49b035, 0xa00823b0};
-
 //******************************************************************
 // DOE(IV_OBF, IV_FE)
 //****************************************************************** 
-void kv_doe(uint8_t doe_fe_dest_id, uint8_t mode){
+void kv_doe(uint8_t doe_fe_dest_id){
 
-    if (mode==0){
-        doe_init(iv_data_uds_0, iv_data_fe_0, doe_fe_dest_id);
-    }
-    else{
-        doe_init(iv_data_uds_1, iv_data_fe_1, doe_fe_dest_id);
-    }
+    doe_init(iv_data_uds, iv_data_fe, doe_fe_dest_id);
+
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 
     doe_clear_secrets();
@@ -463,7 +423,7 @@ void domian_sepration(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_id
     hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 }
 
-void kv_ecc(uint8_t seed_id, uint8_t privkey_id, uint8_t mode){
+void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
 
     ecc_io seed;
     ecc_io nonce;
@@ -514,7 +474,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id, uint8_t mode){
 
     msg.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        msg.data[i] = msg_tbs_0[i];
+        msg.data[i] = msg_tbs[i];
     
     iv.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
@@ -532,7 +492,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id, uint8_t mode){
     cptra_intr_rcv.ecc_notif = 0;
 }
 
-void kv_mldsa(uint8_t seed_id, uint8_t mode){
+void kv_mldsa(uint8_t seed_id){
 
     mldsa_io seed;
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], pubkey[MLDSA87_PUBKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE];
@@ -561,7 +521,7 @@ void kv_mldsa(uint8_t seed_id, uint8_t mode){
         sign_rnd[i] = 0;
     
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
-        msg[i] = msg_tbs_0[i];
+        msg[i] = msg_tbs[i];
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
         entropy[i] = rand() % 0xffffffff;
@@ -634,20 +594,16 @@ void main(){
     uint8_t idevid_ecc_privkey_id;
     uint8_t cdi_ldevid_id;
 
-    uint8_t mode;
-
     //Call interrupt init
     init_interrupts();
 
     doe_uds_dest_id = 0;
     random_generator(&doe_fe_dest_id, &cdi_idevid_id, &idevid_ecc_seed_id, &idevid_mldsa_seed_id, &idevid_ecc_privkey_id, &cdi_ldevid_id);
     
-    mode = 1;
-
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");
         
-        kv_doe(doe_fe_dest_id, mode);
+        kv_doe(doe_fe_dest_id);
         
         //issue zeroize
         ecc_zeroize();
@@ -663,7 +619,7 @@ void main(){
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
 
-        kv_doe(doe_fe_dest_id, mode);
+        kv_doe(doe_fe_dest_id);
         
         //Issue timed warm reset :TODO
         rst_count++;
@@ -677,27 +633,22 @@ void main(){
     else if(rst_count == 3) {
         VPRINTF(LOW, "4th FE flow after cold reset\n");
 
-        printf("doe_fe_dest_id = %x\n",doe_fe_dest_id);
-        printf("cdi_idevid_id = %x\n",cdi_idevid_id);
-        printf("idevid_ecc_seed_id = %x\n",idevid_ecc_seed_id);
-        printf("idevid_mldsa_seed_id = %x\n",idevid_mldsa_seed_id);
-        printf("idevid_ecc_privkey_id = %x\n",idevid_ecc_privkey_id);
-        printf("cdi_ldevid_id = %x\n\n",cdi_ldevid_id);
+        printf("doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
+        printf("cdi_idevid_id = 0x%x\n",cdi_idevid_id);
+        printf("idevid_ecc_seed_id = 0x%x\n",idevid_ecc_seed_id);
+        printf("idevid_mldsa_seed_id = 0x%x\n",idevid_mldsa_seed_id);
+        printf("idevid_ecc_privkey_id = 0x%x\n",idevid_ecc_privkey_id);
+        printf("cdi_ldevid_id = 0x%x\n\n",cdi_ldevid_id);
 
-        if (mode){
-            //inject second set of test vectors
-            printf("%c",0x8f); 
-        }
-
-        kv_doe(doe_fe_dest_id, mode);
+        kv_doe(doe_fe_dest_id);
 
         kv_hmac512(doe_uds_dest_id, doe_fe_dest_id, cdi_idevid_id);
 
         domian_sepration(cdi_idevid_id, idevid_ecc_seed_id, idevid_mldsa_seed_id);
 
-        kv_ecc(idevid_ecc_seed_id, idevid_ecc_privkey_id, mode);
+        kv_ecc(idevid_ecc_seed_id, idevid_ecc_privkey_id);
 
-        kv_mldsa(idevid_mldsa_seed_id, mode);
+        kv_mldsa(idevid_mldsa_seed_id);
 
         kv_hmac512(cdi_idevid_id, doe_fe_dest_id, cdi_ldevid_id);
 
