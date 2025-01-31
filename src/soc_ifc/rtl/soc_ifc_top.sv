@@ -1140,7 +1140,7 @@ i_mbox (
     .mbox_inv_axi_user_axs(mbox_inv_user_p),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_inc_wrptr(dmi_inc_wrptr),
-    .dmi_reg_wen(cptra_uncore_dmi_locked_reg_en & cptra_uncore_dmi_reg_wr_en),
+    .dmi_reg_wen(cptra_uncore_dmi_locked_reg_wr_en),
     .dmi_reg_addr(cptra_uncore_dmi_reg_addr),
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
@@ -1313,10 +1313,10 @@ always_comb begin
 end
 
 //DMI register writes
-always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en & 
+always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.we = cptra_uncore_dmi_locked_reg_wr_en &
                                                          (cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO);
 always_comb soc_ifc_reg_hwif_in.CPTRA_BOOTFSM_GO.GO.next = cptra_uncore_dmi_reg_wdata[0];
-always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we = cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en & 
+always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.we = cptra_uncore_dmi_locked_reg_wr_en &
                                                                       (cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG);
 always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = cptra_uncore_dmi_reg_wdata;
 
