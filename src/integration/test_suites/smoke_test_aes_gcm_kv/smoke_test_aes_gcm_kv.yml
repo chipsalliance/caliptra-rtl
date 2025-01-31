@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: smoke_test_aes_kv
+testname: smoke_test_aes_gcm_kv
