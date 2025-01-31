@@ -41,7 +41,7 @@ addrmap aes_clp_reg {
         default hw = w;
         field {desc = "Name field";} NAME[32];
 
-    } AES_NAME[2] @0x00000100;
+    } AES_NAME[2];
 
     /* ---- AES Component Version ---- */
     reg {
@@ -56,7 +56,7 @@ addrmap aes_clp_reg {
     } AES_VERSION[2];
 
     /* ---- AES Key Vault Control Reg ---- */
-    kv_read_ctrl_reg AES_KV_RD_KEY_CTRL @0x00000600;
+    kv_read_ctrl_reg AES_KV_RD_KEY_CTRL @0x200;
     kv_status_reg AES_KV_RD_KEY_STATUS;
 
    
@@ -352,6 +352,6 @@ addrmap aes_clp_reg {
     /* -----------------------
      * Register File instance
      * ----------------------- */
-    intr_block_t intr_block_rf @0x800;
+    intr_block_t intr_block_rf @0x400;
  
 };

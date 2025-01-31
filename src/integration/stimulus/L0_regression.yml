@@ -6,8 +6,6 @@ contents:
       tags: ["L0", "Lop_regression", "top_regression"]
       paths:
         - ../test_suites/smoke_test_veer/smoke_test_veer.yml
-        #add back for aes
-        #- ../test_suites/smoke_test_aes/smoke_test_aes.yml
         - ../test_suites/smoke_test_mbox/smoke_test_mbox.yml
         - ../test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read.yml
         - ../test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg.yml
@@ -26,7 +24,8 @@ contents:
         - ../test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
-        - ../test_suites/smoke_test_aes/smoke_test_aes.yml
+        - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
+        - ../test_suites/smoke_test_aes_gcm_kv/smoke_test_aes_gcm_kv.yml
         - ../test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
