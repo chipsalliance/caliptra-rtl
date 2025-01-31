@@ -262,6 +262,7 @@ class soc_ifc_predictor #(
       bit [31:0] num_of_prod_debug_unlock_auth_pk_hashes;
       bit [31:0] caliptra_dma_axi_user;
       bit [3:0] [31:0] generic;
+      bit        debug_intent;
   } strap_ss_val = '{default: '0};
 
   bit        recovery_data_avail = 1'b0; // TODO
@@ -318,10 +319,13 @@ class soc_ifc_predictor #(
   extern function void predict_reset(input string kind = "HARD");
   extern function bit  soc_ifc_status_txn_expected_after_noncore_reset();
   extern function bit  cptra_status_txn_expected_after_noncore_reset();
+  extern function bit  ss_mode_status_txn_expected_after_noncore_reset(); // TODO
   extern function bit  soc_ifc_status_txn_expected_after_warm_reset();
   extern function bit  cptra_status_txn_expected_after_warm_reset();
+  extern function bit  ss_mode_status_txn_expected_after_warm_reset(); // TODO
   extern function bit  soc_ifc_status_txn_expected_after_cold_reset();
   extern function bit  cptra_status_txn_expected_after_cold_reset();
+  extern function bit  ss_mode_status_txn_expected_after_cold_reset(); // TODO
   extern function void predict_strap_values();
   extern function bit [`CLP_OBF_FE_DWORDS-1:0]  [31:0] get_expected_obf_field_entropy();
   extern function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] get_expected_obf_uds_seed();
@@ -498,7 +502,7 @@ class soc_ifc_predictor #(
         send_cptra_sts_txn = cptra_status_txn_expected_after_warm_reset();
         `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset event, send_soc_ifc_sts_txn: %d send_cptra_sts_txn: %d", send_soc_ifc_sts_txn, send_cptra_sts_txn), UVM_NONE)
         if (reset_handled.is_off())
-            `uvm_fatal("PRED_SOC_IFC_CTRL", "soc_ifc_ctrl_transaction with cold reset received prior to env-level reset handling")
+            `uvm_fatal("PRED_SOC_IFC_CTRL", "soc_ifc_ctrl_transaction with warm reset received prior to env-level reset handling")
         else
             reset_handled.reset();
         predict_reset("SOFT");
@@ -807,8 +811,10 @@ class soc_ifc_predictor #(
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
     soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
-    if (t.ss_debug_intent)
-        `uvm_error("PRED_SS_MODE_CTRL", "TODO")
+    if (t.ss_debug_intent) begin
+        this.strap_ss_val.debug_intent = 1'b1;
+        `uvm_info("PRED_SS_MODE_CTRL", "Debug intent is set to 1; scheduled as update to strap register (then as wire update on ss_mode_status_transaction)", UVM_MEDIUM)
+    end
 
     if (1) begin
         this.strap_ss_val.caliptra_base_addr                             = (t.strap_ss_caliptra_base_addr                            );
@@ -3717,6 +3723,10 @@ function bit soc_ifc_predictor::cptra_status_txn_expected_after_noncore_reset();
            |nmi_vector;
 endfunction
 
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_noncore_reset();
+    return 0; // TODO
+endfunction
+
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_warm_reset();
     // Most soc_ifc_status signals are actually reset by the noncore reset assertion (later)
     // instead of the cptra_rst_b
@@ -3729,12 +3739,20 @@ function bit soc_ifc_predictor::cptra_status_txn_expected_after_warm_reset();
     return 0;
 endfunction
 
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_warm_reset();
+    return 0; // TODO
+endfunction
+
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_cold_reset();
     return soc_ifc_status_txn_expected_after_warm_reset() || soc_ifc_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
 endfunction
 
 function bit soc_ifc_predictor::cptra_status_txn_expected_after_cold_reset();
     return cptra_status_txn_expected_after_warm_reset() || cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
+endfunction
+
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_cold_reset();
+    return 0; // TODO
 endfunction
 
 function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
@@ -3891,6 +3909,22 @@ function void soc_ifc_predictor::predict_boot_wait_boot_done();
 
 endfunction
 
+// Expected order of operations during a reset:
+// - Environment detects the reset occurrence
+// - Environment calls handle_reset for soc_ifc_predictor
+// - Predictor triggers the reset_handled event to indicate the beginning of reset prediction
+// - Predictor receives a status transaction indicating reset is observed at the DUT
+// - Predictor confirms reset_handled is set, resets it
+// - Predictor performs model prediction tasks for the reset event
+// - Predictor indicates completion of prediction by triggering the reset_predicted event
+// - Predictor returns the reset_handled object handle to environment
+// - If it was a hard/cold reset
+//   - Environment immediately completes reset operation 
+// - Else
+//   - Environment waits for the noncore reset event by monitoring reset_handled
+//     (this assertion is delayed from the soft reset input)
+//   - Environment completes all remaining reset-handling tasks for noncore type
+//   - Environment clears the reset_handled event
 task soc_ifc_predictor::handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
     uvm_object obj_triggered;
     reset_flag kind_predicted;
@@ -4019,7 +4053,6 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 noncore_rst_out_asserted = 1'b0;
                 reset_wdt_count = 1'b0;
                 p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b1);
-                predict_strap_values();
 
                 // Send predicted transactions
                 if (1) begin
@@ -4155,6 +4188,34 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         fuse_update_enabled = 1'b1; // Fuses only latch new values from AXI write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
     end: RESET_VAL_CHANGES_HARD
 
+    if (kind == "NONCORE") begin: RESET_VAL_CHANGES_NONCORE
+        // Value changes on reset DE-assertion
+        fork
+        begin: WAIT_NONCORE_RESET_DEASSERTION
+            ss_mode_sb_ap_output_transaction_t local_ss_mode_sb_ap_txn;
+            bit send_ss_mode_sts_txn = 1'b0;
+            wait(noncore_rst_out_asserted == 1'b0);
+            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
+            // START TODO
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()   != fixme_signal;
+            // END TODO
+            predict_strap_values();
+            if (send_ss_mode_sts_txn) begin
+                local_ss_mode_sb_ap_txn = ss_mode_sb_ap_output_transaction_t::type_id::create("local_ss_mode_sb_ap_txn");
+                populate_expected_ss_mode_status_txn(local_ss_mode_sb_ap_txn);
+                ss_mode_sb_ap.write(local_ss_mode_sb_ap_txn);
+                `uvm_info("PRED_RESET", "Transaction submitted through ss_mode_sb_ap", UVM_MEDIUM)
+            end
+        end: WAIT_NONCORE_RESET_DEASSERTION
+        join_none
+    end: RESET_VAL_CHANGES_NONCORE
+
     // HARD reset is the default for a reg-model
     // FIXME move this to env?
     p_soc_ifc_rm.reset(kind);
@@ -4216,6 +4277,7 @@ function void soc_ifc_predictor::predict_strap_values();
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (this.strap_ss_val.generic[1]                                    );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.predict                                  (this.strap_ss_val.debug_intent                                  );
     end
 endfunction
 
@@ -4269,8 +4331,14 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
 endfunction
 
 function void soc_ifc_predictor::populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
-    // TODO
-    `uvm_warning("TODO","TODO")
+    txn.cptra_ss_debug_intent = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value();
+    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value();
+    txn.ss_soc_dbg_unlock_level = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value())};
+    txn.ss_generic_fw_exec_ctrl = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value())};
 endfunction
 
 // pragma uvmf custom external end
