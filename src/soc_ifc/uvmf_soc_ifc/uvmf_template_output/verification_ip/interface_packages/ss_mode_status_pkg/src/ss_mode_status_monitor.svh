@@ -103,6 +103,7 @@ endclass
 
 // pragma uvmf custom external begin
 task ss_mode_status_monitor::handle_reset(string kind = "HARD");
+    `uvm_info("SS_MODE_STS_MON", "Executing handle_reset", UVM_HIGH)
     if (kind inside {"HARD", "NONCORE"})
         txn_key = 0;
 endtask
