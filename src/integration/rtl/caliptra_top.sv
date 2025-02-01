@@ -691,13 +691,16 @@ el2_veer_wrapper rvtop (
 
 
     //capture incoming CSR HMAC key
-    always_ff @(posedge clk or negedge cptra_pwrgood) begin
-        if (~cptra_pwrgood) begin
+    always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+        if (~cptra_noncore_rst_b) begin
             cptra_csr_hmac_key_reg <= '0;
         end
         //Only latch the value during device manufacturing
         else if (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) begin
             cptra_csr_hmac_key_reg <= cptra_csr_hmac_key;
+        end
+        else begin
+            cptra_csr_hmac_key_reg <= '0;
         end
     end
 
