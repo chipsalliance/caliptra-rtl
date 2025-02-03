@@ -56,7 +56,7 @@ module hmac_drbg_tb();
   wire                       valid_tb;
 
   //Data
-  reg   [147 : 0]            lfsr_seed_tb;
+  reg   [383 : 0]            lfsr_seed_tb;
   reg   [383 : 0]            entropy_tb;
   reg   [383 : 0]            nonce_tb;
   wire  [383 : 0]            drbg_tb;
@@ -142,7 +142,7 @@ module hmac_drbg_tb();
       $display("");
       $display("HMAC block: 0x%096x",hmac_drbg_dut.HMAC_block);
       $display("HMAC key: 0x%096x",hmac_drbg_dut.HMAC_key);
-      $display("HMAC lfsr_seed: 0x%096x",hmac_drbg_dut.HMAC_lfsr_seed);
+      $display("HMAC lfsr_seed: 0x%096x",hmac_drbg_dut.lfsr_seed);
       $display("HMAC tag: 0x%096x",hmac_drbg_dut.HMAC_tag);
       $display("");
 
@@ -268,6 +268,185 @@ module hmac_drbg_tb();
   endtask // hmac384_drbg
 
   //----------------------------------------------------------------
+  // hmac384_drbg_two_rounds()
+  //
+  //----------------------------------------------------------------
+  task hmac384_drbg_two_rounds(input [383 : 0] entropy, input [383 : 0] nonce,
+                  input [383 : 0] lfsr_seed, input  [1 : 0][383 : 0] expected_drbg);
+    begin
+        if (!ready_tb)
+            wait(ready_tb);
+            
+        $display("The HMAC DRBG core is triggered...");
+        
+        entropy_tb = entropy;
+        nonce_tb = nonce;
+        lfsr_seed_tb = lfsr_seed;
+
+        $display("*** entropy   : %096x", entropy_tb);
+        $display("*** nonce     : %096x", nonce_tb);
+        $display("*** lfsr_seed : %096x", lfsr_seed);
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg[0])
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg[0]);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg[1])
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg[1]);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+
+        tc_number = tc_number+1;
+
+    end
+  endtask // hmac384_drbg_two_rounds
+
+
+  //----------------------------------------------------------------
+  // hmac384_drbg_three_rounds()
+  //
+  //----------------------------------------------------------------
+  task hmac384_drbg_three_rounds(input [383 : 0] entropy, input [383 : 0] nonce,
+                  input [383 : 0] lfsr_seed, input  [2 : 0][383 : 0] expected_drbg);
+    begin
+        if (!ready_tb)
+            wait(ready_tb);
+            
+        $display("The HMAC DRBG core is triggered...");
+        
+        entropy_tb = entropy;
+        nonce_tb = nonce;
+        lfsr_seed_tb = lfsr_seed;
+
+        $display("*** entropy   : %096x", entropy_tb);
+        $display("*** nonce     : %096x", nonce_tb);
+        $display("*** lfsr_seed : %096x", lfsr_seed);
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg[0])
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg[0]);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg[1])
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg[1]);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg[2])
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg[2]);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+          
+        tc_number = tc_number+1;
+
+    end
+  endtask // hmac384_drbg_three_rounds
+  //----------------------------------------------------------------
   // hmac_drbg_test()
   //
   // Main test task will perform complete NIST SP 800-90A DRBG.
@@ -323,9 +502,55 @@ module hmac_drbg_tb();
 
         hmac384_drbg(nist_entropy, nist_nonce, seed, nist_expected); 
 
+        nist_entropy  = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+        nist_nonce    = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+        nist_expected = 384'hFEEEF5544A76564990128AD189E873F21F0DFD5AD7E2FA861127EE6E394CA784871C1AEC032C7A8B10B93E0EAB8946D6;
+        seed = random_gen();
+
+        hmac384_drbg(nist_entropy, nist_nonce, seed, nist_expected); 
+
     end
   endtask // hmac_drbg_test
 
+  //----------------------------------------------------------------
+  // hmac_drbg_multi_rounds_test()
+  //
+  //
+  //----------------------------------------------------------------
+  task hmac_drbg_multi_rounds_test;
+    begin
+        reg [383 : 0] hmac384_entropy;
+        reg [383 : 0] hmac384_nonce;
+        reg [2 : 0][383 : 0] hmac384_expected;
+        reg [383 : 0] seed;
+
+        hmac384_entropy  = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+        hmac384_nonce    = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+        hmac384_expected[0] = 384'hFEEEF5544A76564990128AD189E873F21F0DFD5AD7E2FA861127EE6E394CA784871C1AEC032C7A8B10B93E0EAB8946D6;
+        hmac384_expected[1] = 384'hd7f1b8ee5fc4eca7b022ccbdc2b03bee146c8985ea52ae400b9e23ce3cb3a95849ef93140c8a519ed8f817e66e6f0de4;
+        seed = random_gen();
+        
+        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
+        
+        hmac384_entropy  = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        hmac384_nonce    = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        hmac384_expected[0] = 384'h7F68A6D896EA5DA62E78DEDB46F6662BC141F2F0B9E641ACC7342663FD51444E380FEA1DABBCA55F18987C0CFC10DF77;
+        hmac384_expected[1] = 384'hb52178b3c26aeff4a9f2704664c091d8cf57b45d05c2bb8c7bfcf56963fbe7674908ae830bfe10e0de2eccf48fa7b050;
+        seed = random_gen();
+        
+        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
+
+        hmac384_entropy  = 384'hF71EE80F1D123DC3F70EAA1FB3272714858EA555BC496BF39ADB107B192BF0BCBA9BB5B5799CFF8E12A1154F37CA7BBD;
+        hmac384_nonce    = 384'hDE2B2A66EE13797C69438A9BF6F8514C0A8ABEFD3E5533E1119AE88E8D641771E9BCE4CBE44430A0ADAAAB4103095FC4;
+        hmac384_expected[0] = 384'h316f0937ff54b3d16398d5d07799ab59d0e1f3962831101f1eca892f0f1567df2f964c19b8690761d188d2100403eea6;
+        hmac384_expected[1] = 384'h9a42b5046712b4e32c1f9db62a7900d2e0d4e051580b5dc2cbc8498a04df6676ff80b4e6e2b34b29152bd96e5b4eefed;
+        hmac384_expected[2] = 384'h28ff268d4fea88d4bc28a712feb777bb72dace10e9886eefd226615f5f9d508aa8f59d4b087b65d54223a2186f53031b;
+        seed = random_gen();
+        
+        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
+        hmac384_drbg_three_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected);
+    end
+  endtask
 
   //----------------------------------------------------------------
   // always_debug()
@@ -356,6 +581,7 @@ module hmac_drbg_tb();
       //dump_dut_state();
 
       hmac_drbg_test();
+      hmac_drbg_multi_rounds_test();
 
       display_test_results();
 

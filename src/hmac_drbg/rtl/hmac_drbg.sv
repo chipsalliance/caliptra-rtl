@@ -279,7 +279,7 @@ module hmac_drbg
       K21_ST:         HMAC_block  = {nonce[135:0], 1'h1, 875'b0, 12'h888};
       V2_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       T_ST:           HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      K3_ST:          HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h578};
+      K3_ST:          HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h588};
       V3_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       default:        HMAC_block  = '0;
     endcase
@@ -293,9 +293,8 @@ module hmac_drbg
       cnt_reg    <= '0;
     else begin
       unique case (drbg_st_reg)
-        INIT_ST:      cnt_reg    <= '0;
-        NEXT_ST:      cnt_reg    <= cnt_reg + 1;
-        K2_INIT_ST:   cnt_reg    <= cnt_reg + 1;
+        INIT_ST:      cnt_reg    <= 8'h0;
+        K2_INIT_ST:   cnt_reg    <= 8'h1;
         default:      cnt_reg    <= cnt_reg;
       endcase
     end
@@ -345,7 +344,7 @@ module hmac_drbg
       end
 
       INIT_ST:    drbg_next_st      = K10_ST;
-      NEXT_ST:    drbg_next_st      = K10_ST;
+      NEXT_ST:    drbg_next_st      = K3_ST;
       K10_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? K11_ST : K10_ST;
       K11_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? V1_ST : K11_ST;
       V1_ST:      drbg_next_st      = (HMAC_tag_valid_edge)? K2_INIT_ST : V1_ST;
