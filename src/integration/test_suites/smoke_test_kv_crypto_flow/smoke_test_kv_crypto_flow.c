@@ -366,9 +366,9 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
 //******************************************************************
 // HMAC(OBF_KEY , FE)
 //****************************************************************** 
-void domian_sepration(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_id){
+void domain separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_id){
     
-    VPRINTF(LOW,"\n\n *** domain sepration between ECC and MLDSA\n");
+    VPRINTF(LOW,"\n\n *** domain separation between ECC and MLDSA\n");
 
     hmac_io hmac512_key;
     hmac_io hmac512_block;
@@ -644,7 +644,7 @@ void main(){
 
         kv_hmac512(doe_uds_dest_id, doe_fe_dest_id, cdi_idevid_id);
 
-        domian_sepration(cdi_idevid_id, idevid_ecc_seed_id, idevid_mldsa_seed_id);
+        domain_separation(cdi_idevid_id, idevid_ecc_seed_id, idevid_mldsa_seed_id);
 
         kv_ecc(idevid_ecc_seed_id, idevid_ecc_privkey_id);
 
