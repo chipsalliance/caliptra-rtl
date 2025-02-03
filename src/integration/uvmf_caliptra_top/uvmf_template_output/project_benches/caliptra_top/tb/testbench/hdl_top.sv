@@ -216,7 +216,7 @@ import aaxi_uvm_pkg::*;
         .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
     ) ports[1] (
         .ACLK   (clk                                              ),
-        .ARESETn(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b),
+        .ARESETn(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b/*TODO tie to 1'b1*/),
         .CACTIVE(                                                 ),
         .CSYSREQ(1'b0                                             ),
         .CSYSACK(                                                 )
