@@ -81,32 +81,48 @@ The following tables describe the interface signals.
 | cptra_rst_b | 1 | Input | Asynchronous Assertion<br> Synchronous deassertion to clk | Active low asynchronous reset. |
 | clk | 1 | Input | | Convergence and validation done at 400MHz. All other frequencies are up to the user. |
 
-*Table 5: APB Interface*
+*Table 5: AXI Interface*
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| PADDR | CALIPTRA_APB_ADDR_WIDTH | Input | Synchronous to clk | Address bus |
-| PPROT | 3 | Input | Synchronous to clk | Protection level |
-| PSEL | 1 | Input | Synchronous to clk | Select line |
-| PENABLE | 1 | Input | Synchronous to clk | Indicates the second and subsequent cycles. |
-| PWRITE | 1 | Input | Synchronous to clk | Indicates transfer is a write when high or a read when low. |
-| PWDATA | CALIPTRA_APB_DATA_WIDTH | Input | Synchronous to clk | Write data bus |
-| PAUSER | CALIPTRA_APB_USER_WIDTH | Input | Synchronous to clk | Sideband signal indicating requestor ID for transfer. |
-| PREADY | 1 | Output | Synchronous to clk | Used to extend an APB transfer by completer. |
-| PRDATA | CALIPTRA_APB_DATA_WIDTH | Output | Synchronous to clk | Read data bus |
-| PSLVERR | 1 | Output | Synchronous to clk | Transfer error |
+| araddr  | AW   | input  | Synchronous to clk | AR channel address |
+| arburst | 2    | input  | Synchronous to clk | AR channel burst encoding |
+| arsize  | 3    | input  | Synchronous to clk | AR channel size encoding |
+| arlen   | 8    | input  | Synchronous to clk | AR channel length, beats in the burst |
+| aruser  | UW   | input  | Synchronous to clk | AR channel user signal. Identifies the requester for mailbox and fuse access. See AXI_USER details for more information. |
+| arid    | IW   | input  | Synchronous to clk | AR channel id signal |
+| arlock  | 1    | input  | Synchronous to clk | AR channel lock signal |
+| arvalid | 1    | input  | Synchronous to clk | AR channel valid handshake signal |
+| arready | 1    | output | Synchronous to clk | AR channel ready handshake signal |
+| rdata   | DW   | output | Synchronous to clk | R channel read response data |
+| rresp   | 2    | output | Synchronous to clk | R channel read response encoding |
+| rid     | IW   | output | Synchronous to clk | R channel read response id signal |
+| rlast   | 1    | output | Synchronous to clk | R channel read response last beat signal |
+| rvalid  | 1    | output | Synchronous to clk | R channel valid handhsake signal |
+| rready  | 1    | input  | Synchronous to clk | R channel ready handshake signal |
+| awaddr  | AW   | input  | Synchronous to clk | AW channel address |
+| awburst | 2    | input  | Synchronous to clk | AW channel burst encoding |
+| awsize  | 3    | input  | Synchronous to clk | AW channel size encoding |
+| awlen   | 8    | input  | Synchronous to clk | AW channel length, beats in the burst |
+| awuser  | UW   | input  | Synchronous to clk | AW channel user signal. Identifies the requester for mailbox and fuse access. See AXI_USER details for more information. |
+| awid    | IW   | input  | Synchronous to clk | AW channel id signal |
+| awlock  | 1    | input  | Synchronous to clk | AW channel lock signal |
+| awvalid | 1    | input  | Synchronous to clk | AW channel valid handhsake signal |
+| awready | 1    | output | Synchronous to clk | AW channel ready handshake signal |
+| wdata   | DW   | input  | Synchronous to clk | W channel write data |
+| wstrb   | DW/8 | input  | Synchronous to clk | W channel write strobe. Byte enable. |
+| wlast   | 1    | input  | Synchronous to clk | W channel write last beat signal |
+| wvalid  | 1    | input  | Synchronous to clk | W channel valid handhsake signal |
+| wready  | 1    | output | Synchronous to clk | W channel ready handshake signal |
+| bresp   | 2    | output | Synchronous to clk | B channel write response encoding |
+| bid     | IW   | output | Synchronous to clk | B channel write response id signal |
+| bvalid  | 1    | output | Synchronous to clk | B channel valid handhsake signal |
+| bready  | 1    | input  | Synchronous to clk | B channel ready handshake signal |
 
-*Table 6: QSPI signals*
+          
 
-| Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
-| :--------- | :--------- | :--------- | :--------- | :--------- |
-| qspi_clk_o  | 1 | Output | | QSPI clock |
-| qspi_cs_no | 2 | Output | Synchronous to qspi_clk_o | QSPI chip select |
-| qspi_d_i | 4 | Input | Synchronous to qspi_clk_o | QSPI data lanes for receiving data. |
-| qspi_d_o | 4 | Output | Synchronous to qspi_clk_o | QSPI data output lanes for sending opcode and address. |
-| qspi_d_en_o | 4 | Output | Synchronous to qspi_clk_o | QSPI enable pins to control data direction. |
 
-*Table 7: Mailbox notifications*
+*Table 6: Mailbox notifications*
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -116,7 +132,7 @@ The following tables describe the interface signals.
 | mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has data for SoC to read (reflects the value of the register). |
 | mailbox_flow_done | 1 | Output | Synchronous to clk | Indicates that the mailbox flow is complete (reflects the value of the register). |
 
-*Table 8: SRAM interface*
+*Table 7: Caliptra SRAM interface*
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -138,6 +154,24 @@ The following tables describe the interface signals.
 | dccm_addr_bank | DCCM_NUM_BANKS x (DCCM_BITS-4) | Input | Synchronous to clk | Per-bank address |
 | dccm_wr_data_bank | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Input | Synchronous to clk | Per-bank input data |
 | dccm_bank_dout | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Output | Synchronous to clk | Per-bank output data |
+
+*Table 8: Adams-Bridge SRAM Interface*
+
+Adams-Bridge SRAM interface is used to connect the necessary SRAM instances for Adams-Bridge.
+There are 8 SRAMs, 2 of which have 2 banks. Each SRAM has a parameterized data width and depth used to calculate the addr width.
+The full set of wires is encapsulated in the mldsa_mem_if construct mldsa_memory_export at the Caliptra boundary.
+
+The table below details the interface required for each SRAM. Driver direction is from the perspective of Caliptra.
+
+| Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
+| :---------- | :--------- | :--------- | :---------         | :---------                                 |
+| we_i        | 1          | Output     | Synchronous to clk | Write enable                                  |
+| waddr_i     | ADDR_W     | Output     | Synchronous to clk | Write address                                 |
+| wdata_i     | DATA_W     | Output     | Synchronous to clk | Write data                                    |
+| wstrobe_i   | DATA_W/8   | Output     | Synchronous to clk | Write strobe (only for sig_z and pk memories) |
+| re_i        | 1          | Output     | Synchronous to clk | Read enable                                   |
+| raddr_i     | ADDR_W     | Output     | Synchronous to clk | Read address                                  |
+| rdata_o     | DATA_W     | Input      | Synchronous to clk | Read data                                     |
 
 *Table 9: JTAG interface*
 
@@ -373,7 +407,7 @@ This will pass control of the mailbox to the TAP. TAP will follow the **Receivin
 
 ## Mailbox arbitration
 
-From a mailbox protocol perspective, as long as CPTRA\_VALID\_AXI\_USER registers carry valid requestors, mailbox lock can be obtained by any of those valid requestors but only one of them at any given time. While the mailbox flow is happening, all other requestors will not get a grant.
+From a mailbox protocol perspective, as long as CPTRA\_VALID\_AXI\_USER registers carry valid requesters, mailbox lock can be obtained by any of those valid requesters but only one of them at any given time. While the mailbox flow is happening, all other requesters will not get a grant.
 
 A request for lock that is denied due to firmware having the lock results in an interrupt to the firmware. Firmware can optionally use this interrupt to release the lock.
 
