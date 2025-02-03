@@ -277,7 +277,7 @@ module hmac_drbg_tb();
         if (!ready_tb)
             wait(ready_tb);
             
-        $display("The HMAC DRBG core is triggered...");
+        $display("The HMAC DRBG two rounds is triggered...");
         
         entropy_tb = entropy;
         nonce_tb = nonce;
@@ -355,7 +355,7 @@ module hmac_drbg_tb();
         if (!ready_tb)
             wait(ready_tb);
             
-        $display("The HMAC DRBG core is triggered...");
+        $display("The HMAC DRBG three rounds is triggered...");
         
         entropy_tb = entropy;
         nonce_tb = nonce;
