@@ -238,11 +238,18 @@ class soc_ifc_predictor #(
 
   bit [31:0] nmi_vector = 32'h0;
   bit iccm_locked = 1'b0;
-  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
+  // This is the value that we expect to be present in internal_obf_key based on
+  // the most recently received soc_ifc_ctrl_transaction.
+  // It may take a little while to actually reflect to the register, based on
+  // reset timing and RDC clock gating
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0};
+  // Report the input signaling status that tries to write (via HW i/f) the
+  // UDS/FE seed values
   bit                                 cptra_obf_field_entropy_vld = 1'b0;
   bit [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy = '{default:32'h0};
   bit                                 cptra_obf_uds_seed_vld = 1'b0;
   bit [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed = '{default:32'h0};
+
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
@@ -327,6 +334,7 @@ class soc_ifc_predictor #(
   extern function bit  cptra_status_txn_expected_after_cold_reset();
   extern function bit  ss_mode_status_txn_expected_after_cold_reset(); // TODO
   extern function void predict_strap_values();
+  extern function bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] get_expected_obf_key_reg();
   extern function bit [`CLP_OBF_FE_DWORDS-1:0]  [31:0] get_expected_obf_field_entropy();
   extern function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] get_expected_obf_uds_seed();
   extern function void populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
@@ -428,11 +436,7 @@ class soc_ifc_predictor #(
     end
     // Initial boot
     if (!t.set_pwrgood && soc_ifc_rst_in_asserted) begin
-        cptra_obf_key_reg = t.cptra_obf_key_rand;
-        for (byte ii=0; ii < 8; ii++) begin
-            // Change from reset value means we expect a transaction
-            send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.get_reset());
-        end
+        cptra_obf_key_reg = p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets ? '{default: '0} : t.cptra_obf_key_rand; // To be reflected into internal_obf_key by predict_reset
         if (!t.assert_rst)
             `uvm_fatal("PRED_SOC_IFC_CTRL", "Bad initial boot with cptra_rst_b deasserted")
         if (!p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_idle)
@@ -446,8 +450,6 @@ class soc_ifc_predictor #(
     end
     // Cold reset assertion
     else if (!t.set_pwrgood) begin
-        // FIXME
-        // Catch obf_key, uds_seed, field_entropy reset on cold-reset
 
         if (!t.assert_rst) begin
             `uvm_fatal("PRED_SOC_IFC_CTRL", "Bad cold rst")
@@ -465,30 +467,16 @@ class soc_ifc_predictor #(
             // If the obf_key changes, we expect a second cptra_status transaction
             // immediately after all the resets assert, because it takes a few clock cycles
             // for the new key to reflect to the output after cptra_pwrgood deasserts
-            // So send the first one to the scoreboard immediately
-            if (send_cptra_sts_txn) begin
-                populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
-                cptra_sb_ap.write(cptra_sb_ap_output_transaction);
-                cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
-                `uvm_info("PRED_SOC_IFC_CTRL", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
-                send_cptra_sts_txn = 1'b0;
-            end
-            for (byte ii=0; ii < 8; ii++) begin
-                // Change from current value means we expect a transaction
-                // due to cptra_obf_key_rand changing during bringup
-                send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != cptra_obf_key_reg[ii]);
-            end
-            cptra_obf_key_reg = t.cptra_obf_key_rand;
+            // So send the first one to the scoreboard using the current value of 
+            // p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key, then capture the next value
+            // to be mirrored into p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key by
+            // predict_reset
+            cptra_obf_key_reg = p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets ? '{default: '0} : t.cptra_obf_key_rand;
         end
     end
     // Cold reset deassertion
     else if (t.set_pwrgood && t.assert_rst && soc_ifc_rst_in_asserted) begin
-        for (byte ii=0; ii < 8; ii++) begin
-            // Change from current value means we expect a transaction
-            // due to cptra_obf_key_rand changing during bringup
-            send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != cptra_obf_key_reg[ii]);
-        end
-        cptra_obf_key_reg = t.cptra_obf_key_rand;
+        cptra_obf_key_reg = p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets ? '{default: '0} : t.cptra_obf_key_rand;
         reset_predicted.reset();
         // No new signal predictions since it was all done on Cold reset assertion.
         // But trigger the soft reset event to indicate to the predict_reset delay spinoff task
@@ -626,9 +614,9 @@ class soc_ifc_predictor #(
     end
     if (t.assert_clear_secrets) begin
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.reset();
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset();
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset;
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.predict(32'h0); // No "reset" value, so manually clear each field to 0
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset("HARD");
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset("HARD");
         this.cptra_obf_key_reg = '{default:32'h0};
         send_cptra_sts_txn = 1'b1;
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
@@ -3748,7 +3736,12 @@ function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_cold_reset();
 endfunction
 
 function bit soc_ifc_predictor::cptra_status_txn_expected_after_cold_reset();
-    return cptra_status_txn_expected_after_warm_reset() || cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
+    bit cptra_obf_key_reg_will_clr = 0;
+    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw])
+        cptra_obf_key_reg_will_clr |= |p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value();
+    return cptra_obf_key_reg_will_clr ||
+           cptra_status_txn_expected_after_warm_reset() ||
+           cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
 endfunction
 
 function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_cold_reset();
@@ -4113,7 +4106,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
                 // Send predicted transactions
                 if (send_local_cptra_sts_txn) begin
-                    // cptra status is for noncore reset deassertion
+                    // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
                     local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
                     populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
                     cptra_sb_ap.write(local_cptra_sb_ap_txn);
@@ -4186,6 +4179,66 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         cptra_pwrgood_asserted = 1'b0;
         timer_intr_pending = 1'b1;
         fuse_update_enabled = 1'b1; // Fuses only latch new values from AXI write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
+        // Obf key is technically re-captured on pwrgood.
+        // Value isn't stored until RDC clock is re-enabled.
+        // If we're running uvmf_soc_ifc, RDC modelling is not supported (TODO)
+        // so the obf_key gets updated _almost_ immediately.
+        // If RDC clock gate is enabled, obf key can't be registered until the clock
+        // is enabled, which coincides with latching the FE/UDS seed inputs.
+        // So obf_key is checked in both routines.
+        if (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE) begin
+            fork
+            begin: LATCH_OBF_KEY_UPON_PWRGOOD
+                cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                bit send_local_cptra_sts_txn = 1'b0;
+
+                wait(cptra_pwrgood_asserted == 1'b1);
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+
+                foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                    send_local_cptra_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw];
+                    p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                end
+
+                // Send predicted transactions
+                if (send_local_cptra_sts_txn) begin
+                    // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
+                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                end
+            end: LATCH_OBF_KEY_UPON_PWRGOOD
+            join_none
+        end
+        else begin
+            // Sample the incoming obf_key after any hard reset immediately upon
+            // the RDC clock being enabled.
+            fork
+                begin: LATCH_OBF_KEY_UPON_CLK_EN
+                    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                    bit send_local_cptra_sts_txn = 1'b0;
+
+                    wait(rdc_clk_gate_active == 1'b1);
+                    wait(rdc_clk_gate_active == 1'b0);
+
+                    // Grab the values that were captured from soc_ifc_ctrl_transaction
+                    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                        send_local_cptra_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw];
+                        p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                    end
+
+                    // Send predicted transactions
+                    if (send_local_cptra_sts_txn) begin
+                        // cptra status is for latching of obf_key, reflected to outputs towards Caliptra
+                        local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                        populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                        cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                        `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                    end
+                end: LATCH_OBF_KEY_UPON_CLK_EN
+            join_none
+        end
     end: RESET_VAL_CHANGES_HARD
 
     if (kind == "NONCORE") begin: RESET_VAL_CHANGES_NONCORE
@@ -4281,6 +4334,11 @@ function void soc_ifc_predictor::predict_strap_values();
     end
 endfunction
 
+function bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_key_reg();
+    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw])
+        get_expected_obf_key_reg[dw] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value();
+endfunction
+
 function bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_field_entropy();
     byte ii;
     bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] fe;
@@ -4321,7 +4379,7 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.sha_err_intr_pending       = this.sha_err_intr_pending;
     txn.sha_notif_intr_pending     = this.sha_notif_intr_pending;
     txn.timer_intr_pending         = this.timer_intr_pending;
-    txn.cptra_obf_key_reg          = this.cptra_obf_key_reg;
+    txn.cptra_obf_key_reg          = this.get_expected_obf_key_reg();
     txn.obf_field_entropy          = this.get_expected_obf_field_entropy();
     txn.obf_uds_seed               = this.get_expected_obf_uds_seed();
     txn.nmi_vector                 = this.nmi_vector;
