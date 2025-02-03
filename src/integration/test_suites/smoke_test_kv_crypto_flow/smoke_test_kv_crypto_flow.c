@@ -364,9 +364,9 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
 }
 
 //******************************************************************
-// HMAC(OBF_KEY , FE)
+// domain_separation
 //****************************************************************** 
-void domain separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_id){
+void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_id){
     
     VPRINTF(LOW,"\n\n *** domain separation between ECC and MLDSA\n");
 
