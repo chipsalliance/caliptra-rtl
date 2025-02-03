@@ -81,7 +81,6 @@ module hmac_drbg
   localparam [REG_SIZE-1 : 0] V_init = 384'h010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101;
   localparam [REG_SIZE-1 : 0] K_init = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
 
-  localparam CNT_SIZE = 8;
   localparam [(((1024-REG_SIZE)-1)-12)-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length  
 
   localparam [11 : 0] V_SIZE        = {1'b0, 11'd1024 + 11'(REG_SIZE)};
@@ -115,7 +114,6 @@ module hmac_drbg
   reg                   ready_reg;
   reg                   valid_reg;
   reg [REG_SIZE-1 : 0]  drbg_reg;
-  reg [CNT_SIZE-1 : 0]  cnt_reg;
   reg                   first_round;
   reg                   HMAC_tag_valid_last;
   reg                   HMAC_tag_valid_edge;
@@ -292,33 +290,18 @@ module hmac_drbg
   begin : hmac_block_update
     HMAC_key = K_reg;
     unique case(drbg_st_reg)
-      K10_ST:         HMAC_block  = {V_reg, cnt_reg, entropy, nonce[383:136]};
+      K10_ST:         HMAC_block  = {V_reg, 8'h0, entropy, nonce[383:136]};
       K11_ST:         HMAC_block  = {nonce[135:0], 1'h1, 875'b0, 12'h888};
       V1_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      K20_ST:         HMAC_block  = {V_reg, cnt_reg, entropy, nonce[383:136]};
+      K20_ST:         HMAC_block  = {V_reg, 8'h1, entropy, nonce[383:136]};
       K21_ST:         HMAC_block  = {nonce[135:0], 1'h1, 875'b0, 12'h888};
       V2_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       T_ST:           HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      K3_ST:          HMAC_block  = {V_reg, 8'h00, 1'h1, 619'b0, 12'h588};
+      K3_ST:          HMAC_block  = {V_reg, 8'h0, 1'h1, 619'b0, 12'h588};
       V3_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       default:        HMAC_block  = '0;
     endcase
   end // hmac_block_update
-     
-  always_ff @ (posedge clk or negedge reset_n) 
-  begin : cnt_reg_update
-    if (!reset_n)
-      cnt_reg    <= '0;
-    else if (zeroize)
-      cnt_reg    <= '0;
-    else begin
-      unique case (drbg_st_reg)
-        INIT_ST:      cnt_reg    <= 8'h0;
-        K2_INIT_ST:   cnt_reg    <= 8'h1;
-        default:      cnt_reg    <= cnt_reg;
-      endcase
-    end
-  end // cnt_reg_update
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin : state_update
