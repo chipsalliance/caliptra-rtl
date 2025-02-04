@@ -392,7 +392,7 @@ stages:
 
       - caliptra_synthesis_elab_check:
         - display_name: 'Caliptra Synthesis Elab Check'
-        - enabled: ${{ not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow) }}
+        - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
         - run_in_workspace: True
         - timeout: 25
         - commands:
