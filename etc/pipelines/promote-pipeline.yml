@@ -235,20 +235,20 @@ stages:
           - timeout: 45
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
     
-    caliptra_ss_top_vcs:
-     - display_name: 'Build caliptra_ss_top with VCS'
-     - enabled: ${{ parameters.run_clp_ss_github_val_flow}}
-     - configspec_name: 'caliptra_ss_lib'
-     - dut: 'caliptra_ss_top'
-     - args: ''
-     - timeout: 30
-     - testsuites:
-       - l0_regress:
-         - enabled: ${{ parameters.run_clp_ss_github_val_flow }}
-         - configspec_name: 'caliptra_ss_lib'
-         - dut: 'caliptra_ss_top'
-         - timeout: 75
-         - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
+    - caliptra_ss_top_vcs: 
+      - display_name: 'Build caliptra_ss_top with VCS'
+      - enabled: ${{ parameters.run_clp_ss_github_val_flow}}
+      - configspec_name: 'caliptra_ss_lib'
+      - dut: 'caliptra_ss_top'
+      - args: ''
+      - timeout: 30
+      - testsuites:
+        - l0_regress:
+          - enabled: ${{ parameters.run_clp_ss_github_val_flow }}
+          - configspec_name: 'caliptra_ss_lib'
+          - dut: 'caliptra_ss_top'
+          - timeout: 75
+          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 
 # ===================================== AXI FIXME =====================================
 # == Reenable these checks once UVM env is updated to AXI
