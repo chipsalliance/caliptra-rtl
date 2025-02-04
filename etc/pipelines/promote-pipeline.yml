@@ -380,7 +380,7 @@ stages:
       # Pull Requests. Only run here for internal ADO PRs.
       - verilator_smoke_test:
         - display_name: 'Verilator Smoke Test'
-        - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow), not(parameter.run_clp_ss_github_val_flow)) }}
+        - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
         - run_in_workspace: True
         - timeout: 240
         - commands:
