@@ -115,7 +115,7 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
   
-          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_SS\""
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_cptra_ss_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_SS\""
         displayName: 'CREATE MERGED TEST BRANCH'
         enabled: ${{ parameters.run_clp_ss_github_val_flow }}
         condition: eq(variables['Build.Reason'], 'Manual')
@@ -234,23 +234,21 @@ stages:
           - dut: 'caliptra_top_trng_tb'
           - timeout: 45
           - path: '${CALIPTRA_ROOT}/src/integration/stimulus/L0_trng_regression.yml'
-
-# FIXME reenable once build is clean
-#    - caliptra_ss_top_vcs:
-#      - display_name: 'Build caliptra_ss_top with VCS'
-#      - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-#      - configspec_name: 'caliptra_ss_lib'
-#      - dut: 'caliptra_ss_top'
-#      - args: ''
-#      - timeout: 30
-#      - testsuites:
-#        - l0_regress:
-#          - enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow)) }}
-#          - configspec_name: 'caliptra_ss_lib'
-#          - dut: 'caliptra_ss_top'
-#          - timeout: 75
-#          - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
-
+    
+    - caliptra_ss_top_vcs:
+     - display_name: 'Build caliptra_ss_top with VCS'
+     - enabled: ${{ parameters.run_clp_ss_github_val_flow}}
+     - configspec_name: 'caliptra_ss_lib'
+     - dut: 'caliptra_ss_top'
+     - args: ''
+     - timeout: 30
+     - testsuites:
+       - l0_regress:
+         - enabled: ${{ parameters.run_clp_ss_github_val_flow }}
+         - configspec_name: 'caliptra_ss_lib'
+         - dut: 'caliptra_ss_top'
+         - timeout: 75
+         - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 # ===================================== AXI FIXME =====================================
 # == Reenable these checks once UVM env is updated to AXI
 #    - uvmf_soc_ifc:
@@ -418,7 +416,7 @@ stages:
 
       - caliptra_ss_synthesis_elab_check:
         - display_name: 'Caliptra SS Synthesis Elab Check'
-        - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+        - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_github_val_flow)) }}
         - run_in_workspace: True
         - timeout: 25
         - commands:

@@ -29,23 +29,25 @@ function gen_pb_file_list {
     if [[ $cptra_ss_lib = *"coverage" ]]; then return; fi
     echo "Generating File List for lib [${cptra_ss_lib}] in [${cptra_ss_vf_file}]";
     pb fe file_list --tb caliptra_ss_lib::${cptra_ss_lib} +def-target 'tb' --flat --dir-fmt=+incdir+{directory} --file ${cptra_ss_vf_file};
-    # Replace leading portion of Adamsbridge source paths with ${CALIPTRA_SS_ROOT}
+    # Replace leading portion of CaliptraSS source paths with ${CALIPTRA_SS_ROOT}
     sed 's,/home.*caliptra-ss/src,\${CALIPTRA_SS_ROOT}/src,' -i ${cptra_ss_vf_file}
+    sed 's,/home.*caliptra-ss/third_party,\${CALIPTRA_SS_ROOT}/third_party,' -i ${cptra_ss_vf_file}
     # Replace leading portion of UVM/installed library paths with appropriate ENV VAR
     sed 's,/home/cad/tools/mentor/questa/[0-9\._]*/questasim/verilog_src/uvm-[^/]\+,\${UVM_HOME},' -i ${cptra_ss_vf_file}
     sed 's,/home/cad/tools/mentor/uvmf/UVMF_[0-9\.]*,\${UVMF_HOME},' -i ${cptra_ss_vf_file}
     sed 's,/home/cad/tools/mentor/questa_vip/[0-9\.]*,\${QUESTA_MVC_HOME},' -i ${cptra_ss_vf_file}
     sed 's,/home/cad/tools/mentor/avery/[0-9\.]*,\${AVERY_HOME},' -i ${cptra_ss_vf_file}
+    
     # Remove duplicate entries and empty lines from the file
     perl -i -ne 'print if ! $a{$_}++ and /\S/' ${cptra_ss_vf_file}
 }
 
 if [[ $(command -v pb) = "" ]]; then
-    echo "Enter Adamsbridge workspace (to make Playbook available) and try again"
+    echo "Enter Caliptra SS workspace (to make Playbook available) and try again"
     exit 1
 fi
 if [[ -z ${CALIPTRA_SS_ROOT:+"empty"} ]]; then
-    echo "Must run script from within Adamsbridge Playbook context"
+    echo "Must run script from within CaliptraSS Playbook context"
     exit 1
 fi
 # Get all of the compile.yml from caliptra-ss COMODULE, ignoring the submodule flavors

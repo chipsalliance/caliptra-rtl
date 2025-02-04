@@ -80,3 +80,9 @@ if [[ ${sts} -ne 0 ]]; then
     git status -s
     exit 1
 fi
+
+# Update Submodules 
+if git submodule update -- submodules; then 
+    echo "Could not update submodule" 
+    exit 1
+fi
