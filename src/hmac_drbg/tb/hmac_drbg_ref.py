@@ -1,5 +1,10 @@
 import hmac
 import hashlib
+import os
+
+HMAC_DRBG_PRIME = int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973", 16)
+
+
 class HMAC_DRBG:
    def __init__(self, entropy, nonce=b"", personalization=b""):
        """
@@ -88,7 +93,7 @@ def caliptra_test(COUNT, entropy, nonce, expected0, expected1=b"", expected2=b""
 
 def cavp_test_vectors():
     """
-       from: https://github.com/coruus/nist-testvectors/blob/master/csrc.nist.gov/groups/STM/cavp/documents/drbg/drbgtestvectors/drbgvectors_no_reseed/HMAC_DRBG.rsp
+       from: https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/random-number-generators#DRBG
     """
 
     ReturnedBitsLen = 1536
@@ -260,7 +265,37 @@ def caliptra_test_vectors():
     expected2 = bytes.fromhex("28ff268d4fea88d4bc28a712feb777bb72dace10e9886eefd226615f5f9d508aa8f59d4b087b65d54223a2186f53031b")
     caliptra_test(COUNT, entropy, nonce, expected0, expected1, expected2)
 
+def gen_expected_outputs():
+    # Read testbench outputs
+    with open("tb_inputs.txt", "r") as f:
+        lines = f.readlines()
+
+    num_rounds = int(lines[0].strip())  # Read number of rounds
+    entropy = bytes.fromhex(lines[1].strip())  # Read entropy as bytes
+    nonce = bytes.fromhex(lines[2].strip())  # Read nonce as bytes
+
+    returnedbits_len_inbyte = int(384 / 8)
+    drbg = HMAC_DRBG(entropy, nonce)
+    outputs = []
+    
+    for _ in range(num_rounds):
+        while True:
+            output = drbg.generate(returnedbits_len_inbyte)
+            if 0 < int.from_bytes(output, 'big') < HMAC_DRBG_PRIME:
+                outputs.append(output.hex())
+                break
+            
+    # Write expected results to a file
+    with open("tb_expected.txt", "w") as f:
+        for output in outputs:
+            f.write(f"{output}\n")
 
 if __name__ == "__main__":
-#    cavp_test_vectors()
-   caliptra_test_vectors()
+   # Check if tb_inputs.txt exists
+    if os.path.exists("tb_inputs.txt"):
+        print("Found tb_inputs.txt. Running validation against testbench inputs.")
+        gen_expected_outputs()
+    else:
+        print("No tb_inputs.txt found. Running fixed test vectors.")
+        cavp_test_vectors()
+        caliptra_test_vectors()
