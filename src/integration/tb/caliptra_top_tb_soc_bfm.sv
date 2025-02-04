@@ -66,7 +66,7 @@ import caliptra_top_tb_pkg::*; #(
 
     int poll_count;
 
-    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_uds, cptra_obf_key_fe;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obfkey_tb;
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
@@ -154,22 +154,24 @@ import caliptra_top_tb_pkg::*; #(
             cptra_fe_tb = cptra_fe_rand;
         end
         else begin
-            //Key for UDS
-            cptra_obf_key_uds = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-            cptra_uds_tb = 512'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d;
-
-            //Key for FE
-            cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-            cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+            if ($test$plusargs("SECOND_DOE_KAT")) begin
+                //Key for DOE
+                cptra_obfkey_tb = 256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c;
+                cptra_uds_tb = 512'h32cd8a75b5e515bd7b0fe37a6de144696aeedb1f5e03225a71fc690f5b004ff593794db7a99ced97c376385149c4ecafd3afd70cb657a6f6434bfd911983f4ff;
+                cptra_fe_tb = 256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b;
                            /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
                            256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
                            256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
-
+            end 
+            else begin
+                cptra_obfkey_tb = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+                cptra_uds_tb = 512'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d;
+                cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+            end
             //swizzle the key so it matches the endianness of AES block
             //used for visual inspection of uds/fe flow, manually switching keys and checking both
             for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
-                //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-                cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+                cptra_obf_key[dword] = cptra_obfkey_tb[dword];
             end
         end
 
