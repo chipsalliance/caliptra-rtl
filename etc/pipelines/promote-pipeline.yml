@@ -296,7 +296,7 @@ stages:
 
     - uvmf_mldsa:
         - display_name: 'UVMF_MLDSA'
-        - enabled: ${{ not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow) }}
+        - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
         - configspec_name: 'adams_bridge_lib'
         - dut: 'uvmf_mldsa'
         - timeout: 25
@@ -340,7 +340,7 @@ stages:
 
     design_lint_map:
     - caliptra_top_sglint:
-      - enabled: ${{ not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top'
       - top: 'caliptra_top'
@@ -349,7 +349,7 @@ stages:
       - args: '--inherit-waivers=True --waivers-from-compile-yml --goal=caliptra_lint_rtl_msft --platform synth'
 
     - mldsa_top_sglint:
-      - enabled: ${{ not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'adams_bridge_lib'
       - dut: 'mldsa_top'
       - top: 'mldsa_top'
@@ -358,7 +358,7 @@ stages:
       - args: '--inherit-waivers=True --waivers-from-compile-yml --goal=caliptra_lint_rtl_msft --platform synth'
 
     - caliptra_ss_top_sglint:
-      - enabled: ${{ not(parameters.run_clp_github_val_flow), not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_abr_github_val_flow)) }}
       - configspec_name: 'caliptra_ss_lib'
       - dut: 'caliptra_ss_top'
       - top: 'caliptra_ss_top'
@@ -405,7 +405,7 @@ stages:
 
       - adamsbridge_synthesis_elab_check:
         - display_name: 'Adamsbridge Synthesis Elab Check'
-        - enabled: ${{ not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow) }}
+        - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
         - run_in_workspace: True
         - timeout: 25
         - commands:
