@@ -28,14 +28,19 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   // Local Parameters.
   //----------------------------------------------------------------
+    localparam MAX_ROUND    = 15;
+    localparam MAX_ROUND_W  = $clog2(MAX_ROUND);
+
     localparam REG_SIZE  = 384;
-    localparam SEED_SIZE = 384;
     localparam HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973;
 
     localparam CLK_HALF_PERIOD = 1;
     localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
     localparam DEBUG     = 0;
+
+    string      hmac_drbg_test_vector_file; // Input test vector file
+    string      hmac_drbg_test_to_run;
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
@@ -56,11 +61,38 @@ module hmac_drbg_tb();
   wire                       valid_tb;
 
   //Data
-  reg   [383 : 0]            lfsr_seed_tb;
-  reg   [383 : 0]            entropy_tb;
-  reg   [383 : 0]            nonce_tb;
-  wire  [383 : 0]            drbg_tb;
+  reg   [REG_SIZE-1 : 0]            lfsr_seed_tb;
+  reg   [REG_SIZE-1 : 0]            entropy_tb;
+  reg   [REG_SIZE-1 : 0]            nonce_tb;
+  wire  [REG_SIZE-1 : 0]            drbg_tb;
 
+  initial begin
+    if ($value$plusargs("HMAC_DRBG_TEST=%s", hmac_drbg_test_to_run)) begin
+      $display("%m: Running hmac_drbg test = %s", hmac_drbg_test_to_run);
+    end else begin
+      hmac_drbg_test_to_run = "HMAC_DRBG_directed_test";
+      $display("%m: Running hmac_drbg test = %s", hmac_drbg_test_to_run);
+    end
+
+    if (hmac_drbg_test_to_run == "HMAC_DRBG_directed_test") begin
+      if ($value$plusargs("HMAC_DRBG_TEST_VECTOR_FILE=%s", hmac_drbg_test_vector_file)) begin
+        $display("%m: Using HMAC_DRBG test vectors from file specified via plusarg: %s", hmac_drbg_test_vector_file);
+      end else begin
+        hmac_drbg_test_vector_file = "";
+        $display("%m: There is no valid test vector file.");
+      end
+    end
+  end
+
+
+  typedef struct packed {
+      logic [REG_SIZE-1 : 0]  entropy;
+      logic [REG_SIZE-1 : 0]  nonce;
+      logic [MAX_ROUND_W-1:0] num_rounds;
+      logic [MAX_ROUND-1:0][REG_SIZE-1:0] drbg_outputs;
+  } test_vector_t;
+
+  test_vector_t test_vector;
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -120,10 +152,10 @@ module hmac_drbg_tb();
   //
   // 
   //----------------------------------------------------------------
-  function logic [383 : 0] random_gen();
-    logic [383 : 0] random_seed;
-    for (int i=0; i < 12; i++) begin
-      random_seed[i*32 +: 32] = $random;
+  function logic [REG_SIZE-1 : 0] random_gen();
+    logic [REG_SIZE-1 : 0] random_seed;
+    for (int i=0; i < (REG_SIZE / 32); i++) begin
+      random_seed[i*32 +: 32] = $urandom;
     end
     return random_seed;
   endfunction
@@ -267,185 +299,65 @@ module hmac_drbg_tb();
     end
   endtask // hmac384_drbg
 
+
   //----------------------------------------------------------------
-  // hmac384_drbg_two_rounds()
+  // hmac384_drbg_multi_rounds()
   //
   //----------------------------------------------------------------
-  task hmac384_drbg_two_rounds(input [383 : 0] entropy, input [383 : 0] nonce,
-                  input [383 : 0] lfsr_seed, input  [1 : 0][383 : 0] expected_drbg);
+  task hmac384_drbg_multi_rounds(input [REG_SIZE-1 : 0] entropy, input [REG_SIZE-1 : 0] nonce,
+                  input [MAX_ROUND : 0][REG_SIZE-1 : 0] expected_drbg, 
+                  input [MAX_ROUND_W-1:0] num_rounds);
     begin
         if (!ready_tb)
             wait(ready_tb);
             
-        $display("The HMAC DRBG two rounds is triggered...");
+        $display("The HMAC DRBG multi rounds is triggered...");
         
         entropy_tb = entropy;
         nonce_tb = nonce;
-        lfsr_seed_tb = lfsr_seed;
 
         $display("*** entropy   : %096x", entropy_tb);
         $display("*** nonce     : %096x", nonce_tb);
-        $display("*** lfsr_seed : %096x", lfsr_seed);
 
-        #(1 * CLK_PERIOD);
-        init_tb = 1'b1;  
+        for (int i = 0; i < num_rounds; i++) begin
+          lfsr_seed_tb = random_gen();
+          $display("*** lfsr_seed : %096x", lfsr_seed_tb);
 
-        #(1 * CLK_PERIOD);
-        init_tb = 1'b0;
+          #(1 * CLK_PERIOD);
+          if (i==0) begin
+            init_tb = 1'b1;
+            next_tb = 1'b0;
+          end
+          else begin
+            init_tb = 1'b0;
+            next_tb = 1'b1;
+          end
 
-        #(2 * CLK_PERIOD);
+          #(1 * CLK_PERIOD);
+          init_tb = 1'b0;
+          next_tb = 1'b0;
+
+          #(2 * CLK_PERIOD);
         
+          wait(valid_tb);
+          $display("Received valid flag");
 
-        wait(valid_tb);
-        $display("The HMAC DRBG core completed the execution");
-
-        if (drbg_tb == expected_drbg[0])
-          begin
-            $display("*** TC %0d successful.", tc_number);
-            $display("");
+          if (drbg_tb == expected_drbg[i]) begin
+              $display("*** TC %0d round #%0d successful.", tc_number, i);
+              $display("");
           end
-        else
-          begin
-            $display("*** ERROR: TC %0d NOT successful.", tc_number);
-            $display("Expected: 0x%096x", expected_drbg[0]);
-            $display("Got:      0x%096x", drbg_tb);
-            $display("");
-            error_ctr = error_ctr + 1;
+          else begin
+              $display("*** ERROR: TC %0d round #%0d NOT successful.", tc_number, i);
+              $display("Expected: 0x%096x", expected_drbg[i]);
+              $display("Got:      0x%096x", drbg_tb);
+              $display("");
+              error_ctr = error_ctr + 1;
           end
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b1;  
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b0;
-
-        #(2 * CLK_PERIOD);
-        
-
-        wait(valid_tb);
-        $display("The HMAC DRBG core completed the execution");
-
-        if (drbg_tb == expected_drbg[1])
-          begin
-            $display("*** TC %0d successful.", tc_number);
-            $display("");
-          end
-        else
-          begin
-            $display("*** ERROR: TC %0d NOT successful.", tc_number);
-            $display("Expected: 0x%096x", expected_drbg[1]);
-            $display("Got:      0x%096x", drbg_tb);
-            $display("");
-            error_ctr = error_ctr + 1;
-          end
+        end
 
         tc_number = tc_number+1;
-
     end
-  endtask // hmac384_drbg_two_rounds
-
-
-  //----------------------------------------------------------------
-  // hmac384_drbg_three_rounds()
-  //
-  //----------------------------------------------------------------
-  task hmac384_drbg_three_rounds(input [383 : 0] entropy, input [383 : 0] nonce,
-                  input [383 : 0] lfsr_seed, input  [2 : 0][383 : 0] expected_drbg);
-    begin
-        if (!ready_tb)
-            wait(ready_tb);
-            
-        $display("The HMAC DRBG three rounds is triggered...");
-        
-        entropy_tb = entropy;
-        nonce_tb = nonce;
-        lfsr_seed_tb = lfsr_seed;
-
-        $display("*** entropy   : %096x", entropy_tb);
-        $display("*** nonce     : %096x", nonce_tb);
-        $display("*** lfsr_seed : %096x", lfsr_seed);
-
-        #(1 * CLK_PERIOD);
-        init_tb = 1'b1;  
-
-        #(1 * CLK_PERIOD);
-        init_tb = 1'b0;
-
-        #(2 * CLK_PERIOD);
-        
-
-        wait(valid_tb);
-        $display("The HMAC DRBG core completed the execution");
-
-        if (drbg_tb == expected_drbg[0])
-          begin
-            $display("*** TC %0d successful.", tc_number);
-            $display("");
-          end
-        else
-          begin
-            $display("*** ERROR: TC %0d NOT successful.", tc_number);
-            $display("Expected: 0x%096x", expected_drbg[0]);
-            $display("Got:      0x%096x", drbg_tb);
-            $display("");
-            error_ctr = error_ctr + 1;
-          end
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b1;  
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b0;
-
-        #(2 * CLK_PERIOD);
-        
-
-        wait(valid_tb);
-        $display("The HMAC DRBG core completed the execution");
-
-        if (drbg_tb == expected_drbg[1])
-          begin
-            $display("*** TC %0d successful.", tc_number);
-            $display("");
-          end
-        else
-          begin
-            $display("*** ERROR: TC %0d NOT successful.", tc_number);
-            $display("Expected: 0x%096x", expected_drbg[1]);
-            $display("Got:      0x%096x", drbg_tb);
-            $display("");
-            error_ctr = error_ctr + 1;
-          end
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b1;  
-
-        #(1 * CLK_PERIOD);
-        next_tb = 1'b0;
-
-        #(2 * CLK_PERIOD);
-        
-        wait(valid_tb);
-        $display("The HMAC DRBG core completed the execution");
-
-        if (drbg_tb == expected_drbg[2])
-          begin
-            $display("*** TC %0d successful.", tc_number);
-            $display("");
-          end
-        else
-          begin
-            $display("*** ERROR: TC %0d NOT successful.", tc_number);
-            $display("Expected: 0x%096x", expected_drbg[2]);
-            $display("Got:      0x%096x", drbg_tb);
-            $display("");
-            error_ctr = error_ctr + 1;
-          end
-          
-        tc_number = tc_number+1;
-
-    end
-  endtask // hmac384_drbg_three_rounds
+  endtask // hmac384_drbg_multi_rounds
   //----------------------------------------------------------------
   // hmac_drbg_test()
   //
@@ -513,45 +425,104 @@ module hmac_drbg_tb();
   endtask // hmac_drbg_test
 
   //----------------------------------------------------------------
-  // hmac_drbg_multi_rounds_test()
+  // hmac_drbg_multi_rounds_directed_test()
   //
   //
   //----------------------------------------------------------------
-  task hmac_drbg_multi_rounds_test;
+  task hmac_drbg_multi_rounds_directed_test;
     begin
-        reg [383 : 0] hmac384_entropy;
-        reg [383 : 0] hmac384_nonce;
-        reg [2 : 0][383 : 0] hmac384_expected;
-        reg [383 : 0] seed;
+      // Read expected results from tb_expected.hex
+      read_test_vectors(hmac_drbg_test_vector_file);
 
-        hmac384_entropy  = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
-        hmac384_nonce    = 384'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
-        hmac384_expected[0] = 384'hFEEEF5544A76564990128AD189E873F21F0DFD5AD7E2FA861127EE6E394CA784871C1AEC032C7A8B10B93E0EAB8946D6;
-        hmac384_expected[1] = 384'hd7f1b8ee5fc4eca7b022ccbdc2b03bee146c8985ea52ae400b9e23ce3cb3a95849ef93140c8a519ed8f817e66e6f0de4;
-        seed = random_gen();
-        
-        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
-        
-        hmac384_entropy  = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-        hmac384_nonce    = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-        hmac384_expected[0] = 384'h7F68A6D896EA5DA62E78DEDB46F6662BC141F2F0B9E641ACC7342663FD51444E380FEA1DABBCA55F18987C0CFC10DF77;
-        hmac384_expected[1] = 384'hb52178b3c26aeff4a9f2704664c091d8cf57b45d05c2bb8c7bfcf56963fbe7674908ae830bfe10e0de2eccf48fa7b050;
-        seed = random_gen();
-        
-        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
+      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds);
 
-        hmac384_entropy  = 384'hF71EE80F1D123DC3F70EAA1FB3272714858EA555BC496BF39ADB107B192BF0BCBA9BB5B5799CFF8E12A1154F37CA7BBD;
-        hmac384_nonce    = 384'hDE2B2A66EE13797C69438A9BF6F8514C0A8ABEFD3E5533E1119AE88E8D641771E9BCE4CBE44430A0ADAAAB4103095FC4;
-        hmac384_expected[0] = 384'h316f0937ff54b3d16398d5d07799ab59d0e1f3962831101f1eca892f0f1567df2f964c19b8690761d188d2100403eea6;
-        hmac384_expected[1] = 384'h9a42b5046712b4e32c1f9db62a7900d2e0d4e051580b5dc2cbc8498a04df6676ff80b4e6e2b34b29152bd96e5b4eefed;
-        hmac384_expected[2] = 384'h28ff268d4fea88d4bc28a712feb777bb72dace10e9886eefd226615f5f9d508aa8f59d4b087b65d54223a2186f53031b;
-        seed = random_gen();
-        
-        hmac384_drbg_two_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected[1:0]);
-        hmac384_drbg_three_rounds(hmac384_entropy, hmac384_nonce, seed, hmac384_expected);
     end
   endtask
 
+  task hmac_drbg_randomized_test;
+    begin
+      int file;
+      string cmd, line;
+      reg [REG_SIZE-1 : 0] entropy;
+      reg [REG_SIZE-1 : 0] nonce;
+      reg [MAX_ROUND_W-1:0] num_rounds;
+
+      entropy = random_gen();
+      nonce = random_gen();
+      num_rounds = $urandom_range(1, MAX_ROUND);
+
+      // Write test vectors to tb_inputs.hex
+      file = $fopen("tb_inputs.hex", "w");
+      $fdisplay(file, "%d", num_rounds);
+      $fdisplay(file, "%h", entropy);
+      $fdisplay(file, "%h", nonce);
+      
+      $fclose(file);
+
+      // Call Python reference model
+      $system($sformatf("python3 hmac_drbg_ref.py"));
+
+      // Read expected results from tb_expected.hex
+      read_test_vectors("hmac_drbg_test_vector.hex");
+
+      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds);
+
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // read_test_vectors()
+  //
+  //----------------------------------------------------------------
+  task read_test_vectors(input string fname);
+    begin
+      integer line_cnt;
+      integer fin;
+      integer rv;
+      bit [REG_SIZE-1:0] val;
+      bit [MAX_ROUND_W-1:0] round_val;
+      integer test_vector_cnt;
+
+      line_cnt = 0;
+      test_vector_cnt = 0;
+
+      fin = $fopen(fname, "r");
+      if (fin == 0)
+          $error("Can't open file %s", fname);
+      while (!$feof(fin)) begin
+        if (line_cnt == 0) begin
+          rv = $fscanf(fin, "%h\n", round_val); // Read first line as an integer
+          if (rv != 1) begin
+              $error("Failed to read the number of rounds");
+              $fclose(fin);
+              $finish;
+          end
+          test_vector.num_rounds = round_val;
+        end 
+        else begin
+          rv = $fscanf(fin, "%h\n", val);
+          if (rv != 1) begin
+              $error("Failed to read a matching string");
+              $fclose(fin);
+              $finish;
+          end
+          case (line_cnt)
+              0: test_vector.num_rounds = val;
+              1: test_vector.entropy    = val;
+              2: test_vector.nonce      = val;
+              default: begin 
+                test_vector.drbg_outputs[test_vector_cnt]    = val;
+                test_vector_cnt++;
+              end
+          endcase
+        end
+        line_cnt++;
+      end
+      $fclose(fin);
+
+      $display("Read test vector with %0d rounds from %s", test_vector_cnt, fname);
+    end
+  endtask
   //----------------------------------------------------------------
   // always_debug()
   //
@@ -571,6 +542,7 @@ module hmac_drbg_tb();
   //----------------------------------------------------------------
   initial
     begin : main
+      // $write("PLAYBOOK_RANDOM_SEED = %s\n", getenv("PLAYBOOK_RANDOM_SEED"));
       $display("   -= Testbench for HMAC DRBG started =-");
       $display("    ==============================");
       $display("");
@@ -580,8 +552,14 @@ module hmac_drbg_tb();
       reset_dut();
       //dump_dut_state();
 
-      hmac_drbg_test();
-      hmac_drbg_multi_rounds_test();
+      if (hmac_drbg_test_to_run == "HMAC_DRBG_directed_test") begin
+        hmac_drbg_test();
+        if (hmac_drbg_test_vector_file != "")
+          hmac_drbg_multi_rounds_directed_test();
+      end
+      else begin
+        hmac_drbg_randomized_test();
+      end
 
       display_test_results();
 

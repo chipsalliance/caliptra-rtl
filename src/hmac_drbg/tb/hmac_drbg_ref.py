@@ -267,14 +267,14 @@ def caliptra_test_vectors():
 
 def gen_expected_outputs():
     # Read testbench outputs
-    with open("tb_inputs.txt", "r") as f:
+    with open("tb_inputs.hex", "r") as f:
         lines = f.readlines()
 
     num_rounds = int(lines[0].strip())  # Read number of rounds
     entropy = bytes.fromhex(lines[1].strip())  # Read entropy as bytes
     nonce = bytes.fromhex(lines[2].strip())  # Read nonce as bytes
 
-    returnedbits_len_inbyte = int(384 / 8)
+    returnedbits_len_inbyte = 384 // 8
     drbg = HMAC_DRBG(entropy, nonce)
     outputs = []
     
@@ -286,16 +286,19 @@ def gen_expected_outputs():
                 break
             
     # Write expected results to a file
-    with open("tb_expected.txt", "w") as f:
+    with open("hmac_drbg_test_vector.hex", "w") as f:
+        f.write(f"{num_rounds:1X}\n")
+        f.write(f"{entropy.hex()}\n")
+        f.write(f"{nonce.hex()}\n")
         for output in outputs:
             f.write(f"{output}\n")
 
 if __name__ == "__main__":
-   # Check if tb_inputs.txt exists
-    if os.path.exists("tb_inputs.txt"):
-        print("Found tb_inputs.txt. Running validation against testbench inputs.")
+   # Check if tb_inputs.hex exists
+    if os.path.exists("tb_inputs.hex"):
+        print("REF MODEL: Found tb_inputs.hex. Generating the expected outputs...")
         gen_expected_outputs()
     else:
-        print("No tb_inputs.txt found. Running fixed test vectors.")
+        print("REF MODEL: No tb_inputs.hex found. Running fixed test vectors.")
         cavp_test_vectors()
         caliptra_test_vectors()
