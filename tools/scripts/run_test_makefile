@@ -114,7 +114,7 @@ elif [[ ! -z $(echo $TESTNAME | grep -E "caliptra_top_\w*_test") ]]; then
 else
     if [[ "${CONFIG}" == "caliptra_top_trng_tb" ]]; then
         cptra_build_args="CALIPTRA_INTERNAL_TRNG=1"
-    elif [[ "${CONFIG}" == "caliptra_ss_top" ]]; then
+    elif [[ "${CONFIG}" == "caliptra_ss_top_tb" ]]; then
         cptra_build_args="CALIPTRA_INTERNAL_TRNG=0 TESTNAME=smoke_test_mbox"
     else
         cptra_build_args="CALIPTRA_INTERNAL_TRNG=0"
@@ -123,7 +123,7 @@ else
     echo "$cmd"
     $cmd
 
-    if [[ "${CONFIG}" == "caliptra_ss_top" ]]; then
+    if [[ "${CONFIG}" == "caliptra_ss_top_tb" ]]; then
         # Build MCU Firmware for Subsystem Tests
         cmd="make -f $CALIPTRA_SS_SCRIPTS_DIR/Makefile mcu_program.hex"
         echo "$cmd"
