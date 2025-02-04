@@ -41,7 +41,7 @@
         "url": "origin://AHA_POC/c1d93415-7025-4099-98d0-31b78ff267b0",
         "dest": "common",
         "name": "caliptra_config",
-        "version": "promote_caliptra_config_12",
+        "version": "promote_caliptra_config_13",
         "populate": "when_top"
     },
     {
@@ -49,7 +49,7 @@
         "url": "origin://AHA_POC/58dea2a3-6b98-4cac-9b7d-c500aa351324",
         "dest": "chipsalliance",
         "name": "caliptra-rtl",
-        "version": "promote_caliptra-rtl-mirror_105",
+        "version": "promote_caliptra-rtl-mirror_125",
         "has_submodules": "True"
     },
     {
@@ -57,14 +57,14 @@
         "url": "origin://AHA_POC/f625222b-93a4-4f1a-a0d9-716cb938cda9",
         "dest": "chipsalliance",
         "name": "adams-bridge",
-        "version": "promote_adams-bridge-mirror_77"
+        "version": "promote_adams-bridge-mirror_87"
     },
     {
         "description": "caliptra-ss From GitHub",
         "url": "origin://AHA_POC/3193ca95-e7ef-47c2-babf-f2be4f0a2532",
         "dest": "chipsalliance",
         "name": "caliptra-ss",
-        "version": "promote_caliptra-ss-mirror_14",
+        "version": "promote_caliptra-ss-mirror_34",
         "has_submodules": "True"
     }
 ]

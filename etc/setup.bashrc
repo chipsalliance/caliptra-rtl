@@ -12,8 +12,8 @@ export TOOLS=${MSFT_TOOLS}
 
 export CHIPS=${WORKSPACE}/chipsalliance
 
-export CALIPTRA_WORKSPACE=${CHIPS}
-export CALIPTRA_ROOT=${CALIPTRA_WORKSPACE}/caliptra-rtl
+export CALIPTRA_WORKSPACE=${WORKSPACE}
+export CALIPTRA_ROOT=${CHIPS}/caliptra-rtl
 export CALIPTRA_TOOLS="${CALIPTRA_ROOT}/tools"
 export CALIPTRA_SCRIPTS_DIR=${CALIPTRA_TOOLS}/scripts
 
@@ -33,6 +33,7 @@ export I3C_ROOT=${CALIPTRA_SS}/third_party/i3c-core
 
 export UVM_HOME=/home/cad/tools/mentor/questa/2022.2_1/questasim/verilog_src/uvm-1.1d
 export UVMF_HOME=/home/cad/tools/mentor/uvmf/UVMF_2022.3
-export AVERY_HOME=/cad/tools/mentor/avery/2023.2
-export AVERY_AXI=${AVERY_HOME}/axixactor-2.1e.230314
-export AVERY_PLI=/cad/tools/mentor/avery/2.5c/avery_pli-2023_0609
+export AVERY_HOME=/cad/tools/mentor/avery/2024.3
+export AVERY_AXI=${AVERY_HOME}/axixactor
+export AVERY_PLI=${AVERY_HOME}/avery_pli
+export AVERY_SIM=${AVERY_HOME}/avery_sim
