@@ -650,6 +650,7 @@ endtask
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
     this.teardown_proc = process::self();
     // Summary at sequence end
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // FIXME this delay is needed to avoid an Avery AXI VIP NOA error on the final rvalid before a reset
     `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid AxUSER: %0d", hit_invalid_axi_user_count), UVM_MEDIUM)
 endtask
 
