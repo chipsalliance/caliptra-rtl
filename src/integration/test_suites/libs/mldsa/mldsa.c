@@ -67,7 +67,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
         lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
 
-        // Try to overwrite MLDSA SEED from keyvault
+        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -99,21 +99,23 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
     
-    // Read the data back from MLDSA register
-    printf("Load PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PRIVKEY_SIZE) {
-        mldsa_privkey[offset] = *reg_ptr;
-        if (mldsa_privkey[offset] != privkey[offset]) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_privkey[offset]);
-            printf("Expected data: 0x%x\n", privkey[offset]);
-            printf("%c", fail_cmd);
-            while(1);
+    if(!seed.kv_intf){
+        // Read the data back from MLDSA register
+        printf("Load PRIVKEY data from MLDSA\n");
+        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+        offset = 0;
+        while (offset < MLDSA87_PRIVKEY_SIZE) {
+            mldsa_privkey[offset] = *reg_ptr;
+            if (mldsa_privkey[offset] != privkey[offset]) {
+                printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", mldsa_privkey[offset]);
+                printf("Expected data: 0x%x\n", privkey[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
         }
-        reg_ptr++;
-        offset++;
     }
 
     // Read the data back from MLDSA register
@@ -153,7 +155,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
         lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
 
-        // Try to overwrite MLDSA SEED from keyvault
+        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -227,7 +229,6 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
 
     uint32_t mldsa_sign [MLDSA87_SIGN_SIZE];
 
-//  wait for MLDSA to be ready
     printf("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
@@ -365,7 +366,7 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
         lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
 
-        // Try to overwrite MLDSA SEED from keyvault
+        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -440,7 +441,7 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
 
     uint32_t mldsa_sign [MLDSA87_SIGN_SIZE];
 
-//  wait for MLDSA to be ready
+    //  wait for MLDSA to be ready
     printf("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
