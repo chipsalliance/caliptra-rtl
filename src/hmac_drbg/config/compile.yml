@@ -22,6 +22,8 @@ targets:
     files:
       - $COMPILE_ROOT/tb/hmac_drbg_tb.sv
     tops: [hmac_drbg_tb]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_ref.py .'
 global:
   tool:
     vcs:

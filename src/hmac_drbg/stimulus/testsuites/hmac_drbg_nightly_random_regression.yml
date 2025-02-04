@@ -1,0 +1,14 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "HMAC_DRBG",  "random"]
+      path: ""
+      weight: 100
+      generations: 100
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        ${CALIPTRA_ROOT}/src/hmac_drbg/stimulus/tests/randomized/hmac_drbg_randomized_test.yml : { weight 100 }
