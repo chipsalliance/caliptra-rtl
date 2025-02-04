@@ -134,7 +134,7 @@ stages:
           enter-workspace tmp_ws 'echo "running $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh" && cd $MSFT_REPO_ROOT && bash $MSFT_REPO_ROOT/tools/scripts/licenseHeaderCheck.sh'
   
         displayName: 'LICENSE_HEADER_CHECK'
-        enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow), not(parameter.run_clp_ss_github_val_flow))}}
+        enabled: ${{ and(not(parameters.run_clp_github_val_flow),not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow))}}
         timeoutInMinutes: 5
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
