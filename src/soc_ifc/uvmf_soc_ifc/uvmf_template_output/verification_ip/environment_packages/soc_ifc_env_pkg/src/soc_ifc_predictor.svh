@@ -4087,39 +4087,17 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
                 bit send_local_cptra_sts_txn = 1'b0;
 
-                wait(cptra_pwrgood_asserted == 1'b1);
-
-                // Grab the values that were captured from soc_ifc_ctrl_transaction
-                if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
-                    foreach (cptra_obf_field_entropy[dw]) begin
-                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
-                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
-                    end
-                end
-                if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
-                    foreach (cptra_obf_uds_seed[dw]) begin
-                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
-                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
-                    end
-                end
-
-                // Send predicted transaction
-                if (send_local_cptra_sts_txn) begin
-                    // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
-                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
-                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
-                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
-                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
-                end
-
                 if (kind == "HARD") begin
-                    // Slightly later, same prediction for obf_key (capture is delayed from pwrgood)
+                    // Capture is delayed from pwrgood
                     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
 
                     // Grab the values that were captured from soc_ifc_ctrl_transaction
                     foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
                         send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets;
                         p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                        if ((p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                            `uvm_info("PRED_RESET", $sformatf("sending cptra_sts txn due to obf key. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value(), cptra_obf_key_reg[dw]), UVM_LOW)
+                        end
                     end
 
                     // Send predicted transactions
@@ -4130,6 +4108,49 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                         cptra_sb_ap.write(local_cptra_sb_ap_txn);
                         `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
                     end
+                end
+
+                send_local_cptra_sts_txn = 1'b0;
+                wait(cptra_pwrgood_asserted == 1'b1);
+
+                // Grab the values that were captured from soc_ifc_ctrl_transaction
+                if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    foreach (cptra_obf_field_entropy[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to field entropy. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value(), cptra_obf_field_entropy[dw]), UVM_FULL)
+                        end
+                    end
+                end
+                if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    foreach (cptra_obf_uds_seed[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to uds seed. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value(), cptra_obf_uds_seed[dw]), UVM_FULL)
+                        end
+                    end
+                end
+
+                if (kind == "HARD") begin
+                    // Grab the values that were captured from soc_ifc_ctrl_transaction
+                    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets;
+                        p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                        if ((p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to obf key. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value(), cptra_obf_key_reg[dw]), UVM_FULL)
+                        end
+                    end
+                end
+
+                // Send predicted transaction
+                if (send_local_cptra_sts_txn) begin
+                    // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
+                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
                 end
             end: LATCH_FE_UDS_OBF_KEY_UPON_PWRGOOD
             join_none
