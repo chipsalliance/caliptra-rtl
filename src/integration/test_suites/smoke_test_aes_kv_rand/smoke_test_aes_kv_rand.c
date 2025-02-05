@@ -34,8 +34,15 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+#ifndef MY_RANDOM_SEED
+#define MY_RANDOM_SEED 17
+#endif // MY_RANDOM_SEED
 
 void main() {
+
+    // Initialize rand num generator
+    VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
+    srand((uint32_t) MY_RANDOM_SEED);
 
     printf("----------------------------------\n");
     printf(" Run HMAC 384 to generate a key in KV !!\n");
