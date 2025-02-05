@@ -82,7 +82,7 @@ if [[ ${sts} -ne 0 ]]; then
 fi
 
 # Update Submodules 
-if git submodule update -- submodules; then 
+if git submodule update --remote third_party/*; then 
     echo "Could not update submodule" 
     exit 1
 fi
