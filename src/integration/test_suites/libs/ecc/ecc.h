@@ -24,6 +24,8 @@ typedef uint8_t BOOL;
 #define FALSE 0u
 #define TRUE 1u
 
+#define ECC_INPUT_SIZE 12
+
 typedef struct {
     BOOL      kv_intf;
     uint8_t   kv_id;

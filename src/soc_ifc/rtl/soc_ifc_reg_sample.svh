@@ -1265,8 +1265,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__FUSE_KEY_MANIFEST_PK_HASH SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__fuse_key_manifest_pk_hash::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__FUSE_VENDOR_PK_HASH SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_vendor_pk_hash::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1281,7 +1281,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__fuse_key_manifest_pk_hash::sample_values();
+    function void soc_ifc_reg__fuse_vendor_pk_hash::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(hash_bit_cg[bt]) this.hash_bit_cg[bt].sample(hash.get_mirrored_value() >> bt);
         end
@@ -1290,8 +1290,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__FUSE_KEY_MANIFEST_PK_HASH_MASK SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__fuse_key_manifest_pk_hash_mask::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__FUSE_ECC_REVOCATION SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_ecc_revocation::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -1299,19 +1299,19 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(mask_bit_cg[bt]) this.mask_bit_cg[bt].sample(data[0 + bt]);
+            foreach(ecc_revocation_bit_cg[bt]) this.ecc_revocation_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*mask*/   );
+            this.fld_cg.sample( data[3:0]/*ecc_revocation*/   );
         end
     endfunction
 
-    function void soc_ifc_reg__fuse_key_manifest_pk_hash_mask::sample_values();
+    function void soc_ifc_reg__fuse_ecc_revocation::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(mask_bit_cg[bt]) this.mask_bit_cg[bt].sample(mask.get_mirrored_value() >> bt);
+            foreach(ecc_revocation_bit_cg[bt]) this.ecc_revocation_bit_cg[bt].sample(ecc_revocation.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( mask.get_mirrored_value()   );
+            this.fld_cg.sample( ecc_revocation.get_mirrored_value()   );
         end
     endfunction
 
@@ -1537,6 +1537,81 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( token.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__FUSE_PQC_KEY_TYPE SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_pqc_key_type::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(key_type_bit_cg[bt]) this.key_type_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[1:0]/*key_type*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__fuse_pqc_key_type::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(key_type_bit_cg[bt]) this.key_type_bit_cg[bt].sample(key_type.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( key_type.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_MANIFEST_SVN SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_soc_manifest_svn::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(svn_bit_cg[bt]) this.svn_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*svn*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__fuse_soc_manifest_svn::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(svn_bit_cg[bt]) this.svn_bit_cg[bt].sample(svn.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( svn.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__FUSE_SOC_MANIFEST_MAX_SVN SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__fuse_soc_manifest_max_svn::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(svn_bit_cg[bt]) this.svn_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[7:0]/*svn*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__fuse_soc_manifest_max_svn::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(svn_bit_cg[bt]) this.svn_bit_cg[bt].sample(svn.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( svn.get_mirrored_value()   );
         end
     endfunction
 
@@ -1862,6 +1937,31 @@
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
             this.fld_cg.sample( debug_intent.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__SS_CALIPTRA_DMA_AXI_USER SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*user*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(user_bit_cg[bt]) this.user_bit_cg[bt].sample(user.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( user.get_mirrored_value()   );
         end
     endfunction
 

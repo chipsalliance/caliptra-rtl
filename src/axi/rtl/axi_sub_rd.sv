@@ -107,6 +107,8 @@ module axi_sub_rd import axi_pkg::*; #(
     genvar ex; // Exclusive contexts
     `endif
 
+    logic axi_out_of_rst;
+
     // Active transaction signals
     // track requests as they are sent to component
     axi_ctx_t            txn_ctx;
@@ -129,7 +131,16 @@ module axi_sub_rd import axi_pkg::*; #(
     // Address Request I/F                     //
     // --------------------------------------- //
 
-    assign s_axi_if.arready = !txn_active || txn_final_beat;
+    assign s_axi_if.arready = axi_out_of_rst && (!txn_active || txn_final_beat);
+
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            axi_out_of_rst <= 1'b0;
+        end
+        else begin
+            axi_out_of_rst <= 1'b1;
+        end
+    end
 
     // Indicates there are still reqs to be issued towards component.
     // This active signal deasserts after final dv to component, meaning data is
@@ -138,7 +149,7 @@ module axi_sub_rd import axi_pkg::*; #(
         if (!rst_n) begin
             txn_active <= 1'b0;
         end
-        else if (s_axi_if.arvalid) begin
+        else if (s_axi_if.arvalid && s_axi_if.arready) begin
             txn_active <= 1'b1;
         end
         else if (txn_final_beat) begin

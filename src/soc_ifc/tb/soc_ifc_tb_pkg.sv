@@ -23,6 +23,7 @@
 package soc_ifc_tb_pkg;
 
   `include "caliptra_reg_defines.svh" // This is from integration/rtl level 
+  `include "caliptra_reg_field_defines.svh"
 
   localparam SOCIFC_BASE = `CLP_SOC_IFC_REG_BASE_ADDR;
   localparam SHAACC_BASE = `CLP_SHA512_ACC_CSR_BASE_ADDR;

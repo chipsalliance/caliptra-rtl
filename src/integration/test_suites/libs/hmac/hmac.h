@@ -24,6 +24,12 @@ typedef uint8_t BOOL;
 #define FALSE 0u
 #define TRUE 1u
 
+#define HMAC512_KEY_SIZE 16
+#define HMAC384_KEY_SIZE 12
+#define HMAC512_BLOCK_SIZE 32
+#define HMAC512_LFSR_SEED_SIZE 12
+#define HMAC512_TAG_SIZE 16
+
 typedef struct {
     BOOL      kv_intf;
     uint8_t   kv_id;

@@ -13,5 +13,7 @@
 # limitations under the License.
 #
 ---
-seed: 1
-testname: smoke_test_aes
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+  - +SECOND_DOE_KAT
+testname: smoke_test_kv_crypto_flow2
