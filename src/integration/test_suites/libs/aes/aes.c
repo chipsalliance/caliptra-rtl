@@ -204,7 +204,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
       // Read Output Data Block I
       for (int j = 0; j < 4; j++) {
         ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-        VPRINTF(LOW, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+        VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
 
         //byte mask
         uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
@@ -275,7 +275,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
     // Read Output Data Block I
     for (int j = 0; j < 4; j++) {
       tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-      VPRINTF(LOW, "TAG: 0x%x\n", tag[j]);
+      VPRINTF(MEDIUM, "TAG: 0x%x\n", tag[j]);
       if (tag[j] != aes_input.tag[j]) {
         VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
         VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);

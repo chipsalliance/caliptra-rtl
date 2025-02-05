@@ -178,11 +178,11 @@ void main() {
     const char iv_str96[]  = "91a824c5e02328395985806200000000";
     
     const char plaintext_str[] = "fc23e07b4018460279f8392e86423ecfe465b25b60382f58995ef5fa1f9ca235e4bf87112554aa0e72836831d7b5f39125df11518b8aeb1809d804419beb05ae013482213012e4ce980ddd1c58e11608b775d12b450ecace83e678c69d2c5d";
-
+    const char plaintext_str_ECB[] = "fc23e07b4018460279f8392e86423ecfe465b25b60382f58995ef5fa1f9ca235e4bf87112554aa0e72836831d7b5f39125df11518b8aeb1809d804419beb05ae013482213012e4ce980ddd1c58e11608";
     const char aad_str[] = "b3a1db2d467780480f166859e0e7aab212738b85e88237c2782496c9c503347de02f3dad6bfc671fda71a04ff1e4661767c11303daa0c36d944346d39e3e29ec63d695cdcd83b2b57181582c5ac692b13e4299ab5e86c59d09c2dc6194ebe9";
 
-    const char ciphertext_str_ECB[] = ""; //NEED TO FIGURE OUT PADDING FOR THESE
-    const char ciphertext_str_CBC[] = ""; //NEED TO FIGURE OUT PADDING FOR THESE
+    const char ciphertext_str_ECB[] = "87636d91139b2c88efa132e28225d5c5f48b4592b42059af618fdbaef4dccf354a5beed1fc676bbbfa8ae27d6fc615ca2f684def6c6ebf444e16ed72253d9c01297d384bc056272c3360c5ea55c90bf8372031fe214e5a82b80f8268511b4a";
+    const char ciphertext_str_CBC[] = "5bf8ecc4c32bdde86e6572ea4388b28b77ab0ac520e41ff4d1f20f6d3cf3d008c5e88a94fb91bb73da0aece34c00d77126b5bb7539fcfe3757a39b2caca8c8c2ccc651798e730647c2091c8ef6cadb81ef67692fc43a2825f15535c8661cbd"; 
     const char ciphertext_str_CFB[] = "6c9ff294091438a33690af68100b646b7fb69af4140110b493decef8dc9f5423ad81320b987436d4595783726ce8bc5d067fb24de2870d9cee1cd2f72cd7fe032e5eb98a30a3bdab0e76d082e39251215e9d3cb00f4ef80706b15c3525ee65";
     const char ciphertext_str_OFB[] = "6c9ff294091438a33690af68100b646be78b0aba1f82e6ed146aca79ea22929fcd895fa84a6a9d73b1313607f5aeabb58bcb99b3ae6cd3c505a6b445b965dcf967c7a980ba936d96ca927b063d9fe68a2cc892efd44dd6b91dd290f05587b2";
     const char ciphertext_str_CTR[] = "6c9ff294091438a33690af68100b646bba6e6373d6aceefa27eb24b2da18e7e2d8c1e81e07c477bd531dc12c78cc09a043c61bf40f03742a6ec259e86eb4bfcd1bb849379d0afc7f2637953dee84e2a7a28d37d6dbae7a17f147c3dbd09290";
@@ -201,12 +201,56 @@ void main() {
     hex_to_uint32_array(key_str, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;
-    hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
     hex_to_uint32_array(iv_str128, iv, &iv_length);
-    hex_to_uint32_array(aad_str, aad, &aad_length);
+
+    //full block plaintext
+    hex_to_uint32_array(plaintext_str_ECB, plaintext, &plaintext_length);
 
     //CASE1
-    VPRINTF(LOW, "Test Case 1 - CFB\n");
+    VPRINTF(LOW, "Test Case 1 - ECB\n");
+    op = AES_ENC;
+    mode = AES_ECB;
+    hex_to_uint32_array(ciphertext_str_ECB, ciphertext, &ciphertext_length);
+
+    aes_input.key = aes_key;
+    aes_input.text_len = plaintext_length;
+    aes_input.plaintext = plaintext;
+    aes_input.ciphertext = ciphertext;
+    aes_input.aad_len = aad_length;
+    aes_input.aad = aad;
+    aes_input.tag = tag;
+    aes_input.iv = iv;
+    //Run ENC
+    aes_flow(op, mode, key_len, aes_input);
+    op = AES_DEC;
+    //Run DEC
+    aes_flow(op, mode, key_len, aes_input);
+
+    //CASE2
+    VPRINTF(LOW, "Test Case 2 - CBC\n");
+    op = AES_ENC;
+    mode = AES_CBC;
+    hex_to_uint32_array(ciphertext_str_CBC, ciphertext, &ciphertext_length);
+
+    aes_input.key = aes_key;
+    aes_input.text_len = plaintext_length;
+    aes_input.plaintext = plaintext;
+    aes_input.ciphertext = ciphertext;
+    aes_input.aad_len = aad_length;
+    aes_input.aad = aad;
+    aes_input.tag = tag;
+    aes_input.iv = iv;
+    //Run ENC
+    aes_flow(op, mode, key_len, aes_input);
+    op = AES_DEC;
+    //Run DEC
+    aes_flow(op, mode, key_len, aes_input);
+
+    //Non-full block plaintext
+    hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
+
+    //CASE3
+    VPRINTF(LOW, "Test Case 3 - CFB\n");
     op = AES_ENC;
     mode = AES_CFB;
     hex_to_uint32_array(ciphertext_str_CFB, ciphertext, &ciphertext_length);
@@ -225,8 +269,8 @@ void main() {
     //Run DEC
     aes_flow(op, mode, key_len, aes_input);
 
-    //CASE2
-    VPRINTF(LOW, "Test Case 2 - OFB\n");
+    //CASE4
+    VPRINTF(LOW, "Test Case 4 - OFB\n");
     op = AES_ENC;
     mode = AES_OFB;
     hex_to_uint32_array(ciphertext_str_OFB, ciphertext, &ciphertext_length);
@@ -245,8 +289,8 @@ void main() {
     //Run DEC
     aes_flow(op, mode, key_len, aes_input);
 
-    //CASE3
-    VPRINTF(LOW, "Test Case 3 - CTR\n");
+    //CASE5
+    VPRINTF(LOW, "Test Case 5 - CTR\n");
     op = AES_ENC;
     mode = AES_CTR;
     hex_to_uint32_array(ciphertext_str_CTR, ciphertext, &ciphertext_length);
@@ -265,11 +309,12 @@ void main() {
     //Run DEC
     aes_flow(op, mode, key_len, aes_input);
 
-    //CASE4
-    VPRINTF(LOW, "Test Case 4 - GCM\n");
+    //CASE6
+    VPRINTF(LOW, "Test Case 6 - GCM 256\n");
     op = AES_ENC;
     mode = AES_GCM;
     hex_to_uint32_array(ciphertext_str_GCM, ciphertext, &ciphertext_length);
+    hex_to_uint32_array(aad_str, aad, &aad_length);
     hex_to_uint32_array(iv_str96, iv, &iv_length);
     hex_to_uint32_array(tag_str, tag, &tag_length);
 
@@ -287,8 +332,8 @@ void main() {
     //Run DEC
     aes_flow(op, mode, key_len, aes_input);
 
-    //CASE5
-    VPRINTF(LOW, "Test Case 4 - GCM\n");
+    //CASE7
+    VPRINTF(LOW, "Test Case 7 - GCM 128\n");
     key_len = AES_128;
     op = AES_ENC;
     mode = AES_GCM;
