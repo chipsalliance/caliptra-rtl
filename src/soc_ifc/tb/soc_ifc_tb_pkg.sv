@@ -17,6 +17,7 @@
 `ifndef SOC_IFC_TB_PKG
 `define SOC_IFC_TB_PKG
 
+`define CALIPTRA_MODE_SUBSYSTEM
 
 
 package soc_ifc_tb_pkg;
@@ -112,11 +113,14 @@ package soc_ifc_tb_pkg;
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_KEY_MANIFEST_PK_HASH"             : 12,
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
+    "FUSE_MANUF_DBG_UNLOCK_TOKEN"           : 4,
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
     "INTERNAL_OBF_KEY"                      : 8,
-    "SS_STRAP_GENERIC"                      : 4 
+    "SS_STRAP_GENERIC"                      : 4 ,
+    "SS_SOC_DBG_UNLOCK_LEVEL"               : 2, 
+    "SS_GENERIC_FW_EXEC_CTRL"               : 4
   };
 
 
@@ -401,7 +405,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_STATUS"                                 : (`SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK | 
                                                           `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
     "CPTRA_FUSE_AXI_USER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_AXI_USER_LOCK_LOCK_MASK, 
-    "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK, 
+    "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK,
+    "CPTRA_CAP_LOCK_MASK"                              : `SOC_IFC_REG_CPTRA_CAP_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
     "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : (`SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0 |
                                                           `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1 |
@@ -428,6 +433,20 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
+    "SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"         : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_SUCCESS_MASK      |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_FAIL_MASK         |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
+    "SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"        : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_FAIL_MASK     |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
@@ -706,7 +725,7 @@ package soc_ifc_tb_pkg;
   endfunction // update_CPTRA_RESET_REASON
 
 
-  function void update_exp_regval(string addr_name, dword_t indata, access_t modify);
+  function void update_exp_regval(string addr_name, dword_t indata, access_t modify, string pfx="DEFAULT");
     // "expected" model of register. Read-modify-write model 
    
     word_addr_t addr; 
@@ -716,11 +735,14 @@ package soc_ifc_tb_pkg;
     string tmpstr; 
     string axi_user_suffix; 
     string axi_user_lock_regname; 
-    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked; 
+    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked, cap_locked; 
+    string mask_name; 
 
     dword_t sscode;
     dword_t tmp_data;
     dword_t mask;
+    dword_t ss_debug_intent;
+
 
     begin
 
@@ -865,6 +887,25 @@ package soc_ifc_tb_pkg;
 
         end
 
+      end else if (str_startswith(addr_name, "SS_STRAP_GENERIC")) begin // all bits are AHB-RO
+        exp_data = fuses_locked ? curr_data : axi_indata;
+
+      end  else if (str_startswith(addr_name, "SS_GENERIC_FW_EXEC_CTRL")) begin
+        exp_data = axi_rodata | ahb_indata;
+
+      end  else if (str_startswith(addr_name, "SS_SOC_DBG_UNLOCK_LEVEL")) begin
+        exp_data = axi_rodata | ahb_indata;
+
+      end else if (str_startswith(addr_name, "SS_DBG_MANUF_SERVICE_REG_RSP")) begin
+        if (pfx.compare("DEFAULT") != 0)
+          mask_name = {addr_name, pfx};
+        else
+          mask_name = addr_name;
+        addr_name = "SS_DBG_MANUF_SERVICE_REG_RSP";
+        ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
+        $display("In update_exp_regval, mask = 0x%08x", get_mask(mask_name));
+        exp_data = ss_debug_intent ? ahb_indata & get_mask(mask_name) : curr_data;
+
       end else begin    
         $display("COntrol is in this block");
         
@@ -940,6 +981,22 @@ package soc_ifc_tb_pkg;
             $display("Expected data: 0x%x", exp_data);
           end
 
+          "CPTRA_CAP_LOCK": begin
+            exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;
+          end
+
+          "CPTRA_HW_CAPABILITIES": begin
+            cap_locked = _exp_register_data_dict["CPTRA_CAP_LOCK"];
+            $display("CPTRA_CAP_LOCK = 0x%08x", cap_locked);
+            exp_data = cap_locked ? curr_data : (ahb_indata | axi_rodata);
+          end
+
+          "CPTRA_FW_CAPABILITIES": begin
+            cap_locked = _exp_register_data_dict["CPTRA_CAP_LOCK"];
+            $display("CPTRA_CAP_LOCK = 0x%08x", cap_locked);
+            exp_data = cap_locked ? curr_data : (ahb_indata | axi_rodata);
+          end
+
           "INTERNAL_ICCM_LOCK"                              : begin
             iccm_locked = curr_data & get_mask(addr_name); 
             exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata); 
@@ -972,24 +1029,36 @@ package soc_ifc_tb_pkg;
           "INTERNAL_RV_MTIMECMP_L"                   : exp_data = ahb_indata | axi_rodata;
           "INTERNAL_RV_MTIMECMP_H"                   : exp_data = ahb_indata | axi_rodata;
 
-          "SS_CPTRA_BASE_ADDR_L"                          : exp_data = axi_indata | ahb_rodata;
-          "SS_CPTRA_BASE_ADDR_H"                          : exp_data = axi_indata | ahb_rodata;
-          "SS_MCI_BASE_ADDR_L"                            : exp_data = axi_indata | ahb_rodata;
-          "SS_MCI_BASE_ADDR_H"                            : exp_data = axi_indata | ahb_rodata;
-          "SS_RECOVERY_IFC_BASE_ADDR_L"                   : exp_data = axi_indata | ahb_rodata;
-          "SS_RECOVERY_IFC_BASE_ADDR_H"                   : exp_data = axi_indata | ahb_rodata;
-          "SS_OTP_FC_BASE_ADDR_L"                         : exp_data = axi_indata | ahb_rodata;
-          "SS_OTP_FC_BASE_ADDR_H"                         : exp_data = axi_indata | ahb_rodata;
-          "SS_UDS_SEED_BASE_ADDR_L"                       : exp_data = axi_indata | ahb_rodata;
-          "SS_UDS_BASE_ADDR_H"                            : exp_data = axi_indata | ahb_rodata;
-          "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = axi_indata | ahb_rodata;
-          "SS_DEBUG_INTENT"                               : exp_data = axi_indata | ahb_rodata;
-          "SS_STRAP_GENERIC"                              : exp_data = axi_indata | ahb_rodata;
-          "SS_DBG_MANUF_SERVICE_REG_REQ"                  : exp_data = axi_indata | ahb_indata;
-          "SS_DBG_MANUF_SERVICE_REG_RSP"                  : exp_data = ahb_indata | axi_rodata;
-          "SS_SOC_DBG_UNLOCK_LEVEL"                       : exp_data = ahb_indata | axi_rodata;
-          "SS_GENERIC_FW_EXEC_CTRL"                       : exp_data = ahb_indata | axi_rodata;
-
+          "SS_CPTRA_BASE_ADDR_L"                          : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_CPTRA_BASE_ADDR_H"                          : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_MCI_BASE_ADDR_L"                            : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_MCI_BASE_ADDR_H"                            : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_RECOVERY_IFC_BASE_ADDR_L"                   : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_RECOVERY_IFC_BASE_ADDR_H"                   : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_OTP_FC_BASE_ADDR_L"                         : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_OTP_FC_BASE_ADDR_H"                         : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_UDS_SEED_BASE_ADDR_L"                       : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_UDS_BASE_ADDR_H"                            : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"    : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
+          
+          "SS_DBG_MANUF_SERVICE_REG_REQ"                  : begin
+            ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
+            $display("ss_debug_intent = 0x%08x", ss_debug_intent);
+            $display("axi_indata = 0x%08x", axi_indata);
+            $display("ahb_indata = 0x%08x", axi_indata);
+            $display("mask = 0x%08x", get_mask(addr_name));
+            $display("curr_data = 0x%08x", curr_data);
+            exp_data = ss_debug_intent ? axi_indata & get_mask(addr_name) | ahb_indata & get_mask(addr_name) : curr_data;
+          end
+          
+          //"SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"                  : begin
+          //  tmpstr = "SS_DBG_MANUF_SERVICE_REG_RSP";
+          //  ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
+          //  exp_data = ss_debug_intent ? ahb_indata & get_mask(addr_name) : curr_data;
+          //end
+          
           default: begin
             $display("DEBUG: Default: %s", addr_name);
             exp_data = indata & get_mask(addr_name); 
@@ -1286,6 +1355,12 @@ package soc_ifc_tb_pkg;
 
   endfunction // delm_from_strq
 
+  function automatic add_to_strq(inout strq_t mutable_strq, input string name); 
+  // NOTE: This function works ONLY for a single name that will be stored in one index
+
+    mutable_strq.push_back(name);
+
+  endfunction
 
   function automatic dword_t mask_shifted(dword_t v, dword_t n);
 
@@ -1570,7 +1645,7 @@ package soc_ifc_tb_pkg;
 
     extern function new();
     extern function void record_reset_values(tid, access_t modify); 
-    extern function void record_entry(WordTransaction transaction, access_t modify); 
+    extern function void record_entry(WordTransaction transaction, access_t modify, string pfx="DEFAULT"); 
     extern function intpair_t find_matching_transaction(word_addr_t addr, int tid); 
     extern function int check_entry(WordTransaction transaction);
     extern function int check_entry_inrange(WordTransaction transaction, int minval, int maxval);
@@ -1624,7 +1699,7 @@ package soc_ifc_tb_pkg;
   endfunction  // record_reset_vaules
 
 
-  function void RegScoreboard::record_entry(WordTransaction transaction, access_t modify); 
+  function void RegScoreboard::record_entry(WordTransaction transaction, access_t modify, string pfx="DEFAULT"); 
     // NOTE. when an entry is recorded, instead of storing the transaction
     // the expected data is stored, so that comparison can be made later on  
     // for a previous 'tid'.
@@ -1639,11 +1714,15 @@ package soc_ifc_tb_pkg;
     string addr_name;
 
     addr_name = _imap_soc_register_dict[addr];
-    update_exp_regval(addr_name, data, modify);
+    if(pfx.compare("DEFAULT") == 0)
+      update_exp_regval(addr_name, data, modify);
+    else
+      update_exp_regval(addr_name, data, modify, pfx);
+
     exp_data = _exp_register_data_dict[addr_name];
 
     new_trans = {addr: addr, data: exp_data, tid: tid};
-    
+
     if (addr_table.exists(addr)) begin
       // $display ("INFO. Pushing new transaction into existing queue"); 
       addr_table[addr].push_back(new_trans); 

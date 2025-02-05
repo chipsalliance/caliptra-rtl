@@ -15,4 +15,4 @@
 ---
 testname: soc_ifc_test
 #seed: 1
-seed: 1738109322
+seed: ${PLAYBOOK_RANDOM_SEED}

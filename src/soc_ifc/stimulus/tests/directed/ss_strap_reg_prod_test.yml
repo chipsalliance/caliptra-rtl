@@ -14,7 +14,7 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='ss_strap_reg_prod_test'
+  - +SOC_IFC_TEST='fuse_reg_prod_test'
 
-testname: ss_strap_reg_prod_test 
+testname: fuse_reg_prod_test 
 seed: ${PLAYBOOK_RANDOM_SEED}

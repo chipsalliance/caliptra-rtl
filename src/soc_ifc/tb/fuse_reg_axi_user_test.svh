@@ -45,7 +45,7 @@ logic [31:0] fuse_mldsa_revocation;
 
 
 //----------------------------------------------------------------
-// fuse_reg_pauser_test()
+// fuse_reg_axi_user_test()
 // 
 // Checks fuse permission tests depending on PAUSER bit status 
 //----------------------------------------------------------------
@@ -73,8 +73,9 @@ task fuse_reg_axi_user_test;
     wrtrans = new();
     rdtrans = new();
 
-    fuse_regnames = get_fuse_regnames(); 
+    fuse_regnames = get_fuse_regnames_minus_ss_straps(); 
 
+    /*
     foreach (fuse_regnames[ix]) begin
       $display("CUrrent fuse: %s", fuse_regnames[ix]);
       $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
@@ -101,6 +102,7 @@ task fuse_reg_axi_user_test;
         continue; 
       end
     end
+      */
 
     init_sim();
     reset_dut();

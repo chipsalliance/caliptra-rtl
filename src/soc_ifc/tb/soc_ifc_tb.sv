@@ -35,6 +35,7 @@ import "DPI-C" function string getenv(input string env_name);
 `define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
 
 
+
 module soc_ifc_tb
   import soc_ifc_pkg::*;
   import mbox_pkg::*;
@@ -230,9 +231,10 @@ module soc_ifc_tb
 
   bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
 
-  logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
-
   logic         mailbox_data_avail_tb;
+
+  logic       ss_debug_intent_tb;
+  logic       cptra_ss_debug_intent_tb;
 
   typedef enum logic {
     read = 0,
@@ -248,11 +250,6 @@ module soc_ifc_tb
     FAIL = 0, 
     PASS = 1
   } exp_txn_sts_e;
-
-
-  always @(negedge clk_tb) begin
-    prdata_o_latched <= prdata_o_tb;
-  end
 
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -297,9 +294,6 @@ module soc_ifc_tb
              .AXIM_USER_WIDTH(AXIM_USER_WIDTH),
              .AHB_DATA_WIDTH(AHB_DATA_WIDTH), 
              .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH) 
-             //.APB_USER_WIDTH(APB_USER_WIDTH), 
-             //.APB_ADDR_WIDTH(APB_ADDR_WIDTH), 
-             //.APB_DATA_WIDTH(APB_DATA_WIDTH)  
             )
             dut (
              .clk(clk_tb),
@@ -326,16 +320,6 @@ module soc_ifc_tb
              .generic_input_wires({generic_input_wires1, generic_input_wires0}),
              .BootFSM_BrkPoint(1'b0), // TODO
              .generic_output_wires(),
-
-             //.paddr_i(paddr_i_tb),
-             //.psel_i(psel_i_tb),
-             //.penable_i(penable_i_tb),
-             //.pwrite_i(pwrite_i_tb),
-             //.pwdata_i(pwdata_i_tb),
-             //.axi_user_i(axi_user_i_tb),
-             //.pready_o(pready_o_tb),
-             //.prdata_o(prdata_o_tb),
-             //.pslverr_o(pslverr_o_tb),
 
              .s_axi_w_if(s_axi_if.w_sub),
              .s_axi_r_if(s_axi_if.r_sub),
@@ -394,8 +378,8 @@ module soc_ifc_tb
              .strap_ss_strap_generic_1(0),
              .strap_ss_strap_generic_2(0),
              .strap_ss_strap_generic_3(0),
-             .ss_debug_intent(1'b0),
-             .cptra_ss_debug_intent(),
+             .ss_debug_intent(ss_debug_intent_tb),
+             .cptra_ss_debug_intent(cptra_ss_debug_intent_tb),
 
              .ss_dbg_manuf_enable(),
              .ss_soc_dbg_unlock_level(),
@@ -773,6 +757,9 @@ module soc_ifc_tb
       cptra_fe_tb = 256'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d46;
       cptra_fe_vld_tb = 1'b1;
 
+      // SS Straps
+      ss_debug_intent_tb = 1'b0;
+
     end
   endtask // init_sim
 
@@ -861,7 +848,8 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task write_single_word_axi_user_sub(input [31 : 0] address,
                                  input [31 : 0] word, 
-                                 input [31 : 0] axi_user);
+                                 input [31 : 0] axi_user,
+                                 input exp_txn_sts_e exp_txn_sts = PASS);
     begin
       axi_resp_e resp;
       //$display("AXI Write transaction");
@@ -873,7 +861,7 @@ module soc_ifc_tb
       .data(word),
       .resp(resp));
       //$display("Checking if AXI write was successful");
-      axi_txn_check(resp, write);
+      axi_txn_check(resp, write, exp_txn_sts);
     end
   endtask
 
@@ -1269,7 +1257,7 @@ module soc_ifc_tb
   // 
   // common sim and dut initialization routines for register tests 
   //----------------------------------------------------------------
-  task sim_dut_init;
+  task sim_dut_init(input logic debug = 1'b0);
 
     // int sscode = -1;
     string ssname = "UNSET"; 
@@ -1285,6 +1273,8 @@ module soc_ifc_tb
 
       else begin
         init_sim();
+        if (debug == 1'b1)
+          ss_debug_intent_tb = 1'b1;
         reset_dut();
 
         wait (ready_for_fuses == 1'b1);
@@ -1372,7 +1362,6 @@ module soc_ifc_tb
     end
   endtask // write_regs
 
-
   //-----------------------------------------------------------------------------
   // read_reg_chk_inrange()
   //
@@ -1414,7 +1403,7 @@ module soc_ifc_tb
   // Utility for tracking/writing transaction to a register over APB/AHB
   // NOTE. Wait times must be added explcitly outside routine
   //----------------------------------------------------------------
-  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] axi_user=AXI_USER_DEFAULT);
+  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] axi_user=AXI_USER_DEFAULT, string pfx="DEFAULT", input exp_txn_sts_e exp_sts=PASS);
     string rname;
     word_addr_t addr;
 
@@ -1427,17 +1416,17 @@ module soc_ifc_tb
           $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
         end else if (modifier == SET_AXI) begin
           if (axi_user != AXI_USER_DEFAULT) begin
-            write_single_word_axi_user_sub(addr, wrtrans.data, axi_user); 
+            write_single_word_axi_user_sub(addr, wrtrans.data, axi_user, exp_sts); 
             $display("Write over AXI with non-default axi_user: addr = %-40s (0x%08x), data = 0x%08x", 
               rname, addr, wrtrans.data);
           end else begin
-            write_single_word_axi_sub(addr, wrtrans.data); 
+            write_single_word_axi_sub(addr, wrtrans.data, exp_sts); 
             $display("Write over AXI: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
           end
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
-        sb.record_entry(wrtrans, modifier);
+        sb.record_entry(wrtrans, modifier, pfx);
       end
     endtask // write_reg_trans
 
@@ -1684,7 +1673,10 @@ module soc_ifc_tb
   `include "fuse_reg_lifecycle_test.svh"   
   `include "fuse_reg_perm_test.svh"     
   `include "fuse_reg_axi_user_test.svh"     
-  `include "fuse_reg_test.svh"     
+  `include "fuse_reg_test.svh"   
+  `include "fuse_cptra_cap_test.svh"  
+  `include "ss_strap_reg_test.svh"     
+  `include "ss_strap_reg_lifecycle_test.svh"   
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
   `include "soc_reg_test.svh"     
@@ -1692,6 +1684,8 @@ module soc_ifc_tb
   `include "soc_reg_invalid_test.svh"     
   `include "soc_reg_intrblk_test.svh" 
   `include "sha_acc_intrblk_test.svh"
+  `include "debug_unlock_prod_test.svh"
+  `include "debug_unlock_manuf_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1732,12 +1726,28 @@ module soc_ifc_tb
           sim_dut_init();
           fuse_reg_test();
 
+        end else if (soc_ifc_testname == "fuse_cptra_cap_reg_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          fuse_cptra_cap_reg_test();
+
+        end else if (soc_ifc_testname == "ss_strap_reg_prod_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          ss_strap_reg_test();
+
         end else if (soc_ifc_testname == "fuse_reg_lifecycle_test") begin 
           if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
             fuse_reg_lifecycle_test(security_state_testname);
           else
             fuse_reg_lifecycle_test("RANDOM"); 
- 
+
+        end else if (soc_ifc_testname == "ss_strap_reg_lifecycle_test") begin 
+          if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
+            ss_strap_reg_lifecycle_test(security_state_testname);
+          else
+            ss_strap_reg_lifecycle_test("RANDOM"); 
+   
         end else if (soc_ifc_testname == "soc_reg_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
@@ -1782,6 +1792,16 @@ module soc_ifc_tb
           set_security_state_byname("RANDOM");
           sim_dut_init();
           fuse_reg_axi_user_test();
+
+        end else  if (soc_ifc_testname == "debug_unlock_prod_test") begin
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(1'b1);
+          debug_unlock_prod_test();
+
+        end else  if (soc_ifc_testname == "debug_unlock_manuf_test") begin
+          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(1'b1);
+          debug_unlock_manuf_test();
 
         end 
    

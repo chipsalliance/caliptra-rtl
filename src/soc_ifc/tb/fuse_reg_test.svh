@@ -24,6 +24,7 @@ task fuse_reg_test;
   word_addr_t addr; 
   int tid = 0; // optional to increment UNLESS multiple writes to same address 
   strq_t fuse_regnames; 
+  strq_t fuse_cptra_rw_soc_ro_regnames;
 
   WordTransaction wrtrans, rdtrans;
   dword_t exp_data; 
@@ -56,18 +57,17 @@ task fuse_reg_test;
     // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
     // Deleting it explicitly for now
     del_from_strq(fuse_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
-
+*/
     foreach (fuse_regnames[ix]) begin
-      if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
-          (fuse_regnames[ix] == "SS_SOC_DBG_UNLOCK_LEVEL") ||
-          (fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
+      if ((fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
           (fuse_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
           (fuse_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
+        add_to_strq(fuse_cptra_rw_soc_ro_regnames, fuse_regnames[ix]);
         fuse_regnames.delete(ix);  // SOC read-only
         continue; 
       end
     end
-      */
+      
 
     // I. Write over AXI, read over AXI then read again over AHB
 
