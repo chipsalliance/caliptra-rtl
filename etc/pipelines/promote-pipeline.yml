@@ -207,14 +207,14 @@ stages:
     build_and_sim_map:
     - integration_top_vcs:
       - display_name: 'Build integration_lib with VCS'
-      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top_tb'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_regress:
-          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+          - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_tb'
           - timeout: 90
@@ -222,14 +222,14 @@ stages:
 
     - integration_top_trng_vcs:
       - display_name: 'Build integration_lib with VCS and enable TRNG'
-      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'caliptra_top_trng_tb'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_trng_regress:
-          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+          - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
           - configspec_name: 'integration_lib'
           - dut: 'caliptra_top_trng_tb'
           - timeout: 45
@@ -237,14 +237,14 @@ stages:
     
     - caliptra_ss_top_vcs: 
       - display_name: 'Build caliptra_ss_top with VCS'
-      - enabled: ${{ parameters.run_clp_ss_github_val_flow}}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_github_val_flow))  }}
       - configspec_name: 'caliptra_ss_lib'
       - dut: 'caliptra_ss_top'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_regress:
-          - enabled: ${{ parameters.run_clp_ss_github_val_flow }}
+          - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_github_val_flow)) }}
           - configspec_name: 'caliptra_ss_lib'
           - dut: 'caliptra_ss_top'
           - timeout: 75
@@ -309,14 +309,14 @@ stages:
 
     - uvmf_kv:
       - display_name: 'UVMF_KV'
-      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'uvmf_kv'
       #- args: '--submit-resource-args RAM/28000'
       - timeout: 25
       - testsuites:
         - l0_regress:
-          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+          - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_kv'
           - path: '${CALIPTRA_ROOT}/src/keyvault/stimulus/testsuites/kv_promote_regression.yml'
@@ -324,14 +324,14 @@ stages:
 
     - uvmf_pv:
       - display_name: 'UVMF_PV'
-      - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+      - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
       - configspec_name: 'integration_lib'
       - dut: 'uvmf_pv'
       #- args: '--submit-resource-args RAM/28000'
       - timeout: 25
       - testsuites:
         - l0_regress:
-          - enabled: ${{ not(parameters.run_abr_github_val_flow) }}
+          - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_ss_github_val_flow)) }}
           - configspec_name: 'integration_lib'
           - dut: 'uvmf_pv'
           - path: '${CALIPTRA_ROOT}/src/pcrvault/stimulus/testsuites/pv_promote_regression.yml'
