@@ -168,6 +168,7 @@ module axi_mgr_wr import axi_pkg::*; #(
         m_axi_if.wvalid = txn_active && valid_i;
         m_axi_if.wdata  = data_i;
         m_axi_if.wstrb  = '1; // TODO support this? requires significant ctrl updates
+        m_axi_if.wuser  = axuser;
         m_axi_if.wlast = ~|txn_down_cnt;
     end
 
