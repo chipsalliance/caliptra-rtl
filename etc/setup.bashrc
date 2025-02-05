@@ -24,7 +24,7 @@ export ADAMSBRIDGE_SUBMODULE=${CALIPTRA_ROOT}/submodules/adams-bridge
 # relative file paths instead)
 export ADAMSBRIDGE_ROOT=${CHIPS}/adams-bridge
 
-
+export CALIPTRA_SS_ROOT=${CHIPS}/caliptra-ss
 export CALIPTRA_SS=${CHIPS}/caliptra-ss
 export CALIPTRA_SS_TOOLS=${CALIPTRA_SS}/tools
 export CALIPTRA_SS_SCRIPTS_DIR=${CALIPTRA_SS_TOOLS}/scripts
