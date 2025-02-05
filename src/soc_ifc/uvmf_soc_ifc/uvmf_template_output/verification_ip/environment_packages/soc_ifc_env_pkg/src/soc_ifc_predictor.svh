@@ -482,9 +482,31 @@ class soc_ifc_predictor #(
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
-            send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
+            // If we're running uvmf_soc_ifc, RDC modelling is not supported (TODO)
+            // so the wires driving FE/UDS cause them to be latched immediately on assertion
+            // of 'vld' signals while soft reset is asserted
+            if (!p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE)) begin
+                if (cptra_obf_field_entropy_vld) begin
+                    foreach (cptra_obf_field_entropy[dw]) begin
+                        send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]) begin
+                            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("Sending cptra_status_transaction due to field entropy. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value(), cptra_obf_field_entropy[dw]), UVM_FULL)
+                        end
+                    end
+                end
+                if (cptra_obf_uds_seed_vld) begin
+                    foreach (cptra_obf_uds_seed[dw]) begin
+                        send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]) begin
+                            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("Sending cptra_status_transaction due to uds seed. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value(), cptra_obf_uds_seed[dw]), UVM_FULL)
+                        end
+                    end
+                end
+            end
             reset_wdt_count = 1'b0;
-            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d", send_soc_ifc_sts_txn), UVM_NONE)
+            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d, send_cptra_sts_txn: %d", send_soc_ifc_sts_txn, send_cptra_sts_txn), UVM_NONE)
         end
         // Normal operation
         else begin
