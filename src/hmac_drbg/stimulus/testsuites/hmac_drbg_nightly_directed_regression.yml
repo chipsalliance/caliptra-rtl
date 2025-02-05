@@ -5,4 +5,4 @@ contents:
   - tests:
       tags: ["L0", "directed", "nightly", "HMAC_DRBG"]
       paths:
-        - ${CALIPTRA_ROOT}/src/hmac_drbg/stimulus/tests/directed/hmac_drbg_normal_test.yml
+        - ${CALIPTRA_ROOT}/src/hmac_drbg/stimulus/tests/directed/hmac_drbg_directed_test.yml
