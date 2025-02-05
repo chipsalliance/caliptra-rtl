@@ -8,7 +8,7 @@
 +incdir+${AVERY_SIM}/src
 +incdir+${AVERY_SIM}/src.IEEE
 +incdir+${MSFT_REPO_ROOT}/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
-+incdir+/home/ws/caliptra/cwhitehead/WS_tmp/chipsalliance/caliptra-rtl/src/libs/aaxi_uvm
++incdir+${CALIPTRA_ROOT}/src/libs/aaxi_uvm
 ${UVM_HOME}/src/uvm_pkg.sv
 ${AVERY_SIM}/src/avery_pkg.sv
 ${AVERY_SIM}/src/avery_pkg_test.sv
