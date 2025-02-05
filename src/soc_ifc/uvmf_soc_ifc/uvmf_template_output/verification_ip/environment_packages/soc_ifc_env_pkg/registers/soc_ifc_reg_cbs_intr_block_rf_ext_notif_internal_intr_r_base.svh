@@ -48,6 +48,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         uvm_reg_block rm;
         soc_ifc_reg__intr_block_t_ext    sir_intr_rm;
         sha512_acc_csr__intr_block_t_ext sac_intr_rm;
+        axi_dma_reg__intr_block_t_ext    dma_intr_rm;
         bit           fld_hwset_active = 1'b0;
         uvm_reg       sts_reg;
         string event_name    ;
@@ -68,6 +69,10 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         else if (rm.get_parent().get_name() == "soc_ifc_reg_rm") begin
             if (!$cast(sir_intr_rm,rm)) `uvm_fatal("SOC_IFC_REG_CBS", {"Failed to get handle of expected sub-type for parent uvm_reg_block. ", fld.get_full_name()})
             fld_hwset_active = sir_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()];
+        end
+        else if (rm.get_parent().get_name() == "axi_dma_reg_rm") begin
+            if (!$cast(dma_intr_rm,rm)) `uvm_fatal("SOC_IFC_REG_CBS", {"Failed to get handle of expected sub-type for parent uvm_reg_block. ", fld.get_full_name()})
+            fld_hwset_active = dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()];
         end
         else begin
             `uvm_fatal("SOC_IFC_REG_CBS", "Callback is registered to an unrecognized register block!")
@@ -125,6 +130,15 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
                     begin
                     uvm_wait_for_nba_region();
                     sac_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
+                    end
+                join_none
+            end
+            else if (dma_intr_rm != null) begin
+                dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
+                fork
+                    begin
+                    uvm_wait_for_nba_region();
+                    dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
             end
