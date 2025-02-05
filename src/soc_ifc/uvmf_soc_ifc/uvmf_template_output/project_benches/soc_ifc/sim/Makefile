@@ -39,7 +39,6 @@ export UVMF_PROJECT_DIR ?= $(PWD)/..
 # The default values for these variables are to indicate to the user that the value needs to be set.
 # This variable should point down to and including the uvmf directory in the QVIP confiurator generated code.
 export QVIP_AHB_LITE_SLAVE_DIR_NAME ?= the_environment_variable_named_QVIP_AHB_LITE_SLAVE_DIR_NAME_needs_to_point_to_the_QVIP_configurator_generated_code_for_this_sub_environment
-export QVIP_APB5_SLAVE_DIR_NAME ?= the_environment_variable_named_QVIP_APB5_SLAVE_DIR_NAME_needs_to_point_to_the_QVIP_configurator_generated_code_for_this_sub_environment
 #
 # pragma uvmf custom exports end
 # *********************************************************************************************

@@ -39,7 +39,6 @@ module hdl_top;
 
 import soc_ifc_parameters_pkg::*;
 import qvip_ahb_lite_slave_params_pkg::*;
-//import qvip_apb5_slave_params_pkg::*;
 import uvmf_base_pkg_hdl::*;
 `include "avery_defines.svh"
 import aaxi_pkg::*;
@@ -59,13 +58,6 @@ import aaxi_uvm_pkg::*;
         .UNIQUE_ID("uvm_test_top.environment.qvip_ahb_lite_slave_subenv."),
         .EXT_CLK_RESET(1)
        ) uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl();
-
-//  hdl_qvip_apb5_slave 
-//      #(
-//        .APB5_MASTER_0_ACTIVE(1),
-//        .UNIQUE_ID("uvm_test_top.environment.qvip_apb5_slave_subenv."),
-//        .EXT_CLK_RESET(1)
-//       ) uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl();
 
 // pragma uvmf custom clock_generator begin
   bit clk;
@@ -181,8 +173,6 @@ import aaxi_uvm_pkg::*;
   // AHB Clock/reset
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_clk_gen_CLK     = clk;
   assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.default_reset_gen_RESET = cptra_status_agent_bus.cptra_noncore_rst_b;
-//  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_clk_gen_CLK         = clk;
-//  assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.default_reset_gen_RESET     = cptra_status_agent_bus.cptra_noncore_rst_b;
 
     // AXI Interface
     axi_if #(
@@ -240,16 +230,6 @@ import aaxi_uvm_pkg::*;
         //AXI Interface with SoC
         .s_axi_w_if(s_axi_if.w_sub),
         .s_axi_r_if(s_axi_if.r_sub),
-
-//        .paddr_i  (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR[17:0]),
-//        .psel_i   (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSEL       ),
-//        .penable_i(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLE    ),
-//        .pwrite_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
-//        .pwdata_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATA     ),
-//        .pauser_i (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSER     ),
-//        .pready_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADY     ),
-//        .prdata_o (uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATA     ),
-//        .pslverr_o(uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERR    ),
 
         //AHB Interface with uC
         .haddr_i    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]),
@@ -359,24 +339,6 @@ import aaxi_uvm_pkg::*;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXCL     = 1'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTER   = 16'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXOKAY   = 1'b0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSER           = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSER           = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSER           = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUP          = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDRCHK         = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PCTRLCHK         = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSELxCHK         = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLECHK       = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATACHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSTRBCHK         = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUPCHK       = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSERCHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSERCHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADYCHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATACHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
-//    assign uvm_test_top_environment_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
     always_comb begin
         // Clock control placeholders
         ports[0].CACTIVE_m = 1'b0;

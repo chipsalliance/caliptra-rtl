@@ -90,10 +90,6 @@ class soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )) soc_ifc_ctrl_agent_ae;
-//  uvm_analysis_imp_apb5_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
-//                              .CONFIG_T(CONFIG_T),
-//                              .BASE_T(BASE_T)
-//                              )) apb5_slave_0_ae;
   uvm_analysis_imp_axi_sub_0_ae #(aaxi_master_tr, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -119,7 +115,6 @@ class soc_ifc_predictor #(
   // Instantiate the analysis ports
   uvm_analysis_port #(soc_ifc_status_transaction) soc_ifc_sb_ap;
   uvm_analysis_port #(cptra_status_transaction) cptra_sb_ap;
-//  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_apb_ap;
   uvm_analysis_port #(aaxi_master_tr) soc_ifc_sb_axi_ap;
   uvm_analysis_port #(ss_mode_status_transaction) ss_mode_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
@@ -144,17 +139,6 @@ class soc_ifc_predictor #(
   cptra_sb_ap_output_transaction_t cptra_sb_ap_output_transaction;
   // Code for sending output transaction out through cptra_sb_ap
   // cptra_sb_ap.write(cptra_sb_ap_output_transaction);
-
-//  // Transaction variable for predicted values to be sent out soc_ifc_sb_apb_ap
-//  // Once a transaction is sent through an analysis_port, another transaction should
-//  // be constructed for the next predicted transaction. 
-//  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-//                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) soc_ifc_sb_apb_ap_output_transaction_t;
-//  soc_ifc_sb_apb_ap_output_transaction_t soc_ifc_sb_apb_ap_output_transaction;
-//  // Code for sending output transaction out through soc_ifc_sb_apb_ap
-//  // soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
 
   // Transaction variable for predicted values to be sent out soc_ifc_sb_axi_ap
   // Once a transaction is sent through an analysis_port, another transaction should
@@ -186,7 +170,6 @@ class soc_ifc_predictor #(
 
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
-//  mvc_sequence_item_base apb5_slave_0_ae_debug;
   mbox_sram_transaction mbox_sram_agent_ae_debug;
   cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
   ss_mode_ctrl_transaction ss_mode_ctrl_agent_ae_debug;
@@ -196,7 +179,6 @@ class soc_ifc_predictor #(
 
   // pragma uvmf custom class_item_additional begin
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_ahb_reg_ap;
-//  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_apb_reg_ap;
   uvm_analysis_port #(aaxi_master_tr) soc_ifc_axi_reg_wr_ap;
   uvm_analysis_port #(aaxi_master_tr) soc_ifc_axi_reg_rd_ap;
 
@@ -286,7 +268,6 @@ class soc_ifc_predictor #(
   mbox_steps_s next_step = '{null_action: 1'b1, default: 1'b0};
 
   soc_ifc_reg_model_top  p_soc_ifc_rm;
-//  uvm_reg_map p_soc_ifc_APB_map; // Block map
   uvm_reg_map p_soc_ifc_AXI_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
 
@@ -358,16 +339,13 @@ class soc_ifc_predictor #(
     mbox_sram_agent_ae = new("mbox_sram_agent_ae", this);
     ss_mode_ctrl_agent_ae = new("ss_mode_ctrl_agent_ae", this); // FIXME
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
-//    apb5_slave_0_ae = new("apb5_slave_0_ae", this);
     axi_sub_0_ae = new("axi_sub_0_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
     cptra_sb_ap = new("cptra_sb_ap", this );
     soc_ifc_sb_ahb_ap = new("soc_ifc_sb_ahb_ap", this );
-//    soc_ifc_sb_apb_ap = new("soc_ifc_sb_apb_ap", this );
     soc_ifc_sb_axi_ap = new("soc_ifc_sb_axi_ap", this );
     ss_mode_sb_ap = new("ss_mode_sb_ap", this ); // FIXME
     soc_ifc_ahb_reg_ap = new("soc_ifc_ahb_reg_ap", this);
-//    soc_ifc_apb_reg_ap = new("soc_ifc_apb_reg_ap", this);
     soc_ifc_axi_reg_wr_ap = new("soc_ifc_axi_reg_wr_ap", this);
     soc_ifc_axi_reg_rd_ap = new("soc_ifc_axi_reg_rd_ap", this);
     soc_ifc_cov_ap = new("soc_ifc_cov_ap", this );
@@ -376,7 +354,6 @@ class soc_ifc_predictor #(
   // pragma uvmf custom build_phase begin
     p_soc_ifc_rm = configuration.soc_ifc_rm;
     p_soc_ifc_AHB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AHB_map");
-//    p_soc_ifc_APB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_APB_map");
     p_soc_ifc_AXI_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AXI_map");
     reset_predicted = new("reset_predicted");
     reset_handled = new("reset_handled");
@@ -405,7 +382,6 @@ class soc_ifc_predictor #(
     bit send_cptra_sts_txn = 0;
     bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-//    bit send_apb_txn = 0;
     bit send_axi_txn = 0;
 
     soc_ifc_ctrl_agent_ae_debug = t;
@@ -590,7 +566,6 @@ class soc_ifc_predictor #(
     bit send_cptra_sts_txn = 0;
     bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-//    bit send_apb_txn = 0;
     bit send_axi_txn = 0;
 
     cptra_ctrl_agent_ae_debug = t;
@@ -2094,7 +2069,6 @@ class soc_ifc_predictor #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_axi_sub_0_ae(aaxi_master_tr t);
     // pragma uvmf custom axi_sub_0_ae_predictor begin
-//    apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_txn;
     aaxi_master_tr     axi_txn;
     uvm_reg            axs_reg;
     uvm_reg_data_t previous_mirror;

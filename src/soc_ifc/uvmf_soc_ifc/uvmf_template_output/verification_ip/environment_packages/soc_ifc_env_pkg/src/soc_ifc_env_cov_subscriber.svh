@@ -392,8 +392,8 @@ class soc_ifc_env_cov_subscriber #(
   endgroup
   /* TODO:
   * covergroup soc_ifc_env_resets;
-  * covergroup soc_ifc_env_trng; // Incl. TRNG PAUSER cases
-  * covergroup soc_ifc_env_pauser;
+  * covergroup soc_ifc_env_trng; // Incl. TRNG AXI_USER cases
+  * covergroup soc_ifc_env_axi_user;
   * covergroup soc_ifc_env_iccm_lock;
   * covergroup soc_ifc_env_wdt;
   * covergroup soc_ifc_env_mtime;
@@ -404,7 +404,7 @@ class soc_ifc_env_cov_subscriber #(
   * covergroup soc_ifc_env_security_state;
   * covergroup soc_ifc_env_clk_gate;
   * covergroup soc_ifc_env_sha_accel;
-  * covergroup soc_ifc_env_ahb_apb_arb; // Cover access contention
+  * covergroup soc_ifc_env_ahb_axi_arb; // Cover access contention
   */
 
 
@@ -417,15 +417,10 @@ class soc_ifc_env_cov_subscriber #(
                                       ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                                       ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                                       ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_transaction_t;
-//  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-//                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_transaction_t;
 
   // Instantiate the analysis exports
   uvm_analysis_imp_cov_soc_ifc_ctrl_ae   #(soc_ifc_ctrl_transaction,   this_type) soc_ifc_ctrl_ae;
   uvm_analysis_imp_cov_soc_ifc_status_ae #(soc_ifc_status_transaction, this_type) soc_ifc_status_ae;
-//  uvm_analysis_imp_cov_apb_ae            #(mvc_sequence_item_base,     this_type) apb_ae;
   uvm_analysis_imp_cov_axi_ae            #(aaxi_master_tr,             this_type) axi_ae;
   uvm_analysis_imp_cov_cptra_ctrl_ae     #(cptra_ctrl_transaction,     this_type) cptra_ctrl_ae;
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;

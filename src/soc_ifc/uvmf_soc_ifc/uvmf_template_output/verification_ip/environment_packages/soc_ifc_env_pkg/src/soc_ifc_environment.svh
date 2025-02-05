@@ -35,7 +35,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
   qvip_ahb_lite_slave_environment #()  qvip_ahb_lite_slave_subenv;
 
-//  qvip_apb5_slave_environment #()  qvip_apb5_slave_subenv;
   // Avery AXI environment
   aaxi_log              aaxi_test_log;
   aaxi_uvm_container    aaxi_uc;             //VAR: UVM container 
@@ -48,7 +47,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
 
   uvm_analysis_port #( mvc_sequence_item_base ) qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap [string];
-//  uvm_analysis_port #( mvc_sequence_item_base ) qvip_apb5_slave_subenv_apb5_master_0_ap [string];
 
   typedef soc_ifc_ctrl_agent  soc_ifc_ctrl_agent_t;
   soc_ifc_ctrl_agent_t soc_ifc_ctrl_agent;
@@ -117,19 +115,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
                              ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                              ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_reg_adapter_t;
 
-//   typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-//                                        apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                                        apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                                        apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_transfer_t;
-
-//   typedef caliptra_reg2apb_adapter #(apb_reg_transfer_t,
-//                             apb5_master_0_params::APB3_SLAVE_COUNT,
-//                             apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                             apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                             apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_adapter_t;
-
    ahb_reg_adapter_t        ahb_reg_adapter;
-//   apb_reg_adapter_t        apb_reg_adapter;
    caliptra_reg2axi_adapter axi_reg_adapter;
 
    typedef ahb_reg_predictor #(ahb_reg_transfer_t,
@@ -142,14 +128,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
    typedef aaxi_uvm_reg_predictor #(aaxi_master_tr) axi_reg_predictor_t;
 
-//   typedef apb_reg_predictor #(apb_reg_transfer_t,
-//                               apb5_master_0_params::APB3_SLAVE_COUNT,
-//                               apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                               apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                               apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_reg_predictor_t;
-
    ahb_reg_predictor_t    ahb_reg_predictor;
-//   apb_reg_predictor_t    apb_reg_predictor;
    axi_reg_predictor_t    axi_reg_predictor;
 
 
@@ -221,8 +200,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
     qvip_ahb_lite_slave_subenv = qvip_ahb_lite_slave_environment#()::type_id::create("qvip_ahb_lite_slave_subenv",this);
     qvip_ahb_lite_slave_subenv.set_config(configuration.qvip_ahb_lite_slave_subenv_config);
-//    qvip_apb5_slave_subenv = qvip_apb5_slave_environment#()::type_id::create("qvip_apb5_slave_subenv",this);
-//    qvip_apb5_slave_subenv.set_config(configuration.qvip_apb5_slave_subenv_config);
     soc_ifc_ctrl_agent = soc_ifc_ctrl_agent_t::type_id::create("soc_ifc_ctrl_agent",this);
     soc_ifc_ctrl_agent.set_config(configuration.soc_ifc_ctrl_agent_config);
     cptra_ctrl_agent = cptra_ctrl_agent_t::type_id::create("cptra_ctrl_agent",this);
@@ -252,7 +229,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   if (configuration.enable_reg_prediction) begin
     ahb_reg_predictor = ahb_reg_predictor_t::type_id::create("ahb_reg_predictor", this);
     axi_reg_predictor = axi_reg_predictor_t::type_id::create("axi_reg_predictor", this);
-//    apb_reg_predictor = apb_reg_predictor_t::type_id::create("apb_reg_predictor", this);
   end
 // pragma uvmf custom reg_model_build_phase end
 
@@ -314,25 +290,19 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
     soc_ifc_pred.ss_mode_sb_ap.connect(soc_ifc_sb.expected_ss_mode_analysis_export);
     soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
-//    soc_ifc_pred.soc_ifc_sb_apb_ap.connect(soc_ifc_sb.expected_apb_analysis_export);
     soc_ifc_pred.soc_ifc_sb_axi_ap.connect(soc_ifc_sb.expected_axi_analysis_export);
     soc_ifc_status_agent.monitored_ap.connect(soc_ifc_sb.actual_analysis_export);
     cptra_status_agent.monitored_ap.connect(soc_ifc_sb.actual_cptra_analysis_export);
     ss_mode_status_agent.monitored_ap.connect(soc_ifc_sb.actual_ss_mode_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
-//    qvip_apb5_slave_subenv_apb5_master_0_ap = qvip_apb5_slave_subenv.apb5_master_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
-//    qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(soc_ifc_pred.apb5_slave_0_ae);
-//    qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap_sb"].connect(soc_ifc_sb.actual_apb_analysis_export);
     aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
     aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
-//    if ( configuration.qvip_apb5_slave_subenv_interface_activity[0] == ACTIVE )
-//       uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_apb5_slave_subenv_interface_names[0],qvip_apb5_slave_subenv.apb5_master_0.m_sequencer  );
     if ( configuration.axi_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(aaxi_uvm_sequencer)::set(null,UVMF_SEQUENCERS,configuration.axi_slave_subenv_interface_names[0],aaxi_tb.env0.master[0].sequencer  );
     // pragma uvmf custom reg_model_connect_phase begin
@@ -347,7 +317,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
         aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
         aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
-//        qvip_apb5_slave_subenv_apb5_master_0_ap       ["trans_ap_cov"]      .connect(soc_ifc_env_cov_sub.apb_ae           );
     end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
@@ -356,25 +325,20 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       ahb_reg_adapter.en_n_bits = 1; // This is to allow the adapter to generate addresses
                                      // that are not aligned to 64-bit width (the native AHB interface width)
       axi_reg_adapter = caliptra_reg2axi_adapter::type_id::create("reg2axi_adapter");
-//      apb_reg_adapter = apb_reg_adapter_t::type_id::create("caliptra_reg2apb_adapter");
     end
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))
       configuration.soc_ifc_rm.soc_ifc_AHB_map.set_sequencer(qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer, ahb_reg_adapter);
     if ((configuration.enable_reg_adaptation) && (aaxi_tb.env0.master[0].sequencer != null ))
       configuration.soc_ifc_rm.soc_ifc_AXI_map.set_sequencer(aaxi_tb.env0.master[0].sequencer, axi_reg_adapter);
-//    if ((configuration.enable_reg_adaptation) && (qvip_apb5_slave_subenv.apb5_master_0.m_sequencer != null ))
-//      configuration.soc_ifc_rm.soc_ifc_APB_map.set_sequencer(qvip_apb5_slave_subenv.apb5_master_0.m_sequencer, apb_reg_adapter);
     // Set map and adapter handles within uvm predictor
     if (configuration.enable_reg_prediction) begin
       ahb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_AHB_map;
       axi_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_AXI_map;
-//      apb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_APB_map;
       ahb_reg_predictor.adapter = ahb_reg_adapter;
       axi_reg_predictor.adapter = axi_reg_adapter;
-//      apb_reg_predictor.adapter = apb_reg_adapter;
 //      configuration.soc_ifc_rm.soc_ifc_AHB_map.set_auto_predict(1);
-//      configuration.soc_ifc_rm.soc_ifc_APB_map.set_auto_predict(1);
+//      configuration.soc_ifc_rm.soc_ifc_AXI_map.set_auto_predict(1);
       // The connection between the agent analysis_port and uvm_reg_predictor 
       // analysis_export could cause problems due to a uvm register package bug,
       // if this environment is used as a sub-environment at a higher level.
@@ -390,10 +354,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       soc_ifc_pred.soc_ifc_ahb_reg_ap.connect(ahb_reg_predictor.bus_item_export);
       soc_ifc_pred.soc_ifc_axi_reg_wr_ap.connect(axi_reg_predictor.bus_item_write_export);
       soc_ifc_pred.soc_ifc_axi_reg_rd_ap.connect(axi_reg_predictor.bus_item_read_export);
-//      soc_ifc_pred.soc_ifc_apb_reg_ap.connect(apb_reg_predictor.bus_item_export);
       ahb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
       axi_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
-//      apb_reg_predictor.reg_ap.connect(soc_ifc_reg_cov_sub.analysis_export);
 //      qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(ahb_reg_predictor.bus_item_export);
 //      qvip_apb5_slave_subenv_apb5_master_0_ap["trans_ap"].connect(apb_reg_predictor.bus_item_export);
     end

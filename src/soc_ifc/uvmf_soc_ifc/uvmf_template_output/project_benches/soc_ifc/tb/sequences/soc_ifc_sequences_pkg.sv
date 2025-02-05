@@ -38,7 +38,6 @@ package soc_ifc_sequences_pkg;
   import uvmf_base_pkg::*;
   import mvc_pkg::*;
   import mgc_ahb_v2_0_pkg::*;
-//  import mgc_apb3_v1_0_pkg::*;
   import soc_ifc_ctrl_pkg::*;
   import soc_ifc_ctrl_pkg_hdl::*;
   import cptra_ctrl_pkg::*;
@@ -56,7 +55,6 @@ package soc_ifc_sequences_pkg;
   import soc_ifc_parameters_pkg::*;
   import soc_ifc_env_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
-//  import qvip_apb5_slave_params_pkg::*;
   import soc_ifc_reg_model_top_pkg::*;
 
   `include "avery_defines.svh"

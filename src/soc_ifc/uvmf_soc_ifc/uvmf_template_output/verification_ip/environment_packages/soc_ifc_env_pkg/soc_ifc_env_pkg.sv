@@ -40,7 +40,6 @@ package soc_ifc_env_pkg;
   import uvmf_base_pkg::*;
   import mvc_pkg::*;
   import mgc_ahb_v2_0_pkg::*;
-//  import mgc_apb3_v1_0_pkg::*;
   import rw_txn_pkg::*;
   import soc_ifc_ctrl_pkg::*;
   import soc_ifc_ctrl_pkg_hdl::*;
@@ -59,15 +58,12 @@ package soc_ifc_env_pkg;
   import soc_ifc_reg_model_top_pkg::*;
   import qvip_ahb_lite_slave_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
-//  import qvip_apb5_slave_pkg::*;
-//  import qvip_apb5_slave_params_pkg::*;
  
   `uvm_analysis_imp_decl(_soc_ifc_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_cptra_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_ss_mode_ctrl_agent_ae)
   `uvm_analysis_imp_decl(_mbox_sram_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
-//  `uvm_analysis_imp_decl(_apb5_slave_0_ae)
   `uvm_analysis_imp_decl(_axi_sub_0_ae)
   `uvm_analysis_imp_decl(_expected_analysis_export)
   `uvm_analysis_imp_decl(_expected_cptra_analysis_export)
@@ -76,15 +72,12 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_actual_cptra_analysis_export)
   `uvm_analysis_imp_decl(_actual_ss_mode_analysis_export)
   `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
-//  `uvm_analysis_imp_decl(_expected_apb_analysis_export)
   `uvm_analysis_imp_decl(_expected_axi_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
-//  `uvm_analysis_imp_decl(_actual_apb_analysis_export)
   `uvm_analysis_imp_decl(_actual_axi_analysis_export)
  
   `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
-//  `uvm_analysis_imp_decl(_cov_apb_ae)
   `uvm_analysis_imp_decl(_cov_axi_ae)
   `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_cptra_status_ae)

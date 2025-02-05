@@ -130,17 +130,13 @@ class soc_ifc_scoreboard #(
   // the transactions get_key() interface.
   soc_ifc_status_transaction                                                soc_ifc_expected_hash[int unsigned]; // FIXME
   cptra_status_transaction                                                  cptra_expected_hash  [int unsigned]; // FIXME
-  // Use Queues for AHB/APB txns since there is no get_key() method
+  // Use Queues for AHB/AXI txns since there is no get_key() method
   ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
                               ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
                               ahb_lite_slave_0_params::AHB_NUM_SLAVES,
                               ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                               ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                               ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
-//  apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-//                               apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-//                               apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-//                               apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_expected_q       [$]; // FIXME
   aaxi_master_tr axi_expected_q [$];
 
   // Use an soc_ifc_status_monitor_struct to track the expected state of the

@@ -25,12 +25,6 @@ uvmf:
                                            ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                                            ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                                            ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'
-#      - name: expected_apb_analysis_export
-#        type: 'mvc_sequence_item_base'
-#        type: 'apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-#                                            apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-#                                            apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-#                                            apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)'
       - name: expected_axi_analysis_export
         type: 'aaxi_master_tr'
       - name: actual_ahb_analysis_export
@@ -41,11 +35,5 @@ uvmf:
                                            ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                                            ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                                            ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'
-#      - name: actual_apb_analysis_export
-#        type: 'mvc_sequence_item_base'
-#        type: 'apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-#                                            apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-#                                            apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-#                                            apb5_master_0_params::APB3_PRDATA_BIT_WIDTH)'
       - name: actual_axi_analysis_export
         type: 'aaxi_master_tr'

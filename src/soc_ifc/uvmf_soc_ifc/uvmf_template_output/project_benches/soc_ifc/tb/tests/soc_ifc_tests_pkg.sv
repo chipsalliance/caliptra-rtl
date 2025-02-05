@@ -54,12 +54,10 @@ package soc_ifc_tests_pkg;
    import mbox_sram_pkg::*;
    import mbox_sram_pkg_hdl::*;
    import qvip_ahb_lite_slave_pkg::*;
-//   import qvip_apb5_slave_pkg::*;
    import QUESTA_MVC::*;
    import qvip_utils_pkg::*;
    import mvc_pkg::*;
    import mgc_ahb_v2_0_pkg::*;
-//   import mgc_apb3_v1_0_pkg::*;
 
 
    `include "uvm_macros.svh"
