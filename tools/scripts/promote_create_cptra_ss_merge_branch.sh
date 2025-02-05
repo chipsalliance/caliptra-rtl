@@ -31,7 +31,9 @@ if [[ -z "${CALIPTRA_SS_ROOT:+"empty"}" ]]; then
     echo "Error, must set CALIPTRA_SS_ROOT"
     exit 1
 fi
+
 cd $CALIPTRA_SS_ROOT
+echo $PWD
 
 # Add remote
 REMOTE_ADDR='https://github.com/chipsalliance/caliptra-ss.git'
