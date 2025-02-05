@@ -446,6 +446,9 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     // Reset mbox_sram agent (needed to reset the ECC error injection)
     this.mbox_sram_agent.handle_reset(kind);
 
+//    // Reset AXI agent TODO investigating correct way to do this as of 2/4/2025
+//    this.aaxi_tb.env0.master[0].master_reset();
+
     // Reset scoreboard according to kind
     this.soc_ifc_sb.handle_reset(kind);
 
@@ -479,7 +482,6 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     end
 
     // TODO does this happen naturally from hdl_top driving reset?
-    // Reset APB
     // Reset AHB
 endtask
 
