@@ -22,26 +22,26 @@ if [[ -z "${CALIPTRA_ROOT:+"empty"}" ]]; then
 fi
 
 # Create file list
-find "$CALIPTRA_ROOT" -type f -name "*.sv" \
-                           -o -name "*.svh" \
-                           -o -name "*.rdl" \
-                           -o -name "*.json" \
-                           -o -name "*.v" \
-                           -o -name "*.vh" \
-                           -o -name "*.rsp" \
-                           -o -name "*.s" \
-                           -o -name "*.c" \
-                           -o -name "*.cpp" \
-                           -o -name "*.h" \
-                           -o -name "*.hex" \
-                           -o -name "*.ld" \
-                           -o -name "*.gdb" \
-                           -o -name "*.yml" \
-                           -o -name "*.sh" \
-                           -o -name "*.py" \
-                           -o -name "pr_timestamp" \
-                           ! -path "*.github/workflows/*" \
-                           ! -path "*.git/*" | LC_COLLATE=C sort -o $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
+find "$CALIPTRA_ROOT" -type f \( -name "*.sv" \
+                              -o -name "*.svh" \
+                              -o -name "*.rdl" \
+                              -o -name "*.json" \
+                              -o -name "*.v" \
+                              -o -name "*.vh" \
+                              -o -name "*.rsp" \
+                              -o -name "*.s" \
+                              -o -name "*.c" \
+                              -o -name "*.cpp" \
+                              -o -name "*.h" \
+                              -o -name "*.hex" \
+                              -o -name "*.ld" \
+                              -o -name "*.gdb" \
+                              -o -name "*.yml" \
+                              -o -name "*.sh" \
+                              -o -name "*.py" \
+                              -o -name "pr_timestamp" \) \
+                              ! -path "*.github/workflows/*" \
+                              ! -path "*.git/*" | LC_COLLATE=C sort -o $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
 sed -i "s,^$CALIPTRA_ROOT/,," $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
 echo "Found $(wc -l $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt) source code files to hash"
 echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"

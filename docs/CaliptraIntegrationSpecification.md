@@ -160,6 +160,7 @@ The following tables describe the interface signals.
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | |
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | |
 |  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | |
+|  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | |
 |  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | |
 |  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | |
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | |
@@ -240,7 +241,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 ### Straps
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either caliptra pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
-In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on cold boot to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. Once written and locked, the values of these straps persist until a cold reset.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
 

@@ -6,12 +6,19 @@ on:
   push:
     branches: ["main", "dev-goog", "dev-msft", "dev-public"]
   workflow_call:
+    inputs:
+      run_vltr:
+        description: "Control parameter indicating if Verilator tests should be run or skipped"
+        required: true
+        type: string
+        default: 'true'
   workflow_dispatch:
 
 jobs:
   build_verilator:
     name: 
     runs-on: ubuntu-22.04
+    if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0
@@ -90,6 +97,7 @@ jobs:
   build_openocd:
     name: 
     runs-on: ubuntu-22.04
+    if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0
@@ -173,6 +181,7 @@ jobs:
     name: Run GDB debugging tests
     runs-on: ubuntu-22.04
     needs: [build_verilator, build_openocd]
+    if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0
@@ -259,6 +268,7 @@ jobs:
     name: Run OpenOCD debugging tests
     runs-on: ubuntu-22.04
     needs: [build_verilator, build_openocd]
+    if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0

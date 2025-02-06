@@ -914,29 +914,29 @@ package aes_clp_reg_uvm;
                 this.AES_NAME[i0].configure(this);
                 
                 this.AES_NAME[i0].build();
-                this.default_map.add_reg(this.AES_NAME[i0], 'h100 + i0*'h4);
+                this.default_map.add_reg(this.AES_NAME[i0], 'h0 + i0*'h4);
             end
             foreach(this.AES_VERSION[i0]) begin
                 this.AES_VERSION[i0] = new($sformatf("AES_VERSION[%0d]", i0));
                 this.AES_VERSION[i0].configure(this);
                 
                 this.AES_VERSION[i0].build();
-                this.default_map.add_reg(this.AES_VERSION[i0], 'h108 + i0*'h4);
+                this.default_map.add_reg(this.AES_VERSION[i0], 'h8 + i0*'h4);
             end
             this.AES_KV_RD_KEY_CTRL = new("AES_KV_RD_KEY_CTRL");
             this.AES_KV_RD_KEY_CTRL.configure(this);
 
             this.AES_KV_RD_KEY_CTRL.build();
-            this.default_map.add_reg(this.AES_KV_RD_KEY_CTRL, 'h600);
+            this.default_map.add_reg(this.AES_KV_RD_KEY_CTRL, 'h200);
             this.AES_KV_RD_KEY_STATUS = new("AES_KV_RD_KEY_STATUS");
             this.AES_KV_RD_KEY_STATUS.configure(this);
 
             this.AES_KV_RD_KEY_STATUS.build();
-            this.default_map.add_reg(this.AES_KV_RD_KEY_STATUS, 'h604);
+            this.default_map.add_reg(this.AES_KV_RD_KEY_STATUS, 'h204);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();
-            this.default_map.add_submap(this.intr_block_rf.default_map, 'h800);
+            this.default_map.add_submap(this.intr_block_rf.default_map, 'h400);
         endfunction : build
     endclass : aes_clp_reg
 

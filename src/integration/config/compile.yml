@@ -11,7 +11,6 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0
@@ -141,6 +140,13 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Bit Size Exceeded" warning.
+        # VCS flags this during elab for ram signals (found under
+        # caliptra_top_tb_services) that are too large to collect
+        # coverage on.
+        # We don't want coverage on these, so disable the warning.
+        - '-suppress=VCM-BSZEX'
 
 ---
 provides: [caliptra_top_trng_tb]

@@ -17,6 +17,7 @@
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
 `include "caliptra_macros.svh"
 
 `ifndef VERILATOR
@@ -125,6 +126,7 @@ module caliptra_top_tb (
     logic deassert_rst_flag_from_service;
 
     el2_mem_if el2_mem_export ();
+    mldsa_mem_if mldsa_memory_export();
 
 `ifndef VERILATOR
     always
@@ -220,7 +222,8 @@ caliptra_top caliptra_top_dut (
     .m_axi_r_if(m_axi_if.r_mgr),
 
     .el2_mem_export(el2_mem_export.veer_sram_src),
-
+    .mldsa_memory_export(mldsa_memory_export.req),
+    
     .ready_for_fuses(ready_for_fuses),
     .ready_for_mb_processing(ready_for_mb_processing),
     .ready_for_runtime(),
@@ -264,6 +267,7 @@ caliptra_top caliptra_top_dut (
     .strap_ss_uds_seed_base_addr                            (64'h0),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
+    .strap_ss_caliptra_dma_axi_user                         (32'h0),
     .strap_ss_strap_generic_0                               (32'h0),
     .strap_ss_strap_generic_1                               (32'h0),
     .strap_ss_strap_generic_2                               (32'h0),
@@ -309,6 +313,7 @@ caliptra_top_tb_services #(
 
     // Caliptra Memory Export Interface
     .el2_mem_export (el2_mem_export.veer_sram_sink),
+    .mldsa_memory_export (mldsa_memory_export.resp),
 
     //SRAM interface for mbox
     .mbox_sram_cs   (mbox_sram_cs   ),
