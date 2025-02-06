@@ -181,6 +181,7 @@ package soc_ifc_tb_pkg;
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x240 [8]  Field Entropy 
     "FUSE_VENDOR_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_VENDOR_PK_HASH_0,                                // 0x260 [12] - 
     "FUSE_ECC_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ECC_REVOCATION,                                  // 0x290      - 
+    // 0x294..0x2b0
     "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,                            // 0x2b4      - 
     "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,                                   // 0x2b8 [4]  - 
     "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                           // 0x2c8      - 
@@ -203,7 +204,8 @@ package soc_ifc_tb_pkg;
     "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : SOCIFC_BASE + `SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET, // 0x528
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : SOCIFC_BASE + `SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES,        // 0x52c
     "SS_DEBUG_INTENT"                               : SOCIFC_BASE + `SOC_IFC_REG_SS_DEBUG_INTENT,                                       // 0x530
-    // 0x534..0x59c
+    "SS_CPTRA_DMA_AXI_USER"                         : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER,                              // 0x534
+    // 0x538..0x59c
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_MANUF_SERVICE_REG_REQ"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ,                          // 0x5c0
@@ -297,7 +299,8 @@ package soc_ifc_tb_pkg;
   extent_t _undefined_addr_ranges [$] = {
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
-    '{addr_min: SOCIFC_BASE + 16'h0534, addr_max: SOCIFC_BASE + 16'h059c},
+    '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
+    '{addr_min: SOCIFC_BASE + 16'h0538, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
@@ -316,8 +319,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
-    "CPTRA_FUSE_VALID_AXI_USER"              : 32'hffff_ffff, 
-    "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES": 32'h8
+    "CPTRA_FUSE_VALID_AXI_USER"              : 32'hffff_ffff 
+    //"SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES": 32'h8
   };
 
 
@@ -326,8 +329,8 @@ package soc_ifc_tb_pkg;
   word_addr_t _sticky_register_prefix_dict [string] = {
     "FUSE_UDS_SEED"                                    : 32'hffff_ffff,
     "FUSE_FIELD_ENTROPY"                               : 32'hffff_ffff,
-    "FUSE_KEY_MANIFEST_PK_HASH"                        : 32'hffff_ffff ,
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : 32'hf,          // field 3:0
+    "FUSE_VENDOR_PK_HASH"                              : 32'hffff_ffff ,
+    "FUSE_ECC_REVOCATION"                              : 32'hf,          // field 3:0
     "FUSE_FMC_KEY_MANIFEST_SVN"                        : 32'hffff_ffff, 
     "FUSE_RUNTIME_SVN"                                 : 32'hffff_ffff, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : 32'h1,          // field 0
@@ -359,20 +362,20 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
-    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
-    "SS_CPTRA_BASE_ADDR_L"                             : 32'hffff_ffff,
-    "SS_CPTRA_BASE_ADDR_H"                             : 32'hffff_ffff,
-    "SS_MCI_BASE_ADDR_L"                               : 32'hffff_ffff,
-    "SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
-    "SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
-    "SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
-    "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
-    "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
-    "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
-    "SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
-    "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET": 32'hffff_ffff,
-    "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"       : 32'hffff_ffff,
-    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff
+    //"SS_CPTRA_BASE_ADDR_L"                             : 32'hffff_ffff,
+    //"SS_CPTRA_BASE_ADDR_H"                             : 32'hffff_ffff,
+    //"SS_MCI_BASE_ADDR_L"                               : 32'hffff_ffff,
+    //"SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
+    //"SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
+    //"SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
+    //"SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
+    //"SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
+    //"SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
+    //"SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
+    //"SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET": 32'hffff_ffff,
+    //"SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"       : 32'hffff_ffff
+    //"SS_STRAP_GENERIC"                                 : 32'hffff_ffff
   };
 
 
@@ -1044,6 +1047,7 @@ package soc_ifc_tb_pkg;
           "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_CPTRA_DMA_AXI_USER"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           
           "SS_DBG_MANUF_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
