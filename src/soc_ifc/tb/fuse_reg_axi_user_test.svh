@@ -33,7 +33,7 @@ logic [31:0] fuse_mldsa_revocation;
 `FORLOOP_COMB( 12 ) fuse_uds_seed[j]                  = `REG_HIER_PFX.fuse_uds_seed[j].seed.value;
 `FORLOOP_COMB( 8 )  fuse_field_entropy[j]             = `REG_HIER_PFX.fuse_field_entropy[j].seed.value;
 `FORLOOP_COMB( 12 ) fuse_vendor_pk_hash[j]            = `REG_HIER_PFX.fuse_vendor_pk_hash[j].hash.value;
-  always_comb       fuse_ecc_revocation               = `REG_HIER_PFX.fuse_ecc_revocation.mask.value;
+  always_comb       fuse_ecc_revocation               = `REG_HIER_PFX.fuse_ecc_revocation.ecc_revocation.value;
   always_comb       fuse_fmc_key_manifest_svn         = `REG_HIER_PFX.fuse_fmc_key_manifest_svn.svn.value;
 `FORLOOP_COMB( 4 )  fuse_runtime_svn[j]               = `REG_HIER_PFX.fuse_runtime_svn[j].svn.value;
   always_comb       fuse_anti_rollback_disable        = `REG_HIER_PFX.fuse_anti_rollback_disable.dis.value;

@@ -386,6 +386,7 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                        (0x10)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                  (5)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                 (0x20)
+#endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                   (0x300e4)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
 #define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (0xe4)

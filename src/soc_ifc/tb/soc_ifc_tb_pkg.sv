@@ -112,8 +112,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_OWNER_PK_HASH"                   : 12,
     "FUSE_UDS_SEED"                         : 12,
     "FUSE_FIELD_ENTROPY"                    : 8,
-    "FUSE_KEY_MANIFEST_PK_HASH"             : 12,
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
+    "FUSE_VENDOR_PK_HASH"                   : 12,
+    //"FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
     "FUSE_MANUF_DBG_UNLOCK_TOKEN"           : 4,
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
@@ -179,8 +179,8 @@ package soc_ifc_tb_pkg;
     // 0x174..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                      // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x240 [8]  Field Entropy 
-    "FUSE_KEY_MANIFEST_PK_HASH"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_0,                          // 0x260 [12] - 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                : SOCIFC_BASE + `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0,                     // 0x290      - 
+    "FUSE_VENDOR_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_VENDOR_PK_HASH_0,                                // 0x260 [12] - 
+    "FUSE_ECC_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ECC_REVOCATION,                                  // 0x290      - 
     "FUSE_FMC_KEY_MANIFEST_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FMC_KEY_MANIFEST_SVN,                            // 0x2b4      - 
     "FUSE_RUNTIME_SVN"                              : SOCIFC_BASE + `SOC_IFC_REG_FUSE_RUNTIME_SVN_0,                                   // 0x2b8 [4]  - 
     "FUSE_ANTI_ROLLBACK_DISABLE"                    : SOCIFC_BASE + `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE,                           // 0x2c8      - 
@@ -409,14 +409,15 @@ package soc_ifc_tb_pkg;
     "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK,
     "CPTRA_CAP_LOCK_MASK"                              : `SOC_IFC_REG_CPTRA_CAP_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
-    "FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : (`SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_2 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_3 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_4 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_5 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_6 |
-                                                          `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_7),
+    //"FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : (`SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_2 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_3 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_4 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_5 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_6 |
+    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_7),
+    "FUSE_ECC_REVOCATION"                              : `SOC_IFC_REG_FUSE_ECC_REVOCATION_ECC_REVOCATION_MASK,
     "FUSE_MLDSA_REVOCATION"                            : `SOC_IFC_REG_FUSE_MLDSA_REVOCATION_MLDSA_REVOCATION_MASK,
     "FUSE_SOC_STEPPING_ID"                             : `SOC_IFC_REG_FUSE_SOC_STEPPING_ID_SOC_STEPPING_ID_MASK,
     "SS_DEBUG_INTENT"                                  : `SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK,   

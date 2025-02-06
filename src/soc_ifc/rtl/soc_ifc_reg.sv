@@ -3542,10 +3542,8 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: soc_ifc_reg.fuse_vendor_pk_hash[].hash
         always_comb begin
-            automatic logic [31:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.fuse_vendor_pk_hash[i0].hash.value;
-            load_next_c = '0;
+            automatic logic [31:0] next_c = field_storage.fuse_vendor_pk_hash[i0].hash.value;
+            automatic logic load_next_c = '0;
             if(decoded_reg_strb.fuse_vendor_pk_hash[i0] && decoded_req_is_wr && !(hwif_in.fuse_vendor_pk_hash[i0].hash.swwel)) begin // SW write
                 next_c = (field_storage.fuse_vendor_pk_hash[i0].hash.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3564,10 +3562,8 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_ecc_revocation.ecc_revocation
     always_comb begin
-        automatic logic [3:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_ecc_revocation.ecc_revocation.value;
-        load_next_c = '0;
+        automatic logic [3:0] next_c = field_storage.fuse_ecc_revocation.ecc_revocation.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.fuse_ecc_revocation && decoded_req_is_wr && !(hwif_in.fuse_ecc_revocation.ecc_revocation.swwel)) begin // SW write
             next_c = (field_storage.fuse_ecc_revocation.ecc_revocation.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
             load_next_c = '1;
@@ -3764,10 +3760,8 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_pqc_key_type.key_type
     always_comb begin
-        automatic logic [1:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_pqc_key_type.key_type.value;
-        load_next_c = '0;
+        automatic logic [1:0] next_c = field_storage.fuse_pqc_key_type.key_type.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.fuse_pqc_key_type && decoded_req_is_wr && !(hwif_in.fuse_pqc_key_type.key_type.swwel)) begin // SW write
             next_c = (field_storage.fuse_pqc_key_type.key_type.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
@@ -3786,10 +3780,8 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.fuse_soc_manifest_svn[].svn
         always_comb begin
-            automatic logic [31:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.fuse_soc_manifest_svn[i0].svn.value;
-            load_next_c = '0;
+            automatic logic [31:0] next_c = field_storage.fuse_soc_manifest_svn[i0].svn.value;
+            automatic logic load_next_c = '0;
             if(decoded_reg_strb.fuse_soc_manifest_svn[i0] && decoded_req_is_wr && !(hwif_in.fuse_soc_manifest_svn[i0].svn.swwel)) begin // SW write
                 next_c = (field_storage.fuse_soc_manifest_svn[i0].svn.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -3808,10 +3800,8 @@ module soc_ifc_reg (
     end
     // Field: soc_ifc_reg.fuse_soc_manifest_max_svn.svn
     always_comb begin
-        automatic logic [7:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.fuse_soc_manifest_max_svn.svn.value;
-        load_next_c = '0;
+        automatic logic [7:0] next_c = field_storage.fuse_soc_manifest_max_svn.svn.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.fuse_soc_manifest_max_svn && decoded_req_is_wr && !(hwif_in.fuse_soc_manifest_max_svn.svn.swwel)) begin // SW write
             next_c = (field_storage.fuse_soc_manifest_max_svn.svn.value & ~decoded_wr_biten[7:0]) | (decoded_wr_data[7:0] & decoded_wr_biten[7:0]);
             load_next_c = '1;
@@ -4112,10 +4102,8 @@ module soc_ifc_reg (
     assign hwif_out.SS_DEBUG_INTENT.debug_intent.value = field_storage.SS_DEBUG_INTENT.debug_intent.value;
     // Field: soc_ifc_reg.SS_CALIPTRA_DMA_AXI_USER.user
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && decoded_req_is_wr && !(hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.swwel)) begin // SW write
             next_c = (field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
