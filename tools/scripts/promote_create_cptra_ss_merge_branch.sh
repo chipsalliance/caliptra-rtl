@@ -85,7 +85,13 @@ if ! git submodule update --init --recursive; then
 fi
 
 
-echo "== Fetching chips remote"
+echo "== Fetching chips remote 1"
+if ! git submodule update --init --no-recurse third_party/i3c-core; then
+    echo "Could not run git submodule update --init --no-recurse third_party/i3c-core"
+    exit 1
+fi
+echo "== Fetching chips remote 2"
+
 
 # Fetch remote
 if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
@@ -136,14 +142,14 @@ fi
 echo "== Merge ${merge_branch} into ${merge_dest} succeeded"
 
 # Update Submodules 
-if git submodule sync --recursive; then 
+if ! git submodule sync --recursive; then 
     echo "Could not run git submodule sync --recursive" 
     exit 1
 fi
 
 echo "== Submodules synced"
 
-if git submodule update --init --recursive; then 
+if ! git submodule update --init --recursive; then 
     echo "Could not run git submodule update --init --recursive" 
     exit 1
 fi
