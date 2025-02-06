@@ -88,15 +88,15 @@ echo "== Submodules updated"
 
 
 
-sts = $(git submodule sync --recursive)
+sts=$(git submodule sync --recursive > /dev/null; echo $?)
 echo "Status of git submodule sync --recursive is $sts"
 
-sts = $(git submodule update --init --recursive)
+sts=$(git submodule update --init --recursive > /dev/null; echo $?)
 echo "Status of git submodule update --init --recursive is $sts"
 
 echo "== Submodules updated with force"
 
-sts = $(git fetch chips)
+sts=$(git fetch chips > /dev/null; echo $?)
 echo "Status of git fetch chips is $sts"
 
 echo "== Fetched chips remote"
