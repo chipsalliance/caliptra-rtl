@@ -29,6 +29,10 @@ parameters:
   displayName: Run Promote Pipeline to validate Adamsbridge GitHub PullRequest
   type: boolean
   default: false
+- name: run_clp_ss_github_val_flow
+  displayName: Run Promote Pipeline to validate Caliptra SS GitHub PullRequest
+  type: boolean
+  default: false
 - name: bypass_ado_branch_val
   displayName: CAUTION - this is a debug fallback option, and should not typically be used. Bypass ADO branch val.
   type: boolean
@@ -41,10 +45,7 @@ parameters:
   displayName: GitHub Merge Destination Name
   type: string
   default: 'main'
-- name: run_clp_ss_github_val_flow
-  displayName: Run Promote Pipeline to validate Caliptra SS GitHub PullRequest
-  type: boolean
-  default: false
+
 
 stages:
 - template: etc/pipelines/templates/promote-pipeline-template.yml@templates  # Template reference
