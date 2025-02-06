@@ -236,6 +236,15 @@ module soc_ifc_axi_sha_access_test
     end
 endtask // reset_dut
 
+task warm_reset;
+  begin
+    $display("*** Toggle warm reset");
+    cptra_rst_b_tb = 0;
+    #(2*CLK_PERIOD);
+    cptra_rst_b_tb = 1;
+  end
+endtask
+
 //----------------------------------------------------------------
   // display_test_results()
   //
@@ -429,19 +438,17 @@ task soc_ifc_axi_test;
   else  
     $display("SHA Acc lock not acquired over AXI\n");
 
-  //TODO: comment this part back in when RTL is ready
   if ((rdata == 'h1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != user_tb)) begin
     $error("SHA Acc Lock acquired over AXI unexpectedly!");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  // else if ((rdata == 'h0) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+  else if ((rdata == 'h0) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+    $error("SHA Acc Lock not acquired over AXI as expected for the allowed user!");
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
 
-  // end
-
-  //reset test - strap needs to preserve value, lock is reset
-
-  //Add checks here to make sure these accesses below don't go through for random users
   axi_sub_if.axi_write_single(
     .addr(`CLP_SHA512_ACC_CSR_MODE),
     .user(user_tb),
@@ -461,11 +468,16 @@ task soc_ifc_axi_test;
     .resp(resp)
   );
   axi_txn_check(resp, read);
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable and qualify with user
+  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable for rdata
     $display("SHA mode set to 1 over AXI");
   end
-  else begin
-    $error("SHA512 Mode not set to expected value");
+  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+    $error("SHA512 Mode not set to expected value for allowed user");
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != user_tb)) begin
+    $error("SHA512 Mode set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
@@ -490,11 +502,16 @@ task soc_ifc_axi_test;
   );
   axi_txn_check(resp, read);
 
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable and qualify with user
+  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable for rdata
     $display("SHA dlen set to 1 over AXI");
   end
-  else begin
-    $error("SHA512 DLEN not set to expected value");
+  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+    $error("SHA512 dlen not set to expected value for allowed user");
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != user_tb)) begin
+    $error("SHA512 dlen set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
@@ -520,11 +537,16 @@ task soc_ifc_axi_test;
   );
   axi_txn_check(resp, read);
 
-  if ((rdata == wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable and qualify with user
-    $display("SHA datain written over AXI\n");
+  if ((rdata == wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable for rdata
+    $display("SHA datain set to 1 over AXI");
   end
-  else begin
-    $error("SHA512 Datain not set to expected value");
+  else if ((rdata != wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+    $error("SHA512 datain not set to expected value for allowed user");
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+  else if ((rdata == wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != user_tb)) begin
+    $error("SHA512 datain set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
@@ -550,11 +572,16 @@ task soc_ifc_axi_test;
   );
   axi_txn_check(resp, read);
 
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable and qualify with user
-    $display("SHA execute written over AXI\n");
+  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin //TODO replace with variable for rdata
+    $display("SHA execute set to 1 over AXI");
   end
-  else begin
-    $error("SHA512 execute not set to expected value");
+  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == user_tb)) begin
+    $error("SHA512 execute not set to expected value for allowed user");
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != user_tb)) begin
+    $error("SHA512 execute set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
@@ -573,6 +600,8 @@ task soc_ifc_axi_test;
     axi_txn_check(resp, read);
   end
   $display("SHA status read over AXI = %h\n", rdata);
+
+  //reset test - strap needs to preserve value, lock is reset - TODO
 
   $display("Test done\n");
 endtask
