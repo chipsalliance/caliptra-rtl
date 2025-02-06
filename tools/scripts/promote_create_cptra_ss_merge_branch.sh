@@ -96,6 +96,8 @@ else
     git fetch --prune             chips
 fi
 
+git fetch --prune --prune-tags --tags origin
+
 echo "== Fetching chips remote succeeded"
 
 # Check for branch existence
