@@ -14,6 +14,8 @@
 //
 // Address conversion from pcr vault to reg model and vice versa
 
+`include "caliptra_reg_field_defines.svh"
+
 package pv_reg_adapter_functions_pkg;
 
   import pv_defines_pkg::*;

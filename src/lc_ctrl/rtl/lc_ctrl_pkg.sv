@@ -14,19 +14,21 @@ package lc_ctrl_pkg;
   // Netlist Constants (Hashed Tokens) //
   ///////////////////////////////////////
 
-  parameter int NumTokens = 6;
+  parameter int NumTokens = 8;
   parameter int TokenIdxWidth = vbits(NumTokens);
   typedef enum logic [TokenIdxWidth-1:0] {
     // This is the index for the hashed all-zero constant.
     // All unconditional transitions use this token.
-    ZeroTokenIdx       = 3'h0,
-    RawUnlockTokenIdx  = 3'h1,
-    TestUnlockTokenIdx = 3'h2,
-    TestExitTokenIdx   = 3'h3,
-    RmaTokenIdx        = 3'h4,
+    ZeroTokenIdx          = 3'h0,
+    RawUnlockTokenIdx     = 3'h1,
+    TestUnlockTokenIdx    = 3'h2,
+    TestExitDevTokenIdx   = 3'h3,
+    DevExitProdTokenIdx      = 3'h4,
+    ProdExitProdEndTokenIdx   = 3'h5,
+    RmaTokenIdx           = 3'h6,
     // This is the index for an all-zero value (i.e., hashed value = '0).
     // This is used as an additional blocker for some invalid state transition edges.
-    InvalidTokenIdx    = 3'h5
+    InvalidTokenIdx       = 3'h7
   } token_idx_e;
 
   parameter int TokenMuxBits = 2**TokenIdxWidth*LcTokenWidth;
@@ -299,7 +301,9 @@ package lc_ctrl_pkg;
   // -> TEST_UNLOCKED0-(N), RAW
   `define TEST_UNLOCKED(idx)         \
         {2{ZeroTokenIdx}},           \
-        {3{TestExitTokenIdx}},       \
+        {ProdExitProdEndTokenIdx},       \
+        {DevExitProdTokenIdx},          \
+        {TestExitDevTokenIdx},       \
         {(7-idx){InvalidTokenIdx,    \
                  ZeroTokenIdx}},     \
         {(2*idx+2){InvalidTokenIdx}}
@@ -315,7 +319,9 @@ package lc_ctrl_pkg;
   `define TEST_LOCKED(idx)         \
       ZeroTokenIdx,                \
       InvalidTokenIdx,             \
-      {3{TestExitTokenIdx}},       \
+      {ProdExitProdEndTokenIdx},       \
+      {DevExitProdTokenIdx},          \
+      {TestExitDevTokenIdx},       \
       {(7-idx){TestUnlockTokenIdx, \
                InvalidTokenIdx}},  \
       {(2*idx+2){InvalidTokenIdx}}
@@ -335,14 +341,15 @@ package lc_ctrl_pkg;
     // PROD
     ZeroTokenIdx,          // -> SCRAP
     RmaTokenIdx,           // -> RMA
-    {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
+    ProdExitProdEndTokenIdx,   // -> PROD_END
+    {18{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
     // DEV
     ZeroTokenIdx,          // -> SCRAP
     RmaTokenIdx,           // -> RMA
     // {19{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV, PROD, PROD_END
     // ============== This is how we enable from DEV to PROD ==============================
-    InvalidTokenIdx, // -> PROD_END
-    TestExitTokenIdx, // -> PROD
+    ProdExitProdEndTokenIdx, // -> PROD_END
+    DevExitProdTokenIdx, // -> PROD
     {17{InvalidTokenIdx}}, // -> TEST_LOCKED0-6, TEST_UNLOCKED0-7, DEV
     // ====================================================================================
 
