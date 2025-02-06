@@ -172,12 +172,12 @@ module hmac_drbg_tb();
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
       $display("------------");
-      $display("STATE  = 0x%02d", hmac_drbg_dut.drbg_st_reg);
+      $display("STATE  = 0x%02d", dut.drbg_st_reg);
       $display("");
-      $display("HMAC block: 0x%096x",hmac_drbg_dut.HMAC_block);
-      $display("HMAC key: 0x%096x",hmac_drbg_dut.HMAC_key);
-      $display("HMAC lfsr_seed: 0x%096x",hmac_drbg_dut.lfsr_seed);
-      $display("HMAC tag: 0x%096x",hmac_drbg_dut.HMAC_tag);
+      $display("HMAC block: 0x%096x",dut.HMAC_block);
+      $display("HMAC key: 0x%096x",dut.HMAC_key);
+      $display("HMAC lfsr_seed: 0x%096x",dut.lfsr_seed);
+      $display("HMAC tag: 0x%096x",dut.HMAC_tag);
       $display("");
 
     end
@@ -530,10 +530,10 @@ module hmac_drbg_tb();
   //
   // This always block enables to debug the state transactions
   //----------------------------------------------------------------
-  always @(hmac_drbg_dut.drbg_st_reg)
+  always @(dut.drbg_st_reg)
   begin
       if (DEBUG)
-        $display("--------------\n state\n %0d --------------", hmac_drbg_dut.drbg_st_reg);
+        $display("--------------\n state\n %0d --------------", dut.drbg_st_reg);
   end
 
 
