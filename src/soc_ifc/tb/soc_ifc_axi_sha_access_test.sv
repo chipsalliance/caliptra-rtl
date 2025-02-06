@@ -165,7 +165,7 @@ module soc_ifc_axi_sha_access_test
     .strap_ss_strap_generic_1(0),
     .strap_ss_strap_generic_2(0),
     .strap_ss_strap_generic_3(0),
-    .strap_ss_caliptra_dma_axi_user(0),
+    .strap_ss_caliptra_dma_axi_user(user_tb),
     .ss_debug_intent(1'b0),
     .cptra_ss_debug_intent(),
 
@@ -292,6 +292,8 @@ task display_test_results;
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
 
+      user_tb = $urandom();
+
       //reset w_mgr
       axi_mgr_if.awready = 0;
       axi_mgr_if.wready = 0;
@@ -413,7 +415,6 @@ task soc_ifc_axi_test;
   $display("Attempt to acquire SHA ACC LOCK reg over AXI\n");
 
   //id = 0, user --> decoded in axi sub
-  user_tb = 'h0; //TODO: replace with axi strap value
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_LOCK),
     .user(user_tb),
@@ -427,7 +428,7 @@ task soc_ifc_axi_test;
   $display("Read SHA ACC LOCK reg");
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_LOCK),
-    .user(0),
+    .user(user_tb),
     .id(0),
     .lock(0), 
     .data(rdata), 
@@ -462,7 +463,7 @@ task soc_ifc_axi_test;
 
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_MODE),
-    .user(0),
+    .user(user_tb),
     .id(0),
     .lock(0), 
     .data(rdata), 
@@ -495,7 +496,7 @@ task soc_ifc_axi_test;
 
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_DLEN),
-    .user(0),
+    .user(user_tb),
     .id(0),
     .lock(0), 
     .data(rdata), 
@@ -530,7 +531,7 @@ task soc_ifc_axi_test;
 
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_DATAIN),
-    .user(0),
+    .user(user_tb),
     .id(0),
     .lock(0), 
     .data(rdata), 
@@ -565,7 +566,7 @@ task soc_ifc_axi_test;
 
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_EXECUTE),
-    .user(0),
+    .user(user_tb),
     .id(0),
     .lock(0), 
     .data(rdata), 
@@ -592,7 +593,7 @@ task soc_ifc_axi_test;
   while (rdata[1] != 1) begin
     axi_sub_if.axi_read_single(
       .addr(`CLP_SHA512_ACC_CSR_STATUS),
-      .user(0),
+      .user(user_tb),
       .id(0),
       .lock(0), 
       .data(rdata), 
