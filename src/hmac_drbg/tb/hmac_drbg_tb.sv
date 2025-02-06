@@ -101,7 +101,7 @@ module hmac_drbg_tb();
   #(
         .REG_SIZE(REG_SIZE),
         .HMAC_DRBG_PRIME(HMAC_DRBG_PRIME)
-  ) hmac_drbg_dut
+  ) dut
   (
         .clk(clk_tb),
         .reset_n(reset_n_tb),
