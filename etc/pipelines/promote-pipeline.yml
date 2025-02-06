@@ -240,14 +240,14 @@ stages:
       - display_name: 'Build caliptra_ss_top with VCS'
       - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_github_val_flow))  }}
       - configspec_name: 'caliptra_ss_lib'
-      - dut: 'caliptra_ss_top'
+      - dut: 'caliptra_ss_top_tb'
       - args: ''
       - timeout: 30
       - testsuites:
         - l0_regress:
           - enabled: ${{ and(not(parameters.run_abr_github_val_flow), not(parameters.run_clp_github_val_flow)) }}
           - configspec_name: 'caliptra_ss_lib'
-          - dut: 'caliptra_ss_top'
+          - dut: 'caliptra_ss_top_tb'
           - timeout: 75
           - path: '${CALIPTRA_SS}/src/integration/stimulus/L0_regression.yml'
 
@@ -360,7 +360,7 @@ stages:
     - caliptra_ss_top_sglint:
       - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_abr_github_val_flow)) }}
       - configspec_name: 'caliptra_ss_lib'
-      - dut: 'caliptra_ss_top'
+      - dut: 'caliptra_ss_top_tb'
       - top: 'caliptra_ss_top_tb'
       - lint_tool: 'sglint'
       - timeout: 45
