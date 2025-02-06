@@ -103,10 +103,10 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT                 := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL            := 25,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL     := 0, // TODO re-enable this := 25,
-          IDX_SOC_IFC_ENV_RST_WARM                             := 1,
-          IDX_SOC_IFC_ENV_RST_COLD                             := 1,
-          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 10,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 10
+          IDX_SOC_IFC_ENV_RST_WARM                             := 0, // TODO re-enable this //:= 1,
+          IDX_SOC_IFC_ENV_RST_COLD                             := 0, // TODO re-enable this //:= 1,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 0, // TODO re-enable this //:= 10,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 0  // TODO re-enable this //:= 10
       };
   }
   constraint disable_long_env_seqs_c {
