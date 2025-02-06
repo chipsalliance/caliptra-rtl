@@ -982,7 +982,8 @@ package soc_ifc_tb_pkg;
           end 
 
           "CPTRA_OWNER_PK_HASH_LOCK": begin
-            exp_data = ahb_rodata | axi_indata & get_mask(addr_name);
+            owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
+            exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : axi_indata & get_mask(addr_name);
             $display("Expected data: 0x%x", exp_data);
           end
 
