@@ -36,12 +36,20 @@ cd $CALIPTRA_SS_ROOT
 echo $PWD
 
 # Add remote
-REMOTE_ADDR='https://github.com/chipsalliance/caliptra-ss.git'
+SS_REMOTE_ADDR='https://github.com/chipsalliance/caliptra-ss.git'
+I3C_REMOTE_ADDR='https://github.com/chipsalliance/i3c-core.git'
+COCOTB_REMOTE_ADDR='https://github.com/antmicro/cocotbext-i3c.git'
+
 sts=$(git config --get remote.chips.url > /dev/null; echo $?)
 echo "Status for git config --get remote.chips.url is $sts"
+
 if [[ $sts -ne 0 ]]; then
-    echo "Add chips remote at $REMOTE_ADDR"
-    git remote add chips $REMOTE_ADDR
+    echo "Add chips remote at $SS_REMOTE_ADDR"
+    git remote add chips $SS_REMOTE_ADDR
+    echo "Add i3c remote at $I3C_REMOTE_ADDR"
+    git remote add i3c $I3C_REMOTE_ADDR
+    echo "Add cocotb remote at $COCOTB_REMOTE_ADDR"
+    git remote add cocotb $COCOTB_REMOTE_ADDR
 else
     chips_url=$(git config --get remote.chips.url)
     echo "Result of git config --get remote.chips.url is [$chips_url]"
