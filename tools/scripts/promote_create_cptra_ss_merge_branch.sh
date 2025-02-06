@@ -84,7 +84,12 @@ if [[ ${sts} -ne 0 ]]; then
 fi
 
 # Update Submodules 
-if git submodule update --remote third_party/*; then 
-    echo "Could not update submodule" 
+if git submodule sync --recursive; then 
+    echo "Could not run git submodule sync --recursive" 
+    exit 1
+fi
+
+if git submodule update --init --recursive; then 
+    echo "Could not run git submodule update --init --recursive" 
     exit 1
 fi
