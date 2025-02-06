@@ -857,7 +857,7 @@ package soc_ifc_tb_pkg;
 
       else if (str_startswith(addr_name, "CPTRA_OWNER_PK_HASH") & !str_endswith(addr_name, "LOCK")) begin
         owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
-        exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : axi_indata; // all bits are ahb-RO
+        exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : (axi_indata | ahb_rodata); // all bits are ahb-RO
       end
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
