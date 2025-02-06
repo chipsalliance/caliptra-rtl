@@ -116,6 +116,8 @@ module hmac_drbg_tb();
         .drbg(drbg_tb)
     );
 
+  //bind coverage file
+  hmac_drbg_cov_bind i_hmac_drbg_cov_bind();
 
   //----------------------------------------------------------------
   // clk_gen

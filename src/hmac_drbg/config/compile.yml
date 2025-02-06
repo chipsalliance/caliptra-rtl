@@ -15,6 +15,7 @@ provides: [hmac_drbg_tb]
 schema_version: 2.4.0
 requires: 
   - hmac_drbg
+  - hmac_drbg_coverage
 targets:
   tb:
     directories: 
@@ -24,6 +25,18 @@ targets:
     tops: [hmac_drbg_tb]
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_ref.py .'
+---
+provides: [hmac_drbg_coverage]  
+schema_version: 2.4.0
+requires: 
+  - hmac_drbg
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac_drbg_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac_drbg_cov_bind.sv
 global:
   tool:
     vcs:

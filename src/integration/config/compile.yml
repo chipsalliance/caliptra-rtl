@@ -72,6 +72,7 @@ requires:
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage
+  - hmac_drbg_coverage
   - ecc_coverage
   - soc_ifc_coverage
   - pcrvault_cov
