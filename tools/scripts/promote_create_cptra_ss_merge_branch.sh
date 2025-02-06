@@ -85,12 +85,12 @@ if ! git submodule update --init --recursive; then
 fi
 
 
-echo "== Fetching chips remote 1"
-if ! git submodule update --init --no-recurse third_party/i3c-core; then
-    echo "Could not run git submodule update --init --no-recurse third_party/i3c-core"
-    exit 1
-fi
-echo "== Fetching chips remote 2"
+# echo "== Fetching chips remote 1"
+# if ! git submodule update --init --no-recurse third_party/i3c-core; then
+#     echo "Could not run git submodule update --init --no-recurse third_party/i3c-core"
+#     exit 1
+# fi
+# echo "== Fetching chips remote 2"
 
 
 # Fetch remote
