@@ -34,8 +34,7 @@ class soc_ifc_env_mbox_max_sequence extends soc_ifc_env_mbox_sequence_base;
   constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_e == MBOX_CMD_UC_OVERRUN;}
 
   // Constrain dlen to reach max or max-1
-  constraint mbox_dlen_minmax_c { mbox_op_rand.dlen inside {32'h0002_0000,32'h0001_FFFF,32'h0001_FFFE,32'h0001_FFFD,
-                                                            32'h0001_FFFC,32'h0001_FFFB,32'h0001_FFFA,32'h0001_FFF9}; }
+  constraint mbox_dlen_minmax_c { mbox_op_rand.dlen inside {[CPTRA_MBOX_SIZE_BYTES-8:CPTRA_MBOX_SIZE_BYTES]}; }
 
 endclass
 
