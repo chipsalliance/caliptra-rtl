@@ -286,6 +286,7 @@ logic wdt_error_t2_intr_serviced;
 
 logic valid_trng_user;
 logic valid_fuse_user;
+logic valid_sha_user;
 
 boot_fsm_state_e boot_fsm_ps;
 
@@ -413,6 +414,7 @@ soc_ifc_arb #(
     .rst_b(cptra_noncore_rst_b),
     .valid_mbox_users(valid_mbox_users),
     .valid_fuse_user(valid_fuse_user),
+    .valid_sha_user(valid_sha_user),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -923,6 +925,9 @@ generate
                                      (soc_req.user == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value[AXI_USER_WIDTH-1:0]));
     end
 endgenerate
+
+always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
