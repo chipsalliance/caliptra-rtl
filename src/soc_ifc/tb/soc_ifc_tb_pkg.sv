@@ -796,8 +796,8 @@ package soc_ifc_tb_pkg;
       axi_indata = indata & {32{(modify == SET_AXI)}}; // axi_mutable;
       ahb_indata = indata & {32{(modify == SET_AHB)}}; // ahb_mutable;
 
-      axi_rodata = curr_data & {32{(modify == SET_AXI)}}; // axi_readonly;
-      ahb_rodata = curr_data & {32{(modify == SET_AHB)}}; // ahb_readonly;
+      axi_rodata = curr_data & {32{(modify == GET_AXI)}}; // axi_readonly;
+      ahb_rodata = curr_data & {32{(modify == GET_AHB)}}; // ahb_readonly;
 
       $display("axi_indata = 0x%x", axi_indata);
       $display("ahb_rodata = 0x%x", ahb_rodata);
