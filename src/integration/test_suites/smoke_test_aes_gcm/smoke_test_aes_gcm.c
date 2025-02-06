@@ -124,8 +124,8 @@ void main() {
     //CASE1
     VPRINTF(LOW, "Test Case 1\n");
     hex_to_uint32_array(key_str1, key, &key_size);
-    key_len = key_size == 8 ? AES_256 :
-              key_size == 4 ? AES_128 : AES_192;
+    key_len = key_size == 32 ? AES_256 :
+              key_size == 16 ? AES_128 : AES_192;
     hex_to_uint32_array(iv_str1, iv, &iv_length);
     hex_to_uint32_array(plaintext_str1, plaintext, &plaintext_length);
     hex_to_uint32_array(ciphertext_str1, ciphertext, &ciphertext_length);
@@ -139,10 +139,10 @@ void main() {
     }
 
     aes_input.key = aes_key;
-    aes_input.text_len = plaintext_length*4; //convert length to bytes
+    aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
-    aes_input.aad_len = aad_length*4; //convert length to bytes
+    aes_input.aad_len = aad_length;
     aes_input.aad = aad;
     aes_input.tag = tag;
     aes_input.iv = iv;
@@ -152,8 +152,8 @@ void main() {
     //CASE2
     VPRINTF(LOW, "Test Case 2\n");
     hex_to_uint32_array(key_str2, key, &key_size);
-    key_len = key_size == 8 ? AES_256 :
-              key_size == 4 ? AES_128 : AES_192;
+    key_len = key_size == 32 ? AES_256 :
+              key_size == 16 ? AES_128 : AES_192;
     hex_to_uint32_array(iv_str2, iv, &iv_length);
     hex_to_uint32_array(plaintext_str2, plaintext, &plaintext_length);
     hex_to_uint32_array(ciphertext_str2, ciphertext, &ciphertext_length);
@@ -167,10 +167,10 @@ void main() {
     }
 
     aes_input.key = aes_key;
-    aes_input.text_len = plaintext_length*4; //convert length to bytes
+    aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
-    aes_input.aad_len = aad_length*4; //convert length to bytes
+    aes_input.aad_len = aad_length;
     aes_input.aad = aad;
     aes_input.tag = tag;
     aes_input.iv = iv;
@@ -180,8 +180,8 @@ void main() {
     //CASE3
     VPRINTF(LOW, "Test Case 3\n");
     hex_to_uint32_array(key_str3, key, &key_size);
-    key_len = key_size == 8 ? AES_256 :
-              key_size == 4 ? AES_128 : AES_192;
+    key_len = key_size == 32 ? AES_256 :
+              key_size == 16 ? AES_128 : AES_192;
     hex_to_uint32_array(iv_str3, iv, &iv_length);
     hex_to_uint32_array(plaintext_str3, plaintext, &plaintext_length);
     hex_to_uint32_array(ciphertext_str3, ciphertext, &ciphertext_length);
@@ -195,10 +195,10 @@ void main() {
     }
 
     aes_input.key = aes_key;
-    aes_input.text_len = plaintext_length*4; //convert length to bytes
+    aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
-    aes_input.aad_len = aad_length*4; //convert length to bytes
+    aes_input.aad_len = aad_length;
     aes_input.aad = aad;
     aes_input.tag = tag;
     aes_input.iv = iv;
@@ -208,8 +208,8 @@ void main() {
     //CASE4
     VPRINTF(LOW, "Test Case 4\n");
     hex_to_uint32_array(key_str4, key, &key_size);
-    key_len = key_size == 8 ? AES_256 :
-              key_size == 4 ? AES_128 : AES_192;
+    key_len = key_size == 32 ? AES_256 :
+              key_size == 16 ? AES_128 : AES_192;
     hex_to_uint32_array(iv_str4, iv, &iv_length);
     hex_to_uint32_array(plaintext_str4, plaintext, &plaintext_length);
     hex_to_uint32_array(ciphertext_str4, ciphertext, &ciphertext_length);
@@ -223,10 +223,10 @@ void main() {
     }
 
     aes_input.key = aes_key;
-    aes_input.text_len = plaintext_length*4; //convert length to bytes
+    aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
-    aes_input.aad_len = aad_length*4; //convert length to bytes
+    aes_input.aad_len = aad_length;
     aes_input.aad = aad;
     aes_input.tag = tag;
     aes_input.iv = iv;

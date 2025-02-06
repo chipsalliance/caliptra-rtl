@@ -1674,26 +1674,26 @@
 #define AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW                                               (6)
 #define AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_MASK                                              (0x7c0)
 #endif
-#define CLP_AES_CLP_REG_BASE_ADDR                                                                   (0x10011100)
-#define CLP_AES_CLP_REG_AES_NAME_0                                                                  (0x10011200)
+#define CLP_AES_CLP_REG_BASE_ADDR                                                                   (0x10011800)
+#define CLP_AES_CLP_REG_AES_NAME_0                                                                  (0x10011800)
 #ifndef AES_CLP_REG_AES_NAME_0
-#define AES_CLP_REG_AES_NAME_0                                                                      (0x100)
+#define AES_CLP_REG_AES_NAME_0                                                                      (0x0)
 #endif
-#define CLP_AES_CLP_REG_AES_NAME_1                                                                  (0x10011204)
+#define CLP_AES_CLP_REG_AES_NAME_1                                                                  (0x10011804)
 #ifndef AES_CLP_REG_AES_NAME_1
-#define AES_CLP_REG_AES_NAME_1                                                                      (0x104)
+#define AES_CLP_REG_AES_NAME_1                                                                      (0x4)
 #endif
-#define CLP_AES_CLP_REG_AES_VERSION_0                                                               (0x10011208)
+#define CLP_AES_CLP_REG_AES_VERSION_0                                                               (0x10011808)
 #ifndef AES_CLP_REG_AES_VERSION_0
-#define AES_CLP_REG_AES_VERSION_0                                                                   (0x108)
+#define AES_CLP_REG_AES_VERSION_0                                                                   (0x8)
 #endif
-#define CLP_AES_CLP_REG_AES_VERSION_1                                                               (0x1001120c)
+#define CLP_AES_CLP_REG_AES_VERSION_1                                                               (0x1001180c)
 #ifndef AES_CLP_REG_AES_VERSION_1
-#define AES_CLP_REG_AES_VERSION_1                                                                   (0x10c)
+#define AES_CLP_REG_AES_VERSION_1                                                                   (0xc)
 #endif
-#define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (0x10011700)
+#define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (0x10011a00)
 #ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
-#define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (0x600)
+#define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (0x200)
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_LOW                                                  (0)
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK                                                 (0x1)
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW                                               (1)
@@ -1703,9 +1703,9 @@
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL_RSVD_LOW                                                     (7)
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL_RSVD_MASK                                                    (0xffffff80)
 #endif
-#define CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS                                                        (0x10011704)
+#define CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS                                                        (0x10011a04)
 #ifndef AES_CLP_REG_AES_KV_RD_KEY_STATUS
-#define AES_CLP_REG_AES_KV_RD_KEY_STATUS                                                            (0x604)
+#define AES_CLP_REG_AES_KV_RD_KEY_STATUS                                                            (0x204)
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_LOW                                                  (0)
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK                                                 (0x1)
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_LOW                                                  (1)
@@ -1713,18 +1713,18 @@
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW                                                  (2)
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK                                                 (0x3fc)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_START                                                         (0x10011900)
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x10011900)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_START                                                         (0x10011c00)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x10011c00)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
-#define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x800)
+#define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x400)
 #define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                    (0x1)
 #define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                     (1)
 #define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                    (0x2)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                               (0x10011904)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                               (0x10011c04)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                   (0x804)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                   (0x404)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_LOW                                     (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK                                    (0x1)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_LOW                                     (1)
@@ -1734,27 +1734,27 @@
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_LOW                                     (3)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK                                    (0x8)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                               (0x10011908)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                               (0x10011c08)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (0x808)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (0x408)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                             (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                            (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                           (0x1001190c)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                           (0x10011c0c)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                               (0x80c)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                               (0x40c)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                   (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                  (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                           (0x10011910)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                           (0x10011c10)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                               (0x810)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                               (0x410)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                   (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                  (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                         (0x10011914)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                         (0x10011c14)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                             (0x814)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                             (0x414)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_LOW                              (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK                             (0x1)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_LOW                              (1)
@@ -1764,15 +1764,15 @@
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_LOW                              (3)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK                             (0x8)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                         (0x10011918)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                         (0x10011c18)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (0x818)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (0x418)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                      (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                     (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                             (0x1001191c)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                             (0x10011c1c)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                 (0x81c)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                 (0x41c)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_LOW                                 (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_MASK                                (0x1)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_LOW                                 (1)
@@ -1782,59 +1782,59 @@
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_LOW                                 (3)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_MASK                                (0x8)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                             (0x10011920)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                             (0x10011c20)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (0x820)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (0x420)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                         (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                        (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                           (0x10011a00)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                           (0x10011d00)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                               (0x900)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                               (0x500)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                           (0x10011a04)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                           (0x10011d04)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                               (0x904)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                               (0x504)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                           (0x10011a08)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                           (0x10011d08)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                               (0x908)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                               (0x508)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                           (0x10011a0c)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                           (0x10011d0c)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                               (0x90c)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                               (0x50c)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                   (0x10011a80)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                   (0x10011d80)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                       (0x980)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                       (0x580)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                      (0x10011b00)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                      (0x10011e00)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                          (0xa00)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                          (0x600)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_MASK                               (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                      (0x10011b04)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                      (0x10011e04)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                          (0xa04)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                          (0x604)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_MASK                               (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                      (0x10011b08)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                      (0x10011e08)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                          (0xa08)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                          (0x608)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_MASK                               (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                      (0x10011b0c)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                      (0x10011e0c)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                          (0xa0c)
+#define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                          (0x60c)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_MASK                               (0x1)
 #endif
-#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                              (0x10011b10)
+#define CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                              (0x10011e10)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
-#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                  (0xa10)
+#define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                  (0x610)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
 #define AES_CLP_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (0x1)
 #endif
