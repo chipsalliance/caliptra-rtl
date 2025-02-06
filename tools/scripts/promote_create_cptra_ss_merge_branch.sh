@@ -47,6 +47,8 @@ else
     echo "Result of git config --get remote.chips.url is [$chips_url]"
 fi
 
+echo "== Fetching chips remote"
+
 # Fetch remote
 if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
     echo "Fetching with unshallow option"
@@ -55,6 +57,8 @@ else
     echo "Repo is already full, no need to unshallow"
     git fetch --prune             chips
 fi
+
+echo "== Fetching chips remote succeeded"
 
 # Check for branch existence
 if ! git show-ref --quiet "chips/${merge_dest}"; then
@@ -66,6 +70,8 @@ if ! git show-ref --quiet "chips/${merge_branch}"; then
     exit 1
 fi
 
+echo "== Branches found: [chips/${merge_dest}] and [chips/${merge_branch}]"
+
 # Update branches and perform merge
 merged=$(date +%F_%H-%M-%S)_merge_${merge_branch}_into_${merge_dest}
 if git show-ref --quiet "${merged}"; then
@@ -74,8 +80,12 @@ if git show-ref --quiet "${merged}"; then
 fi
 git switch --create ${merged} chips/${merge_dest}
 
+echo "== Merging ${merge_branch} into ${merge_dest}"
+
 git merge -m "Merge ${merge_branch} into ${merge_dest}" chips/${merge_branch}
 sts=$?
+
+echo "== Merge status: ${sts}"
 
 if [[ ${sts} -ne 0 ]]; then
     echo "Merge ${merge_branch} into ${merge_dest} failed with status ${sts}"
@@ -83,13 +93,19 @@ if [[ ${sts} -ne 0 ]]; then
     exit 1
 fi
 
+echo "== Merge ${merge_branch} into ${merge_dest} succeeded"
+
 # Update Submodules 
 if git submodule sync --recursive; then 
     echo "Could not run git submodule sync --recursive" 
     exit 1
 fi
 
+echo "== Submodules synced"
+
 if git submodule update --init --recursive; then 
     echo "Could not run git submodule update --init --recursive" 
     exit 1
 fi
+
+echo "== Submodules updated"
