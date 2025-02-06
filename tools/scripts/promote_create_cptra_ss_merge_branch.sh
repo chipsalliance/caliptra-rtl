@@ -47,6 +47,27 @@ else
     echo "Result of git config --get remote.chips.url is [$chips_url]"
 fi
 
+echo "== Syncing submodules"
+
+if ! git submodule sync --recursive; then 
+    echo "Error: git submodule sync failed"
+    exit 1
+fi
+
+echo "== Submodules synced"
+
+if ! git submodule update --init --recursive; then 
+    echo "Submodule update failed. Resetting submodules..."
+    git submodule deinit -f --all
+    rm -rf .git/modules/*
+    git submodule update --init --recursive
+    if [[ $? -ne 0 ]]; then
+        echo "Submodule update still failing. Please check manually."
+        exit 1
+    fi
+fi
+
+
 echo "== Fetching chips remote"
 
 # Fetch remote
