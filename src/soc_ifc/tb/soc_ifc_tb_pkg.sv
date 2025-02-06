@@ -796,8 +796,8 @@ package soc_ifc_tb_pkg;
       axi_indata = indata & {32{(modify == SET_AXI)}}; // axi_mutable;
       ahb_indata = indata & {32{(modify == SET_AHB)}}; // ahb_mutable;
 
-      axi_rodata = curr_data & {32{(modify == GET_AXI)}}; // axi_readonly;
-      ahb_rodata = curr_data & {32{(modify == GET_AHB)}}; // ahb_readonly;
+      axi_rodata = curr_data & {32{(modify == SET_AXI)}}; // axi_readonly;
+      ahb_rodata = curr_data & {32{(modify == SET_AHB)}}; // ahb_readonly;
 
       $display("axi_indata = 0x%x", axi_indata);
       $display("ahb_rodata = 0x%x", ahb_rodata);
@@ -857,7 +857,7 @@ package soc_ifc_tb_pkg;
 
       else if (str_startswith(addr_name, "CPTRA_OWNER_PK_HASH") & !str_endswith(addr_name, "LOCK")) begin
         owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
-        exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : (axi_indata | ahb_rodata); // all bits are ahb-RO
+        exp_data = owner_pk_hash_locked ? curr_data : (axi_indata | ahb_rodata); // all bits are ahb-RO
       end
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
@@ -983,7 +983,7 @@ package soc_ifc_tb_pkg;
 
           "CPTRA_OWNER_PK_HASH_LOCK": begin
             owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
-            exp_data = owner_pk_hash_locked ? (ahb_rodata | axi_rodata) : axi_indata & get_mask(addr_name);
+            exp_data = owner_pk_hash_locked ? curr_data : ahb_rodata | (axi_indata & get_mask(addr_name));
             $display("Expected data: 0x%x", exp_data);
           end
 
