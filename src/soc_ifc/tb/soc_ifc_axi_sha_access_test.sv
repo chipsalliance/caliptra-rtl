@@ -165,6 +165,7 @@ module soc_ifc_axi_sha_access_test
     .strap_ss_strap_generic_1(0),
     .strap_ss_strap_generic_2(0),
     .strap_ss_strap_generic_3(0),
+    .strap_ss_caliptra_dma_axi_user(0),
     .ss_debug_intent(1'b0),
     .cptra_ss_debug_intent(),
 
