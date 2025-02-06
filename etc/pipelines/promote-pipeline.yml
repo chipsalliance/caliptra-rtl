@@ -115,7 +115,7 @@ stages:
           export PYREQUIREMENTS="$(workspace_root)/pipelines/require-progress.txt"
           PROGRESS_CONFIG="$(workspace_root)/progress/config.json"
   
-          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_cptra_ss_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_SS\""
+          enter-workspace tmp_ws "echo \"running \$MSFT_REPO_ROOT/tools/scripts/promote_create_cptra_ss_merge_branch.sh with ${{ parameters.github_dest_name }}, ${{ parameters.github_branch_name }}\" && bash \$MSFT_REPO_ROOT/tools/scripts/promote_create_cptra_ss_merge_branch.sh ${{ parameters.github_dest_name }} ${{ parameters.github_branch_name }} && echo \"Done - check \$CALIPTRA_SS\""
         displayName: 'CREATE MERGED TEST BRANCH'
         enabled: ${{ parameters.run_clp_ss_github_val_flow }}
         condition: eq(variables['Build.Reason'], 'Manual')
