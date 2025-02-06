@@ -84,27 +84,31 @@ if ! git submodule update --init --recursive; then
     fi
 fi
 
+echo "== Submodules updated"
 
-# echo "== Fetching chips remote 1"
-# if ! git submodule update --init --no-recurse third_party/i3c-core; then
-#     echo "Could not run git submodule update --init --no-recurse third_party/i3c-core"
-#     exit 1
+
+
+sts = $(git submodule sync --recursive)
+echo "Status of git submodule sync --recursive is $sts"
+
+sts = $(git submodule update --init --recursive)
+echo "Status of git submodule update --init --recursive is $sts"
+
+echo "== Submodules updated with force"
+
+sts = $(git fetch chips)
+echo "Status of git fetch chips is $sts"
+
+echo "== Fetched chips remote"
+
+# # Fetch remote
+# if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
+#     echo "Fetching with unshallow option"
+#     git fetch --prune --unshallow chips
+# else
+#     echo "Repo is already full, no need to unshallow"
+#     git fetch --prune             chips
 # fi
-# echo "== Fetching chips remote 2"
-
-
-# Fetch remote
-if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
-    echo "Fetching with unshallow option"
-    git fetch --prune --unshallow chips
-else
-    echo "Repo is already full, no need to unshallow"
-    git fetch --prune             chips
-fi
-
-git fetch --prune --prune-tags --tags origin
-
-echo "== Fetching chips remote succeeded"
 
 # Check for branch existence
 if ! git show-ref --quiet "chips/${merge_dest}"; then
