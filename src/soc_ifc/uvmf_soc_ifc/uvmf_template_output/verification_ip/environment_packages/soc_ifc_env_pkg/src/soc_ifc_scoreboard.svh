@@ -128,8 +128,9 @@ class soc_ifc_scoreboard #(
 
   // Associative array of exptected transactions keyed with the integer accessed using
   // the transactions get_key() interface.
-  soc_ifc_status_transaction                                                soc_ifc_expected_hash[int unsigned]; // FIXME
-  cptra_status_transaction                                                  cptra_expected_hash  [int unsigned]; // FIXME
+  soc_ifc_status_transaction                                                soc_ifc_expected_hash  [int unsigned]; // FIXME
+  cptra_status_transaction                                                  cptra_expected_hash    [int unsigned]; // FIXME
+  ss_mode_status_transaction                                                ss_mode_expected_hash  [int unsigned]; // FIXME
   // Use Queues for AHB/AXI txns since there is no get_key() method
   ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
                               ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
@@ -272,12 +273,13 @@ class soc_ifc_scoreboard #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_expected_ss_mode_analysis_export(ss_mode_status_transaction t);
     // pragma uvmf custom expected_ss_mode_analysis_export_scoreboard begin
-    `uvm_info("PRED", "Transaction Received through expected_ss_mode_analysis_export", UVM_MEDIUM)
-    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_warning("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_expected_ss_mode_analysis_export function needs to be completed with custom scoreboard functionality")
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    `uvm_info("SCBD_SS_MODE_STS", $sformatf("Transaction Received through expected_ss_mode_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
+    `uvm_info("SCBD_SS_MODE_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
+
+    // FIXME re-enable these checks
+//    ss_mode_expected_hash[t.get_key()] = t;
+//    transaction_count++;
+//    -> entry_received;
  
     // pragma uvmf custom expected_ss_mode_analysis_export_scoreboard end
   endfunction
@@ -440,12 +442,35 @@ class soc_ifc_scoreboard #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_actual_ss_mode_analysis_export(ss_mode_status_transaction t);
     // pragma uvmf custom actual_ss_mode_analysis_export_scoreboard begin
-    `uvm_info("PRED", "Transaction Received through actual_ss_mode_analysis_export", UVM_MEDIUM)
-    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ss_mode_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-    `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
+    ss_mode_status_transaction t_exp;
+    bit txn_eq;
+
+    `uvm_info("SCBD_SS_MODE_STS", $sformatf("Transaction Received through actual_ss_mode_analysis_export with key: [%0d]", t.get_key()), UVM_MEDIUM)
+    `uvm_info("SCBD_SS_MODE_STS", {"            Data: ",t.convert2string()}, UVM_HIGH)
+
+    // Check for expected analysis port to receive first transaction after a reset before proceeding with the actual check
+    if (reset_handled.is_on())
+        `uvm_error("SCBD_SS_MODE_STS", "Received actual ss_mode_status_transaction after a reset event, but prior to receiving the expected transaction!")
+    // FIXME re-enable this
+//    if (ss_mode_expected_hash.exists(t.get_key())) begin
+//        t_exp = ss_mode_expected_hash[t.get_key()];
+//        txn_eq = t.compare(t_exp);
+//        if (txn_eq) begin
+//            `uvm_info("SCBD_SS_MODE_STS", "write_actual_ss_mode_analysis_export() received transaction matching expected", UVM_HIGH)
+//            match_count++;
+//        end
+//        else begin
+//            `uvm_error("SCBD_SS_MODE_STS", $sformatf("write_actual_ss_mode_analysis_export() received transaction not matching expected\nExpected: %s\nActual:   %s", t_exp.convert2string(), t.convert2string()))
+//            mismatch_count++;
+//        end
+//        ss_mode_expected_hash.delete(t.get_key());
+//    end
+//    else begin
+//        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_ss_mode_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
+//        `uvm_error("SCBD_SS_MODE_STS",$sformatf("NO PREDICTED ENTRY WITH KEY [%0d] TO COMPARE AGAINST:%s", t.get_key(), t.convert2string()))
+//        nothing_to_compare_against_count++;
+//    end
+//    -> entry_received;
  
     // pragma uvmf custom actual_ss_mode_analysis_export_scoreboard end
   endfunction
@@ -637,6 +662,7 @@ endclass
           // Flush transactions
           soc_ifc_expected_hash.delete();
           cptra_expected_hash  .delete();
+          ss_mode_expected_hash.delete();
           ahb_expected_q.delete();
           axi_expected_q.delete();
 
@@ -671,13 +697,15 @@ endclass
       bit entries_remaining = 0;
       if (soc_ifc_expected_hash.size() != 0) entries_remaining |= 1;
       if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
+      if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
       if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
       if (axi_expected_q.size() != 0)        entries_remaining |= 1;
       while (entries_remaining) begin : while_entries_remaining
-          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ahb_exp[%d] axi_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ahb_expected_q.size(), axi_expected_q.size()),UVM_NONE)
+          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ss_mode_exp[%d] ahb_exp[%d] axi_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ss_mode_expected_hash.size(), ahb_expected_q.size(), axi_expected_q.size()),UVM_NONE)
           begin: VERBOSE_TXN_DUMP
               foreach (soc_ifc_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("soc_ifc_expected[%0d]: %s",ii,soc_ifc_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (cptra_expected_hash  [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("cptra_expected[%0d]:   %s",ii,cptra_expected_hash  [ii].convert2string()), UVM_FULL) end
+              foreach (ss_mode_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ss_mode_expected[%0d]: %s",ii,ss_mode_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (ahb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ahb_expected[%0d]:     %s",ii,ahb_expected_q       [ii].convert2string()), UVM_FULL) end
               foreach (axi_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_expected[%0d]:     %s",ii,axi_expected_q       [ii].convert2string()), UVM_FULL) end
           end
@@ -685,6 +713,7 @@ endclass
           entries_remaining=0;
           if (soc_ifc_expected_hash.size() != 0) entries_remaining |= 1;
           if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
+          if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
           if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
           if (axi_expected_q.size() != 0)        entries_remaining |= 1;
       end : while_entries_remaining
