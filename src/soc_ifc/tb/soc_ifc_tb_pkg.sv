@@ -426,8 +426,8 @@ package soc_ifc_tb_pkg;
     "SS_DEBUG_INTENT"                                  : `SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK,   
     "SS_DBG_MANUF_SERVICE_REG_REQ"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK  |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_MASK),
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK),
+                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_MASK),
     "SS_DBG_MANUF_SERVICE_REG_RSP"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
@@ -436,22 +436,22 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
+                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
     "SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"         : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_SUCCESS_MASK      |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_FAIL_MASK         |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
+                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
     "SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"        : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_FAIL_MASK     |
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_FAIL_MASK        |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),
+                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
+                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
@@ -902,10 +902,12 @@ package soc_ifc_tb_pkg;
         exp_data = axi_rodata | ahb_indata;
 
       end else if (str_startswith(addr_name, "SS_DBG_MANUF_SERVICE_REG_RSP")) begin
+        $display("pfx = %s", pfx);
         if (pfx.compare("DEFAULT") != 0)
           mask_name = {addr_name, pfx};
         else
           mask_name = addr_name;
+        $display("name_name = %s", mask_name);
         addr_name = "SS_DBG_MANUF_SERVICE_REG_RSP";
         ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
         $display("In update_exp_regval, mask = 0x%08x", get_mask(mask_name));
