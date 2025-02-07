@@ -74,35 +74,6 @@ task fuse_reg_axi_user_test;
 
     fuse_regnames = get_fuse_regnames_minus_ss_straps(); 
 
-    /*
-    foreach (fuse_regnames[ix]) begin
-      $display("CUrrent fuse: %s", fuse_regnames[ix]);
-      $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-      if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
-          (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
-          (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
-        $display("Found %s", fuse_regnames[ix]);
-        fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
-        continue; 
-      end
-    end 
-
-    // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
-    // Deleting it explicitly for now
-    del_from_strq(fuse_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
-
-    foreach (fuse_regnames[ix]) begin
-      if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
-          (fuse_regnames[ix] == "SS_SOC_DBG_UNLOCK_LEVEL") ||
-          (fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
-          (fuse_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
-          (fuse_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
-        fuse_regnames.delete(ix);  // SOC read-only
-        continue; 
-      end
-    end
-      */
-
     init_sim();
     reset_dut();
 
@@ -132,7 +103,7 @@ task fuse_reg_axi_user_test;
     repeat (3) @(posedge clk_tb);
     rdtrans.update_byname("CPTRA_FUSE_VALID_AXI_USER", 0, tid); 
     read_reg_trans(GET_AXI, rdtrans);
-    $display ("Pauser value programmed = 0x%08x", rdtrans.data); 
+    $display ("Axi user value programmed = 0x%08x", rdtrans.data); 
     assert (rdtrans.data == valid_axi_user) else begin
       $display("TB ERROR. fuse_pauser_valid modfication failed"); 
       error_ctr += 1;

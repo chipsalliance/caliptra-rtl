@@ -836,9 +836,9 @@ module soc_ifc_tb
         .lock(0),
         .data(word),
         .resp(resp));
-      $display("Checking if AXI write was successful");
+      //$display("Checking if AXI write was successful");
       axi_txn_check(resp, write, exp_txn_sts);
-      $display("Done writing to address 0x%x", address);
+      //$display("Done writing to address 0x%x", address);
     end
   endtask
 
@@ -940,10 +940,10 @@ module soc_ifc_tb
         .lock(0),
         .data(rdata),
         .resp(resp));
-      $display("AXi SUB read complete");
+      //$display("AXi SUB read complete");
       //$display("Checking if AXI read was successful");
       axi_txn_check(resp, read, exp_txn_sts);
-      $display("AXI txn check complete");
+      //$display("AXI txn check complete");
     end
   endtask // read_single_word_axi_sub
 
@@ -965,10 +965,10 @@ module soc_ifc_tb
         .lock(0),
         .data(rdata),
         .resp(resp));
-      $display("AXi SUB read complete");
+      //$display("AXi SUB read complete");
       //$display("Checking if AXI read was successful");
       axi_txn_check(resp, read);
-      $display("AXI txn check complete");
+      //$display("AXI txn check complete");
     end
   endtask // read_single_word_axi_user_sub
 
@@ -1301,7 +1301,7 @@ module soc_ifc_tb
       // Enable release of Caliptra core from reset & simulate FW boot
       wait(ready_for_fuses == 1'b1);
       write_single_word_axi_sub(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1); 
-      $display("Done writing CPTRA_FUSE_WR_DONE");
+      //$display("Done writing CPTRA_FUSE_WR_DONE");
       update_exp_regval("CPTRA_FUSE_WR_DONE", 32'h1, SET_AXI);
       socregs.lock_fuses();
 
@@ -1603,7 +1603,7 @@ module soc_ifc_tb
           rdtrans.update(addr, valid_hrdata, tid); 
         end else if (rd_modifier == GET_AXI) begin
           read_single_word_axi_sub(addr, valid_axi_rdata);
-          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_axi_rdata); 
+          $display(" Read over AXI: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_axi_rdata); 
           rdtrans.update(addr, valid_axi_rdata, tid); 
         end else 
           $error("TB ERROR. Unsupported access rd_modifier %s", rd_modifier.name()); 

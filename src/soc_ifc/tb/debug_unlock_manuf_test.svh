@@ -205,10 +205,10 @@
         $display("\n3a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
-        $display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        $display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"));
+        //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
+        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"));
         ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK");
-        $display("Write data with mask = 0x%0x", ss_debug_rsp_data);
+        //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AHB, wrtrans_rsp_reg, .pfx("_MANUF_UNLOCK"));
 
         repeat (10) @(posedge clk_tb);
@@ -238,10 +238,10 @@
         $display("\n4a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
-        $display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
+        //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
         $display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"));
         ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK");
-        $display("Write data with mask = 0x%0x", ss_debug_rsp_data);
+        ////$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_MANUF_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);
@@ -271,10 +271,10 @@
         $display("\n5a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
-        $display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        $display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
+        //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
+        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
         ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PRODF_UNLOCK");
-        $display("Write data with mask = 0x%0x", ss_debug_rsp_data);
+        //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_PROD_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);
@@ -302,10 +302,10 @@
         $display("\n5d. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
-        $display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        $display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
+        //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
+        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
         ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK");
-        $display("Write data with mask = 0x%0x", ss_debug_rsp_data);
+        //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_PROD_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);

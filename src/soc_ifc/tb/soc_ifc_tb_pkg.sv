@@ -363,19 +363,6 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
     "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff
-    //"SS_CPTRA_BASE_ADDR_L"                             : 32'hffff_ffff,
-    //"SS_CPTRA_BASE_ADDR_H"                             : 32'hffff_ffff,
-    //"SS_MCI_BASE_ADDR_L"                               : 32'hffff_ffff,
-    //"SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
-    //"SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
-    //"SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
-    //"SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
-    //"SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
-    //"SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
-    //"SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
-    //"SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET": 32'hffff_ffff,
-    //"SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"       : 32'hffff_ffff
-    //"SS_STRAP_GENERIC"                                 : 32'hffff_ffff
   };
 
 
@@ -387,10 +374,8 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK  ),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
-                                                          //`SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK        |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK       |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK  |
-                                                          //`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK    |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_MAILBOX_FLOW_DONE_MASK),
     "CPTRA_MBOX_AXI_USER_LOCK"                           : `SOC_IFC_REG_CPTRA_MBOX_AXI_USER_LOCK_0_LOCK_MASK,   // same for all 5 pausers
     "CPTRA_TRNG_AXI_USER_LOCK"                           : `SOC_IFC_REG_CPTRA_TRNG_AXI_USER_LOCK_LOCK_MASK,
@@ -412,14 +397,6 @@ package soc_ifc_tb_pkg;
     "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK,
     "CPTRA_CAP_LOCK_MASK"                              : `SOC_IFC_REG_CPTRA_CAP_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
-    //"FUSE_KEY_MANIFEST_PK_HASH_MASK"                   : (`SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_0 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_1 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_2 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_3 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_4 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_5 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_6 |
-    //                                                      `SOC_IFC_REG_FUSE_KEY_MANIFEST_PK_HASH_MASK_7),
     "FUSE_ECC_REVOCATION"                              : `SOC_IFC_REG_FUSE_ECC_REVOCATION_ECC_REVOCATION_MASK,
     "FUSE_MLDSA_REVOCATION"                            : `SOC_IFC_REG_FUSE_MLDSA_REVOCATION_MLDSA_REVOCATION_MASK,
     "FUSE_SOC_STEPPING_ID"                             : `SOC_IFC_REG_FUSE_SOC_STEPPING_ID_SOC_STEPPING_ID_MASK,
@@ -427,7 +404,6 @@ package soc_ifc_tb_pkg;
     "SS_DBG_MANUF_SERVICE_REG_REQ"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK),
-                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_MASK),
     "SS_DBG_MANUF_SERVICE_REG_RSP"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
@@ -437,28 +413,24 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
-                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
     "SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"         : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_SUCCESS_MASK      |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_FAIL_MASK         |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
-                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),   
     "SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"        : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_FAIL_MASK        |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
-                                                          //`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK),
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
     "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_ECC_UNC_MASK |
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK), 
-                                                       // `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK is AXI/AHB RO
     "INTERNAL_HW_ERROR_NON_FATAL_MASK"                 : (`SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_NO_LOCK_MASK | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_OOO_MASK     | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_ECC_UNC_MASK),      
@@ -687,24 +659,24 @@ package soc_ifc_tb_pkg;
     dword_t tmp_data;
 
     begin
-      $display("In update_CPTRA_FLOW_STATUS");
+      //$display("In update_CPTRA_FLOW_STATUS");
       tmp_data = _exp_register_data_dict["CPTRA_FLOW_STATUS"]; // then preserve read-only bit fields per masks 
       $display("Read back expected CPTRA_FLOW_STATUS: 0x%x", tmp_data);
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
       $display(tmp_data);
       tmp_data = tmp_data | mask_shifted(fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK);
-      $display("fuse_ready_val = 0x%x, ready_for_fuses_mask = 0x%x, tmp_data = 0x%x", fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK, tmp_data);
+      //$display("fuse_ready_val = 0x%x, ready_for_fuses_mask = 0x%x, tmp_data = 0x%x", fuse_ready_val, `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_MASK, tmp_data);
       tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
-      $display("boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
+      //$display("boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
       tmp_data = tmp_data | mask_shifted(boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK);
-      $display("boot_fsm_ps = 0x%x, boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
+      //$display("boot_fsm_ps = 0x%x, boot_fsm_ps_mask = 0x%x, tmp_data = 0x%x", boot_fsm_ps, `SOC_IFC_REG_CPTRA_FLOW_STATUS_BOOT_FSM_PS_MASK, tmp_data);
       // $display( "TB DEBUG. update_CPTRA_FLOW_STATUS(%x, %x) at time %t. new tmp_data = 0x%08x", fuse_ready_val, boot_fsm_ps, $realtime, tmp_data); 
 
-      $display("Final Temp_data = 0x%x", tmp_data);
+      //$display("Final Temp_data = 0x%x", tmp_data);
       //update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
       update_exp_regval("CPTRA_FLOW_STATUS", tmp_data, SET_DIRECT); 
 
-      $display("Back to update_CPTRA_FLOW_STATUS");
+      //$display("Back to update_CPTRA_FLOW_STATUS");
 
       $display( "TB INFO. Updated expected value of CPTRA_FLOW_STATUS = 0x%08x", _exp_register_data_dict["CPTRA_FLOW_STATUS"]);
       $display("Done update_CPTRA_FLOW_STATUS");
@@ -751,7 +723,7 @@ package soc_ifc_tb_pkg;
 
     begin
 
-      $display("In update_exp_regval: %s", addr_name);
+      //$display("In update_exp_regval: %s", addr_name);
 
       addr = _soc_register_dict[addr_name];
       sscode = _soc_register_initval_dict["CPTRA_SECURITY_STATE"];
@@ -799,9 +771,9 @@ package soc_ifc_tb_pkg;
       axi_rodata = curr_data & {32{(modify == SET_AXI)}}; // axi_readonly;
       ahb_rodata = curr_data & {32{(modify == SET_AHB)}}; // ahb_readonly;
 
-      $display("axi_indata = 0x%x", axi_indata);
-      $display("ahb_rodata = 0x%x", ahb_rodata);
-      $display("curr_data = 0x%x", curr_data);
+      //$display("axi_indata = 0x%x", axi_indata);
+      //$display("ahb_rodata = 0x%x", ahb_rodata);
+      //$display("curr_data = 0x%x", curr_data);
 
       // handle wide registers first, then normal sized ones
 
@@ -834,13 +806,13 @@ package soc_ifc_tb_pkg;
         axi_user_lock_regname = {"CPTRA_MBOX_AXI_USER_LOCK", axi_user_suffix};
         axi_user_locked = _exp_register_data_dict[axi_user_lock_regname]; 
         exp_data = axi_user_locked ? curr_data : (ahb_indata | axi_indata); 
-        $display("DEBUG: addr_name: %s\naxi_user_lock_regname: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_lock_regname, axi_user_locked, exp_data);
+        //$display("DEBUG: addr_name: %s\naxi_user_lock_regname: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_lock_regname, axi_user_locked, exp_data);
 
       end else if (str_startswith(addr_name, "CPTRA_MBOX_AXI_USER_LOCK")) begin //  if axi_user locked, axi-RO
         tmpstr = "CPTRA_MBOX_AXI_USER_LOCK";
         axi_user_locked = _exp_register_data_dict[addr_name];
         exp_data = axi_user_locked ? curr_data & get_mask(tmpstr) :  (ahb_indata | axi_indata) & get_mask(tmpstr); 
-        $display("DEBUG: addr_name: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_locked, exp_data);
+        //$display("DEBUG: addr_name: %s\naxi_user_locked: 0x%x\nexp_data: 0x%x", addr_name, axi_user_locked, exp_data);
 
       end else if (str_startswith(addr_name, "CPTRA_GENERIC_INPUT_WIRES")) 
         exp_data = curr_data; // all bits are RO 
@@ -907,14 +879,14 @@ package soc_ifc_tb_pkg;
           mask_name = {addr_name, pfx};
         else
           mask_name = addr_name;
-        $display("name_name = %s", mask_name);
+        //$display("name_name = %s", mask_name);
         addr_name = "SS_DBG_MANUF_SERVICE_REG_RSP";
         ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
-        $display("In update_exp_regval, mask = 0x%08x", get_mask(mask_name));
+        //$display("In update_exp_regval, mask = 0x%08x", get_mask(mask_name));
         exp_data = ss_debug_intent ? ahb_indata & get_mask(mask_name) : curr_data;
 
       end else begin    
-        $display("COntrol is in this block");
+        //$display("COntrol is in this block");
         
         case (addr_name)
     
@@ -924,7 +896,7 @@ package soc_ifc_tb_pkg;
           end
 
           "CPTRA_FLOW_STATUS" : begin
-            $display("DEBUG: here");
+            //$display("DEBUG: here");
             if (modify == SET_AXI) //  apb-RO 
               exp_data = axi_rodata;
             else if (modify == SET_AHB) begin // some fields are ro
@@ -1054,11 +1026,11 @@ package soc_ifc_tb_pkg;
           
           "SS_DBG_MANUF_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
-            $display("ss_debug_intent = 0x%08x", ss_debug_intent);
-            $display("axi_indata = 0x%08x", axi_indata);
-            $display("ahb_indata = 0x%08x", axi_indata);
-            $display("mask = 0x%08x", get_mask(addr_name));
-            $display("curr_data = 0x%08x", curr_data);
+            //$display("ss_debug_intent = 0x%08x", ss_debug_intent);
+            //$display("axi_indata = 0x%08x", axi_indata);
+            //$display("ahb_indata = 0x%08x", axi_indata);
+            //$display("mask = 0x%08x", get_mask(addr_name));
+            //$display("curr_data = 0x%08x", curr_data);
             exp_data = ss_debug_intent ? axi_indata & get_mask(addr_name) | ahb_indata & get_mask(addr_name) : curr_data;
           end
           
@@ -1069,7 +1041,7 @@ package soc_ifc_tb_pkg;
           //end
           
           default: begin
-            $display("DEBUG: Default: %s", addr_name);
+            //$display("DEBUG: Default: %s", addr_name);
             exp_data = indata & get_mask(addr_name); 
           end
         endcase
@@ -1078,7 +1050,7 @@ package soc_ifc_tb_pkg;
       _exp_register_data_dict[addr_name] = exp_data;
        $display ("TB DEBUG: Expected data for addr_name %s (addr 0x%08x) = 0x%08x", addr_name, addr, exp_data); 
     end
-    $display("Done update_exp_regval: %s", addr_name);
+    //$display("Done update_exp_regval: %s", addr_name);
 
   endfunction // update_exp_regval
 

@@ -152,9 +152,9 @@
       fuse_regnames = get_fuse_regnames();
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
-      foreach (fuse_regnames[ix]) begin
-        $display("Initial set of fuses: %s", fuse_regnames[ix]);
-      end
+      //foreach (fuse_regnames[ix]) begin
+        //$display("Initial set of fuses: %s", fuse_regnames[ix]);
+      //end
 
       foreach (fuse_regnames[ix]) begin
         $display("CUrrent fuse: %s", fuse_regnames[ix]);
@@ -162,7 +162,7 @@
         if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
             (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
             (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
-          $display("Found %s", fuse_regnames[ix]);
+          //$display("Found %s", fuse_regnames[ix]);
           fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
           continue; 
         end
@@ -183,9 +183,9 @@
         end
       end
 
-      foreach (fuse_regnames[ix]) begin
-        $display("Final set of fuses: %s", fuse_regnames[ix]);
-      end
+      //foreach (fuse_regnames[ix]) begin
+      //  $display("Final set of fuses: %s", fuse_regnames[ix]);
+      ////end
 
       foreach (soc_regnames[ix]) begin
         if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS") || 
