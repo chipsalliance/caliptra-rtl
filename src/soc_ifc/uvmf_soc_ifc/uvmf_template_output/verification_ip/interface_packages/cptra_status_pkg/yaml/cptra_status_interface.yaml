@@ -53,6 +53,14 @@ uvmf:
         reset_value: '''bz'
         width: '1'
       - dir: output
+        name: dma_error_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: dma_notif_intr
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
         name: timer_intr
         reset_value: '''bz'
         width: '1'
@@ -94,6 +102,18 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
         name: sha_notif_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: dma_err_intr_pending
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: dma_notif_intr_pending
         type: bit
         unpacked_dimension: ''
       - comment: ''

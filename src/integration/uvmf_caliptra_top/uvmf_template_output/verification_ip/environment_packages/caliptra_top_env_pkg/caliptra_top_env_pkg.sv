@@ -38,7 +38,7 @@ package caliptra_top_env_pkg;
   import uvmf_base_pkg::*;
   import mvc_pkg::*;
   import mgc_ahb_v2_0_pkg::*;
-  import mgc_apb3_v1_0_pkg::*;
+//  import mgc_apb3_v1_0_pkg::*;
   import soc_ifc_env_pkg::*;
  
 

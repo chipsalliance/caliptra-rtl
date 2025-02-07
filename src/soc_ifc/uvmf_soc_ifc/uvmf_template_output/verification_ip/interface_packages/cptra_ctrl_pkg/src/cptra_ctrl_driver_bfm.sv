@@ -112,6 +112,8 @@ end
   reg  iccm_axs_blocked_o = 'b0;
   tri [3:0] rv_ecc_sts_i;
   reg [3:0] rv_ecc_sts_o = 'b0;
+  tri  crypto_error_i;
+  reg  crypto_error_o = 'b0;
 
   // Bi-directional signals
   
@@ -131,6 +133,8 @@ end
   assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
   assign bus.rv_ecc_sts = (initiator_responder == INITIATOR) ? rv_ecc_sts_o : 'bz;
   assign rv_ecc_sts_i = bus.rv_ecc_sts;
+  assign bus.crypto_error = (initiator_responder == INITIATOR) ? crypto_error_o : 'bz;
+  assign crypto_error_i = bus.crypto_error;
 
   // Proxy handle to UVM driver
   cptra_ctrl_pkg::cptra_ctrl_driver   proxy;
@@ -165,6 +169,7 @@ end
        clear_obf_secrets_o <= 'b0;
        iccm_axs_blocked_o <= 'b0;
        rv_ecc_sts_o <= 'b0;
+       crypto_error_o <= 'b0;
        // Bi-directional signals
 
      end
@@ -207,10 +212,12 @@ end
        //   bit assert_clear_secrets ;
        //   bit iccm_axs_blocked ;
        //   rv_ecc_sts_t pulse_rv_ecc_error ;
+       //   bit crypto_error ;
        // Members within the cptra_ctrl_responder_struct:
        //   bit assert_clear_secrets ;
        //   bit iccm_axs_blocked ;
        //   rv_ecc_sts_t pulse_rv_ecc_error ;
+       //   bit crypto_error ;
        initiator_struct = cptra_ctrl_initiator_struct;
        //
        // Reference code;
@@ -228,12 +235,14 @@ end
        //      clear_obf_secrets_o <= cptra_ctrl_initiator_struct.xyz;  //     
        //      iccm_axs_blocked_o <= cptra_ctrl_initiator_struct.xyz;  //     
        //      rv_ecc_sts_o <= cptra_ctrl_initiator_struct.xyz;  //    [3:0] 
+       //      crypto_error_o <= cptra_ctrl_initiator_struct.xyz;  //     
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
     clear_obf_secrets_o <= cptra_ctrl_initiator_struct.assert_clear_secrets;
     iccm_axs_blocked_o  <= cptra_ctrl_initiator_struct.iccm_axs_blocked;
     rv_ecc_sts_o        <= cptra_ctrl_initiator_struct.pulse_rv_ecc_error;
+    crypto_error_o      <= cptra_ctrl_initiator_struct.crypto_error;
     // Wait for the responder to complete the transfer then place the responder data into 
     // cptra_ctrl_responder_struct.
     @(posedge clk_i);
@@ -241,6 +250,7 @@ end
     rv_ecc_sts_o        <= '0;
     cptra_ctrl_responder_struct.assert_clear_secrets <= clear_obf_secrets_i;
     cptra_ctrl_responder_struct.iccm_axs_blocked     <= iccm_axs_blocked_i;
+    cptra_ctrl_responder_struct.crypto_error         <= crypto_error_i;
     responder_struct = cptra_ctrl_responder_struct;
   endtask        
 // pragma uvmf custom initiate_and_get_response end
@@ -267,10 +277,12 @@ bit first_transfer=1;
   //   bit assert_clear_secrets ;
   //   bit iccm_axs_blocked ;
   //   rv_ecc_sts_t pulse_rv_ecc_error ;
+  //   bit crypto_error ;
   // Variables within the cptra_ctrl_responder_struct:
   //   bit assert_clear_secrets ;
   //   bit iccm_axs_blocked ;
   //   rv_ecc_sts_t pulse_rv_ecc_error ;
+  //   bit crypto_error ;
        // Reference code;
        //    How to wait for signal value
        //      while (control_signal == 1'b1) @(posedge clk_i);
@@ -281,6 +293,7 @@ bit first_transfer=1;
        //      cptra_ctrl_responder_struct.xyz = clear_obf_secrets_i;  //     
        //      cptra_ctrl_responder_struct.xyz = iccm_axs_blocked_i;  //     
        //      cptra_ctrl_responder_struct.xyz = rv_ecc_sts_i;  //    [3:0] 
+       //      cptra_ctrl_responder_struct.xyz = crypto_error_i;  //     
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

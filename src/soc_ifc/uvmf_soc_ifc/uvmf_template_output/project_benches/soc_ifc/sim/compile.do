@@ -47,17 +47,18 @@ vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_HOME
 ###################################################################
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $env(QVIP_AHB_LITE_SLAVE_DIR_NAME)/qvip_ahb_lite_slave_filelist.f
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QVIP_AHB_LITE_SLAVE_DIR_NAME) $env(QVIP_AHB_LITE_SLAVE_DIR_NAME)/hdl_qvip_ahb_lite_slave.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $env(QVIP_APB5_SLAVE_DIR_NAME)/qvip_apb5_slave_filelist.f
-vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QVIP_APB5_SLAVE_DIR_NAME) $env(QVIP_APB5_SLAVE_DIR_NAME)/hdl_qvip_apb5_slave.sv
 vlog -sv -timescale 1ps/1ps +incdir+$env(UVMF_HOME)/common/utility_packages/qvip_utils_pkg $env(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/qvip_utils_pkg.sv
 
 ###################################################################
 ## UVMF INTERFACE COMPILATION
 ###################################################################
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/dummy_avery_aaxi_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_ctrl_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_status_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_status_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_status_pkg/compile.do
 do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/mbox_sram_pkg/compile.do
 
 ###################################################################

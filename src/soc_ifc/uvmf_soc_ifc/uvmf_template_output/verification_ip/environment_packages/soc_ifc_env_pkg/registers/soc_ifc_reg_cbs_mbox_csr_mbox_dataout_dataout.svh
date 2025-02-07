@@ -45,7 +45,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
                     rm.mbox_datain_to_dataout_predict.is_off())
                     `uvm_error("SOC_IFC_REG_CBS", $sformatf("Access to dataout of kind [%p] is unexpected on map [%s]! Mailbox state tracker: %p", kind, map.get_name(), rm.mbox_fn_state_sigs))
             end
-            this.APB_map_name: begin
+            this.AXI_map_name: begin
                 if (rm.mbox_fn_state_sigs.mbox_idle && rm.mbox_datain_to_dataout_predict.is_off()) begin
                     error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
                     error_job.rm = rm;
@@ -78,7 +78,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_dataout_dataout extends soc_ifc_reg_cbs_mbox
         endcase
         // Update the data queue and modify predicted value for mbox_dataout
         if ((map.get_name() == this.AHB_map_name) ||
-            (map.get_name() == this.APB_map_name)) begin
+            (map.get_name() == this.AXI_map_name)) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (value != previous) begin

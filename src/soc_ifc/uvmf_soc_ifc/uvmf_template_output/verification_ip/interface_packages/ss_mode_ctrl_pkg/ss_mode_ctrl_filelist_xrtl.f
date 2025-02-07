@@ -1,0 +1,3 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_if.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_monitor_bfm.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_ctrl_pkg/src/ss_mode_ctrl_driver_bfm.sv
