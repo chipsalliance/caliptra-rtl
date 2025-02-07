@@ -33,7 +33,7 @@ class soc_ifc_env_wdt_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
       typedef soc_ifc_ctrl_sequence_base soc_ifc_ctrl_sequence_t;
       soc_ifc_ctrl_sequence_t soc_ifc_ctrl_seq;
   
-    // caliptra_apb_user apb_user_obj;
+    // caliptra_axi_user axi_user_obj;
   
     // typedef struct packed {
     //     bit              set_bootfsm_breakpoint;
@@ -65,8 +65,8 @@ class soc_ifc_env_wdt_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
       super.new(name);
       soc_ifc_ctrl_seq = soc_ifc_ctrl_sequence_t::type_id::create("soc_ifc_ctrl_seq");
         
-      // Setup a User object to override PAUSER
-    //   apb_user_obj = new();
+      // Setup a User object to override AxUSER
+    //   axi_user_obj = new();
   
     endfunction
   
@@ -97,7 +97,7 @@ class soc_ifc_env_wdt_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
       reg_model = configuration.soc_ifc_rm;
       if (soc_ifc_status_agent_rsp_seq == null)
           `uvm_fatal("SOC_IFC_WDT", "SOC_IFC ENV wdt sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
-    //   apb_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset("HARD"));
+    //   axi_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset("HARD"));
     endtask
   
   

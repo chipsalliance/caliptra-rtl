@@ -55,8 +55,12 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
   // Instantiate sequences here
   typedef soc_ifc_ctrl_random_sequence  soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t;
   soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq;
+  typedef ss_mode_ctrl_random_sequence  soc_ifc_subenv_ss_mode_ctrl_agent_random_seq_t;
+  soc_ifc_subenv_ss_mode_ctrl_agent_random_seq_t soc_ifc_subenv_ss_mode_ctrl_agent_random_seq;
   typedef soc_ifc_status_responder_sequence  soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t;
   soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+  typedef ss_mode_status_responder_sequence  soc_ifc_subenv_ss_mode_status_agent_responder_seq_t;
+  soc_ifc_subenv_ss_mode_status_agent_responder_seq_t soc_ifc_subenv_ss_mode_status_agent_responder_seq;
   typedef mbox_sram_responder_sequence  soc_ifc_subenv_mbox_sram_agent_responder_seq_t;
   soc_ifc_subenv_mbox_sram_agent_responder_seq_t soc_ifc_subenv_mbox_sram_agent_responder_seq;
   // pragma uvmf custom sequences end
@@ -64,14 +68,19 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
   // Sequencer handles for each active interface in the environment
   typedef soc_ifc_ctrl_transaction  soc_ifc_subenv_soc_ifc_ctrl_agent_transaction_t;
   uvm_sequencer #(soc_ifc_subenv_soc_ifc_ctrl_agent_transaction_t)  soc_ifc_subenv_soc_ifc_ctrl_agent_sequencer; 
+  typedef ss_mode_ctrl_transaction  soc_ifc_subenv_ss_mode_ctrl_agent_transaction_t;
+  uvm_sequencer #(soc_ifc_subenv_ss_mode_ctrl_agent_transaction_t)  soc_ifc_subenv_ss_mode_ctrl_agent_sequencer; 
   typedef soc_ifc_status_transaction  soc_ifc_subenv_soc_ifc_status_agent_transaction_t;
   uvm_sequencer #(soc_ifc_subenv_soc_ifc_status_agent_transaction_t)  soc_ifc_subenv_soc_ifc_status_agent_sequencer; 
+  typedef ss_mode_status_transaction  soc_ifc_subenv_ss_mode_status_agent_transaction_t;
+  uvm_sequencer #(soc_ifc_subenv_ss_mode_status_agent_transaction_t)  soc_ifc_subenv_ss_mode_status_agent_sequencer; 
   typedef mbox_sram_transaction  soc_ifc_subenv_mbox_sram_agent_transaction_t;
   uvm_sequencer #(soc_ifc_subenv_mbox_sram_agent_transaction_t)  soc_ifc_subenv_mbox_sram_agent_sequencer; 
 
   // Sequencer handles for each QVIP interface
   mvc_sequencer uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr;
-  mvc_sequencer uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0_sqr;
+//  mvc_sequencer uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0_sqr;
+  aaxi_uvm_sequencer uvm_test_top_environment_soc_ifc_subenv_aaxi_tb_env0_master_0_sqr;
 
   // Top level environment configuration handle
   caliptra_top_env_configuration_t top_configuration;
@@ -79,8 +88,10 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
   // Configuration handles to access interface BFM's
   soc_ifc_ctrl_configuration  soc_ifc_subenv_soc_ifc_ctrl_agent_config;
   cptra_ctrl_configuration  soc_ifc_subenv_cptra_ctrl_agent_config;
+  ss_mode_ctrl_configuration  soc_ifc_subenv_ss_mode_ctrl_agent_config;
   soc_ifc_status_configuration  soc_ifc_subenv_soc_ifc_status_agent_config;
   cptra_status_configuration  soc_ifc_subenv_cptra_status_agent_config;
+  ss_mode_status_configuration  soc_ifc_subenv_ss_mode_status_agent_config;
   mbox_sram_configuration  soc_ifc_subenv_mbox_sram_agent_config;
 
   // pragma uvmf custom class_item_additional begin
@@ -102,21 +113,29 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
       `uvm_fatal("CFG" , "uvm_config_db #( soc_ifc_ctrl_configuration )::get cannot find resource soc_ifc_subenv_soc_ifc_ctrl_agent_BFM" )
     if( !uvm_config_db #( cptra_ctrl_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_cptra_ctrl_agent_BFM , soc_ifc_subenv_cptra_ctrl_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( cptra_ctrl_configuration )::get cannot find resource soc_ifc_subenv_cptra_ctrl_agent_BFM" )
+    if( !uvm_config_db #( ss_mode_ctrl_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_ss_mode_ctrl_agent_BFM , soc_ifc_subenv_ss_mode_ctrl_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( ss_mode_ctrl_configuration )::get cannot find resource soc_ifc_subenv_ss_mode_ctrl_agent_BFM" )
     if( !uvm_config_db #( soc_ifc_status_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_soc_ifc_status_agent_BFM , soc_ifc_subenv_soc_ifc_status_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( soc_ifc_status_configuration )::get cannot find resource soc_ifc_subenv_soc_ifc_status_agent_BFM" )
     if( !uvm_config_db #( cptra_status_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_cptra_status_agent_BFM , soc_ifc_subenv_cptra_status_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( cptra_status_configuration )::get cannot find resource soc_ifc_subenv_cptra_status_agent_BFM" )
+    if( !uvm_config_db #( ss_mode_status_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_ss_mode_status_agent_BFM , soc_ifc_subenv_ss_mode_status_agent_config ) ) 
+      `uvm_fatal("CFG" , "uvm_config_db #( ss_mode_status_configuration )::get cannot find resource soc_ifc_subenv_ss_mode_status_agent_BFM" )
     if( !uvm_config_db #( mbox_sram_configuration )::get( null , UVMF_CONFIGURATIONS , soc_ifc_subenv_mbox_sram_agent_BFM , soc_ifc_subenv_mbox_sram_agent_config ) ) 
       `uvm_fatal("CFG" , "uvm_config_db #( mbox_sram_configuration )::get cannot find resource soc_ifc_subenv_mbox_sram_agent_BFM" )
 
     // Assign the sequencer handles from the handles within agent configurations
     soc_ifc_subenv_soc_ifc_ctrl_agent_sequencer = soc_ifc_subenv_soc_ifc_ctrl_agent_config.get_sequencer();
+    soc_ifc_subenv_ss_mode_ctrl_agent_sequencer = soc_ifc_subenv_ss_mode_ctrl_agent_config.get_sequencer();
     soc_ifc_subenv_soc_ifc_status_agent_sequencer = soc_ifc_subenv_soc_ifc_status_agent_config.get_sequencer();
+    soc_ifc_subenv_ss_mode_status_agent_sequencer = soc_ifc_subenv_ss_mode_status_agent_config.get_sequencer();
     soc_ifc_subenv_mbox_sram_agent_sequencer = soc_ifc_subenv_mbox_sram_agent_config.get_sequencer();
 
     // Retrieve QVIP sequencer handles from the uvm_config_db
-    if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.soc_ifc_subenv.qvip_apb5_slave_subenv.apb5_master_0", uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0_sqr) ) 
-      `uvm_warning("CFG" , "uvm_config_db #( mvc_sequencer )::get cannot find resource apb5_master_0" ) 
+//    if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.soc_ifc_subenv.qvip_apb5_slave_subenv.apb5_master_0", uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0_sqr) ) 
+//      `uvm_warning("CFG" , "uvm_config_db #( mvc_sequencer )::get cannot find resource apb5_master_0" ) 
+    if( !uvm_config_db #(aaxi_uvm_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.soc_ifc_subenv.aaxi_tb.env0.master[0]", uvm_test_top_environment_soc_ifc_subenv_aaxi_tb_env0_master_0_sqr) )
+      `uvm_warning("CFG" , "uvm_config_db #( aaxi_uvm_sequencer )::get cannot find resource aaxi_tb.env0.master[0]" )
 
 
     // pragma uvmf custom new begin
@@ -133,23 +152,29 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq      = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
+    soc_ifc_subenv_ss_mode_ctrl_agent_random_seq       = soc_ifc_subenv_ss_mode_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_ss_mode_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_ss_mode_status_agent_responder_seq  = soc_ifc_subenv_ss_mode_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_ss_mode_status_agent_responder_seq");
     soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
     fork
       soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_reset();
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_reset();
+      soc_ifc_subenv_ss_mode_ctrl_agent_config.wait_for_reset();
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_reset();
       soc_ifc_subenv_cptra_status_agent_config.wait_for_reset();
+      soc_ifc_subenv_ss_mode_status_agent_config.wait_for_reset();
       soc_ifc_subenv_mbox_sram_agent_config.wait_for_reset();
     join
     // Start RESPONDER sequences here
     fork
       soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
+      soc_ifc_subenv_ss_mode_status_agent_responder_seq.start(soc_ifc_subenv_ss_mode_status_agent_sequencer);
       soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
     join_none
     // Start INITIATOR sequences here
     fork
       repeat (25) soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq.start(soc_ifc_subenv_soc_ifc_ctrl_agent_sequencer);
+      repeat (25) soc_ifc_subenv_ss_mode_ctrl_agent_random_seq.start(soc_ifc_subenv_ss_mode_ctrl_agent_sequencer);
     join
 
 caliptra_top_env_seq.start(top_configuration.vsqr);
@@ -160,8 +185,10 @@ caliptra_top_env_seq.start(top_configuration.vsqr);
     fork
       soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_ss_mode_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_ss_mode_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 

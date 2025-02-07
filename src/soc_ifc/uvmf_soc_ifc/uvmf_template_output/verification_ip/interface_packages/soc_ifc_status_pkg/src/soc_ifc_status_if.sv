@@ -34,7 +34,7 @@
 // This template can be used to connect a DUT to these signals
 //
 // .dut_signal_port(soc_ifc_status_bus.ready_for_fuses), // Agent output 
-// .dut_signal_port(soc_ifc_status_bus.ready_for_fw_push), // Agent output 
+// .dut_signal_port(soc_ifc_status_bus.ready_for_mb_processing), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.ready_for_runtime), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.mailbox_data_avail), // Agent output 
 // .dut_signal_port(soc_ifc_status_bus.mailbox_flow_done), // Agent output 
@@ -52,7 +52,7 @@ interface  soc_ifc_status_if
   input tri clk, 
   input tri dummy,
   inout tri  ready_for_fuses,
-  inout tri  ready_for_fw_push,
+  inout tri  ready_for_mb_processing,
   inout tri  ready_for_runtime,
   inout tri  mailbox_data_avail,
   inout tri  mailbox_flow_done,
@@ -67,7 +67,7 @@ modport monitor_port
   input clk,
   input dummy,
   input ready_for_fuses,
-  input ready_for_fw_push,
+  input ready_for_mb_processing,
   input ready_for_runtime,
   input mailbox_data_avail,
   input mailbox_flow_done,
@@ -82,7 +82,7 @@ modport initiator_port
   input clk,
   input dummy,
   output ready_for_fuses,
-  output ready_for_fw_push,
+  output ready_for_mb_processing,
   output ready_for_runtime,
   output mailbox_data_avail,
   output mailbox_flow_done,
@@ -97,7 +97,7 @@ modport responder_port
   input clk,
   input dummy,  
   input ready_for_fuses,
-  input ready_for_fw_push,
+  input ready_for_mb_processing,
   input ready_for_runtime,
   input mailbox_data_avail,
   input mailbox_flow_done,

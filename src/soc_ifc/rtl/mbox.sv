@@ -190,7 +190,7 @@ assign tap_mode = hwif_out.tap_mode.enabled.value;
 
 //Determine if this is a valid request from the requester side
 //1) uC requests are valid if uc has lock
-//2) SoC requests are valid if soc has lock and it's the AXI ID that locked it 
+//2) SoC requests are valid if soc has lock and it's the AXI USER that locked it 
 always_comb valid_requester = hwif_out.mbox_lock.lock.value & 
                               ((~req_data_soc_req & (~soc_has_lock || (mbox_fsm_ps == MBOX_EXECUTE_UC))) |
                                ( req_data_soc_req & soc_has_lock & (req_data_user == hwif_out.mbox_user.user.value[MBOX_IFC_USER_W-1:0])));
@@ -396,7 +396,7 @@ always_comb begin : mbox_fsm_combo
             end
         end
         //uC set execute, data is for the SoC
-        //If we're here, restrict reading to the AXI ID that requested the data
+        //If we're here, restrict reading to the AXI USER that requested the data
         //Only SoC can read from mbox
         //Only SoC can write to datain here to respond to uC
         MBOX_EXECUTE_SOC: begin

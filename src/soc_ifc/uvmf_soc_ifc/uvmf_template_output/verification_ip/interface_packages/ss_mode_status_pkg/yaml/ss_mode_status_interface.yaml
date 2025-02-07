@@ -1,0 +1,59 @@
+uvmf:
+  interfaces:
+    ss_mode_status:
+      clock: clk
+      config_constraints: []
+      config_vars: []
+      existing_library_component: 'True'
+      gen_inbound_streaming_driver: 'False'
+      hdl_pkg_parameters: []
+      hdl_typedefs: []
+      hvl_pkg_parameters: []
+      hvl_typedefs: []
+      parameters: []
+      ports:
+      - dir: output
+        name: cptra_ss_debug_intent
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: ss_dbg_manuf_enable
+        reset_value: '''bz'
+        width: '1'
+      - dir: output
+        name: ss_soc_dbg_unlock_level
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: ss_generic_fw_exec_ctrl
+        reset_value: '''bz'
+        width: '128'
+      reset: dummy
+      reset_assertion_level: 'False'
+      transaction_constraints: []
+      transaction_vars:
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: cptra_ss_debug_intent
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: ss_dbg_manuf_enable
+        type: bit
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: ss_soc_dbg_unlock_level
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'True'
+        isrand: 'False'
+        name: ss_generic_fw_exec_ctrl
+        type: bit [127:0]
+        unpacked_dimension: ''
+      use_dpi_link: 'False'

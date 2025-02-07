@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+import mbox_pkg::*;
 import soc_ifc_pkg::*;
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -107,14 +108,14 @@ end
   // directionality in the config file was from the point-of-view of the INITIATOR
 
   // INITIATOR mode input signals
-  tri [$bits(mbox_sram_resp_t)-1:0] mbox_sram_resp_i;
-//  reg [$bits(mbox_sram_resp_t)-1:0] mbox_sram_resp_o = 'bz;
-  mbox_sram_resp_t mbox_sram_resp_o = 'bz;
+  tri [$bits(cptra_mbox_sram_resp_t)-1:0] mbox_sram_resp_i;
+//  reg [$bits(cptra_mbox_sram_resp_t)-1:0] mbox_sram_resp_o = 'bz;
+  cptra_mbox_sram_resp_t mbox_sram_resp_o = 'bz;
 
   // INITIATOR mode output signals
-//  tri [$bits(mbox_sram_req_t)-1:0] mbox_sram_req_i;
-  mbox_sram_req_t mbox_sram_req_i;
-  reg [$bits(mbox_sram_req_t)-1:0] mbox_sram_req_o = 'bz;
+//  tri [$bits(cptra_mbox_sram_req_t)-1:0] mbox_sram_req_i;
+  cptra_mbox_sram_req_t mbox_sram_req_i;
+  reg [$bits(cptra_mbox_sram_req_t)-1:0] mbox_sram_req_o = 'bz;
 
   // Bi-directional signals
   
@@ -207,16 +208,16 @@ end
        // 
        // Members within the mbox_sram_initiator_struct:
        //   bit is_read ;
-       //   bit [MBOX_ADDR_W-1:0] address ;
-       //   bit [MBOX_DATA_W-1:0] data ;
-       //   bit [MBOX_ECC_DATA_W-1:0] data_ecc ;
+       //   bit [CPTRA_MBOX_ADDR_W-1:0] address ;
+       //   bit [CPTRA_MBOX_DATA_W-1:0] data ;
+       //   bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ;
        //   bit ecc_single_bit_error ;
        //   bit ecc_double_bit_error ;
        // Members within the mbox_sram_responder_struct:
        //   bit is_read ;
-       //   bit [MBOX_ADDR_W-1:0] address ;
-       //   bit [MBOX_DATA_W-1:0] data ;
-       //   bit [MBOX_ECC_DATA_W-1:0] data_ecc ;
+       //   bit [CPTRA_MBOX_ADDR_W-1:0] address ;
+       //   bit [CPTRA_MBOX_DATA_W-1:0] data ;
+       //   bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ;
        //   bit ecc_single_bit_error ;
        //   bit ecc_double_bit_error ;
        initiator_struct = mbox_sram_initiator_struct;
@@ -228,13 +229,13 @@ end
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available initiator input and inout signals listed.
        //    Initiator input signals
-       //      mbox_sram_responder_struct.xyz = mbox_sram_resp_i;  //    [$bits(mbox_sram_resp_t)-1:0] 
+       //      mbox_sram_responder_struct.xyz = mbox_sram_resp_i;  //    [$bits(cptra_mbox_sram_resp_t)-1:0] 
        //    Initiator inout signals
        //    How to assign a signal from an initiator struct member named xyz.   
        //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
-       //      mbox_sram_req_o <= mbox_sram_initiator_struct.xyz;  //    [$bits(mbox_sram_req_t)-1:0] 
+       //      mbox_sram_req_o <= mbox_sram_initiator_struct.xyz;  //    [$bits(cptra_mbox_sram_req_t)-1:0] 
        //    Initiator inout signals
     // Initiate a transfer using the data received.
     @(posedge clk_i);
@@ -268,16 +269,16 @@ bit first_transfer=1;
        );// pragma tbx xtf   
   // Variables within the mbox_sram_initiator_struct:
   //   bit is_read ;
-  //   bit [MBOX_ADDR_W-1:0] address ;
-  //   bit [MBOX_DATA_W-1:0] data ;
-  //   bit [MBOX_ECC_DATA_W-1:0] data_ecc ;
+  //   bit [CPTRA_MBOX_ADDR_W-1:0] address ;
+  //   bit [CPTRA_MBOX_DATA_W-1:0] data ;
+  //   bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ;
   //   bit ecc_single_bit_error ;
   //   bit ecc_double_bit_error ;
   // Variables within the mbox_sram_responder_struct:
   //   bit is_read ;
-  //   bit [MBOX_ADDR_W-1:0] address ;
-  //   bit [MBOX_DATA_W-1:0] data ;
-  //   bit [MBOX_ECC_DATA_W-1:0] data_ecc ;
+  //   bit [CPTRA_MBOX_ADDR_W-1:0] address ;
+  //   bit [CPTRA_MBOX_DATA_W-1:0] data ;
+  //   bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ;
   //   bit ecc_single_bit_error ;
   //   bit ecc_double_bit_error ;
        // Reference code;
@@ -287,13 +288,13 @@ bit first_transfer=1;
        //    How to assign a responder struct member, named xyz, from a signal.   
        //    All available responder input and inout signals listed.
        //    Responder input signals
-       //      mbox_sram_responder_struct.xyz = mbox_sram_req_i;  //    [$bits(mbox_sram_req_t)-1:0] 
+       //      mbox_sram_responder_struct.xyz = mbox_sram_req_i;  //    [$bits(cptra_mbox_sram_req_t)-1:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Responder output signals
-       //      mbox_sram_resp_o <= mbox_sram_initiator_struct.xyz;  //    [$bits(mbox_sram_resp_t)-1:0] 
+       //      mbox_sram_resp_o <= mbox_sram_initiator_struct.xyz;  //    [$bits(cptra_mbox_sram_resp_t)-1:0] 
        //    Responder inout signals
     
   responder_struct <= mbox_sram_responder_struct;

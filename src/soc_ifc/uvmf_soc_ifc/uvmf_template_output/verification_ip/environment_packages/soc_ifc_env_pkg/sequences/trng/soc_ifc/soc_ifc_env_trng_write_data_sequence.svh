@@ -34,9 +34,9 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
   int sts_rsp_count;
   bit trng_data_req;
 
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] trng_valid_user;
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] trng_valid_user;
   bit trng_valid_user_initialized = 1'b0;
-  caliptra_apb_user apb_user_obj; // Handle to the most recently generated user object
+  caliptra_axi_user axi_user_obj; // Handle to the most recently generated user object
 
   extern virtual task soc_ifc_env_trng_setup();
   extern virtual task soc_ifc_env_trng_poll_data_req();
@@ -54,8 +54,8 @@ class soc_ifc_env_trng_write_data_sequence extends soc_ifc_env_sequence_base #(.
   function new(string name = "" );
     super.new(name);
 
-    // Setup a User object to override PAUSER
-    apb_user_obj = new();
+    // Setup a User object to override AxUSER
+    axi_user_obj = new();
 
   endfunction
 
@@ -100,24 +100,24 @@ endclass
 //               - Any other functionality implemented in derived classes
 //==========================================
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_setup();
-    // Read the valid PAUSER fields from register mirrored value if the local array
+    // Read the valid AxUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!trng_valid_user_initialized) begin
-        // If PAUSER is locked, we must use the exact value programmed.
-        if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value())
-            trng_valid_user = reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER.PAUSER.get_mirrored_value();
+        // If AxUSER is locked, we must use the exact value programmed.
+        if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_AXI_USER_LOCK.LOCK.get_mirrored_value())
+            trng_valid_user = reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.get_mirrored_value();
         else if (!std::randomize(this.trng_valid_user))
             `uvm_error("TRNG_REQ_SEQ", "Failed to generate random value for trng_valid_user")
         trng_valid_user_initialized = 1'b1;
     end
     else begin
-        if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value() &&
-            trng_valid_user != reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_PAUSER.get_mirrored_value())
+        if (reg_model.soc_ifc_reg_rm.CPTRA_TRNG_AXI_USER_LOCK.LOCK.get_mirrored_value() &&
+            trng_valid_user != reg_model.soc_ifc_reg_rm.CPTRA_TRNG_VALID_AXI_USER.get_mirrored_value())
             `uvm_warning("TRNG_REQ_SEQ", "trng_valid_user initialized with a value that does not match mirrored value in register model!")
     end
 
     // Assign user and use throughout sequence
-    apb_user_obj.set_addr_user(trng_valid_user);
+    axi_user_obj.set_addr_user(trng_valid_user);
     `uvm_info("TRNG_REQ_SEQ", $sformatf("trng_valid_user initialized to value 0x%x", trng_valid_user), UVM_HIGH)
 
 endtask
@@ -149,7 +149,7 @@ endtask
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_check_data_req(output bit data_req);
   uvm_status_e reg_sts;
   uvm_reg_data_t reg_data;
-  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
   if (reg_sts != UVM_IS_OK) begin
     `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
   end
@@ -169,7 +169,7 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_data();
   for (ii = 0; ii < this.trng_num_dwords; ii++) begin
     if (!std::randomize(data)) `uvm_error("TRNG_REQ_SEQ", "Failed to randomize data")
     `uvm_info("TRNG_REQ_SEQ", $sformatf("Sending TRNG_DATA[%0d]: 0x%0x", ii, data), UVM_HIGH)
-    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[ii].write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (reg_sts != UVM_IS_OK) 
       `uvm_error("TRNG_REQ_SEQ", "Register access failed (TRNG_DATA)")
   end
@@ -182,7 +182,7 @@ endtask
 task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_write_done();
   uvm_status_e reg_sts;
   `uvm_info("TRNG_REQ_SEQ", "Sending TRNG_DONE", UVM_MEDIUM)
-  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, uvm_reg_data_t'(trng_write_done) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.write(reg_sts, uvm_reg_data_t'(trng_write_done) << reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos(), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
   if (reg_sts != UVM_IS_OK) 
     `uvm_error("TRNG_REQ_SEQ", "Register access failed (TRNG_DONE)")
 endtask
@@ -198,12 +198,12 @@ task soc_ifc_env_trng_write_data_sequence::soc_ifc_env_trng_wait_idle();
 
   `uvm_info("TRNG_REQ_SEQ", "Waiting for TRNG_DONE to clear", UVM_HIGH)
 
-  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
   if (reg_sts != UVM_IS_OK) 
     `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
   while (data[reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_lsb_pos()]) begin
       configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200);
-      reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+      reg_model.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       if (reg_sts != UVM_IS_OK) 
         `uvm_error("TRNG_REQ_SEQ", "Register access failed (CPTRA_TRNG_STATUS)")
   end

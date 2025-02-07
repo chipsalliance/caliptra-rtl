@@ -111,7 +111,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock extends soc_ifc_reg_cbs_mbox_c
                 end
             endcase
         end
-        else if ((map.get_name() == this.APB_map_name)) begin
+        else if ((map.get_name() == this.AXI_map_name)) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_unlock on map [%s] has no effect and is discarded", map.get_name()), UVM_FULL)

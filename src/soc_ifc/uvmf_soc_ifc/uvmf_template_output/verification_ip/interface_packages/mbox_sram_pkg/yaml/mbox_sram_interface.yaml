@@ -8,7 +8,7 @@ uvmf:
         isrand: 'False'
         name: inject_ecc_error
         type: bit [1:0]
-        value: 1'b0
+        value: 2'b00
       - comment: When set, causes the mbox_sram_responder_sequence to clear the variable 'inject_ecc_error' after a single ECC error is injected
         isrand: 'False'
         name: auto_clear_ecc_error_injection
@@ -25,11 +25,11 @@ uvmf:
       - dir: output
         name: mbox_sram_req
         reset_value: '''bz'
-        width: $bits(mbox_sram_req_t)
+        width: $bits(cptra_mbox_sram_req_t)
       - dir: input
         name: mbox_sram_resp
         reset_value: '''bz'
-        width: $bits(mbox_sram_resp_t)
+        width: $bits(cptra_mbox_sram_resp_t)
       reset: dummy
       reset_assertion_level: 'False'
       transaction_constraints: []
@@ -44,19 +44,19 @@ uvmf:
         iscompare: 'True'
         isrand: 'True'
         name: address
-        type: bit [MBOX_ADDR_W-1:0]
+        type: bit [CPTRA_MBOX_ADDR_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
         name: data
-        type: bit [MBOX_DATA_W-1:0]
+        type: bit [CPTRA_MBOX_DATA_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'
         isrand: 'False'
         name: data_ecc
-        type: bit [MBOX_ECC_DATA_W-1:0]
+        type: bit [CPTRA_MBOX_ECC_DATA_W-1:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'True'

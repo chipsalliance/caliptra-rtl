@@ -3,18 +3,27 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 
+add wave -noupdate -divider dummy_avery_aaxi_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/dummy_avery_aaxi_agent/dummy_avery_aaxi_agent_monitor/txn_stream
+add wave -noupdate -group dummy_avery_aaxi_agent_bus /hdl_top/dummy_avery_aaxi_agent_bus/*
 add wave -noupdate -divider soc_ifc_ctrl_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/soc_ifc_ctrl_agent/soc_ifc_ctrl_agent_monitor/txn_stream
 add wave -noupdate -group soc_ifc_ctrl_agent_bus /hdl_top/soc_ifc_ctrl_agent_bus/*
 add wave -noupdate -divider cptra_ctrl_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/cptra_ctrl_agent/cptra_ctrl_agent_monitor/txn_stream
 add wave -noupdate -group cptra_ctrl_agent_bus /hdl_top/cptra_ctrl_agent_bus/*
+add wave -noupdate -divider ss_mode_ctrl_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/ss_mode_ctrl_agent/ss_mode_ctrl_agent_monitor/txn_stream
+add wave -noupdate -group ss_mode_ctrl_agent_bus /hdl_top/ss_mode_ctrl_agent_bus/*
 add wave -noupdate -divider soc_ifc_status_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/soc_ifc_status_agent/soc_ifc_status_agent_monitor/txn_stream
 add wave -noupdate -group soc_ifc_status_agent_bus /hdl_top/soc_ifc_status_agent_bus/*
 add wave -noupdate -divider cptra_status_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/cptra_status_agent/cptra_status_agent_monitor/txn_stream
 add wave -noupdate -group cptra_status_agent_bus /hdl_top/cptra_status_agent_bus/*
+add wave -noupdate -divider ss_mode_status_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/ss_mode_status_agent/ss_mode_status_agent_monitor/txn_stream
+add wave -noupdate -group ss_mode_status_agent_bus /hdl_top/ss_mode_status_agent_bus/*
 add wave -noupdate -divider mbox_sram_agent 
 add wave -noupdate /uvm_root/uvm_test_top/environment/mbox_sram_agent/mbox_sram_agent_monitor/txn_stream
 add wave -noupdate -group mbox_sram_agent_bus /hdl_top/mbox_sram_agent_bus/*

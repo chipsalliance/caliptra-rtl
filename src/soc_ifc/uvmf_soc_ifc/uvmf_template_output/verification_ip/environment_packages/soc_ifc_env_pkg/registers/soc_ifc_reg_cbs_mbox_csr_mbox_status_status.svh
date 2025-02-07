@@ -96,7 +96,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                             // Maximum allowable size for data transferred via mailbox
                             int unsigned dlen_cap_dw = (mbox_status_e'(value) != DATA_READY)                         ? 0 : /* ignore DLEN if the uC is not sending response data to SOC */
                                                        (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
-                                                                                                                       (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
+                                                                                                                       (mm.get_size() * mm.get_n_bytes()) >> ($clog2(CPTRA_MBOX_DATA_W/8));
                             if (rm.mbox_data_q.size() > 0) begin
                                 `uvm_info("SOC_IFC_REG_CBS", $sformatf("Write to mbox_status transfers control back to SOC, but mbox_data_q is not empty! Size: %0d", rm.mbox_data_q.size()), UVM_LOW) /* TODO: Make a warning that can be disabled for DLEN violation cases? */
                                 rm.mbox_data_q.delete();
@@ -121,7 +121,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                             else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                                 uvm_reg_data_t zeros [$];
                                 `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
-                                zeros = '{MBOX_DEPTH{32'h0}};
+                                zeros = '{CPTRA_MBOX_DEPTH{32'h0}};
                                 zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                                 rm.mbox_data_q = {rm.mbox_data_q, zeros};
                             end
@@ -139,7 +139,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_status_status extends soc_ifc_reg_cbs_mbox_c
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (rm.mbox_fn_state_sigs.soc_receive_stage &&

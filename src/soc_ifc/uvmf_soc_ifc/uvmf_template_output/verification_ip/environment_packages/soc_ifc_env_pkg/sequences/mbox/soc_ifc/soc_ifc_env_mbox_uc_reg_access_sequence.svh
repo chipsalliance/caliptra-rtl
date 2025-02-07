@@ -70,9 +70,6 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
   // pick a slave to select an address in a valid range
   constraint slave_sel_c { slave_sel.size() == num_reg;
                            foreach (slave_sel[i]) { slave_sel[i] <  `CALIPTRA_AHB_SLAVES_NUM; 
-                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_I3C;
-                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_UART;
-                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_QSPI; 
                                                     slave_sel[i] != `CALIPTRA_SLAVE_SEL_SOC_IFC;
                                                     slave_sel[i] != `CALIPTRA_SLAVE_SEL_CSRNG;
                                                     slave_sel[i] != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC; }
@@ -110,7 +107,7 @@ task soc_ifc_env_mbox_uc_reg_access_sequence::mbox_push_datain();
     for (datain_ii = 0; datain_ii < num_reg; datain_ii++) begin
       data = uvm_reg_data_t'(reg_addr[datain_ii]);
       reg_model.mbox_csr_rm.mbox_datain_sem.get();
-      reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+      reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
       reg_model.mbox_csr_rm.mbox_datain_sem.put();
       report_reg_sts(reg_sts, "mbox_datain");
     end
