@@ -86,8 +86,6 @@ fi
 
 echo "== Submodules updated"
 
-
-
 sts=$(git submodule sync --recursive > /dev/null; echo $?)
 echo "Status of git submodule sync --recursive is $sts"
 
@@ -101,14 +99,14 @@ echo "Status of git fetch chips is $sts"
 
 echo "== Fetched chips remote"
 
-# # Fetch remote
-# if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
-#     echo "Fetching with unshallow option"
-#     git fetch --prune --unshallow chips
-# else
-#     echo "Repo is already full, no need to unshallow"
-#     git fetch --prune             chips
-# fi
+# Fetch remote
+if [[ $(git rev-parse --is-shallow-repository) == "true" ]]; then
+    echo "Fetching with unshallow option"
+    git fetch --prune --unshallow chips
+else
+    echo "Repo is already full, no need to unshallow"
+    git fetch --prune             chips
+fi
 
 # Check for branch existence
 if ! git show-ref --quiet "chips/${merge_dest}"; then
