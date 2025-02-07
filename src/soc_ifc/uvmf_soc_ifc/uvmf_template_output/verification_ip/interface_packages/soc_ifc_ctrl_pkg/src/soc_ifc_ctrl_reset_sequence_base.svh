@@ -39,6 +39,8 @@ class soc_ifc_ctrl_reset_sequence_base
   bit set_bootfsm_breakpoint;
   security_state_t security_state;
   bit [7:0] [31:0] cptra_obf_key ;
+  bit recovery_data_avail;
+  bit recovery_image_activated;
   // pragma uvmf custom class_item_additional end
 
   //*****************************************************************

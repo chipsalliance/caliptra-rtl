@@ -1116,11 +1116,11 @@
     );
         option.per_instance = 1;
         ecc_revocation_cp : coverpoint ecc_revocation {
-            bins zero_val = {32'h0};
-            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
-            bins ones_val = {{32{1'b1}}};
-            wildcard bins set = (0 => 32'h????_????);
-            wildcard bins clr = (32'h????_???? => 0);
+            bins zero_val = {4'h0};
+            bins rand_val[4] = {[1:4'hE]};
+            bins ones_val = {{4{1'b1}}};
+            wildcard bins set = (0 => 4'h?);
+            wildcard bins clr = (4'h? => 0);
         }
 
     endgroup

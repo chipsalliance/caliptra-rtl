@@ -1,0 +1,60 @@
+uvmf:
+  interfaces:
+    ############## SOC-facing Status Interface, Subsystem Mode Signals ##############
+    ss_mode_status:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters: []
+
+      # NOTE: Ports are 'output' instead of 'input' because this agent
+      #       will be in RESPONDER mode, which inverts all port's polarities
+      ports:
+      # Debug Intent (Qualified)
+      - name: cptra_ss_debug_intent
+        dir: output
+        width: '1'
+
+      # Subsystem mode debug outputs
+      - name: ss_dbg_manuf_enable
+        dir: output
+        width: '1'
+      - name: ss_soc_dbg_unlock_level
+        dir: output
+        width: '64'
+
+      # Subsystem mode firmware execution control
+      - name: ss_generic_fw_exec_ctrl
+        dir: output
+        width: '128'
+
+      transaction_constraints: []
+      transaction_vars:
+      # Debug Intent (Qualified)
+      - name: cptra_ss_debug_intent
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+
+      # Subsystem mode debug outputs
+      - name: ss_dbg_manuf_enable
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: ss_soc_dbg_unlock_level
+        type: bit [63:0]
+        iscompare: 'True'
+        isrand: 'False'
+
+      # Subsystem mode firmware execution control
+      - name: ss_generic_fw_exec_ctrl
+        type: bit [127:0]
+        iscompare: 'True'
+        isrand: 'False'

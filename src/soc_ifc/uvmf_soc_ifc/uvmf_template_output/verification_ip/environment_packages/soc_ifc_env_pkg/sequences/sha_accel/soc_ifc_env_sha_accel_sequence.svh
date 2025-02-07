@@ -29,7 +29,7 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
 
   `uvm_object_utils( soc_ifc_env_sha_accel_sequence )
 
-  caliptra_apb_user apb_user_obj;
+  caliptra_axi_user axi_user_obj;
   rand sha_accel_op_s sha_accel_op_rand;
   rand int test_case;
   reg [31:0] dlen;
@@ -53,8 +53,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   constraint test_case_c {test_case inside { [1:255] }; }
 
   virtual function void do_kill();
-    // FIXME gracefully terminate any APB requests pending?
-    reg_model.soc_ifc_APB_map.get_sequencer().stop_sequences(); // Kill any pending APB transfers
+    // FIXME gracefully terminate any AXI requests pending?
+    reg_model.soc_ifc_AXI_map.get_sequencer().stop_sequences(); // Kill any pending AXI transfers
   endfunction
 
   virtual task pre_body();
@@ -93,8 +93,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
     join_none
 
     //`uvm_info("SHA_ACCEL_SEQ", $sformatf("Initiating command sequence to mailbox with cmd: [%p] dlen: [%p] resp_dlen: [%p]", sha_accel_op_rand.cmd.cmd_e, sha_accel_op_rand.dlen, sha_accel_resp_expected_dlen), UVM_MEDIUM)
-    apb_user_obj = new();
-    apb_user_obj.randomize();
+    axi_user_obj = new();
+    axi_user_obj.randomize();
 
     //open appropriate file for test vectors
     if (this.sha_accel_op_rand.sha512_mode) begin
@@ -173,17 +173,17 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_acquire_lock(output op_sts_e op_s
     uvm_reg_data_t data;
 
     op_sts = CPTRA_TIMEOUT;
-    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "LOCK");
     // Wait for read data to return with '0', indicating no other agent has lock
     while (data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()]) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
-        reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "LOCK");
     end
     //Read the lock again to test predictor
     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
-    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "LOCK");
     op_sts = CPTRA_SUCCESS;
 endtask
@@ -195,19 +195,19 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_set_cmd(input sha_accel_op_s op);
     data[0] = op.sha512_mode;
     data[1] = op.mailbox_mode;
 
-    reg_model.sha512_acc_csr_rm.MODE.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.MODE.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "MODE");
     data[31:0] = this.dlen;
 
-    reg_model.sha512_acc_csr_rm.DLEN.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.DLEN.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "DLEN");
 
     //read back some fields to test predictor
-    reg_model.sha512_acc_csr_rm.USER.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.USER.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "USER");
-    reg_model.sha512_acc_csr_rm.MODE.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.MODE.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "MODE");
-    reg_model.sha512_acc_csr_rm.DLEN.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.DLEN.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "DLEN");  
 endtask
 
@@ -223,7 +223,7 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_push_datain(reg [3199:0][31:0] sh
         for (ii=most_sig_dword; ii >= 0 ; ii--) begin
             data = sha_block_data[ii];
             `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
-            reg_model.sha512_acc_csr_rm.DATAIN.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+            reg_model.sha512_acc_csr_rm.DATAIN.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             report_reg_sts(reg_sts, "DATAIN");
         end
     end
@@ -231,19 +231,19 @@ endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_execute();
     uvm_reg_data_t data = uvm_reg_data_t'(1) << reg_model.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_lsb_pos();
-    reg_model.sha512_acc_csr_rm.EXECUTE.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.EXECUTE.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "EXECUTE");
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_poll_status();
     uvm_reg_data_t data;
-    reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "STATUS");
 
     // Wait for read data to return with '0', indicating no other agent has lock
     while (!data[reg_model.sha512_acc_csr_rm.STATUS.VALID.get_lsb_pos()]) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
-        reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "STATUS");
     end
 endtask
@@ -253,7 +253,7 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_read_result(reg [15:0][31:0] sha_
     int ii;
     int digest_dwords = this.sha_accel_op_rand.sha512_mode ? 16 : 12;
     for (ii=0; ii < digest_dwords; ii++) begin
-        reg_model.sha512_acc_csr_rm.DIGEST[ii].read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+        reg_model.sha512_acc_csr_rm.DIGEST[ii].read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "DIGEST");
         if (data != sha_digest[digest_dwords-1-ii]) begin
             `uvm_error("SHA_ACCEL_SEQ",$sformatf("SHA512 Digest Mismatch - Digest[%x] Expected: %x Actual: %x", ii, sha_digest[digest_dwords-1-ii], data))
@@ -265,7 +265,7 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_clr_lock();
     uvm_reg_data_t data = 0;
     data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] = 1'b1;
     //write one to clear lock
-    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(apb_user_obj));
+    reg_model.sha512_acc_csr_rm.LOCK.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "LOCK");
 endtask
 

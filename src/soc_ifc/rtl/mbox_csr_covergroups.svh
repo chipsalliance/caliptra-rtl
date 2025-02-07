@@ -15,7 +15,7 @@
 `ifndef MBOX_CSR_COVERGROUPS
     `define MBOX_CSR_COVERGROUPS
 
-    import soc_ifc_pkg::*;
+    import mbox_pkg::*;
     
     /*----------------------- MBOX_CSR__MBOX_LOCK COVERGROUPS -----------------------*/
     covergroup mbox_csr__mbox_lock_bit_cg with function sample(input bit reg_bit);

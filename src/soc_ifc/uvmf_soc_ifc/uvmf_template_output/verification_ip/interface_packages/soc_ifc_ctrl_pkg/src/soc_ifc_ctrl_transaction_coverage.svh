@@ -40,8 +40,10 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
-  soc_ifc_ctrl_transaction_bit_cg cptra_obf_key_rand_bit_cg[`CLP_OBF_KEY_DWORDS-1:0] [31:0];
-  soc_ifc_ctrl_transaction_bit_cg  generic_input_val_bit_cg[63:0]                          ;
+  soc_ifc_ctrl_transaction_bit_cg cptra_obf_key_rand_bit_cg     [`CLP_OBF_KEY_DWORDS-1:0] [31:0];
+  soc_ifc_ctrl_transaction_bit_cg cptra_obf_field_entropy_bit_cg[`CLP_OBF_FE_DWORDS-1:0]  [31:0];
+  soc_ifc_ctrl_transaction_bit_cg cptra_obf_uds_seed_bit_cg     [`CLP_OBF_UDS_DWORDS-1:0] [31:0];
+  soc_ifc_ctrl_transaction_bit_cg  generic_input_val_bit_cg     [63:0]                          ;
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -57,6 +59,10 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     }
     set_pwrgood: coverpoint coverage_trans.set_pwrgood;
     assert_rst: coverpoint coverage_trans.assert_rst;
+    cptra_obf_field_entropy_vld: coverpoint coverage_trans.cptra_obf_field_entropy_vld;
+    cptra_obf_field_entropy: coverpoint coverage_trans.cptra_obf_field_entropy;
+    cptra_obf_uds_seed_vld: coverpoint coverage_trans.cptra_obf_uds_seed_vld;
+    cptra_obf_uds_seed: coverpoint coverage_trans.cptra_obf_uds_seed;
     wait_cycles: coverpoint coverage_trans.wait_cycles {
         bins zero_wait  = {0};
         bins one_wait   = {1};
@@ -78,6 +84,8 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
         bins byte_6    = {[0:$]} with ($countones(item[55:48] > 0));
         bins byte_7    = {[0:$]} with ($countones(item[63:56] > 0));
     }
+    recovery_data_avail: coverpoint coverage_trans.recovery_data_avail;
+    recovery_image_activated: coverpoint coverage_trans.recovery_image_activated;
 
     cross_rst : cross set_pwrgood, assert_rst;
     cross_brk : cross assert_rst, set_bootfsm_breakpoint {
@@ -93,8 +101,10 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     soc_ifc_ctrl_transaction_cg=new;
-    foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt] = new;
-    foreach (coverage_trans.generic_input_val[bt]     ) generic_input_val_bit_cg[bt]     = new;
+    foreach (coverage_trans.cptra_obf_key_rand[dw,bt]     ) cptra_obf_key_rand_bit_cg     [dw][bt] = new;
+    foreach (coverage_trans.cptra_obf_field_entropy[dw,bt]) cptra_obf_field_entropy_bit_cg[dw][bt] = new;
+    foreach (coverage_trans.cptra_obf_uds_seed[dw,bt]     ) cptra_obf_uds_seed_bit_cg     [dw][bt] = new;
+    foreach (coverage_trans.generic_input_val[bt]         ) generic_input_val_bit_cg      [bt]     = new;
   endfunction
 
   // ****************************************************************************
@@ -103,8 +113,10 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
   //
   function void build_phase(uvm_phase phase);
     soc_ifc_ctrl_transaction_cg.set_inst_name($sformatf("soc_ifc_ctrl_transaction_cg_%s",get_full_name()));
-    foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt].set_inst_name($sformatf("cptra_obf_key_rand_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
-    foreach (coverage_trans. generic_input_val[bt])     generic_input_val_bit_cg[bt]    .set_inst_name($sformatf( "generic_input_val_bit_cg_%d_%s",       bt, get_full_name()));
+    foreach (coverage_trans.cptra_obf_key_rand[dw,bt]     ) cptra_obf_key_rand_bit_cg[dw][bt]     .set_inst_name($sformatf("cptra_obf_key_rand_bit_cg_%d_%d_%s",dw, bt,      get_full_name()));
+    foreach (coverage_trans.cptra_obf_field_entropy[dw,bt]) cptra_obf_field_entropy_bit_cg[dw][bt].set_inst_name($sformatf("cptra_obf_field_entropy_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
+    foreach (coverage_trans.cptra_obf_uds_seed[dw,bt]     ) cptra_obf_uds_seed_bit_cg[dw][bt]     .set_inst_name($sformatf("cptra_obf_uds_seed_bit_cg_%d_%d_%s",dw, bt,      get_full_name()));
+    foreach (coverage_trans. generic_input_val[bt]        ) generic_input_val_bit_cg[bt]          .set_inst_name($sformatf( "generic_input_val_bit_cg_%d_%s",       bt,      get_full_name()));
   endfunction
 
   // ****************************************************************************
@@ -117,8 +129,10 @@ class soc_ifc_ctrl_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_ctr
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
     soc_ifc_ctrl_transaction_cg.sample();
-    foreach (coverage_trans.cptra_obf_key_rand[dw,bt]) cptra_obf_key_rand_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_key_rand[dw][bt]);
-    foreach (coverage_trans. generic_input_val[bt])     generic_input_val_bit_cg[bt]    .sample(coverage_trans.generic_input_val[bt]);
+    foreach (coverage_trans.cptra_obf_key_rand[dw,bt])      cptra_obf_key_rand_bit_cg[dw][bt]     .sample(coverage_trans.cptra_obf_key_rand[dw][bt]);
+    foreach (coverage_trans.cptra_obf_field_entropy[dw,bt]) cptra_obf_field_entropy_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_field_entropy[dw][bt]);
+    foreach (coverage_trans.cptra_obf_uds_seed[dw,bt])      cptra_obf_uds_seed_bit_cg[dw][bt]     .sample(coverage_trans.cptra_obf_uds_seed[dw][bt]);
+    foreach (coverage_trans. generic_input_val[bt])         generic_input_val_bit_cg[bt]          .sample(coverage_trans.generic_input_val[bt]);
   endfunction
 
 endclass

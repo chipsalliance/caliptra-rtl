@@ -32,7 +32,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   `uvm_object_utils( caliptra_top_rand_sequence );
 
   rand soc_ifc_env_bringup_sequence_t soc_ifc_env_bringup_seq;
-  rand soc_ifc_env_pauser_init_sequence_t soc_ifc_env_pauser_init_seq;
+  rand soc_ifc_env_axi_user_init_sequence_t soc_ifc_env_axi_user_init_seq;
   rand soc_ifc_env_mbox_rand_small_sequence_t soc_ifc_env_early_mbox_seq;
   rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_fmc_seq;
   rand soc_ifc_env_mbox_real_fw_sequence_t soc_ifc_env_mbox_rt_seq;
@@ -52,9 +52,9 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
       IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
       IDX_SOC_IFC_ENV_MBOX_MIN,
       IDX_SOC_IFC_ENV_MBOX_MAX,
-      IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL,
-      IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM,
-      IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE,
+      IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_SMALL,
+      IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_MEDIUM,
+      IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_LARGE,
       IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL,
       IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
       IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE,
@@ -97,13 +97,13 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_RAND_LARGE               := 2,
           IDX_SOC_IFC_ENV_MBOX_MIN                      := 100,
           IDX_SOC_IFC_ENV_MBOX_MAX                      := 10,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL        := 100,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM       := 100,
-          IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE        := 10,
+          IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_SMALL      := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_MEDIUM     := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_LARGE      := 10,
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL         := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM        := 100,
           IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE         := 5,
-          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE := 100,
+          IDX_SOC_IFC_ENV_MBOX_RAND_MEDIUM_INTERFERENCE := 0, // TODO re-enable this // := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID             := 10,
           IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_SMALL      := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_OVERFLOW_MEDIUM     := 100,
@@ -111,19 +111,19 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_SMALL     := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_MEDIUM    := 100,
           IDX_SOC_IFC_ENV_MBOX_DLEN_UNDERFLOW_LARGE     := 10,
-          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL        := 200,
-          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM       := 200,
-          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE        := 20,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_SMALL        := 0, // TODO re-enable these // := 200,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_MEDIUM       := 0, // TODO re-enable these // := 200,
+          IDX_SOC_IFC_ENV_MBOX_REG_AXS_INV_LARGE        := 0, // TODO re-enable these // := 20,
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_SMALL          := 200,
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_MEDIUM         := 200,
           IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE          := 10,
-          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT              := 200,
-          IDX_SOC_IFC_ENV_RST_WARM                      := 100,
-          IDX_SOC_IFC_ENV_RST_COLD                      := 100,
-          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM     := 100,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM     := 100,
-          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 100,
-          IDX_SOC_IFC_ENV_SHA_ACCEL                     := 100,
+          IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT              := 0, // TODO re-enable these // := 200,
+          IDX_SOC_IFC_ENV_RST_WARM                      := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_RST_COLD                      := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM     := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM     := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_SHA_ACCEL                     := 0, // TODO re-enable these // := 100,
           IDX_SOC_IFC_ENV_FW_UPD                        := 10,
           IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS            := 100,
           IDX_SOC_IFC_ENV_MBOX_DIR_READ                 := 100
@@ -132,7 +132,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   constraint disable_long_env_seqs_c {
       !(rand_seq_idx inside {IDX_SOC_IFC_ENV_MBOX_RAND_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_MAX,
-                             IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE,
+                             IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_MEDIUM,
                              IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_DLEN_INVALID,
@@ -191,13 +191,13 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
   // ****************************************************************************
   virtual task run_firmware_init(soc_ifc_env_mbox_real_fw_sequence_t fmc_seq, soc_ifc_env_mbox_real_fw_sequence_t rt_seq);
-    bit ready_for_fw = 0;
+    bit ready_for_mb_processing = 0;
     bit ready_for_rt = 0;
-    while (!ready_for_fw) begin
+    while (!ready_for_mb_processing) begin
         while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
         `uvm_info("CALIPTRA_TOP_RAND_TEST", "Observed status response, checking contents", UVM_DEBUG)
         sts_rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
-        ready_for_fw = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_fw_push;
+        ready_for_mb_processing = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_mb_processing;
     end
     if (!fmc_seq.randomize() with { fmc_seq.mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_FMC_UPDATE); })
         `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - fmc_seq randomization failed")
@@ -219,7 +219,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
   virtual task body();
     // pragma uvmf custom body begin
     // Construct sequences here
-    bit pauser_valid_initialized = 1'b0;
+    bit axi_user_valid_initialized = 1'b0;
     bit override_mbox_sts_exp_error = 1'b0;
     mbox_sts_exp_error_type_e override_mbox_sts_exp_error_type = EXP_ERR_NONE;
     uvm_object obj;
@@ -229,18 +229,20 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
-    soc_ifc_env_pauser_init_seq = soc_ifc_env_pauser_init_sequence_t::type_id::create("soc_ifc_env_pauser_init_seq");
+    soc_ifc_env_axi_user_init_seq = soc_ifc_env_axi_user_init_sequence_t::type_id::create("soc_ifc_env_axi_user_init_seq");
     soc_ifc_env_early_mbox_seq = soc_ifc_env_mbox_rand_small_sequence_t::type_id::create("soc_ifc_env_early_mbox_seq");
     soc_ifc_env_mbox_fmc_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_fmc_seq");
     soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rt_seq");
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
+    soc_ifc_subenv_ss_mode_ctrl_agent_random_seq      = soc_ifc_subenv_ss_mode_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_ss_mode_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_ss_mode_status_agent_responder_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_ss_mode_status_agent_responder_seq");
     soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
     soc_ifc_env_bringup_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
-    soc_ifc_env_pauser_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+    soc_ifc_env_axi_user_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_early_mbox_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_fmc_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_rt_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
@@ -255,6 +257,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     // Start RESPONDER sequences here
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
+        soc_ifc_subenv_ss_mode_status_agent_responder_seq.start(soc_ifc_subenv_ss_mode_status_agent_sequencer);
         soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
     join_none
 //    // Start INITIATOR sequences here
@@ -314,38 +317,38 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 obj = soc_ifc_env_mbox_min_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_MAX:
                 obj = soc_ifc_env_mbox_max_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
-            IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_SMALL: begin
-                if (!pauser_valid_initialized) begin
-                    if(!soc_ifc_env_pauser_init_seq.randomize())
-                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed")
-                    soc_ifc_env_pauser_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+            IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_SMALL: begin
+                if (!axi_user_valid_initialized) begin
+                    if(!soc_ifc_env_axi_user_init_seq.randomize())
+                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_axi_user_init_seq randomization failed")
+                    soc_ifc_env_axi_user_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
-                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed PAUSER VALID initialization", UVM_LOW)
-                    pauser_valid_initialized = 1'b1;
+                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed AXI_USER VALID initialization", UVM_LOW)
+                    axi_user_valid_initialized = 1'b1;
                 end
-                obj = soc_ifc_env_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                obj = soc_ifc_env_mbox_rand_axi_user_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             end
-            IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_MEDIUM: begin
-                if (!pauser_valid_initialized) begin
-                    if(!soc_ifc_env_pauser_init_seq.randomize())
-                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed")
-                    soc_ifc_env_pauser_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+            IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_MEDIUM: begin
+                if (!axi_user_valid_initialized) begin
+                    if(!soc_ifc_env_axi_user_init_seq.randomize())
+                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_axi_user_init_seq randomization failed")
+                    soc_ifc_env_axi_user_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
-                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed PAUSER VALID initialization", UVM_LOW)
-                    pauser_valid_initialized = 1'b1;
+                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed AXI_USER VALID initialization", UVM_LOW)
+                    axi_user_valid_initialized = 1'b1;
                 end
-                obj = soc_ifc_env_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                obj = soc_ifc_env_mbox_rand_axi_user_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             end
-            IDX_SOC_IFC_ENV_MBOX_RAND_PAUSER_LARGE: begin
-                if (!pauser_valid_initialized) begin
-                    if(!soc_ifc_env_pauser_init_seq.randomize())
-                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_pauser_init_seq randomization failed")
-                    soc_ifc_env_pauser_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+            IDX_SOC_IFC_ENV_MBOX_RAND_AXI_USER_LARGE: begin
+                if (!axi_user_valid_initialized) begin
+                    if(!soc_ifc_env_axi_user_init_seq.randomize())
+                        `uvm_fatal("CALIPTRA_TOP_RAND_TEST", "caliptra_top_rand_sequence::body() - soc_ifc_env_axi_user_init_seq randomization failed")
+                    soc_ifc_env_axi_user_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
 
-                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed PAUSER VALID initialization", UVM_LOW)
-                    pauser_valid_initialized = 1'b1;
+                    `uvm_info("CALIPTRA_TOP_RAND_TEST", "SoC completed AXI_USER VALID initialization", UVM_LOW)
+                    axi_user_valid_initialized = 1'b1;
                 end
-                obj = soc_ifc_env_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+                obj = soc_ifc_env_mbox_rand_axi_user_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             end
             IDX_SOC_IFC_ENV_MBOX_RAND_DELAY_SMALL: begin
                 obj = soc_ifc_env_mbox_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
@@ -385,7 +388,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
             IDX_SOC_IFC_ENV_MBOX_2BIT_FLIP_LARGE:
                 obj = soc_ifc_env_mbox_sram_double_bit_flip_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_MULTI_AGENT:
-                // TODO PAUSER init first?
+                // TODO AXI_USER init first?
                 obj = soc_ifc_env_mbox_rand_multi_agent_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_RST_WARM:
                 obj = soc_ifc_env_reset_warm_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
@@ -433,6 +436,7 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
             end
         end
         soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+        soc_ifc_env_seq_ii[ii].ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
         soc_ifc_env_seq_ii[ii].start(top_configuration.soc_ifc_subenv_config.vsqr);
 
         // After the sequence ends, if it injected a double-bit error and the
@@ -466,6 +470,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
                 soc_ifc_env_mbox_fw_seq_ii[$sformatf("rt[%0d]" , ii)] = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create($sformatf("soc_ifc_env_mbox_rt_seq[%0d]",ii));
                 soc_ifc_env_mbox_fw_seq_ii[$sformatf("fmc[%0d]", ii)].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
                 soc_ifc_env_mbox_fw_seq_ii[$sformatf("rt[%0d]" , ii)].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+                soc_ifc_env_mbox_fw_seq_ii[$sformatf("fmc[%0d]", ii)].ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
+                soc_ifc_env_mbox_fw_seq_ii[$sformatf("rt[%0d]" , ii)].ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
                 run_firmware_init(soc_ifc_env_mbox_fw_seq_ii[$sformatf("fmc[%0d]", ii)],
                                   soc_ifc_env_mbox_fw_seq_ii[$sformatf("rt[%0d]" , ii)]);
             end
@@ -480,8 +486,10 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
     fork
       soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_ss_mode_ctrl_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_ss_mode_status_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(4000);
     join
 

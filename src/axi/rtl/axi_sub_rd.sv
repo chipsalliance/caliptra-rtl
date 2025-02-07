@@ -20,6 +20,7 @@
 //   Subordinate to convert AXI protocol reads into internal component accesses
 //
 // Limitations:
+//   - Drives RUSER to all 0's (i.e., RUSER is unimplemented)
 //   - When multiple ID tracking is enabled, read responses are returned in the
 //     same order they are received, regardless of ID.
 //
@@ -372,6 +373,7 @@ module axi_sub_rd import axi_pkg::*; #(
         s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
         s_axi_if.rdata  = dp_rdata[C_LAT+1];
         s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
+        s_axi_if.ruser  = '0;
         s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
     end
 
@@ -393,6 +395,7 @@ module axi_sub_rd import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RDATA  , (s_axi_if.rvalid ? s_axi_if.rdata : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RRESP  , (s_axi_if.rvalid ? s_axi_if.rresp : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RID    , (s_axi_if.rvalid ? s_axi_if.rid   : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RUSER  , (s_axi_if.rvalid ? s_axi_if.ruser : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_RLAST  , (s_axi_if.rvalid ? s_axi_if.rlast : '0), clk, !rst_n)
 
     // Handshake rules

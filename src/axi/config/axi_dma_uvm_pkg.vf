@@ -1,0 +1,2 @@
++incdir+${CALIPTRA_ROOT}/src/axi/rtl
+${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_uvm.sv

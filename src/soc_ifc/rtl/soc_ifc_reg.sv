@@ -3488,16 +3488,18 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: soc_ifc_reg.fuse_uds_seed[].seed
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_uds_seed[i0].seed.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
-                next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.fuse_uds_seed[i0].seed.value;
+            load_next_c = '0;
+            if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_uds_seed[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_uds_seed[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
+                next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.fuse_uds_seed[i0].seed.next = next_c;
@@ -3515,16 +3517,18 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.fuse_field_entropy[].seed
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.fuse_field_entropy[i0].seed.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
-                next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.fuse_field_entropy[i0].seed.value;
+            load_next_c = '0;
+            if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_field_entropy[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_field_entropy[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
+                next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.fuse_field_entropy[i0].seed.next = next_c;
@@ -4458,16 +4462,18 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.internal_obf_key[].key
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.internal_obf_key[i0].key.value;
-            automatic logic load_next_c = '0;
-            if(decoded_reg_strb.internal_obf_key[i0] && decoded_req_is_wr && hwif_in.internal_obf_key[i0].key.swwe) begin // SW write
-                next_c = (field_storage.internal_obf_key[i0].key.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(!hwif_in.internal_obf_key[i0].key.wel) begin // HW Write - wel
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.internal_obf_key[i0].key.value;
+            load_next_c = '0;
+            if(!hwif_in.internal_obf_key[i0].key.wel) begin // HW Write - wel
                 next_c = hwif_in.internal_obf_key[i0].key.next;
                 load_next_c = '1;
             end else if(hwif_in.internal_obf_key[i0].key.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.internal_obf_key[i0] && decoded_req_is_wr && hwif_in.internal_obf_key[i0].key.swwe) begin // SW write
+                next_c = (field_storage.internal_obf_key[i0].key.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.internal_obf_key[i0].key.next = next_c;

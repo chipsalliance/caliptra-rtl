@@ -58,8 +58,10 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
 
     soc_ifc_ctrl_agent_random_seq      = soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_ctrl_agent_random_seq");
     cptra_ctrl_agent_random_seq        = cptra_ctrl_agent_random_seq_t::type_id::create("cptra_ctrl_agent_random_seq");
+    ss_mode_ctrl_agent_random_seq      = ss_mode_ctrl_agent_random_seq_t::type_id::create("ss_mode_ctrl_agent_random_seq");
     soc_ifc_status_agent_responder_seq = soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_status_agent_responder_seq");
     cptra_status_agent_responder_seq   = cptra_status_agent_responder_seq_t::type_id::create("cptra_status_agent_responder_seq");
+    ss_mode_status_agent_responder_seq = ss_mode_status_agent_responder_seq_t::type_id::create("ss_mode_status_agent_responder_seq");
     mbox_sram_agent_responder_seq      = mbox_sram_agent_responder_seq_t::type_id::create("mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
@@ -72,6 +74,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     fork
         soc_ifc_status_agent_responder_seq.start(soc_ifc_status_agent_sequencer);
         cptra_status_agent_responder_seq.start(cptra_status_agent_sequencer);
+        ss_mode_status_agent_responder_seq.start(ss_mode_status_agent_sequencer);
         mbox_sram_agent_responder_seq.start(mbox_sram_agent_sequencer);
     join_none
 
@@ -116,6 +119,7 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
             `uvm_fatal("SOC_IFC_CMDLINE_TEST", $sformatf("soc_ifc_cmdline_test_sequence::body() - %s randomization failed", soc_ifc_env_seq.get_type_name()));
         soc_ifc_env_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_status_agent_responder_seq;
         soc_ifc_env_seq.cptra_status_agent_rsp_seq   = cptra_status_agent_responder_seq;
+        soc_ifc_env_seq.ss_mode_status_agent_rsp_seq = ss_mode_status_agent_responder_seq;
         soc_ifc_env_seq.start(top_configuration.vsqr);
     end
 
@@ -125,8 +129,10 @@ class soc_ifc_cmdline_test_sequence extends soc_ifc_bench_sequence_base;
     fork
       soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
       cptra_ctrl_agent_config.wait_for_num_clocks(400);
+      ss_mode_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_status_agent_config.wait_for_num_clocks(400);
       cptra_status_agent_config.wait_for_num_clocks(400);
+      ss_mode_status_agent_config.wait_for_num_clocks(400);
       mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 

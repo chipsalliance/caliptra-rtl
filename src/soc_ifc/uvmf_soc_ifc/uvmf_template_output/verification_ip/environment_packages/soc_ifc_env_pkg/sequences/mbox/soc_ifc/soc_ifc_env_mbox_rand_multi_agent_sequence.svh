@@ -20,7 +20,7 @@
 //
 // DESCRIPTION: Mailbox/Multi-Agent sequence provides a command flow
 //              that attempts to execute a mailbox command from multiple
-//              requestors (using a different, legal PAUSER).
+//              requestors (using a different, legal AxUSER).
 //              This is facilitated by running the mailbox flow
 //              in a fork with a randomized delay before the sequence entry,
 //              to vary which agent successfully wins the access.
@@ -44,11 +44,11 @@ class soc_ifc_env_mbox_rand_multi_agent_sequence extends soc_ifc_env_sequence_ba
   `uvm_object_utils( soc_ifc_env_mbox_rand_multi_agent_sequence )
 
   rand int agents;
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users_uniq [$];
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] mbox_valid_users [6];
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] mbox_valid_users_uniq [$];
   soc_ifc_env_mbox_sequence_base_t      soc_ifc_env_mbox_multi_agent_seq[];
 
-  // Max agents is equal to number of supported PAUSER values
+  // Max agents is equal to number of supported AxUSER values
   constraint agents_c { agents inside {[1:6]}; }
 
   extern virtual function      create_seqs();
@@ -68,24 +68,24 @@ class soc_ifc_env_mbox_rand_multi_agent_sequence extends soc_ifc_env_sequence_ba
         `uvm_fatal("SOC_IFC_MBOX", "SOC_IFC ENV mailbox sequence expected a handle to the soc_ifc status agent responder sequence (from bench-level sequence) but got null!")
     end
 
-    // Find unique configured valid_users (PAUSER) in mailbox and use this to
+    // Find unique configured valid_users (AxUSER) in mailbox and use this to
     // cull agent count
-    foreach(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii]) begin: VALID_USER_LOOP
-        if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
-            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value();
+    foreach(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii]) begin: VALID_USER_LOOP
+        if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value())
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value();
         else
-            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_reset("HARD");
+            mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_reset("HARD");
     end
-    mbox_valid_users[5] = '1; // FIXME hardcoded to reflect default PAUSER valid value
+    mbox_valid_users[5] = '1; // FIXME hardcoded to reflect default AxUSER valid value
     mbox_valid_users.shuffle;
     mbox_valid_users_uniq = mbox_valid_users.unique;
     `uvm_info("SOC_IFC_MBOX", $sformatf("Unique mbox_valid_users found: %p", mbox_valid_users_uniq), UVM_MEDIUM) // FIXME increase verbosity
-    // Each agent must have a unique PAUSER.
-    // If insufficient PAUSER values have been setup, limit number of parallel
+    // Each agent must have a unique AxUSER.
+    // If insufficient AxUSER values have been setup, limit number of parallel
     // sequences.
     if (mbox_valid_users_uniq.size() < agents) begin
         agents = mbox_valid_users_uniq.size();
-        `uvm_info("SOC_IFC_MBOX", $sformatf("Found %d unique valid PAUSER values initialized. Restricting parallel agent count to %d", mbox_valid_users_uniq.size(), agents), UVM_MEDIUM)
+        `uvm_info("SOC_IFC_MBOX", $sformatf("Found %d unique valid AxUSER values initialized. Restricting parallel agent count to %d", mbox_valid_users_uniq.size(), agents), UVM_MEDIUM)
     end
   endtask
 
@@ -137,9 +137,9 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
         DELAY_SMALL,
         DELAY_MEDIUM,
         DELAY_LARGE,
-        PAUSER_SMALL,
-        PAUSER_MEDIUM,
-        PAUSER_LARGE,
+        AXI_USER_SMALL,
+        AXI_USER_MEDIUM,
+        AXI_USER_LARGE,
         INTERFERENCE_MEDIUM
     } seq_type;
 
@@ -160,9 +160,9 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
                                                               DELAY_SMALL           := 100,
                                                               DELAY_MEDIUM          := 50,
                                                               DELAY_LARGE           := 1,
-                                                              PAUSER_SMALL          := 50,
-                                                              PAUSER_MEDIUM         := 20,
-                                                              PAUSER_LARGE          := 1,
+                                                              AXI_USER_SMALL        := 50,
+                                                              AXI_USER_MEDIUM       := 20,
+                                                              AXI_USER_LARGE        := 1,
                                                               INTERFERENCE_MEDIUM   := 10   }; });
         case (seq_type) inside
             SMALL:
@@ -193,12 +193,12 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::create_seqs();
                 obj = soc_ifc_env_mbox_rand_delay_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             DELAY_LARGE:
                 obj = soc_ifc_env_mbox_rand_delay_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
-            PAUSER_SMALL:
-                obj = soc_ifc_env_mbox_rand_pauser_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
-            PAUSER_MEDIUM:
-                obj = soc_ifc_env_mbox_rand_pauser_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
-            PAUSER_LARGE:
-                obj = soc_ifc_env_mbox_rand_pauser_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            AXI_USER_SMALL:
+                obj = soc_ifc_env_mbox_rand_axi_user_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            AXI_USER_MEDIUM:
+                obj = soc_ifc_env_mbox_rand_axi_user_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
+            AXI_USER_LARGE:
+                obj = soc_ifc_env_mbox_rand_axi_user_large_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             INTERFERENCE_MEDIUM:
                 obj = soc_ifc_env_mbox_rand_medium_interference_sequence_t::get_type().create_object($sformatf("soc_ifc_env_mbox_multi_agent_seq[%0d]",ii));
             default:
@@ -215,7 +215,7 @@ function soc_ifc_env_mbox_rand_multi_agent_sequence::randomize_seqs();
     for (ii=0; ii<agents; ii++) begin
         if(!soc_ifc_env_mbox_multi_agent_seq[ii].randomize())
             `uvm_fatal("SOC_IFC_MBOX", $sformatf("soc_ifc_env_mbox_rand_multi_agent_sequence::body() - %s randomization failed", soc_ifc_env_mbox_multi_agent_seq[ii].get_type_name()));
-        // Each sequence (aka "agent") has a unique PAUSER
+        // Each sequence (aka "agent") has a unique AxUSER
         soc_ifc_env_mbox_multi_agent_seq[ii].mbox_user_override_val = mbox_valid_users_uniq.pop_front();
         soc_ifc_env_mbox_multi_agent_seq[ii].override_mbox_user = 1'b1;
     end

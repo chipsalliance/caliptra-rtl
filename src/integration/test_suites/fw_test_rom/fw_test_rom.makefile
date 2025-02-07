@@ -25,24 +25,24 @@ TEST_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/$(TESTNAME)
 VPATH = $(TEST_DIR) $(BUILD_DIR)
 
 # Offset calculations for fetching keys from ROM image
-KEY_MANIFEST_ECC_PK_COUNT      = 4
-KEY_MANIFEST_ECC_PK_SIZE       = 96
-KEY_MANIFEST_ECC_PK_ROM_OFFSET = 8
+KEY_MANIFEST_ECC_PK_COUNT      = 1
+KEY_MANIFEST_ECC_PK_SIZE       = 196
+KEY_MANIFEST_ECC_PK_ROM_OFFSET = 12
 KEY_MANIFEST_ECC_PK_LENGTH     = $(shell bc <<< "$(KEY_MANIFEST_ECC_PK_COUNT)*$(KEY_MANIFEST_ECC_PK_SIZE)")
 
-KEY_MANIFEST_LMS_PK_COUNT      = 32
-KEY_MANIFEST_LMS_PK_SIZE       = 48
-KEY_MANIFEST_LMS_PK_ROM_OFFSET = $(shell bc <<< "$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) + $(KEY_MANIFEST_ECC_PK_COUNT)*$(KEY_MANIFEST_ECC_PK_SIZE)")
-KEY_MANIFEST_LMS_PK_LENGTH     = $(shell bc <<< "$(KEY_MANIFEST_LMS_PK_COUNT)*$(KEY_MANIFEST_LMS_PK_SIZE)")
+KEY_MANIFEST_PQC_PK_COUNT      = 1
+KEY_MANIFEST_PQC_PK_SIZE       = 1540
+KEY_MANIFEST_PQC_PK_ROM_OFFSET = $(shell bc <<< "$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) + $(KEY_MANIFEST_ECC_PK_COUNT)*$(KEY_MANIFEST_ECC_PK_SIZE)")
+KEY_MANIFEST_PQC_PK_LENGTH     = $(shell bc <<< "$(KEY_MANIFEST_PQC_PK_COUNT)*$(KEY_MANIFEST_PQC_PK_SIZE)")
 
-KEY_MANIFEST_PK_LENGTH         = $(shell bc <<< "$(KEY_MANIFEST_LMS_PK_LENGTH) + $(KEY_MANIFEST_ECC_PK_LENGTH)")
+KEY_MANIFEST_PK_LENGTH         = $(shell bc <<< "$(KEY_MANIFEST_PQC_PK_LENGTH) + $(KEY_MANIFEST_ECC_PK_LENGTH)")
 
 OWNER_ECC_PK_SIZE              = 96
-OWNER_ECC_PK_ROM_OFFSET        = 3652
-OWNER_LMS_PK_SIZE              = 48
-OWNER_LMS_PK_ROM_OFFSET        = $(shell bc <<< "$(OWNER_ECC_PK_ROM_OFFSET) + $(OWNER_ECC_PK_SIZE)")
+OWNER_ECC_PK_ROM_OFFSET        = 9168
+OWNER_PQC_PK_SIZE              = 2592
+OWNER_PQC_PK_ROM_OFFSET        = $(shell bc <<< "$(OWNER_ECC_PK_ROM_OFFSET) + $(OWNER_ECC_PK_SIZE)")
 
-OWNER_PK_LENGTH                = $(shell bc <<< "$(OWNER_LMS_PK_SIZE) + $(OWNER_ECC_PK_SIZE)")
+OWNER_PK_LENGTH                = $(shell bc <<< "$(OWNER_PQC_PK_SIZE) + $(OWNER_ECC_PK_SIZE)")
 
 # Targets
 all: program.hex
@@ -56,7 +56,7 @@ clean:
 ############ TEST build ###############################
 
 # Build program.hex from RUST executable
-program.hex: key_manifest_pk_hash_val.hex owner_pk_hash_val.hex fw_update.hex $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME)
+program.hex: vendor_pk_hash_val.hex owner_pk_hash_val.hex fw_update.hex $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME)
 	@-echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
 	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	du -b $(TEST_DIR)/$(TESTNAME) | cut -f1 > $(TESTNAME).size
@@ -67,11 +67,11 @@ fw_update.hex: $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME_fw)
 	du -b $(TEST_DIR)/$(TESTNAME_fw) | cut -f1 > fw_update.size
 
 # Extract public keys from ROM binary and dump as hex values
-key_manifest_pk_hash_val.hex: key_manifest_pk_val.bin
-	sha384sum key_manifest_pk_val.bin | sed 's,\s\+\S\+$$,,' > key_manifest_pk_hash_val.hex
+vendor_pk_hash_val.hex: vendor_pk_val.bin
+	sha384sum vendor_pk_val.bin | sed 's,\s\+\S\+$$,,' > vendor_pk_hash_val.hex
 
-key_manifest_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
-	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=key_manifest_pk_val.bin skip=$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) count=$(KEY_MANIFEST_PK_LENGTH)
+vendor_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
+	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=vendor_pk_val.bin skip=$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) count=$(KEY_MANIFEST_PK_LENGTH)
 
 owner_pk_hash_val.hex: owner_pk_val.bin
 	sha384sum owner_pk_val.bin | sed 's,\s\+\S\+$$,,' > owner_pk_hash_val.hex

@@ -69,7 +69,7 @@ task soc_ifc_env_cptra_mbox_interference_handler_sequence::mbox_wait_for_command
         end
         else begin
             for (ii=0; ii<xfers; ii++) begin: XFER_LOOP
-                // Do random access to mailbox memory to trigger arb logic as soc APB actor writes command data
+                // Do random access to mailbox memory to trigger arb logic as soc AXI actor writes command data
                 // NOTE that RnW is forced to AHB_READ when the address falls inside the range of DLEN current value, so that
                 // data from the mailbox command is not corrupted.
                 // TODO also mix in some reg accesses?

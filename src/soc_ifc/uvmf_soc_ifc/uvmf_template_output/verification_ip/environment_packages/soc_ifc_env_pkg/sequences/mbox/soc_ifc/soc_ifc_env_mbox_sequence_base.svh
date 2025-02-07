@@ -40,15 +40,15 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   uvm_status_e reg_sts;
   uvm_event in_report_reg_sts;
   process teardown_proc;
-  rand bit do_apb_lock_check;
+  rand bit do_axi_lock_check;
   rand bit retry_failed_reg_axs;
   bit mbox_sts_exp_error = 0; // Indicates this sequence will inject an error, which should manifest as a CMD_FAILURE response status
                               // TODO make this more comprehensive/intelligent about randomized error injection
   mbox_sts_exp_error_type_e mbox_sts_exp_error_type = EXP_ERR_NONE; // Known error types to expect/handle from test sequences
   bit saw_mbox_unlock = 1'b0;
-  int datain_ii = MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
-                                     // evaluated against specific offsets for some error checking cases. So give it an
-                                     // unambiguously invalid init value prior to use.
+  int datain_ii = CPTRA_MBOX_SIZE_BYTES/4; // Initialize to max value. This iterator is reset in mbox_push_datain for loop, but is
+                                           // evaluated against specific offsets for some error checking cases. So give it an
+                                           // unambiguously invalid init value prior to use.
 
   typedef enum byte {
     DLY_ZERO,
@@ -69,25 +69,25 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   // array of all possible enumerated values.
   mbox_cmd_e defined_cmds[];
 
-  // PAUSER tracking/override
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6];
+  // AxUSER tracking/override
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] mbox_valid_users [6];
   bit mbox_valid_users_initialized = 1'b0;
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_user_override_val;
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] mbox_user_override_val;
   bit override_mbox_user = 1'b0;
-  caliptra_apb_user apb_user_obj; // Handle to the most recently generated user object
+  caliptra_axi_user axi_user_obj; // Handle to the most recently generated user object
   struct packed {
-      bit [apb5_master_0_params::PAUSER_WIDTH-1:0] pauser; /* Value of PAUSER when mbox lock acquired */
-      bit                                          locked;
-  } pauser_locked = '{pauser: '1, locked: 1'b0};
-  int hit_invalid_pauser_count = '0;
+      bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] axi_user; /* Value of AxUSER when mbox lock acquired */
+      bit                                   locked;
+  } axi_user_locked = '{axi_user: '1, locked: 1'b0};
+  int hit_invalid_axi_user_count = '0;
 
-  localparam FORCE_VALID_PAUSER = 0;
-  int unsigned PAUSER_PROB_LOCK   ;
-  int unsigned PAUSER_PROB_CMD    ;
-  int unsigned PAUSER_PROB_DATAIN ;
-  int unsigned PAUSER_PROB_EXECUTE;
-  int unsigned PAUSER_PROB_STATUS ;
-  int unsigned PAUSER_PROB_DATAOUT;
+  localparam FORCE_VALID_AXI_USER = 0;
+  int unsigned AXI_USER_PROB_LOCK   ;
+  int unsigned AXI_USER_PROB_CMD    ;
+  int unsigned AXI_USER_PROB_DATAIN ;
+  int unsigned AXI_USER_PROB_EXECUTE;
+  int unsigned AXI_USER_PROB_STATUS ;
+  int unsigned AXI_USER_PROB_DATAOUT;
 
   extern virtual task mbox_setup();
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
@@ -101,10 +101,10 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_teardown();
 
   extern virtual task                       do_rand_delay(input bit do_delay_randomize=1, input delay_scale_e scale=DLY_SMALL);
-  extern virtual function void              set_pauser_prob_vals();
-  extern virtual function bit               pauser_used_is_valid(caliptra_apb_user user_handle = null);
-  extern virtual function caliptra_apb_user get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
-  extern virtual task                       report_reg_sts(uvm_status_e reg_sts, string name, caliptra_apb_user user_handle = null);
+  extern virtual function void              set_axi_user_prob_vals();
+  extern virtual function bit               axi_user_used_is_valid(caliptra_axi_user user_handle = null);
+  extern virtual function caliptra_axi_user get_rand_user(int unsigned invalid_prob = FORCE_VALID_AXI_USER);
+  extern virtual task                       report_reg_sts(uvm_status_e reg_sts, string name, caliptra_axi_user user_handle = null);
 
   // Constrain command to not be firmware or uC-initiated
   constraint mbox_cmd_c { mbox_op_rand.cmd.cmd_s.fw        == 1'b0;
@@ -112,21 +112,21 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
 
   // Constrain size to less than 128KiB for now (mailbox size), but we will
   // recalculate this based on the command being sent
-  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= MBOX_SIZE_BYTES; }
+  constraint mbox_dlen_max_c { mbox_op_rand.dlen <= CPTRA_MBOX_SIZE_BYTES; }
   // Minimum 2 dwords to include dlen/mbox_resp_expected_dlen at the beginning
   // IFF the response data is required
   constraint mbox_dlen_min_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_op_rand.dlen >= 32'h8; }
   // Response data is only non-zero if a response is requested, and also must
   // be small enough to fit in the mailbox
-  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= MBOX_SIZE_BYTES;
+  constraint mbox_resp_dlen_c {                                      mbox_resp_expected_dlen <= CPTRA_MBOX_SIZE_BYTES;
                                 !mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen == 0;
                                  mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >  0; }
 
   // After acquiring the lock, it is informative to read from the mbox_status
   // and mbox_user registers to confirm that lock acquisition had the intended
-  // side-effects. But doing register reads on APB actually affects the
+  // side-effects. But doing register reads on AXI actually affects the
   // system - so we get more interesting coverage by skipping it sometimes
-  constraint apb_reg_check_c {do_apb_lock_check dist {0:/1, 1:/1};}
+  constraint axi_reg_check_c {do_axi_lock_check dist {0:/1, 1:/1};}
   constraint retry_failed_reg_c {retry_failed_reg_axs == 1'b1;}
 
   // Constraint on the random delays injected between each step of the flow.
@@ -175,8 +175,8 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
             defined_cmds[idx] = defined_cmds[idx-1].next();
     end
 
-    // Assign probabilties of generating invalid PAUSER at different stages
-    set_pauser_prob_vals();
+    // Assign probabilties of generating invalid AxUSER at different stages
+    set_axi_user_prob_vals();
 
     // Default constraint mode is SMALL random delays, updated when doing
     // the delay
@@ -196,8 +196,8 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   //              this sequence.
   //==========================================
   virtual function void do_kill();
-    // FIXME gracefully terminate any APB requests pending?
-    reg_model.soc_ifc_APB_map.get_sequencer().stop_sequences(); // Kill any pending APB transfers
+    // FIXME gracefully terminate any AXI requests pending?
+    reg_model.soc_ifc_AXI_map.get_sequencer().stop_sequences(); // Kill any pending AXI transfers
   endfunction
 
   //==========================================
@@ -270,30 +270,30 @@ endclass
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
     byte ii;
-    // Read the valid PAUSER fields from register mirrored value if the local array
+    // Read the valid AxUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: VALID_USER_LOOP
-            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value())
-                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value();
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value())
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value();
             else
-                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_reset("HARD");
+                mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_reset("HARD");
         end
         // FIXME hardcoded default value of 32'hFFFF_FFFF
         mbox_valid_users[5] = '1;
         mbox_valid_users_initialized = 1'b1;
     end
     else begin
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
-            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[ii].LOCK.get_mirrored_value() &&
-                mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[ii].get_mirrored_value())
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
+            if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value() &&
+                mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value())
                 `uvm_warning("MBOX_SEQ", "mbox_valid_users initialized with a value that does not match mirrored value in register model!")
         end
         if (~&mbox_valid_users[5]) begin
             `uvm_warning("MBOX_SEQ", $sformatf("mbox_valid_users initialized with a value that does not match the default valid user of 0x%x", 32'hFFFF_FFFF))
         end
     end
-    if (override_mbox_user && !(mbox_user_override_val inside mbox_valid_users)) begin
+    if (override_mbox_user && !(mbox_user_override_val inside {mbox_valid_users})) begin
         `uvm_info("MBOX_SEQ", $sformatf("mbox_user overridden to 0x%x which is not in mbox_valid_users [%p]!", mbox_user_override_val, mbox_valid_users), UVM_LOW)
     end
 endtask
@@ -307,88 +307,88 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     bit soc_has_lock;
 
     op_sts = CPTRA_TIMEOUT;
-    reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_LOCK)));
+    reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_LOCK)));
     report_reg_sts(reg_sts, "mbox_lock");
     // Wait for read data to return with '0', indicating no other agent has lock
     while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
         do_rand_delay(1, poll_delay);
-        reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_LOCK)));
+        reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_LOCK)));
         report_reg_sts(reg_sts, "mbox_lock");
     end
 
-    if (do_apb_lock_check || reg_sts != UVM_IS_OK) begin
+    if (do_axi_lock_check || reg_sts != UVM_IS_OK) begin
         // Check if we actually got the lock and if we expected to or not
-        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(this.axi_user_obj));
         report_reg_sts(reg_sts, "mbox_status");
         soc_has_lock = data[reg_model.mbox_csr_rm.mbox_status.soc_has_lock.get_lsb_pos()] && reg_sts == UVM_IS_OK;
-        if (!soc_has_lock && pauser_used_is_valid()) begin
-            `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid PAUSER!")
+        if (!soc_has_lock && axi_user_used_is_valid()) begin
+            `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid AxUSER!")
             op_sts = CPTRA_INVALID;
         end
-        else if (soc_has_lock && !pauser_used_is_valid()) begin
-            `uvm_error("MBOX_SEQ", "Acquired lock unexpectedly when using invalid PAUSER!")
+        else if (soc_has_lock && !axi_user_used_is_valid()) begin
+            `uvm_error("MBOX_SEQ", "Acquired lock unexpectedly when using invalid AxUSER!")
         end
 
         // Check latest value of mbox_user
-        reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+        reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(this.axi_user_obj));
         report_reg_sts(reg_sts, "mbox_user");
-        if (soc_has_lock && (data != this.apb_user_obj.get_addr_user())) begin
-            `uvm_error("MBOX_SEQ", "mbox_user does not match PAUSER used when lock was acquired!")
+        if (soc_has_lock && (data != this.axi_user_obj.get_addr_user())) begin
+            `uvm_error("MBOX_SEQ", "mbox_user does not match AXI_USER used when lock was acquired!")
             op_sts = CPTRA_INVALID;
         end
-        else if (!soc_has_lock && (data == this.apb_user_obj.get_addr_user())) begin
+        else if (!soc_has_lock && (data == this.axi_user_obj.get_addr_user())) begin
             `uvm_error("MBOX_SEQ", "mbox_user unexpectedly updated when lock was not acquired!")
             op_sts = CPTRA_INVALID;
         end
         else begin
-            `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.apb_user_obj.get_addr_user()), UVM_HIGH)
+            `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.axi_user_obj.get_addr_user()), UVM_HIGH)
         end
 
-        // If we don't already have the lock, acquire it using a valid PAUSER
+        // If we don't already have the lock, acquire it using a valid AXI_USER
         if (!soc_has_lock && retry_failed_reg_axs) begin
-            reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             report_reg_sts(reg_sts, "mbox_lock");
             // Wait for read data to return with '0', indicating no other agent has lock
             while (data[reg_model.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()]) begin
                 do_rand_delay(1, poll_delay);
-                reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+                reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(this.axi_user_obj));
                 report_reg_sts(reg_sts, "mbox_lock");
             end
-            this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
+            this.axi_user_locked.axi_user = this.axi_user_obj.get_addr_user();
 
             // Check if we actually got the lock
-            reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+            reg_model.mbox_csr_rm.mbox_status.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(this.axi_user_obj));
             report_reg_sts(reg_sts, "mbox_status");
             soc_has_lock = data[reg_model.mbox_csr_rm.mbox_status.soc_has_lock.get_lsb_pos()] && reg_sts == UVM_IS_OK;
-            if (!pauser_used_is_valid())
-                `uvm_error("MBOX_SEQ", "PAUSER value used is not valid even after attempt to force it to a valid value!")
+            if (!axi_user_used_is_valid())
+                `uvm_error("MBOX_SEQ", "AxUSER value used is not valid even after attempt to force it to a valid value!")
             else if (!soc_has_lock)
-                `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid PAUSER!")
+                `uvm_error("MBOX_SEQ", "Failed to acquire lock when using valid AxUSER!")
             else
-                this.pauser_locked.locked = 1'b1;
+                this.axi_user_locked.locked = 1'b1;
 
             // Check latest value of mbox_user
-            reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(this.apb_user_obj));
+            reg_model.mbox_csr_rm.mbox_user.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(this.axi_user_obj));
             report_reg_sts(reg_sts, "mbox_user");
-            if (soc_has_lock && (data != this.apb_user_obj.get_addr_user())) begin
-                `uvm_error("MBOX_SEQ", "mbox_user does not match PAUSER used when lock was acquired!")
+            if (soc_has_lock && (data != this.axi_user_obj.get_addr_user())) begin
+                `uvm_error("MBOX_SEQ", "mbox_user does not match AxUSER used when lock was acquired!")
             end
-            else if (!soc_has_lock && (data == this.apb_user_obj.get_addr_user())) begin
-                `uvm_error("MBOX_SEQ", "mbox_user unexpectedly updated when using invalid PAUSER!")
+            else if (!soc_has_lock && (data == this.axi_user_obj.get_addr_user())) begin
+                `uvm_error("MBOX_SEQ", "mbox_user unexpectedly updated when using invalid AxUSER!")
             end
             else begin
-                `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.apb_user_obj.get_addr_user()), UVM_HIGH)
+                `uvm_info("MBOX_SEQ", $sformatf("mbox_user matches expected value [0x%x] based on result of attempt to acquire lock", this.axi_user_obj.get_addr_user()), UVM_HIGH)
             end
 
         end
         else if (soc_has_lock) begin
-            this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
-            this.pauser_locked.locked = 1'b1;
+            this.axi_user_locked.axi_user = this.axi_user_obj.get_addr_user();
+            this.axi_user_locked.locked = 1'b1;
         end
     end
     else begin
-        this.pauser_locked.pauser = this.apb_user_obj.get_addr_user();
-        this.pauser_locked.locked = 1'b1;
+        this.axi_user_locked.axi_user = this.axi_user_obj.get_addr_user();
+        this.axi_user_locked.locked = 1'b1;
     end
     op_sts = CPTRA_SUCCESS;
 endtask
@@ -402,16 +402,16 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
     uvm_reg_data_t data, prev_data;
 
     prev_data = reg_model.mbox_csr_rm.mbox_cmd.get_mirrored_value();
-    reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
+    reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_cmd");
-    if (!pauser_used_is_valid()) begin
+    if (!axi_user_used_is_valid()) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
-        reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        reg_model.mbox_csr_rm.mbox_cmd.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_cmd");
         if (data != prev_data)
-            `uvm_error("MBOX_SEQ", "Write to mbox_cmd succeeded unexpectedly with invalid PAUSER!")
+            `uvm_error("MBOX_SEQ", "Write to mbox_cmd succeeded unexpectedly with invalid AxUSER!")
         else if (retry_failed_reg_axs) begin
-            reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            reg_model.mbox_csr_rm.mbox_cmd.write(reg_sts, uvm_reg_data_t'(op.cmd), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             report_reg_sts(reg_sts, "mbox_cmd");
         end
     end
@@ -419,16 +419,16 @@ task soc_ifc_env_mbox_sequence_base::mbox_set_cmd(input mbox_op_s op);
     if (rand_delay_en) do_rand_delay(1, step_delay);
 
     prev_data = reg_model.mbox_csr_rm.mbox_dlen.get_mirrored_value();
-    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_CMD)));
+    reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_CMD)));
     report_reg_sts(reg_sts, "mbox_dlen");
-    if (!pauser_used_is_valid()) begin
+    if (!axi_user_used_is_valid()) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
-        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_dlen");
         if (32'(data) != prev_data)
-            `uvm_error("MBOX_SEQ", "Write to mbox_dlen succeeded unexpectedly with invalid PAUSER!")
+            `uvm_error("MBOX_SEQ", "Write to mbox_dlen succeeded unexpectedly with invalid AxUSER!")
         else if (retry_failed_reg_axs)  begin
-            reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            reg_model.mbox_csr_rm.mbox_dlen.write(reg_sts, uvm_reg_data_t'(op.dlen), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             report_reg_sts(reg_sts, "mbox_dlen");
         end
     end
@@ -453,14 +453,14 @@ task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
         end
         `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain_sem.get();
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
         reg_model.mbox_csr_rm.mbox_datain_sem.put();
         report_reg_sts(reg_sts, "mbox_datain");
-        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
             if (rand_delay_en) do_rand_delay(1, data_delay);
-            `uvm_info("MBOX_SEQ", "Re-do datain write with valid PAUSER", UVM_HIGH)
+            `uvm_info("MBOX_SEQ", "Re-do datain write with valid AxUSER", UVM_HIGH)
             reg_model.mbox_csr_rm.mbox_datain_sem.get();
-            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             reg_model.mbox_csr_rm.mbox_datain_sem.put();
             report_reg_sts(reg_sts, "mbox_datain");
         end
@@ -475,11 +475,11 @@ endtask
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_execute();
     uvm_reg_data_t data = uvm_reg_data_t'(1) << reg_model.mbox_csr_rm.mbox_execute.execute.get_lsb_pos();
-    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
+    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
-    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+    if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
-        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_execute");
     end
 endtask
@@ -490,11 +490,11 @@ endtask
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
     uvm_reg_data_t reg_data;
-    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
+    reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_STATUS)));
     report_reg_sts(reg_sts, "mbox_status");
 
-    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
-        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+    if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_status.read(reg_sts, reg_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_status");
     end
 
@@ -515,10 +515,10 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     uvm_reg_data_t data;
     uvm_reg_data_t dlen;
     int ii;
-    reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
+    reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAOUT)));
     report_reg_sts(reg_sts, "mbox_dlen");
-    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
-        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+    if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
+        reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_dlen");
     end
     if (dlen != mbox_resp_expected_dlen) begin
@@ -534,12 +534,12 @@ task soc_ifc_env_mbox_sequence_base::mbox_read_resp_data();
     end
     if (rand_delay_en) do_rand_delay(1, step_delay);
     for (ii=0; ii < dlen; ii+=4) begin
-        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
+        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAOUT)));
         report_reg_sts(reg_sts, "mbox_dataout");
-        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+        if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
             if (rand_delay_en) do_rand_delay(1, data_delay);
-            `uvm_info("MBOX_SEQ", "Re-do dataout read with valid PAUSER", UVM_HIGH)
-            reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+            `uvm_info("MBOX_SEQ", "Re-do dataout read with valid AxUSER", UVM_HIGH)
+            reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             report_reg_sts(reg_sts, "mbox_dataout");
         end
         if (rand_delay_en && (ii+4) < dlen) do_rand_delay(1, data_delay);
@@ -614,19 +614,19 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
     uvm_reg_data_t err;
 
     // Write 0 to mbox_execute to clear mbox_lock and end the test
-    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_EXECUTE)));
+    reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_EXECUTE)));
     report_reg_sts(reg_sts, "mbox_execute");
-    if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
+    if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
         if (rand_delay_en) do_rand_delay(1, step_delay);
-        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        reg_model.mbox_csr_rm.mbox_execute.write(reg_sts, uvm_reg_data_t'(0), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
         report_reg_sts(reg_sts, "mbox_execute");
     end
 
     if (rand_delay_en) do_rand_delay(1, step_delay);
 
     // Check for any non-fatal mailbox protocol or sram errors that occurred during the test
-    reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
-    // don't use report_reg_sts since this isn't a mbox reg and doesn't have pauser requirements
+    reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.read(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(500)));
+    // don't use report_reg_sts since this isn't a mbox reg and doesn't have axi_user requirements
     if (reg_sts != UVM_IS_OK) begin
         `uvm_error("MBOX_SEQ", "Unexpected error on read from CPTRA_HW_ERROR_NON_FATAL")
     end
@@ -634,7 +634,7 @@ task soc_ifc_env_mbox_sequence_base::mbox_clr_execute();
         if (!mbox_sts_exp_error)
             `uvm_error("MBOX_SEQ", "Observed error in CPTRA_HW_ERROR_NON_FATAL unexpectedly, since sequence was not anticipating mailbox ECC errors or protocol violations")
         `uvm_info("MBOX_SEQ", "Detected non-fatal errors at end of mailbox flow. Clearing.", UVM_LOW)
-        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.write(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(500)));
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.write(reg_sts, err, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(500)));
         if (reg_sts != UVM_IS_OK) begin
             `uvm_error("MBOX_SEQ", "Unexpected error on write to CPTRA_HW_ERROR_NON_FATAL")
         end
@@ -645,12 +645,13 @@ endtask
 // Task:        mbox_teardown
 // Description: Placeholder task to allow derived classes
 //              to add any end-of-sequence functionality.
-//              Currently just reports PAUSER violation count.
+//              Currently just reports AxUSER violation count.
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_teardown();
     this.teardown_proc = process::self();
     // Summary at sequence end
-    `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid PAUSER: %0d", hit_invalid_pauser_count), UVM_MEDIUM)
+    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // FIXME this delay is needed to avoid an Avery AXI VIP NOA error on the final rvalid before a reset
+    `uvm_info("MBOX_SEQ", $sformatf("Count of mailbox accesses performed with invalid AxUSER: %0d", hit_invalid_axi_user_count), UVM_MEDIUM)
 endtask
 
 //==========================================
@@ -681,25 +682,25 @@ task soc_ifc_env_mbox_sequence_base::do_rand_delay(input bit do_delay_randomize=
 endtask
 
 //==========================================
-// Function:    set_pauser_prob_vals
+// Function:    set_axi_user_prob_vals
 // Description: Assign values to class variables
-//              that control the likelihood of APB transfers
-//              using an illegal PAUSER value at all stages
+//              that control the likelihood of AXI transfers
+//              using an illegal AxUSER value at all stages
 //              of the mailbox flow.
 //==========================================
-function void soc_ifc_env_mbox_sequence_base::set_pauser_prob_vals();
-  this.PAUSER_PROB_LOCK    = FORCE_VALID_PAUSER;
-  this.PAUSER_PROB_CMD     = FORCE_VALID_PAUSER;
-  this.PAUSER_PROB_DATAIN  = FORCE_VALID_PAUSER;
-  this.PAUSER_PROB_EXECUTE = FORCE_VALID_PAUSER;
-  this.PAUSER_PROB_STATUS  = FORCE_VALID_PAUSER;
-  this.PAUSER_PROB_DATAOUT = FORCE_VALID_PAUSER;
+function void soc_ifc_env_mbox_sequence_base::set_axi_user_prob_vals();
+  this.AXI_USER_PROB_LOCK    = FORCE_VALID_AXI_USER;
+  this.AXI_USER_PROB_CMD     = FORCE_VALID_AXI_USER;
+  this.AXI_USER_PROB_DATAIN  = FORCE_VALID_AXI_USER;
+  this.AXI_USER_PROB_EXECUTE = FORCE_VALID_AXI_USER;
+  this.AXI_USER_PROB_STATUS  = FORCE_VALID_AXI_USER;
+  this.AXI_USER_PROB_DATAOUT = FORCE_VALID_AXI_USER;
 endfunction
 
 //==========================================
 // Function:    get_rand_user
-// Description: Return a caliptra_apb_user object populated with some value of
-//              addr_user (with which to override PAUSER in the reg adapter).
+// Description: Return a caliptra_axi_user object populated with some value of
+//              addr_user (with which to override AxUSER in the reg adapter).
 //              The likelihood that the generated addr_user is a invalid value
 //              is given by the supplied argument.
 //              The supplied argument is normalized against the value 1000 (the probability
@@ -711,17 +712,17 @@ endfunction
 //               - A random selection from valid_users if the mbox_lock has yet to be acquired
 //               - The value in mbox_user if mbox_lock has been acquired already
 // NOTE:        In the context of this function, the term 'valid' is overloaded.
-//              mbox_valid_users contains the list of 'allowed' agent PAUSER values
+//              mbox_valid_users contains the list of 'allowed' agent AxUSER values
 //              that have access to issue commands to the mailbox.
-//              Once the mailbox is locked, the only PAUSER value that is actually
+//              Once the mailbox is locked, the only AxUSER value that is actually
 //              considered "valid" is the value that was locked - other entries from
 //              mbox_valid_users are not legal and will trigger protocol violations.
 //              This function uses the more restrictive definition to evaluate constraints.
 //==========================================
-function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_PAUSER);
-    apb_user_obj = new();
-    if (!this.apb_user_obj.randomize() with {if (pauser_locked.locked)
-                                                 (addr_user == pauser_locked.pauser) dist
+function caliptra_axi_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_AXI_USER);
+    axi_user_obj = new();
+    if (!this.axi_user_obj.randomize() with {if (axi_user_locked.locked)
+                                                 (addr_user == axi_user_locked.axi_user) dist
                                                  {1 :/ 1000,
                                                   0 :/ invalid_prob};
                                              // Override only applies to user value used to acquire lock
@@ -732,61 +733,61 @@ function caliptra_apb_user soc_ifc_env_mbox_sequence_base::get_rand_user(int uns
                                                  {1 :/ 1000,
                                                   0 :/ invalid_prob};
                                              // When randomizing to a non-valid USER value after
-                                             // PAUSER has been locked, make the assigned USER value
+                                             // AxUSER has been locked, make the assigned USER value
                                              // equally likely to be from the allowed agents as it is
                                              // to be some totally random (non-allowed) value
-                                             if (pauser_locked.locked)
+                                             if (axi_user_locked.locked)
                                                  (addr_user inside {mbox_valid_users}) dist
                                                  {1 :/ 1,
                                                   0 :/ 1}; })
-        `uvm_error("MBOX_SEQ", "Failed to randomize APB PAUSER override value")
+        `uvm_error("MBOX_SEQ", "Failed to randomize AXI AxUSER override value")
     else
-        `uvm_info("MBOX_SEQ", $sformatf("Randomized APB PAUSER override value to 0x%x", this.apb_user_obj.addr_user), UVM_HIGH)
-    this.hit_invalid_pauser_count += pauser_used_is_valid() ? 0 : 1;
-    return this.apb_user_obj;
+        `uvm_info("MBOX_SEQ", $sformatf("Randomized AXI AxUSER override value to 0x%x", this.axi_user_obj.addr_user), UVM_HIGH)
+    this.hit_invalid_axi_user_count += axi_user_used_is_valid() ? 0 : 1;
+    return this.axi_user_obj;
 endfunction
 
 //==========================================
-// Function:    pauser_used_is_valid
-// Description: Assess whether the most recent APB
-//              transfer used a valid PAUSER or not
+// Function:    axi_user_used_is_valid
+// Description: Assess whether the most recent AXI
+//              transfer used a valid AxUSER or not
 //==========================================
-function bit soc_ifc_env_mbox_sequence_base::pauser_used_is_valid(caliptra_apb_user user_handle = null);
-    caliptra_apb_user user;
-    if (user_handle == null) user = this.apb_user_obj;
+function bit soc_ifc_env_mbox_sequence_base::axi_user_used_is_valid(caliptra_axi_user user_handle = null);
+    caliptra_axi_user user;
+    if (user_handle == null) user = this.axi_user_obj;
     else                     user = user_handle;
-    if (this.pauser_locked.locked)
-        return user.get_addr_user() == this.pauser_locked.pauser;
+    if (this.axi_user_locked.locked)
+        return user.get_addr_user() == this.axi_user_locked.axi_user;
     else 
-        return user.get_addr_user() inside mbox_valid_users;
+        return user.get_addr_user() inside {mbox_valid_users};
 endfunction
 
 //==========================================
 // Function:    report_reg_sts
 // Description: Generate informative messages about the result
-//              of the most recent APB transfer, accounting for
-//              the PAUSER value that was used.
+//              of the most recent AXI transfer, accounting for
+//              the AxUSER value that was used.
 //==========================================
-task soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name, caliptra_apb_user user_handle = null);
-    caliptra_apb_user user;
+task soc_ifc_env_mbox_sequence_base::report_reg_sts(uvm_status_e reg_sts, string name, caliptra_axi_user user_handle = null);
+    caliptra_axi_user user;
     int waiters = in_report_reg_sts.get_num_waiters();
     in_report_reg_sts.trigger();
-    if (user_handle == null) user = this.apb_user_obj;
+    if (user_handle == null) user = this.axi_user_obj;
     else                     user = user_handle;
-    // APB error is flagged only for PAUSER that doesn't match the registered
-    // values, it does not check that PAUSER matches the exact value in
+    // AXI error is flagged only for AxUSER that doesn't match the registered
+    // values, it does not check that AxUSER matches the exact value in
     // mbox_user that was stored when lock was acquired (this results in a
     // silent error but a successful reg read).
-    // Ergo, check against mbox_valid_users instead of pauser_locked.
-    if (reg_sts != UVM_IS_OK && user.get_addr_user() inside mbox_valid_users)
+    // Ergo, check against mbox_valid_users instead of axi_user_locked.
+    if (reg_sts != UVM_IS_OK && user.get_addr_user() inside {mbox_valid_users})
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access failed unexpectedly with valid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
-    else if (reg_sts == UVM_IS_OK && !(user.get_addr_user() inside mbox_valid_users))
+                   $sformatf("Register access failed unexpectedly with valid AxUSER! 0x%x (%s)", user.get_addr_user(), name))
+    else if (reg_sts == UVM_IS_OK && !(user.get_addr_user() inside {mbox_valid_users}))
         `uvm_error("MBOX_SEQ",
-                   $sformatf("Register access passed unexpectedly with invalid PAUSER! 0x%x (%s)", user.get_addr_user(), name))
+                   $sformatf("Register access passed unexpectedly with invalid AxUSER! 0x%x (%s)", user.get_addr_user(), name))
     else
         `uvm_info("MBOX_SEQ",
-                  $sformatf("Register access to (%s) with pauser_used_is_valid: %b and reg_sts: %p", name, this.pauser_used_is_valid(user), reg_sts),
+                  $sformatf("Register access to (%s) with axi_user_used_is_valid: %b and reg_sts: %p", name, this.axi_user_used_is_valid(user), reg_sts),
                   UVM_HIGH)
     if (waiters)
         in_report_reg_sts.wait_off();
