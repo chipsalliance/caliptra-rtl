@@ -63,9 +63,8 @@ void main() {
     // init_interrupts();
 
     //Inject mldsa failure
-    // printf("Inject random failure into mldsa\n");
-    // printf("%c", 0xd7);
-    
+    printf("Inject random failure into mldsa\n");
+    printf("%c", 0xd7);
     
     //inject seed to kv key reg (in RTL)
     printf("Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
