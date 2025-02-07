@@ -21,7 +21,7 @@ uvmf:
       - name: ready_for_fuses
         dir: output
         width: '1'
-      - name: ready_for_fw_push
+      - name: ready_for_mb_processing
         dir: output
         width: '1'
       - name: ready_for_runtime
@@ -59,7 +59,7 @@ uvmf:
         type: bit
         iscompare: 'True'
         isrand: 'False'
-      - name: ready_for_fw_push
+      - name: ready_for_mb_processing
         type: bit
         iscompare: 'True'
         isrand: 'False'
@@ -150,6 +150,12 @@ uvmf:
       - name: sha_notif_intr
         dir: output
         width: '1'
+      - name: dma_error_intr
+        dir: output
+        width: '1'
+      - name: dma_notif_intr
+        dir: output
+        width: '1'
       - name: timer_intr
         dir: output
         width: '1'
@@ -183,6 +189,14 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
       - name: sha_notif_intr_pending
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: dma_err_intr_pending
+        type: bit
+        iscompare: 'True'
+        isrand: 'False'
+      - name: dma_notif_intr_pending
         type: bit
         iscompare: 'True'
         isrand: 'False'

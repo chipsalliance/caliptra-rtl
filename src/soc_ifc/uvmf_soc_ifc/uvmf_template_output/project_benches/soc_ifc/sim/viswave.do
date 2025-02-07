@@ -4,6 +4,12 @@ onerror resume
 wave tags F0
 wave update off
 
+wave spacer -backgroundcolor Salmon { dummy_avery_aaxi_agent }
+wave add uvm_test_top.environment.dummy_avery_aaxi_agent.dummy_avery_aaxi_agent_monitor.txn_stream -radix string -tag F0
+wave group dummy_avery_aaxi_agent_bus
+wave add -group dummy_avery_aaxi_agent_bus hdl_top.dummy_avery_aaxi_agent_bus.* -radix hexadecimal -tag F0
+wave group dummy_avery_aaxi_agent_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
 wave spacer -backgroundcolor Salmon { soc_ifc_ctrl_agent }
 wave add uvm_test_top.environment.soc_ifc_ctrl_agent.soc_ifc_ctrl_agent_monitor.txn_stream -radix string -tag F0
 wave group soc_ifc_ctrl_agent_bus
@@ -16,6 +22,12 @@ wave group cptra_ctrl_agent_bus
 wave add -group cptra_ctrl_agent_bus hdl_top.cptra_ctrl_agent_bus.* -radix hexadecimal -tag F0
 wave group cptra_ctrl_agent_bus -collapse
 wave insertion [expr [wave index insertpoint] +1]
+wave spacer -backgroundcolor Salmon { ss_mode_ctrl_agent }
+wave add uvm_test_top.environment.ss_mode_ctrl_agent.ss_mode_ctrl_agent_monitor.txn_stream -radix string -tag F0
+wave group ss_mode_ctrl_agent_bus
+wave add -group ss_mode_ctrl_agent_bus hdl_top.ss_mode_ctrl_agent_bus.* -radix hexadecimal -tag F0
+wave group ss_mode_ctrl_agent_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
 wave spacer -backgroundcolor Salmon { soc_ifc_status_agent }
 wave add uvm_test_top.environment.soc_ifc_status_agent.soc_ifc_status_agent_monitor.txn_stream -radix string -tag F0
 wave group soc_ifc_status_agent_bus
@@ -27,6 +39,12 @@ wave add uvm_test_top.environment.cptra_status_agent.cptra_status_agent_monitor.
 wave group cptra_status_agent_bus
 wave add -group cptra_status_agent_bus hdl_top.cptra_status_agent_bus.* -radix hexadecimal -tag F0
 wave group cptra_status_agent_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
+wave spacer -backgroundcolor Salmon { ss_mode_status_agent }
+wave add uvm_test_top.environment.ss_mode_status_agent.ss_mode_status_agent_monitor.txn_stream -radix string -tag F0
+wave group ss_mode_status_agent_bus
+wave add -group ss_mode_status_agent_bus hdl_top.ss_mode_status_agent_bus.* -radix hexadecimal -tag F0
+wave group ss_mode_status_agent_bus -collapse
 wave insertion [expr [wave index insertpoint] +1]
 wave spacer -backgroundcolor Salmon { mbox_sram_agent }
 wave add uvm_test_top.environment.mbox_sram_agent.mbox_sram_agent_monitor.txn_stream -radix string -tag F0

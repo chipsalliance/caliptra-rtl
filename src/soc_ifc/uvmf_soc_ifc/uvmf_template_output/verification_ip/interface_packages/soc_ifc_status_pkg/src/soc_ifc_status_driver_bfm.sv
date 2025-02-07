@@ -108,8 +108,8 @@ end
   // INITIATOR mode output signals
   tri  ready_for_fuses_i;
   reg  ready_for_fuses_o = 'b0;
-  tri  ready_for_fw_push_i;
-  reg  ready_for_fw_push_o = 'b0;
+  tri  ready_for_mb_processing_i;
+  reg  ready_for_mb_processing_o = 'b0;
   tri  ready_for_runtime_i;
   reg  ready_for_runtime_o = 'b0;
   tri  mailbox_data_avail_i;
@@ -139,8 +139,8 @@ end
   // not be driven by this BFM unless placed in INITIATOR mode.
   assign bus.ready_for_fuses = (initiator_responder == INITIATOR) ? ready_for_fuses_o : 'bz;
   assign ready_for_fuses_i = bus.ready_for_fuses;
-  assign bus.ready_for_fw_push = (initiator_responder == INITIATOR) ? ready_for_fw_push_o : 'bz;
-  assign ready_for_fw_push_i = bus.ready_for_fw_push;
+  assign bus.ready_for_mb_processing = (initiator_responder == INITIATOR) ? ready_for_mb_processing_o : 'bz;
+  assign ready_for_mb_processing_i = bus.ready_for_mb_processing;
   assign bus.ready_for_runtime = (initiator_responder == INITIATOR) ? ready_for_runtime_o : 'bz;
   assign ready_for_runtime_i = bus.ready_for_runtime;
   assign bus.mailbox_data_avail = (initiator_responder == INITIATOR) ? mailbox_data_avail_o : 'bz;
@@ -187,7 +187,7 @@ end
        // RESPONDER mode output signals
        // INITIATOR mode output signals
        ready_for_fuses_o <= 'b0;
-       ready_for_fw_push_o <= 'b0;
+       ready_for_mb_processing_o <= 'b0;
        ready_for_runtime_o <= 'b0;
        mailbox_data_avail_o <= 'b0;
        mailbox_flow_done_o <= 'b0;
@@ -202,15 +202,15 @@ end
 
   // pragma uvmf custom interface_item_additional begin
   function bit any_signal_changed();
-      return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i     ^  ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i     ^  ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i    ^  mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i     ^  mailbox_flow_done_o        ) ||
-             |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
-             |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
-             |(trng_req_i              ^  trng_req_o                 ) ||
-             |(generic_output_wires_i  ^  generic_output_wires_o     );
+      return |(ready_for_fuses_i         ^  ready_for_fuses_o          ) ||
+             |(ready_for_mb_processing_i ^  ready_for_mb_processing_o        ) ||
+             |(ready_for_runtime_i       ^  ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i      ^  mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i       ^  mailbox_flow_done_o        ) ||
+             |(cptra_error_fatal_i       & !cptra_error_fatal_o        ) ||
+             |(cptra_error_non_fatal_i   & !cptra_error_non_fatal_o    ) ||
+             |(trng_req_i                ^  trng_req_o                 ) ||
+             |(generic_output_wires_i    ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -246,7 +246,7 @@ end
        // 
        // Members within the soc_ifc_status_initiator_struct:
        //   bit ready_for_fuses ;
-       //   bit ready_for_fw_push ;
+       //   bit ready_for_mb_processing ;
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
@@ -256,7 +256,7 @@ end
        //   bit [63:0] generic_output_val ;
        // Members within the soc_ifc_status_responder_struct:
        //   bit ready_for_fuses ;
-       //   bit ready_for_fw_push ;
+       //   bit ready_for_mb_processing ;
        //   bit ready_for_runtime ;
        //   bit mailbox_data_avail ;
        //   bit mailbox_flow_done ;
@@ -279,7 +279,7 @@ end
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
        //    Initiator output signals
        //      ready_for_fuses_o <= soc_ifc_status_initiator_struct.xyz;  //     
-       //      ready_for_fw_push_o <= soc_ifc_status_initiator_struct.xyz;  //     
+       //      ready_for_mb_processing_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      ready_for_runtime_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_data_avail_o <= soc_ifc_status_initiator_struct.xyz;  //     
        //      mailbox_flow_done_o <= soc_ifc_status_initiator_struct.xyz;  //     
@@ -319,7 +319,7 @@ bit first_transfer=1;
        );// pragma tbx xtf   
   // Variables within the soc_ifc_status_initiator_struct:
   //   bit ready_for_fuses ;
-  //   bit ready_for_fw_push ;
+  //   bit ready_for_mb_processing ;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
@@ -329,7 +329,7 @@ bit first_transfer=1;
   //   bit [63:0] generic_output_val ;
   // Variables within the soc_ifc_status_responder_struct:
   //   bit ready_for_fuses ;
-  //   bit ready_for_fw_push ;
+  //   bit ready_for_mb_processing ;
   //   bit ready_for_runtime ;
   //   bit mailbox_data_avail ;
   //   bit mailbox_flow_done ;
@@ -345,7 +345,7 @@ bit first_transfer=1;
        //    All available responder input and inout signals listed.
        //    Responder input signals
        //      soc_ifc_status_responder_struct.xyz = ready_for_fuses_i;  //     
-       //      soc_ifc_status_responder_struct.xyz = ready_for_fw_push_i;  //     
+       //      soc_ifc_status_responder_struct.xyz = ready_for_mb_processing_i;  //     
        //      soc_ifc_status_responder_struct.xyz = ready_for_runtime_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_data_avail_i;  //     
        //      soc_ifc_status_responder_struct.xyz = mailbox_flow_done_i;  //     
@@ -377,7 +377,7 @@ bit first_transfer=1;
         @(posedge clk_i);
     end
     ready_for_fuses_o              <= ready_for_fuses_i      ;
-    ready_for_fw_push_o            <= ready_for_fw_push_i    ;
+    ready_for_mb_processing_o      <= ready_for_mb_processing_i;
     ready_for_runtime_o            <= ready_for_runtime_i    ;
     mailbox_data_avail_o           <= mailbox_data_avail_i   ;
     mailbox_flow_done_o            <= mailbox_flow_done_i    ;
@@ -390,7 +390,7 @@ bit first_transfer=1;
     begin: build_return_struct
   // Variables within the soc_ifc_status_initiator_struct:
          soc_ifc_status_initiator_struct.ready_for_fuses                    = ready_for_fuses_i;
-         soc_ifc_status_initiator_struct.ready_for_fw_push                  = ready_for_fw_push_i;
+         soc_ifc_status_initiator_struct.ready_for_mb_processing            = ready_for_mb_processing_i;
          soc_ifc_status_initiator_struct.ready_for_runtime                  = ready_for_runtime_i;
          soc_ifc_status_initiator_struct.mailbox_data_avail                 = mailbox_data_avail_i;
          soc_ifc_status_initiator_struct.mailbox_flow_done                  = mailbox_flow_done_i;

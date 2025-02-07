@@ -1,0 +1,7 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ./ss_mode_status_common.compile
+incdir:
+  - .
+src:
+  - ss_mode_status_pkg.sv

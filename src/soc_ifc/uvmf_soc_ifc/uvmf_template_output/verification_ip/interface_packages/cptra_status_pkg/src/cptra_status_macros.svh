@@ -67,6 +67,8 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit dma_err_intr_pending ; \
+  bit dma_notif_intr_pending ; \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
@@ -87,6 +89,8 @@ typedef struct packed  { \
             this.soc_ifc_notif_intr_pending , \
             this.sha_err_intr_pending , \
             this.sha_notif_intr_pending , \
+            this.dma_err_intr_pending , \
+            this.dma_notif_intr_pending , \
             this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
@@ -108,6 +112,8 @@ typedef struct packed  { \
             this.soc_ifc_notif_intr_pending , \
             this.sha_err_intr_pending , \
             this.sha_notif_intr_pending , \
+            this.dma_err_intr_pending , \
+            this.dma_notif_intr_pending , \
             this.timer_intr_pending , \
             this.noncore_rst_asserted , \
             this.uc_rst_asserted , \
@@ -131,6 +137,8 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit dma_err_intr_pending ; \
+  bit dma_notif_intr_pending ; \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
@@ -151,6 +159,8 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.dma_err_intr_pending , \
+           this.dma_notif_intr_pending , \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
@@ -172,6 +182,8 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.dma_err_intr_pending , \
+           this.dma_notif_intr_pending , \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
@@ -195,6 +207,8 @@ typedef struct packed  { \
   bit soc_ifc_notif_intr_pending ; \
   bit sha_err_intr_pending ; \
   bit sha_notif_intr_pending ; \
+  bit dma_err_intr_pending ; \
+  bit dma_notif_intr_pending ; \
   bit timer_intr_pending ; \
   bit noncore_rst_asserted ; \
   bit uc_rst_asserted ; \
@@ -215,6 +229,8 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.dma_err_intr_pending , \
+           this.dma_notif_intr_pending , \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \
@@ -236,6 +252,8 @@ typedef struct packed  { \
            this.soc_ifc_notif_intr_pending , \
            this.sha_err_intr_pending , \
            this.sha_notif_intr_pending , \
+           this.dma_err_intr_pending , \
+           this.dma_notif_intr_pending , \
            this.timer_intr_pending , \
            this.noncore_rst_asserted , \
            this.uc_rst_asserted , \

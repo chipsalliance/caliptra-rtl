@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
     `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_secret)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     // Function: post_predict
     //
@@ -40,7 +40,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
         uvm_reg_block blk = fld.get_parent().get_parent(); /* soc_ifc_reg_rm */
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
         if (map.get_name() == this.AHB_map_name ||
-            map.get_name() == this.APB_map_name) begin
+            map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
@@ -48,6 +48,10 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
                 UVM_PREDICT_WRITE: begin
                     if (rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_FUSE_WR_DONE. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        value = previous;
+                    end
+                    else if (rm.clear_obf_secrets) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to clear_obf_secrets. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin

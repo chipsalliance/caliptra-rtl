@@ -101,8 +101,8 @@ enum mbox_cmd_e {
 enum mbox_fw_offsets_e {
     MBOX_ICCM_OFFSET_FMC = 0x00000,
     MBOX_DCCM_OFFSET_FMC = 0x00000,
-    MBOX_ICCM_OFFSET_RT  = 0x10000,
-    MBOX_DCCM_OFFSET_RT  = 0x10000,
+    MBOX_ICCM_OFFSET_RT  = 0x20000,
+    MBOX_DCCM_OFFSET_RT  = 0x20000,
 };
 
 typedef struct {

@@ -44,8 +44,8 @@ interface  mbox_sram_if
   (
   input tri clk, 
   input tri dummy,
-  inout tri [$bits(mbox_sram_req_t)-1:0] mbox_sram_req,
-  inout tri [$bits(mbox_sram_resp_t)-1:0] mbox_sram_resp
+  inout tri [$bits(cptra_mbox_sram_req_t)-1:0] mbox_sram_req,
+  inout tri [$bits(cptra_mbox_sram_resp_t)-1:0] mbox_sram_resp
   );
 
 modport monitor_port 

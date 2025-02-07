@@ -41,6 +41,15 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_axi_sram.sv
     tops: [caliptra_axi_sram]
 ---
+provides: [axi_dma_uvm_pkg]
+schema_version: 2.4.0
+requires: []
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_dma_reg_uvm.sv
+---
 provides: [axi_dma]
 schema_version: 2.4.0
 requires:

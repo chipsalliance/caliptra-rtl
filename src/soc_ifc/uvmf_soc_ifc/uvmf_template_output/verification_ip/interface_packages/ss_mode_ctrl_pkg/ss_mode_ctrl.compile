@@ -1,0 +1,3 @@
+needs:
+  - ss_mode_ctrl_hvl.compile
+  - ss_mode_ctrl_hdl.compile

@@ -1,0 +1,3 @@
+needs:
+  - ss_mode_status_hvl.compile
+  - ss_mode_status_hdl.compile

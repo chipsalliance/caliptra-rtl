@@ -35,6 +35,7 @@ class cptra_ctrl_transaction  extends uvmf_transaction_base;
   bit assert_clear_secrets ;
   bit iccm_axs_blocked ;
   rv_ecc_sts_t pulse_rv_ecc_error ;
+  bit crypto_error ;
 
   //Constraints for the transaction variables:
 
@@ -117,7 +118,7 @@ class cptra_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("assert_clear_secrets:0x%x iccm_axs_blocked:0x%x pulse_rv_ecc_error:0x%x %s",assert_clear_secrets,iccm_axs_blocked,pulse_rv_ecc_error,super.convert2string);
+    return $sformatf("assert_clear_secrets:0x%x iccm_axs_blocked:0x%x pulse_rv_ecc_error:0x%x crypto_error:0x%x %s",assert_clear_secrets,iccm_axs_blocked,pulse_rv_ecc_error,crypto_error,super.convert2string);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -162,6 +163,7 @@ class cptra_ctrl_transaction  extends uvmf_transaction_base;
     this.assert_clear_secrets = RHS.assert_clear_secrets;
     this.iccm_axs_blocked = RHS.iccm_axs_blocked;
     this.pulse_rv_ecc_error = RHS.pulse_rv_ecc_error;
+    this.crypto_error = RHS.crypto_error;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -188,6 +190,7 @@ class cptra_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,assert_clear_secrets,"assert_clear_secrets");
     $add_attribute(transaction_view_h,iccm_axs_blocked,"iccm_axs_blocked");
     $add_attribute(transaction_view_h,pulse_rv_ecc_error,"pulse_rv_ecc_error");
+    $add_attribute(transaction_view_h,crypto_error,"crypto_error");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);
