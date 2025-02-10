@@ -33,7 +33,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     printf("-------------------------------------\n");
-    printf(" Randomized PCR MLDSA Signing flow !!\n");
+    printf(" PCR MLDSA Injection !!\n");
     printf("-------------------------------------\n");
 
     //Call interrupt init
