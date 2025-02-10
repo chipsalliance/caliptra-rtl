@@ -33,7 +33,6 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
     for (int i = 0; i <= num_dwords; i++) {
         uint32_t value = 0x00000000;
         num_chars = (i == num_dwords) ? len % 8 : 8;
-        VPRINTF(HIGH, "Number of characters is %d.\n",num_chars);
         for (int j = 0; j < num_chars; j++) {
             char c = hex_str[i * 8 + j];
             uint32_t digit;
@@ -51,7 +50,6 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
             value |= digit << (4 * index[j]);
         }
         if (num_chars != 0) {
-          VPRINTF(HIGH, "Converted value is 0x%x.\n",value);
           array[i] = value;
         }
     }
@@ -191,7 +189,13 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
       // Write Input Data Block.
       VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
       for (int j = 0; j < 4; j++) {
-        lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
+        if (op == AES_ENC) {
+          VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
+          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
+        } else if (op == AES_DEC) {
+          VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
+          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4]);
+        }
       }                      
 
       // Wait for OUTPUT_VALID bit
@@ -200,7 +204,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
       // Read Output Data Block I
       for (int j = 0; j < 4; j++) {
         ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-        VPRINTF(LOW, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+        VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
 
         //byte mask
         uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
@@ -209,13 +213,23 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           mask = (1 << (partial_text_len%4)*8) - 1;
           masked = 0x1;
         }
-
-        if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
-          VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-          VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-          VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
-          VPRINTF(FATAL,"%c", fail_cmd);
-          while(1);
+        
+        if (op == AES_ENC) {
+          if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
+            VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+            VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+            VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
+            VPRINTF(FATAL,"%c", fail_cmd);
+            while(1);
+          }
+        } else if (op == AES_DEC) {
+          if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
+            VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+            VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+            VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
+            VPRINTF(FATAL,"%c", fail_cmd);
+            while(1);
+          }
         }
       }
     }
@@ -261,7 +275,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
     // Read Output Data Block I
     for (int j = 0; j < 4; j++) {
       tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-      VPRINTF(LOW, "TAG: 0x%x\n", tag[j]);
+      VPRINTF(MEDIUM, "TAG: 0x%x\n", tag[j]);
       if (tag[j] != aes_input.tag[j]) {
         VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
         VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
