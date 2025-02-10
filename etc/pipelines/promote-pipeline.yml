@@ -360,8 +360,8 @@ stages:
     - caliptra_ss_top_sglint:
       - enabled: ${{ and(not(parameters.run_clp_github_val_flow), not(parameters.run_abr_github_val_flow)) }}
       - configspec_name: 'caliptra_ss_lib'
-      - dut: 'caliptra_ss_top_tb'
-      - top: 'caliptra_ss_top_tb'
+      - dut: 'caliptra_ss_top'
+      - top: 'caliptra_ss_top'
       - lint_tool: 'sglint'
       - timeout: 45
       - args: '--inherit-waivers=True --waivers-from-compile-yml --goal=caliptra_lint_rtl_msft --platform synth'
