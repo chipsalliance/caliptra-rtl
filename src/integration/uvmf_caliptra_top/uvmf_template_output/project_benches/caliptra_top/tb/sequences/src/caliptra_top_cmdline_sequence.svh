@@ -45,13 +45,13 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
 
   // ****************************************************************************
   virtual task run_firmware_init(soc_ifc_env_mbox_real_fw_sequence_t fmc_seq, soc_ifc_env_mbox_real_fw_sequence_t rt_seq);
-    bit ready_for_fw = 0;
+    bit ready_for_mb_processing = 0;
     bit ready_for_rt = 0;
-    while (!ready_for_fw) begin
+    while (!ready_for_mb_processing) begin
         while(!sts_rsp_count)soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(1); // Wait for new status updates
         `uvm_info("CALIPTRA_TOP_CMDLINE_TEST", "Observed status response, checking contents", UVM_DEBUG)
         sts_rsp_count = 0; // We only care about the latest rsp, so even if count > 1, reset back to 0
-        ready_for_fw = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_fw_push;
+        ready_for_mb_processing = soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.ready_for_mb_processing;
     end
     if (!fmc_seq.randomize() with { fmc_seq.mbox_op_rand.cmd == mbox_cmd_e'(MBOX_CMD_FMC_UPDATE); })
         `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", "caliptra_top_rand_sequence::body() - fmc_seq randomization failed")
@@ -85,6 +85,8 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
+    soc_ifc_subenv_ss_mode_ctrl_agent_random_seq      = soc_ifc_subenv_ss_mode_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_ss_mode_ctrl_agent_random_seq");
+    soc_ifc_subenv_ss_mode_status_agent_responder_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_ss_mode_status_agent_responder_seq");
     soc_ifc_subenv_mbox_sram_agent_responder_seq      = soc_ifc_subenv_mbox_sram_agent_responder_seq_t::type_id::create("soc_ifc_subenv_mbox_sram_agent_responder_seq");
 
     // Handle to the responder sequence for getting response transactions
@@ -97,6 +99,7 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
         soc_ifc_subenv_mbox_sram_agent_responder_seq.start(soc_ifc_subenv_mbox_sram_agent_sequencer);
+        soc_ifc_subenv_ss_mode_status_agent_responder_seq.start(soc_ifc_subenv_ss_mode_status_agent_sequencer);
     join_none
 
     fork
@@ -126,6 +129,8 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
             soc_ifc_env_mbox_rt_seq = soc_ifc_env_mbox_real_fw_sequence_t::type_id::create($sformatf("soc_ifc_env_mbox_rt_seq[%0d]",ii));
             soc_ifc_env_mbox_fmc_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
             soc_ifc_env_mbox_rt_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+            soc_ifc_env_mbox_fmc_seq.ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
+            soc_ifc_env_mbox_rt_seq.ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
             run_firmware_init(soc_ifc_env_mbox_fmc_seq,soc_ifc_env_mbox_rt_seq);
         end
         else begin
@@ -141,6 +146,7 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
             if(!soc_ifc_env_seq_ii[ii].randomize())
                 `uvm_fatal("CALIPTRA_TOP_CMDLINE_TEST", $sformatf("caliptra_top_cmdline_sequence::body() - %s randomization failed", soc_ifc_env_seq_ii[ii].get_type_name()));
             soc_ifc_env_seq_ii[ii].soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
+            soc_ifc_env_seq_ii[ii].ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
             soc_ifc_env_seq_ii[ii].start(top_configuration.soc_ifc_subenv_config.vsqr);
         end
     end
@@ -151,8 +157,10 @@ class caliptra_top_cmdline_sequence extends caliptra_top_bench_sequence_base;
     fork
       soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_ss_mode_ctrl_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_cptra_status_agent_config.wait_for_num_clocks(400);
+      soc_ifc_subenv_ss_mode_status_agent_config.wait_for_num_clocks(400);
       soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(400);
     join
 

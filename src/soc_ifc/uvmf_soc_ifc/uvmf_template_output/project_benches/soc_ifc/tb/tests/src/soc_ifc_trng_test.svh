@@ -56,8 +56,6 @@ class soc_ifc_trng_test extends test_top;
           uvm_top.set_report_verbosity_level_hier(UVM_NONE);
           this.environment.soc_ifc_pred.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
           this.environment.soc_ifc_sb.set_report_severity_action(UVM_WARNING,UVM_NO_ACTION);
-          // Since en_sb is recently set to 0, this is unavailable and gives null-object
-          //this.environment.qvip_apb5_slave_subenv.apb5_master_0.get_analysis_component("checker").set_report_severity_id_action(UVM_WARNING,"scoreboard_debug",UVM_NO_ACTION);
       end
   endfunction
 

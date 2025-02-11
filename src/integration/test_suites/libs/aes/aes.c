@@ -18,20 +18,23 @@
 #include <stdint.h>
 #include <string.h>
 
-//"0388dace60b6a392f328c2b971b2fe78"
-
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size) {
     int len = strlen(hex_str);
+    int num_dwords;
+    int num_chars;
+      VPRINTF(HIGH, "String length is %d.\n",len);
     const uint32_t index[] = {1,0,3,2,5,4,7,6};
-    if (len % 8 != 0) {
-        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 8.\n");
+    if (len % 2 != 0) {
+        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 2.\n");
         return;
     }
-
-    *array_size = len / 8;
-    for (int i = 0; i < *array_size; i++) {
+    num_dwords = (len / 8);
+    *array_size = (len / 2);
+    for (int i = 0; i <= num_dwords; i++) {
         uint32_t value = 0x00000000;
-        for (int j = 0; j < 8; j++) {
+        num_chars = (i == num_dwords) ? len % 8 : 8;
+        VPRINTF(HIGH, "Number of characters is %d.\n",num_chars);
+        for (int j = 0; j < num_chars; j++) {
             char c = hex_str[i * 8 + j];
             uint32_t digit;
 
@@ -47,7 +50,10 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
             }
             value |= digit << (4 * index[j]);
         }
-        array[i] = value;
+        if (num_chars != 0) {
+          VPRINTF(HIGH, "Converted value is 0x%x.\n",value);
+          array[i] = value;
+        }
     }
 }
 
@@ -70,6 +76,19 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
   // wait for AES to be idle
   aes_wait_idle();
+
+  //Load key from keyvault if expected
+  if (aes_input.key.kv_intf){
+      // Wait for KV read logic to be idle
+      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
+
+      // Program KEY Read
+      lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                      ((aes_input.key.kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+
+      // Check that AES key is loaded
+      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+  }
 
   uint32_t aes_ctrl =
     ((op << AES_REG_CTRL_SHADOWED_OPERATION_LOW) & AES_REG_CTRL_SHADOWED_OPERATION_MASK) |
@@ -98,18 +117,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   aes_wait_idle();
 
   //Write the key
-  if (aes_input.key.kv_intf){
-      // Wait for KV read logic to be idle
-      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
-
-      // Program KEY Read
-      lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
-                                                      ((aes_input.key.kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
-
-      // Check that AES key is loaded
-      while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK) == 0);
-  }
-  else{
+  if (~aes_input.key.kv_intf){
       // Load key from hw_data and write to AES
       VPRINTF(LOW, "Load Key data to AES\n");
       for (int j = 0; j < 8; j++) {

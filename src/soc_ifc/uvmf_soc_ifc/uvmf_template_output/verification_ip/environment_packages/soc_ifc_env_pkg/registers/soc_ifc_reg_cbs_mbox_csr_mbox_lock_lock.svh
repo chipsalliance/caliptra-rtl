@@ -27,7 +27,7 @@ class soc_ifc_reg_delay_job_mbox_csr_mbox_lock_lock extends soc_ifc_reg_delay_jo
             if (map.get_name() == "soc_ifc_AHB_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(0), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             end
-            else if (map.get_name() == "soc_ifc_APB_map") begin
+            else if (map.get_name() == "soc_ifc_AXI_map") begin
                 rm.mbox_status.soc_has_lock.predict(uvm_reg_data_t'(1), .kind(UVM_PREDICT_READ), .path(UVM_PREDICT), .map(map));
             end
             `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("post_predict called through map [%p] on mbox_lock results in state transition. Functional state tracker: [%p] mbox_fsm_ps transition [%p]", map.get_name(), rm.mbox_fn_state_sigs, state_nxt), UVM_FULL)
@@ -124,7 +124,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_lock_lock extends soc_ifc_reg_cbs_mbox_csr;
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
                     // Reading mbox_lock when it is already locked (by uC)

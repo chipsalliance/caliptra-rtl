@@ -24,7 +24,7 @@ addrmap clp {
 
     aes aes_reg @ 0x1001_1000;
 
-    aes_clp_reg aes_clp_reg @ 0x1001_1100;
+    aes_clp_reg aes_clp_reg @ 0x1001_1800;
 
     kv_reg kv_reg @ 0x1001_8000;
 

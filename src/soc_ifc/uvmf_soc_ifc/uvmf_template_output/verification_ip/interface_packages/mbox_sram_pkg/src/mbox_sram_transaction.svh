@@ -33,9 +33,9 @@ class mbox_sram_transaction  extends uvmf_transaction_base;
   `uvm_object_utils( mbox_sram_transaction )
 
   rand bit is_read ;
-  rand bit [MBOX_ADDR_W-1:0] address ;
-  rand bit [MBOX_DATA_W-1:0] data ;
-  bit [MBOX_ECC_DATA_W-1:0] data_ecc ;
+  rand bit [CPTRA_MBOX_ADDR_W-1:0] address ;
+  rand bit [CPTRA_MBOX_DATA_W-1:0] data ;
+  bit [CPTRA_MBOX_ECC_DATA_W-1:0] data_ecc ;
   rand bit ecc_single_bit_error ;
   rand bit ecc_double_bit_error ;
 

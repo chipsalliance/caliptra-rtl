@@ -58,7 +58,7 @@ task soc_ifc_env_mbox_rand_fw_sequence::mbox_push_datain();
             if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
         end
         `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this);
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this);
         if (reg_sts != UVM_IS_OK)
             `uvm_error("MBOX_SEQ", "Register access failed (mbox_datain)")
     end

@@ -6,8 +6,10 @@ needs:
   - ../parameters/soc_ifc_parameters_pkg.compile
   - ../../../../verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_hdl.compile
   - ../../../../verification_ip/interface_packages/cptra_ctrl_pkg/cptra_ctrl_hdl.compile
+  - ../../../../verification_ip/interface_packages/ss_mode_ctrl_pkg/ss_mode_ctrl_hdl.compile
   - ../../../../verification_ip/interface_packages/soc_ifc_status_pkg/soc_ifc_status_hdl.compile
   - ../../../../verification_ip/interface_packages/cptra_status_pkg/cptra_status_hdl.compile
+  - ../../../../verification_ip/interface_packages/ss_mode_status_pkg/ss_mode_status_hdl.compile
   - ../../../../verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_hdl.compile
 src:
   - hdl_top.sv

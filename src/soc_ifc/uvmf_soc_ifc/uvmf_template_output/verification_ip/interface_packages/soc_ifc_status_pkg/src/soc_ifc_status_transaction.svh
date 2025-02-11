@@ -33,7 +33,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   `uvm_object_utils( soc_ifc_status_transaction )
 
   bit ready_for_fuses ;
-  bit ready_for_fw_push ;
+  bit ready_for_mb_processing ;
   bit ready_for_runtime ;
   bit mailbox_data_avail ;
   bit mailbox_flow_done ;
@@ -123,7 +123,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("ready_for_fuses:0x%x ready_for_fw_push:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x cptra_error_fatal_intr_pending:0x%x cptra_error_non_fatal_intr_pending:0x%x trng_req_pending:0x%x generic_output_val:0x%x %s",ready_for_fuses,ready_for_fw_push,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,cptra_error_fatal_intr_pending,cptra_error_non_fatal_intr_pending,trng_req_pending,generic_output_val,super.convert2string());
+    return $sformatf("ready_for_fuses:0x%x ready_for_mb_processing:0x%x ready_for_runtime:0x%x mailbox_data_avail:0x%x mailbox_flow_done:0x%x cptra_error_fatal_intr_pending:0x%x cptra_error_non_fatal_intr_pending:0x%x trng_req_pending:0x%x generic_output_val:0x%x %s",ready_for_fuses,ready_for_mb_processing,ready_for_runtime,mailbox_data_avail,mailbox_flow_done,cptra_error_fatal_intr_pending,cptra_error_non_fatal_intr_pending,trng_req_pending,generic_output_val,super.convert2string());
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -152,7 +152,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
             &&(this.ready_for_fuses == RHS.ready_for_fuses)
-            &&(this.ready_for_fw_push == RHS.ready_for_fw_push)
+            &&(this.ready_for_mb_processing == RHS.ready_for_mb_processing)
             &&(this.ready_for_runtime == RHS.ready_for_runtime)
             &&(this.mailbox_data_avail == RHS.mailbox_data_avail)
             &&(this.mailbox_flow_done == RHS.mailbox_flow_done)
@@ -175,7 +175,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
     this.ready_for_fuses = RHS.ready_for_fuses;
-    this.ready_for_fw_push = RHS.ready_for_fw_push;
+    this.ready_for_mb_processing = RHS.ready_for_mb_processing;
     this.ready_for_runtime = RHS.ready_for_runtime;
     this.mailbox_data_avail = RHS.mailbox_data_avail;
     this.mailbox_flow_done = RHS.mailbox_flow_done;
@@ -207,7 +207,7 @@ class soc_ifc_status_transaction  extends uvmf_transaction_base;
     // endcase
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
     $add_attribute(transaction_view_h,ready_for_fuses,"ready_for_fuses");
-    $add_attribute(transaction_view_h,ready_for_fw_push,"ready_for_fw_push");
+    $add_attribute(transaction_view_h,ready_for_mb_processing,"ready_for_mb_processing");
     $add_attribute(transaction_view_h,ready_for_runtime,"ready_for_runtime");
     $add_attribute(transaction_view_h,mailbox_data_avail,"mailbox_data_avail");
     $add_attribute(transaction_view_h,mailbox_flow_done,"mailbox_flow_done");

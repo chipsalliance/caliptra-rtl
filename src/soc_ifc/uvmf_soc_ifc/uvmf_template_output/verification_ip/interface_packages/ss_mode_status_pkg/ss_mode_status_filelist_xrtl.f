@@ -1,0 +1,3 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_status_pkg/src/ss_mode_status_if.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_status_pkg/src/ss_mode_status_monitor_bfm.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/ss_mode_status_pkg/src/ss_mode_status_driver_bfm.sv

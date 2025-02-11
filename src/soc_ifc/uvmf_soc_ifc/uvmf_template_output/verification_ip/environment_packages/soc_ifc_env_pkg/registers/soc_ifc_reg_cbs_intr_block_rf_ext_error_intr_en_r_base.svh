@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base extends uvm_reg_cbs
     `uvm_object_utils(soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
 
@@ -64,14 +64,14 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base extends uvm_reg_cbs
         en_glb  = rm.get_reg_by_name("global_intr_en_r").get_field_by_name("error_en");
         sts_glb = rm.get_reg_by_name("error_global_intr_r").get_field_by_name("agg_sts");
 
-        if (map.get_name() == this.APB_map_name) begin
+        if (map.get_name() == this.AXI_map_name) begin
             if (kind == UVM_PREDICT_WRITE) begin
-                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through APB interface is blocked!"})
+                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through AXI interface is blocked!"})
                 value = previous;
                 return;
             end
             else
-                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
+                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through AXI interface!", UVM_LOW)
         end
         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Access to %s with path %p", fld.get_full_name(), path), UVM_FULL)
 

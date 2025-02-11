@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
     `uvm_object_utils(soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
 
@@ -48,6 +48,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         uvm_reg_block rm;
         soc_ifc_reg__intr_block_t_ext    sir_intr_rm;
         sha512_acc_csr__intr_block_t_ext sac_intr_rm;
+        axi_dma_reg__intr_block_t_ext    dma_intr_rm;
         bit           fld_hwset_active = 1'b0;
         uvm_reg       sts_reg;
         string event_name    ;
@@ -69,6 +70,10 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
             if (!$cast(sir_intr_rm,rm)) `uvm_fatal("SOC_IFC_REG_CBS", {"Failed to get handle of expected sub-type for parent uvm_reg_block. ", fld.get_full_name()})
             fld_hwset_active = sir_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()];
         end
+        else if (rm.get_parent().get_name() == "axi_dma_reg_rm") begin
+            if (!$cast(dma_intr_rm,rm)) `uvm_fatal("SOC_IFC_REG_CBS", {"Failed to get handle of expected sub-type for parent uvm_reg_block. ", fld.get_full_name()})
+            fld_hwset_active = dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()];
+        end
         else begin
             `uvm_fatal("SOC_IFC_REG_CBS", "Callback is registered to an unrecognized register block!")
         end
@@ -80,14 +85,14 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         sts_glb    = rm.get_reg_by_name("error_global_intr_r").get_field_by_name("agg_sts");
         cnt_fld    = rm.get_reg_by_name({event_name, "_intr_count_r"}).get_field_by_name("cnt");
 
-        if (map.get_name() == this.APB_map_name) begin
+        if (map.get_name() == this.AXI_map_name) begin
             if (kind == UVM_PREDICT_WRITE) begin
-                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through APB interface is blocked!"})
+                `uvm_warning("SOC_IFC_REG_CBS", {"Unexpected write to interrupt register ", fld.get_full_name(), " through AXI interface is blocked!"})
                 value = previous;
                 return;
             end
             else
-                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through APB interface!", UVM_LOW)
+                `uvm_info("SOC_IFC_REG_CBS", "Unexpected read to interrupt register through AXI interface!", UVM_LOW)
         end
         `uvm_info("SOC_IFC_REG_CBS", $sformatf("Access to %s with path %p", fld.get_full_name(), path), UVM_FULL)
 
@@ -102,7 +107,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         end
 
         // Anytime an access intr sts register predicts a value of 1, we can treat
-        // that as a hwset (even if it's just an AHB/APB read) because we _know_ a
+        // that as a hwset (even if it's just an AHB/AXI read) because we _know_ a
         // W1C won't result in value=1, which is the case we're protecting against
         // by tracking this hwset flag.
         // We must track the hwset flag for all value=1 (not just the transitions
@@ -125,6 +130,15 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
                     begin
                     uvm_wait_for_nba_region();
                     sac_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
+                    end
+                join_none
+            end
+            else if (dma_intr_rm != null) begin
+                dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
+                fork
+                    begin
+                    uvm_wait_for_nba_region();
+                    dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
             end

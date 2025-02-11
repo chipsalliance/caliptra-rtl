@@ -32,7 +32,7 @@ class soc_ifc_env_mbox_rand_medium_interference_sequence extends soc_ifc_env_mbo
 
   rand uvm_reg_data_t data;
   rand int reg_select;
-  rand apb3_rw_e RnW;
+  rand bit is_read;
   rand byte unsigned xfers;
   rand byte unsigned cycles;
 
@@ -46,7 +46,7 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
     uvm_reg blocklist[];
     int del_idx[$];
 
-    reg_model.soc_ifc_APB_map.get_registers(regs, UVM_HIER);
+    reg_model.soc_ifc_AXI_map.get_registers(regs, UVM_HIER);
 
     // Registers we won't randomly access due to side-effects
     blocklist = '{reg_model.mbox_csr_rm.mbox_lock,
@@ -60,22 +60,22 @@ task soc_ifc_env_mbox_rand_medium_interference_sequence::mbox_poll_status();
     // A force-unlock would cause state->MBOX_IDLE, so we exit the polling loop
     do begin
         if(!this.randomize(xfers) with {xfers inside {[1:20]}; }) begin
-            `uvm_error("MBOX_SEQ", "Failed to randomize APB reg transfer count in mbox_poll_status")
+            `uvm_error("MBOX_SEQ", "Failed to randomize AXI reg transfer count in mbox_poll_status")
         end
         else begin
             for (ii=0; ii<xfers; ii++) begin: XFER_LOOP
                 // Do random access to mailbox to trigger arb logic as cptra sequence reads command data
                 // and writes response data
                 // TODO also mix in some reg writes?
-                if(!this.randomize(RnW, reg_select, data, cycles) with {RnW == APB3_TRANS_READ;
-                                                                        reg_select < regs.size();
-                                                                        cycles inside {[1:200]}; }) begin
-                    `uvm_error("MBOX_SEQ", "Failed to randomize memory APB transfer in mbox_wait_for_command")
+                if(!this.randomize(is_read, reg_select, data, cycles) with {is_read == 1;
+                                                                            reg_select < regs.size();
+                                                                            cycles inside {[1:200]}; }) begin
+                    `uvm_error("MBOX_SEQ", "Failed to randomize memory AXI transfer in mbox_wait_for_command")
                 end
                 else begin
-                    `uvm_info("MBOX_SEQ", $sformatf("Doing random APB access of type %p to %s, which has is_busy(): %d", RnW, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_DEBUG)
-                    if (RnW == APB3_TRANS_READ) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
-                    else                        regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_STATUS)));
+                    `uvm_info("MBOX_SEQ", $sformatf("Doing random AXI access of type [read? %x] to %s, which has is_busy(): %d", is_read, regs[reg_select].get_name(), regs[reg_select].is_busy()), UVM_DEBUG)
+                    if (is_read) regs[reg_select].read (reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_STATUS)));
+                    else         regs[reg_select].write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_STATUS)));
                 end
             end
         end

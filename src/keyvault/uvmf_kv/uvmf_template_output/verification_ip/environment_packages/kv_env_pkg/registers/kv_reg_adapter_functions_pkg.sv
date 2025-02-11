@@ -14,6 +14,8 @@
 //
 // Address conversion from key vault to reg model and vice versa
 
+`include "caliptra_reg_field_defines.svh"
+
 package kv_reg_adapter_functions_pkg;
 
   import kv_defines_pkg::*;

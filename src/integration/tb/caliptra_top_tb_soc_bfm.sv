@@ -66,16 +66,19 @@ import caliptra_top_tb_pkg::*; #(
 
     int poll_count;
 
-    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_uds, cptra_obf_key_fe;
+    logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obfkey_tb;
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
 
     // AXI request signals
     axi_resp_e wresp, rresp;
-    logic [`CALIPTRA_AXI_DATA_WIDTH-1:0] wdata, rdata;
+    logic [`CALIPTRA_AXI_DATA_WIDTH  -1:0] wdata, rdata;
     logic [`CALIPTRA_AXI_DATA_WIDTH/8-1:0] wstrb_array[];
-    logic [`CALIPTRA_AXI_DATA_WIDTH-1:0] rdata_array[];
+    logic [`CALIPTRA_AXI_USER_WIDTH  -1:0] wuser_array[];
+    logic [`CALIPTRA_AXI_USER_WIDTH  -1:0] buser;
+    logic [`CALIPTRA_AXI_DATA_WIDTH  -1:0] rdata_array[];
+    logic [`CALIPTRA_AXI_USER_WIDTH  -1:0] ruser_array[];
     axi_resp_e rresp_array[];
 
     int byte_count;
@@ -154,22 +157,24 @@ import caliptra_top_tb_pkg::*; #(
             cptra_fe_tb = cptra_fe_rand;
         end
         else begin
-            //Key for UDS
-            cptra_obf_key_uds = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-            cptra_uds_tb = 512'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d;
-
-            //Key for FE
-            cptra_obf_key_fe = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
-            cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+            if ($test$plusargs("SECOND_DOE_KAT")) begin
+                //Key for DOE
+                cptra_obfkey_tb = 256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c;
+                cptra_uds_tb = 512'h32cd8a75b5e515bd7b0fe37a6de144696aeedb1f5e03225a71fc690f5b004ff593794db7a99ced97c376385149c4ecafd3afd70cb657a6f6434bfd911983f4ff;
+                cptra_fe_tb = 256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b;
                            /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
                            256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
                            256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
-
+            end 
+            else begin
+                cptra_obfkey_tb = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
+                cptra_uds_tb = 512'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d;
+                cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+            end
             //swizzle the key so it matches the endianness of AES block
             //used for visual inspection of uds/fe flow, manually switching keys and checking both
             for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
-                //cptra_obf_key[dword] = cptra_obf_key_uds[dword];
-                cptra_obf_key[dword] = cptra_obf_key_fe[dword];
+                cptra_obf_key[dword] = cptra_obfkey_tb[dword];
             end
         end
 
@@ -204,19 +209,19 @@ import caliptra_top_tb_pkg::*; #(
 
                     $display ("SoC: Writing obfuscated UDS to fuse bank\n");
                     for (int dw=0; dw < `CLP_OBF_UDS_DWORDS; dw++) begin
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_UDS_SEED_0 + 4 * dw), .data(cptra_uds_tb[dw]), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_UDS_SEED_0 + 4 * dw), .data(cptra_uds_tb[dw]), .resp(wresp), .resp_user(buser));
                     end
 
                     $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
                     for (int dw=0; dw < `CLP_OBF_FE_DWORDS; dw++) begin
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * dw), .data(cptra_fe_tb[dw]), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * dw), .data(cptra_fe_tb[dw]), .resp(wresp), .resp_user(buser));
                     end
 
                     $display ("SoC: Writing SOC Stepping ID to fuse bank\n");
-                    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID), .data($urandom()), .resp(wresp));
+                    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID), .data($urandom()), .resp(wresp), .resp_user(buser));
 
                     $display ("SoC: Writing fuse done register\n");
-                    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE), .data(32'h00000001), .resp(wresp));
+                    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE), .data(32'h00000001), .resp(wresp), .resp_user(buser));
 
                     assert (!cptra_error_non_fatal) else begin
                         $error("cptra_error_non_fatal observed during boot up");
@@ -231,12 +236,12 @@ import caliptra_top_tb_pkg::*; #(
                         $write ("SoC: Polling Flow Status...");
                         poll_count = 0;
                         do begin
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS), .data(rdata), .resp(rresp), .resp_user(buser));
                             poll_count++;
                         end while(rdata[`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW] == 1);
                         $display("\n  >>> SoC: Ready for Fuses deasserted after polling %d times\n", poll_count);
                         $display ("SoC: Writing BootGo register\n");
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO), .data(32'h00000001), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO), .data(32'h00000001), .resp(wresp), .resp_user(buser));
                     end
 
                     $display ("CLP: ROM Flow in progress...\n");
@@ -252,42 +257,44 @@ import caliptra_top_tb_pkg::*; #(
                         $write ("SoC: Requesting mailbox lock...");
                         poll_count = 0;
                         do begin
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_LOCK), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_LOCK), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
                             poll_count++;
                         end while (rdata[`MBOX_CSR_MBOX_LOCK_LOCK_LOW] == 1);
                         $display ("\n  >>> SoC: Lock granted after polling %d times\n", poll_count);
 
                         $display ("SoC: Writing the Command Register\n");
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_CMD), .user(32'hFFFF_FFFF), .data(32'hBA5EBA11), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_CMD), .user(32'hFFFF_FFFF), .data(32'hBA5EBA11), .resp(wresp), .resp_user(buser));
 
                         $display ("SoC: Writing the Data Length Register\n");
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(FW_NUM_DWORDS*4), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(FW_NUM_DWORDS*4), .resp(wresp), .resp_user(buser));
 
                         $display ("SoC: Writing the Firmware into Data-in Register\n");
                         fw_blob = new[FW_NUM_DWORDS];
                         wstrb_array = new[FW_NUM_DWORDS]('{default: {`CALIPTRA_AXI_DATA_WIDTH/8{1'b1}}});
                         for (int dw=0; dw < FW_NUM_DWORDS; dw++)
                             fw_blob[dw] = $urandom();
-                        m_axi_bfm_if.axi_write(.addr(`CLP_MBOX_CSR_MBOX_DATAIN),
-                                           .burst(AXI_BURST_FIXED),
-                                           .len  (FW_NUM_DWORDS-1),
-                                           .user (32'hFFFF_FFFF),
-                                           .data (fw_blob),
-                                           .strb (wstrb_array),
-                                           .resp (wresp));
+                        m_axi_bfm_if.axi_write(.addr      (`CLP_MBOX_CSR_MBOX_DATAIN),
+                                               .burst     (AXI_BURST_FIXED),
+                                               .len       (FW_NUM_DWORDS-1),
+                                               .user      (32'hFFFF_FFFF  ),
+                                               .data      (fw_blob        ),
+                                               .strb      (wstrb_array    ),
+                                               .write_user(wuser_array    ),
+                                               .resp      (wresp          ),
+                                               .resp_user (buser          ));
 
                         $display ("SoC: Setting the Execute Register\n");
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h00000001), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h00000001), .resp(wresp), .resp_user(buser));
 
                         $display("SoC: Waiting for Response Data availability\n");
                         wait(mailbox_data_avail);
 
                         $display("SoC: Reading the Status Register...\n");
-                        m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_STATUS), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                        m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_STATUS), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
 
                         if (((rdata & `MBOX_CSR_MBOX_STATUS_STATUS_MASK) >> `MBOX_CSR_MBOX_STATUS_STATUS_LOW) == DATA_READY) begin: READ_RESP_DATA
                             $display("SoC: Reading the Data Length Register...\n");
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
 
                             $display("SoC: Reading the Data Out Register\n");
                             for (int xfer4k = 0; xfer4k < rdata; xfer4k += 4096) begin
@@ -295,17 +302,19 @@ import caliptra_top_tb_pkg::*; #(
                                 dw_count = byte_count/(`CALIPTRA_AXI_DATA_WIDTH/8) + |byte_count[$clog2(`CALIPTRA_AXI_DATA_WIDTH/8)-1:0];
                                 rdata_array = new[dw_count];
                                 rresp_array = new[dw_count];
-                                m_axi_bfm_if.axi_read(.addr (`CLP_MBOX_CSR_MBOX_DATAOUT),
-                                                      .burst(AXI_BURST_FIXED),
-                                                      .len  (dw_count-1     ),
-                                                      .user (32'hFFFF_FFFF  ),
-                                                      .data (rdata_array    ),
-                                                      .resp (rresp_array)   );
+                                ruser_array = new[dw_count];
+                                m_axi_bfm_if.axi_read(.addr     (`CLP_MBOX_CSR_MBOX_DATAOUT),
+                                                      .burst    (AXI_BURST_FIXED),
+                                                      .len      (dw_count-1     ),
+                                                      .user     (32'hFFFF_FFFF  ),
+                                                      .data     (rdata_array    ),
+                                                      .resp     (rresp_array    ),
+                                                      .resp_user(ruser_array    ));
                             end
                         end: READ_RESP_DATA
 
                         $display("SoC: Resetting the Execute Register\n");
-                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h0), .resp(wresp));
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h0), .resp(wresp), .resp_user(buser));
 
                         //Wait for Mailbox flow to be done before toggling generic_input_wires
                         @(negedge core_clk);
@@ -321,7 +330,7 @@ import caliptra_top_tb_pkg::*; #(
                     forever begin
                         if (cptra_error_fatal_dly_p) begin
                             $display("SoC: Observed cptra_error_fatal; reading Caliptra register\n");
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(rdata), .resp(rresp), .resp_user(buser));
                             if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_LOW]) begin
                                 generic_input_wires = {32'h0, ICCM_FATAL_OBSERVED};
                             end
@@ -345,7 +354,7 @@ import caliptra_top_tb_pkg::*; #(
                         end
                         else if (cptra_error_non_fatal_dly_p) begin
                             $display("SoC: Observed cptra_error_non_fatal; reading Caliptra register\n");
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(rresp), .resp_user(buser));
                             if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_LOW]) begin
                                 generic_input_wires = {32'h0, PROT_NO_LOCK_NON_FATAL_OBSERVED};
                             end
@@ -359,11 +368,11 @@ import caliptra_top_tb_pkg::*; #(
                                 generic_input_wires = {32'h0, ERROR_NONE_SET};
                             end
                             $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
-                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(wresp));
+                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(wresp), .resp_user(buser));
                         end
                         else if (soc_ifc_hw_error_wdata) begin
                             $display("SoC: Observed cptra_error_fatal; writing to clear Caliptra register\n");
-                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(soc_ifc_hw_error_wdata), .resp(wresp));
+                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(soc_ifc_hw_error_wdata), .resp(wresp), .resp_user(buser));
                             soc_ifc_hw_error_wdata = '0;
                         end
                         else if (ras_test_ctrl.do_no_lock_access) begin
@@ -373,12 +382,14 @@ import caliptra_top_tb_pkg::*; #(
                                     dw_count = 1;
                                     rdata_array = new[dw_count];
                                     rresp_array = new[dw_count];
-                                    m_axi_bfm_if.axi_read(.addr(`CLP_MBOX_CSR_MBOX_DATAOUT),
-                                                      .burst(AXI_BURST_FIXED),
-                                                      .len  (dw_count-1     ),
-                                                      .user (32'hFFFF_FFFF  ),
-                                                      .data (rdata_array    ),
-                                                      .resp (rresp_array)   );
+                                    ruser_array = new[dw_count];
+                                    m_axi_bfm_if.axi_read(.addr     (`CLP_MBOX_CSR_MBOX_DATAOUT),
+                                                          .burst    (AXI_BURST_FIXED),
+                                                          .len      (dw_count-1     ),
+                                                          .user     (32'hFFFF_FFFF  ),
+                                                          .data     (rdata_array    ),
+                                                          .resp     (rresp_array    ),
+                                                          .resp_user(ruser_array    ));
                                 end
                             join
                         end
@@ -388,24 +399,26 @@ import caliptra_top_tb_pkg::*; #(
                                     $write ("SoC: Requesting mailbox lock...");
                                     poll_count = 0;
                                     do begin
-                                        m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_LOCK), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                                        m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_LOCK), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
                                         poll_count++;
                                     end while (rdata[`MBOX_CSR_MBOX_LOCK_LOCK_LOW] == 1);
                                     $display ("\n  >>> SoC: Lock granted after polling %d times\n", poll_count);
 
                                     $display("SoC: Reading the Data Length Register...\n");
-                                    m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                                    m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
 
                                     $display("SoC: Reading the Data Out Register\n");
                                     dw_count = 1;
                                     rdata_array = new[dw_count];
                                     rresp_array = new[dw_count];
-                                    m_axi_bfm_if.axi_read(.addr(`CLP_MBOX_CSR_MBOX_DATAOUT),
-                                                      .burst(AXI_BURST_FIXED),
-                                                      .len  (dw_count-1     ),
-                                                      .user (32'hFFFF_FFFF  ),
-                                                      .data (rdata_array    ),
-                                                      .resp (rresp_array)   );
+                                    ruser_array = new[dw_count];
+                                    m_axi_bfm_if.axi_read(.addr     (`CLP_MBOX_CSR_MBOX_DATAOUT),
+                                                          .burst    (AXI_BURST_FIXED),
+                                                          .len      (dw_count-1     ),
+                                                          .user     (32'hFFFF_FFFF  ),
+                                                          .data     (rdata_array    ),
+                                                          .resp     (rresp_array    ),
+                                                          .resp_user(ruser_array    ));
                                 end
                             join
                         end
@@ -422,7 +435,7 @@ import caliptra_top_tb_pkg::*; #(
                         end
                         else if (mailbox_data_avail) begin
                             $display("SoC: Reading the Data Length Register\n");
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp));
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
 
                             $display("SoC: Reading the Data Out Register\n");
                             for (int xfer4k = 0; xfer4k < rdata; xfer4k += 4096) begin
@@ -430,16 +443,18 @@ import caliptra_top_tb_pkg::*; #(
                                 dw_count = byte_count/(`CALIPTRA_AXI_DATA_WIDTH/8) + |byte_count[$clog2(`CALIPTRA_AXI_DATA_WIDTH/8)-1:0];
                                 rdata_array = new[dw_count];
                                 rresp_array = new[dw_count];
-                                m_axi_bfm_if.axi_read(.addr(`CLP_MBOX_CSR_MBOX_DATAOUT),
-                                                  .burst(AXI_BURST_FIXED),
-                                                  .len  (dw_count-1     ),
-                                                  .user (32'hFFFF_FFFF  ),
-                                                  .data (rdata_array    ),
-                                                  .resp (rresp_array    ));
+                                ruser_array = new[dw_count];
+                                m_axi_bfm_if.axi_read(.addr     (`CLP_MBOX_CSR_MBOX_DATAOUT),
+                                                      .burst    (AXI_BURST_FIXED ),
+                                                      .len      (dw_count-1      ),
+                                                      .user     (32'hFFFF_FFFF   ),
+                                                      .data     (rdata_array     ),
+                                                      .resp     (rresp_array     ),
+                                                      .resp_user(ruser_array     ));
                             end
 
                             $display ("SoC: Writing the Mbox Status Register\n");
-                            m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_STATUS), .user(32'hFFFF_FFFF), .data(32'h1), .resp(wresp));
+                            m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_STATUS), .user(32'hFFFF_FFFF), .data(32'h1), .resp(wresp), .resp_user(buser));
                         end
                         @(posedge core_clk);
                     end

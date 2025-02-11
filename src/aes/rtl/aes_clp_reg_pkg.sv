@@ -4,7 +4,7 @@
 package aes_clp_reg_pkg;
 
     localparam AES_CLP_REG_DATA_WIDTH = 32;
-    localparam AES_CLP_REG_MIN_ADDR_WIDTH = 12;
+    localparam AES_CLP_REG_MIN_ADDR_WIDTH = 11;
 
     typedef struct packed{
         logic [31:0] next;
@@ -152,6 +152,6 @@ package aes_clp_reg_pkg;
         kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2
     } kv_status_reg__ERROR__kv_error_e_e;
 
-    localparam AES_CLP_REG_ADDR_WIDTH = 32'd12;
+    localparam AES_CLP_REG_ADDR_WIDTH = 32'd11;
 
 endpackage
