@@ -459,7 +459,6 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac384_key_tb = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
-    // logic [0:15][31:0]   mldsa_seed_2_tb= 512'h_fdc431e57c4325899e48d6daa9b7b5cfa23bc560ffd58e06b8c0c4b9e1e842e0_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     
@@ -711,13 +710,6 @@ module caliptra_top_tb_services
         else if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.makehint_invalid_i) begin //clear flags if end of signing loop or verify failed
             inject_makehint_failure <= 1'b0;
         end
-        // else if ((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid))
-        //     reset_mldsa_failure <= 1'b1;
-        // else if (((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
-        //     reset_mldsa_failure <= 1'b0;
-        //     inject_makehint_failure <= 1'b0;
-        //     inject_normcheck_failure <= 1'b0;
-        // end
     end
 
     always_ff @(negedge clk) begin
