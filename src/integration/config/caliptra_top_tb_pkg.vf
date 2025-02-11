@@ -410,6 +410,8 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/power2round/rtl/power2round_ctrl.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/power2round/rtl/power2round_core.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/power2round/rtl/power2round_skencode.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_ctrl_pkg.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_mem_if.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_mem_top.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_seq_prim.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_seq_sec.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/rtl/mldsa_ctrl.sv
