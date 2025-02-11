@@ -196,6 +196,7 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_s_needs_release;
 
     logic                       en_jtag_access;
+    logic                       disable_mldsa_sva;
 
     typedef bit  [0:11][31:0]   operand_t;
 
@@ -676,19 +677,25 @@ module caliptra_top_tb_services
             reset_mldsa_failure <= 1'b0;
             random_mldsa_failure_injection <= $urandom();
             normcheck_mode_random <= $urandom_range(0,2);
+            disable_mldsa_sva <= 1'b0;
         end
         else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
             if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
-                inject_normcheck_failure <= 1'b1;
-                normcheck_mode_random <= 'h0;
+                inject_normcheck_failure    <= 1'b1;
+                normcheck_mode_random       <= 'h0;
+                inject_makehint_failure     <= 1'b0;
                 $display("Verify: Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
             end
             else if (random_mldsa_failure_injection) begin
-                inject_makehint_failure <= 1'b1;
+                inject_makehint_failure     <= 1'b1;
+                inject_normcheck_failure    <= 1'b0;  
+                disable_mldsa_sva           <= 1'b1;
                 $display("Injecting makehint failure\n");
             end
             else begin
-                inject_normcheck_failure <= 1'b1;                
+                inject_makehint_failure     <= 1'b0;
+                inject_normcheck_failure    <= 1'b1;   
+                disable_mldsa_sva           <= 1'b1;             
                 $display("Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
             end
         end
@@ -698,10 +705,10 @@ module caliptra_top_tb_services
         else if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
             inject_normcheck_failure <= 1'b0;
         end
-        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid) begin //clear flags if end of signing loop or verify failed
+        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random)) begin //clear flags if end of signing loop or verify failed
             inject_normcheck_failure <= 1'b0;
         end
-        else if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid) begin //clear flags if end of signing loop or verify failed
+        else if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.makehint_invalid_i) begin //clear flags if end of signing loop or verify failed
             inject_makehint_failure <= 1'b0;
         end
         // else if ((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid))
@@ -714,15 +721,19 @@ module caliptra_top_tb_services
     end
 
     always_ff @(negedge clk) begin
-        if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.makehint_inst.hintgen_enable)
+        if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.makehint_inst.hintgen_enable) begin
             force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
-        else
-            release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
-        
-        if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
+            force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b0;
+        end
+        else if (inject_makehint_failure) begin
+            force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b0;
+        end       
+        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
-        else
+        else begin
             release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+            release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
+        end
         
         if (inject_mldsa_timeout)
             force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
