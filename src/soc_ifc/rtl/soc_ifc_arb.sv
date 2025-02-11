@@ -245,9 +245,13 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
                         (soc_dma_gnt & dma_reg_error) |
                         (soc_req_dv & ~(soc_mbox_req | soc_reg_req | soc_sha_req | soc_dma_req));
 
+`CALIPTRA_ASSERT      (ERR_ARB_MBOX_ADDR     , mbox_req_dv     -> mbox_req_data.addr inside {[MBOX_REG_START_ADDR:MBOX_REG_END_ADDR]}, clk, rst_b)
+`CALIPTRA_ASSERT      (ERR_ARB_MBOX_DIR_ADDR , mbox_dir_req_dv -> mbox_req_data.addr inside {[MBOX_DIR_START_ADDR:MBOX_DIR_END_ADDR]}, clk, rst_b)
+
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_ACCESS_MUTEX, {uc_mbox_gnt,soc_mbox_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_REG_ACCESS_MUTEX , {uc_reg_gnt,soc_reg_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_sha_gnt,soc_sha_gnt}, clk, rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_DMA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, rst_b)
+`CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_REG_AND_DIR_ACCESS_MUTEX, {mbox_req_dv,mbox_dir_req_dv}, clk, rst_b)
 
 endmodule
