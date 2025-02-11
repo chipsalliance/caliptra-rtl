@@ -59,9 +59,6 @@ void main() {
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
-    printf("Check the signing results\n");
-    printf("%c", 0x94);
-
     cptra_intr_rcv.mldsa_notif = 0;
     mldsa_zeroize();
 
