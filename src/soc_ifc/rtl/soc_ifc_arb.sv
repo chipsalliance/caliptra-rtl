@@ -174,7 +174,7 @@ always_comb req_collision = (uc_mbox_req & soc_mbox_req & ~mbox_req_hold) |
                             (uc_dma_req & soc_dma_req & ~dma_reg_req_hold);
 
 //drive the dv to the appropriate destination if either client is trying to 
-always_comb mbox_req_dv = uc_mbox_reg_req | soc_mbox_req;
+always_comb mbox_req_dv = uc_mbox_reg_req | soc_mbox_gnt;
 always_comb mbox_dir_req_dv = uc_mbox_dir_req & uc_mbox_gnt;
 always_comb soc_ifc_reg_req_dv = uc_reg_req | soc_reg_req;
 always_comb sha_req_dv = uc_sha_req | soc_sha_req;
