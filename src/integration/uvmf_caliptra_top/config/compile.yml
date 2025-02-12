@@ -59,6 +59,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
@@ -97,6 +99,9 @@ global:
         # declare all signals as inout, but are driven at a lower layer than the
         # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        # Suppress warnings about encrypted VIP code for which coverage
+        # can not be captured
+        - '-suppress=VCM-NOCOV-ENC'
         # AVERY
 #        - '+libext+.v+.sv+.svh'
         - +warn=noUII-L
@@ -134,6 +139,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
@@ -168,6 +175,9 @@ global:
         # declare all signals as inout, but are driven at a lower layer than the
         # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        # Suppress warnings about encrypted VIP code for which coverage
+        # can not be captured
+        - '-suppress=VCM-NOCOV-ENC'
         # AVERY
 #        - '+libext+.v+.sv+.svh'
         - +warn=noUII-L
