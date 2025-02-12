@@ -7,7 +7,7 @@
 +incdir+${AVERY_AXI}/testbench
 +incdir+${AVERY_SIM}/src
 +incdir+${AVERY_SIM}/src.IEEE
-+incdir+/home/ws/caliptra/anjpar/caliptra_ws_01_06/caliptra/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
++incdir+${MSFT_REPO_ROOT}/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
 +incdir+${CALIPTRA_ROOT}/src/libs/aaxi_uvm
 ${UVM_HOME}/src/uvm_pkg.sv
 ${AVERY_SIM}/src/avery_pkg.sv
@@ -15,7 +15,7 @@ ${AVERY_SIM}/src/avery_pkg_test.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg_xactor.sv
 ${AVERY_AXI}/src.axi/aaxi_class_pll.sv
-/home/ws/caliptra/anjpar/caliptra_ws_01_06/caliptra/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
+${MSFT_REPO_ROOT}/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
 ${AVERY_AXI}/checker/monitor_wrapper/BP063/aaxi_monitor_wrapper.sv
 ${AVERY_AXI}/src.VCS/aaxi_busmonitor.v
 ${AVERY_AXI}/src.axi/aaxi_coverage_metrics.sv
