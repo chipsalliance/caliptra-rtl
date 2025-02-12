@@ -59,6 +59,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
@@ -134,6 +136,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
