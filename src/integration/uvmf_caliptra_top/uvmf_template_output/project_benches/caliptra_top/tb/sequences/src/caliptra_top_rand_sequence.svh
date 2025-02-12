@@ -122,8 +122,8 @@ class caliptra_top_rand_sequence extends caliptra_top_bench_sequence_base;
           IDX_SOC_IFC_ENV_RST_COLD                      := 0, // TODO re-enable these // := 100,
           IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM     := 0, // TODO re-enable these // := 100,
           IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM     := 0, // TODO re-enable these // := 100,
-          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 0, // TODO re-enable these // := 100,
-          IDX_SOC_IFC_ENV_SHA_ACCEL                     := 0, // TODO re-enable these // := 100,
+          IDX_SOC_IFC_ENV_MBOX_SHA_ACCEL                := 100,
+          IDX_SOC_IFC_ENV_SHA_ACCEL                     := 100,
           IDX_SOC_IFC_ENV_FW_UPD                        := 10,
           IDX_SOC_IFC_ENV_MBOX_UC_REG_ACCESS            := 100,
           IDX_SOC_IFC_ENV_MBOX_DIR_READ                 := 100
