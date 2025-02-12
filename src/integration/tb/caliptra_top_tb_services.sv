@@ -628,7 +628,12 @@ module caliptra_top_tb_services
 `ifdef CALIPTRA_DEBUG_UNLOCKED
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 `else
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    initial begin
+        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+        else
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    end
 `endif
     always @(negedge clk) begin
         //lock debug mode
@@ -1358,6 +1363,14 @@ endgenerate //IV_NO
             deassert_rst_flag <= 'b0;
         end
     end
+`ifdef CALIPTRA_FORCE_CPU_RESET
+    initial force `CPTRA_TOP_PATH.rvtop.rst_l = 1'b0;
+`else
+    initial begin
+        if ($test$plusargs("CALIPTRA_FORCE_CPU_RESET"))
+            force `CPTRA_TOP_PATH.rvtop.rst_l = 1'b0;
+    end
+`endif
 
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
