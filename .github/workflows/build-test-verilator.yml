@@ -219,10 +219,10 @@ jobs:
     steps:
       - name: Print Verilator Aggregated Result
         run: |
-#          echo "Run Verilator check has a result of [${{ inputs.run_vltr }}]"
-#          if [[ "${{ inputs.run_vltr }}" == "false" ]]; then
-#            exit 0
-#          fi
+          #echo "Run Verilator check has a result of [${{ inputs.run_vltr }}]"
+          #if [[ "${{ inputs.run_vltr }}" == "false" ]]; then
+          #  exit 0
+          #fi
           echo "build_and_test has a result of [${{ needs.build_and_test.result }}]"
           if [[ "${{ needs.build_and_test.result }}" != "success" ]]; then
             exit 1
