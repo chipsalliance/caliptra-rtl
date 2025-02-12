@@ -22,6 +22,7 @@ module soc_ifc_arb
 
     input logic [4:0][AXI_USER_WIDTH-1:0] valid_mbox_users,
     input logic valid_fuse_user,
+    input logic valid_sha_user,
     //UC inf
     input  logic uc_req_dv,
     output logic uc_req_hold,
@@ -148,7 +149,7 @@ always_comb soc_reg_req = (soc_req_dv & (soc_req_data.addr inside {[SOC_IFC_REG_
 
 //Requests to SHA
 always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
-always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}));
+always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]})) & valid_sha_user;
 
 // Requests to DMA
 always_comb uc_dma_req = (uc_req_dv & (uc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));

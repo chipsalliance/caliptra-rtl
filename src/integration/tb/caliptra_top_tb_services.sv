@@ -302,6 +302,7 @@ module caliptra_top_tb_services
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
+    //         8'h9b        - Inject zeroize during keyvault read
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
@@ -1021,6 +1022,35 @@ endgenerate //IV_NO
             else begin
                 release `CPTRA_TOP_PATH.hmac.hmac_inst.i_hmac_reg.field_storage.HMAC512_CTRL.ZEROIZE.value;
             end
+        end
+    end
+
+    logic inject_zeroize_kv_read;
+    logic inject_zeroize_to_mldsa;
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if (~cptra_rst_b) begin
+            inject_zeroize_kv_read <= 1'b0;
+            inject_zeroize_to_mldsa <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h9b) && mailbox_write) begin
+            inject_zeroize_kv_read <= 1'b1;
+        end
+        else if (inject_zeroize_kv_read) begin
+            if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.kv_seed_write_en & 
+                (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.kv_seed_write_offset == 3)) begin
+                inject_zeroize_to_mldsa <= 1'b1;
+            end
+            if (inject_zeroize_to_mldsa) begin
+                inject_zeroize_to_mldsa <= 1'b0;
+                inject_zeroize_kv_read <= 1'b0;
+            end
+        end
+    end
+    always@(negedge clk) begin
+        if (inject_zeroize_to_mldsa) begin
+            force `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value = 1'b1;
+        end else begin
+            release `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value;
         end
     end
 
