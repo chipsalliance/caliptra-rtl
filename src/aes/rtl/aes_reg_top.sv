@@ -49,7 +49,7 @@ module aes_reg_top (
 
   // incoming payload check
   logic intg_err;
-  tlul_cmd_intg_chk u_chk (
+  caliptra_tlul_cmd_intg_chk u_chk (
     .tl_i(tl_i),
     .err_o(intg_err)
   );
@@ -82,7 +82,7 @@ module aes_reg_top (
 
   // outgoing integrity generation
   caliptra_tlul_pkg::tl_d2h_t tl_o_pre;
-  tlul_rsp_intg_gen #(
+  caliptra_tlul_rsp_intg_gen #(
     .EnableRspIntgGen(1),
     .EnableDataIntgGen(1)
   ) u_rsp_intg_gen (
@@ -93,7 +93,7 @@ module aes_reg_top (
   assign tl_reg_h2d = tl_i;
   assign tl_o_pre   = tl_reg_d2h;
 
-  tlul_adapter_reg #(
+  caliptra_tlul_adapter_reg #(
     .RegAw(AW),
     .RegDw(DW),
     .EnableDataIntgGen(0)

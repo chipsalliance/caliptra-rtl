@@ -32,7 +32,6 @@ module aes_wrap
   localparam logic SIDELOAD = 1'b1;
   localparam aes_mode_e AES_MODE = AES_ECB;
 
-  import aes_pkg::*;
   import aes_reg_pkg::*;
   import caliptra_tlul_pkg::*;
 
@@ -65,7 +64,7 @@ module aes_wrap
   assign alert_fatal_o = alert_tx[1].alert_p | ~alert_tx[1].alert_n;
 
   // Command integrity generation
-  tlul_cmd_intg_gen tlul_cmd_intg_gen (
+  caliptra_tlul_cmd_intg_gen caliptra_tlul_cmd_intg_gen (
     .tl_i(h2d),
     .tl_o(h2d_intg)
   );
@@ -152,7 +151,7 @@ module aes_wrap
     h2d.a_data            = 32'h55555555;
     h2d.a_user.rsvd       = '0;                        // static
     h2d.a_user.instr_type = caliptra_prim_mubi_pkg::MuBi4False; // static (Data)
-    h2d.a_user.cmd_intg   = '0;                        // will be driven by tlul_cmd_intg_gen
+    h2d.a_user.cmd_intg   = '0;                        // will be driven by caliptra_tlul_cmd_intg_gen
     h2d.a_user.data_intg  = '0;                        // will be driven by caliptra_prim_secded_enc
     h2d.d_ready           = 1'b1;                      // static
 
