@@ -47,6 +47,7 @@ For each release, the following steps are followed to ensure code functionality 
   - Audit pipelines: Nightly pipeline UVM TOP regression test list updated
   - Audit pipelines: Nightly pipeline UVM TOP regression enabled
   - Audit pipelines: Nightly pipeline UVM TOP (ROM) regression enabled
+- Audit RTL and testbenches for FIXME/TODO items
 - Pre-Silicon Regressions
   - [L0 regression](../src/integration/stimulus/L0_regression.yml)
   - Directed/Random regression per the [Test Plan](./Caliptra_TestPlan.xlsx)
