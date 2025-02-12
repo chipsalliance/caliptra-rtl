@@ -15,11 +15,12 @@ on:
         required: true
         type: string
         default: 'main'
-  workflow_call:
-    outputs:
-      run_vltr:
-        description: "Control parameter indicating if Verilator tests should be run or skipped"
-        value: ${{ jobs.evaluate_if_run.outputs.run_vltr }}
+  pull_request:
+#  workflow_call:
+#    outputs:
+#      run_vltr:
+#        description: "Control parameter indicating if Verilator tests should be run or skipped"
+#        value: ${{ jobs.evaluate_if_run.outputs.run_vltr }}
 
 env:
   MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" )
@@ -223,61 +224,61 @@ jobs:
             export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
             $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"
 
-  # Verilator is always run outside of the Pull Request context.
-  # For Pull Requests, conditionally run based on evaluation of
-  # modified file set
-  evaluate_if_run:
-    name: Evaluate if Verilator Will Run
-    runs-on: ubuntu-22.04
-    outputs:
-      run_vltr: ${{ steps.do_decide.outputs.run }}
-    env:
-      DO_EVAL: ${{ github.event_name == 'pull_request' }}
-
-    steps:
-      - uses: actions/checkout@v4
-        if: ${{ env.DO_EVAL == 'true' }}
-        with:
-          submodules: 'true'
-
-      # If only documentation files have been modified as part of a
-      # Pull Request, skip the Verilator checks
-      # Otherwise, run Verilator
-      - name: Do Git Diff
-        id: do_git_diff
-        if: ${{ env.DO_EVAL == 'true' }}
-        env:
-            SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
-            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
-            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
-            SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
-            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
-        run: |
-          if [[ "${SOURCE_FORK}" == "true" ]]; then
-            echo "pull request is from a fork: ${SOURCE_FORK}"
-            echo "fork repository owner is ${SOURCE_OWN}"
-            echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
-            git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
-          fi
-          echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
-          echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-          mods=$(git diff --name-only $(git show-ref --hash "origin/${TARGET_BR}")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
-          if [[ $(IFS='\n' grep -c -v '\\.md\\|\\.png' <<< "$mods") -gt 0 ]]; then
-            echo "Found modified source files in ${SOURCE_BR}"
-            echo "src_mods=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "Only modified files in ${SOURCE_BR} are for documentation"
-            echo "src_mods=false" >> "${GITHUB_OUTPUT}"
-          fi
-
-      - name: Decide
-        id: do_decide
-        run: |
-          if [[ "${{ env.DO_EVAL }}" == "false" ]]; then
-            echo "run=true" >> "${GITHUB_OUTPUT}"
-          elif [[ "${{ steps.do_git_diff.outputs.src_mods }}" == "true" ]]; then
-            echo "run=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "run=false" >> "${GITHUB_OUTPUT}"
-          fi
-
+#  # Verilator is always run outside of the Pull Request context.
+#  # For Pull Requests, conditionally run based on evaluation of
+#  # modified file set
+#  evaluate_if_run:
+#    name: Evaluate if Verilator Will Run
+#    runs-on: ubuntu-22.04
+#    outputs:
+#      run_vltr: ${{ steps.do_decide.outputs.run }}
+#    env:
+#      DO_EVAL: ${{ github.event_name == 'pull_request' }}
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#        if: ${{ env.DO_EVAL == 'true' }}
+#        with:
+#          submodules: 'true'
+#
+#      # If only documentation files have been modified as part of a
+#      # Pull Request, skip the Verilator checks
+#      # Otherwise, run Verilator
+#      - name: Do Git Diff
+#        id: do_git_diff
+#        if: ${{ env.DO_EVAL == 'true' }}
+#        env:
+#            SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
+#            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
+#            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
+#            SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
+#            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
+#        run: |
+#          if [[ "${SOURCE_FORK}" == "true" ]]; then
+#            echo "pull request is from a fork: ${SOURCE_FORK}"
+#            echo "fork repository owner is ${SOURCE_OWN}"
+#            echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
+#            git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+#          fi
+#          echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
+#          echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
+#          mods=$(git diff --name-only $(git show-ref --hash "origin/${TARGET_BR}")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
+#          if [[ $(IFS='\n' grep -c -v '\\.md\\|\\.png' <<< "$mods") -gt 0 ]]; then
+#            echo "Found modified source files in ${SOURCE_BR}"
+#            echo "src_mods=true" >> "${GITHUB_OUTPUT}"
+#          else
+#            echo "Only modified files in ${SOURCE_BR} are for documentation"
+#            echo "src_mods=false" >> "${GITHUB_OUTPUT}"
+#          fi
+#
+#      - name: Decide
+#        id: do_decide
+#        run: |
+#          if [[ "${{ env.DO_EVAL }}" == "false" ]]; then
+#            echo "run=true" >> "${GITHUB_OUTPUT}"
+#          elif [[ "${{ steps.do_git_diff.outputs.src_mods }}" == "true" ]]; then
+#            echo "run=true" >> "${GITHUB_OUTPUT}"
+#          else
+#            echo "run=false" >> "${GITHUB_OUTPUT}"
+#          fi
+#
