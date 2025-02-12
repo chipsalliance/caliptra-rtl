@@ -929,7 +929,7 @@ module ecc_dsa_ctrl
     );
 
 always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
-    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, reset_n)
-    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, reset_n)
+    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
+    `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
 
 endmodule

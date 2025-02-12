@@ -93,6 +93,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
@@ -130,6 +132,9 @@ global:
         # declare all signals as inout, but are driven at a lower layer than the
         # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        # Suppress warnings about encrypted VIP code for which coverage
+        # can not be captured
+        - '-suppress=VCM-NOCOV-ENC'
         #- '-suppress=STASKEC_USF' FIXME - attempt to fix "undefined system function"
         # AVERY
 #        - '+libext+.v+.sv+.svh'
