@@ -44,7 +44,7 @@ interface  ECC_out_if #(
   inout tri [AHB_DATA_WIDTH-1:0] hrdata,
   inout tri  transaction_flag_out_monitor,
   inout tri [2:0] test,
-  inout tri [2:0] op
+  inout tri [1:0] op
   );
 
 modport monitor_port 
