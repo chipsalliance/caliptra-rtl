@@ -62,8 +62,8 @@ jobs:
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
               git fetch ${SOURCE_OWN}
             fi
-            echo "target ref is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
-            echo "source ref is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
+            echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
+            echo "source ref for [${SOURCE_OWN}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
             compiles=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/$TARGET_BR")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_OWN}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
@@ -264,8 +264,8 @@ jobs:
             git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
             git fetch ${SOURCE_OWN}
           fi
-          echo "target ref is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
-          echo "source ref is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
+          echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
+          echo "source ref for [${SOURCE_OWN}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_OWN}/${SOURCE_BR}"))
           if [[ $(IFS='\n' grep -c -v '\\.md\\|\\.png' <<< "$mods") -gt 0 ]]; then
             echo "Found modified source files in ${SOURCE_BR}"
