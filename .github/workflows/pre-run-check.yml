@@ -55,8 +55,8 @@ jobs:
                 exit 0
               fi
             done
-            echo "git fetch origin"
-            if ! git fetch origin; then
+            echo "git fetch origin $TARGET_BR"
+            if ! git fetch origin $TARGET_BR; then
               echo "git fetch failed\!"
               exit 1
             fi
@@ -65,8 +65,14 @@ jobs:
               echo "fork repository owner is ${SOURCE_OWN}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
-              echo "git fetch ${SOURCE_OWN}"
-              if ! git fetch ${SOURCE_OWN; then
+              echo "git fetch ${SOURCE_OWN} $SOURCE_BR"
+              if ! git fetch ${SOURCE_OWN} $SOURCE_BR; then
+                echo "git fetch failed\!"
+                exit 1
+              fi
+            else
+              echo "git fetch origin $SOURCE_BR"
+              if ! git fetch origin $SOURCE_BR; then
                 echo "git fetch failed\!"
                 exit 1
               fi
@@ -266,8 +272,8 @@ jobs:
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
-          echo "git fetch origin"
-          if ! git fetch origin; then
+          echo "git fetch origin $TARGET_BR"
+          if ! git fetch origin $TARGET_BR; then
             echo "git fetch failed\!"
             exit 1
           fi
@@ -276,7 +282,17 @@ jobs:
             echo "fork repository owner is ${SOURCE_OWN}"
             echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
             git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
-            git fetch ${SOURCE_OWN}
+            echo "git fetch ${SOURCE_OWN} $SOURCE_BR"
+            if ! git fetch ${SOURCE_OWN} $SOURCE_BR; then
+              echo "git fetch failed\!"
+              exit 1
+            fi
+          else
+            echo "git fetch origin $SOURCE_BR"
+            if ! git fetch origin $SOURCE_BR; then
+              echo "git fetch failed\!"
+              exit 1
+            fi
           fi
           echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
           echo "source ref for [${SOURCE_OWN}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
