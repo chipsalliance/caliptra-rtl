@@ -61,6 +61,7 @@ jobs:
               echo "fork repository owner is ${SOURCE_OWN}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+              git fetch ${SOURCE_OWN}
             fi
             echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
             echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
