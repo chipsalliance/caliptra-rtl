@@ -5,11 +5,13 @@ name: Verilator
 on:
   push:
     branches: ["main", "dev-goog", "dev-msft"]
-  pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '**.png'
+  workflow_call:
+    inputs:
+      run_vltr:
+        description: "Control parameter indicating if Verilator tests should be run or skipped"
+        required: true
+        type: string
+        default: 'true'
   workflow_dispatch:
 
 env:
@@ -27,6 +29,7 @@ jobs:
   build_tools:
     name: Build Tools
     runs-on: ubuntu-22.04
+    if: ${{ inputs.run_vltr == 'true' }}
     
     steps:
       - uses: actions/checkout@v3
@@ -122,6 +125,7 @@ jobs:
     name: Build Smoke Test matrix
     runs-on: ubuntu-22.04
     needs: build_tools
+    if: ${{ inputs.run_vltr == 'true' }}
     outputs:
       test_names: ${{ steps.output-matrix.outputs.test_names  }}
     env:
@@ -141,6 +145,7 @@ jobs:
     name: Verilator
     runs-on: ubuntu-22.04
     needs: build_matrix
+    if: ${{ inputs.run_vltr == 'true' }}
 
     strategy:
       fail-fast: false
@@ -209,6 +214,10 @@ jobs:
     steps:
       - name: Print Verilator Aggregated Result
         run: |
+          echo "Run Verilator check has a result of [${{ inputs.run_vltr }}]"
+          if [[ "${{ inputs.run_vltr }}" == "false" ]]; then
+            exit 0
+          fi
           echo "build_and_test has a result of [${{ needs.build_and_test.result }}]"
           if [[ "${{ needs.build_and_test.result }}" != "success" ]]; then
             exit 1
