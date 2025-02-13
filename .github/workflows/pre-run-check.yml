@@ -133,6 +133,7 @@ jobs:
             done
             echo "Latest non-doc hash is ${last_commit}"
             echo "Checking if ${last_commit} is contained in branch 'origin/$TARGET_BR'"
+            echo "branch contains: [$(git branch --remotes                            --contains ${last_commit})]"
             echo "branch contains: [$(git branch --remotes --list 'origin/$TARGET_BR' --contains ${last_commit})]"
             # If the last non-doc commit is already contained in branch 'TARGET_BR', then skip the
             # timestamp check -- as that commit would already be signed off through another PR.
