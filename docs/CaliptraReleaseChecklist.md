@@ -52,3 +52,4 @@ For each release, the following steps are followed to ensure code functionality 
   - Add latest synthesis results to the [CaliptraIntegrationSpecification](./CaliptraIntegrationSpecification.md#netlist-synthesis-data)
   - Update [Release_Notes](../Release_Notes.md)
   - Tag the main branch on GitHub to generate an official release
+  - Generate version-specific registers documentation page in the [Register Documentation Workflow](./.github/workflows/doc-gen.yml)
