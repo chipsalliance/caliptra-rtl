@@ -47,7 +47,6 @@ jobs:
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
-            echo "Comparing $SOURCE_OWN/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
             local_msft_actors=${{ env.MSFT_ACTORS }}
             for msft_actor in "${local_msft_actors[@]}"; do
               if [[ "${PR_OPENER}" == "${msft_actor}" ]]; then
@@ -55,15 +54,29 @@ jobs:
                 exit 0
               fi
             done
+            echo "git fetch origin $TARGET_BR"
+            if ! git fetch origin $TARGET_BR; then
+              echo "git fetch failed\!"
+              exit 1
+            fi
             if [[ "${SOURCE_FORK}" == "true" ]]; then
               echo "pull request is from a fork: ${SOURCE_FORK}"
               echo "fork repository owner is ${SOURCE_OWN}"
               echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
               git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+              SOURCE_REMOTE=${SOURCE_OWN}
+            else
+              SOURCE_REMOTE=origin
             fi
-            echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
-            echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-            compiles=$(git diff --name-only $(git show-ref --hash "origin/$TARGET_BR")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
+            echo "git fetch ${SOURCE_REMOTE} $SOURCE_BR"
+            if ! git fetch ${SOURCE_REMOTE} $SOURCE_BR; then
+              echo "git fetch failed\!"
+              exit 1
+            fi
+            echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
+            echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
+            echo "Comparing $SOURCE_REMOTE/$SOURCE_BR against merge target origin/$TARGET_BR to look for compile.yml"
+            compiles=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/$TARGET_BR")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
             if [[ $(grep -c compile.yml <<< "$compiles") -gt 0 ]]; then
                 echo "compile.yml should not be modified for pull requests! Found:"
                 echo "$compiles"
@@ -120,6 +133,8 @@ jobs:
             echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
       - name: Check Timestamp
+        env:
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
         run: |
             # Find the last commit that modified any design file (not documentation)
             # Start the search with the second parent of the PR merge commit
@@ -129,12 +144,13 @@ jobs:
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
-            # If the last non-doc commit is already contained in branch 'main', then skip the
+            echo "Checking if ${last_commit} is contained in branch 'origin/$TARGET_BR'"
+            # If the last non-doc commit is already contained in branch 'TARGET_BR', then skip the
             # timestamp check -- as that commit would already be signed off through another PR.
-            # Otherwise, that commit would fail because it's part of a commit that was squashed into main
+            # Otherwise, that commit would fail because it's part of a commit that was squashed into TARGET_BR
             # much later than the original stamp commit.
-            if [[ $(git branch --remotes --list 'origin/main' --contains ${last_commit}) =~ 'origin/main' ]]; then
-                echo "Commit ${last_commit} is contained in branch 'main', skipping timestamp check"
+            if [[ $(git branch --remotes --list "origin/$TARGET_BR" --contains ${last_commit}) =~ "origin/$TARGET_BR" ]]; then
+                echo "Commit ${last_commit} is contained in branch '$TARGET_BR', skipping timestamp check"
             else
                 # Compare the timestamp from the latest commit with the pr_timestamp file
                 timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
@@ -253,16 +269,29 @@ jobs:
             SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
             TARGET_BR:   ${{ github.event.pull_request.base.ref }}
         run: |
+          echo "git fetch origin $TARGET_BR"
+          if ! git fetch origin $TARGET_BR; then
+            echo "git fetch failed\!"
+            exit 1
+          fi
           if [[ "${SOURCE_FORK}" == "true" ]]; then
             echo "pull request is from a fork: ${SOURCE_FORK}"
             echo "fork repository owner is ${SOURCE_OWN}"
             echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
             git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+            SOURCE_REMOTE=${SOURCE_OWN}
+          else
+            SOURCE_REMOTE=origin
           fi
-          echo "target ref is $(git show-ref origin/${TARGET_BR} 2> /dev/null)"
-          echo "source ref is $(git show-ref ${SOURCE_OWN}/${SOURCE_BR} 2> /dev/null)"
-          mods=$(git diff --name-only $(git show-ref --hash "origin/${TARGET_BR}")...$(git show-ref --hash "${SOURCE_OWN}/${SOURCE_BR}"))
-          if [[ $(IFS='\n' grep -c -v '\\.md\\|\\.png' <<< "$mods") -gt 0 ]]; then
+          echo "git fetch ${SOURCE_REMOTE} $SOURCE_BR"
+          if ! git fetch ${SOURCE_REMOTE} $SOURCE_BR; then
+            echo "git fetch failed\!"
+            exit 1
+          fi
+          echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
+          echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
+          mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
+          if [[ $(IFS='\n' grep -c -v '\.md\|\.png' <<< "$mods") -gt 0 ]]; then
             echo "Found modified source files in ${SOURCE_BR}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
