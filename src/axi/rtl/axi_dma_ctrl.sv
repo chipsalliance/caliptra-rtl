@@ -721,8 +721,8 @@ import soc_ifc_pkg::*;
     // Requests must have valid length
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_LEN, rd_req_hshake |-> r_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_LEN, wr_req_hshake |-> w_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_LEN, rd_req_hshake && rd_req_if.fixed |-> r_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_LEN, wr_req_hshake && wr_req_if.fixed |-> w_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_RD_REQ_LEN, rd_req_hshake && r_req_if.fixed |-> r_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_WR_REQ_LEN, wr_req_hshake && w_req_if.fixed |-> w_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
     // Requests must not cross AXI boundary (4KiB)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
