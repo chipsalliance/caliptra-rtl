@@ -682,7 +682,8 @@ module caliptra_top_tb_services
             if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
                 inject_normcheck_failure    <= 1'b1;
                 normcheck_mode_random       <= 'h0;
-                inject_makehint_failure     <= 1'b0;
+                inject_makehint_failure     <= 1'b0; 
+                disable_mldsa_sva           <= 1'b1;  
                 $display("Verify: Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
             end
             else if (random_mldsa_failure_injection) begin

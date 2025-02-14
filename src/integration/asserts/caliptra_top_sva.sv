@@ -696,10 +696,11 @@ module caliptra_top_sva
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         
   MLDSA_valid_flag:     assert property (
-                                    @(posedge `SVA_RDC_CLK)
-                                    `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready 
-                                    )
-                        else $display("SVA ERROR: MLDSA VALID flag mismatch!");
+                          @(posedge `SVA_RDC_CLK)
+                          disable iff (`SERVICES_PATH.disable_mldsa_sva)
+                          `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready
+                      )
+                      else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 
