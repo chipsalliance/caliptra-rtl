@@ -38,6 +38,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define MY_RANDOM_SEED 17
 #endif // MY_RANDOM_SEED
 
+/* HMAC384 test vector
+    KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+    BLOCK = 4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440
+    LFSR_SEED = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504
+    TAG = b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2
+*/
+
 void main() {
 
     // Initialize rand num generator
@@ -51,7 +58,20 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    uint32_t block[32] =   {0x48692054,
+    uint32_t hmac_key[12] = {0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b,
+                             0x0b0b0b0b};
+
+    uint32_t hmac_block[32] =   {0x48692054,
                             0x68657265,
                             0x80000000,
                             0x00000000,
@@ -85,7 +105,7 @@ void main() {
                             0x00000440};
 
     //this is a random lfsr_seed
-    uint32_t hmac384_lfsr_seed_data[12] =  {0xC8F518D4,
+    uint32_t hmac_lfsr[12] =  {0xC8F518D4,
                                     0xF3AA1BD4,
                                     0x6ED56C1C,
                                     0x3C9E16FB,
@@ -98,21 +118,20 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4}; 
 
-    uint32_t hmac384_expected_tag[12] = {0x41833b5a, 
-                                        0xd860db3e, 
-                                        0x9e0182cb, 
-                                        0xf70555ac, 
-                                        0xa65d79d4, 
-                                        0x7416087f, 
-                                        0x5539e002, 
-                                        0xdb7c04fe, 
-                                        0x56cbe683, 
-                                        0x77f4092c, 
-                                        0x1d4576e8, 
-                                        0x326cf662}; 
+    uint32_t hmac_tag[12] =   {0xb6a8d563,
+                                    0x6f5c6a72,
+                                    0x24f9977d,
+                                    0xcf7ee6c7,
+                                    0xfb6d0c48,
+                                    0xcbdee973,
+                                    0x7a959796,
+                                    0x489bddbc,
+                                    0x4c5df61d,
+                                    0x5b3297b4,
+                                    0xfb68dab9,
+                                    0xf1b582c2}; 
 
     uint8_t hmackey_kv_id       = 0x2;
-    uint8_t hmacblock_kv_id     = 0x1;
     uint8_t tag_kv_id           = rand() % 24; //generated key goes in a random slot
 
     hmac_io hmac384_key;
@@ -120,25 +139,53 @@ void main() {
     hmac_io hmac384_lfsr_seed;
     hmac_io hmac384_tag;
 
-    hmac384_key.kv_intf = TRUE;
+    //Run once and get the tag out from API
+    hmac384_key.kv_intf = FALSE;
     hmac384_key.kv_id = hmackey_kv_id;
+    hmac384_key.data_size = 12;
+    for (int i = 0; i < hmac384_key.data_size; i++)
+        hmac384_key.data[i] = hmac_key[i];
 
-    hmac384_block.kv_intf = TRUE;
-    hmac384_block.kv_id = hmacblock_kv_id;
+    hmac384_block.kv_intf = FALSE;
+    hmac384_block.kv_id = 0;
     hmac384_block.data_size = 32;
     for (int i = 0; i < hmac384_block.data_size; i++)
-        hmac384_block.data[i] = block[i];
+        hmac384_block.data[i] = hmac_block[i];
 
     hmac384_lfsr_seed.kv_intf = FALSE;
     hmac384_lfsr_seed.data_size = 12;
     for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
-        hmac384_lfsr_seed.data[i] = hmac384_lfsr_seed_data[i];
+        hmac384_lfsr_seed.data[i] = hmac_lfsr[i];
+
+    hmac384_tag.kv_intf = FALSE;
+    hmac384_tag.kv_id = tag_kv_id;
+    hmac384_tag.data_size = 12;
+    for (int i = 0; i < hmac384_tag.data_size; i++)
+        hmac384_tag.data[i] = hmac_tag[i];
+    
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac_zeroize();
+
+    //Run again, but put the tag in keyvault
+    hmac384_key.kv_intf = TRUE;
+    hmac384_key.kv_id = hmackey_kv_id;
+
+    hmac384_block.kv_intf = FALSE;
+    hmac384_block.kv_id = 0;
+    hmac384_block.data_size = 32;
+    for (int i = 0; i < hmac384_block.data_size; i++)
+        hmac384_block.data[i] = hmac_block[i];
+
+    hmac384_lfsr_seed.kv_intf = FALSE;
+    hmac384_lfsr_seed.data_size = 12;
+    for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
+        hmac384_lfsr_seed.data[i] = hmac_lfsr[i];
 
     hmac384_tag.kv_intf = TRUE;
     hmac384_tag.kv_id = tag_kv_id;
     hmac384_tag.data_size = 12;
     for (int i = 0; i < hmac384_tag.data_size; i++)
-        hmac384_tag.data[i] = hmac384_expected_tag[i];
+        hmac384_tag.data[i] = hmac_tag[i];
 
 
     //inject hmac384_key to kv key reg (in RTL)
@@ -172,7 +219,7 @@ void main() {
 
     aes_key_t aes_key;
 
-    const char key_str[] = "5a3b83413edb60d8cb82019eac5505f7d4795da67f08167402e03955fe047cdb";
+    const char key_str[] = "b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc";
 
     const char iv_str128[] = "1234567891a824c5e023283959858062";
     const char iv_str96[]  = "91a824c5e02328395985806200000000";
@@ -181,16 +228,16 @@ void main() {
     const char plaintext_str_ECB[] = "fc23e07b4018460279f8392e86423ecfe465b25b60382f58995ef5fa1f9ca235e4bf87112554aa0e72836831d7b5f39125df11518b8aeb1809d804419beb05ae013482213012e4ce980ddd1c58e11608";
     const char aad_str[] = "b3a1db2d467780480f166859e0e7aab212738b85e88237c2782496c9c503347de02f3dad6bfc671fda71a04ff1e4661767c11303daa0c36d944346d39e3e29ec63d695cdcd83b2b57181582c5ac692b13e4299ab5e86c59d09c2dc6194ebe9";
 
-    const char ciphertext_str_ECB[] = "87636d91139b2c88efa132e28225d5c5f48b4592b42059af618fdbaef4dccf354a5beed1fc676bbbfa8ae27d6fc615ca2f684def6c6ebf444e16ed72253d9c01297d384bc056272c3360c5ea55c90bf8372031fe214e5a82b80f8268511b4a";
-    const char ciphertext_str_CBC[] = "5bf8ecc4c32bdde86e6572ea4388b28b77ab0ac520e41ff4d1f20f6d3cf3d008c5e88a94fb91bb73da0aece34c00d77126b5bb7539fcfe3757a39b2caca8c8c2ccc651798e730647c2091c8ef6cadb81ef67692fc43a2825f15535c8661cbd"; 
-    const char ciphertext_str_CFB[] = "6c9ff294091438a33690af68100b646b7fb69af4140110b493decef8dc9f5423ad81320b987436d4595783726ce8bc5d067fb24de2870d9cee1cd2f72cd7fe032e5eb98a30a3bdab0e76d082e39251215e9d3cb00f4ef80706b15c3525ee65";
-    const char ciphertext_str_OFB[] = "6c9ff294091438a33690af68100b646be78b0aba1f82e6ed146aca79ea22929fcd895fa84a6a9d73b1313607f5aeabb58bcb99b3ae6cd3c505a6b445b965dcf967c7a980ba936d96ca927b063d9fe68a2cc892efd44dd6b91dd290f05587b2";
-    const char ciphertext_str_CTR[] = "6c9ff294091438a33690af68100b646bba6e6373d6aceefa27eb24b2da18e7e2d8c1e81e07c477bd531dc12c78cc09a043c61bf40f03742a6ec259e86eb4bfcd1bb849379d0afc7f2637953dee84e2a7a28d37d6dbae7a17f147c3dbd09290";
-    const char ciphertext_str_GCM[] = "a9b939f06d2302005aaf25a12b416fac91fd374753fe16c9b4dbd6d977fb569fe1278bb2d6fa72caad3b81a430535eb0bbe982e7a33213bcae8b0c1947364e2ba1ad19c673867d9bb1b3b5e8219e28b11135c8fbe12d6634e3c892c47a50e7";
-    const char ciphertext_str_GCM_128[] = "7989165c697534e660289595e2a4ea746a732252b0fac9499e873b0af346414fe6265d4cc6f6d3de85184b194798893da01135470eae6a1427ce02a164112b74fd8a9ed0e763b4b3b15abfd0685d33f0d89b957c5b2e1984cca67cb6403b99";
+    const char ciphertext_str_ECB[] = "294645de9db599fc87c89addcc4d2b2c3cbb855d32efd4ba0e885b0bd69218497822dc61260e767e0220911263b5ece06ee7d06dc4618cb014791390780931b39ac63768b28fe148c937f3fee63afa1fb2244382980b01da1d5c6b6657aa4250";
+    const char ciphertext_str_CBC[] = "0d14d00d157f3381a8e85a6348fa6b3aebc79bbad0aae732f6b1376a4ba5daa60e314acb51865bb82e32cfb6d54fbc60cc83e641b5166da3913164f478d894bc0f355fb1c92a3d8d574ad88ac09f8b7f51e4c7a7c07bdecd52331172b0508325"; 
+    const char ciphertext_str_CFB[] = "2ea4ca977176ebb032748adee0bafd06e6783fc7b8969b3b67ce623c7eb43a2d89034afda7bbef834a5b426d94e05474dfcc1e572c4f4e026f643215bccb9632edb37e0569a8c17e12d46d6fe6818da583a67317f69d4f8b6c3c6c92af3e94";
+    const char ciphertext_str_OFB[] = "2ea4ca977176ebb032748adee0bafd06b1b92e0ee1dff90c3818d80238e7c8672a4ef70ffd28ecda2097cc39829783b67c8f0b9a334208911c84b17391470dfec8c73ebf403e14749c6013133f38759c20a33faa707f564b32b2a369a4d6a6";
+    const char ciphertext_str_CTR[] = "2ea4ca977176ebb032748adee0bafd06e7dff005c5693781e9304ef63013153bf0173c4b62916cb686c11e9632abbc4f31cb6297a018e2d50c9752a6bbde1f3b78b7ba66f9fc1828b262380f8821fa5dbc8fc44985e9b77a533bb43edfa2ca";
+    const char ciphertext_str_GCM[] = "f7313f90bc3394d66a39e1e560fcb8c89483aa0bdd00bc909a466f55e788d2da05e89b536356240717136ac8fe15a3e6064936bcc6ea7098da0488a5d4689ca01bd66d605c7e7ad1714916cbfb37e1ceff0182f7ca9763c463f0528565ce9e";
+    const char ciphertext_str_GCM_128[] = "480f91d08e219a72dc9ea427e3a616f02c6f43dbc4b7f8e21e90c2076532b5b34e026006a03bdcb0807b80f50e83ee59fbae56418ca6df73086a66659a47d65df50416a7b8444d4618647548cd8ae84312811f1cc74cfdae10a09d17d97820";
 
-    const char tag_str[] = "e4e3906bddc4ccc3a0c6d6faec9bf3be";
-    const char tag_str_128[] = "62155c4c4e05cb8708f6ff6390447314";
+    const char tag_str[] = "a6722f6434c72c8dbd598360d804af39";
+    const char tag_str_128[] = "51a88221d6054c43ed3600482ae50245";
 
     //Key from KV
     aes_key.kv_intf = TRUE;
@@ -201,6 +248,11 @@ void main() {
     hex_to_uint32_array(key_str, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;
+    for (int i = 0; i < 8; i++) {
+        aes_key.key_share0[i] = key[i];
+        aes_key.key_share1[i] = 0x00000000;
+    }
+
     hex_to_uint32_array(iv_str128, iv, &iv_length);
 
     //full block plaintext
