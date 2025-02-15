@@ -732,11 +732,11 @@ import soc_ifc_pkg::*;
     // FIFO must have space for all requested data
     `CALIPTRA_ASSERT(AXI_DMA_LIM_RD_CRED, rd_credits <= FIFO_BC/BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_OFL_RD_CRED, rd_req_hshake |-> rd_req_byte_count <= FIFO_BC, clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_MIN_RD_CRED, !((rd_credits < BC) && rd_req_hshake), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_MIN_RD_CRED, !((rd_credits < 1) && rd_req_hshake), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_RST_RD_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (rd_credits == FIFO_BC/BC), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_LIM_WR_CRED, wr_credits <= FIFO_BC/BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_UFL_WR_CRED, wr_req_hshake |-> wr_credits >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW], clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_MIN_WR_CRED, !((wr_credits < BC) && wr_req_hshake), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_MIN_WR_CRED, !((wr_credits < 1) && wr_req_hshake), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_RST_WR_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (wr_credits == 0), clk, !rst_n)
 
 endmodule
