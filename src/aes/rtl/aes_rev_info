@@ -1,13 +1,14 @@
-commit 2721e79285b143ba2f8b91e913c44d9b42779448
-Author: Pirmin Vogel <vogelpi@lowrisc.org>
-Date:   Thu Jan 9 17:26:40 2025 +0100
+commit 6e8ca0f2ba1f0ac45301000bf874a6102b05c6f2
+Author: Pascal Nasahl <nasahlpa@lowrisc.org>
+Date:   Mon Feb 10 12:32:53 2025 +0100
 
-    [aes/rtl] Correct manual operation mode for GCM
+    [aes,dv] Enable GCM mode in several tests
     
-    This commit cleans up the generation of GCM specific start signals
-    and properly handles manual operation mode for GCM. Previously, some
-    GCM phases (especially the ones not using the AES cipher core) would
-    start automatically despite the module being configured in manual
-    operation mode.
+    This commit enables the AES-GCM mode in the following tests:
+    - aes_stress_test
+    - aes_reseed_test
+    - aes_deinit_test
+    - aes_alert_reset_test
+    - aes_manual_config_err_test
     
-    Signed-off-by: Pirmin Vogel <vogelpi@lowrisc.org>
+    Signed-off-by: Pascal Nasahl <nasahlpa@lowrisc.org>
