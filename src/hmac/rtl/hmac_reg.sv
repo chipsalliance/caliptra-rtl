@@ -732,8 +732,10 @@ module hmac_reg (
 
     // Field: hmac_reg.HMAC512_CTRL.INIT
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.INIT.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.INIT.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.INIT.swwe) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.INIT.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -754,8 +756,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_CTRL.INIT.value = field_storage.HMAC512_CTRL.INIT.value;
     // Field: hmac_reg.HMAC512_CTRL.NEXT
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.NEXT.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.NEXT.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.NEXT.swwe) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.NEXT.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -776,8 +780,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_CTRL.NEXT.value = field_storage.HMAC512_CTRL.NEXT.value;
     // Field: hmac_reg.HMAC512_CTRL.ZEROIZE
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.ZEROIZE.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.ZEROIZE.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.ZEROIZE.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -798,8 +804,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_CTRL.ZEROIZE.value = field_storage.HMAC512_CTRL.ZEROIZE.value;
     // Field: hmac_reg.HMAC512_CTRL.MODE
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.MODE.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.MODE.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.MODE.swwe) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.MODE.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -817,8 +825,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_CTRL.MODE.value = field_storage.HMAC512_CTRL.MODE.value;
     // Field: hmac_reg.HMAC512_CTRL.CSR_MODE
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.CSR_MODE.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.CSR_MODE.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.CSR_MODE.swwe) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.CSR_MODE.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -836,8 +846,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_CTRL.CSR_MODE.value = field_storage.HMAC512_CTRL.CSR_MODE.value;
     // Field: hmac_reg.HMAC512_CTRL.Reserved
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_CTRL.Reserved.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.Reserved.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_CTRL.Reserved.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -856,8 +868,10 @@ module hmac_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: hmac_reg.HMAC512_KEY[].KEY
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.HMAC512_KEY[i0].KEY.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.HMAC512_KEY[i0].KEY.value;
+            load_next_c = '0;
             if(decoded_reg_strb.HMAC512_KEY[i0] && decoded_req_is_wr && !(hwif_in.HMAC512_KEY[i0].KEY.swwel)) begin // SW write
                 next_c = (field_storage.HMAC512_KEY[i0].KEY.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -883,8 +897,10 @@ module hmac_reg (
     for(genvar i0=0; i0<32; i0++) begin
         // Field: hmac_reg.HMAC512_BLOCK[].BLOCK
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.HMAC512_BLOCK[i0].BLOCK.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.HMAC512_BLOCK[i0].BLOCK.value;
+            load_next_c = '0;
             if(decoded_reg_strb.HMAC512_BLOCK[i0] && decoded_req_is_wr && !(hwif_in.HMAC512_BLOCK[i0].BLOCK.swwel)) begin // SW write
                 next_c = (field_storage.HMAC512_BLOCK[i0].BLOCK.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -910,8 +926,10 @@ module hmac_reg (
     for(genvar i0=0; i0<16; i0++) begin
         // Field: hmac_reg.HMAC512_TAG[].TAG
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.HMAC512_TAG[i0].TAG.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.HMAC512_TAG[i0].TAG.value;
+            load_next_c = '0;
             if(hwif_in.HMAC512_TAG[i0].TAG.hwclr) begin // HW Clear
                 next_c = '0;
                 load_next_c = '1;
@@ -933,8 +951,10 @@ module hmac_reg (
     for(genvar i0=0; i0<12; i0++) begin
         // Field: hmac_reg.HMAC512_LFSR_SEED[].LFSR_SEED
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value;
+            load_next_c = '0;
             if(decoded_reg_strb.HMAC512_LFSR_SEED[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -953,8 +973,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.HMAC512_KV_RD_KEY_CTRL.read_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -975,8 +997,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_KEY_CTRL.read_en.value = field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value;
     // Field: hmac_reg.HMAC512_KV_RD_KEY_CTRL.read_entry
     always_comb begin
-        automatic logic [4:0] next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value;
-        automatic logic load_next_c = '0;
+        automatic logic [4:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
@@ -994,8 +1018,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_KEY_CTRL.read_entry.value = field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value;
     // Field: hmac_reg.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -1013,8 +1039,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value = field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value;
     // Field: hmac_reg.HMAC512_KV_RD_KEY_CTRL.rsvd
     always_comb begin
-        automatic logic [24:0] next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value;
-        automatic logic load_next_c = '0;
+        automatic logic [24:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
@@ -1032,8 +1060,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_KEY_CTRL.rsvd.value = field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value;
     // Field: hmac_reg.HMAC512_KV_RD_KEY_STATUS.VALID
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_KEY_STATUS.VALID.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_KEY_STATUS.VALID.value;
+        load_next_c = '0;
         if(hwif_in.HMAC512_KV_RD_KEY_STATUS.VALID.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
@@ -1053,8 +1083,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.HMAC512_KV_RD_BLOCK_CTRL.read_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1075,8 +1107,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_BLOCK_CTRL.read_en.value = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value;
     // Field: hmac_reg.HMAC512_KV_RD_BLOCK_CTRL.read_entry
     always_comb begin
-        automatic logic [4:0] next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value;
-        automatic logic load_next_c = '0;
+        automatic logic [4:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
@@ -1094,8 +1128,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value;
     // Field: hmac_reg.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -1113,8 +1149,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value = field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
     // Field: hmac_reg.HMAC512_KV_RD_BLOCK_CTRL.rsvd
     always_comb begin
-        automatic logic [24:0] next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value;
-        automatic logic load_next_c = '0;
+        automatic logic [24:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
@@ -1132,8 +1170,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value = field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value;
     // Field: hmac_reg.HMAC512_KV_RD_BLOCK_STATUS.VALID
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_RD_BLOCK_STATUS.VALID.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_RD_BLOCK_STATUS.VALID.value;
+        load_next_c = '0;
         if(hwif_in.HMAC512_KV_RD_BLOCK_STATUS.VALID.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
@@ -1153,8 +1193,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.write_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.write_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.write_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.write_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1175,8 +1217,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.write_en.value = field_storage.HMAC512_KV_WR_CTRL.write_en.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.write_entry
     always_comb begin
-        automatic logic [4:0] next_c = field_storage.HMAC512_KV_WR_CTRL.write_entry.value;
-        automatic logic load_next_c = '0;
+        automatic logic [4:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.write_entry.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.write_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
@@ -1194,8 +1238,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.write_entry.value = field_storage.HMAC512_KV_WR_CTRL.write_entry.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.hmac_key_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -1213,8 +1259,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.hmac_block_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
@@ -1232,8 +1280,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
@@ -1251,8 +1301,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
             load_next_c = '1;
@@ -1270,8 +1322,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value & ~decoded_wr_biten[10:10]) | (decoded_wr_data[10:10] & decoded_wr_biten[10:10]);
             load_next_c = '1;
@@ -1289,8 +1343,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.aes_key_dest_valid
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value & ~decoded_wr_biten[11:11]) | (decoded_wr_data[11:11] & decoded_wr_biten[11:11]);
             load_next_c = '1;
@@ -1308,8 +1364,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [19:0] next_c = field_storage.HMAC512_KV_WR_CTRL.rsvd.value;
-        automatic logic load_next_c = '0;
+        automatic logic [19:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.rsvd.value;
+        load_next_c = '0;
         if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:12]) | (decoded_wr_data[31:12] & decoded_wr_biten[31:12]);
             load_next_c = '1;
@@ -1327,8 +1385,10 @@ module hmac_reg (
     assign hwif_out.HMAC512_KV_WR_CTRL.rsvd.value = field_storage.HMAC512_KV_WR_CTRL.rsvd.value;
     // Field: hmac_reg.HMAC512_KV_WR_STATUS.VALID
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.HMAC512_KV_WR_STATUS.VALID.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_STATUS.VALID.value;
+        load_next_c = '0;
         if(hwif_in.HMAC512_KV_WR_STATUS.VALID.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
@@ -1348,8 +1408,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1366,8 +1428,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1384,8 +1448,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_en_r.key_mode_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.key_mode_error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1402,8 +1468,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_en_r.key_zero_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.key_zero_error_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1420,8 +1488,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_en_r.error2_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error2_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1438,8 +1508,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_en_r.error3_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error3_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1456,8 +1528,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1474,8 +1548,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
@@ -1494,8 +1570,10 @@ module hmac_reg (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: hmac_reg.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
@@ -1514,8 +1592,10 @@ module hmac_reg (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: hmac_reg.intr_block_rf.error_internal_intr_r.key_mode_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.key_mode_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
             load_next_c = '1;
@@ -1538,8 +1618,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_internal_intr_r.key_zero_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.key_zero_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
             load_next_c = '1;
@@ -1562,8 +1644,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_internal_intr_r.error2_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
             load_next_c = '1;
@@ -1586,8 +1670,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_internal_intr_r.error3_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
             load_next_c = '1;
@@ -1615,8 +1701,10 @@ module hmac_reg (
         || |(field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value & field_storage.intr_block_rf.error_intr_en_r.error3_en.value);
     // Field: hmac_reg.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
             load_next_c = '1;
@@ -1641,8 +1729,10 @@ module hmac_reg (
         |(field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value);
     // Field: hmac_reg.intr_block_rf.error_intr_trig_r.key_mode_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1662,8 +1752,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_trig_r.key_zero_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1683,8 +1775,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_trig_r.error2_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1704,8 +1798,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error_intr_trig_r.error3_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1725,8 +1821,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1746,8 +1844,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.key_mode_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.key_mode_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.key_mode_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1778,8 +1878,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.key_zero_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.key_zero_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.key_zero_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1810,8 +1912,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error2_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error2_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1842,8 +1946,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error3_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error3_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1874,8 +1980,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1906,8 +2014,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.key_mode_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.key_mode_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.key_mode_error_trig.value;
             load_next_c = '1;
@@ -1935,8 +2045,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.key_zero_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.key_zero_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.key_zero_error_trig.value;
             load_next_c = '1;
@@ -1964,8 +2076,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error2_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
             load_next_c = '1;
@@ -1993,8 +2107,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.error3_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
             load_next_c = '1;
@@ -2022,8 +2138,10 @@ module hmac_reg (
     end
     // Field: hmac_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
             load_next_c = '1;
@@ -2064,7 +2182,7 @@ module hmac_reg (
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-    
+
     // Assign readback values to a flattened array
     logic [46-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
