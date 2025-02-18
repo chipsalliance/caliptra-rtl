@@ -167,6 +167,7 @@ module caliptra_top_tb_services
     logic                       cold_rst_done;
 
     logic                       inject_hmac_key;
+    logic                       inject_hmac_block;
     logic                       inject_ecc_seed;
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
@@ -298,6 +299,7 @@ module caliptra_top_tb_services
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
+    //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hd7        - Inject normcheck failure during mldsa signing
     //         8'hd8        - Inject makehint failure during mldsa signing
@@ -447,11 +449,12 @@ module caliptra_top_tb_services
 
     //keyvault injection hooks
     //Inject data to KV key reg
-    logic [0:15][31:0]   ecc_seed_tb    = 512'h_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441_00000000000000000000000000000000;
-    logic [0:15][31:0]   ecc_privkey_tb = 512'h_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17_00000000000000000000000000000000;
-    logic [0:15][31:0]   hmac384_key_tb = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
-    logic [0:15][31:0]   hmac512_key_tb = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
-    logic [0:15][31:0]   mldsa_seed_tb  = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
+    logic [0:15][31:0]   ecc_seed_tb      = 512'h_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441_00000000000000000000000000000000;
+    logic [0:15][31:0]   ecc_privkey_tb   = 512'h_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17_00000000000000000000000000000000;
+    logic [0:15][31:0]   hmac384_key_tb   = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
+    logic [0:15][31:0]   hmac512_key_tb   = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
+    logic [0:15][31:0]   hmac512_block_tb = 512'h_e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2_00000000000000000000000000000000;
+    logic [0:15][31:0]   mldsa_seed_tb    = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     
@@ -546,6 +549,18 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
+                    //inject valid hmac_block dest and hmac512_block value to key reg
+                    else if((WriteData[7:0] == 8'hb0) && mailbox_write) begin
+                        inject_hmac_block <= 1'b1;
+                        if (slot_id == 4) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'h2;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_block_tb[dword_i][31 : 0];
+                        end
+                    end
                     else if((WriteData[7:0] == 8'hf4) && mailbox_write) begin
                         inject_random_data <= '1;
                         if (slot_id == 0) begin
@@ -575,6 +590,7 @@ module caliptra_top_tb_services
                         inject_hmac_key <= '0;
                         inject_mldsa_seed <= '0;
                         inject_random_data <= '0;
+                        inject_hmac_block <= '0;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
