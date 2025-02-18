@@ -546,8 +546,8 @@ void main() {
     printf("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
-    printf("Injecting makehint failure\n");
-    printf("%c",0xd8);
+    printf("Injecting random failure\n");
+    printf("%c",0xd7);
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
@@ -567,9 +567,6 @@ void main() {
         reg_ptr++;
         offset++;
     }
-
-    mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
     
     // **********************************************
     // Injecting norm check failure into verifying
