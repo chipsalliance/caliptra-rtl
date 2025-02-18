@@ -14,7 +14,7 @@
 
 `ifndef VERILATOR
 
-interface axi_dma_cov_if
+interface axi_dma_top_cov_if
     import soc_ifc_pkg::*;
     (
         input logic clk,
@@ -38,25 +38,33 @@ interface axi_dma_cov_if
         input  logic                   mb_error,
         output var soc_ifc_req_t       mb_data,
         input  logic [DW-1:0]          mb_rdata
-    )
+    );
 
-    
+    // Queue to store write data input Component INF
+    logic [SOC_IFC_DATA_W-1:0] req_data_queue[$];
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            req_data_queue.clear();
+        end else if (dv && req_data.write) begin
+            req_data_queue.push_back(req_data.wdata);
+        end
+    end
+
     covergroup axi_dma_cov_grp @(posedge clk);
-        option.per_isntance = 1;
+        option.per_instance = 1;
 
         //-------------------------------------------------------------
         // Edge Function Coverpoints
         //-------------------------------------------------------------
 
-        // AHB2AXI 1DW Transfer
-        ahb2axi_1dw: coverpoint (s_axi_r_if.arvalid && s_axi_r_if.arready && s_axi_r_if.arsize == 3'b010) { //ahb_htrans == 2'b10 && ahb_hsize == 3'b010 && 
-            bins single_4byte_rd = {1}; // Cover 4-byte read transfers
+        // AHB2AXI_1DW Transfer with Data Comparison
+        ahb2axi_1dw_data_compare: coverpoint (m_axi_r_if.awvalid && m_axi_w_if.awready && m_axi_r_if.awsize == 3'b010 && 
+                                                m_axi_w_if.wdata == req_data_queue.pop_front()) {
+            bins single_4byte_wr_match = {1}; // Cover 4-byte write transfers with matching data
         }
         
     endgroup
-
-    
 endinterface
-
 
 `endif
