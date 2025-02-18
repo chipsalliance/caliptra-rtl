@@ -173,6 +173,7 @@ module caliptra_top_tb_services
     logic                       inject_random_data;
     logic                       check_pcr_ecc_signing;
     logic                       check_pcr_mldsa_signing;
+    logic                       inject_single_msg_for_ecc_mldsa;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -195,6 +196,7 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_s_needs_release;
 
     logic                       en_jtag_access;
+    logic                       disable_mldsa_sva;
 
     typedef bit  [0:11][31:0]   operand_t;
 
@@ -260,6 +262,11 @@ module caliptra_top_tb_services
 
     mldsa_test_vector_t mldsa_test_vector;
 
+    logic inject_makehint_failure, inject_normcheck_failure;
+    logic reset_mldsa_failure;
+    logic [1:0] normcheck_mode_random;
+    logic inject_mldsa_timeout;
+    logic random_mldsa_failure_injection;
     function automatic logic [511:0] change_endian(input logic [511:0] data);
         logic [511:0] result;
         for (int i = 0; i < 512; i = i + 8) begin
@@ -286,6 +293,7 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -299,8 +307,8 @@ module caliptra_top_tb_services
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
-    //         8'hd7        - Inject normcheck failure during mldsa signing
-    //         8'hd8        - Inject makehint failure during mldsa signing
+    //         8'hd6        - Inject mldsa timeout
+    //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
     //         8'hdb        - Perform mldsa verify
@@ -504,7 +512,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
                     end
                     else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
-                        inject_ecc_privkey <= 1'b1;
+                        inject_mldsa_seed <= 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].dest_valid.next = 5'b100;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[KV_ENTRY_FOR_MLDSA_SIGNING].last_dword.we = 1'b1;
@@ -650,47 +658,79 @@ module caliptra_top_tb_services
         end
     end
 
-    //MLDSA
-    logic inject_makehint_failure, inject_normcheck_failure;
-    logic reset_mldsa_failure;
-    logic [1:0] normcheck_mode_random;
+    always_ff @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b)
+            inject_single_msg_for_ecc_mldsa <= 'b0;
+        else if ((WriteData[7:0] == 8'h89) && mailbox_write && !inject_single_msg_for_ecc_mldsa)
+            inject_single_msg_for_ecc_mldsa <= 'b1; //set
+        else if ((WriteData[7:0] == 8'h89) && mailbox_write && inject_single_msg_for_ecc_mldsa)
+            inject_single_msg_for_ecc_mldsa <= 'b0; //reset
+    end
+
+    
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
             inject_makehint_failure <= 1'b0;
             inject_normcheck_failure <= 1'b0;
+            inject_mldsa_timeout <= 1'b0;
             reset_mldsa_failure <= 1'b0;
-            normcheck_mode_random <= 'h0;
+            random_mldsa_failure_injection <= $urandom();
+            normcheck_mode_random <= $urandom_range(0,2);
+            disable_mldsa_sva <= 1'b0;
         end
-        else if (((WriteData[7:0] == 8'hd8) && mailbox_write) /*&& !`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid*/) begin
-            inject_makehint_failure <= 1'b1;
+        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
+            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
+                inject_normcheck_failure    <= 1'b1;
+                normcheck_mode_random       <= 'h0;
+                inject_makehint_failure     <= 1'b0; 
+                disable_mldsa_sva           <= 1'b1;  
+                $display("Verify: Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
+            end
+            else if (random_mldsa_failure_injection) begin
+                inject_makehint_failure     <= 1'b1;
+                inject_normcheck_failure    <= 1'b0;  
+                disable_mldsa_sva           <= 1'b1;
+                $display("Injecting makehint failure\n");
+            end
+            else begin
+                inject_makehint_failure     <= 1'b0;
+                inject_normcheck_failure    <= 1'b1;   
+                disable_mldsa_sva           <= 1'b1;             
+                $display("Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
+            end
         end
-        else if (((WriteData[7:0] == 8'hd7) && mailbox_write) /*&& (!`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid || !`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid)*/) begin
-            inject_normcheck_failure <= 1'b1;
-            if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.verifying_process)
-                normcheck_mode_random <= 'h0;
-            else
-                normcheck_mode_random <= $urandom_range(0,2);
+        else if (((WriteData[7:0] == 8'hd6) && mailbox_write)) begin
+            inject_mldsa_timeout <= 1'b1;
         end
-        else if ((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid))
-            reset_mldsa_failure <= 1'b1;
-        else if (((`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.sec_prog_cntr == 'h1A) && reset_mldsa_failure) || `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
-            reset_mldsa_failure <= 1'b0;
-            inject_makehint_failure <= 1'b0;
+        else if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_verify_valid) begin //clear flags if end of signing loop or verify failed
             inject_normcheck_failure <= 1'b0;
+        end
+        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random)) begin //clear flags if end of signing loop or verify failed
+            inject_normcheck_failure <= 1'b0;
+        end
+        else if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.clear_signature_valid && `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.makehint_invalid_i) begin //clear flags if end of signing loop or verify failed
+            inject_makehint_failure <= 1'b0;
         end
     end
 
     always_ff @(negedge clk) begin
-        if (inject_makehint_failure & `CPTRA_TOP_PATH.mldsa.makehint_inst.hintgen_enable)
+        if (inject_makehint_failure && `CPTRA_TOP_PATH.mldsa.makehint_inst.hintgen_enable) begin
             force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
-        else
-            release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
-        
-        if (inject_normcheck_failure & `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable & (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
+            force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b0;
+        end
+        else if (inject_makehint_failure) begin
+            force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b0;
+        end       
+        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
-        else
-            release `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid;
+        else begin
+            release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+            release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
+        end
+        
+        if (inject_mldsa_timeout)
+            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
     end
 
     `ifndef VERILATOR
@@ -1284,7 +1324,7 @@ endgenerate //IV_NO
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = ecc_random_msg[15-dword][31 : 0];
                 end
-                else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
+                else if((WriteData[7:0] == 8'h93) && mailbox_write && !inject_single_msg_for_ecc_mldsa) begin //TODO: what if mldsa is trig'd first and then ecc?
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign_we = 1'b1;
                     force `CPTRA_TOP_PATH.sha512.sha512_inst.pcr_sign[dword] = mldsa_random_msg[15-dword][31 : 0];
                 end
