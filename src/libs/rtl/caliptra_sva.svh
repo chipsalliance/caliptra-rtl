@@ -24,10 +24,10 @@
 
 // CALIPTRA_ASSERT_RPT is available to change the reporting mechanism when an assert fails
 `define CALIPTRA_ASSERT_RPT(name)                                                  \
-`ifdef UVM                                                                \
-  assert_rpt_pkg::assert_rpt($sformatf("[%m] %s (%s:%0d)",                \
-                             name, `__FILE__, `__LINE__));                \
-`else                                                                     \
+`ifdef UVM                                                                            \
+  uvm_pkg::uvm_report_error("CALIPTRA ASSERT FAILED", name, uvm_pkg::UVM_NONE,        \
+                            `__FILE__, `__LINE__);                                    \
+`else                                                                                 \
   $fatal(1, "[CALIPTRA_ASSERT FAILED] [%m] %s (%s:%0d)",name, `__FILE__, `__LINE__);  \
 `endif
 
