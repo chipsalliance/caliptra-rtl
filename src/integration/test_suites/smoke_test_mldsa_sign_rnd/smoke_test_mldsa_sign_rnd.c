@@ -200,7 +200,7 @@ const uint32_t mldsa_seed[] = {
 0x9d29499b, 0xf0b43a43, 0xbb92ba18, 0xadcbdba8, 0xe8efe27e, 0x139e60fe, 0xcf8295d7, 0xbc9f3538
 };
 
-const uint32_t mldsa_sign_rnd[] = {  //deterministic signature
+const uint32_t mldsa_sign_rnd[] = {
 0x6742d2f8, 0x55d7decb, 0xa20a5e96, 0xf1ef77ed, 0x8d2e6575, 0x5b7cc393, 0xc6504726, 0x4b9c2fa1
 };
 
