@@ -16,7 +16,15 @@
 
 interface axi_dma_top_cov_if
     import soc_ifc_pkg::*;
-    (
+    #(
+        parameter AW = 64,
+        parameter DW = 32,         // Data Width
+                BC = DW/8,       // Byte Count
+                BW = $clog2(BC), // Byte count Width
+        parameter UW = 32,         // User Width
+        parameter IW = 1,          // ID Width
+                ID_NUM = 1 << IW // Don't override
+    )(
         input logic clk,
         input logic cptra_pwrgood,
         input logic rst_n,
