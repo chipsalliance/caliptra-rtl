@@ -14,8 +14,7 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='soc_reg_test'
+  - +SOC_IFC_TEST='debug_unlock_manuf_test'
 
-testname: soc_reg_test
-#seed: ${PLAYBOOK_RANDOM_SEED}
-seed: 1738109322
+testname: debug_unlock_manuf_test
+seed: ${PLAYBOOK_RANDOM_SEED}
