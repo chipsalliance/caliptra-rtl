@@ -18,7 +18,7 @@
   //----------------------------------------------------------------
   // sha_acc_intrblk_test()
   // 
-  // Tests that SHA ACC Interrupt Block Registers are RO over APB  
+  // Tests that SHA ACC Interrupt Block Registers are RO over AXI  
   //----------------------------------------------------------------
 
 
@@ -85,11 +85,11 @@
 
       // Skip wrting & reading over AHB until post reset sequencing is done 
       // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using APB as part of Caliptra boot.  Scoreboard update not 
+      // are written using AXI as part of Caliptra boot.  Scoreboard update not 
       // needed for readonly fields which are set directly by wires.
       simulate_caliptra_boot();
 
-      // PHASE I. 1a.  Write (AHB, then APB) and Read register over APB 
+      // PHASE I. 1a.  Write (AHB, then AXI) and Read register over AXI 
       // ------------------------------------------------------------
 
       repeat (20) @(posedge clk_tb);
@@ -97,7 +97,7 @@
 
       update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
 
-      $display ("\n1a. Writing over AHB, APB then reading back over APB"); 
+      $display ("\n1a. Writing over AHB, AXI then reading back over AXI"); 
 
       foreach (sha_acc_intrblk_regnames[i]) begin
         rname = sha_acc_intrblk_regnames[i];
@@ -111,11 +111,11 @@
         write_reg_trans(SET_AHB, wrtrans);  
         repeat (3) @(posedge clk_tb);
         wrtrans.update_data(apb_wrdata);
-        write_reg_trans(SET_APB, wrtrans);  
+        write_reg_trans(SET_AXI, wrtrans);  
         repeat (3) @(posedge clk_tb);
 
         rdtrans.update(addr, 0, tid);
-        read_reg_trans(GET_APB, rdtrans);  
+        read_reg_trans(GET_AXI, rdtrans);  
         @(posedge clk_tb);
 
         apb_rddata = rdtrans.data;
@@ -167,7 +167,7 @@
 
         fork    // Try to set again over apb - should be unsuccessful 
           begin
-            write_reg_trans(SET_APB, wrtrans);  
+            write_reg_trans(SET_AXI, wrtrans);  
             repeat (10) @(posedge clk_tb); 
           end
 
@@ -178,28 +178,28 @@
               case (rname) 
                "SHA_ACC_INTR_BRF_ERROR_INTERNAL_INTR_R": assert ((|error_internal_intr_r) == 1'b0)
                   else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over APB! agg value is 0b%b", addr, rname, error_internal_intr_r);
+                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, error_internal_intr_r);
                     error_ctr += 1;
                     break;
                   end
 
                 "SHA_ACC_INTR_BRF_NOTIF_INTERNAL_INTR_R": assert ((|notif_internal_intr_r) == 1'b0)
                   else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over APB! agg value is 0b%b", addr, rname, notif_internal_intr_r); 
+                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, notif_internal_intr_r); 
                     error_ctr += 1;
                     break;
                   end
 
                 "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R": assert ((|error_intr_trig_r) == 1'b0)
                   else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over APB! agg value is 0b%b", addr, rname, error_intr_trig_r); 
+                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, error_intr_trig_r); 
                     error_ctr += 1;
                     break;
                   end
 
                 "SHA_ACC_INTR_BRF_NOTIF_INTR_TRIG_R": assert ((|notif_intr_trig_r) == 1'b0)
                   else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over APB! agg value is 0b%b", addr, rname, notif_intr_trig_r); 
+                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, notif_intr_trig_r); 
                     error_ctr += 1;
                     break;
                   end

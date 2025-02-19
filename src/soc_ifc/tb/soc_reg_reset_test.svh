@@ -54,11 +54,16 @@
       // --------------------------------------------------------------------------
 
       sb.record_reset_values(0, COLD_RESET);
+      $display("Entering update_CPTRA_FLOW_STATUS");
       flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
       @(posedge clk_tb);
 
-      read_regs(GET_APB, soc_regnames, 0, 3);
-      _read_special_register(GET_APB, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
+      $display("Moving to read regs");
+
+      //read_regs(GET_AXI, soc_regnames, 0, 3);
+      //_read_special_register(GET_AXI, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
+      read_regs(GET_AXI, soc_regnames, 0, 3);
+      //_read_special_register(GET_AXI, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
 
       simulate_caliptra_boot();
       flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
@@ -77,10 +82,11 @@
         join_any
       end
 
-      _read_special_register(GET_APB, "CPTRA_GENERIC_INPUT_WIRES0", 0);
-      _read_special_register(GET_APB, "CPTRA_GENERIC_INPUT_WIRES1", 0);
+      //_read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES0", 0);
+      //_read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES1", 0);
+      _read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES0", 0);
+      _read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES1", 0);
       // *** end - special registers ***
-
 
       repeat (10) @(posedge clk_tb); 
       
@@ -97,8 +103,15 @@
 
       sb.record_reset_values(0, COLD_RESET);
 
-      read_regs(GET_APB, soc_regnames, 0, 3);
-      _read_special_register(GET_APB, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
+      wait (ready_for_fuses == 1'b1);
+      flow_status = update_CPTRA_FLOW_STATUS(int'(ready_for_fuses), `REG_HIER_BOOT_FSM_PS);
+
+      //read_regs(GET_AXI, soc_regnames, 0, 3);
+      //_read_special_register(GET_AXI, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
+      $display("Moving to read regs");
+      read_regs(GET_AXI, soc_regnames, 0, 3);
+      //_read_special_register(GET_AXI, "INTERNAL_RV_MTIME_L", 0); // *** special register ***
+      $display("DOnme with read regs");
 
       error_ctr = sb.err_count;
     end
@@ -139,6 +152,41 @@
       fuse_regnames = get_fuse_regnames();
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
+      //foreach (fuse_regnames[ix]) begin
+        //$display("Initial set of fuses: %s", fuse_regnames[ix]);
+      //end
+
+      foreach (fuse_regnames[ix]) begin
+        $display("CUrrent fuse: %s", fuse_regnames[ix]);
+        $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
+        if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
+            (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
+            (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
+          //$display("Found %s", fuse_regnames[ix]);
+          fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
+          continue; 
+        end
+      end 
+
+      // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
+      // Deleting it explicitly for now
+      del_from_strq(fuse_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
+
+      foreach (fuse_regnames[ix]) begin
+        if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
+            (fuse_regnames[ix] == "SS_SOC_DBG_UNLOCK_LEVEL")) begin // ||
+            //(fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
+            //(fuse_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
+            //(fuse_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
+          fuse_regnames.delete(ix);  // SOC read-only
+          continue; 
+        end
+      end
+
+      //foreach (fuse_regnames[ix]) begin
+      //  $display("Final set of fuses: %s", fuse_regnames[ix]);
+      ////end
+
       foreach (soc_regnames[ix]) begin
         if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS") || 
             (soc_regnames[ix] == "CPTRA_TRNG_DATA")) begin 
@@ -147,33 +195,42 @@
         end
       end
 
-      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L"); // Exclude CPTRA_RV_MTIME_L
+      foreach (soc_regnames[ix]) begin
+        if ((soc_regnames[ix] == "CPTRA_CAP_LOCK") ||
+            (soc_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
+            (soc_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
+          soc_regnames.delete(ix);  // SOC read-only
+          continue; 
+        end
+      end
 
+
+      del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L"); // Exclude CPTRA_RV_MTIME_L
 
       tphase = "1";
       print_banner("\nPhase 1. Initialize registers after cold boot, overwrite and check");
       // ---------------------------------------------------------------------------------
 
-      write_regs(SET_APB, fuse_regnames, 0, 3);
-      read_regs(GET_APB, fuse_regnames, 0, 3); // just so we see what was written
+      write_regs(SET_AXI, fuse_regnames, 0, 3);
+      read_regs(GET_AXI, fuse_regnames, 0, 3); // just so we see what was written
 
       // Have to wait until after cptra_noncore_rst_b_tb is high
-      //  write_regs(SET_APB, soc_regnames, 0, 3);
-      //  read_regs(GET_APB, soc_regnames, 0, 3); // just so we see what was written
+      //  write_regs(SET_AXI, soc_regnames, 0, 3);
+      //  read_regs(GET_AXI, soc_regnames, 0, 3); // just so we see what was written
 
       simulate_caliptra_boot();
       wait (cptra_noncore_rst_b_tb == 1'b1);
 
       repeat (5) @(posedge clk_tb); 
 
-      write_regs(SET_APB, soc_regnames, 0, 3);
-      read_regs(GET_APB, soc_regnames, 0, 3); // just so we see what was written
+      write_regs(SET_AXI, soc_regnames, 0, 3);
+      read_regs(GET_AXI, soc_regnames, 0, 3); // just so we see what was written
 
       repeat (5) @(posedge clk_tb); 
 
 
       tphase = "2a";
-      print_banner("\nPhase 2a. Perform a warm reset then just read regs over APB"); 
+      print_banner("\nPhase 2a. Perform a warm reset then just read regs over AXI"); 
       // --------------------------------------------------------------------------
 
       sb.del_all();
@@ -202,13 +259,13 @@
 
 
       // expect old sticky values which are different from power-on values
-      read_regs(GET_APB, fuse_regnames, 0, 3);      
-      read_regs(GET_APB, soc_regnames, 0, 3);      
+      read_regs(GET_AXI, fuse_regnames, 0, 3);      
+      read_regs(GET_AXI, soc_regnames, 0, 3);      
 
       // *** begin - special registers ***
-      _read_special_register(GET_APB, "INTERNAL_RV_MTIME_L", 0);
-      _read_special_register(GET_APB, "CPTRA_GENERIC_INPUT_WIRES0", 0);
-      _read_special_register(GET_APB, "CPTRA_GENERIC_INPUT_WIRES1", 0);
+      _read_special_register(GET_AXI, "INTERNAL_RV_MTIME_L", 0);
+      _read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES0", 0);
+      _read_special_register(GET_AXI, "CPTRA_GENERIC_INPUT_WIRES1", 0);
       // *** end - special registers ***
 
 
@@ -224,13 +281,13 @@
       flow_status = update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS); 
       transaction.update_byname("CPTRA_FLOW_STATUS", flow_status, 0);    
       transaction.display(); // DEBUG
-      sb.record_entry(transaction, SET_APB);
+      sb.record_entry(transaction, SET_AXI);
 
 
       // task above updates bootfsm_go so need to update scoreboard accordingly 
       sb.del_entries("CPTRA_BOOTFSM_GO");
       transaction.update_byname("CPTRA_BOOTFSM_GO", 32'h1, 0);    
-      sb.record_entry(transaction, SET_APB);
+      sb.record_entry(transaction, SET_AXI);
 
       read_regs(GET_AHB, fuse_regnames, 0, 3);
       read_regs(GET_AHB, soc_regnames, 0, 3);
