@@ -14,8 +14,11 @@
 #
 ---
 plusargs:
-  - +SOC_IFC_TEST='soc_reg_test'
+  - +SOC_IFC_TEST='ss_strap_reg_lifecycle_test'
+  - +SECURITY_STATE='RANDOM'  
+# RANDOM is default if SECURITY_STATE is not provided 
+# - +SECURITY_STATE='DEBUG_LOCKED_PRODUCTION'
+# - +SECURITY_STATE='ALL'
 
-testname: soc_reg_test
-#seed: ${PLAYBOOK_RANDOM_SEED}
-seed: 1738109322
+testname: ss_strap_reg_lifecycle_test 
+seed: ${PLAYBOOK_RANDOM_SEED}
