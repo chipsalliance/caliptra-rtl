@@ -41,7 +41,7 @@ task fuse_reg_perm_test;
     wrtrans = new();
     rdtrans = new();
 
-    fuse_regnames = get_fuse_regnames(); 
+    fuse_regnames = get_fuse_regnames_minus_ss_straps(); 
 
 
 /* Writes to fuse registers are completed. After the done bit is set, 
@@ -57,20 +57,20 @@ any subsequent writes to a fuse register will be dropped unless
     // -----------------------------------------------------------------
     // PHASE 1. Normal sequence 
     // -----------------------------------------------------------------
-    $display ("1a. APB write twice to registers, lock fuses and attempt to modify\n");
+    $display ("1a. AXI write twice to registers, lock fuses and attempt to modify\n");
     tphase = "1a";
 
-    write_regs(SET_APB, fuse_regnames, 0, 3);  // effect changes
+    write_regs(SET_AXI, fuse_regnames, 0, 3);  // effect changes
     repeat (5) @(posedge clk_tb);
 
-    write_regs(SET_APB, fuse_regnames, 1, 3);  // effect changes
+    write_regs(SET_AXI, fuse_regnames, 1, 3);  // effect changes
 
     simulate_caliptra_boot(); 
 
-    write_regs(SET_APB, fuse_regnames, 2, 3);  // ineffectual 
+    write_regs(SET_AXI, fuse_regnames, 2, 3, FAIL);  // ineffectual 
 
     // expect everything from TID=1 
-    read_regs(GET_APB, fuse_regnames, 1, 3);   
+    read_regs(GET_AXI, fuse_regnames, 1, 3);   
     read_regs(GET_AHB, fuse_regnames, 1, 3); 
 
     repeat (5) @(posedge clk_tb);
@@ -80,16 +80,16 @@ any subsequent writes to a fuse register will be dropped unless
 
     sb.del_all();
 
-    write_single_word_apb(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h0); 
+    write_single_word_axi_sub(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h0); 
 
-    write_regs(SET_APB, fuse_regnames, 3, 3);
-    read_regs(GET_APB, fuse_regnames, 1, 3);
+    write_regs(SET_AXI, fuse_regnames, 3, 3, FAIL);
+    read_regs(GET_AXI, fuse_regnames, 1, 3);
     read_regs(GET_AHB, fuse_regnames, 1, 3);
 
     repeat (10) @(posedge clk_tb);
 
     // -----------------------------------------------------------------
-    // PHASE 2. Perform Cold Reset and Repeat APB Write & Read from 1a  
+    // PHASE 2. Perform Cold Reset and Repeat AXI Write & Read from 1a  
     // -----------------------------------------------------------------
     $display ("\n2a. Write to registers after cold boot and check back writes");
     tphase = "2a";
@@ -100,8 +100,8 @@ any subsequent writes to a fuse register will be dropped unless
     wait(ready_for_fuses);
     @(posedge clk_tb);
 
-    write_regs(SET_APB, fuse_regnames, 0, 3);
-    read_regs(GET_APB, fuse_regnames, 0, 3);
+    write_regs(SET_AXI, fuse_regnames, 0, 3);
+    read_regs(GET_AXI, fuse_regnames, 0, 3);
 
     simulate_caliptra_boot();
 
@@ -110,9 +110,9 @@ any subsequent writes to a fuse register will be dropped unless
     repeat (10) @(posedge clk_tb);
 
     // -----------------------------------------------------------------
-    // PHASE 3. Perform Warm Reset, read values & Repeat APB Write & Read from 1a  
+    // PHASE 3. Perform Warm Reset, read values & Repeat AXI Write & Read from 1a  
     // -----------------------------------------------------------------
-    $display ("\n3a. Perform a warm reset then repeat steps 1a (just APB)"); 
+    $display ("\n3a. Perform a warm reset then repeat steps 1a (just AXI)"); 
     tphase = "3a";
 
     warm_reset_dut(); 
@@ -120,12 +120,12 @@ any subsequent writes to a fuse register will be dropped unless
     wait(ready_for_fuses);
     @(posedge clk_tb);
 
-    read_regs(GET_APB, fuse_regnames, 0, 3);      // should be old sticky values
+    read_regs(GET_AXI, fuse_regnames, 0, 3);      // should be old sticky values
     sb.del_all();
 
     // These writes should fail to write again  
-    write_regs(SET_APB, fuse_regnames, 0, 3);
-    read_regs(GET_APB, fuse_regnames, 0, 3);
+    write_regs(SET_AXI, fuse_regnames, 0, 3);
+    read_regs(GET_AXI, fuse_regnames, 0, 3);
 
     simulate_caliptra_boot();
 

@@ -7929,8 +7929,8 @@
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK                                                    (32'he)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_LOW                                                  (4)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                                 (32'h10)
-`define SOC_IFC_REG_CPTRA_HW_CONFIG_ACTIVE_MODE_EN_LOW                                              (5)
-`define SOC_IFC_REG_CPTRA_HW_CONFIG_ACTIVE_MODE_EN_MASK                                             (32'h20)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                           (5)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                          (32'h20)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                             (32'he4)
