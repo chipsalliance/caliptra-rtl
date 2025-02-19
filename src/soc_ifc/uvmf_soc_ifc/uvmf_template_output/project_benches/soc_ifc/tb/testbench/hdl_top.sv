@@ -48,7 +48,7 @@ import aaxi_pll::*;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-import aaxi_uvm_pkg::*;
+import caliptra_aaxi_uvm_pkg::*;
 `include "config_defines.svh"
 
   // pragma attribute hdl_top partition_module_xrtl                                            

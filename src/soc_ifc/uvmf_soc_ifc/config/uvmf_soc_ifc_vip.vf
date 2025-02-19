@@ -96,7 +96,7 @@ ${AVERY_AXI}/src.VCS/aaxi_busmonitor.v
 ${AVERY_AXI}/src.axi/aaxi_coverage_metrics.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg_test.sv
 ${AVERY_AXI}/src.axi/aaxi_intf.sv
-${AVERY_AXI}/src.uvm/aaxi_uvm_pkg.sv
+${MSFT_REPO_ROOT}/src/libs/avery_licensed/src.uvm/caliptra_aaxi_uvm_pkg.sv
 ${AVERY_AXI}/src.uvm/aaxi_uvm_test_top.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_uvm.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh

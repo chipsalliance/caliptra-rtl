@@ -36,11 +36,11 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   qvip_ahb_lite_slave_environment #()  qvip_ahb_lite_slave_subenv;
 
   // Avery AXI environment
-  aaxi_log              aaxi_test_log;
-  aaxi_uvm_container    aaxi_uc;             //VAR: UVM container 
-  aaxi_uvm_testbench    aaxi_tb;
-  uvm_table_printer     aaxi_printer;
-  aaxi_protocol_version aaxi_vers;
+  aaxi_log                      aaxi_test_log;
+  aaxi_uvm_container            aaxi_uc;             //VAR: UVM container 
+  caliptra_aaxi_uvm_testbench   aaxi_tb;
+  uvm_table_printer             aaxi_printer;
+  aaxi_protocol_version         aaxi_vers;
 //  aaxi_cfg_info mcfg;
 //  aaxi_cfg_info scfg;
 
@@ -167,7 +167,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         uvm_config_db #(aaxi_protocol_version)::set(uvm_root::get(), "*", "vers", aaxi_vers);
 
         // ask the sequencer not to generate random sequence at the beginning
-        aaxi_tb = aaxi_uvm_testbench::type_id::create("aaxi_tb", this);
+        aaxi_tb = caliptra_aaxi_uvm_testbench::type_id::create("aaxi_tb", this);
         uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.master[0].sequencer.build_phase", "count", 0);
 //        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.slave[0].sequencer.build_phase", "count", 0);
 //        `ifdef AVERY_PASSIVE_SLAVE

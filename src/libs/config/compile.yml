@@ -95,6 +95,7 @@ requires:
 targets:
   tb:
     directories:
+      - $MSFT_REPO_ROOT/src/libs/avery_licensed/src.uvm
       - $AVERY_AXI/src.uvm 
       - $AVERY_AXI/testsuite/examples.uvm 
       - $AVERY_AXI/src.axi.VCS 
@@ -119,7 +120,7 @@ targets:
       - $AVERY_AXI/src.axi/aaxi_coverage_metrics.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_test.sv 
       - $AVERY_AXI/src.axi/aaxi_intf.sv 
-      - $AVERY_AXI/src.uvm/aaxi_uvm_pkg.sv 
+      - $AVERY_AXI/src.uvm/caliptra_aaxi_uvm_pkg.sv 
       - $AVERY_AXI/src.uvm/aaxi_uvm_test_top.sv 
     tops: []
 ---
