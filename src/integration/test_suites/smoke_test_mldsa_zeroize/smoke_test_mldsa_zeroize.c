@@ -19,7 +19,6 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mldsa.h"
-#include <stdlib.h>
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -64,10 +63,20 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .axi_dma_error    = 0,
 };
 
+void inject_command(uint8_t cmd){
+    if (cmd == 0){
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
+    }
+    else{
+        printf("Enable scan mode\n");
+        printf("%c", 0xef);
+    }
+} 
+
 void main() {
-    printf("--------------------------------------------\n");
-    printf(" KV Smoke Test With MLDSA Locked API flow !!\n");
-    printf("--------------------------------------------\n");
+    printf("---------------------------------------------\n");
+    printf(" KV Smoke Test With MLDSA Zeroize/ScanMode !!\n");
+    printf("---------------------------------------------\n");
 
     /* Intializes random number generator */  //TODO    
     srand(time);
@@ -76,6 +85,10 @@ void main() {
     init_interrupts();
     mldsa_io seed;
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], msg[MLDSA87_MSG_SIZE];
+    uint16_t offset, end_addr;
+    volatile uint32_t * reg_ptr;
+    volatile uint32_t * status_ptr;
+    uint8_t fail_cmd = 0x1;
 
     seed.kv_intf = TRUE;
     seed.kv_id = 8; //KV_ENTRY_FOR_MLDSA_SIGNING
@@ -91,13 +104,8 @@ void main() {
 
     printf("inject random mldsa seed to kv key reg (in RTL)\n");
     printf("%c", 0x93);
-
-    uint16_t offset;
-    volatile uint32_t * reg_ptr;
-    volatile uint32_t * status_ptr;
-    uint8_t fail_cmd = 0x1;
     
-    printf("Waiting for mldsa status ready in keygen\n");
+    printf("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
@@ -108,77 +116,76 @@ void main() {
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
     
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
-        *reg_ptr++ = msg[offset++];
-    }
-
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
-        *reg_ptr++ = sign_rnd[offset++];
-    }
-
-    // Write MLDSA ENTROPY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
+    // Program MLDSA ENTROPY
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     status_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_STATUS;
 
-    printf("\nMLDSA KEYGEN + SIGNING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    uint8_t inject_cmd = rand() % 2;
+    uint8_t test_mode = rand() % 16;
+    if (test_mode == 0) {
+        printf("\nApplying MLDSA zeroize/scan_mode just before enabling MLDSA.\n");
+        inject_command(inject_cmd);
 
-    printf("Try to Load Locked SIGN data from MLDSA\n");
-    while (*status_ptr == 0){
-        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
-        offset = 0;
-        while (offset < MLDSA87_SIGN_SIZE) {
-            if ((*reg_ptr != 0) & (*status_ptr == 0)) {
-                printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", *reg_ptr);
-                printf("Expected data: 0x%x\n", 0);
-                printf("%c", fail_cmd);
-                while(1);
-            }
-            reg_ptr++;
-            offset++;
+        printf("\nMLDSA KEYGEN + SIGNING\n");
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    }
+    else if (test_mode == 1){
+        printf("\nMLDSA KEYGEN + SIGNING\n");
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+
+        printf("\nApplying MLDSA zeroize/scan_mode just after enabling MLDSA.\n");
+        inject_command(inject_cmd);
+    }
+    else {
+        printf("\nMLDSA KEYGEN + SIGNING\n");
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    
+        // Randomly apply zeroize during engine execution
+        uint32_t zeroize_time = rand() % 3000;
+        printf("\nzeroize time is = %d\n", zeroize_time);
+        for (uint32_t slp = 0; slp < zeroize_time; slp++) {
+            __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
+
+        printf("\nApplying MLDSA zeroize/scan_mode during execution.\n");
+        inject_command(inject_cmd);
     }
 
-    // wait for MLDSA SIGNING process to be done
-    wait_for_mldsa_intr();
-
     // Read the data back from MLDSA register
-    printf("Try to Load Locked PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PRIVKEY_SIZE) {
-        if (*reg_ptr != 0) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", 0);
-            printf("%c", fail_cmd);
-            while(1);
-        }
-        reg_ptr++;
-        offset++;
+    uint8_t zeroize_target_api = rand() % 4;
+    switch (zeroize_target_api){
+        case 0:
+            printf("\nTry to Load zeroized Pubkey data from MLDSA\n");
+            reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+            end_addr = MLDSA87_PUBKEY_SIZE;
+            break;
+        case 1:
+            printf("\nTry to Load zeroized PRIVKEY_OUT data from MLDSA\n");
+            reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+            end_addr = MLDSA87_PRIVKEY_SIZE;
+            break;
+        case 2:
+            printf("\nTry to Load zeroized SIGNATURE data from MLDSA\n");
+            reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+            end_addr = MLDSA87_SIGN_SIZE;
+            break;
+        case 3:
+            printf("\nTry to Load zeroized PRIVKEY_IN data from MLDSA\n");
+            reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+            end_addr = MLDSA87_PRIVKEY_SIZE;
+            break;
     }
 
-    printf("MLDSA zeroize flow.\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
-
-    // Read the data back from MLDSA register
-    printf("Try to Load zeroized PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
-    while (offset < MLDSA87_PRIVKEY_SIZE) {
+    while ((*status_ptr == 0) & (offset < end_addr)) {
+        // Try to Overwrite data in MLDSA
+        *reg_ptr = rand() % 0xffffffff;
         if (*reg_ptr != 0) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+            printf("At offset [%d], mldsa data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", *reg_ptr);
             printf("Expected data: 0x%x\n", 0);
             printf("%c", fail_cmd);
