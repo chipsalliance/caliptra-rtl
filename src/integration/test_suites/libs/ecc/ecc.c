@@ -218,6 +218,9 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
         // set privkey DEST to write
         lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, (ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
                                                     ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_HMAC_BLOCK_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_HMAC_KEY_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_MASK |
                                                     ((sharedkey.kv_id << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
     }
 

@@ -57,7 +57,7 @@ interface  ECC_in_if #(
   inout tri  hreadyout,
   inout tri  transaction_flag_out_monitor,
   inout tri [2:0] test,
-  inout tri [2:0] op
+  inout tri [1:0] op
   );
 
 modport monitor_port 
