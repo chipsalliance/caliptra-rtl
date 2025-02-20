@@ -17,6 +17,6 @@
 // This file contains properties that define various sequences of events in AXI DMA
 
 module axi_dma_top_cov_props();
-  `ifnedef VERILATOR
+  `ifndef VERILATOR
   `endif
 endmodule
