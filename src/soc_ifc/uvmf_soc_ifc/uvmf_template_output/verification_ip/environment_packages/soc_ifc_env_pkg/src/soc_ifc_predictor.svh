@@ -33,6 +33,7 @@
 //   ss_mode_ctrl_agent_ae receives transactions of type  ss_mode_ctrl_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
 //   axi_sub_0_ae receives transactions of type  aaxi_master_tr
+//   axi_mgr_0_ae receives transactions of type  aaxi_slave_tr
 //
 //   This analysis component has the following analysis_ports that can broadcast
 //   the listed transaction type.
@@ -94,6 +95,10 @@ class soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )) axi_sub_0_ae;
+  uvm_analysis_imp_axi_mgr_0_ae #(aaxi_slave_tr, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) axi_mgr_0_ae;
   uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -118,6 +123,7 @@ class soc_ifc_predictor #(
   uvm_analysis_port #(aaxi_master_tr) soc_ifc_sb_axi_ap;
   uvm_analysis_port #(ss_mode_status_transaction) ss_mode_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
+  uvm_analysis_port #(aaxi_slave_tr) soc_ifc_sb_axi_mgr_ap;
 
   uvm_analysis_port #(soc_ifc_ctrl_transaction) soc_ifc_cov_ap;
   uvm_analysis_port #(cptra_ctrl_transaction  ) cptra_cov_ap;
@@ -168,6 +174,13 @@ class soc_ifc_predictor #(
   // Code for sending output transaction out through soc_ifc_sb_ahb_ap
   // soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
 
+  // Transaction variable for predicted values to be sent out soc_ifc_sb_axi_mgr_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
+  aaxi_slave_tr soc_ifc_sb_axi_mgr_ap_output_transaction;
+  // Code for sending output transaction out through soc_ifc_sb_axi_mgr_ap
+  // soc_ifc_sb_axi_mgr_ap.write(soc_ifc_sb_axi_mgr_ap_output_transaction);
+
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
   mbox_sram_transaction mbox_sram_agent_ae_debug;
@@ -175,6 +188,7 @@ class soc_ifc_predictor #(
   ss_mode_ctrl_transaction ss_mode_ctrl_agent_ae_debug;
   mvc_sequence_item_base ahb_slave_0_ae_debug;
   aaxi_master_tr axi_sub_0_ae_debug;
+  aaxi_slave_tr axi_mgr_0_ae_debug;
 
 
   // pragma uvmf custom class_item_additional begin
@@ -340,10 +354,12 @@ class soc_ifc_predictor #(
     ss_mode_ctrl_agent_ae = new("ss_mode_ctrl_agent_ae", this); // FIXME
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
     axi_sub_0_ae = new("axi_sub_0_ae", this);
+    axi_mgr_0_ae = new("axi_mgr_0_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
     cptra_sb_ap = new("cptra_sb_ap", this );
     soc_ifc_sb_ahb_ap = new("soc_ifc_sb_ahb_ap", this );
     soc_ifc_sb_axi_ap = new("soc_ifc_sb_axi_ap", this );
+    soc_ifc_sb_axi_mgr_ap = new("soc_ifc_sb_axi_mgr_ap", this );
     ss_mode_sb_ap = new("ss_mode_sb_ap", this ); // FIXME
     soc_ifc_ahb_reg_ap = new("soc_ifc_ahb_reg_ap", this);
     soc_ifc_axi_reg_wr_ap = new("soc_ifc_axi_reg_wr_ap", this);
@@ -3015,6 +3031,98 @@ class soc_ifc_predictor #(
         `uvm_info("PRED_AXI", "Transaction submitted through soc_ifc_sb_axi_ap", UVM_MEDIUM)
     end
     // pragma uvmf custom axi_sub_0_ae_predictor end
+  endfunction
+
+  // FUNCTION: write_axi_mgr_0_ae
+  // Transactions received through axi_mgr_0_ae initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_axi_mgr_0_ae(aaxi_slave_tr t);
+    // pragma uvmf custom axi_mgr_0_ae_predictor begin
+    aaxi_slave_tr      axi_txn;
+
+    // Flags control whether each transaction is sent to scoreboard
+    bit send_soc_ifc_sts_txn = 0;
+    bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
+    bit send_ahb_txn = 0;
+    bit send_axi_txn = 0;
+    bit send_axi_mgr_txn = 1;
+    axi_mgr_0_ae_debug = t;
+
+    `uvm_info("PRED_AXI_MGR", "Transaction Received through axi_mgr_0_ae", UVM_MEDIUM)
+    `uvm_info("PRED_AXI_MGR", {"            Data: ",t.sprint(uvm_top.uvm_get_max_verbosity(), "AXI_MGR_0_AE")}, UVM_HIGH)
+
+    // Construct one of each output transaction type.
+    soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
+    cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
+    soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
+
+    // Extract info
+    $cast(axi_txn, t);
+    soc_ifc_sb_axi_mgr_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
+
+    // Calculate any other system effects from the register access
+
+    // Code for sending output transaction out through soc_ifc_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction
+    // using either new() or create().  Broadcasting a transaction object more than once to either the
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_soc_ifc_sts_txn) begin
+        populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
+        soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
+        `uvm_info("PRED_AXI_MGR", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+    end
+    // Code for sending output transaction out through cptra_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_cptra_sts_txn) begin
+        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+        `uvm_info("PRED_AXI_MGR", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+    end
+    // Code for sending output transaction out through soc_ifc_sb_ahb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_ahb_txn) begin
+        soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
+        `uvm_error("PRED_AXI_MGR", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
+    end
+    // Code for sending output transaction out through ss_mode_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_AXI_MGR", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_AXI_MGR", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_mgr_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_mgr_txn) begin
+        soc_ifc_sb_axi_mgr_ap.write(soc_ifc_sb_axi_mgr_ap_output_transaction);
+        `uvm_info("PRED_AXI_MGR", "Transaction submitted through soc_ifc_sb_axi_mgr_ap", UVM_MEDIUM)
+    end
+    // pragma uvmf custom axi_mgr_0_ae_predictor end
   endfunction
 
 

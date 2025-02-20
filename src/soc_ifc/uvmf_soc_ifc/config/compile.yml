@@ -116,6 +116,7 @@ global:
         - +define+AVERY_COVERAGE_ON
         - +define+AVERY_MONITOR_ON
         - +define+AVERY_PASSIVE_MASTER
+        - +define+AVERY_PASSIVE_SLAVE
         - +define+AVERY_CLOCK=5
         - +define+AVERY_NAMED_CONSTRUCTOR
         - +define+AVERY_AXI_USER

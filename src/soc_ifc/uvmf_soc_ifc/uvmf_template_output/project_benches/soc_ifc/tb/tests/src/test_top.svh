@@ -55,7 +55,8 @@ qvip_memory_message_handler message_handler;
     soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [5] */ , 
     cptra_status_agent_BFM /* cptra_status_agent     [6] */ , 
     ss_mode_status_agent_BFM /* ss_mode_status_agent     [7] */ , 
-    mbox_sram_agent_BFM /* mbox_sram_agent     [8] */ 
+    mbox_sram_agent_BFM /* mbox_sram_agent     [8] */ ,
+    uvm_test_top_environment_aaxi_tb_env0_slave_0 /* aaxi_tb.env0.slave[0] [9] */
 };
 
 uvmf_active_passive_t interface_activities[] = { 
@@ -67,7 +68,8 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* soc_ifc_status_agent     [5] */ , 
     ACTIVE /* cptra_status_agent     [6] */ , 
     ACTIVE /* ss_mode_status_agent     [7] */ , 
-    ACTIVE /* mbox_sram_agent     [8] */   };
+    ACTIVE /* mbox_sram_agent     [8] */ ,
+    ACTIVE /* aaxi_tb.env0.slave[0] [9] */   };
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

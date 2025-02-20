@@ -73,6 +73,8 @@ extends uvmf_environment_configuration_base;
     uvmf_active_passive_t                    qvip_ahb_lite_slave_subenv_interface_activity[];
     string                                   axi_slave_subenv_interface_names[];
     uvmf_active_passive_t                    axi_slave_subenv_interface_activity[];
+    string                                   axi_manager_subenv_interface_names[];
+    uvmf_active_passive_t                    axi_manager_subenv_interface_activity[];
 
   typedef uvmf_virtual_sequencer_base #(.CONFIG_T(soc_ifc_env_configuration)) soc_ifc_vsqr_t;
   soc_ifc_vsqr_t vsqr;
@@ -180,6 +182,12 @@ extends uvmf_environment_configuration_base;
 
     axi_slave_subenv_interface_names     = interface_names[1:1];
     axi_slave_subenv_interface_activity  = interface_activity[1:1];
+
+    axi_manager_subenv_interface_names    = new[9];
+    axi_manager_subenv_interface_activity = new[9];
+
+    axi_manager_subenv_interface_names     = interface_names[9:9];
+    axi_manager_subenv_interface_activity  = interface_activity[9:9];
 
 
   // Interface initialization for local agents

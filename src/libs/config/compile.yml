@@ -113,14 +113,14 @@ targets:
       - $AVERY_AXI/src.axi/aaxi_pkg.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_xactor.sv 
       - $AVERY_AXI/src.axi/aaxi_class_pll.sv 
-#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv
       - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
       - $AVERY_AXI/checker/monitor_wrapper/BP063/aaxi_monitor_wrapper.sv
       - $AVERY_AXI/src.VCS/aaxi_busmonitor.v
       - $AVERY_AXI/src.axi/aaxi_coverage_metrics.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_test.sv 
       - $AVERY_AXI/src.axi/aaxi_intf.sv 
-      - $AVERY_AXI/src.uvm/caliptra_aaxi_uvm_pkg.sv 
+      - $MSFT_REPO_ROOT/src/libs/avery_licensed/src.uvm/caliptra_aaxi_uvm_pkg.sv
       - $AVERY_AXI/src.uvm/aaxi_uvm_test_top.sv 
     tops: []
 ---

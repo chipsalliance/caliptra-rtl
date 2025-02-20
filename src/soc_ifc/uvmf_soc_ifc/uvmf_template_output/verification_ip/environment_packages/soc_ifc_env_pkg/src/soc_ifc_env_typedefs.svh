@@ -132,5 +132,12 @@
     bit          is_ahb;
     mbox_steps_s step;
   } mbox_steps_by_if_s;
+
+  // AXI SRAM config
+  localparam CALIPTRA_UVM_AXI_DMA_SRAM_SIZE_BYTES   = 65536;
+  localparam CALIPTRA_UVM_AXI_DMA_SRAM_ADDR_WIDTH   = $clog2(CALIPTRA_UVM_AXI_DMA_SRAM_SIZE_BYTES);
+  localparam CALIPTRA_UVM_AXI_DMA_SRAM_DEPTH        = CALIPTRA_UVM_AXI_DMA_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
+  localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] CALIPTRA_UVM_AXI_DMA_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2345_0000; 
+
   // pragma uvmf custom additional end
 

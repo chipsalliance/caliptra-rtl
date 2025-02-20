@@ -390,6 +390,13 @@ class soc_ifc_env_cov_subscriber #(
     *}
     */
   endgroup
+
+  covergroup soc_ifc_env_axi_dma_variables_cg with function sample (input bit is_write, input aaxi_burst_type burst, input bit [7:0] len);
+    option.per_instance = 1;
+    axi_kind          : coverpoint (is_write);
+    axi_burst         : coverpoint (burst);
+    axi_len           : coverpoint (len);
+  endgroup
   /* TODO:
   * covergroup soc_ifc_env_resets;
   * covergroup soc_ifc_env_trng; // Incl. TRNG AXI_USER cases
@@ -422,6 +429,7 @@ class soc_ifc_env_cov_subscriber #(
   uvm_analysis_imp_cov_soc_ifc_ctrl_ae   #(soc_ifc_ctrl_transaction,   this_type) soc_ifc_ctrl_ae;
   uvm_analysis_imp_cov_soc_ifc_status_ae #(soc_ifc_status_transaction, this_type) soc_ifc_status_ae;
   uvm_analysis_imp_cov_axi_ae            #(aaxi_master_tr,             this_type) axi_ae;
+  uvm_analysis_imp_cov_axi_mgr_ae        #(aaxi_slave_tr,              this_type) axi_mgr_ae;
   uvm_analysis_imp_cov_cptra_ctrl_ae     #(cptra_ctrl_transaction,     this_type) cptra_ctrl_ae;
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;
   uvm_analysis_imp_cov_ahb_ae            #(mvc_sequence_item_base,     this_type) ahb_ae;
@@ -436,6 +444,7 @@ class soc_ifc_env_cov_subscriber #(
     super.new(name, parent);
     soc_ifc_env_mbox_steps_cg = new;
     soc_ifc_env_mbox_scenarios_cg = new;
+    soc_ifc_env_axi_dma_variables_cg = new;
   endfunction
 
   //------------------------------------------------------------------------------------------
@@ -445,6 +454,7 @@ class soc_ifc_env_cov_subscriber #(
     soc_ifc_ctrl_ae   = new("soc_ifc_ctrl_ae"  , this);
     soc_ifc_status_ae = new("soc_ifc_status_ae", this);
     axi_ae            = new("axi_ae"           , this);
+    axi_mgr_ae        = new("axi_mgr_ae"       , this);
     cptra_ctrl_ae     = new("cptra_ctrl_ae"    , this);
     cptra_status_ae   = new("cptra_status_ae"  , this);
     ahb_ae            = new("ahb_ae"           , this);
@@ -455,6 +465,7 @@ class soc_ifc_env_cov_subscriber #(
     c_soc_ifc_rm = configuration.soc_ifc_rm;
     soc_ifc_env_mbox_steps_cg.set_inst_name($sformatf("soc_ifc_env_mbox_steps_cg_%s",get_full_name()));
     soc_ifc_env_mbox_scenarios_cg.set_inst_name($sformatf("soc_ifc_env_mbox_scenarios_cg_%s",get_full_name()));
+    soc_ifc_env_axi_dma_variables_cg.set_inst_name($sformatf("soc_ifc_env_axi_dma_variables_cg_%s",get_full_name()));
   endfunction
 
   //------------------------------------------------------------------------------------------
@@ -623,6 +634,56 @@ class soc_ifc_env_cov_subscriber #(
             end
         endcase
     end
+  endfunction
+  
+  //------------------------------------------------------------------------------------------
+  //                                   AXI MGR - write
+  //------------------------------------------------------------------------------------------
+  virtual function void write_cov_axi_mgr_ae(aaxi_slave_tr txn);
+    aaxi_slave_tr    axi_txn;
+    uvm_reg          axs_reg;
+
+    // Extract info
+    if (!$cast(axi_txn,txn)) `uvm_fatal("SOC_IFC_COV_AXI_MGR", "AXI MGR coverage analysis import received invalid transaction")
+//    axs_reg = c_soc_ifc_rm.soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
+
+    soc_ifc_env_axi_dma_variables_cg.sample(axi_txn.is_write(), axi_txn.burst, axi_txn.len);
+
+//    // Calculate coverage impact from register access
+//    if (axs_reg == null) begin
+//        `uvm_error("SOC_IFC_COV_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
+//    end
+//    else begin: REG_AXS
+//        `uvm_info("SOC_IFC_COV_AXI", {"Collecting coverage on access to register: ", axs_reg.get_full_name()}, UVM_HIGH)
+//        case (axs_reg.get_name()) inside
+//            "mbox_lock",
+//            "mbox_user",
+//            "mbox_cmd",
+//            "mbox_dlen",
+//            "mbox_datain",
+//            "mbox_dataout",
+//            "mbox_execute",
+//            "mbox_status",
+//            "mbox_unlock": begin
+//                `uvm_info("SOC_IFC_COV_AXI", $sformatf("Got next_step [%p]", pred.next_step), UVM_FULL)
+//                // Skip coverage on repeated steps, as a memory optimization (large rep. operators are onerous)
+//                if (pred.next_step inside {MBOX_STEP_DATAIN_WR,
+//                                           MBOX_STEP_DATAOUT_RD,
+//                                           MBOX_STEP_STATUS_RD,
+//                                           MBOX_STEP_RESP_DATAIN_WR/*shouldn't happen*/,
+//                                           MBOX_STEP_RESP_DATAOUT_RD} &&
+//                    pred.next_step == prev_step_sampled.step &&
+//                    !prev_step_sampled.is_ahb) begin
+//                    `uvm_info("SOC_IFC_COV_AXI", "Skipping sample for step [%p] as it is a repetition", UVM_DEBUG)
+//                end
+//                else begin
+//                    soc_ifc_env_mbox_steps_cg.sample(.is_ahb(NOT_AHB_REQ), .next_step(pred.next_step));
+//                    soc_ifc_env_mbox_scenarios_cg.sample({NOT_AHB_REQ,pred.next_step});
+//                    prev_step_sampled = '{is_ahb: NOT_AHB_REQ, step:pred.next_step};
+//                end
+//            end
+//        endcase
+//    end
   endfunction
   
 endclass

@@ -85,32 +85,52 @@ import caliptra_aaxi_uvm_pkg::*;
 
   // pragma uvmf custom module_item_additional begin
   //uc
-  aaxi_uvm_container  uc;             //VAR: UVM container
+  caliptra_aaxi_uvm_container  uc;             //VAR: UVM container
 
   aaxi_intf #(
       .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
       .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
       .SCB_INPUT (aaxi_pkg::AAXI_SCB_INPUT ),
       .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
-  ) ports[1] (
+  ) m_ports_arr[1] (
       .ACLK   (clk                               ),
       .ARESETn(soc_ifc_ctrl_agent_bus.cptra_rst_b),
       .CACTIVE(                                  ),
       .CSYSREQ(1'b0                              ),
       .CSYSACK(                                  )
   );
-  aaxi_monitor_wrapper monitor0 (ports[0]);
+  aaxi_intf #(
+      .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
+      .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
+      .SCB_INPUT (aaxi_pkg::AAXI_SCB_INPUT ),
+      .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
+  ) s_ports_arr[1] (
+      .ACLK   (clk                               ),
+      .ARESETn(soc_ifc_ctrl_agent_bus.cptra_rst_b),
+      .CACTIVE(                                  ),
+      .CSYSREQ(1'b0                              ),
+      .CSYSACK(                                  )
+  );
+  aaxi_monitor_wrapper monitor0 (m_ports_arr[0]);
   defparam monitor0.ID_WIDTH= AAXI_ID_WIDTH;
   defparam monitor0.BUS_DATA_WIDTH=aaxi_pkg::AAXI_DATA_WIDTH;
   // enable the support of all user-defined signaling
   defparam monitor0.USER_SUPPORT= 5'b11111;
   defparam monitor0.VER= "AXI4";
 
+  aaxi_monitor_wrapper monitor1 (s_ports_arr[0]);
+  defparam monitor1.ID_WIDTH= AAXI_ID_WIDTH;
+  defparam monitor1.BUS_DATA_WIDTH=aaxi_pkg::AAXI_DATA_WIDTH;
+  // enable the support of all user-defined signaling
+  defparam monitor1.USER_SUPPORT= 5'b11111;
+  defparam monitor1.VER= "AXI4";
+
   initial begin
     uc = new();
-    uvm_config_db #(aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
+    uvm_config_db #(caliptra_aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
 
-    uc.ports = ports[0];
+    uc.m_ports_arr = m_ports_arr;
+    uc.s_ports_arr = s_ports_arr;
     //uvm_config_db #(virtual aaxi_intf)::set(uvm_root::get(), "intf_uc", "ports", ports[0]);
   end
   // pragma uvmf custom module_item_additional end
@@ -341,101 +361,109 @@ import caliptra_aaxi_uvm_pkg::*;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXOKAY   = 1'b0;
     always_comb begin
         // Clock control placeholders
-        ports[0].CACTIVE_m = 1'b0;
-        ports[0].CACTIVE_s = 1'b0;
-        ports[0].CSYSACK_m = 1'b0;
-        ports[0].CSYSACK_s = 1'b0;
+        m_ports_arr[0].CACTIVE_m = 1'b0;
+        m_ports_arr[0].CACTIVE_s = 1'b0;
+        m_ports_arr[0].CSYSACK_m = 1'b0;
+        m_ports_arr[0].CSYSACK_s = 1'b0;
 
         // AXI AR
-        s_axi_if.araddr  = ports[0].ARADDR;
-        s_axi_if.arburst = ports[0].ARBURST;
-        s_axi_if.arsize  = ports[0].ARSIZE;
-        s_axi_if.arlen   = ports[0].ARLEN;
-        s_axi_if.aruser  = ports[0].ARUSER;
-        s_axi_if.arid    = ports[0].ARID;
-        s_axi_if.arlock  = ports[0].ARLOCK;
-        s_axi_if.arvalid = ports[0].ARVALID;
-        ports[0].ARREADY = s_axi_if.arready;
+        s_axi_if.araddr  = m_ports_arr[0].ARADDR;
+        s_axi_if.arburst = m_ports_arr[0].ARBURST;
+        s_axi_if.arsize  = m_ports_arr[0].ARSIZE;
+        s_axi_if.arlen   = m_ports_arr[0].ARLEN;
+        s_axi_if.aruser  = m_ports_arr[0].ARUSER;
+        s_axi_if.arid    = m_ports_arr[0].ARID;
+        s_axi_if.arlock  = m_ports_arr[0].ARLOCK;
+        s_axi_if.arvalid = m_ports_arr[0].ARVALID;
+        m_ports_arr[0].ARREADY = s_axi_if.arready;
 
         // AXI R
-        ports[0].RDATA  = s_axi_if.rdata ;
-        ports[0].RRESP  = s_axi_if.rresp ;
-        ports[0].RID    = s_axi_if.rid   ;
-        ports[0].RUSER  = s_axi_if.ruser ;
-        ports[0].RLAST  = s_axi_if.rlast ;
-        ports[0].RVALID = s_axi_if.rvalid;
-        s_axi_if.rready = ports[0].RREADY;
+        m_ports_arr[0].RDATA  = s_axi_if.rdata ;
+        m_ports_arr[0].RRESP  = s_axi_if.rresp ;
+        m_ports_arr[0].RID    = s_axi_if.rid   ;
+        m_ports_arr[0].RUSER  = s_axi_if.ruser ;
+        m_ports_arr[0].RLAST  = s_axi_if.rlast ;
+        m_ports_arr[0].RVALID = s_axi_if.rvalid;
+        s_axi_if.rready = m_ports_arr[0].RREADY;
 
         // AXI AW
-        s_axi_if.awaddr  = ports[0].AWADDR;
-        s_axi_if.awburst = ports[0].AWBURST;
-        s_axi_if.awsize  = ports[0].AWSIZE;
-        s_axi_if.awlen   = ports[0].AWLEN;
-        s_axi_if.awuser  = ports[0].AWUSER;
-        s_axi_if.awid    = ports[0].AWID;
-        s_axi_if.awlock  = ports[0].AWLOCK;
-        s_axi_if.awvalid = ports[0].AWVALID;
-        ports[0].AWREADY = s_axi_if.awready;
+        s_axi_if.awaddr  = m_ports_arr[0].AWADDR;
+        s_axi_if.awburst = m_ports_arr[0].AWBURST;
+        s_axi_if.awsize  = m_ports_arr[0].AWSIZE;
+        s_axi_if.awlen   = m_ports_arr[0].AWLEN;
+        s_axi_if.awuser  = m_ports_arr[0].AWUSER;
+        s_axi_if.awid    = m_ports_arr[0].AWID;
+        s_axi_if.awlock  = m_ports_arr[0].AWLOCK;
+        s_axi_if.awvalid = m_ports_arr[0].AWVALID;
+        m_ports_arr[0].AWREADY = s_axi_if.awready;
 
         // AXI W
-        s_axi_if.wdata  = ports[0].WDATA;
-        s_axi_if.wstrb  = ports[0].WSTRB;
-        s_axi_if.wuser  = ports[0].WUSER;
-        s_axi_if.wvalid = ports[0].WVALID;
-        s_axi_if.wlast  = ports[0].WLAST;
-        ports[0].WREADY = s_axi_if.wready;
+        s_axi_if.wdata  = m_ports_arr[0].WDATA;
+        s_axi_if.wstrb  = m_ports_arr[0].WSTRB;
+        s_axi_if.wuser  = m_ports_arr[0].WUSER;
+        s_axi_if.wvalid = m_ports_arr[0].WVALID;
+        s_axi_if.wlast  = m_ports_arr[0].WLAST;
+        m_ports_arr[0].WREADY = s_axi_if.wready;
 
         // AXI B
-        ports[0].BRESP  = s_axi_if.bresp ;
-        ports[0].BID    = s_axi_if.bid   ;
-        ports[0].BUSER  = s_axi_if.buser ;
-        ports[0].BVALID = s_axi_if.bvalid;
-        s_axi_if.bready = ports[0].BREADY;
+        m_ports_arr[0].BRESP  = s_axi_if.bresp ;
+        m_ports_arr[0].BID    = s_axi_if.bid   ;
+        m_ports_arr[0].BUSER  = s_axi_if.buser ;
+        m_ports_arr[0].BVALID = s_axi_if.bvalid;
+        s_axi_if.bready = m_ports_arr[0].BREADY;
     end
-    // TODO
     always_comb begin
+        // Clock control placeholders
+        s_ports_arr[0].CACTIVE_m = 1'b0;
+        s_ports_arr[0].CACTIVE_s = 1'b0;
+        s_ports_arr[0].CSYSACK_m = 1'b0;
+        s_ports_arr[0].CSYSACK_s = 1'b0;
+
         // AXI AR
-//        ports[0].ARADDR  = m_axi_if.araddr;
-//        ports[0].ARBURST = m_axi_if.arburst;
-//        ports[0].ARSIZE  = m_axi_if.arsize;
-//        ports[0].ARLEN   = m_axi_if.arlen;
-//        ports[0].ARUSER  = m_axi_if.aruser;
-//        ports[0].ARID    = m_axi_if.arid;
-//        ports[0].ARLOCK  = m_axi_if.arlock;
-//        ports[0].ARVALID = m_axi_if.arvalid;
-        m_axi_if.arready = '0;//ports[0].ARREADY;
+        s_ports_arr[0].ARADDR  = m_axi_if.araddr;
+        s_ports_arr[0].ARBURST = m_axi_if.arburst;
+        s_ports_arr[0].ARSIZE  = m_axi_if.arsize;
+        s_ports_arr[0].ARLEN   = m_axi_if.arlen;
+        s_ports_arr[0].ARUSER  = m_axi_if.aruser;
+        s_ports_arr[0].ARID    = m_axi_if.arid;
+        s_ports_arr[0].ARLOCK  = m_axi_if.arlock;
+        s_ports_arr[0].ARVALID = m_axi_if.arvalid;
+        m_axi_if.arready = s_ports_arr[0].ARREADY;
 
         // AXI R
-        m_axi_if.rdata  = '0; //ports[0].RDATA;
-        m_axi_if.rresp  = '0; //ports[0].RRESP;
-        m_axi_if.rid    = '0; //ports[0].RID;
-        m_axi_if.rlast  = '0; //ports[0].RLAST;
-        m_axi_if.rvalid = '0; //ports[0].RVALID;
-//        ports[0].RREADY = s_axi_if.rready;
+        m_axi_if.rdata  = s_ports_arr[0].RDATA;
+        m_axi_if.rresp  = s_ports_arr[0].RRESP;
+        m_axi_if.rid    = s_ports_arr[0].RID;
+        m_axi_if.ruser  = s_ports_arr[0].RUSER;
+        m_axi_if.rlast  = s_ports_arr[0].RLAST;
+        m_axi_if.rvalid = s_ports_arr[0].RVALID;
+        s_ports_arr[0].RREADY = m_axi_if.rready;
 
         // AXI AW
-//        ports[0].AWADDR  = m_axi_if.awaddr;
-//        ports[0].AWBURST = m_axi_if.awburst;
-//        ports[0].AWSIZE  = m_axi_if.awsize;
-//        ports[0].AWLEN   = m_axi_if.awlen;
-//        ports[0].AWUSER  = m_axi_if.awuser;
-//        ports[0].AWID    = m_axi_if.awid;
-//        ports[0].AWLOCK  = m_axi_if.awlock;
-//        ports[0].AWVALID = m_axi_if.awvalid;
-        m_axi_if.awready = '0; //ports[0].AWREADY;
+        s_ports_arr[0].AWADDR  = m_axi_if.awaddr;
+        s_ports_arr[0].AWBURST = m_axi_if.awburst;
+        s_ports_arr[0].AWSIZE  = m_axi_if.awsize;
+        s_ports_arr[0].AWLEN   = m_axi_if.awlen;
+        s_ports_arr[0].AWUSER  = m_axi_if.awuser;
+        s_ports_arr[0].AWID    = m_axi_if.awid;
+        s_ports_arr[0].AWLOCK  = m_axi_if.awlock;
+        s_ports_arr[0].AWVALID = m_axi_if.awvalid;
+        m_axi_if.awready = s_ports_arr[0].AWREADY;
 
         // AXI W
-//        ports[0].WDATA  = m_axi_if.wdata;
-//        ports[0].WSTRB  = m_axi_if.wstrb;
-//        ports[0].WVALID = m_axi_if.wvalid;
-//        ports[0].WLAST  = m_axi_if.wlast;
-        m_axi_if.wready = '0; //ports[0].WREADY;
+        s_ports_arr[0].WDATA  = m_axi_if.wdata;
+        s_ports_arr[0].WSTRB  = m_axi_if.wstrb;
+        s_ports_arr[0].WUSER  = m_axi_if.wuser;
+        s_ports_arr[0].WVALID = m_axi_if.wvalid;
+        s_ports_arr[0].WLAST  = m_axi_if.wlast;
+        m_axi_if.wready = s_ports_arr[0].WREADY;
 
         // AXI B
-        m_axi_if.bresp  = '0; //ports[0].BRESP;
-        m_axi_if.bid    = '0; //ports[0].BID;
-        m_axi_if.bvalid = '0; //ports[0].BVALID;
-//        ports[0].BREADY = m_axi_if.bready;
+        m_axi_if.bresp  = s_ports_arr[0].BRESP;
+        m_axi_if.bid    = s_ports_arr[0].BID;
+        m_axi_if.buser  = s_ports_arr[0].BUSER;
+        m_axi_if.bvalid = s_ports_arr[0].BVALID;
+        s_ports_arr[0].BREADY = m_axi_if.bready;
     end
 
 
