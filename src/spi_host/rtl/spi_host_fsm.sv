@@ -589,8 +589,8 @@ module spi_host_fsm
 
   `CALIPTRA_ASSERT(BidirOnlyInStdMode_A,
       cmd_speed_d == Standard || !(cmd_rd_en_d && cmd_wr_en_d),
-      clk_i, rst_ni)
-  `CALIPTRA_ASSERT(ValidSpeed_A, cmd_speed_d != RsvdSpd, clk_i, rst_ni)
-  `CALIPTRA_ASSERT(ValidCSID_A, csid < NumCS, clk_i, rst_ni)
+      clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(ValidSpeed_A, cmd_speed_d != RsvdSpd, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(ValidCSID_A, csid < NumCS, clk_i, !rst_ni)
 
 endmodule

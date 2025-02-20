@@ -84,7 +84,7 @@ end
   tri clk_i;
   tri dummy_i;
   tri  ready_for_fuses_i;
-  tri  ready_for_fw_push_i;
+  tri  ready_for_mb_processing_i;
   tri  ready_for_runtime_i;
   tri  mailbox_data_avail_i;
   tri  mailbox_flow_done_i;
@@ -95,7 +95,7 @@ end
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign ready_for_fuses_i = bus.ready_for_fuses;
-  assign ready_for_fw_push_i = bus.ready_for_fw_push;
+  assign ready_for_mb_processing_i = bus.ready_for_mb_processing;
   assign ready_for_runtime_i = bus.ready_for_runtime;
   assign mailbox_data_avail_i = bus.mailbox_data_avail;
   assign mailbox_flow_done_i = bus.mailbox_flow_done;
@@ -110,7 +110,7 @@ end
 
   // pragma uvmf custom interface_item_additional begin
   reg  ready_for_fuses_o = 'b0;
-  reg  ready_for_fw_push_o = 'b0;
+  reg  ready_for_mb_processing_o = 'b0;
   reg  ready_for_runtime_o = 'b0;
   reg  mailbox_data_avail_o = 'b0;
   reg  mailbox_flow_done_o = 'b0;
@@ -119,15 +119,15 @@ end
   reg  trng_req_o = 'b0;
   reg [63:0] generic_output_wires_o = 'b0;
   function bit any_signal_changed();
-      return |(ready_for_fuses_i       ^  ready_for_fuses_o          ) ||
-             |(ready_for_fw_push_i     ^  ready_for_fw_push_o        ) ||
-             |(ready_for_runtime_i     ^  ready_for_runtime_o        ) ||
-             |(mailbox_data_avail_i    ^  mailbox_data_avail_o       ) ||
-             |(mailbox_flow_done_i     ^  mailbox_flow_done_o        ) ||
-             |(cptra_error_fatal_i     & !cptra_error_fatal_o        ) ||
-             |(cptra_error_non_fatal_i & !cptra_error_non_fatal_o    ) ||
-             |(trng_req_i              ^  trng_req_o                 ) ||
-             |(generic_output_wires_i  ^  generic_output_wires_o     );
+      return |(ready_for_fuses_i         ^  ready_for_fuses_o          ) ||
+             |(ready_for_mb_processing_i ^  ready_for_mb_processing_o        ) ||
+             |(ready_for_runtime_i       ^  ready_for_runtime_o        ) ||
+             |(mailbox_data_avail_i      ^  mailbox_data_avail_o       ) ||
+             |(mailbox_flow_done_i       ^  mailbox_flow_done_o        ) ||
+             |(cptra_error_fatal_i       & !cptra_error_fatal_o        ) ||
+             |(cptra_error_non_fatal_i   & !cptra_error_non_fatal_o    ) ||
+             |(trng_req_i                ^  trng_req_o                 ) ||
+             |(generic_output_wires_i    ^  generic_output_wires_o     );
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -146,7 +146,7 @@ end
   endtask
 
   // pragma uvmf custom wait_for_num_clocks begin
-  //****************************************************************************                         
+  //****************************************************************************
   // Inject pragmas's here to throw a warning on regeneration.
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
@@ -155,7 +155,7 @@ end
     @(posedge clk_i);
     repeat (count-1) @(posedge clk_i);
   endtask
-  // pragma uvmf custom wait_for_num_clocks end                                                                
+  // pragma uvmf custom wait_for_num_clocks end
 
   //******************************************************************
   event go;
@@ -197,7 +197,7 @@ end
     //
     // Available struct members:
     //     //    soc_ifc_status_monitor_struct.ready_for_fuses
-    //     //    soc_ifc_status_monitor_struct.ready_for_fw_push
+    //     //    soc_ifc_status_monitor_struct.ready_for_mb_processing
     //     //    soc_ifc_status_monitor_struct.ready_for_runtime
     //     //    soc_ifc_status_monitor_struct.mailbox_data_avail
     //     //    soc_ifc_status_monitor_struct.mailbox_flow_done
@@ -213,7 +213,7 @@ end
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
     //      soc_ifc_status_monitor_struct.xyz = ready_for_fuses_i;  //     
-    //      soc_ifc_status_monitor_struct.xyz = ready_for_fw_push_i;  //     
+    //      soc_ifc_status_monitor_struct.xyz = ready_for_mb_processing_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = ready_for_runtime_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = mailbox_data_avail_i;  //     
     //      soc_ifc_status_monitor_struct.xyz = mailbox_flow_done_i;  //     
@@ -238,7 +238,7 @@ end
         @(posedge clk_i);
     end
     ready_for_fuses_o              <= ready_for_fuses_i     ;
-    ready_for_fw_push_o            <= ready_for_fw_push_i   ;
+    ready_for_mb_processing_o      <= ready_for_mb_processing_i;
     ready_for_runtime_o            <= ready_for_runtime_i   ;
     mailbox_data_avail_o           <= mailbox_data_avail_i  ;
     mailbox_flow_done_o            <= mailbox_flow_done_i   ;
@@ -249,7 +249,7 @@ end
     begin: build_return_struct
     // Variables within the soc_ifc_status_initiator_struct:
          soc_ifc_status_monitor_struct.ready_for_fuses                    =  ready_for_fuses_i;
-         soc_ifc_status_monitor_struct.ready_for_fw_push                  =  ready_for_fw_push_i;
+         soc_ifc_status_monitor_struct.ready_for_mb_processing            =  ready_for_mb_processing_i;
          soc_ifc_status_monitor_struct.ready_for_runtime                  =  ready_for_runtime_i;
          soc_ifc_status_monitor_struct.mailbox_data_avail                 =  mailbox_data_avail_i;
          soc_ifc_status_monitor_struct.mailbox_flow_done                  =  mailbox_flow_done_i;

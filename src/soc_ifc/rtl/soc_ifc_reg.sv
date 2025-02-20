@@ -3606,14 +3606,14 @@ module soc_ifc_reg (
             automatic logic load_next_c;
             next_c = field_storage.fuse_uds_seed[i0].seed.value;
             load_next_c = '0;
-            if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
-                next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
+            if(hwif_in.fuse_uds_seed[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_uds_seed[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_uds_seed[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.fuse_uds_seed[i0] && decoded_req_is_wr && !(hwif_in.fuse_uds_seed[i0].seed.swwel)) begin // SW write
+                next_c = (field_storage.fuse_uds_seed[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.fuse_uds_seed[i0].seed.next = next_c;
@@ -3635,14 +3635,14 @@ module soc_ifc_reg (
             automatic logic load_next_c;
             next_c = field_storage.fuse_field_entropy[i0].seed.value;
             load_next_c = '0;
-            if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
-                next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
+            if(hwif_in.fuse_field_entropy[i0].seed.we) begin // HW Write - we
                 next_c = hwif_in.fuse_field_entropy[i0].seed.next;
                 load_next_c = '1;
             end else if(hwif_in.fuse_field_entropy[i0].seed.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.fuse_field_entropy[i0] && decoded_req_is_wr && !(hwif_in.fuse_field_entropy[i0].seed.swwel)) begin // SW write
+                next_c = (field_storage.fuse_field_entropy[i0].seed.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.fuse_field_entropy[i0].seed.next = next_c;
@@ -4666,14 +4666,14 @@ module soc_ifc_reg (
             automatic logic load_next_c;
             next_c = field_storage.internal_obf_key[i0].key.value;
             load_next_c = '0;
-            if(decoded_reg_strb.internal_obf_key[i0] && decoded_req_is_wr && hwif_in.internal_obf_key[i0].key.swwe) begin // SW write
-                next_c = (field_storage.internal_obf_key[i0].key.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(!hwif_in.internal_obf_key[i0].key.wel) begin // HW Write - wel
+            if(!hwif_in.internal_obf_key[i0].key.wel) begin // HW Write - wel
                 next_c = hwif_in.internal_obf_key[i0].key.next;
                 load_next_c = '1;
             end else if(hwif_in.internal_obf_key[i0].key.hwclr) begin // HW Clear
                 next_c = '0;
+                load_next_c = '1;
+            end else if(decoded_reg_strb.internal_obf_key[i0] && decoded_req_is_wr && hwif_in.internal_obf_key[i0].key.swwe) begin // SW write
+                next_c = (field_storage.internal_obf_key[i0].key.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
             end
             field_combo.internal_obf_key[i0].key.next = next_c;
@@ -7113,7 +7113,7 @@ module soc_ifc_reg (
     assign readback_array[56][0:0] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next : '0;
     assign readback_array[56][3:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.RSVD_en.next : '0;
     assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
-    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next : '0;
+    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next : '0;
     assign readback_array[56][31:6] = '0;
     assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
     assign readback_array[57][31:1] = '0;

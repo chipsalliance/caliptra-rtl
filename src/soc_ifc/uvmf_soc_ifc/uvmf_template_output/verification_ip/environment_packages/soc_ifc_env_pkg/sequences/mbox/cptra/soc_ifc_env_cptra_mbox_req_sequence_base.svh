@@ -109,7 +109,7 @@ class soc_ifc_env_cptra_mbox_req_sequence_base extends soc_ifc_env_sequence_base
   //==========================================
   virtual function void do_kill();
     // FIXME gracefully terminate any AHB requests pending?
-    reg_model.soc_ifc_AHB_map.get_sequencer().stop_sequences(); // Kill any pending APB transfers
+    reg_model.soc_ifc_AHB_map.get_sequencer().stop_sequences(); // Kill any pending AHB transfers
   endfunction
 
   //==========================================
@@ -243,7 +243,7 @@ task soc_ifc_env_cptra_mbox_req_sequence_base::mbox_acquire_lock(output op_sts_e
 
         // If we don't already have the lock, acquire it
         // TODO this logic copied from soc-mailbox flow. Is it applicable without
-        //      PAUSER field to evaluate?
+        //      AxUSER field to evaluate?
         if (!uc_has_lock && retry_failed_reg_axs) begin
             reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
             report_reg_sts(reg_sts, "mbox_lock");

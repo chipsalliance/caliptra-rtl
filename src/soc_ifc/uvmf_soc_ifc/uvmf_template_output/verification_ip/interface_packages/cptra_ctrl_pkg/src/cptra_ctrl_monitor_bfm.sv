@@ -30,7 +30,7 @@
 //     signal with a _i suffix.  The _i signal should be used for sampling.
 //
 //     The input signal connections are as follows:
-//       bus.signal -> signal_i 
+//       bus.signal -> signal_i
 //
 //      Interface functions and tasks used by UVM components:
 //             monitor(inout TRANS_T txn);
@@ -86,23 +86,27 @@ end
   tri  clear_obf_secrets_i;
   tri  iccm_axs_blocked_i;
   tri [3:0] rv_ecc_sts_i;
+  tri  crypto_error_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign clear_obf_secrets_i = bus.clear_obf_secrets;
   assign iccm_axs_blocked_i = bus.iccm_axs_blocked;
   assign rv_ecc_sts_i = bus.rv_ecc_sts;
+  assign crypto_error_i = bus.crypto_error;
 
   // Proxy handle to UVM monitor
   cptra_ctrl_pkg::cptra_ctrl_monitor  proxy;
-  // pragma tbx oneway proxy.notify_transaction                 
+  // pragma tbx oneway proxy.notify_transaction
 
   // pragma uvmf custom interface_item_additional begin
   logic clear_obf_secrets_r = 1'b0;
   logic iccm_axs_blocked_r = 1'b0;
+  logic crypto_error_r = 1'b0;
   function bit any_signal_changed();
       return |(clear_obf_secrets_i   ^  clear_obf_secrets_r  ) ||
              |(iccm_axs_blocked_i    ^  iccm_axs_blocked_r   ) ||
-             |(rv_ecc_sts_i          /* pulse no reg-stage */);
+             |(rv_ecc_sts_i          /* pulse no reg-stage */) ||
+             |(crypto_error_i        ^  crypto_error_r);
   endfunction
   // pragma uvmf custom interface_item_additional end
 
@@ -121,7 +125,7 @@ end
   endtask
 
   // pragma uvmf custom wait_for_num_clocks begin
-  //****************************************************************************                         
+  //****************************************************************************
   // Inject pragmas's here to throw a warning on regeneration.
   // Task must have automatic lifetime so that it can be concurrently invoked
   // by multiple entities with a different wait value.
@@ -130,7 +134,7 @@ end
     @(posedge clk_i);
     repeat (count-1) @(posedge clk_i);
   endtask
-  // pragma uvmf custom wait_for_num_clocks end                                                                
+  // pragma uvmf custom wait_for_num_clocks end
 
   //******************************************************************
   event go;
@@ -174,6 +178,7 @@ end
     //     //    cptra_ctrl_monitor_struct.assert_clear_secrets
     //     //    cptra_ctrl_monitor_struct.iccm_axs_blocked
     //     //    cptra_ctrl_monitor_struct.pulse_rv_ecc_error
+    //     //    cptra_ctrl_monitor_struct.crypto_error
     //     //
     // Reference code;
     //    How to wait for signal value
@@ -181,9 +186,10 @@ end
     //
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
-    //      cptra_ctrl_monitor_struct.xyz = clear_obf_secrets_i;  //     
+    //      cptra_ctrl_monitor_struct.xyz = clear_obf_secrets_i;  //
     //      cptra_ctrl_monitor_struct.xyz = iccm_axs_blocked_i;  //
     //      cptra_ctrl_monitor_struct.xyz = rv_ecc_sts_i;  //    [3:0]
+    //      cptra_ctrl_monitor_struct.xyz = crypto_error_i;  //
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to
@@ -195,14 +201,17 @@ end
 
     // Wait for next transfer then gather info from intiator about the transfer.
     // Place the data into the cptra_ctrl_monitor_struct.
+    // TODO these signals behave like interrupts, so should only trigger a transaction on rising edges? Similar to cptra_status_monitor_bfm
     while (!any_signal_changed()) @(posedge clk_i);
     iccm_axs_blocked_r    = iccm_axs_blocked_i;
     clear_obf_secrets_r   = clear_obf_secrets_i;
+    crypto_error_r        = crypto_error_i;
     begin: build_return_struct
   // Variables within the cptra_ctrl_monitor_struct:
          cptra_ctrl_monitor_struct.iccm_axs_blocked     = iccm_axs_blocked_i;
          cptra_ctrl_monitor_struct.assert_clear_secrets = clear_obf_secrets_i;
          cptra_ctrl_monitor_struct.pulse_rv_ecc_error   = rv_ecc_sts_i;
+         cptra_ctrl_monitor_struct.crypto_error         = crypto_error_i;
     end
     // pragma uvmf custom do_monitor end
   endtask

@@ -30,7 +30,7 @@
 `define CALIPTRA_ASSERT_ERROR(__name)                                                             \
 `ifdef UVM                                                                                        \
   uvm_pkg::uvm_report_error("CALIPTRA_ASSERT FAILED", `CALIPTRA_PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
-                            `__FILE__, `__LINE__, "", 1);                                         \
+                            `__FILE__, `__LINE__);                                                \
 `else                                                                                             \
   $error("%0t: (%0s:%0d) [%m] [CALIPTRA_ASSERT FAILED] %0s", $time, `__FILE__, `__LINE__,         \
          `CALIPTRA_PRIM_STRINGIFY(__name));                                                                \

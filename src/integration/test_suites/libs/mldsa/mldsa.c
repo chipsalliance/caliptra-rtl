@@ -561,5 +561,18 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
         reg_ptr++;
         offset++;
     }
+}
 
+void mldsa_keyload_error_flow(mldsa_io seed)
+{
+    // wait for MLDSA to be ready
+    printf("Waiting for mldsa status ready\n");
+    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+
+    //Enable force of zeroize during keyvault read
+    printf("%c",0x9b);
+
+    // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+    lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
 }

@@ -82,6 +82,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_intr_hw.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_onehot_check.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_onehot_enc.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_onehot_mux.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi8_sync.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi8_sender.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_sync_cnt.sv

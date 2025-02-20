@@ -20,6 +20,8 @@
 //   Subordinate to convert AXI protocol writes into internal component accesses
 //
 // Limitations:
+//   - Does not consume or store received WUSER, and drives BUSER to all 0's
+//     (i.e., BUSER is unimplemented)
 //   - When multiple ID tracking is enabled, write responses are returned in the
 //     same order they are received, regardless of ID.
 //
@@ -364,6 +366,8 @@ module axi_sub_wr import axi_pkg::*; #(
                   s_axi_if.bid}  )
     );
 
+    always_comb s_axi_if.buser = '0;
+
 
     // --------------------------------------- //
     // Formal Properties                       //
@@ -381,11 +385,13 @@ module axi_sub_wr import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_WREADY , s_axi_if.wready , clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_WDATA  , (s_axi_if.wvalid ? s_axi_if.wdata : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_WSTRB  , (s_axi_if.wvalid ? s_axi_if.wstrb : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_WUSER  , (s_axi_if.wvalid ? s_axi_if.wuser : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_WLAST  , (s_axi_if.wvalid ? s_axi_if.wlast : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BVALID , s_axi_if.bvalid , clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BREADY , s_axi_if.bready , clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BRESP  , (s_axi_if.bvalid ? s_axi_if.bresp : '0), clk, !rst_n)
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BID    , (s_axi_if.bvalid ? s_axi_if.bid   : '0), clk, !rst_n)
+    `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BUSER  , (s_axi_if.bvalid ? s_axi_if.buser : '0), clk, !rst_n)
 
     // Handshake rules
     `CALIPTRA_ASSERT      (AXI_SUB_AW_HSHAKE_ERR, (s_axi_if.awvalid && !s_axi_if.awready) |=> s_axi_if.awvalid, clk, !rst_n)

@@ -38,24 +38,37 @@ package caliptra_top_sequences_pkg;
   import uvmf_base_pkg::*;
   import mvc_pkg::*;
   import mgc_ahb_v2_0_pkg::*;
-  import mgc_apb3_v1_0_pkg::*;
+//  import mgc_apb3_v1_0_pkg::*;
   import soc_ifc_ctrl_pkg::*;
   import soc_ifc_ctrl_pkg_hdl::*;
   import cptra_ctrl_pkg::*;
   import cptra_ctrl_pkg_hdl::*;
+  import ss_mode_ctrl_pkg::*;
+  import ss_mode_ctrl_pkg_hdl::*;
   import soc_ifc_status_pkg::*;
   import soc_ifc_status_pkg_hdl::*;
   import cptra_status_pkg::*;
   import cptra_status_pkg_hdl::*;
+  import ss_mode_status_pkg::*;
+  import ss_mode_status_pkg_hdl::*;
   import mbox_sram_pkg::*;
   import mbox_sram_pkg_hdl::*;
   import caliptra_top_parameters_pkg::*;
   import caliptra_top_env_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
-  import qvip_apb5_slave_params_pkg::*;
+//  import qvip_apb5_slave_params_pkg::*;
   `include "uvm_macros.svh"
 
   // pragma uvmf custom package_imports_additional begin
+
+  `include "avery_defines.svh"
+  import aaxi_pkg::*;
+  import aaxi_pkg_xactor::*;
+  import aaxi_pkg_test::*;
+  import aaxi_pll::*;
+
+  import aaxi_uvm_pkg::*;
+
   import soc_ifc_env_pkg::*;
   import soc_ifc_reg_model_top_pkg::*;
   // pragma uvmf custom package_imports_additional end

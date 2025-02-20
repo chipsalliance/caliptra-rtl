@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use ss_mode_ctrl_pkg_hdl.vinfo
++incdir+@vinfodir
+src/ss_mode_ctrl_if.sv
+src/ss_mode_ctrl_driver_bfm.sv
+src/ss_mode_ctrl_monitor_bfm.sv

@@ -20,6 +20,7 @@ requires:
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage
+  - hmac_drbg_coverage
   - ecc_coverage
   - soc_ifc_coverage
   - pcrvault_cov
@@ -59,6 +60,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
@@ -73,17 +76,49 @@ global:
         # package (each .svh file included in the auto-generated UVM _pkg.sv
         # files imports the same dependencies)
         - '-suppress=SV-LCM-PPWI'
+        # AVERY
+        - '-assert svaext'
+        - '-full64'
+        - +define+AVERY_VCS
+        - +define+AVERY_ASSERT_ON
+        - +define+AVERY_COVERAGE_ON
+        - +define+AVERY_MONITOR_ON
+        - +define+AVERY_PASSIVE_MASTER
+        - +define+AVERY_CLOCK=5
+        - +define+AVERY_NAMED_CONSTRUCTOR
+        - +define+AVERY_AXI_USER
+        - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+FOUR_OUTSTANDING
+        - +define+AAXI_MAX_DATA_WIDTH=32
+        - +define+AAXI_MAX_ADDR_WIDTH=64
+        - +define+AAXI_MAX_ID_WIDTH=5
+        #- +define+AAXI_TOP_PATH=aaxi_uvm_test_top
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+        - "-P $AVERY_PLI/tb_vcs64.tab"
       elab:
         # Suppress warnings about too few port connections - auto-generated interfaces
         # declare all signals as inout, but are driven at a lower layer than the
         # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        # Suppress warnings about encrypted VIP code for which coverage
+        # can not be captured
+        - '-suppress=VCM-NOCOV-ENC'
+        # AVERY
+#        - '+libext+.v+.sv+.svh'
+        - +warn=noUII-L
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+        - "-P $AVERY_PLI/tb_vcs64.tab"
       sim:
         - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
         - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
         - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'
         # Report "MVC_ERROR" as "UVM_ERROR"
         - '+QVIP_UVM_REPORTING'
+        # AVERY
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+#        - "-P $AVERY_PLI/tb_vcs64.tab"
+        - '+vpi -lpthread'
+#        - +aaxi_dbg_name=all
 ---
 provides: [uvmf_caliptra_top_itrng]
 schema_version: 2.4.0
@@ -105,6 +140,8 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        # Define this for caliptra_sva to know how to report assert errors
+        - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
@@ -115,14 +152,46 @@ global:
         # package (each .svh file included in the auto-generated UVM _pkg.sv
         # files imports the same dependencies)
         - '-suppress=SV-LCM-PPWI'
+        # AVERY
+        - '-assert svaext'
+        - '-full64'
+        - +define+AVERY_VCS
+        - +define+AVERY_ASSERT_ON
+        - +define+AVERY_COVERAGE_ON
+        - +define+AVERY_MONITOR_ON
+        - +define+AVERY_PASSIVE_MASTER
+        - +define+AVERY_CLOCK=5
+        - +define+AVERY_NAMED_CONSTRUCTOR
+        - +define+AVERY_AXI_USER
+        - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+FOUR_OUTSTANDING
+        - +define+AAXI_MAX_DATA_WIDTH=32
+        - +define+AAXI_MAX_ADDR_WIDTH=64
+        - +define+AAXI_MAX_ID_WIDTH=5
+        #- +define+AAXI_TOP_PATH=aaxi_uvm_test_top
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+        - "-P $AVERY_PLI/tb_vcs64.tab"
       elab:
         # Suppress warnings about too few port connections - auto-generated interfaces
         # declare all signals as inout, but are driven at a lower layer than the
         # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        # Suppress warnings about encrypted VIP code for which coverage
+        # can not be captured
+        - '-suppress=VCM-NOCOV-ENC'
+        # AVERY
+#        - '+libext+.v+.sv+.svh'
+        - +warn=noUII-L
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+        - "-P $AVERY_PLI/tb_vcs64.tab"
       sim:
         - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
         - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
         - '-sv_lib libapb3_IN_SystemVerilog_VCS_full'
         # Report "MVC_ERROR" as "UVM_ERROR"
         - '+QVIP_UVM_REPORTING'
+        # AVERY
+        - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
+#        - "-P $AVERY_PLI/tb_vcs64.tab"
+        - '+vpi -lpthread'
+#        - +aaxi_dbg_name=all

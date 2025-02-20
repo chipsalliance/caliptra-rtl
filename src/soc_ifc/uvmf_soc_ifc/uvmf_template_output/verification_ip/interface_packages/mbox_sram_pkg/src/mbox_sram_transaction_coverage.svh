@@ -40,9 +40,9 @@ class mbox_sram_transaction_coverage  extends uvm_subscriber #(.T(mbox_sram_tran
   T coverage_trans;
 
   // pragma uvmf custom class_item_additional begin
-  mbox_sram_transaction_bit_cg address_bit_cg[MBOX_ADDR_W];
-  mbox_sram_transaction_bit_cg data_bit_cg[MBOX_DATA_W];
-  mbox_sram_transaction_bit_cg data_ecc_bit_cg[MBOX_ECC_DATA_W];
+  mbox_sram_transaction_bit_cg address_bit_cg[CPTRA_MBOX_ADDR_W];
+  mbox_sram_transaction_bit_cg data_bit_cg[CPTRA_MBOX_DATA_W];
+  mbox_sram_transaction_bit_cg data_ecc_bit_cg[CPTRA_MBOX_ECC_DATA_W];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************

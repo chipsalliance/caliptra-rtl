@@ -29,7 +29,7 @@ class soc_ifc_env_mbox_rom_fw_sequence extends soc_ifc_env_mbox_sequence_base;
   `uvm_object_utils( soc_ifc_env_mbox_rom_fw_sequence )
 
   // 128KiB memory, with 32768 single-dword entries
-  bit [7:0] fw_img [soc_ifc_pkg::MBOX_DEPTH][soc_ifc_pkg::MBOX_DATA_W/8-1:0];    
+  bit [7:0] fw_img [soc_ifc_pkg::CPTRA_MBOX_DEPTH][soc_ifc_pkg::CPTRA_MBOX_DATA_W/8-1:0];    
   int fw_img_size;
 
   extern virtual task mbox_setup();
@@ -90,7 +90,7 @@ task soc_ifc_env_mbox_rom_fw_sequence::mbox_push_datain();
         else
             `uvm_info("MBOX_ROM_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii, data), UVM_DEBUG)
         reg_model.mbox_csr_rm.mbox_datain_sem.get();
-        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+        reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
         reg_model.mbox_csr_rm.mbox_datain_sem.put();
         report_reg_sts(reg_sts, "mbox_datain");
     end
