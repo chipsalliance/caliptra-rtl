@@ -81,3 +81,4 @@ targets:
     files:
       - $COMPILE_ROOT/coverage/axi_dma_top_cov_if.sv
       - $COMPILE_ROOT/coverage/axi_dma_top_cov_bind.sv
+      - $COMPILE_ROOT/coverage/axi_dma_top_cov_props.sv

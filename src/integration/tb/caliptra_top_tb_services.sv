@@ -2220,6 +2220,7 @@ ecc_top_cov_bind i_ecc_top_cov_bind();
 mldsa_top_cov_bind i_mldsa_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
+axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

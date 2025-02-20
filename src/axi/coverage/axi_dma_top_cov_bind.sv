@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-module axi_dma_cov_bind;
+module axi_dma_top_cov_bind;
   `ifdef FCOV
   bind axi_dma_top axi_dma_top_cov_if i_axi_dma_top_cov_if(.*);
   bind axi_dma_top axi_dma_top_cov_props i_axi_dma_top_cov_props(.*);
