@@ -229,6 +229,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
+                                                      HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK  |
                                                       ((tag.kv_id << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
     }
 

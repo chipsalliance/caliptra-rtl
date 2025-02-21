@@ -36,9 +36,9 @@
 
       tc_ctr = tc_ctr + 1;
 
+      // Exclude registers that are covered in separate tasks - fuse and intrblk regs
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
-      // Exclude registers that are covered in separate tasks - fuse and intrblk regs
       // -- Exclude CPTRA_TRNG_STATUS, INTERNAL_RV_MTIME_L/H
       del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_L");
       del_from_strq(soc_regnames, "INTERNAL_RV_MTIME_H");
@@ -47,11 +47,21 @@
       // -- Exclude CPTRA_TRNG_DATA*
       delm_from_strq(soc_regnames, "CPTRA_TRNG_DATA");
 
+      // Exclude read-only registers. Covered in separate tasks
+      foreach (soc_regnames[ix]) begin
+        if ((soc_regnames[ix] == "CPTRA_CAP_LOCK") ||
+            (soc_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
+            (soc_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
+          soc_regnames.delete(ix);  // SOC read-only
+          continue; 
+        end
+      end
+      
       repeat (5) @(posedge clk_tb);
 
       // Skip wrting & reading over AHB until post reset sequencing is done 
       // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using APB as part of Caliptra boot.  Scoreboard update not 
+      // are written using AXI as part of Caliptra boot.  Scoreboard update not 
       // needed for readonly fields which are set directly by wires.
       simulate_caliptra_boot();
 
@@ -78,29 +88,29 @@
       sb.del_all();
 
       $display ("\n-------------------------------------------------------------");
-      $display ("1b. Writing/Reading back to back using APB/APB every 3 cycles");
+      $display ("1b. Writing/Reading back to back using AXI/AXI every 3 cycles");
       $display ("-------------------------------------------------------------");
 
-      write_read_regs(SET_APB, GET_APB, soc_regnames, tid, 3);
+      write_read_regs(SET_AXI, GET_AXI, soc_regnames, tid, 3);
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
 
       $display ("\n-------------------------------------------------------------");
-      $display ("1c. Writing/Reading back to back using APB/AHB every 3 cycles");
+      $display ("1c. Writing/Reading back to back using AXI/AHB every 3 cycles");
       $display ("-------------------------------------------------------------");
 
-      write_read_regs(SET_APB, GET_AHB, soc_regnames, tid, 3);
+      write_read_regs(SET_AXI, GET_AHB, soc_regnames, tid, 3);
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
 
       $display ("\n-------------------------------------------------------------");
-      $display ("1d. Writing/Reading back to back using AHB/APB every 3 cycles");
+      $display ("1d. Writing/Reading back to back using AHB/AXI every 3 cycles");
       $display ("-------------------------------------------------------------");
 
-      write_read_regs(SET_AHB, GET_APB, soc_regnames, tid, 3);
+      write_read_regs(SET_AHB, GET_AXI, soc_regnames, tid, 3);
       
       //FIXME. Need to add test for delayed cross modification of INTERNAL_ICCM_LOCK  
       //        if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
