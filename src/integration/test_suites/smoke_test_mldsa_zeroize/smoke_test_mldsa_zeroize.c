@@ -133,8 +133,8 @@ void main() {
 
         status_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_STATUS;
 
-        uint8_t inject_cmd = 1; //rand() % 2;
-        uint8_t test_mode = 3; //rand() % 16;
+        uint8_t inject_cmd = rand() % 2;
+        uint8_t test_mode = rand() % 16;
         if (test_mode == 0) {
             printf("\nApplying MLDSA zeroize/scan_mode just before enabling MLDSA.\n");
             inject_command(inject_cmd);
@@ -154,7 +154,7 @@ void main() {
             lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
         
             // Randomly apply zeroize during engine execution
-            uint32_t zeroize_time = 200; //rand() % 3000;
+            uint32_t zeroize_time = rand() % 3000;
             printf("\nzeroize time is = %d\n", zeroize_time);
             for (uint32_t slp = 0; slp < zeroize_time; slp++) {
                 __asm__ volatile ("nop"); // Sleep loop as "nop"
