@@ -51,6 +51,7 @@
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define MLDSA_RAMS_PATH     `SERVICES_PATH.mldsa_mem_top_inst
+`define MLDSA_TOP_PATH      `CPTRA_TOP_PATH.mldsa
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -61,6 +62,8 @@
   `define SVA_CLK `CPTRA_TB_TOP_NAME.core_clk
   `define SVA_RST `CPTRA_TB_TOP_NAME.cptra_rst_b
 `endif
+`define MLDSA_ZEROIZATION   `CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.mldsa_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value
+`define MLDSA_SCAN_DEBUG    `CPTRA_TOP_PATH.mldsa.debugUnlock_or_scan_mode_switch
 
 module caliptra_top_sva
   import doe_defines_pkg::*;
@@ -90,6 +93,13 @@ module caliptra_top_sva
   localparam SIGNATURE_C_NUM_DWORDS = 16;
   localparam SIGNATURE_Z_NUM_DWORDS = 1120;
   localparam SIGNATURE_NUM_DWORDS = SIGNATURE_H_NUM_DWORDS + SIGNATURE_Z_NUM_DWORDS + SIGNATURE_C_NUM_DWORDS;
+
+  localparam MLDSA_REG_RHO_P_NUM_DWORDS = PRIVKEY_REG_RHO_NUM_DWORDS;
+  localparam MLDSA_PRIVKEY_REG_NUM_DWORDS = PRIVKEY_REG_NUM_DWORDS;
+  localparam MLDSA_ENTROPY_NUM_DWORDS   = 16;
+  localparam MLDSA_SIGN_RND_NUM_DWORDS  = 8; 
+
+
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
                                             @(posedge `SVA_RDC_CLK)
@@ -420,6 +430,161 @@ module caliptra_top_sva
       end
     end
   endgenerate
+  // MLDSA Scan, Debug and Zeroization Assertions
+  generate
+    // Check rho_p_reg word-by-word using MLDSA_REG_RHO_P_NUM_DWORDS
+    for (genvar i = 0; i < MLDSA_REG_RHO_P_NUM_DWORDS; i++) begin: rho_p_check
+      ZERO_MLDSA_RHO_P_check: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.rho_p_reg[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_PATH.rho_p_reg[%0d] is not zero", i);
+    end
+
+    // Check privatekey_reg (accessed via its raw field) word-by-word using MLDSA_PRIVKEY_REG_NUM_DWORDS
+    for (genvar i = 0; i < MLDSA_PRIVKEY_REG_NUM_DWORDS; i++) begin: privkey_check
+      ZERO_MLDSA_K_rho_tr_check: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.privatekey_reg.raw[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_PATH.privatekey_reg.raw[%0d] is not zero", i);
+    end
+
+    ZERO_MLDSA_priv_key_rd_port: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.privkey_reg_rdata == 0))
+    )
+    else $display("SVA ERROR: MLDSA_PATH.privkey_reg_rdata is not zero");
+
+    // Check seed_reg word-by-word using MLDSA_SEED_NUM_DWORDS
+    for (genvar i = 0; i < MLDSA_SEED_NUM_DWORDS; i++) begin: seed_check
+      ZERO_MLDSA_seed_reg: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.seed_reg[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_PATH.seed_reg[%0d] is not zero", i);
+    end
+
+    // Check entropy_reg word-by-word using MLDSA_ENTROPY_NUM_DWORDS
+    for (genvar i = 0; i < MLDSA_ENTROPY_NUM_DWORDS; i++) begin: entropy_check
+      ZERO_MLDSA_entropy_reg: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.entropy_reg[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_PATH.entropy_reg[%0d] is not zero", i);
+    end
+
+    // Check sign_rnd_reg word-by-word using MLDSA_SIGN_RND_NUM_DWORDS
+    for (genvar i = 0; i < MLDSA_SIGN_RND_NUM_DWORDS; i++) begin: sign_rnd_check
+      ZERO_MLDSA_sign_rnd_reg: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_PATH.sign_rnd_reg[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_PATH.sign_rnd_reg[%0d] is not zero", i);
+    end
+
+  endgenerate
+  // MLDSA_TOP_PATH Memory Interface Zeroization Assertions
+  generate
+    // skencode_mem_rd_data: 2-element array of MLDSA_MEM_DATA_WIDTH bits each.
+    for (genvar i = 0; i < 2; i++) begin: skencode_mem_rd_data_check
+      ZERO_MLDSA_skencode_mem_rd_data: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##4 (`MLDSA_TOP_PATH.skencode_mem_rd_data[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.skencode_mem_rd_data[%0d] is not zero", i);
+    end
+    // skencode_wr_data: Single vector of DATA_WIDTH bits.
+    ZERO_MLDSA_skencode_wr_data: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_TOP_PATH.skencode_wr_data == 0))
+    )
+    else $display("SVA ERROR: MLDSA_TOP_PATH.skencode_wr_data is not zero");
+
+    // skdecode_mem_wr_data: 2-element array of MLDSA_MEM_DATA_WIDTH bits each.
+    for (genvar i = 0; i < 2; i++) begin: skdecode_mem_wr_data_check
+      ZERO_MLDSA_skdecode_mem_wr_data: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_TOP_PATH.skdecode_mem_wr_data[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.skdecode_mem_wr_data[%0d] is not zero", i);
+    end
+
+    // skdecode_rd_data: 2-element array of DATA_WIDTH bits each.
+    for (genvar i = 0; i < 2; i++) begin: skdecode_rd_data_check
+      ZERO_MLDSA_skdecode_rd_data: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##4 (`MLDSA_TOP_PATH.skdecode_rd_data[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.skdecode_rd_data[%0d] is not zero", i);
+    end
+
+    // mldsa_mem_rdata0_bank: 2-element array of MLDSA_MEM_DATA_WIDTH bits.
+    for (genvar i = 0; i < 2; i++) begin: mldsa_mem_rdata0_bank_check
+      ZERO_MLDSA_mldsa_mem_rdata0_bank: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##3 (`MLDSA_TOP_PATH.mldsa_mem_rdata0_bank[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.mldsa_mem_rdata0_bank[%0d] is not zero", i);
+    end
+
+    // mldsa_mem_wdata: Array indexed from 1 to 3, each element is MLDSA_MEM_DATA_WIDTH bits.
+    for (genvar i = 1; i <= 3; i++) begin: mldsa_mem_wdata_check
+      ZERO_MLDSA_mldsa_mem_wdata: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1 (`MLDSA_TOP_PATH.mldsa_mem_wdata[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.mldsa_mem_wdata[%0d] is not zero", i);
+    end
+
+    // mldsa_mem_wdata0_bank: 2-element array of MLDSA_MEM_DATA_WIDTH bits.
+    for (genvar i = 0; i < 2; i++) begin: mldsa_mem_wdata0_bank_check
+      ZERO_MLDSA_mldsa_mem_wdata0_bank: assert property (
+        @(posedge `SVA_RDC_CLK)
+        ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##4 (`MLDSA_TOP_PATH.mldsa_mem_wdata0_bank[i] == 0))
+      )
+      else $display("SVA ERROR: MLDSA_TOP_PATH.mldsa_mem_wdata0_bank[%0d] is not zero", i);
+    end
+  endgenerate
+  generate
+    begin: MLDSA_mem_zeroize_check
+      // Check bank0 memory: even addresses from the private key memory
+      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank0_zero_check
+        ZERO_MLDSA_sk_mem_bank0_zero: assert property (
+            @(posedge `SVA_RDC_CLK)
+            (
+              ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1
+                ( (!`MLDSA_PATH.zeroize_mem_done)[*0:$] ##1
+                  ( `MLDSA_PATH.zeroize_mem_done &&
+                    (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword] == 0)
+                  )
+                )
+              )
+            )
+        )
+        else $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero", dword);
+      end
+  
+      // Check bank1 memory: odd addresses from the private key memory
+      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank1_zero_check
+        ZERO_MLDSA_sk_mem_bank1_zero: assert property (
+            @(posedge `SVA_RDC_CLK)
+            (
+              ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1
+                ( (!`MLDSA_PATH.zeroize_mem_done)[*0:$] ##1
+                  ( `MLDSA_PATH.zeroize_mem_done &&
+                    (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword] == 0)
+                  )
+                )
+              )
+            )
+        )
+        else $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero", dword);
+      end
+    end
+  endgenerate
+  
+
 
   `endif
   //Generate disable signal for fuse_wr_check sva when hwclr is asserted. The disable needs to be for 3 clks in order to ignore the fuses being cleared
