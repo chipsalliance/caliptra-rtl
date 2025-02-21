@@ -828,6 +828,7 @@ module soc_ifc_tb
                                  input exp_txn_sts_e exp_txn_sts = PASS);
     begin
       axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
       $display("AXI Write transaction to address 0x%x", address);
       s_axi_if.axi_write_single(
         .addr(address),
@@ -835,7 +836,9 @@ module soc_ifc_tb
         .id(0),
         .lock(0),
         .data(word),
-        .resp(resp));
+        .write_user(0),
+        .resp(resp),
+        .resp_user(resp_user));
       //$display("Checking if AXI write was successful");
       axi_txn_check(resp, write, exp_txn_sts);
       //$display("Done writing to address 0x%x", address);
@@ -853,6 +856,7 @@ module soc_ifc_tb
                                  input exp_txn_sts_e exp_txn_sts = PASS);
     begin
       axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
       //$display("AXI Write transaction");
       s_axi_if.axi_write_single(
       .addr(address),
@@ -860,7 +864,9 @@ module soc_ifc_tb
       .id(0),
       .lock(0),
       .data(word),
-      .resp(resp));
+      .write_user(0),
+      .resp(resp),
+      .resp_user(resp_user));
       //$display("Checking if AXI write was successful");
       axi_txn_check(resp, write, exp_txn_sts);
     end
@@ -933,12 +939,14 @@ module soc_ifc_tb
                                 input exp_txn_sts_e exp_txn_sts = PASS);
     begin
       axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
       s_axi_if.axi_read_single(
         .addr(address),
         .user('hFFFFFFFF),
         .id(0),
         .lock(0),
         .data(rdata),
+        .resp_user(resp_user),
         .resp(resp));
       //$display("AXi SUB read complete");
       //$display("Checking if AXI read was successful");
@@ -958,12 +966,14 @@ module soc_ifc_tb
                                      output [31 : 0] rdata);
     begin
       axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
       s_axi_if.axi_read_single(
         .addr(address),
         .user(axi_user),
         .id(0),
         .lock(0),
         .data(rdata),
+        .resp_user(resp_user),
         .resp(resp));
       //$display("AXi SUB read complete");
       //$display("Checking if AXI read was successful");
