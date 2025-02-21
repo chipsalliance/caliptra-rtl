@@ -680,7 +680,7 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv),
+    .s_cpuif_req(req_dv & ~dir_req_dv),
     .s_cpuif_req_is_wr(req_data_write),
     .s_cpuif_addr(req_data_addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data_wdata),
