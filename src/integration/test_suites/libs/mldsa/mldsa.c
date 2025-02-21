@@ -46,7 +46,11 @@ void mldsa_zeroize(){
 
 }
 
-
+void write_mldsa_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        base_addr[i] = data[i];
+    }
+}
 
 void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE])
 {
@@ -77,20 +81,12 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
          while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
      }
      else{
-        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
-            *reg_ptr++ = seed.data[offset++];
-        }
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0, seed.data, MLDSA87_SEED_SIZE);
     }
 
     // Write MLDSA ENTROPY
     printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     printf("\nMLDSA KEYGEN\n");
     // Enable MLDSA KEYGEN core
@@ -165,34 +161,17 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
          while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
      }
      else{
-        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
-            *reg_ptr++ = seed.data[offset++];
-        }
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0, seed.data, MLDSA87_SEED_SIZE);
     }
 
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
-        *reg_ptr++ = msg[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
-        *reg_ptr++ = sign_rnd[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
 
     // Write MLDSA ENTROPY
-    printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING\n");
@@ -234,35 +213,17 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
 
     // Program MLDSA PRIVKEY
     printf("Writing privkey\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PRIVKEY_SIZE) {
-        // printf("offset = %0d, value = %x, reg ptr = %0d\n", offset++, privkey[offset++], reg_ptr);
-        *reg_ptr++ = privkey[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
     
     // Program MLDSA MSG
     printf("Writing msg\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
-        *reg_ptr++ = msg[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
-        *reg_ptr++ = sign_rnd[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
 
     // Program MLDSA ENTROPY
-    printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA SIGNING core
     printf("\nMLDSA SIGNING\n");
@@ -302,25 +263,13 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
     
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
-        *reg_ptr++ = msg[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
 
     // Program MLDSA PUBKEY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PUBKEY_SIZE) {
-        *reg_ptr++ = pubkey[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR, pubkey, MLDSA87_PUBKEY_SIZE);
 
     // Program MLDSA SIGNATURE
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_SIGN_SIZE) {
-        *reg_ptr++ = sign[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
 
     // Enable MLDSA VERIFYING core
     printf("\nMLDSA VERIFYING\n");
@@ -376,34 +325,18 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
          while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
      }
      else{
-        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
-            *reg_ptr++ = seed.data[offset++];
-        }
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0, seed.data, MLDSA87_SEED_SIZE);
     }
 
     // Program MLDSA EXTERNAL_MU
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
-        *reg_ptr++ = external_mu[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0, external_mu, MLDSA87_EXTERNAL_MU_SIZE);
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
-        *reg_ptr++ = sign_rnd[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
 
     // Write MLDSA ENTROPY
     printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING in ExternalMu mode\n");
@@ -447,35 +380,16 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
 
     // Program MLDSA PRIVKEY
     printf("Writing privkey\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PRIVKEY_SIZE) {
-        // printf("offset = %0d, value = %x, reg ptr = %0d\n", offset++, privkey[offset++], reg_ptr);
-        *reg_ptr++ = privkey[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
     
     printf("Writing ExternalMu\n");
-    // Program MLDSA EXTERNAL_MU
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
-        *reg_ptr++ = external_mu[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0, external_mu, MLDSA87_EXTERNAL_MU_SIZE);
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
-        *reg_ptr++ = sign_rnd[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
 
     // Program MLDSA ENTROPY
-    printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
-        *reg_ptr++ = entropy[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA SIGNING core
     printf("\nMLDSA SIGNING in ExternalMu mode\n");
@@ -517,25 +431,13 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     
     printf("Writing ExternalMu\n");
     // Program MLDSA EXTERNAL_MU
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15) {
-        *reg_ptr++ = external_mu[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_0, external_mu, MLDSA87_EXTERNAL_MU_SIZE);
 
     // Program MLDSA PUBKEY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_PUBKEY_SIZE) {
-        *reg_ptr++ = pubkey[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR, pubkey, MLDSA87_PUBKEY_SIZE);
 
     // Program MLDSA SIGNATURE
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_SIGN_SIZE) {
-        *reg_ptr++ = sign[offset++];
-    }
+    write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
 
     // Enable MLDSA VERIFYING core
     printf("\nMLDSA VERIFYING in ExternalMu mode\n");
