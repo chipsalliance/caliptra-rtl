@@ -67,7 +67,7 @@ package caliptra_top_sequences_pkg;
   import aaxi_pkg_test::*;
   import aaxi_pll::*;
 
-  import aaxi_uvm_pkg::*;
+  import caliptra_aaxi_uvm_pkg::*;
 
   import soc_ifc_env_pkg::*;
   import soc_ifc_reg_model_top_pkg::*;
