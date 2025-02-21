@@ -1624,13 +1624,15 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
                 "CPTRA_HW_CAPABILITIES": begin
-                    `uvm_error("TODO", "FIXME")
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_FW_CAPABILITIES": begin
-                    `uvm_error("TODO", "FIXME")
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_CAP_LOCK": begin
-                    `uvm_error("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
                 ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
@@ -2780,13 +2782,15 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
             "CPTRA_HW_CAPABILITIES": begin
-                `uvm_error("TODO", "FIXME")
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_FW_CAPABILITIES": begin
-                `uvm_error("TODO", "FIXME")
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_CAP_LOCK": begin
-                `uvm_error("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
             ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin

@@ -119,6 +119,7 @@ endgenerate
             write <= 1'b0;
             addr <= '0;
             err_f <= '0;
+            size <= '0;
         end
         else begin
             err_f <= err;
