@@ -502,7 +502,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
@@ -510,7 +510,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
