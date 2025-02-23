@@ -76,8 +76,8 @@
         wrtrans.update(addr, 0, tid); 
         wrtrans.randomize();
 
-        if (str_startswith(meth_name, "APB.")) 
-          write_read_regs(SET_APB, GET_APB, reglist, tid, 1);
+        if (str_startswith(meth_name, "AXI.")) 
+          write_read_regs(SET_AXI, GET_AXI, reglist, tid, 1);
         else if (str_startswith(meth_name, "AHB.")) 
           write_read_regs(SET_AHB, GET_AHB, reglist, tid, 1);
 

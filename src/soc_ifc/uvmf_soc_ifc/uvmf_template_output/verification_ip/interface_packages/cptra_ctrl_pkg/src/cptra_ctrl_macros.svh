@@ -66,6 +66,7 @@ typedef struct packed  { \
   bit assert_clear_secrets ; \
   bit iccm_axs_blocked ; \
   rv_ecc_sts_t pulse_rv_ecc_error ; \
+  bit crypto_error ; \
      } cptra_ctrl_monitor_s;
 
   `define cptra_ctrl_TO_MONITOR_STRUCT_FUNCTION \
@@ -74,7 +75,8 @@ typedef struct packed  { \
             { \
             this.assert_clear_secrets , \
             this.iccm_axs_blocked , \
-            this.pulse_rv_ecc_error  \
+            this.pulse_rv_ecc_error , \
+            this.crypto_error  \
             };\
     return ( cptra_ctrl_monitor_struct);\
   endfunction\
@@ -84,7 +86,8 @@ typedef struct packed  { \
             {\
             this.assert_clear_secrets , \
             this.iccm_axs_blocked , \
-            this.pulse_rv_ecc_error  \
+            this.pulse_rv_ecc_error , \
+            this.crypto_error  \
             } = cptra_ctrl_monitor_struct;\
   endfunction
 
@@ -97,6 +100,7 @@ typedef struct packed  { \
   bit assert_clear_secrets ; \
   bit iccm_axs_blocked ; \
   rv_ecc_sts_t pulse_rv_ecc_error ; \
+  bit crypto_error ; \
      } cptra_ctrl_initiator_s;
 
   `define cptra_ctrl_TO_INITIATOR_STRUCT_FUNCTION \
@@ -105,7 +109,8 @@ typedef struct packed  { \
            {\
            this.assert_clear_secrets , \
            this.iccm_axs_blocked , \
-           this.pulse_rv_ecc_error  \
+           this.pulse_rv_ecc_error , \
+           this.crypto_error  \
            };\
     return ( cptra_ctrl_initiator_struct);\
   endfunction
@@ -115,7 +120,8 @@ typedef struct packed  { \
            {\
            this.assert_clear_secrets , \
            this.iccm_axs_blocked , \
-           this.pulse_rv_ecc_error  \
+           this.pulse_rv_ecc_error , \
+           this.crypto_error  \
            } = cptra_ctrl_initiator_struct;\
   endfunction
 
@@ -128,6 +134,7 @@ typedef struct packed  { \
   bit assert_clear_secrets ; \
   bit iccm_axs_blocked ; \
   rv_ecc_sts_t pulse_rv_ecc_error ; \
+  bit crypto_error ; \
      } cptra_ctrl_responder_s;
 
   `define cptra_ctrl_TO_RESPONDER_STRUCT_FUNCTION \
@@ -136,7 +143,8 @@ typedef struct packed  { \
            {\
            this.assert_clear_secrets , \
            this.iccm_axs_blocked , \
-           this.pulse_rv_ecc_error  \
+           this.pulse_rv_ecc_error , \
+           this.crypto_error  \
            };\
     return ( cptra_ctrl_responder_struct);\
   endfunction
@@ -146,7 +154,8 @@ typedef struct packed  { \
            {\
            this.assert_clear_secrets , \
            this.iccm_axs_blocked , \
-           this.pulse_rv_ecc_error  \
+           this.pulse_rv_ecc_error , \
+           this.crypto_error  \
            } = cptra_ctrl_responder_struct;\
   endfunction
 // pragma uvmf custom additional begin

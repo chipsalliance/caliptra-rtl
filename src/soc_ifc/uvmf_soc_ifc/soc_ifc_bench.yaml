@@ -7,6 +7,8 @@ uvmf:
         value: ACTIVE
       - bfm_name: cptra_ctrl_agent
         value: ACTIVE
+      - bfm_name: ss_mode_ctrl_agent
+        value: ACTIVE
         # STATUS agent is configured as a responder and only has inputs
         # from the DUT. It must still be considered ACTIVE so that the
         # driver is instantiated, which is used to create sequences that
@@ -17,6 +19,8 @@ uvmf:
       - bfm_name: soc_ifc_status_agent
         value: ACTIVE
       - bfm_name: cptra_status_agent
+        value: ACTIVE
+      - bfm_name: ss_mode_status_agent
         value: ACTIVE
       - bfm_name: mbox_sram_agent
         value: ACTIVE

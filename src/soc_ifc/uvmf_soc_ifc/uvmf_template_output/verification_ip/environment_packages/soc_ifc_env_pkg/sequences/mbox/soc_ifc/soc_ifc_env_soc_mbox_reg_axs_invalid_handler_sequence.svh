@@ -108,7 +108,7 @@ task soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence::mbox_do_random_reg_w
     int unsigned rand_idx;
     int unsigned rand_delay;
     uvm_reg_data_t rand_wr_data;
-    caliptra_apb_user local_apb_user_obj;
+    caliptra_axi_user local_axi_user_obj;
 
     mbox_regs.push_back(reg_model.mbox_csr_rm.mbox_cmd    );
     mbox_regs.push_back(reg_model.mbox_csr_rm.mbox_dlen   );
@@ -137,14 +137,14 @@ task soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence::mbox_do_random_reg_w
     // Data used depends on which reg is being accessed to force invalid contents
     rand_wr_data = get_rand_wr_data(mbox_regs[rand_idx]);
 
-    // Get a randomized PAUSER for this transaction - 50% chance of being valid
-    local_apb_user_obj = new();
-    if (!local_apb_user_obj.randomize() with {(addr_user inside {mbox_valid_users}) dist
+    // Get a randomized AxUSER for this transaction - 50% chance of being valid
+    local_axi_user_obj = new();
+    if (!local_axi_user_obj.randomize() with {(addr_user inside {mbox_valid_users}) dist
                                               {1 :/ 1,
                                                0 :/ 1}; })
-        `uvm_error("SOC_MBOX_HANDLER", "Failed to randomize APB PAUSER override value")
+        `uvm_error("SOC_MBOX_HANDLER", "Failed to randomize AXI AxUSER override value")
     else
-        `uvm_info("SOC_MBOX_HANDLER", $sformatf("Randomized APB PAUSER override value to 0x%x", local_apb_user_obj.addr_user), UVM_HIGH)
+        `uvm_info("SOC_MBOX_HANDLER", $sformatf("Randomized AXI AxUSER override value to 0x%x", local_axi_user_obj.addr_user), UVM_HIGH)
 
     // Pause the main mailbox responder flow to prevent race conditions (on accesses to the same register, triggering is_busy UVM_WARNING)
     if (mainline.status() inside {process::RUNNING,process::WAITING}) begin
@@ -160,17 +160,17 @@ task soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence::mbox_do_random_reg_w
     // Do the access
     `uvm_info("SOC_MBOX_HANDLER", {"Performing random register access to ", mbox_regs[rand_idx].get_name()}, UVM_LOW)
     if (mbox_regs[rand_idx].get_name() == "mbox_dataout") begin
-        mbox_regs[rand_idx].read(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
-        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
+        mbox_regs[rand_idx].read(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(local_axi_user_obj));
+        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_axi_user_obj);
     end
     else if (mbox_regs[rand_idx].get_name() == "mbox_datain") begin
         wait(reg_model.mbox_csr_rm.mbox_fn_state_sigs.uc_receive_stage == 1'b0);
-        mbox_regs[rand_idx].write(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
-        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
+        mbox_regs[rand_idx].write(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(local_axi_user_obj));
+        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_axi_user_obj);
     end
     else begin
-        mbox_regs[rand_idx].write(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(local_apb_user_obj));
-        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_apb_user_obj);
+        mbox_regs[rand_idx].write(reg_sts, rand_wr_data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(local_axi_user_obj));
+        report_reg_sts(reg_sts, mbox_regs[rand_idx].get_name(), local_axi_user_obj);
     end
     if (mainline.status() == process::SUSPENDED) begin
         `uvm_info("SOC_MBOX_HANDLER", $sformatf("Resuming main mailbox flow after random reg access injection"), UVM_HIGH)

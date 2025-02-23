@@ -109,7 +109,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_cmd_command extends soc_ifc_reg_cbs_mbox_csr
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     if (rm.mbox_fn_state_sigs.soc_cmd_stage/* && (rm.mbox_status.mbox_fsm_ps.get_mirrored_value() == MBOX_RDY_FOR_CMD)*/) begin

@@ -39,7 +39,6 @@ export UVMF_PROJECT_DIR ?= $(PWD)/..
 # The default values for these variables are to indicate to the user that the value needs to be set.
 # This variable should point down to and including the uvmf directory in the QVIP confiurator generated code.
 export QVIP_AHB_LITE_SLAVE_DIR_NAME ?= the_environment_variable_named_QVIP_AHB_LITE_SLAVE_DIR_NAME_needs_to_point_to_the_QVIP_configurator_generated_code_for_this_sub_environment
-export QVIP_APB5_SLAVE_DIR_NAME ?= the_environment_variable_named_QVIP_APB5_SLAVE_DIR_NAME_needs_to_point_to_the_QVIP_configurator_generated_code_for_this_sub_environment
 #
 # pragma uvmf custom exports end
 # *********************************************************************************************
@@ -83,10 +82,13 @@ include $(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/Makefile
 
 
 # Include all requisite interface package targets for this bench
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/dummy_avery_aaxi_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_ctrl_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_ctrl_pkg/Makefile
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_ctrl_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/soc_ifc_status_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/cptra_status_pkg/Makefile
+include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/ss_mode_status_pkg/Makefile
 include $(UVMF_VIP_LIBRARY_HOME)/interface_packages/mbox_sram_pkg/Makefile
 
 # Include all requisite environment package targets for this bench
@@ -185,8 +187,6 @@ comp_soc_ifc_dut: comp_soc_ifc_vhdl_dut comp_soc_ifc_verilog_dut
 comp_qvip: 
 	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $(QVIP_AHB_LITE_SLAVE_DIR_NAME)/qvip_ahb_lite_slave_filelist.f
 	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QVIP_AHB_LITE_SLAVE_DIR_NAME) $(QVIP_AHB_LITE_SLAVE_DIR_NAME)/hdl_qvip_ahb_lite_slave.sv
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $(QVIP_APB5_SLAVE_DIR_NAME)/qvip_apb5_slave_filelist.f
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QVIP_APB5_SLAVE_DIR_NAME) $(QVIP_APB5_SLAVE_DIR_NAME)/hdl_qvip_apb5_slave.sv
 
 BUILD_TGT_0 = make_build
 BUILD_TGT_1 = vinfo_build
@@ -197,7 +197,7 @@ comp_hvl : comp_hvl_core
 
 
 comp_hvl_core :  comp_qvip comp_qvip_utils_pkg   \
-	 comp_soc_ifc_ctrl_pkg  comp_cptra_ctrl_pkg  comp_soc_ifc_status_pkg  comp_cptra_status_pkg  comp_mbox_sram_pkg  \
+	 comp_soc_ifc_ctrl_pkg  comp_cptra_ctrl_pkg  comp_ss_mode_ctrl_pkg  comp_soc_ifc_status_pkg  comp_cptra_status_pkg  comp_ss_mode_status_pkg  comp_mbox_sram_pkg  \
 	comp_soc_ifc_env_pkg \
 	comp_soc_ifc_parameters_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg 
 
@@ -205,7 +205,7 @@ comp_uvmf_core : comp_uvm_pkg comp_uvmf_base_pkg
 
 make_build: comp_soc_ifc_dut comp_uvmf_core comp_hvl comp_test_bench  
 
-hvl_build:  q_comp_soc_ifc_ctrl_pkg  q_comp_cptra_ctrl_pkg  q_comp_soc_ifc_status_pkg  q_comp_cptra_status_pkg  q_comp_mbox_sram_pkg  comp_soc_ifc_env_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg hvl_comp_testbench link optimize
+hvl_build:  q_comp_soc_ifc_ctrl_pkg  q_comp_cptra_ctrl_pkg  q_comp_ss_mode_ctrl_pkg  q_comp_soc_ifc_status_pkg  q_comp_cptra_status_pkg  q_comp_ss_mode_status_pkg  q_comp_mbox_sram_pkg  comp_soc_ifc_env_pkg comp_soc_ifc_sequence_pkg comp_soc_ifc_tests_pkg hvl_comp_testbench link optimize
 
 
 vinfo_build: comp_qvip  comp_soc_ifc_vhdl_dut  build_hdl_vinfo build_hvl_vinfo $(VINFO_TGT)

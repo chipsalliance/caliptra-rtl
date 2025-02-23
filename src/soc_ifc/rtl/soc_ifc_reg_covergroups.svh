@@ -639,13 +639,13 @@
     input bit [1-1:0] iTRNG_en,
     input bit [3-1:0] RSVD_en,
     input bit [1-1:0] LMS_acc_en,
-    input bit [1-1:0] ACTIVE_MODE_en
+    input bit [1-1:0] SUBSYSTEM_MODE_en
     );
         option.per_instance = 1;
         iTRNG_en_cp : coverpoint iTRNG_en;
         RSVD_en_cp : coverpoint RSVD_en;
         LMS_acc_en_cp : coverpoint LMS_acc_en;
-        ACTIVE_MODE_en_cp : coverpoint ACTIVE_MODE_en;
+        SUBSYSTEM_MODE_en_cp : coverpoint SUBSYSTEM_MODE_en;
 
     endgroup
 
@@ -1116,11 +1116,11 @@
     );
         option.per_instance = 1;
         ecc_revocation_cp : coverpoint ecc_revocation {
-            bins zero_val = {32'h0};
-            bins rand_val[64] = {[1:32'hFFFF_FFFE]};
-            bins ones_val = {{32{1'b1}}};
-            wildcard bins set = (0 => 32'h????_????);
-            wildcard bins clr = (32'h????_???? => 0);
+            bins zero_val = {4'h0};
+            bins rand_val[4] = {[1:4'hE]};
+            bins ones_val = {{4{1'b1}}};
+            wildcard bins set = (0 => 4'h?);
+            wildcard bins clr = (4'h? => 0);
         }
 
     endgroup

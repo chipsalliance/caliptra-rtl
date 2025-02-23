@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+import mbox_pkg::*;
 import soc_ifc_pkg::*;
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -86,8 +87,8 @@ end
 
   tri clk_i;
   tri dummy_i;
-  tri mbox_sram_req_t  mbox_sram_req_i;
-  tri mbox_sram_resp_t mbox_sram_resp_i;
+  tri cptra_mbox_sram_req_t  mbox_sram_req_i;
+  tri cptra_mbox_sram_resp_t mbox_sram_resp_i;
   assign clk_i = bus.clk;
   assign dummy_i = bus.dummy;
   assign mbox_sram_req_i = bus.mbox_sram_req;
@@ -198,8 +199,8 @@ end
     //
     //    How to assign a struct member, named xyz, from a signal.
     //    All available input signals listed.
-    //      mbox_sram_monitor_struct.xyz = mbox_sram_req_i;  //    [$bits(mbox_sram_req_t)-1:0]
-    //      mbox_sram_monitor_struct.xyz = mbox_sram_resp_i;  //    [$bits(mbox_sram_resp_t)-1:0]
+    //      mbox_sram_monitor_struct.xyz = mbox_sram_req_i;  //    [$bits(cptra_mbox_sram_req_t)-1:0]
+    //      mbox_sram_monitor_struct.xyz = mbox_sram_resp_i;  //    [$bits(cptra_mbox_sram_resp_t)-1:0]
     // pragma uvmf custom do_monitor begin
     // UVMF_CHANGE_ME : Implement protocol monitoring.  The commented reference code
     // below are examples of how to capture signal values and assign them to

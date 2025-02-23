@@ -19,4 +19,9 @@ pr\_\* objects are used to validate a Pull Request run. This is in support of an
       - Pull Request runs a hash on the branch fileset (including the timestamp), compares with the contents of pr\_hash. If the hash mismatches, the feature branch is considered to have failed the internal workflow
   1. Pull Request is allowed to be merged only once all Actions complete successfully
 
-The Pull Request run ignores updates to documentation files. That is, commits containing only markdown (.md) or image (.png) files are not required to pass the timestamp/hash check.
+The Pull Request run ignores updates to documentation files. That is, commits containing only the following files are not required to pass the timestamp/hash check.
+
+* Markdown (.md)
+* Images (.png)
+* Github Workflows (.github/workflows/**)
+

@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ extends uvm_reg_cbs
     `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     // Function: post_predict
     //
@@ -47,7 +47,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ extends uvm_reg_cbs
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ:begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
@@ -55,7 +55,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_REQ extends uvm_reg_cbs
                 UVM_PREDICT_WRITE: begin
                     if (value != previous) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] attempts to change register value but is blocked. value: 0x%x previous: 0x%x", kind, value, previous), UVM_LOW)
-                        // APB has RO access to DATA_REQ field
+                        // AXI has RO access to DATA_REQ field
                         value = previous;
                     end
                     else begin

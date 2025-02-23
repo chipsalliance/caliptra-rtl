@@ -50,7 +50,7 @@ class soc_ifc_status_transaction_coverage  extends uvm_subscriber #(.T(soc_ifc_s
     option.auto_bin_max=1024;
     option.per_instance=1;
     ready_for_fuses: coverpoint coverage_trans.ready_for_fuses;
-    ready_for_fw_push: coverpoint coverage_trans.ready_for_fw_push;
+    ready_for_mb_processing: coverpoint coverage_trans.ready_for_mb_processing;
     ready_for_runtime: coverpoint coverage_trans.ready_for_runtime;
     mailbox_data_avail: coverpoint coverage_trans.mailbox_data_avail;
     mailbox_flow_done: coverpoint coverage_trans.mailbox_flow_done;

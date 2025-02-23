@@ -30,8 +30,9 @@
 //   soc_ifc_ctrl_agent_ae receives transactions of type  soc_ifc_ctrl_transaction
 //   cptra_ctrl_agent_ae receives transactions of type  cptra_ctrl_transaction
 //   mbox_sram_agent_ae receives transactions of type  mbox_sram_transaction
+//   ss_mode_ctrl_agent_ae receives transactions of type  ss_mode_ctrl_transaction
 //   ahb_slave_0_ae receives transactions of type  mvc_sequence_item_base
-//   apb5_slave_0_ae receives transactions of type  mvc_sequence_item_base
+//   axi_sub_0_ae receives transactions of type  aaxi_master_tr
 //
 //   This analysis component has the following analysis_ports that can broadcast
 //   the listed transaction type.
@@ -39,7 +40,8 @@
 //  soc_ifc_sb_ap broadcasts transactions of type soc_ifc_status_transaction
 //  cptra_sb_ap broadcasts transactions of type cptra_status_transaction
 //  soc_ifc_sb_ahb_ap broadcasts transactions of type mvc_sequence_item_base
-//  soc_ifc_sb_apb_ap broadcasts transactions of type mvc_sequence_item_base
+//  soc_ifc_sb_axi_ap broadcasts transactions of type aaxi_master_tr
+//  ss_mode_sb_ap broadcasts transactions of type ss_mode_status_transaction
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -87,38 +89,39 @@ class soc_ifc_predictor #(
   uvm_analysis_imp_soc_ifc_ctrl_agent_ae #(soc_ifc_ctrl_transaction, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) soc_ifc_ctrl_agent_ae;
-  uvm_analysis_imp_cptra_ctrl_agent_ae #(cptra_ctrl_transaction, soc_ifc_predictor #(
+                              )) soc_ifc_ctrl_agent_ae;
+  uvm_analysis_imp_axi_sub_0_ae #(aaxi_master_tr, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) cptra_ctrl_agent_ae;
+                              )) axi_sub_0_ae;
   uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) mbox_sram_agent_ae;
+                              )) mbox_sram_agent_ae;
+  uvm_analysis_imp_cptra_ctrl_agent_ae #(cptra_ctrl_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) cptra_ctrl_agent_ae;
+  uvm_analysis_imp_ss_mode_ctrl_agent_ae #(ss_mode_ctrl_transaction, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) ss_mode_ctrl_agent_ae;
   uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
-                              )
-) ahb_slave_0_ae;
-  uvm_analysis_imp_apb5_slave_0_ae #(mvc_sequence_item_base, soc_ifc_predictor #(
-                              .CONFIG_T(CONFIG_T),
-                              .BASE_T(BASE_T)
-                              )
-) apb5_slave_0_ae;
+                              )) ahb_slave_0_ae;
 
 
   // Instantiate the analysis ports
   uvm_analysis_port #(soc_ifc_status_transaction) soc_ifc_sb_ap;
   uvm_analysis_port #(cptra_status_transaction) cptra_sb_ap;
+  uvm_analysis_port #(aaxi_master_tr) soc_ifc_sb_axi_ap;
+  uvm_analysis_port #(ss_mode_status_transaction) ss_mode_sb_ap;
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_ahb_ap;
-  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_sb_apb_ap;
 
   uvm_analysis_port #(soc_ifc_ctrl_transaction) soc_ifc_cov_ap;
   uvm_analysis_port #(cptra_ctrl_transaction  ) cptra_cov_ap;
+  uvm_analysis_port #(ss_mode_ctrl_transaction) ss_mode_cov_ap;
 
 
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ap
@@ -137,6 +140,21 @@ class soc_ifc_predictor #(
   // Code for sending output transaction out through cptra_sb_ap
   // cptra_sb_ap.write(cptra_sb_ap_output_transaction);
 
+  // Transaction variable for predicted values to be sent out soc_ifc_sb_axi_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
+  aaxi_master_tr soc_ifc_sb_axi_ap_output_transaction;
+  // Code for sending output transaction out through soc_ifc_sb_axi_ap
+  // soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+
+  // Transaction variable for predicted values to be sent out ss_mode_sb_ap
+  // Once a transaction is sent through an analysis_port, another transaction should
+  // be constructed for the next predicted transaction. 
+  typedef ss_mode_status_transaction ss_mode_sb_ap_output_transaction_t;
+  ss_mode_sb_ap_output_transaction_t ss_mode_sb_ap_output_transaction;
+  // Code for sending output transaction out through ss_mode_sb_ap
+  // ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ahb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
   // be constructed for the next predicted transaction. 
@@ -150,28 +168,19 @@ class soc_ifc_predictor #(
   // Code for sending output transaction out through soc_ifc_sb_ahb_ap
   // soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
 
-  // Transaction variable for predicted values to be sent out soc_ifc_sb_apb_ap
-  // Once a transaction is sent through an analysis_port, another transaction should
-  // be constructed for the next predicted transaction. 
-  typedef apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT,
-                                       apb5_master_0_params::APB3_PADDR_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PWDATA_BIT_WIDTH,
-                                       apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) soc_ifc_sb_apb_ap_output_transaction_t;
-  soc_ifc_sb_apb_ap_output_transaction_t soc_ifc_sb_apb_ap_output_transaction;
-  // Code for sending output transaction out through soc_ifc_sb_apb_ap
-  // soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-
   // Define transaction handles for debug visibility
   soc_ifc_ctrl_transaction soc_ifc_ctrl_agent_ae_debug;
-  cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
   mbox_sram_transaction mbox_sram_agent_ae_debug;
+  cptra_ctrl_transaction cptra_ctrl_agent_ae_debug;
+  ss_mode_ctrl_transaction ss_mode_ctrl_agent_ae_debug;
   mvc_sequence_item_base ahb_slave_0_ae_debug;
-  mvc_sequence_item_base apb5_slave_0_ae_debug;
+  aaxi_master_tr axi_sub_0_ae_debug;
 
 
   // pragma uvmf custom class_item_additional begin
   uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_ahb_reg_ap;
-  uvm_analysis_port #(mvc_sequence_item_base) soc_ifc_apb_reg_ap;
+  uvm_analysis_port #(aaxi_master_tr) soc_ifc_axi_reg_wr_ap;
+  uvm_analysis_port #(aaxi_master_tr) soc_ifc_axi_reg_rd_ap;
 
   process running_dly_jobs[$];
   int unsigned job_end_count[time];
@@ -184,13 +193,15 @@ class soc_ifc_predictor #(
   bit soc_ifc_notif_intr_pending = 1'b0;
   bit sha_err_intr_pending = 1'b0; // TODO
   bit sha_notif_intr_pending = 1'b0; // TODO
+  bit dma_err_intr_pending = 1'b0; // TODO
+  bit dma_notif_intr_pending = 1'b0; // TODO
   bit timer_intr_pending = 1'b1;
   bit nmi_intr_pending = 1'b0;
   bit cptra_error_fatal = 1'b0;
   bit cptra_error_non_fatal = 1'b0;
   bit fuse_update_enabled = 1'b1;
-  bit ready_for_fw_push      = 1'b0;
-  bit ready_for_fw_push_fall = 1'b0;
+  bit ready_for_mb_processing      = 1'b0;
+  bit ready_for_mb_processing_fall = 1'b0;
   bit ready_for_runtime      = 1'b0;
   bit ready_for_runtime_fall = 1'b0;
   bit mailbox_flow_done      = 1'b0;
@@ -209,7 +220,18 @@ class soc_ifc_predictor #(
 
   bit [31:0] nmi_vector = 32'h0;
   bit iccm_locked = 1'b0;
-  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0}; // FIXME use reg-model value?
+  // This is the value that we expect to be present in internal_obf_key based on
+  // the most recently received soc_ifc_ctrl_transaction.
+  // It may take a little while to actually reflect to the register, based on
+  // reset timing and RDC clock gating
+  bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg = '{default:32'h0};
+  // Report the input signaling status that tries to write (via HW i/f) the
+  // UDS/FE seed values
+  bit                                 cptra_obf_field_entropy_vld = 1'b0;
+  bit [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy = '{default:32'h0};
+  bit                                 cptra_obf_uds_seed_vld = 1'b0;
+  bit [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed = '{default:32'h0};
+
   security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
@@ -218,18 +240,35 @@ class soc_ifc_predictor #(
   bit [63:0] generic_output_wires      = 64'h0;
   bit        generic_output_wires_fall = 1'b0;
 
-  bit [apb5_master_0_params::PAUSER_WIDTH-1:0] mbox_valid_users [6]    = '{default: '1};
-  bit [4:0]                                    mbox_valid_users_locked = 5'b00000;
+  // Straps
+  struct packed {
+      bit [63:0] caliptra_base_addr;
+      bit [63:0] mci_base_addr;
+      bit [63:0] recovery_ifc_base_addr;
+      bit [63:0] otp_fc_base_addr;
+      bit [63:0] uds_seed_base_addr;
+      bit [31:0] prod_debug_unlock_auth_pk_hash_reg_bank_offset;
+      bit [31:0] num_of_prod_debug_unlock_auth_pk_hashes;
+      bit [31:0] caliptra_dma_axi_user;
+      bit [3:0] [31:0] generic;
+      bit        debug_intent;
+  } strap_ss_val = '{default: '0};
+
+  bit        recovery_data_avail = 1'b0; // TODO
+  bit        recovery_image_activated = 1'b0; // TODO
+
+  bit [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] mbox_valid_users [6]    = '{default: '1};
+  bit [4:0]                             mbox_valid_users_locked = 5'b00000;
 
   bit trng_data_req = 1'b0;
-  bit [apb5_master_0_params::APB3_PWDATA_BIT_WIDTH-1:0] trng_data [12]       = '{default: '0}; // FIXME what is this used for? Can we just use the reg-model mirrors instead?
+  bit [aaxi_pkg::AAXI_DATA_WIDTH-1:0] trng_data [12] = '{default: '0}; // FIXME what is this used for? Can we just use the reg-model mirrors instead?
 
   // For collecting coverage
   mbox_steps_s prev_step = '{null_action: 1'b1, default: 1'b0};
   mbox_steps_s next_step = '{null_action: 1'b1, default: 1'b0};
 
   soc_ifc_reg_model_top  p_soc_ifc_rm;
-  uvm_reg_map p_soc_ifc_APB_map; // Block map
+  uvm_reg_map p_soc_ifc_AXI_map; // Block map
   uvm_reg_map p_soc_ifc_AHB_map; // Block map
 
   int unsigned soc_ifc_status_txn_key = 0;
@@ -253,9 +292,9 @@ class soc_ifc_predictor #(
 
   extern task          poll_and_run_delay_jobs();
   extern function void send_delayed_expected_transactions();
-  extern function bit  check_mbox_no_lock_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
-  extern function bit  check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
-  extern function bit  check_mbox_inv_user_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+  extern function bit  check_mbox_no_lock_error(aaxi_master_tr txn, uvm_reg axs_reg);
+  extern function bit  check_mbox_ooo_error(aaxi_master_tr txn, uvm_reg axs_reg);
+  extern function bit  check_mbox_inv_user_error(aaxi_master_tr txn, uvm_reg axs_reg);
   extern task          update_mtime_mirrors();
   extern task          mtime_counter_task();
   extern function bit  mtime_lt_mtimecmp();
@@ -268,14 +307,20 @@ class soc_ifc_predictor #(
   extern function void predict_reset(input string kind = "HARD");
   extern function bit  soc_ifc_status_txn_expected_after_noncore_reset();
   extern function bit  cptra_status_txn_expected_after_noncore_reset();
+  extern function bit  ss_mode_status_txn_expected_after_noncore_reset(); // TODO
   extern function bit  soc_ifc_status_txn_expected_after_warm_reset();
   extern function bit  cptra_status_txn_expected_after_warm_reset();
+  extern function bit  ss_mode_status_txn_expected_after_warm_reset(); // TODO
   extern function bit  soc_ifc_status_txn_expected_after_cold_reset();
   extern function bit  cptra_status_txn_expected_after_cold_reset();
+  extern function bit  ss_mode_status_txn_expected_after_cold_reset(); // TODO
+  extern function void predict_strap_values();
+  extern function bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] get_expected_obf_key_reg();
   extern function bit [`CLP_OBF_FE_DWORDS-1:0]  [31:0] get_expected_obf_field_entropy();
   extern function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] get_expected_obf_uds_seed();
   extern function void populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
   extern function void populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
+  extern function void populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
   // pragma uvmf custom class_item_additional end
 
   // FUNCTION: new
@@ -292,20 +337,24 @@ class soc_ifc_predictor #(
     soc_ifc_ctrl_agent_ae = new("soc_ifc_ctrl_agent_ae", this);
     cptra_ctrl_agent_ae = new("cptra_ctrl_agent_ae", this);
     mbox_sram_agent_ae = new("mbox_sram_agent_ae", this);
+    ss_mode_ctrl_agent_ae = new("ss_mode_ctrl_agent_ae", this); // FIXME
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
-    apb5_slave_0_ae = new("apb5_slave_0_ae", this);
+    axi_sub_0_ae = new("axi_sub_0_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
     cptra_sb_ap = new("cptra_sb_ap", this );
     soc_ifc_sb_ahb_ap = new("soc_ifc_sb_ahb_ap", this );
-    soc_ifc_sb_apb_ap = new("soc_ifc_sb_apb_ap", this );
+    soc_ifc_sb_axi_ap = new("soc_ifc_sb_axi_ap", this );
+    ss_mode_sb_ap = new("ss_mode_sb_ap", this ); // FIXME
     soc_ifc_ahb_reg_ap = new("soc_ifc_ahb_reg_ap", this);
-    soc_ifc_apb_reg_ap = new("soc_ifc_apb_reg_ap", this);
+    soc_ifc_axi_reg_wr_ap = new("soc_ifc_axi_reg_wr_ap", this);
+    soc_ifc_axi_reg_rd_ap = new("soc_ifc_axi_reg_rd_ap", this);
     soc_ifc_cov_ap = new("soc_ifc_cov_ap", this );
     cptra_cov_ap = new("cptra_cov_ap", this );
+    ss_mode_cov_ap = new("ss_mode_cov_ap", this ); // FIXME
   // pragma uvmf custom build_phase begin
     p_soc_ifc_rm = configuration.soc_ifc_rm;
     p_soc_ifc_AHB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AHB_map");
-    p_soc_ifc_APB_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_APB_map");
+    p_soc_ifc_AXI_map = p_soc_ifc_rm.get_map_by_name("soc_ifc_AXI_map");
     reset_predicted = new("reset_predicted");
     reset_handled = new("reset_handled");
     hard_reset_flag = new("hard_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
@@ -331,8 +380,9 @@ class soc_ifc_predictor #(
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-    bit send_apb_txn = 0;
+    bit send_axi_txn = 0;
 
     soc_ifc_ctrl_agent_ae_debug = t;
     `uvm_info("PRED_SOC_IFC_CTRL", "Transaction Received through soc_ifc_ctrl_agent_ae", UVM_MEDIUM)
@@ -340,21 +390,29 @@ class soc_ifc_predictor #(
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
 
     // FIXME account for security_state/scan_mode below
 
     cptra_pwrgood_asserted = t.set_pwrgood;
 
+    // Regardless of reset state, capture the current input value for FE/UDS.
+    // They will be reflected into the reg-map (and a cptra_status_transaction) later
+    // once the RDC clock is active.
+    cptra_obf_field_entropy_vld = t.cptra_obf_field_entropy_vld;
+    if (t.cptra_obf_field_entropy_vld) begin
+        cptra_obf_field_entropy     = t.cptra_obf_field_entropy;
+    end
+    cptra_obf_uds_seed_vld = t.cptra_obf_uds_seed_vld;
+    if (t.cptra_obf_uds_seed_vld) begin
+        cptra_obf_uds_seed     = t.cptra_obf_uds_seed;
+    end
     // Initial boot
     if (!t.set_pwrgood && soc_ifc_rst_in_asserted) begin
-        cptra_obf_key_reg = t.cptra_obf_key_rand;
-        for (byte ii=0; ii < 8; ii++) begin
-            // Change from reset value means we expect a transaction
-            send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.get_reset());
-        end
+        cptra_obf_key_reg = t.cptra_obf_key_rand; // To be reflected into internal_obf_key by predict_reset
         if (!t.assert_rst)
             `uvm_fatal("PRED_SOC_IFC_CTRL", "Bad initial boot with cptra_rst_b deasserted")
         if (!p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_idle)
@@ -368,8 +426,6 @@ class soc_ifc_predictor #(
     end
     // Cold reset assertion
     else if (!t.set_pwrgood) begin
-        // FIXME
-        // Catch obf_key, uds_seed, field_entropy reset on cold-reset
 
         if (!t.assert_rst) begin
             `uvm_fatal("PRED_SOC_IFC_CTRL", "Bad cold rst")
@@ -387,29 +443,15 @@ class soc_ifc_predictor #(
             // If the obf_key changes, we expect a second cptra_status transaction
             // immediately after all the resets assert, because it takes a few clock cycles
             // for the new key to reflect to the output after cptra_pwrgood deasserts
-            // So send the first one to the scoreboard immediately
-            if (send_cptra_sts_txn) begin
-                populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
-                cptra_sb_ap.write(cptra_sb_ap_output_transaction);
-                cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
-                `uvm_info("PRED_SOC_IFC_CTRL", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
-                send_cptra_sts_txn = 1'b0;
-            end
-            for (byte ii=0; ii < 8; ii++) begin
-                // Change from current value means we expect a transaction
-                // due to cptra_obf_key_rand changing during bringup
-                send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != cptra_obf_key_reg[ii]);
-            end
+            // So send the first one to the scoreboard using the current value of 
+            // p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key, then capture the next value
+            // to be mirrored into p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key by
+            // predict_reset
             cptra_obf_key_reg = t.cptra_obf_key_rand;
         end
     end
     // Cold reset deassertion
     else if (t.set_pwrgood && t.assert_rst && soc_ifc_rst_in_asserted) begin
-        for (byte ii=0; ii < 8; ii++) begin
-            // Change from current value means we expect a transaction
-            // due to cptra_obf_key_rand changing during bringup
-            send_cptra_sts_txn |= (t.cptra_obf_key_rand[ii] != cptra_obf_key_reg[ii]);
-        end
         cptra_obf_key_reg = t.cptra_obf_key_rand;
         reset_predicted.reset();
         // No new signal predictions since it was all done on Cold reset assertion.
@@ -424,7 +466,7 @@ class soc_ifc_predictor #(
         send_cptra_sts_txn = cptra_status_txn_expected_after_warm_reset();
         `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset event, send_soc_ifc_sts_txn: %d send_cptra_sts_txn: %d", send_soc_ifc_sts_txn, send_cptra_sts_txn), UVM_NONE)
         if (reset_handled.is_off())
-            `uvm_fatal("PRED_SOC_IFC_CTRL", "soc_ifc_ctrl_transaction with cold reset received prior to env-level reset handling")
+            `uvm_fatal("PRED_SOC_IFC_CTRL", "soc_ifc_ctrl_transaction with warm reset received prior to env-level reset handling")
         else
             reset_handled.reset();
         predict_reset("SOFT");
@@ -440,9 +482,31 @@ class soc_ifc_predictor #(
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
-            send_cptra_sts_txn = 0; // cptra sts transaction not expected until after CPTRA_FUSE_WR_DONE
+            // If we're running uvmf_soc_ifc, RDC modelling is not supported (TODO)
+            // so the wires driving FE/UDS cause them to be latched immediately on assertion
+            // of 'vld' signals while soft reset is asserted
+            if (!p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE)) begin
+                if (cptra_obf_field_entropy_vld) begin
+                    foreach (cptra_obf_field_entropy[dw]) begin
+                        send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]) begin
+                            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("Sending cptra_status_transaction due to field entropy. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value(), cptra_obf_field_entropy[dw]), UVM_FULL)
+                        end
+                    end
+                end
+                if (cptra_obf_uds_seed_vld) begin
+                    foreach (cptra_obf_uds_seed[dw]) begin
+                        send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]) begin
+                            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("Sending cptra_status_transaction due to uds seed. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value(), cptra_obf_uds_seed[dw]), UVM_FULL)
+                        end
+                    end
+                end
+            end
             reset_wdt_count = 1'b0;
-            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d", send_soc_ifc_sts_txn), UVM_NONE)
+            `uvm_info("PRED_SOC_IFC_CTRL", $sformatf("In response to warm_reset deassertion, send_soc_ifc_sts_txn: %d, send_cptra_sts_txn: %d", send_soc_ifc_sts_txn, send_cptra_sts_txn), UVM_NONE)
         end
         // Normal operation
         else begin
@@ -486,14 +550,24 @@ class soc_ifc_predictor #(
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
         `uvm_error("PRED_SOC_IFC_CTRL", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
     end
-    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Code for sending output transaction out through ss_mode_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    if (send_apb_txn) begin
-        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-        `uvm_error("PRED_SOC_IFC_CTRL", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_SOC_IFC_CTRL", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_SOC_IFC_CTRL", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
     end
 
     if (1/*FIXME*/) begin
@@ -512,8 +586,9 @@ class soc_ifc_predictor #(
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-    bit send_apb_txn = 0;
+    bit send_axi_txn = 0;
 
     cptra_ctrl_agent_ae_debug = t;
     `uvm_info("PRED_CPTRA_CTRL", "Transaction Received through cptra_ctrl_agent_ae", UVM_MEDIUM)
@@ -521,8 +596,9 @@ class soc_ifc_predictor #(
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     if (t.iccm_axs_blocked) begin
         // Error caused by blocked ICCM write causes intr bit to set
@@ -534,12 +610,15 @@ class soc_ifc_predictor #(
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_iccm_blocked_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
     end
     if (t.assert_clear_secrets) begin
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.reset();
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset();
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset;
-        this.cptra_obf_key_reg = '{default:32'h0};
+        p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.predict(32'h0); // No "reset" value, so manually clear each field to 0
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset("HARD");
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset("HARD");
         send_cptra_sts_txn = 1'b1;
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
+    end
+    else begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b0;
     end
     if (t.pulse_rv_ecc_error) begin
         `uvm_error("PRED_CPTRA_CTRL", "Unimplemented predictor for signaling RISCV SRAM ECC Errors")
@@ -574,14 +653,24 @@ class soc_ifc_predictor #(
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
         `uvm_error("PRED_CPTRA_CTRL", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
     end
-    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Code for sending output transaction out through ss_mode_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    if (send_apb_txn) begin
-        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-        `uvm_error("PRED_CPTRA_CTRL", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_CPTRA_CTRL", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_CPTRA_CTRL", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
     end
 
     if (1/*FIXME*/) begin
@@ -600,8 +689,9 @@ class soc_ifc_predictor #(
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-    bit send_apb_txn = 0;
+    bit send_axi_txn = 0;
 
     mbox_sram_agent_ae_debug = t;
     `uvm_info("PRED_MBOX_SRAM", "Transaction Received through mbox_sram_agent_ae", UVM_MEDIUM)
@@ -609,8 +699,9 @@ class soc_ifc_predictor #(
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
         `uvm_info("PRED_MBOX_SRAM", "Received transaction while RDC clock gate is active, no system prediction to do since interrupt bits cannot be set", UVM_MEDIUM)
@@ -660,16 +751,129 @@ class soc_ifc_predictor #(
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
         `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
     end
-    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Code for sending output transaction out through ss_mode_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    if (send_apb_txn) begin
-        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_MBOX_SRAM", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
     end
     // pragma uvmf custom mbox_sram_agent_ae_predictor end
+  endfunction
+
+  // FUNCTION: write_ss_mode_ctrl_agent_ae
+  // Transactions received through ss_mode_ctrl_agent_ae initiate the execution of this function.
+  // This function performs prediction of DUT output values based on DUT input, configuration and state
+  virtual function void write_ss_mode_ctrl_agent_ae(ss_mode_ctrl_transaction t);
+    // pragma uvmf custom ss_mode_ctrl_agent_ae_predictor begin
+    // Flags control whether each transaction is sent to scoreboard
+    bit send_soc_ifc_sts_txn = 0;
+    bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
+    bit send_ahb_txn = 0;
+    bit send_axi_txn = 0;
+
+    ss_mode_ctrl_agent_ae_debug = t;
+    `uvm_info("PRED_SS_MODE_CTRL", "Transaction Received through ss_mode_ctrl_agent_ae", UVM_MEDIUM)
+    `uvm_info("PRED_SS_MODE_CTRL", {"            Data: ",t.convert2string()}, UVM_HIGH)
+    // Construct one of each output transaction type.
+    soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
+    cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
+    soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
+
+    if (t.ss_debug_intent) begin
+        this.strap_ss_val.debug_intent = 1'b1;
+        `uvm_info("PRED_SS_MODE_CTRL", "Debug intent is set to 1; scheduled as update to strap register (then as wire update on ss_mode_status_transaction)", UVM_MEDIUM)
+    end
+
+    if (1) begin
+        this.strap_ss_val.caliptra_base_addr                             = (t.strap_ss_caliptra_base_addr                            );
+        this.strap_ss_val.mci_base_addr                                  = (t.strap_ss_mci_base_addr                                 );
+        this.strap_ss_val.recovery_ifc_base_addr                         = (t.strap_ss_recovery_ifc_base_addr                        );
+        this.strap_ss_val.otp_fc_base_addr                               = (t.strap_ss_otp_fc_base_addr                              );
+        this.strap_ss_val.uds_seed_base_addr                             = (t.strap_ss_uds_seed_base_addr                            );
+        this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset = (t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
+        this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes        = (t.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       );
+        this.strap_ss_val.caliptra_dma_axi_user                          = (t.strap_ss_caliptra_dma_axi_user                         );
+        this.strap_ss_val.generic[0]                                     = (t.strap_ss_strap_generic_0                               );
+        this.strap_ss_val.generic[1]                                     = (t.strap_ss_strap_generic_1                               );
+        this.strap_ss_val.generic[2]                                     = (t.strap_ss_strap_generic_2                               );
+        this.strap_ss_val.generic[3]                                     = (t.strap_ss_strap_generic_3                               );
+    end
+    else begin
+        `uvm_error("PRED_SS_MODE_CTRL", "FIXME")
+    end
+
+ 
+    // Code for sending output transaction out through soc_ifc_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_soc_ifc_sts_txn) begin
+        populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
+        soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
+        `uvm_info("PRED_SS_MODE_CTRL", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+    end
+    // Code for sending output transaction out through cptra_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_cptra_sts_txn) begin
+        populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
+        cptra_sb_ap.write(cptra_sb_ap_output_transaction);
+        `uvm_info("PRED_SS_MODE_CTRL", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_SS_MODE_CTRL", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
+    end
+    // Code for sending output transaction out through ss_mode_sb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_SS_MODE_CTRL", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_ahb_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_ahb_txn) begin
+        soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
+        `uvm_error("PRED_SS_MODE_CTRL", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
+    end
+
+    if (1/*FIXME*/) begin
+        // Forward the received transaction on to the coverage subscriber
+        ss_mode_cov_ap.write(t);
+        `uvm_info("PRED_SS_MODE_CTRL", "Transaction submitted through ss_mode_cov_ap", UVM_MEDIUM)
+    end
+    // pragma uvmf custom ss_mode_ctrl_agent_ae_predictor end
   endfunction
 
   // FUNCTION: write_ahb_slave_0_ae
@@ -688,8 +892,9 @@ class soc_ifc_predictor #(
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 1;
-    bit send_apb_txn = 0;
+    bit send_axi_txn = 0;
     bit wdt_cascade = 0;
     bit wdt_independent = 0;
     bit wdt_t1_timeout = 0;
@@ -702,8 +907,9 @@ class soc_ifc_predictor #(
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     // Extract info
     $cast(ahb_txn, t);
@@ -1134,6 +1340,29 @@ class soc_ifc_predictor #(
                 "CONTROL": begin
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
                 end
+                // axi_dma_reg registers
+                // TODO
+                "id",
+                "cap",
+                "ctrl",
+                "status0",
+                "status1",
+                "src_addr_l",
+                "src_addr_h",
+                "dst_addr_l",
+                "dst_addr_h",
+                "byte_count",
+                "block_size",
+                "write_data",
+                "read_data": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to AXI DMA reg %s with value %d (0x%x) has no effect on system prediction.", axs_reg.get_name(), data_active, data_active), UVM_LOW)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
+                end
+                // soc_ifc_reg registers
                 "CPTRA_HW_ERROR_FATAL": begin
                     if (ahb_txn.RnW == AHB_WRITE && |data_active && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
                         `uvm_info("PRED_AHB", $sformatf("Write to %s results in all bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
@@ -1183,16 +1412,16 @@ class soc_ifc_predictor #(
                 end
                 "CPTRA_FLOW_STATUS": begin
                     if (ahb_txn.RnW == AHB_WRITE &&
-                        ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw.get_mirrored_value()      != this.ready_for_fw_push) ||
-                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value() != this.ready_for_runtime) ||
-                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value() != this.mailbox_flow_done))) begin
-                        if (this.ready_for_fw_push && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value())
-                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_fw_push_fall)
+                        ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value() != this.ready_for_mb_processing) ||
+                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value()       != this.ready_for_runtime) ||
+                         (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value()       != this.mailbox_flow_done))) begin
+                        if (this.ready_for_mb_processing && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value())
+                            `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_mb_processing_fall)
                         if (this.ready_for_runtime && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value())
                             `SOC_IFC_PRED_PULSE_1_CYCLE(this.ready_for_runtime_fall)
                         if (this.mailbox_flow_done && !p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value())
                             `SOC_IFC_PRED_PULSE_1_CYCLE(this.mailbox_flow_done_fall)
-                        this.ready_for_fw_push = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fw     .get_mirrored_value();
+                        this.ready_for_mb_processing = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_mb_processing.get_mirrored_value();
                         this.ready_for_runtime = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_runtime.get_mirrored_value();
                         this.mailbox_flow_done = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.mailbox_flow_done.get_mirrored_value();
                         send_soc_ifc_sts_txn = 1'b1;
@@ -1206,8 +1435,8 @@ class soc_ifc_predictor #(
                     if (ahb_txn.RnW == AHB_WRITE)
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
                 end
-                ["CPTRA_MBOX_VALID_PAUSER[0]":"CPTRA_MBOX_VALID_PAUSER[4]"]: begin
-                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].get_offset(p_soc_ifc_AHB_map);
+                ["CPTRA_MBOX_VALID_AXI_USER[0]":"CPTRA_MBOX_VALID_AXI_USER[4]"]: begin
+                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].get_offset(p_soc_ifc_AHB_map);
                     idx /= 4;
                     if (mbox_valid_users_locked[idx] && ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_error("PRED_AHB", {"Write attempted to locked register: ", axs_reg.get_name()})
@@ -1216,26 +1445,26 @@ class soc_ifc_predictor #(
                         `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " has no effect on system until locked"}, UVM_MEDIUM)
                     end
                 end
-                ["CPTRA_MBOX_PAUSER_LOCK[0]":"CPTRA_MBOX_PAUSER_LOCK[4]"]: begin
-                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].get_offset(p_soc_ifc_AHB_map);
+                ["CPTRA_MBOX_AXI_USER_LOCK[0]":"CPTRA_MBOX_AXI_USER_LOCK[4]"]: begin
+                    int idx = axs_reg.get_offset(p_soc_ifc_AHB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[0].get_offset(p_soc_ifc_AHB_map);
                     idx /= 4;
                     if (mbox_valid_users_locked[idx] && ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_error("PRED_AHB", {"Write attempted to locked register: ", axs_reg.get_name()})
                     end
                     else if (ahb_txn.RnW == AHB_WRITE) begin
-                        mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[idx].get_mirrored_value(); // VALID_PAUSER field is only applied when locked
-                        mbox_valid_users_locked[idx] |= data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[idx].LOCK.get_lsb_pos()];
+                        mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[idx].get_mirrored_value(); // VALID_AXI_USER field is only applied when locked
+                        mbox_valid_users_locked[idx] |= data_active[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[idx].LOCK.get_lsb_pos()];
                         `uvm_info("PRED_AHB", $sformatf("mbox_valid_users_locked[%d] set to 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_MEDIUM)
                     end
                     else begin
                         `uvm_info("PRED_AHB", $sformatf("mbox_valid_users_locked[%d] read value 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_HIGH)
                     end
                 end
-                "CPTRA_TRNG_VALID_PAUSER",
-                "CPTRA_TRNG_PAUSER_LOCK",
+                "CPTRA_TRNG_VALID_AXI_USER",
+                "CPTRA_TRNG_AXI_USER_LOCK",
                 ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
                 ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"],
-		        "CPTRA_TRNG_CTRL": begin
+                "CPTRA_TRNG_CTRL": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
@@ -1382,8 +1611,8 @@ class soc_ifc_predictor #(
                 "CPTRA_WDT_STATUS": begin
                     `uvm_info("PRED_AHB", "AHB access of WDT status", UVM_MEDIUM);
                 end
-                "CPTRA_FUSE_VALID_PAUSER",
-                "CPTRA_FUSE_PAUSER_LOCK": begin
+                "CPTRA_FUSE_VALID_AXI_USER",
+                "CPTRA_FUSE_AXI_USER_LOCK": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         `uvm_error("PRED_AHB", {"Add prediction for write to ",axs_reg.get_name()," register on AHB interface"}) // TODO
                     end
@@ -1394,8 +1623,27 @@ class soc_ifc_predictor #(
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
+                "CPTRA_HW_CAPABILITIES": begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "CPTRA_FW_CAPABILITIES": begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "CPTRA_CAP_LOCK": begin
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
+                ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "CPTRA_OWNER_PK_HASH_LOCK": begin
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
-                ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
+                ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
                     if (fuse_update_enabled) begin
                         `uvm_error("PRED_AHB", {"Unexpected write to ", axs_reg.get_name(), " should not occur when fuse_update_enabled == 1!"})
                         send_cptra_sts_txn       = 1'b1;
@@ -1407,11 +1655,9 @@ class soc_ifc_predictor #(
                         send_cptra_sts_txn       = 1'b1;
                     end
                 end
-                ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
-                ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
-                "fuse_key_manifest_pk_hash_mask",
-                ["fuse_owner_pk_hash[0]" :"fuse_owner_pk_hash[9]"],
-                ["fuse_owner_pk_hash[10]":"fuse_owner_pk_hash[11]"],
+                ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
+                ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
+                "fuse_ecc_revocation",
                 "fuse_fmc_key_manifest_svn",
                 ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
                 "fuse_anti_rollback_disable",
@@ -1419,14 +1665,53 @@ class soc_ifc_predictor #(
                 ["fuse_idevid_cert_attr[10]":"fuse_idevid_cert_attr[19]"],
                 ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
                 ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
-                "fuse_life_cycle",
-                "fuse_lms_verify",
                 "fuse_lms_revocation",
+                "fuse_mldsa_revocation",
                 "fuse_soc_stepping_id",
+                ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+                "fuse_pqc_key_type",
+                ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
+                "fuse_soc_manifest_max_svn",
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
+                // subsystem regs/straps
+                // TODO
+                "SS_CALIPTRA_BASE_ADDR_L",
+                "SS_CALIPTRA_BASE_ADDR_H",
+                "SS_MCI_BASE_ADDR_L",
+                "SS_MCI_BASE_ADDR_H",
+                "SS_RECOVERY_IFC_BASE_ADDR_L",
+                "SS_RECOVERY_IFC_BASE_ADDR_H",
+                "SS_OTP_FC_BASE_ADDR_L",
+                "SS_OTP_FC_BASE_ADDR_H",
+                "SS_UDS_SEED_BASE_ADDR_L",
+                "SS_UDS_SEED_BASE_ADDR_H",
+                "SS_CALIPTRA_DMA_AXI_USER",
+                "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
+                "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
+                "SS_DEBUG_INTENT",
+                "SS_STRAP_GENERIC[4]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_SOC_DBG_UNLOCK_LEVEL[0]",
+                "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                "SS_GENERIC_FW_EXEC_CTRL[0]",
+                "SS_GENERIC_FW_EXEC_CTRL[1]",
+                "SS_GENERIC_FW_EXEC_CTRL[2]",
+                "SS_GENERIC_FW_EXEC_CTRL[3]": begin
+                    `uvm_warning("TODO", "FIXME")
+                end
+                // Caliptra Internal Registers
                 "internal_iccm_lock": begin
                     if (ahb_txn.RnW == AHB_WRITE && !iccm_locked) begin
                         iccm_locked = 1'b1;
@@ -1670,6 +1955,77 @@ class soc_ifc_predictor #(
                 end
             endcase
         end
+        // Interrupt registers have 3-levels of ancestry back to reg_model top
+        //                          2-levels of ancestry back to unique parent
+        else if (axs_reg.get_parent().get_parent().get_name() == "axi_dma_reg_rm") begin
+            case (axs_reg.get_name()) inside
+                "global_intr_en_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_cptra_sts_txn = (!this.sha_err_intr_pending   && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value()) ||
+                                             (!this.sha_notif_intr_pending && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value());
+                        this.sha_err_intr_pending   = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.error_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.error_en.get_mirrored_value();
+                        this.sha_notif_intr_pending = p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.notif_global_intr_r.agg_sts.get_mirrored_value() && p_soc_ifc_rm.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r.notif_en.get_mirrored_value();
+                    end
+                end
+                "error_intr_en_r",
+                "notif_intr_en_r",
+                "error_intr_trig_r",
+                "notif_intr_trig_r": begin
+                    `uvm_info("PRED_AHB", $sformatf("Write to %s handled in callback", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "error_global_intr_r",
+                "notif_global_intr_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", $sformatf("Unexpected write to %s will have no effect", axs_reg.get_name()))
+                    end
+                end
+                "error_internal_intr_r",
+                "notif_internal_intr_r": begin
+                    if (ahb_txn.RnW == AHB_WRITE && |data_active) begin
+                        // If the write clears ALL pending interrupts, global intr signal will deassert
+                        // but this does not result in a cptra status transaction because we only
+                        // capture rising edges as a transaction
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " attempts to clear an interrupt"}, UVM_HIGH)
+                    end
+                end
+                "error_cmd_dec_intr_count_r",
+                "error_axi_rd_intr_count_r",
+                "error_axi_wr_intr_count_r",
+                "error_mbox_lock_intr_count_r",
+                "error_sha_lock_intr_count_r",
+                "error_fifo_oflow_intr_count_r",
+                "error_fifo_uflow_intr_count_r",
+                "notif_txn_done_intr_count_r",
+                "notif_fifo_empty_intr_count_r",
+                "notif_fifo_not_empty_intr_count_r",
+                "notif_fifo_full_intr_count_r",
+                "notif_fifo_not_full_intr_count_r" : begin
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to ", axs_reg.get_name(), " modifies interrupt statistics count"}, UVM_HIGH)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                    end
+                end
+                "error_cmd_dec_intr_count_incr_r",
+                "error_axi_rd_intr_count_incr_r",
+                "error_axi_wr_intr_count_incr_r",
+                "error_mbox_lock_intr_count_incr_r",
+                "error_sha_lock_intr_count_incr_r",
+                "error_fifo_oflow_intr_count_incr_r",
+                "error_fifo_uflow_intr_count_incr_r",
+                "notif_txn_done_intr_count_incr_r",
+                "notif_fifo_empty_intr_count_incr_r",
+                "notif_fifo_not_empty_intr_count_incr_r",
+                "notif_fifo_full_intr_count_incr_r",
+                "notif_fifo_not_full_intr_count_incr_r" : begin
+                    `uvm_info("PRED_AHB", {"Access to register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                end
+                default: begin
+                    `uvm_warning("PRED_AHB", $sformatf("Prediction for accesses to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
+                end
+            endcase
+        end
     end// REG_AXS
 
     fork
@@ -1710,24 +2066,34 @@ class soc_ifc_predictor #(
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
         `uvm_info("PRED_AHB", "Transaction submitted through soc_ifc_sb_ahb_ap", UVM_MEDIUM)
     end
-    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Code for sending output transaction out through ss_mode_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    if (send_apb_txn) begin
-        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-        `uvm_error("PRED_AHB", "NULL Transaction submitted through soc_ifc_sb_apb_ap")
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_AHB", "NULL Transaction submitted through ss_mode_sb_ap")
+    end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_error("PRED_AHB", "NULL Transaction submitted through soc_ifc_sb_axi_ap")
     end
     // pragma uvmf custom ahb_slave_0_ae_predictor end
   endfunction
 
-  // FUNCTION: write_apb5_slave_0_ae
-  // Transactions received through apb5_slave_0_ae initiate the execution of this function.
+  // FUNCTION: write_axi_sub_0_ae
+  // Transactions received through axi_sub_0_ae initiate the execution of this function.
   // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_apb5_slave_0_ae(mvc_sequence_item_base t);
-    // pragma uvmf custom apb5_slave_0_ae_predictor begin
-    apb3_host_apb3_transaction #(apb5_master_0_params::APB3_SLAVE_COUNT, apb5_master_0_params::APB3_PADDR_BIT_WIDTH, apb5_master_0_params::APB3_PWDATA_BIT_WIDTH, apb5_master_0_params::APB3_PRDATA_BIT_WIDTH) apb_txn;
+  virtual function void write_axi_sub_0_ae(aaxi_master_tr t);
+    // pragma uvmf custom axi_sub_0_ae_predictor begin
+    aaxi_master_tr     axi_txn;
     uvm_reg            axs_reg;
     uvm_reg_data_t previous_mirror;
     bit do_reg_prediction = 1;
@@ -1735,23 +2101,26 @@ class soc_ifc_predictor #(
     // Flags control whether each transaction is sent to scoreboard
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
     bit send_ahb_txn = 0;
-    bit send_apb_txn = 1;
-    apb5_slave_0_ae_debug = t;
+    bit send_axi_txn = 1;
+    axi_sub_0_ae_debug = t;
 
-    `uvm_info("PRED_APB", "Transaction Received through apb5_slave_0_ae", UVM_MEDIUM)
-    `uvm_info("PRED_APB", {"            Data: ",t.convert2string()}, UVM_HIGH)
+    `uvm_info("PRED_AXI", "Transaction Received through axi_sub_0_ae", UVM_MEDIUM)
+    `uvm_info("PRED_AXI", {"            Data: ",t.sprint(uvm_top.uvm_get_max_verbosity(), "AXI_SUB_0_AE")}, UVM_HIGH)
 
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-    soc_ifc_sb_apb_ap_output_transaction = soc_ifc_sb_apb_ap_output_transaction_t::type_id::create("soc_ifc_sb_apb_ap_output_transaction");
+//    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     // Extract info
-    $cast(apb_txn, t);
-    soc_ifc_sb_apb_ap_output_transaction.copy(apb_txn);
-    axs_reg = p_soc_ifc_APB_map.get_reg_by_offset(apb_txn.addr);
+    $cast(axi_txn, t);
+//    soc_ifc_sb_axi_ap_output_transaction.copy(axi_txn);
+    soc_ifc_sb_axi_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
+    axs_reg = p_soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
     // Determine if we will submit the transaction to reg_predictor to update mirrors
     if (!configuration.enable_reg_prediction) begin
@@ -1760,7 +2129,8 @@ class soc_ifc_predictor #(
     // This is because of the RDC CLK GATE disablement...
     else if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
         do_reg_prediction = 1'b0;
-        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
     end
     else begin
         case (axs_reg.get_name()) inside
@@ -1771,217 +2141,267 @@ class soc_ifc_predictor #(
                 previous_mirror = axs_reg.get_mirrored_value();
             end
             // Mailbox accesses are discarded based on valid_requester/valid_receiver
-            // (i.e. PAUSER + state info)
+            // (i.e. AxUSER + state info)
             "mbox_lock": begin
-                // RS access policy wants to update lock to 1 on a read, but if the PAUSER value is invalid
+                // RS access policy wants to update lock to 1 on a read, but if the AxUSER value is invalid
                 // lock will not be set. It will hold the previous value.
-                if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
-                    // Access to mbox_lock is dropped if PAUSER is not valid
+                if (!((axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser) inside {mbox_valid_users})) begin
+                    // Access to mbox_lock is dropped if AXI_USER is not valid
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     // Complete any scheduled predictions to 0 (due to other delay jobs)
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
-                        `uvm_info("PRED_APB", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) since mbox_lock reg prediction is disabled, due to failed APB transfer", UVM_MEDIUM)
+                        `uvm_info("PRED_AXI", "Completed mbox_lock deassert prediction (scheduled by mbox_execute) since mbox_lock reg prediction is disabled, due to failed AXI transfer", UVM_MEDIUM)
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.reset(0);
                     end
                 end
             end
             "mbox_user",
             "mbox_unlock": begin
-                if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
-                    // Access to mbox_lock is dropped if PAUSER is not valid
+                if (!((axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser) inside {mbox_valid_users})) begin
+                    // Access to mbox_lock is dropped if AxUSER is not valid
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
             end
             "mbox_cmd",
             "mbox_dlen",
             "mbox_execute": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    do_reg_prediction = valid_requester(apb_txn) && !apb_txn.slave_err;
+                if (axi_txn.is_write()) begin
+                    if (!(axi_txn.awuser inside {mbox_valid_users})) begin
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    end
+                    do_reg_prediction = valid_requester(axi_txn) && (soc_ifc_sb_axi_ap_output_transaction.resp == AAXI_RESP_OKAY);
                 end
                 else begin
-                    if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
+                    if (!(axi_txn.aruser inside {mbox_valid_users})) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
                 end
             end
             "mbox_datain": begin
                 // The mbox_data_q in the reg-model is used to track
                 // datain->dataout integrity.
-                // Pushes to datain are gated here by checking PAUSER/FSM state/lock etc.
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    if (valid_requester(apb_txn)) begin
+                // Pushes to datain are gated here by checking AxUSER/FSM state/lock etc.
+                if (axi_txn.is_write()) begin
+                    if (valid_requester(axi_txn)) begin
                         do_reg_prediction = 1'b1;
                         datain_count++;
                     end
                     else begin
                         do_reg_prediction = 1'b0;
+                        if (!(axi_txn.awuser inside {mbox_valid_users})) begin
+                            // "Expected" resp is SLVERR
+                            soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                        end
                     end
                 end
                 else begin
-                    if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
+                    if (!(axi_txn.aruser inside {mbox_valid_users})) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
                 end
             end
             "mbox_dataout": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
+                if (axi_txn.is_write()) begin
                     do_reg_prediction = 1'b0;
-                    `uvm_warning("PRED_APB", "Attempted write to mbox_dataout is unsupported and will be dropped")
+                    `uvm_warning("PRED_AXI", "Attempted write to mbox_dataout is unsupported and will be dropped")
+                    if (!(axi_txn.awuser inside {mbox_valid_users})) begin
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    end
                 end
                 else begin
-                    if (valid_receiver(apb_txn) && !apb_txn.slave_err) begin
+                    if (valid_receiver(axi_txn)) begin
                         do_reg_prediction = 1'b1;
                         // "Expected" read data for scoreboard is current
                         // mirrored value prior to running do_predict
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = axs_reg.get_mirrored_value();
+                        soc_ifc_sb_axi_ap_output_transaction.data = {8'(axs_reg.get_mirrored_value() >> 0 ),
+                                                                     8'(axs_reg.get_mirrored_value() >> 8 ),
+                                                                     8'(axs_reg.get_mirrored_value() >> 16),
+                                                                     8'(axs_reg.get_mirrored_value() >> 24)};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {axs_reg.get_mirrored_value()};
                         // ... unless it's an ECC double bit error, just use the
                         // observed data to avoid a scoreboard error (since the
                         // mismatch is anticipated)
                         if (dataout_mismatch_expected) begin
-                            `uvm_info("PRED_APB", "Ignoring mbox_dataout predicted contents and using observed APB data due to prior ECC double bit flip", UVM_HIGH)
+                            `uvm_info("PRED_AXI", "Ignoring mbox_dataout predicted contents and using observed AXI data due to prior ECC double bit flip", UVM_HIGH)
                             dataout_mismatch_expected = 1'b0;
-                            soc_ifc_sb_apb_ap_output_transaction.rd_data = apb_txn.rd_data;
+                            soc_ifc_sb_axi_ap_output_transaction.data  = axi_txn.data;
+                            soc_ifc_sb_axi_ap_output_transaction.beatQ = axi_txn.beatQ;
                         end
                         dataout_count++;
                     end
                     else begin
                         do_reg_prediction = 1'b0;
                         // TODO escalate to uvm_warning?
-                        `uvm_info("PRED_APB", "Attempted read from mbox_dataout with invalid receiver", UVM_MEDIUM)
+                        `uvm_info("PRED_AXI", "Attempted read from mbox_dataout with invalid receiver", UVM_MEDIUM)
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = uvm_reg_data_t'(0);
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                        if (!(axi_txn.aruser inside {mbox_valid_users})) begin
+                            // "Expected" resp is SLVERR
+                            soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                        end
                     end
                 end
             end
             "mbox_status": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE)
-                    do_reg_prediction = valid_receiver(apb_txn) && !apb_txn.slave_err;
+                if (axi_txn.is_write()) begin
+                    if (!(axi_txn.awuser inside {mbox_valid_users})) begin
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    end
+                    do_reg_prediction = valid_receiver(axi_txn) && (soc_ifc_sb_axi_ap_output_transaction.resp == AAXI_RESP_OKAY);
+                end
                 else begin
-                    if (!(apb_txn.addr_user inside mbox_valid_users) || apb_txn.slave_err) begin
+                    if (!(axi_txn.aruser inside {mbox_valid_users})) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
                 end
             end
-            // SHA Accelerator Functions are screened based on PAUSER
+            // SHA Accelerator Functions are screened based on AXI_USER
             "LOCK",
             "USER": begin
-                if (apb_txn.read_or_write == APB3_TRANS_READ && apb_txn.slave_err) begin
+                if (axi_txn.is_read()/* && (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY)*/) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
                 end
             end
             "MODE",
             "START_ADDRESS",
             "DLEN": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    do_reg_prediction = sha_valid_user(apb_txn) && (!apb_txn.slave_err);
+                if (axi_txn.is_write()) begin
+                    do_reg_prediction = sha_valid_user(axi_txn)/* && (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                 end
                 else begin
-                    if (apb_txn.slave_err) begin
+//                    if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
-                    end
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+//                    end
                 end
             end
             "DATAIN": begin
-                if (apb_txn.slave_err) begin
+//                if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
-                end
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+//                end
             end
             "EXECUTE": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    do_reg_prediction = sha_valid_user(apb_txn) && (!apb_txn.slave_err);
+                if (axi_txn.is_write()) begin
+                    do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                 end
                 else begin
-                    if (apb_txn.slave_err) begin
+//                    if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
-                        soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
-                    end
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+//                    end
                 end
             end
             "STATUS",
             ["DIGEST[0]":"DIGEST[9]"],
             ["DIGEST[10]":"DIGEST[15]"]:begin
-                if (apb_txn.slave_err) begin
+//                if ((aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY)) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
-                    soc_ifc_sb_apb_ap_output_transaction.rd_data = 0;
-                end
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+//                end
             end
             "CONTROL": begin
             end
             default: begin
-                `uvm_info("PRED_APB", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
+                `uvm_info("PRED_AXI", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
             end
         endcase
     end
 
     // Submit the transaction to reg_predictor to update mirrors
     if (do_reg_prediction) begin
-        `uvm_info("PRED_APB", "Forwarding transaction to apb_reg_predictor", UVM_HIGH)
+        `uvm_info("PRED_AXI", "Forwarding transaction to axi_reg_predictor", UVM_HIGH)
         // NOTE: BACKDOOR accesses, if ever used, will need some way to account
-        //       for the PAUSER side-calculation
-        soc_ifc_apb_reg_ap.write(apb_txn);
+        //       for the AXI_USER side-calculation
+        if (axi_txn.is_write())
+            soc_ifc_axi_reg_wr_ap.write(axi_txn);
+        else
+            soc_ifc_axi_reg_rd_ap.write(axi_txn);
     end
     else begin
-        `uvm_info("PRED_APB", $sformatf("Skipping reg prediction on access to register [%s]", axs_reg.get_full_name()), UVM_HIGH)
+        `uvm_info("PRED_AXI", $sformatf("Skipping reg prediction on access to register [%s]", axs_reg.get_full_name()), UVM_HIGH)
     end
 
     // Calculate any other system effects from the register access
     if (rdc_clk_gate_active || noncore_rst_out_asserted) begin
-        `uvm_info("PRED_APB", {"On access to register: ", axs_reg.get_full_name(), " reset is asserted, skipping system prediction"}, UVM_MEDIUM)
+        `uvm_info("PRED_AXI", {"On access to register: ", axs_reg.get_full_name(), " reset is asserted, skipping system prediction"}, UVM_MEDIUM)
     end
     else if (axs_reg == null) begin
-        `uvm_error("PRED_APB", $sformatf("APB transaction to address: 0x%x decodes to null from soc_ifc_APB_map", apb_txn.addr))
+        `uvm_error("PRED_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
     end
     else begin
-        `uvm_info("PRED_APB", {"Detected access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
+        `uvm_info("PRED_AXI", {"Detected access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
         case (axs_reg.get_name()) inside
             "mbox_lock": begin
                 // Reading mbox_lock when it is already locked has no effect, so
                 // only calculate predictions on acquiring lock (rdata == 0)
-                // which requires that the APB transfer was not blocked due to
+                // which requires that the AXI transfer was not blocked due to
                 // invalid access
                 if (do_reg_prediction &&
-                    ~apb_txn.rd_data[p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()] &&
+                    ~axi_txn.beatQ[0][p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_lsb_pos()] &&
                     p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value())
                 begin
                     // Cannot put this inside the reg callback because the post_predict
                     // method has no way to access the addr_user value
-                    `uvm_info("PRED_APB", $sformatf("Predicting new value [0x%x] for mbox_user as APB agent acquires lock",apb_txn.addr_user), UVM_HIGH)
-                    p_soc_ifc_rm.mbox_csr_rm.mbox_user.predict(uvm_reg_data_t'(apb_txn.addr_user));
+                    `uvm_info("PRED_AXI", $sformatf("Predicting new value [0x%x] for mbox_user as AXI agent acquires lock",axi_txn.aruser), UVM_HIGH)
+                    p_soc_ifc_rm.mbox_csr_rm.mbox_user.predict(uvm_reg_data_t'(axi_txn.aruser));
                     // Reset counters at beginning of command
                     datain_count = 0;
                     dataout_count = 0;
                     // Log the step for coverage
                     next_step = '{lock_acquire: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("Access to mbox_lock of type %p has no effect", apb_txn.read_or_write), UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", $sformatf("Access to mbox_lock of type %p has no effect", axi_txn.kind), UVM_MEDIUM)
                     // Log the step for coverage
                     next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
@@ -1989,8 +2409,8 @@ class soc_ifc_predictor #(
                 end
             end
             "mbox_user": begin
-                if (check_mbox_no_lock_error(apb_txn, axs_reg) || check_mbox_ooo_error(apb_txn, axs_reg)) begin
-                    `uvm_warning("PRED_APB", {"Access to RO register: ", axs_reg.get_name(), " triggers mailbox protocol violation"})
+                if (check_mbox_no_lock_error(axi_txn, axs_reg) || check_mbox_ooo_error(axi_txn, axs_reg)) begin
+                    `uvm_warning("PRED_AXI", {"Access to RO register: ", axs_reg.get_name(), " triggers mailbox protocol violation"})
                 end
                 else if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
@@ -1998,50 +2418,50 @@ class soc_ifc_predictor #(
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 else begin
-                    `uvm_info("PRED_APB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
-                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             "mbox_cmd": begin
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE &&
+                if (axi_txn.is_write() &&
                     do_reg_prediction &&
                     p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_cmd_stage) begin
                     // Log the step for coverage
                     next_step = '{cmd_wr: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_READ && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
+                else if (axi_txn.is_read() && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
                     // Log the step for coverage
                     next_step = '{cmd_rd: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
                     // Log the step for coverage
                     next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
             end
             "mbox_dlen": begin
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error && mailbox_data_avail) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                if (axi_txn.is_write() && do_reg_prediction) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_dlen_stage)
                         next_step = '{dlen_wr: 1'b1, default: 1'b0};
@@ -2049,53 +2469,53 @@ class soc_ifc_predictor #(
                         next_step = '{resp_dlen_wr: 1'b1, default: 1'b0};
                     else begin
                         next_step = '{null_action: 1'b1, default: 1'b0};
-                        `uvm_info("PRED_APB", $sformatf("Logging unexpected step %p; access to %s while in state %p", next_step, axs_reg.get_name(), p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs), UVM_LOW)
+                        `uvm_info("PRED_AXI", $sformatf("Logging unexpected step %p; access to %s while in state %p", next_step, axs_reg.get_name(), p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs), UVM_LOW)
                     end
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+                else if (axi_txn.is_read()) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage)
                         next_step = '{dlen_rd: 1'b1, default: 1'b0};
                     else if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage)
                         next_step = '{resp_dlen_rd: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
                     // Log the step for coverage
                     next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
             end
             "mbox_datain": begin
-                `uvm_info("PRED_APB", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                `uvm_info("PRED_AXI", $sformatf("Access to mailbox datain, write count: %d", datain_count), UVM_FULL)
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                if (axi_txn.is_write() && do_reg_prediction) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_data_stage)
                         next_step = '{datain_wr: 1'b1, default: 1'b0};
                     else
                         next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
                     // Log the step for coverage
                     next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
             end
             "mbox_dataout": begin
-                `uvm_info("PRED_APB", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                `uvm_info("PRED_AXI", $sformatf("Access to mailbox dataout, read count: %d", dataout_count), UVM_FULL)
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
@@ -2103,7 +2523,7 @@ class soc_ifc_predictor #(
                 end
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
-                if (apb_txn.read_or_write == APB3_TRANS_READ && do_reg_prediction) begin
+                if (axi_txn.is_read() && do_reg_prediction) begin
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage) begin
                         next_step = '{dataout_rd: 1'b1, default: 1'b0};
                     end
@@ -2111,12 +2531,12 @@ class soc_ifc_predictor #(
                         next_step = '{resp_dataout_rd: 1'b1, default: 1'b0};
                     end
                 end
-                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             "mbox_execute": begin
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
@@ -2124,7 +2544,7 @@ class soc_ifc_predictor #(
                 end
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                if (axi_txn.is_write() && do_reg_prediction) begin
                     // Log the step for coverage
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_data_stage && p_soc_ifc_rm.mbox_csr_rm.mbox_execute.execute.get_mirrored_value()) begin
                         next_step = '{exec_set: 1'b1, default: 1'b0};
@@ -2133,40 +2553,40 @@ class soc_ifc_predictor #(
                         next_step = '{exec_clr: 1'b1, default: 1'b0};
                     end
                 end
-                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             "mbox_status": begin
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 if (mailbox_data_avail && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
                     mailbox_data_avail = 1'b0;
                     `SOC_IFC_PRED_PULSE_1_CYCLE(mailbox_data_avail_fall)
                     send_soc_ifc_sts_txn = 1'b1;
                 end
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && do_reg_prediction) begin
+                if (axi_txn.is_write() && do_reg_prediction) begin
                     // Log the step for coverage
                     next_step = '{status_wr: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_READ && do_reg_prediction) begin
+                else if (axi_txn.is_read() && do_reg_prediction) begin
                     // Log the step for coverage
                     next_step = '{status_rd: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
                 else begin
                     // Log the step for coverage
                     next_step = '{null_action: 1'b1, default: 1'b0};
-                    `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                 end
             end
             "mbox_unlock": begin
-                void'(check_mbox_no_lock_error(apb_txn, axs_reg));
-                void'(check_mbox_ooo_error(apb_txn, axs_reg));
-                void'(check_mbox_inv_user_error(apb_txn, axs_reg));
+                void'(check_mbox_no_lock_error (axi_txn, axs_reg));
+                void'(check_mbox_ooo_error     (axi_txn, axs_reg));
+                void'(check_mbox_inv_user_error(axi_txn, axs_reg));
                 // Log the step for coverage
                 next_step = '{null_action: 1'b1, default: 1'b0};
-                `uvm_info("PRED_APB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
+                `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
             //SHA Accelerator Functions
             "LOCK": begin 
@@ -2175,24 +2595,24 @@ class soc_ifc_predictor #(
                 // which requires that the AHB transfer was successful in
                 // performing the access
                 if (do_reg_prediction &&
-                    ~apb_txn.rd_data[p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] &&
+                    ~axi_txn.beatQ[0][p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()] &&
                     p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value())
                 begin
                     // Cannot put this inside the reg callback because the post_predict
                     // method has no way to access the addr_user value
-                    `uvm_info("PRED_APB", $sformatf("Predicting new value [0x%x] for sha_user as AHB agent acquires lock",apb_txn.addr_user), UVM_HIGH)
-                    p_soc_ifc_rm.sha512_acc_csr_rm.USER.predict(uvm_reg_data_t'(apb_txn.addr_user));
+                    `uvm_info("PRED_AXI", $sformatf("Predicting new value [0x%x] for sha_user as AHB agent acquires lock",axi_txn.aruser), UVM_HIGH)
+                    p_soc_ifc_rm.sha512_acc_csr_rm.USER.predict(uvm_reg_data_t'(axi_txn.aruser));
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("Access to sha_lock of type %p has no effect", apb_txn.read_or_write), UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", $sformatf("Access to sha_lock of type %p has no effect", axi_txn.kind), UVM_MEDIUM)
                 end
             end
             "USER": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    `uvm_warning("PRED_APB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                if (axi_txn.is_write()) begin
+                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
                 end
                 else begin
-                    `uvm_info("PRED_APB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
             end
             "MODE",
@@ -2204,39 +2624,39 @@ class soc_ifc_predictor #(
             ["DIGEST[0]":"DIGEST[9]"],
             ["DIGEST[10]":"DIGEST[15]"],
             "CONTROL": begin
-                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_FULL)
             end
             "CPTRA_HW_ERROR_FATAL": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |apb_txn.wr_data && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                if (axi_txn.is_write() && |axi_txn.beatQ[0] && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                 end
             end
             "CPTRA_HW_ERROR_NON_FATAL": begin
                 if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
                     (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
-                    `uvm_info("PRED_APB", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_non_fatal = 1'b0;
                 end
             end
             "CPTRA_FW_ERROR_FATAL": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |(~previous_mirror & apb_txn.wr_data & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value())) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s set a new bit, trigger cptra_error_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                if (axi_txn.is_write() && |(~previous_mirror & axi_txn.beatQ[0] & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value())) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s set a new bit, trigger cptra_error_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_fatal = 1'b1;
                     send_soc_ifc_sts_txn = 1'b1;
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_WRITE && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value()) == 0)) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
+                else if (axi_txn.is_write() && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_fatal_mask.get_mirrored_value()) == 0)) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                 end
             end
             "CPTRA_FW_ERROR_NON_FATAL": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE && |(~previous_mirror & apb_txn.wr_data & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value())) begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s set a new bit, trigger cptra_error_non_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
+                if (axi_txn.is_write() && |(~previous_mirror & axi_txn.beatQ[0] & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value())) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s set a new bit, trigger cptra_error_non_fatal interrupt", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_non_fatal = 1'b1;
                     send_soc_ifc_sts_txn = 1'b1;
                 end
                 else if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
                          (p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_error_non_fatal_mask.get_mirrored_value()) == 0) begin
-                    `uvm_info("PRED_APB", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
+                    `uvm_info("PRED_AXI", $sformatf("Access to %s results in all unmasked bits cleared, which causes deassertion of cptra_error_non_fatal", axs_reg.get_name()), UVM_MEDIUM)
                     cptra_error_non_fatal = 1'b0;
                 end
             end
@@ -2244,56 +2664,56 @@ class soc_ifc_predictor #(
             "CPTRA_FLOW_STATUS",
             "CPTRA_RESET_REASON",
             "CPTRA_SECURITY_STATE": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE)
-                    `uvm_info("PRED_APB", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
+                if (axi_txn.is_write())
+                    `uvm_info("PRED_AXI", {"Write to ", axs_reg.get_name(), " has no effect"}, UVM_DEBUG)
             end
-            ["CPTRA_MBOX_VALID_PAUSER[0]":"CPTRA_MBOX_VALID_PAUSER[4]"]: begin
-                int idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].get_offset(p_soc_ifc_APB_map);
+            ["CPTRA_MBOX_VALID_AXI_USER[0]":"CPTRA_MBOX_VALID_AXI_USER[4]"]: begin
+                int idx = axs_reg.get_offset(p_soc_ifc_AXI_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].get_offset(p_soc_ifc_AXI_map);
                 idx /= 4;
-                if (mbox_valid_users_locked[idx] && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                if (mbox_valid_users_locked[idx] && axi_txn.is_write()) begin
+                    `uvm_error("PRED_AXI", {"Write attempted to locked register: ", axs_reg.get_name()})
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-//                    mbox_valid_users[idx] = apb_txn.wr_data;
+                else if (axi_txn.is_write()) begin
+//                    mbox_valid_users[idx] = axi_txn.beatQ[0];
                 end
             end
-            ["CPTRA_MBOX_PAUSER_LOCK[0]":"CPTRA_MBOX_PAUSER_LOCK[4]"]: begin
-                int idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].get_offset(p_soc_ifc_APB_map);
+            ["CPTRA_MBOX_AXI_USER_LOCK[0]":"CPTRA_MBOX_AXI_USER_LOCK[4]"]: begin
+                int idx = axs_reg.get_offset(p_soc_ifc_AXI_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[0].get_offset(p_soc_ifc_AXI_map);
                 idx /= 4;
-                if (mbox_valid_users_locked[idx] && apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    `uvm_error("PRED_APB", {"Write attempted to locked register: ", axs_reg.get_name()})
+                if (mbox_valid_users_locked[idx] && axi_txn.is_write()) begin
+                    `uvm_error("PRED_AXI", {"Write attempted to locked register: ", axs_reg.get_name()})
                 end
-                else if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[idx].get_mirrored_value(); // VALID_PAUSER field is only applied when locked
-                    mbox_valid_users_locked[idx] |= apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[idx].LOCK.get_lsb_pos()];
-                    `uvm_info("PRED_APB", $sformatf("mbox_valid_users_locked[%d] set to 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_MEDIUM)
+                else if (axi_txn.is_write()) begin
+                    mbox_valid_users[idx] = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[idx].get_mirrored_value(); // VALID_AXI_USER field is only applied when locked
+                    mbox_valid_users_locked[idx] |= axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[idx].LOCK.get_lsb_pos()];
+                    `uvm_info("PRED_AXI", $sformatf("mbox_valid_users_locked[%d] set to 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_MEDIUM)
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("mbox_valid_users_locked[%d] read value 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_HIGH)
+                    `uvm_info("PRED_AXI", $sformatf("mbox_valid_users_locked[%d] read value 0x%x, mbox_valid_users[%d] has value: 0x%x", idx, mbox_valid_users_locked[idx], idx, mbox_valid_users[idx]), UVM_HIGH)
                 end
             end
             ["CPTRA_TRNG_DATA[0]" : "CPTRA_TRNG_DATA[9]"],
             ["CPTRA_TRNG_DATA[10]" : "CPTRA_TRNG_DATA[11]"]: begin
-                int idx = axs_reg.get_offset(p_soc_ifc_APB_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_DATA[0].get_offset(p_soc_ifc_APB_map);
+                int idx = axs_reg.get_offset(p_soc_ifc_AXI_map) - p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_DATA[0].get_offset(p_soc_ifc_AXI_map);
                 idx /= 4;
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    trng_data[idx] = apb_txn.wr_data; // TODO can we just use the reg mirrors and remove this var?
+                if (axi_txn.is_write()) begin
+                    trng_data[idx] = axi_txn.beatQ[0]; // TODO can we just use the reg mirrors and remove this var?
 //                    send_soc_ifc_sts_txn = 1'b1;
                 end
-//                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+//                else if (axi_txn.is_read()) begin
 //                    send_soc_ifc_sts_txn = 1'b0;
 //                end
             end
-            "CPTRA_TRNG_VALID_PAUSER",
-            "CPTRA_TRNG_PAUSER_LOCK",
+            "CPTRA_TRNG_VALID_AXI_USER",
+            "CPTRA_TRNG_AXI_USER_LOCK",
             "CPTRA_TRNG_CTRL",
             "CPTRA_TRNG_STATUS": begin
                 // Handled in callbacks via reg predictor
-                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
-//                if (apb_txn.read_or_write == APB3_TRANS_WRITE && p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_mirrored_value()) begin
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+//                if (axi_txn.is_write() && p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_TRNG_STATUS.DATA_WR_DONE.get_mirrored_value()) begin
 //                    send_soc_ifc_sts_txn = 1'b1;
 //                end
-//                else if (apb_txn.read_or_write == APB3_TRANS_READ) begin
+//                else if (axi_txn.is_read()) begin
 //                    send_soc_ifc_sts_txn = 1'b0;
 //                end
             end
@@ -2303,80 +2723,99 @@ class soc_ifc_predictor #(
                 // When writing fuse done, if breakpoint is set we're going to wait state where noncore reset will be de-asserted
                 // SoC or JTAG would check for boot fsm to be in wait state before setting GO when ready to advance and bring uc out of reset
                 if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_fuse &&
-                    apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()] &&
-                    apb_txn.read_or_write == APB3_TRANS_WRITE)
+                    axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_lsb_pos()] &&
+                    axi_txn.is_write())
                 begin
                     //predict ready for fuses de-assertion
                     p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
                     if (bootfsm_breakpoint) begin
                         // Similar logic should be tied to the fw_update_reset reg callback
                         p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_wait: 1'b1, default: 1'b0};
-                        `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset assertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
+                        `uvm_info("PRED_AXI", $sformatf("Write to %s results in uc reset assertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
                     end
                     else begin
                         predict_boot_wait_boot_done();
-                        `uvm_info("PRED_APB", $sformatf("Write to %s results in uc reset deassertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
+                        `uvm_info("PRED_AXI", $sformatf("Write to %s results in uc reset deassertion and boot FSM state transition to %p", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs), UVM_HIGH)
                     end
                     fuse_update_enabled      = 1'b0;
                     send_soc_ifc_sts_txn     = 1'b1; // for ready_for_fuses
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, apb_txn.read_or_write), UVM_FULL)
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and txn type [%p]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, axi_txn.kind), UVM_FULL)
                 end
             end
             "CPTRA_TIMER_CONFIG": begin
-                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
                 //When uc reset is still asserted and we're writing to bootfsm go, expect uc to be brough out of reset
-                bit setting_go = apb_txn.read_or_write == APB3_TRANS_WRITE &&
-                                 apb_txn.wr_data[p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.GO.get_lsb_pos()];
+                bit setting_go = axi_txn.is_write() &&
+                                 axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO.GO.get_lsb_pos()];
 
                 if (p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait &&
                     bootfsm_breakpoint &&
                     setting_go) begin
 
                     if (fw_update_wait_count == 0) begin
-                        `uvm_info("PRED_APB", $sformatf("Write to %s results in boot FSM state transition and uC reset deassertion", axs_reg.get_name()), UVM_MEDIUM)
+                        `uvm_info("PRED_AXI", $sformatf("Write to %s results in boot FSM state transition and uC reset deassertion", axs_reg.get_name()), UVM_MEDIUM)
                         predict_boot_wait_boot_done();
                     end
                     else begin
                         // State transition will be triggered in the thread spawned by CPTRA_FUSE_WR_DONE write instead
-                        `uvm_info("PRED_APB", $sformatf("Write to %s clears bootfsm_breakpoint, but state transition is delayed by %d cycles", axs_reg.get_name(), fw_update_wait_count), UVM_HIGH)
+                        `uvm_info("PRED_AXI", $sformatf("Write to %s clears bootfsm_breakpoint, but state transition is delayed by %d cycles", axs_reg.get_name(), fw_update_wait_count), UVM_HIGH)
                     end
 
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and 'setting_go' [%d]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, setting_go), UVM_DEBUG)
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s has no effect on boot FSM due to state [%p] breakpoint [%d] and 'setting_go' [%d]", axs_reg.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs, bootfsm_breakpoint, setting_go), UVM_DEBUG)
                 end
                 bootfsm_breakpoint &= ~setting_go;
             end
             "CPTRA_DBG_MANUF_SERVICE_REG": begin
-                `uvm_info("PRED_APB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
             "CPTRA_iTRNG_ENTROPY_CONFIG_1",
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
-                `uvm_info("PRED_APB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+            end
+            "CPTRA_HW_CAPABILITIES": begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "CPTRA_FW_CAPABILITIES": begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "CPTRA_CAP_LOCK": begin
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
+            ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "CPTRA_OWNER_PK_HASH_LOCK": begin
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
-            ["fuse_uds_seed[10]":"fuse_uds_seed[11]"]: begin
-                if (fuse_update_enabled) begin
+            ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
+                if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-                if (fuse_update_enabled) begin
+                if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
-            ["fuse_key_manifest_pk_hash[0]" :"fuse_key_manifest_pk_hash[9]"],
-            ["fuse_key_manifest_pk_hash[10]":"fuse_key_manifest_pk_hash[11]"],
-            "fuse_key_manifest_pk_hash_mask",
-            ["fuse_owner_pk_hash[0]" :"fuse_owner_pk_hash[9]"],
-            ["fuse_owner_pk_hash[10]":"fuse_owner_pk_hash[11]"],
+            ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
+            ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
+            "fuse_ecc_revocation",
             "fuse_fmc_key_manifest_svn",
             ["fuse_runtime_svn[0]":"fuse_runtime_svn[3]"],
             "fuse_anti_rollback_disable",
@@ -2384,17 +2823,55 @@ class soc_ifc_predictor #(
             ["fuse_idevid_cert_attr[10]":"fuse_idevid_cert_attr[19]"],
             ["fuse_idevid_cert_attr[20]":"fuse_idevid_cert_attr[23]"],
             ["fuse_idevid_manuf_hsm_id[0]":"fuse_idevid_manuf_hsm_id[3]"],
-            "fuse_life_cycle",
-            "fuse_lms_verify",
             "fuse_lms_revocation",
+            "fuse_mldsa_revocation",
             "fuse_soc_stepping_id",
+            ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+            "fuse_pqc_key_type",
+            ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
+            "fuse_soc_manifest_max_svn",
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
-                `uvm_info("PRED_APB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            // subsystem regs/straps
+            // TODO
+            "SS_CALIPTRA_BASE_ADDR_L",
+            "SS_CALIPTRA_BASE_ADDR_H",
+            "SS_MCI_BASE_ADDR_L",
+            "SS_MCI_BASE_ADDR_H",
+            "SS_RECOVERY_IFC_BASE_ADDR_L",
+            "SS_RECOVERY_IFC_BASE_ADDR_H",
+            "SS_OTP_FC_BASE_ADDR_L",
+            "SS_OTP_FC_BASE_ADDR_H",
+            "SS_UDS_SEED_BASE_ADDR_L",
+            "SS_UDS_SEED_BASE_ADDR_H",
+            "SS_CALIPTRA_DMA_AXI_USER",
+            "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
+            "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
+            "SS_DEBUG_INTENT",
+            "SS_STRAP_GENERIC[4]": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_SOC_DBG_UNLOCK_LEVEL[0]",
+            "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
+                `uvm_warning("TODO", "FIXME")
+            end
+            "SS_GENERIC_FW_EXEC_CTRL[0]",
+            "SS_GENERIC_FW_EXEC_CTRL[1]",
+            "SS_GENERIC_FW_EXEC_CTRL[2]",
+            "SS_GENERIC_FW_EXEC_CTRL[3]": begin
+                `uvm_warning("TODO", "FIXME")
             end
             "internal_iccm_lock": begin
                 // Handled in callbacks via reg predictor
-                `uvm_info("PRED_APB", $sformatf("Handling access to register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                `uvm_info("PRED_AXI", $sformatf("Handling access to register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "global_intr_en_r",
             "error_intr_en_r",
@@ -2442,20 +2919,44 @@ class soc_ifc_predictor #(
             "error1_intr_count_incr_r",
             "error2_intr_count_incr_r",
             "error3_intr_count_incr_r",
-            "notif_cmd_done_intr_count_incr_r": begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    `uvm_info("PRED_APB", {"Write to interrupt register ", axs_reg.get_name(), " is unsupported via APB interface and will be dropped"}, UVM_HIGH)
+            "notif_cmd_done_intr_count_incr_r",
+            "error_cmd_dec_intr_count_r",
+            "error_axi_rd_intr_count_r",
+            "error_axi_wr_intr_count_r",
+            "error_mbox_lock_intr_count_r",
+            "error_sha_lock_intr_count_r",
+            "error_fifo_oflow_intr_count_r",
+            "error_fifo_uflow_intr_count_r",
+            "notif_txn_done_intr_count_r",
+            "notif_fifo_empty_intr_count_r",
+            "notif_fifo_not_empty_intr_count_r",
+            "notif_fifo_full_intr_count_r",
+            "notif_fifo_not_full_intr_count_r",
+            "error_cmd_dec_intr_count_incr_r",
+            "error_axi_rd_intr_count_incr_r",
+            "error_axi_wr_intr_count_incr_r",
+            "error_mbox_lock_intr_count_incr_r",
+            "error_sha_lock_intr_count_incr_r",
+            "error_fifo_oflow_intr_count_incr_r",
+            "error_fifo_uflow_intr_count_incr_r",
+            "notif_txn_done_intr_count_incr_r",
+            "notif_fifo_empty_intr_count_incr_r",
+            "notif_fifo_not_empty_intr_count_incr_r",
+            "notif_fifo_full_intr_count_incr_r",
+            "notif_fifo_not_full_intr_count_incr_r" : begin
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", {"Write to interrupt register ", axs_reg.get_name(), " is unsupported via AXI interface and will be dropped"}, UVM_HIGH)
                 end
                 else begin
-                    `uvm_info("PRED_APB", {"Read access to interrupt register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
+                    `uvm_info("PRED_AXI", {"Read access to interrupt register ", axs_reg.get_name(), " will have no effect on system"}, UVM_HIGH)
                 end
             end
             default: begin
-                if (apb_txn.read_or_write == APB3_TRANS_WRITE) begin
-                    `uvm_warning("PRED_APB", $sformatf("Prediction for writes to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
+                if (axi_txn.is_write()) begin
+                    `uvm_warning("PRED_AXI", $sformatf("Prediction for writes to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()))
                 end
                 else begin
-                    `uvm_info("PRED_APB", $sformatf("Prediction for reads to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()), UVM_LOW)
+                    `uvm_info("PRED_AXI", $sformatf("Prediction for reads to register '%s' unimplemented! Fix soc_ifc_predictor", axs_reg.get_name()), UVM_LOW)
                 end
             end
         endcase
@@ -2477,7 +2978,7 @@ class soc_ifc_predictor #(
     if (send_soc_ifc_sts_txn) begin
         populate_expected_soc_ifc_status_txn(soc_ifc_sb_ap_output_transaction);
         soc_ifc_sb_ap.write(soc_ifc_sb_ap_output_transaction);
-        `uvm_info("PRED_APB", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
+        `uvm_info("PRED_AXI", "Transaction submitted through soc_ifc_sb_ap", UVM_MEDIUM)
     end
     // Code for sending output transaction out through cptra_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -2487,7 +2988,7 @@ class soc_ifc_predictor #(
     if (send_cptra_sts_txn) begin
         populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
         cptra_sb_ap.write(cptra_sb_ap_output_transaction);
-        `uvm_info("PRED_APB", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+        `uvm_info("PRED_AXI", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
     end
     // Code for sending output transaction out through soc_ifc_sb_ahb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -2496,18 +2997,28 @@ class soc_ifc_predictor #(
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     if (send_ahb_txn) begin
         soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
-        `uvm_error("PRED_APB", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
+        `uvm_error("PRED_AXI", "NULL Transaction submitted through soc_ifc_sb_ahb_ap")
     end
-    // Code for sending output transaction out through soc_ifc_sb_apb_ap
+    // Code for sending output transaction out through ss_mode_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    if (send_apb_txn) begin
-        soc_ifc_sb_apb_ap.write(soc_ifc_sb_apb_ap_output_transaction);
-        `uvm_info("PRED_APB", "Transaction submitted through soc_ifc_sb_apb_ap", UVM_MEDIUM)
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_AXI", "NULL Transaction submitted through ss_mode_sb_ap")
     end
-    // pragma uvmf custom apb5_slave_0_ae_predictor end
+    // Code for sending output transaction out through soc_ifc_sb_axi_ap
+    // Please note that each broadcasted transaction should be a different object than previously 
+    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
+    // using either new() or create().  Broadcasting a transaction object more than once to either the 
+    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
+    if (send_axi_txn) begin
+        soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
+        `uvm_info("PRED_AXI", "Transaction submitted through soc_ifc_sb_axi_ap", UVM_MEDIUM)
+    end
+    // pragma uvmf custom axi_sub_0_ae_predictor end
   endfunction
 
 
@@ -2520,12 +3031,14 @@ endclass
 function void soc_ifc_predictor::send_delayed_expected_transactions();
     bit send_soc_ifc_sts_txn = 0;
     bit send_cptra_sts_txn = 0;
+    bit send_ss_mode_sts_txn = 0;
 
     //////////////////////////////////////////////////
     // Construct one of each output transaction type.
     //
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
+    ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
 
     //////////////////////////////////////////////////
     // Check for any updates that may occur as a result of delayed jobs
@@ -2665,7 +3178,7 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
                 repeat(32'(p_soc_ifc_rm.soc_ifc_reg_rm.internal_fw_update_reset_wait_cycles.wait_cycles.get_mirrored_value())) begin
                     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
                     if (fw_update_wait_count == 0)
-                        `uvm_fatal("PRED_APB", "Decrement will underflow!")
+                        `uvm_fatal("PRED_DLY", "Decrement will underflow!")
                     fw_update_wait_count--;
                 end
             end
@@ -2702,6 +3215,11 @@ function void soc_ifc_predictor::send_delayed_expected_transactions();
         populate_expected_cptra_status_txn(cptra_sb_ap_output_transaction);
         cptra_sb_ap.write(cptra_sb_ap_output_transaction);
         `uvm_info("PRED_DLY", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+    end
+    if (send_ss_mode_sts_txn) begin
+        populate_expected_ss_mode_status_txn(ss_mode_sb_ap_output_transaction);
+        ss_mode_sb_ap.write(ss_mode_sb_ap_output_transaction);
+        `uvm_error("PRED_DLY", "NULL Transaction submitted through ss_mode_sb_ap")
     end
 endfunction
 
@@ -2743,31 +3261,33 @@ task soc_ifc_predictor::poll_and_run_delay_jobs();
     end
 endtask
 
-function bit soc_ifc_predictor::check_mbox_no_lock_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+function bit soc_ifc_predictor::check_mbox_no_lock_error(aaxi_master_tr txn, uvm_reg axs_reg);
     soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error error_job;
     uvm_reg_field fld;
     bit is_error = 0;
-    if (!p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() && txn.addr_user inside mbox_valid_users) begin
+    if (!p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() &&
+        (txn.is_read() ? (txn.aruser inside {mbox_valid_users}) :
+                         (txn.awuser inside {mbox_valid_users}))) begin
         case (axs_reg.get_name()) inside
             "mbox_lock": begin
                 fld = axs_reg.get_field_by_name("lock");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_user": begin
                 fld = axs_reg.get_field_by_name("user");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_cmd": begin
                 fld = axs_reg.get_field_by_name("command");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_dlen": begin
                 fld = axs_reg.get_field_by_name("length");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_datain": begin
                 fld = axs_reg.get_field_by_name("datain");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_dataout": begin
                 fld = axs_reg.get_field_by_name("dataout");
@@ -2775,15 +3295,15 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(soc_ifc_sb_apb_ap_outpu
             end
             "mbox_execute": begin
                 fld = axs_reg.get_field_by_name("execute");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_status": begin
                 fld = axs_reg.get_field_by_name("status");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             "mbox_unlock": begin
                 fld = axs_reg.get_field_by_name("unlock");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE;
+                is_error = txn.is_write();
             end
             default: begin
                 `uvm_error("MBOX_NO_LOCK_CHK", "This function should not be called for access to non-mailbox regs")
@@ -2793,24 +3313,26 @@ function bit soc_ifc_predictor::check_mbox_no_lock_error(soc_ifc_sb_apb_ap_outpu
     if (is_error) begin
         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
         error_job.rm = p_soc_ifc_rm.mbox_csr_rm;
-        error_job.map = p_soc_ifc_APB_map;
+        error_job.map = p_soc_ifc_AXI_map;
         error_job.fld = fld;
         error_job.set_delay_cycles(0);
         error_job.state_nxt = MBOX_IDLE;
         error_job.error = '{axs_without_lock: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
         `uvm_info("MBOX_NO_LOCK_CHK",
-                  $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation. Delay job is queued to update DUT model.",
-                            txn.read_or_write.name(),
+                  $sformatf("%s to %s on map [%s] with value [%x] causes a mbox no_lock protocol violation (lock = %x). User (0x%x) and mbox_valid_users (%p). Delay job is queued to update DUT model.",
+                            txn.kind.name(),
                             fld.get_name(),
-                            p_soc_ifc_APB_map.get_name(),
-                            txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data),
+                            p_soc_ifc_AXI_map.get_name(),
+                            txn.beatQ[0],
+                            p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
+                            txn.is_read() ? txn.aruser : txn.awuser, mbox_valid_users),
                   UVM_LOW)
     end
     return is_error;
 endfunction
 
-function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+function bit soc_ifc_predictor::check_mbox_ooo_error(aaxi_master_tr txn, uvm_reg axs_reg);
     soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error error_job;
     uvm_reg_field fld;
     bit is_error = 0;
@@ -2823,27 +3345,28 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
     // but not necessarily valid_requester.
     // Since valid_requester may be false, the reg_prediction is not done, and
     // thus the callback can't catch this scenario.
-    if (txn.addr_user inside mbox_valid_users) begin
+    if (txn.is_read() ? (txn.aruser inside {mbox_valid_users}) :
+                        (txn.awuser inside {mbox_valid_users})) begin
         case (axs_reg.get_name()) inside
             "mbox_lock": begin
                 fld = axs_reg.get_field_by_name("lock");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+                is_error = txn.is_write() && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
             end
             "mbox_user": begin
                 fld = axs_reg.get_field_by_name("user");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+                is_error = txn.is_write() && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
             end
             "mbox_cmd": begin
                 fld = axs_reg.get_field_by_name("command");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+                is_error = txn.is_write() &&  valid_receiver(txn) && !valid_requester(txn);
             end
             "mbox_dlen": begin
                 fld = axs_reg.get_field_by_name("length");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+                is_error = txn.is_write() &&  valid_receiver(txn) && !valid_requester(txn);
             end
             "mbox_datain": begin
                 fld = axs_reg.get_field_by_name("datain");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+                is_error = txn.is_write() &&  valid_receiver(txn) && !valid_requester(txn);
             end
             "mbox_dataout": begin
                 fld = axs_reg.get_field_by_name("dataout");
@@ -2851,15 +3374,15 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
             end
             "mbox_execute": begin
                 fld = axs_reg.get_field_by_name("execute");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE &&  valid_receiver(txn) && !valid_requester(txn);
+                is_error = txn.is_write() &&  valid_receiver(txn) && !valid_requester(txn);
             end
             "mbox_status": begin
                 fld = axs_reg.get_field_by_name("status");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE && !valid_receiver(txn) &&  valid_requester(txn);
+                is_error = txn.is_write() && !valid_receiver(txn) &&  valid_requester(txn);
             end
             "mbox_unlock": begin
                 fld = axs_reg.get_field_by_name("unlock");
-                is_error = txn.read_or_write == APB3_TRANS_WRITE && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
+                is_error = txn.is_write() && !p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle;
             end
             default: begin
                 `uvm_error("MBOX_OOO_CHK", "This function should not be called for access to non-mailbox regs")
@@ -2869,51 +3392,51 @@ function bit soc_ifc_predictor::check_mbox_ooo_error(soc_ifc_sb_apb_ap_output_tr
     if (is_error && p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_error) begin
         `uvm_info("MBOX_OOO_CHK",
                   $sformatf("%s to %s on map [%s] with value [%x] calculates as a mbox out_of_order protocol violation, but no delay job is scheduled since predictor is already in state [%p].",
-                            txn.read_or_write.name(),
+                            txn.kind.name(),
                             fld.get_name(),
-                            p_soc_ifc_APB_map.get_name(),
-                            txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data,
+                            p_soc_ifc_AXI_map.get_name(),
+                            txn.beatQ[0],
                             p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs),
                   UVM_LOW)
     end
     else if (is_error) begin
         error_job = soc_ifc_reg_delay_job_mbox_csr_mbox_prot_error::type_id::create("error_job");
         error_job.rm = p_soc_ifc_rm.mbox_csr_rm;
-        error_job.map = p_soc_ifc_APB_map;
+        error_job.map = p_soc_ifc_AXI_map;
         error_job.fld = fld;
         error_job.set_delay_cycles(0);
         error_job.state_nxt = MBOX_ERROR;
         error_job.error = '{axs_incorrect_order: 1'b1, default: 1'b0};
         p_soc_ifc_rm.delay_jobs.push_back(error_job);
-        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.read_or_write.name(), fld.get_name(), p_soc_ifc_APB_map.get_name(), txn.read_or_write == APB3_TRANS_WRITE ? txn.wr_data : txn.rd_data), UVM_LOW)
+        `uvm_info("MBOX_OOO_CHK", $sformatf("%s to %s on map [%s] with value [%x] causes a mbox out_of_order protocol violation. Delay job is queued to update DUT model.", txn.kind.name(), fld.get_name(), p_soc_ifc_AXI_map.get_name(), txn.beatQ[0]), UVM_LOW)
         p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs = '{mbox_error: 1'b1, default: 1'b0};
     end
     return is_error;
 endfunction
 
-function bit soc_ifc_predictor::check_mbox_inv_user_error(soc_ifc_sb_apb_ap_output_transaction_t txn, uvm_reg axs_reg);
+function bit soc_ifc_predictor::check_mbox_inv_user_error(aaxi_master_tr txn, uvm_reg axs_reg);
     bit is_error = 0;
-    // The invalid PAUSER error is only flagged for write attempts by an agent
+    // The invalid AXI_USER error is only flagged for write attempts by an agent
     // that is considered 'valid', but which currently doesn't have lock
     // (exception: reads to mbox_dataout while not holding lock also flagged)
-    if (txn.addr_user inside mbox_valid_users) begin
+    if (txn.is_write() ? (txn.awuser inside {mbox_valid_users}) : (txn.aruser inside {mbox_valid_users})) begin
         case (axs_reg.get_name()) inside
-            "mbox_lock":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
-            "mbox_user":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
-            "mbox_cmd":     is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
-            "mbox_dlen":    is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn) || valid_receiver(txn));
-            "mbox_datain":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
-            "mbox_dataout": is_error =                                          !(valid_requester(txn) || valid_receiver(txn));
-            "mbox_execute": is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
-            "mbox_status":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn) || valid_receiver(txn));
-            // Unwriteable via APB, but writes still don't flag a PAUSER invalid error
-            "mbox_unlock":  is_error = txn.read_or_write == APB3_TRANS_WRITE && !(valid_requester(txn)                       );
+            "mbox_lock":    is_error = txn.is_write() && !(valid_requester(txn)                       );
+            "mbox_user":    is_error = txn.is_write() && !(valid_requester(txn)                       );
+            "mbox_cmd":     is_error = txn.is_write() && !(valid_requester(txn)                       );
+            "mbox_dlen":    is_error = txn.is_write() && !(valid_requester(txn) || valid_receiver(txn));
+            "mbox_datain":  is_error = txn.is_write() && !(valid_requester(txn)                       );
+            "mbox_dataout": is_error =                   !(valid_requester(txn) || valid_receiver(txn));
+            "mbox_execute": is_error = txn.is_write() && !(valid_requester(txn)                       );
+            "mbox_status":  is_error = txn.is_write() && !(valid_requester(txn) || valid_receiver(txn));
+            // Unwriteable via AXI, but writes still don't flag a AxUSER invalid error
+            "mbox_unlock":  is_error = txn.is_write() && !(valid_requester(txn)                       );
             default: `uvm_error("MBOX_INV_USER_CHK", "This function should not be called for access to non-mailbox regs")
         endcase
     end
     if (is_error) begin
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_inv_dev_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
-        `uvm_info("MBOX_INV_USER_CHK", $sformatf("%s to %s on map [%s] with user [0x%x] causes a mbox invalid PAUSER detection.", txn.read_or_write.name(), axs_reg.get_name(), p_soc_ifc_APB_map.get_name(), txn.addr_user), UVM_LOW)
+        `uvm_info("MBOX_INV_USER_CHK", $sformatf("%s to %s on map [%s] with user [0x%x] causes a mbox invalid AxUSER detection.", txn.kind.name(), axs_reg.get_name(), p_soc_ifc_AXI_map.get_name(), txn.is_write() ? txn.awuser : txn.aruser), UVM_LOW)
     end
     return is_error;
 endfunction
@@ -2931,7 +3454,7 @@ task soc_ifc_predictor::update_mtime_mirrors();
         if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.is_busy()) begin
             uvm_wait_for_nba_region();
             // If mtime_l transitions from busy to not busy on the current clock edge, leave the mirror at the value it just acquired instead of overwriting
-            // (unless the value was not updated by the recent transfer, e.g. because it was an APB transfer)
+            // (unless the value was not updated by the recent transfer, e.g. because it was an AXI transfer)
             // Else, predict a new value (which will be overwritten later when the active transfer completes)
             if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.is_busy() || (mtime[31:00] == p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.get_mirrored_value())) begin
                 p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_l.count_l.predict(new_mtime[31:00], .kind(UVM_PREDICT_WRITE), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
@@ -2944,7 +3467,7 @@ task soc_ifc_predictor::update_mtime_mirrors();
         if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.is_busy()) begin
             uvm_wait_for_nba_region();
             // If mtime_h transitions from busy to not busy on the current clock edge, leave the mirror at the value it just acquired instead of overwriting
-            // (unless the value was not updated by the recent transfer, e.g. because it was an APB transfer)
+            // (unless the value was not updated by the recent transfer, e.g. because it was an AXI transfer)
             // Else, predict a new value (which will be overwritten later when the active transfer completes)
             if (p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.is_busy() || (mtime[63:32] == p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.get_mirrored_value())) begin
                 p_soc_ifc_rm.soc_ifc_reg_rm.internal_rv_mtime_h.count_h.predict(new_mtime[63:32], .kind(UVM_PREDICT_WRITE), .path(UVM_PREDICT), .map(p_soc_ifc_AHB_map));
@@ -3171,9 +3694,9 @@ function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_noncore_reset(
     // signal deassertion will still be observed at the same time as the reset.
     // Thus, generate an expected status transaction for these signals based on falling edges.
     /* FIXME calculate all of these from the reg-model somehow? */
-    return ready_for_fw_push || ready_for_fw_push_fall ||
-           ready_for_runtime || ready_for_runtime_fall ||
-           mailbox_data_avail || mailbox_data_avail_fall ||
+    return ready_for_mb_processing || ready_for_mb_processing_fall ||
+           ready_for_runtime       || ready_for_runtime_fall ||
+           mailbox_data_avail      || mailbox_data_avail_fall ||
            |generic_output_wires || generic_output_wires_fall /*|| trng_req_pending*/; /* only expect a soc_ifc_status_transaction if some signal will transition */
 endfunction
 
@@ -3185,6 +3708,10 @@ function bit soc_ifc_predictor::cptra_status_txn_expected_after_noncore_reset();
            !uc_rst_out_asserted      ||
            iccm_locked               ||
            |nmi_vector;
+endfunction
+
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_noncore_reset();
+    return 0; // TODO
 endfunction
 
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_warm_reset();
@@ -3199,17 +3726,30 @@ function bit soc_ifc_predictor::cptra_status_txn_expected_after_warm_reset();
     return 0;
 endfunction
 
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_warm_reset();
+    return 0; // TODO
+endfunction
+
 function bit soc_ifc_predictor::soc_ifc_status_txn_expected_after_cold_reset();
     return soc_ifc_status_txn_expected_after_warm_reset() || soc_ifc_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
 endfunction
 
 function bit soc_ifc_predictor::cptra_status_txn_expected_after_cold_reset();
-    return cptra_status_txn_expected_after_warm_reset() || cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
+    bit cptra_obf_key_reg_will_clr = 0;
+    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw])
+        cptra_obf_key_reg_will_clr |= |p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value();
+    return cptra_obf_key_reg_will_clr ||
+           cptra_status_txn_expected_after_warm_reset() ||
+           cptra_status_txn_expected_after_noncore_reset(); /* all resets are expected in conjunction with cold */
+endfunction
+
+function bit soc_ifc_predictor::ss_mode_status_txn_expected_after_cold_reset();
+    return 0; // TODO
 endfunction
 
 function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
     soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
-    soc_ifc_sb_apb_ap_output_transaction_t apb_txn;
+    aaxi_master_tr                         axi_txn;
     if ($cast(ahb_txn,txn)) begin
         valid_requester = p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() &&
                           (!p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value() ||
@@ -3226,15 +3766,15 @@ function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
         end
         return valid_requester;
     end
-    else if ($cast(apb_txn,txn)) begin
+    else if ($cast(axi_txn,txn)) begin
         valid_requester = p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() &&
                           p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value() &&
-                          p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == apb_txn.addr_user;
+                          p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser);
         if (!valid_requester) begin
             string msg = $sformatf("valid_requester is false!\nmbox_lock: %d\nmbox_status.soc_has_lock: %d\naddr_user: 0x%x\nmbox_user: 0x%x",
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
-                                   apb_txn.addr_user,
+                                   (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value());
             `uvm_info("PRED_VALID_REQ", msg, UVM_FULL)
         end
@@ -3244,7 +3784,7 @@ function bit soc_ifc_predictor::valid_requester(input uvm_transaction txn);
         return valid_requester;
     end
     else begin
-        `uvm_error("PRED_VALID_REQ", "valid_requester received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_REQ", "valid_requester received invalid transaction - cannot cast as AHB or AXI!")
         valid_requester = 0;
         return valid_requester;
     end
@@ -3252,7 +3792,7 @@ endfunction
 
 function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
     soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
-    soc_ifc_sb_apb_ap_output_transaction_t apb_txn;
+    aaxi_master_tr                         axi_txn;
     if ($cast(ahb_txn,txn)) begin
         valid_receiver = p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value() &&
                          p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value() &&
@@ -3269,21 +3809,21 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
         end
         return valid_receiver;
     end
-    else if ($cast(apb_txn,txn)) begin
+    else if ($cast(axi_txn,txn)) begin
         if (!p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value())
             valid_receiver = 0;
         else if (p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value())
-            valid_receiver = p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == apb_txn.addr_user &&
+            valid_receiver = p_soc_ifc_rm.mbox_csr_rm.mbox_user.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser) &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_done_stage;
         else
-            valid_receiver = apb_txn.addr_user inside {mbox_valid_users} &&
+            valid_receiver = (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser) inside {mbox_valid_users} &&
                              p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.soc_receive_stage;
         if (!valid_receiver) begin
             string msg = $sformatf("valid_receiver is false!\nmbox_lock: %d\nmbox_status.soc_has_lock: %d\nmbox_fn_state_sigs: %p\naddr_user: 0x%x\nvalid_users: %p",
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_status.soc_has_lock.get_mirrored_value(),
                                    p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs,
-                                   apb_txn.addr_user,
+                                   (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser),
                                    mbox_valid_users);
             `uvm_info("PRED_VALID_RCV", msg, UVM_FULL)
         end
@@ -3293,7 +3833,7 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
         return valid_receiver;
     end
     else begin
-        `uvm_error("PRED_VALID_RCV", "valid_receiver received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_RCV", "valid_receiver received invalid transaction - cannot cast as AHB or AXI!")
         valid_receiver = 0;
         return valid_receiver;
     end
@@ -3301,7 +3841,7 @@ endfunction
 
 function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
     soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
-    soc_ifc_sb_apb_ap_output_transaction_t apb_txn;
+    aaxi_master_tr                         axi_txn;
     if ($cast(ahb_txn,txn)) begin
         sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
                         !p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value();
@@ -3316,15 +3856,15 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         end
         return sha_valid_user;
     end
-    else if ($cast(apb_txn,txn)) begin
+    else if ($cast(axi_txn,txn)) begin
         sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value() &&
-                         p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == apb_txn.addr_user;
+                         p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser);
         if (!sha_valid_user) begin
             string msg = $sformatf("sha_valid_user is false!\nsha_lock: %d\nsha_status.soc_has_lock: %d\naddr_user: 0x%x\nsha_user: 0x%x",
                                    p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value(),
                                    p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value(),
-                                   apb_txn.addr_user,
+                                   (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser),
                                    p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value());
             `uvm_info("PRED_VALID_SHA", msg, UVM_HIGH)
         end
@@ -3334,7 +3874,7 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         return sha_valid_user;
     end
     else begin
-        `uvm_error("PRED_VALID_SHA", "sha_valid_user received invalid transaction - cannot cast as AHB or APB!")
+        `uvm_error("PRED_VALID_SHA", "sha_valid_user received invalid transaction - cannot cast as AHB or AXI!")
         sha_valid_user = 0;
         return sha_valid_user;
     end
@@ -3361,6 +3901,22 @@ function void soc_ifc_predictor::predict_boot_wait_boot_done();
 
 endfunction
 
+// Expected order of operations during a reset:
+// - Environment detects the reset occurrence
+// - Environment calls handle_reset for soc_ifc_predictor
+// - Predictor triggers the reset_handled event to indicate the beginning of reset prediction
+// - Predictor receives a status transaction indicating reset is observed at the DUT
+// - Predictor confirms reset_handled is set, resets it
+// - Predictor performs model prediction tasks for the reset event
+// - Predictor indicates completion of prediction by triggering the reset_predicted event
+// - Predictor returns the reset_handled object handle to environment
+// - If it was a hard/cold reset
+//   - Environment immediately completes reset operation 
+// - Else
+//   - Environment waits for the noncore reset event by monitoring reset_handled
+//     (this assertion is delayed from the soft reset input)
+//   - Environment completes all remaining reset-handling tasks for noncore type
+//   - Environment clears the reset_handled event
 task soc_ifc_predictor::handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
     uvm_object obj_triggered;
     reset_flag kind_predicted;
@@ -3385,6 +3941,7 @@ endtask
 function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     uvm_reg all_regs[$];
     reset_flag last_predicted_kind = null;
+    bit send_ss_mode_sts_txn = 0; // TODO
 
     `uvm_info("PRED_RESET", $sformatf("Predicting reset of kind: %p", kind), UVM_LOW)
 
@@ -3394,7 +3951,13 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         `uvm_info("PRED_RESET", $sformatf("Reset prediction of kind: %p results in immediate assertion of internal resets", kind), UVM_MEDIUM)
         noncore_rst_out_asserted = 1'b1;
         uc_rst_out_asserted = 1'b1;
-        rdc_clk_gate_active = 1'b1;
+        // FIXME need to implement clk gating features in uvmf_soc_ifc
+        if (configuration.cptra_ctrl_agent_config.active_passive == PASSIVE) begin
+            rdc_clk_gate_active = 1'b1;
+        end
+        else begin
+            rdc_clk_gate_active = 1'b0;
+        end
     end
     else if (kind == "SOFT") begin
         fork
@@ -3508,13 +4071,141 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     if (kind inside {"HARD", "SOFT"}) begin: RESET_VAL_CHANGES_HARD_SOFT
         soc_ifc_rst_in_asserted = 1'b1;
         p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.predict(1'b0);
+        // Sample the incoming uds_seed/field_entropy wires after any hard/soft reset
+        // immediately upon the RDC clock being enabled. Sampling is enabled any
+        // time a warm reset is asserted.
+        // Obf key is technically re-captured on pwrgood.
+        // Value isn't stored until RDC clock is re-enabled.
+        // If we're running uvmf_soc_ifc, RDC modelling is not supported (TODO)
+        // so the obf_key gets updated _almost_ immediately.
+        // If RDC clock gate is enabled, obf key can't be registered until the clock
+        // is enabled, which coincides with latching the FE/UDS seed inputs.
+        // So obf_key is checked in both routines.
+        if (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE) begin
+            fork
+            begin: LATCH_FE_UDS_OBF_KEY_UPON_PWRGOOD
+                cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                bit send_local_cptra_sts_txn = 1'b0;
+
+                if (kind == "HARD") begin
+                    // Capture is delayed from pwrgood
+                    configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+
+                    // Grab the values that were captured from soc_ifc_ctrl_transaction
+                    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets;
+                        p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                        if ((p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                            `uvm_info("PRED_RESET", $sformatf("sending cptra_sts txn due to obf key. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value(), cptra_obf_key_reg[dw]), UVM_LOW)
+                        end
+                    end
+
+                    // Send predicted transactions
+                    if (send_local_cptra_sts_txn) begin
+                        // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
+                        local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                        populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                        cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                        `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                    end
+                end
+
+                send_local_cptra_sts_txn = 1'b0;
+                wait(cptra_pwrgood_asserted == 1'b1);
+
+                // Grab the values that were captured from soc_ifc_ctrl_transaction
+                if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    foreach (cptra_obf_field_entropy[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to field entropy. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value(), cptra_obf_field_entropy[dw]), UVM_FULL)
+                        end
+                    end
+                end
+                if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    foreach (cptra_obf_uds_seed[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                        p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                        if (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to uds seed. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value(), cptra_obf_uds_seed[dw]), UVM_FULL)
+                        end
+                    end
+                end
+
+                if (kind == "HARD") begin
+                    // Grab the values that were captured from soc_ifc_ctrl_transaction
+                    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                        send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets;
+                        p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                        if ((p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                            `uvm_info("PRED_RESET", $sformatf("Sending cptra_status_transaction due to obf key. mirror 0x%x exp 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value(), cptra_obf_key_reg[dw]), UVM_FULL)
+                        end
+                    end
+                end
+
+                // Send predicted transaction
+                if (send_local_cptra_sts_txn) begin
+                    // cptra status is for latching of UDS/FE values, reflected to outputs towards Caliptra
+                    local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                    populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                    cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                    `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                end
+            end: LATCH_FE_UDS_OBF_KEY_UPON_PWRGOOD
+            join_none
+        end
+        else begin
+            // Sample the incoming obf_key after any hard reset immediately upon
+            // the RDC clock being enabled.
+            fork
+                begin: LATCH_OBF_KEY_UPON_CLK_EN
+                    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
+                    bit send_local_cptra_sts_txn = 1'b0;
+
+                    wait(rdc_clk_gate_active == 1'b1);
+                    wait(rdc_clk_gate_active == 1'b0);
+
+                    // Grab the values that were captured from soc_ifc_ctrl_transaction
+                    if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                        foreach (cptra_obf_field_entropy[dw]) begin
+                            send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
+                            p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
+                        end
+                    end
+                    if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                        foreach (cptra_obf_uds_seed[dw]) begin
+                            send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
+                            p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
+                        end
+                    end
+
+                    if (kind == "HARD") begin
+                        // Grab the values that were captured from soc_ifc_ctrl_transaction
+                        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw]) begin
+                            send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value() != cptra_obf_key_reg[dw]) && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets;
+                            p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].predict(cptra_obf_key_reg[dw]);
+                        end
+                    end
+
+                    // Send predicted transactions
+                    if (send_local_cptra_sts_txn) begin
+                        // cptra status is for latching of obf_key, reflected to outputs towards Caliptra
+                        local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
+                        populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
+                        cptra_sb_ap.write(local_cptra_sb_ap_txn);
+                        `uvm_info("PRED_RESET", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                    end
+                end: LATCH_OBF_KEY_UPON_CLK_EN
+            join_none
+        end
     end: RESET_VAL_CHANGES_HARD_SOFT
 
     // Signals that are tied to reg values are not reset by warm reset until it
     // propagates to the internal resets
     // FIXME: Do a reg-model reset and then extract these from the reg_model???
     if (kind inside {"HARD", "NONCORE"}) begin: RESET_VAL_CHANGES_HARD_NONCORE
-        ready_for_fw_push = 1'b0;
+        ready_for_mb_processing = 1'b0;
         ready_for_runtime = 1'b0;
         nmi_vector = '0;
         iccm_locked = 1'b0;
@@ -3534,17 +4225,17 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         reset_wdt_count = 1'b1;
 
         // FIXME get rid of this variable?
-        mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[1].PAUSER.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[2].PAUSER.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[3].PAUSER.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[4].PAUSER.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_PAUSER[0].PAUSER.get_reset(kind)/*This entry is for the non-programmable default value */};
-        mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[0].LOCK.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[1].LOCK.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[2].LOCK.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[3].LOCK.get_reset(kind),
-                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_PAUSER_LOCK[4].LOCK.get_reset(kind)};
+        mbox_valid_users        = '{p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[1].AXI_USER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[2].AXI_USER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[3].AXI_USER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[4].AXI_USER.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset(kind)/*This entry is for the non-programmable default value */};
+        mbox_valid_users_locked =  {p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[0].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[1].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[2].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[3].LOCK.get_reset(kind),
+                                    p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[4].LOCK.get_reset(kind)};
 
         trng_data_req = 1'b0;
 
@@ -3572,8 +4263,36 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
     if (kind == "HARD") begin: RESET_VAL_CHANGES_HARD
         cptra_pwrgood_asserted = 1'b0;
         timer_intr_pending = 1'b1;
-        fuse_update_enabled = 1'b1; // Fuses only latch new values from APB write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
+        fuse_update_enabled = 1'b1; // Fuses only latch new values from AXI write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
     end: RESET_VAL_CHANGES_HARD
+
+    if (kind == "NONCORE") begin: RESET_VAL_CHANGES_NONCORE
+        // Value changes on reset DE-assertion
+        fork
+        begin: WAIT_NONCORE_RESET_DEASSERTION
+            ss_mode_sb_ap_output_transaction_t local_ss_mode_sb_ap_txn;
+            bit send_ss_mode_sts_txn = 1'b0;
+            wait(noncore_rst_out_asserted == 1'b0);
+            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
+            // START TODO
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()   != fixme_signal;
+            // END TODO
+            predict_strap_values();
+            if (send_ss_mode_sts_txn) begin
+                local_ss_mode_sb_ap_txn = ss_mode_sb_ap_output_transaction_t::type_id::create("local_ss_mode_sb_ap_txn");
+                populate_expected_ss_mode_status_txn(local_ss_mode_sb_ap_txn);
+                ss_mode_sb_ap.write(local_ss_mode_sb_ap_txn);
+                `uvm_info("PRED_RESET", "Transaction submitted through ss_mode_sb_ap", UVM_MEDIUM)
+            end
+        end: WAIT_NONCORE_RESET_DEASSERTION
+        join_none
+    end: RESET_VAL_CHANGES_NONCORE
 
     // HARD reset is the default for a reg-model
     // FIXME move this to env?
@@ -3596,7 +4315,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
     if (kind inside {"HARD","NONCORE"}) begin: RESET_REG_BUSY_HARD_NONCORE
         // If any reg access was in progress when reset occurred, clear the busy
-        // flag (since the APB/AHB sequencers and any mailbox sequences were killed).
+        // flag (since the AXI/AHB sequencers and any mailbox sequences were killed).
         // We don't run this for warm/soft resets because cptra_rst_b doesn't immediately
         // reset the AHB interface, so pending transactions might still complete.
         p_soc_ifc_rm.get_registers(all_regs, UVM_HIER);
@@ -3615,6 +4334,34 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         soc_ifc_status_txn_key = 0;
         cptra_status_txn_key = 0;
     end: RESET_TXN_KEY_HARD_NONCORE
+endfunction
+
+function void soc_ifc_predictor::predict_strap_values();
+    if (!p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (this.strap_ss_val.caliptra_base_addr[31:00]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (this.strap_ss_val.caliptra_base_addr[63:32]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (this.strap_ss_val.mci_base_addr[31:00]                          );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (this.strap_ss_val.uds_seed_base_addr[63:32]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset);
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes       );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.predict                         (this.strap_ss_val.caliptra_dma_axi_user                         );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0].predict                              (this.strap_ss_val.generic[0]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1].predict                              (this.strap_ss_val.generic[1]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.predict                                  (this.strap_ss_val.debug_intent                                  );
+    end
+endfunction
+
+function bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_key_reg();
+    foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw])
+        get_expected_obf_key_reg[dw] = p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[dw].get_mirrored_value();
 endfunction
 
 function bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_field_entropy();
@@ -3637,7 +4384,7 @@ endfunction
 
 function void soc_ifc_predictor::populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
     txn.ready_for_fuses                    = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value();
-    txn.ready_for_fw_push                  = this.ready_for_fw_push;
+    txn.ready_for_mb_processing            = this.ready_for_mb_processing;
     txn.ready_for_runtime                  = this.ready_for_runtime;
     txn.mailbox_data_avail                 = this.mailbox_data_avail;
     txn.mailbox_flow_done                  = this.mailbox_flow_done; // FIXME
@@ -3657,13 +4404,24 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.sha_err_intr_pending       = this.sha_err_intr_pending;
     txn.sha_notif_intr_pending     = this.sha_notif_intr_pending;
     txn.timer_intr_pending         = this.timer_intr_pending;
-    txn.cptra_obf_key_reg          = this.cptra_obf_key_reg;
+    txn.cptra_obf_key_reg          = this.get_expected_obf_key_reg();
     txn.obf_field_entropy          = this.get_expected_obf_field_entropy();
     txn.obf_uds_seed               = this.get_expected_obf_uds_seed();
     txn.nmi_vector                 = this.nmi_vector;
     txn.nmi_intr_pending           = this.nmi_intr_pending;
     txn.iccm_locked                = this.iccm_locked;
     txn.set_key(cptra_status_txn_key++);
+endfunction
+
+function void soc_ifc_predictor::populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
+    txn.cptra_ss_debug_intent = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value();
+    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value();
+    txn.ss_soc_dbg_unlock_level = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value())};
+    txn.ss_generic_fw_exec_ctrl = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()),
+                                   32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value())};
 endfunction
 
 // pragma uvmf custom external end

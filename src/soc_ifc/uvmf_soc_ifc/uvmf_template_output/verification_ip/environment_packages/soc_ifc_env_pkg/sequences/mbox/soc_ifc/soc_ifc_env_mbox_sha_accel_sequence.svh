@@ -145,12 +145,12 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_setup();
     this.mbox_op_rand.dlen = 4 + this.dlen;
 
     // Ensure that the start address is after the data
-    if ( (this.start_addr <= this.mbox_op_rand.dlen) || ( (this.start_addr + this.dlen) > MBOX_SIZE_BYTES )) begin
+    if ( (this.start_addr <= this.mbox_op_rand.dlen) || ( (this.start_addr + this.dlen) > CPTRA_MBOX_SIZE_BYTES )) begin
         // Re-randomize start address to ensure it is after the valid data
         // and still meets alignment requirements.
         // Restrict the start addr so that we don't overflow the mailbox
         this.randomize(this.start_addr) with { this.start_addr >= this.mbox_op_rand.dlen + 4;
-                                               this.start_addr + this.dlen <= MBOX_SIZE_BYTES;
+                                               this.start_addr + this.dlen <= CPTRA_MBOX_SIZE_BYTES;
                                                this.start_addr[1:0] == 2'b00; };
     end
     // This shouldn't happen - if it does we bail out
@@ -172,13 +172,13 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
 
     //write the start address into the first dword
     reg_model.mbox_csr_rm.mbox_datain_sem.get();
-    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(this.start_addr), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(this.start_addr), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
     reg_model.mbox_csr_rm.mbox_datain_sem.put();
     report_reg_sts(reg_sts, "mbox_datain");
 
     //pad the data until start address
     //for (datain_ii=1; datain_ii < sha_block_start_dw; datain_ii++) begin
-    //    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+    //    reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'('0), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
     //    report_reg_sts(reg_sts, "mbox_datain");
     //end
 
@@ -190,7 +190,7 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_push_datain();
             data = sha_block_data[datain_ii];
             `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii, data), UVM_DEBUG)
             reg_model.mbox_csr_rm.mbox_datain_sem.get();
-            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAIN)));
+            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
             reg_model.mbox_csr_rm.mbox_datain_sem.put();
             report_reg_sts(reg_sts, "mbox_datain");
         end
@@ -205,11 +205,11 @@ task soc_ifc_env_mbox_sha_accel_sequence::mbox_read_resp_data();
     int digest_dwords = this.sha_accel_op_rand.sha512_mode ? 16 : 12;
 
     for (ii=0; ii < digest_dwords; ii++) begin
-        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(PAUSER_PROB_DATAOUT)));
+        reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAOUT)));
         report_reg_sts(reg_sts, "mbox_dataout");
-        if (!pauser_used_is_valid() && retry_failed_reg_axs) begin
-            `uvm_info("SHA_ACCEL_SEQ", "Re-do dataout read with valid PAUSER", UVM_HIGH)
-            reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_APB_map, this, .extension(get_rand_user(FORCE_VALID_PAUSER)));
+        if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
+            `uvm_info("SHA_ACCEL_SEQ", "Re-do dataout read with valid AxUSER", UVM_HIGH)
+            reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
             report_reg_sts(reg_sts, "mbox_dataout");
         end
         if (data != sha_digest[digest_dwords-1-ii]) begin
