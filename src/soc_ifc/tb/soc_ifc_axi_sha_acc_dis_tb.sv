@@ -18,7 +18,7 @@
 // ----------
 // Test to make sure SHA acc is not accessible over SoC AXI interface
 
-module soc_ifc_axi_sha_acc_dis_test
+module soc_ifc_axi_sha_acc_dis_tb
     import soc_ifc_pkg::*;
     import axi_pkg::*;
     ();

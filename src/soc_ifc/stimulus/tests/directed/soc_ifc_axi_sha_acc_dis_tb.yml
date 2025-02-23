@@ -13,5 +13,5 @@
 # limitations under the License.
 #
 ---
-testname: soc_ifc_axi_sha_acc_dis_test
+testname: soc_ifc_axi_sha_acc_dis_tb
 seed: ${PLAYBOOK_RANDOM_SEED}

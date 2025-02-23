@@ -90,8 +90,6 @@ targets:
     files:
       - $COMPILE_ROOT/tb/soc_ifc_tb_pkg.sv
       - $COMPILE_ROOT/tb/soc_ifc_tb.sv
-      - $COMPILE_ROOT/tb/soc_ifc_axi_sha_acc_dis_test.sv
-      - $COMPILE_ROOT/tb/soc_ifc_axi_sha_access_test.sv
     tops: [soc_ifc_tb]
 global:
   tool:
@@ -106,7 +104,7 @@ global:
       #sim:
         #- '-ucli -i dump.ucli'
 ---
-provides: [soc_ifc_axi_sha_acc_dis_test]
+provides: [soc_ifc_axi_sha_acc_dis_tb]
 schema_version: 2.4.0
 requires:
   - soc_ifc_coverage
@@ -118,9 +116,8 @@ targets:
     files:
       # - $COMPILE_ROOT/tb/soc_ifc_tb_pkg.sv
       # - $COMPILE_ROOT/tb/soc_ifc_tb.sv
-      - $COMPILE_ROOT/tb/soc_ifc_axi_sha_acc_dis_test.sv
-      - $COMPILE_ROOT/tb/soc_ifc_axi_sha_access_test.sv
-    tops: [soc_ifc_axi_sha_acc_dis_test]
+      - $COMPILE_ROOT/tb/soc_ifc_axi_sha_acc_dis_tb.sv
+    tops: [soc_ifc_axi_sha_acc_dis_tb]
 global:
   tool:
     vcs:

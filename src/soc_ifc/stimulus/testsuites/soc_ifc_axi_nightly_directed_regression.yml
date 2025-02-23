@@ -1,0 +1,14 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L0", "directed", "nightly", "SOC_IFC"]
+      path: ""
+      weight: 100 
+      generations: 20 
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:        
+        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/soc_ifc_axi_sha_acc_dis_tb: {weight 20}
