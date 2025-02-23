@@ -126,6 +126,11 @@ endgenerate
             if (hready_i) begin
                 dv <= hsel_i & htrans_i inside {2'b10, 2'b11};
             end
+            // Clear dv as soon as the component responds
+            // (in case of error, hready_i will still be 0 due to hreadyout_o == 0)
+            else if (dv && !hld) begin
+                dv <= 1'b0;
+            end
             if(hready_i & hsel_i) begin
                 addr <= haddr_i[CLIENT_ADDR_WIDTH-1:0];
                 write <= hwrite_i & |htrans_i;
