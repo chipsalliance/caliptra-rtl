@@ -14,4 +14,4 @@
 #
 ---
 testname: soc_ifc_axi_sha_acc_dis_test
-seed: 1
+seed: ${PLAYBOOK_RANDOM_SEED}

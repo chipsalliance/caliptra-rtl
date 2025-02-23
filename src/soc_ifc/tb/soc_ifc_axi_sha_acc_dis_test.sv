@@ -68,6 +68,10 @@ module soc_ifc_axi_sha_acc_dis_test
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
+  axi_resp_e resp;
+  logic [UW-1:0] resp_user;
+  logic access;
+
   typedef enum logic {
     read = 0,
     write = 1
@@ -326,6 +330,7 @@ task display_test_results;
 
       user_tb = $urandom();
       random_user_tb = 0;
+      access = 1;
     end
 endtask // init_sim
 
@@ -394,7 +399,8 @@ task read_single_word(input [31 : 0]  address);
 endtask // read_single_word
 //-----------------------------------------
 task soc_ifc_axi_test;
-  axi_resp_e resp;
+
+  access = 1; //$urandom_range(0,1);
 
   #(10*CLK_PERIOD);
   $display("Clearing SHA LOCK over AHB\n");
@@ -403,18 +409,22 @@ task soc_ifc_axi_test;
   //wait for write to go through
   #(CLK_PERIOD);
   hsel_i_tb       = 0;
-  
-  $display("Attempt to acquire SHA ACC LOCK reg over AXI\n");
 
   //id = 0, user --> decoded in axi sub
-  random_user_tb = $urandom();
+  random_user_tb = access ? user_tb : $urandom();
+  $display("access = %0d", access);
+  $display("-----------------");
+  $display("Testing access with user %h with strap set to user %h", random_user_tb, user_tb);
+  $display("-----------------\n");
 
+  $display("Attempt to acquire SHA ACC LOCK reg over AXI\n");
   axi_sub_if.axi_read_single(
     .addr(`CLP_SHA512_ACC_CSR_LOCK),
     .user(random_user_tb),
     .id($urandom()),
     .lock(0), 
     .data(rdata), 
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -424,7 +434,8 @@ task soc_ifc_axi_test;
     .user(random_user_tb),
     .id(0),
     .lock(0), 
-    .data(rdata), 
+    .data(rdata),
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -453,6 +464,8 @@ task soc_ifc_axi_test;
     .id(0),
     .lock(0),
     .data('h1),
+    .write_user(random_user_tb),
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -461,7 +474,8 @@ task soc_ifc_axi_test;
     .user(random_user_tb),
     .id(0),
     .lock(0), 
-    .data(rdata), 
+    .data(rdata),
+    .resp_user(resp_user), 
     .resp(resp)
   );
 
@@ -485,6 +499,8 @@ task soc_ifc_axi_test;
     .id(0),
     .lock(0),
     .data('h1),
+    .resp_user(resp_user),
+    .write_user(random_user_tb),
     .resp(resp)
   );
 
@@ -493,7 +509,8 @@ task soc_ifc_axi_test;
     .user(random_user_tb),
     .id(0),
     .lock(0), 
-    .data(rdata), 
+    .data(rdata),
+    .resp_user(resp_user), 
     .resp(resp)
   );
 
@@ -519,6 +536,8 @@ task soc_ifc_axi_test;
     .id(0),
     .lock(0),
     .data(wdata),
+    .write_user(random_user_tb),
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -527,7 +546,8 @@ task soc_ifc_axi_test;
     .user(random_user_tb),
     .id(0),
     .lock(0), 
-    .data(rdata), 
+    .data(rdata),
+    .resp_user(resp_user), 
     .resp(resp)
   );
 
@@ -552,6 +572,8 @@ task soc_ifc_axi_test;
     .id(0),
     .lock(0),
     .data('h1),
+    .write_user(random_user_tb),
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -560,7 +582,8 @@ task soc_ifc_axi_test;
     .user(random_user_tb),
     .id(0),
     .lock(0), 
-    .data(rdata), 
+    .data(rdata),
+    .resp_user(resp_user),
     .resp(resp)
   );
 
@@ -586,7 +609,8 @@ if (user_tb == random_user_tb) begin
       .user(random_user_tb),
       .id(0),
       .lock(0), 
-      .data(rdata), 
+      .data(rdata),
+      .resp_user(resp_user), 
       .resp(resp)
     );
   end
@@ -595,7 +619,6 @@ end
 
   //reset test - strap needs to preserve value, lock is reset - TODO
 
-  $display("Test done\n");
 endtask
 
 initial begin
@@ -604,7 +627,12 @@ initial begin
   reset_dut();
   $display("Init and reset done\n");
   soc_ifc_axi_test();
+  $display("Issuing warm reset\n");
+  reset_dut();
+  @(posedge clk_tb);
+  soc_ifc_axi_test();
   repeat(100) @(posedge clk_tb);
+  $display("TESTCASE PASSED");
   $finish;
 end
 endmodule
