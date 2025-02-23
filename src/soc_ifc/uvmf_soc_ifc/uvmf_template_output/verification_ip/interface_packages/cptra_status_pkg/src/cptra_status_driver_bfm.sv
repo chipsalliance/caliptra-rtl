@@ -126,6 +126,10 @@ end
   reg  sha_error_intr_o = 'bz;
   tri  sha_notif_intr_i;
   reg  sha_notif_intr_o = 'bz;
+  tri  dma_error_intr_i;
+  reg  dma_error_intr_o = 'bz;
+  tri  dma_notif_intr_i;
+  reg  dma_notif_intr_o = 'bz;
   tri  timer_intr_i;
   reg  timer_intr_o = 'bz;
   tri [31:0] nmi_vector_i;
@@ -167,6 +171,10 @@ end
   assign sha_error_intr_i = bus.sha_error_intr;
   assign bus.sha_notif_intr = (initiator_responder == INITIATOR) ? sha_notif_intr_o : 'bz;
   assign sha_notif_intr_i = bus.sha_notif_intr;
+  assign bus.dma_error_intr = (initiator_responder == INITIATOR) ? dma_error_intr_o : 'bz;
+  assign dma_error_intr_i = bus.dma_error_intr;
+  assign bus.dma_notif_intr = (initiator_responder == INITIATOR) ? dma_notif_intr_o : 'bz;
+  assign dma_notif_intr_i = bus.dma_notif_intr;
   assign bus.timer_intr = (initiator_responder == INITIATOR) ? timer_intr_o : 'bz;
   assign timer_intr_i = bus.timer_intr;
   assign bus.nmi_vector = (initiator_responder == INITIATOR) ? nmi_vector_o : 'bz;
@@ -216,6 +224,8 @@ end
        soc_ifc_notif_intr_o <= 'bz;
        sha_error_intr_o <= 'bz;
        sha_notif_intr_o <= 'bz;
+       dma_error_intr_o <= 'bz;
+       dma_notif_intr_o <= 'bz;
        timer_intr_o <= 'bz;
        nmi_vector_o <= 'bz;
        nmi_intr_o <= 'bz;
@@ -243,6 +253,8 @@ end
                  |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
                  |(sha_error_intr_i       & !sha_error_intr_o           ) ||
                  |(sha_notif_intr_i       & !sha_notif_intr_o           ) ||
+                 |(dma_error_intr_i       & !dma_error_intr_o           ) ||
+                 |(dma_notif_intr_i       & !dma_notif_intr_o           ) ||
                  |(timer_intr_i           & !timer_intr_o               ) ||
                  |(nmi_vector_i           ^  nmi_vector_o               ) ||
                  |(nmi_intr_i             & !nmi_intr_o                 ) ||
@@ -285,6 +297,8 @@ end
        //   bit soc_ifc_notif_intr_pending ;
        //   bit sha_err_intr_pending ;
        //   bit sha_notif_intr_pending ;
+       //   bit dma_err_intr_pending ;
+       //   bit dma_notif_intr_pending ;
        //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
@@ -300,6 +314,8 @@ end
        //   bit soc_ifc_notif_intr_pending ;
        //   bit sha_err_intr_pending ;
        //   bit sha_notif_intr_pending ;
+       //   bit dma_err_intr_pending ;
+       //   bit dma_notif_intr_pending ;
        //   bit timer_intr_pending ;
        //   bit noncore_rst_asserted ;
        //   bit uc_rst_asserted ;
@@ -334,6 +350,8 @@ end
        //      soc_ifc_notif_intr_o <= cptra_status_initiator_struct.xyz;  //    
        //      sha_error_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      sha_notif_intr_o <= cptra_status_initiator_struct.xyz;  //     
+       //      dma_error_intr_o <= cptra_status_initiator_struct.xyz;  //     
+       //      dma_notif_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      timer_intr_o <= cptra_status_initiator_struct.xyz;  //     
        //      nmi_vector_o <= cptra_status_initiator_struct.xyz;  //    [31:0]
        //      nmi_intr_o <= cptra_status_initiator_struct.xyz;  //     
@@ -373,6 +391,8 @@ bit first_transfer=1;
   //   bit soc_ifc_notif_intr_pending ;
   //   bit sha_err_intr_pending ;
   //   bit sha_notif_intr_pending ;
+  //   bit dma_err_intr_pending ;
+  //   bit dma_notif_intr_pending ;
   //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
@@ -388,6 +408,8 @@ bit first_transfer=1;
   //   bit soc_ifc_notif_intr_pending ;
   //   bit sha_err_intr_pending ;
   //   bit sha_notif_intr_pending ;
+  //   bit dma_err_intr_pending ;
+  //   bit dma_notif_intr_pending ;
   //   bit timer_intr_pending ;
   //   bit noncore_rst_asserted ;
   //   bit uc_rst_asserted ;
@@ -415,6 +437,8 @@ bit first_transfer=1;
        //      cptra_status_responder_struct.xyz = soc_ifc_notif_intr_i;  //   
        //      cptra_status_responder_struct.xyz = sha_error_intr_i;  //     
        //      cptra_status_responder_struct.xyz = sha_notif_intr_i;  //     
+       //      cptra_status_responder_struct.xyz = dma_error_intr_i;  //     
+       //      cptra_status_responder_struct.xyz = dma_notif_intr_i;  //     
        //      cptra_status_responder_struct.xyz = timer_intr_i;  //     
        //      cptra_status_responder_struct.xyz = nmi_vector_i;  //    [31:0] 
        //      cptra_status_responder_struct.xyz = nmi_intr_i;  //     
@@ -442,6 +466,8 @@ bit first_transfer=1;
         soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i;
         sha_error_intr_o               <= sha_error_intr_i    ;
         sha_notif_intr_o               <= sha_notif_intr_i    ;
+        dma_error_intr_o               <= dma_error_intr_i    ;
+        dma_notif_intr_o               <= dma_notif_intr_i    ;
         timer_intr_o                   <= timer_intr_i        ;
         nmi_intr_o                     <= nmi_intr_i          ;
         @(posedge clk_i);
@@ -456,6 +482,8 @@ bit first_transfer=1;
     soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
     sha_error_intr_o               <= sha_error_intr_i      ;
     sha_notif_intr_o               <= sha_notif_intr_i      ;
+    dma_error_intr_o               <= dma_error_intr_i      ;
+    dma_notif_intr_o               <= dma_notif_intr_i      ;
     timer_intr_o                   <= timer_intr_i          ;
     nmi_vector_o                   <= nmi_vector_i          ;
     nmi_intr_o                     <= nmi_intr_i            ;
@@ -468,6 +496,8 @@ bit first_transfer=1;
          cptra_status_initiator_struct.soc_ifc_notif_intr_pending = soc_ifc_notif_intr_i;
          cptra_status_initiator_struct.sha_err_intr_pending       = sha_error_intr_i;
          cptra_status_initiator_struct.sha_notif_intr_pending     = sha_notif_intr_i;
+         cptra_status_initiator_struct.dma_err_intr_pending       = dma_error_intr_i;
+         cptra_status_initiator_struct.dma_notif_intr_pending     = dma_notif_intr_i;
          cptra_status_initiator_struct.timer_intr_pending         = timer_intr_i;
          cptra_status_initiator_struct.noncore_rst_asserted       = !cptra_noncore_rst_b_i;
          cptra_status_initiator_struct.uc_rst_asserted            = !cptra_uc_rst_b_i;

@@ -43,17 +43,23 @@ package caliptra_top_tests_pkg;
    import soc_ifc_ctrl_pkg_hdl::*;
    import cptra_ctrl_pkg::*;
    import cptra_ctrl_pkg_hdl::*;
+   import ss_mode_ctrl_pkg::*;
+   import ss_mode_ctrl_pkg_hdl::*;
    import soc_ifc_status_pkg::*;
    import soc_ifc_status_pkg_hdl::*;
    import cptra_status_pkg::*;
    import cptra_status_pkg_hdl::*;
+   import ss_mode_status_pkg::*;
+   import ss_mode_status_pkg_hdl::*;
+   import mbox_sram_pkg::*;
+   import mbox_sram_pkg_hdl::*;
    import qvip_ahb_lite_slave_pkg::*;
-   import qvip_apb5_slave_pkg::*;
+//   import qvip_apb5_slave_pkg::*;
    import QUESTA_MVC::*;
    import qvip_utils_pkg::*;
    import mvc_pkg::*;
    import mgc_ahb_v2_0_pkg::*;
-   import mgc_apb3_v1_0_pkg::*;
+//   import mgc_apb3_v1_0_pkg::*;
 
 
    `include "uvm_macros.svh"

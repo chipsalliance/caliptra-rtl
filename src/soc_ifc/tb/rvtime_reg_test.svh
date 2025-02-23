@@ -59,7 +59,7 @@
 
       // Skip wrting & reading over AHB until post reset sequencing is done 
       // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using APB as part of Caliptra boot.  Scoreboard update not 
+      // are written using AXI as part of Caliptra boot.  Scoreboard update not 
       // needed for readonly fields which are set directly by wires.
       simulate_caliptra_boot();
 
@@ -115,21 +115,21 @@
       rvtime_hval = 32'hffff_ffff;
 
       $display ("\n-------------------------------------------------------------");
-      $display ("1b. Writing/Reading using APB/APB + AHB"); 
+      $display ("1b. Writing/Reading using AXI/AXI + AHB"); 
       $display ("-------------------------------------------------------------");
 
       // ** Write & check RV_MTIME_H ** 
       wrtrans.update(rvtime_haddr, 0, tid); 
       wrtrans.randomize();
 
-      write_reg_trans(SET_APB, wrtrans);  
-      read_regs(GET_APB, {rvtime_h}, tid, 3); 
+      write_reg_trans(SET_AXI, wrtrans);  
+      read_regs(GET_AXI, {rvtime_h}, tid, 3); 
 
       // ** Write to RV_MTIME_L & check val ** 
       wrtrans.update(rvtime_laddr, 0, tid); 
       wrtrans.randomize();
 
-      write_reg_trans(SET_APB, wrtrans);  
+      write_reg_trans(SET_AXI, wrtrans);  
 
       repeat (3) @(posedge clk_tb);
       rvtime_lval = 32'hffff_fff0 + (cycle_ctr_since_pwrgood - update_ctr); 
@@ -148,12 +148,12 @@
       read_reg_chk_inrange(GET_AHB, rvtime_h, tid, rvtime_hval, rvtime_hval); 
       @(posedge clk_tb);
 
-      // There's no overflow of eiter MTIME register with APB writes since MTIME_L just 
+      // There's no overflow of eiter MTIME register with AXI writes since MTIME_L just 
       // rolled passed 0. -- no check needed  
 
 
       $display ("\n-------------------------------------------------------------");
-      $display ("1c. Writing/Reading using AHB/APB"); 
+      $display ("1c. Writing/Reading using AHB/AXI"); 
       $display ("-------------------------------------------------------------");
 
       // ** Write & check RV_MTIME_H this time preparing for rolloever ** 
@@ -167,9 +167,9 @@
 
 
       repeat (3) @(posedge clk_tb);
-      read_reg_chk_inrange(GET_APB, rvtime_h, tid, 'h0, 'h0); 
+      read_reg_chk_inrange(GET_AXI, rvtime_h, tid, 'h0, 'h0); 
       repeat (3) @(posedge clk_tb);
-      read_reg_chk_inrange(GET_APB, rvtime_l, tid, 'h1, 'h20); 
+      read_reg_chk_inrange(GET_AXI, rvtime_l, tid, 'h1, 'h20); 
 
       // ** Write random values to RV_TIME_H/L preparing for warm reset **  
       wrtrans.update(rvtime_haddr, 0, tid);
@@ -190,7 +190,7 @@
 
 
       // -----------------------------------------------------------------
-      // Phase 2. Perform Warm Reset, read values over APB 
+      // Phase 2. Perform Warm Reset, read values over AXI 
       // -----------------------------------------------------------------
       $display ("\n-------------------------------------------------------------");
       $display ("2a. Perform a warm reset then just read regs"); 
@@ -207,15 +207,15 @@
       reset_reason = update_CPTRA_RESET_REASON(1, 0);
 
       // expect old sticky values which are different from power-on values
-      read_reg_chk_inrange(GET_APB, {rvtime_h}, tid, rvtime_hval, rvtime_hval);
+      read_reg_chk_inrange(GET_AXI, {rvtime_h}, tid, rvtime_hval, rvtime_hval);
       @(posedge clk_tb);
 
       rvtime_lval = rvtime_lval + (cycle_ctr_since_pwrgood - update_ctr);  
-      read_reg_chk_inrange(GET_APB, {rvtime_l}, tid, rvtime_lval - 'd5, rvtime_lval + 'd15); 
+      read_reg_chk_inrange(GET_AXI, {rvtime_l}, tid, rvtime_lval - 'd5, rvtime_lval + 'd15); 
       @(posedge clk_tb);
 
       // -----------------------------------------------------------------
-      // Phase 3. Perform Cold Reset, read values over APB 
+      // Phase 3. Perform Cold Reset, read values over AXI 
       // -----------------------------------------------------------------
       $display ("\n-------------------------------------------------------------");
       $display ("3a. Perform a cold reset then just read regs"); 
@@ -232,9 +232,9 @@
       reset_reason = update_CPTRA_RESET_REASON(1, 0);
 
       // expect old sticky values which are different from power-on values
-      read_reg_chk_inrange(GET_APB, {rvtime_h}, tid, 0, 0); 
+      read_reg_chk_inrange(GET_AXI, {rvtime_h}, tid, 0, 0); 
       @(posedge clk_tb);
-      read_reg_chk_inrange(GET_APB, {rvtime_l}, tid, 'd1, 'd20);
+      read_reg_chk_inrange(GET_AXI, {rvtime_l}, tid, 'd1, 'd20);
       @(posedge clk_tb);
 
       error_ctr += sb.err_count;

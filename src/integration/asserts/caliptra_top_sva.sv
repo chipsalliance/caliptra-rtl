@@ -346,7 +346,7 @@ module caliptra_top_sva
       for (genvar dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
         MLDSA_signature_16_36_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
             (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword] == {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}))
         )
         else $display("SVA ERROR: [MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword], {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}, SIGNATURE_C_NUM_DWORDS+dword);
@@ -355,7 +355,7 @@ module caliptra_top_sva
       for (genvar dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
         MLDSA_signature_0_15_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
             (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_PATH.signature_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
         )
         else $display("SVA ERROR: [MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
@@ -368,7 +368,7 @@ module caliptra_top_sva
         for (genvar j = 0; j < 5; j++) begin
           MLDSA_sig_37_1135_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
             (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `MLDSA_PATH.mldsa_status_done_p) |=> (`MLDSA_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
           )
           else $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `MLDSA_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
@@ -696,10 +696,11 @@ module caliptra_top_sva
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         
   MLDSA_valid_flag:     assert property (
-                                    @(posedge `SVA_RDC_CLK)
-                                    `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready 
-                                    )
-                        else $display("SVA ERROR: MLDSA VALID flag mismatch!");
+                          @(posedge `SVA_RDC_CLK)
+                          disable iff (`SERVICES_PATH.disable_mldsa_sva)
+                          `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready
+                      )
+                      else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 

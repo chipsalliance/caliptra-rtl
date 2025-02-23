@@ -19,7 +19,7 @@
 virtual class soc_ifc_reg_cbs_mbox_csr extends uvm_reg_cbs;
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
 

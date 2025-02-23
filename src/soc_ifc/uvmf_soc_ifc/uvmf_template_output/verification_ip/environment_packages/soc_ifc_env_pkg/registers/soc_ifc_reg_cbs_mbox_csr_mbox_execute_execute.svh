@@ -159,7 +159,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                     else if (value & !previous) begin
                         // Maximum allowable size for data transferred via mailbox
                         int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
-                                                                                                                   (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
+                                                                                                                   (mm.get_size() * mm.get_n_bytes()) >> ($clog2(CPTRA_MBOX_DATA_W/8));
                         if (!rm.mbox_fn_state_sigs.uc_data_stage)
                             `uvm_error("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by uC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs))
                         // Round dlen up to nearest dword boundary and compare with data queue size
@@ -178,7 +178,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                             uvm_reg_data_t zeros [$];
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
-                            zeros = '{MBOX_DEPTH{32'h0}};
+                            zeros = '{CPTRA_MBOX_DEPTH{32'h0}};
                             zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                             rm.mbox_data_q = {rm.mbox_data_q, zeros};
                         end
@@ -196,7 +196,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     // Check for protocol violations
@@ -244,7 +244,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                     else if (value & !previous) begin
                         // Maximum allowable size for data transferred via mailbox
                         int unsigned dlen_cap_dw = (mbox_dlen_mirrored(rm) < (mm.get_size() * mm.get_n_bytes())) ? mbox_dlen_mirrored_dword_ceil(rm) :
-                                                                                                                   (mm.get_size() * mm.get_n_bytes()) >> ($clog2(MBOX_DATA_W/8));
+                                                                                                                   (mm.get_size() * mm.get_n_bytes()) >> ($clog2(CPTRA_MBOX_DATA_W/8));
                         if (!rm.mbox_fn_state_sigs.soc_data_stage)
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("mbox_execute is set by SOC when in an unexpected state [%p]!", rm.mbox_fn_state_sigs), UVM_LOW)
                         // Round dlen up to nearest dword boundary and compare with data queue size
@@ -263,7 +263,7 @@ class soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute extends soc_ifc_reg_cbs_mbox
                         else if (rm.mbox_data_q.size < dlen_cap_dw) begin
                             uvm_reg_data_t zeros [$];
                             `uvm_info("SOC_IFC_REG_CBS", $sformatf("Insufficient entries detected in mbox_data_q on control transfer - 0-filling %d entries", dlen_cap_dw - rm.mbox_data_q.size()), UVM_LOW)
-                            zeros = '{MBOX_DEPTH{32'h0}};
+                            zeros = '{CPTRA_MBOX_DEPTH{32'h0}};
                             zeros = zeros[0:dlen_cap_dw - rm.mbox_data_q.size() - 1];
                             rm.mbox_data_q = {rm.mbox_data_q, zeros};
                         end

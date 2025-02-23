@@ -43,6 +43,8 @@
 // .dut_signal_port(cptra_status_bus.soc_ifc_notif_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.sha_error_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.sha_notif_intr), // Agent output 
+// .dut_signal_port(cptra_status_bus.dma_error_intr), // Agent output 
+// .dut_signal_port(cptra_status_bus.dma_notif_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.timer_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.nmi_vector), // Agent output 
 // .dut_signal_port(cptra_status_bus.nmi_intr), // Agent output 
@@ -66,6 +68,8 @@ interface  cptra_status_if
   inout tri  soc_ifc_notif_intr,
   inout tri  sha_error_intr,
   inout tri  sha_notif_intr,
+  inout tri  dma_error_intr,
+  inout tri  dma_notif_intr,
   inout tri  timer_intr,
   inout tri [31:0] nmi_vector,
   inout tri  nmi_intr,
@@ -86,6 +90,8 @@ modport monitor_port
   input soc_ifc_notif_intr,
   input sha_error_intr,
   input sha_notif_intr,
+  input dma_error_intr,
+  input dma_notif_intr,
   input timer_intr,
   input nmi_vector,
   input nmi_intr,
@@ -106,6 +112,8 @@ modport initiator_port
   output soc_ifc_notif_intr,
   output sha_error_intr,
   output sha_notif_intr,
+  output dma_error_intr,
+  output dma_notif_intr,
   output timer_intr,
   output nmi_vector,
   output nmi_intr,
@@ -126,6 +134,8 @@ modport responder_port
   input soc_ifc_notif_intr,
   input sha_error_intr,
   input sha_notif_intr,
+  input dma_error_intr,
+  input dma_notif_intr,
   input timer_intr,
   input nmi_vector,
   input nmi_intr,

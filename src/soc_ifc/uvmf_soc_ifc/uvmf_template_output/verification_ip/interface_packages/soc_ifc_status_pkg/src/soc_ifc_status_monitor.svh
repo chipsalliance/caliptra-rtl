@@ -111,6 +111,7 @@ function void soc_ifc_status_monitor::force_advance_txn_key(int unsigned incr);
 endfunction
 
 task soc_ifc_status_monitor::handle_reset(string kind = "HARD");
+    `uvm_info("SOC_IFC_STS_MON", "Executing handle_reset", UVM_HIGH)
     if (kind inside {"HARD","NONCORE"})
         txn_key = 0;
 endtask

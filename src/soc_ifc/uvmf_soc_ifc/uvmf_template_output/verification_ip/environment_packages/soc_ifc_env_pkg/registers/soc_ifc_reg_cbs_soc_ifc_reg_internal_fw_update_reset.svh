@@ -71,7 +71,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset extends soc_ifc_reg_c
     `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     // Function: post_predict
     //
@@ -160,7 +160,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_internal_fw_update_reset extends soc_ifc_reg_c
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
+        else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to internal reg field %s on map %s. value: 0x%x previous: 0x%x", fld.get_full_name(), map.get_name(), value, previous), UVM_LOW)

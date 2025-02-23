@@ -29,7 +29,7 @@ typedef enum {
   AES_CBC = (1 << 1),
   AES_CFB = (1 << 2),
   AES_OFB = (1 << 3),
-  AEC_CTR = (1 << 4),
+  AES_CTR = (1 << 4),
   AES_GCM = (1 << 5)
 } aes_mode_e;
 

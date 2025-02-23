@@ -19,7 +19,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE extends uvm_reg
     `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE)
 
     string AHB_map_name = "soc_ifc_AHB_map";
-    string APB_map_name = "soc_ifc_APB_map";
+    string AXI_map_name = "soc_ifc_AXI_map";
 
     // Function: post_predict
     //
@@ -58,38 +58,38 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_TRNG_STATUS_DATA_WR_DONE extends uvm_reg
                 end
             endcase
         end
-        else if (map.get_name() == this.APB_map_name) begin
-            apb_reg_adapter_t adapter;
+        else if (map.get_name() == this.AXI_map_name) begin
+            axi_reg_adapter_t adapter;
             if (!$cast(adapter,ah)) `uvm_fatal("SOC_IFC_REG_CBS", "Failed to get valid adapter handle")
             case (kind) inside
                 UVM_PREDICT_READ, UVM_PREDICT_WRITE: begin
-                    // Compare the PAUSER value used for the current reg access
+                    // Compare the AXI_USER value used for the current reg access
                     // with the locked value in the reg model. If mismatch, block
                     // any reg-prediction changes on this field.
-                    // The current reg access PAUSER value is stored to the user_obj
-                    // inside the adapter by the apb_reg_predictor when it receives
+                    // The current reg access AXI_USER value is stored to the user_obj
+                    // inside the adapter by the axi_reg_predictor when it receives
                     // a request to do prediction for a reg access, via a call
                     // to bus2reg. This occurs prior to invoking "do_predict".
-                    if (rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value() &&
-                        adapter.bus2reg_user_obj.get_addr_user() != rm.CPTRA_TRNG_VALID_PAUSER.PAUSER.get_mirrored_value() &&
+                    if (rm.CPTRA_TRNG_AXI_USER_LOCK.LOCK.get_mirrored_value() &&
+                        adapter.bus2reg_user_obj.get_addr_user() != rm.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.get_mirrored_value() &&
                         value != previous) begin
                         `uvm_info("SOC_IFC_REG_CBS",
-                                  $sformatf("post_predict called with kind [%p] blocked attempt to update CPTRA_TRNG_STATUS.%s due to PAUSER mismatch. lock: %0d VALID_PAUSER: 0x%x BUS_PAUSER: 0x%x",
+                                  $sformatf("post_predict called with kind [%p] blocked attempt to update CPTRA_TRNG_STATUS.%s due to AXI_USER mismatch. lock: %0d VALID_AXI_USER: 0x%x BUS_AXI_USER: 0x%x",
                                             kind,
                                             fld.get_name(),
-                                            rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value(),
-                                            rm.CPTRA_TRNG_VALID_PAUSER.PAUSER.get_mirrored_value(),
+                                            rm.CPTRA_TRNG_AXI_USER_LOCK.LOCK.get_mirrored_value(),
+                                            rm.CPTRA_TRNG_VALID_AXI_USER.AXI_USER.get_mirrored_value(),
                                             adapter.bus2reg_user_obj.get_addr_user()),
                                   UVM_FULL)
                         value = previous;
                     end
                     else begin
-                        // Any access with a valid PAUSER means post_predict won't manipulate the predicted value update to the mirror
+                        // Any access with a valid AXI_USER means post_predict won't manipulate the predicted value update to the mirror
                         `uvm_info("SOC_IFC_REG_CBS",
-                                  $sformatf("post_predict called with kind [%p] has no effect due to valid PAUSER [0x%x] used and LOCK [%0d]. value: 0x%x previous: 0x%x",
+                                  $sformatf("post_predict called with kind [%p] has no effect due to valid AXI_USER [0x%x] used and LOCK [%0d]. value: 0x%x previous: 0x%x",
                                             kind,
                                             adapter.bus2reg_user_obj.get_addr_user(),
-                                            rm.CPTRA_TRNG_PAUSER_LOCK.LOCK.get_mirrored_value(),
+                                            rm.CPTRA_TRNG_AXI_USER_LOCK.LOCK.get_mirrored_value(),
                                             value,
                                             previous),
                                   UVM_FULL)

@@ -35,9 +35,9 @@ class mbox_sram_responder_sequence
 
   // pragma uvmf custom class_item_additional begin
   // Implement a model of the Mailbox SRAM
-  localparam NUM_BYTES = MBOX_DATA_AND_ECC_W/8 + ((MBOX_DATA_AND_ECC_W % 8) ? 1 : 0);
+  localparam NUM_BYTES = CPTRA_MBOX_DATA_AND_ECC_W/8 + ((CPTRA_MBOX_DATA_AND_ECC_W % 8) ? 1 : 0);
   // TODO support initialization from mailbox.hex
-  logic [7:0] ram [MBOX_DEPTH][NUM_BYTES-1:0] = '{default: 8'h00};
+  logic [7:0] ram [CPTRA_MBOX_DEPTH][NUM_BYTES-1:0] = '{default: 8'h00};
 
   function bit [1:0] rvecc_decode  ( input [31:0]  din, input [6:0]   ecc_in);
     bit [6:0]  ecc_check;
@@ -80,17 +80,17 @@ class mbox_sram_responder_sequence
       // The 'rsp' is actually a request from the DUT, we need to create a response
       if (rsp.is_read) begin
         byte unsigned ii;
-        for (ii=0;ii<MBOX_DATA_W/8;ii++) begin
+        for (ii=0;ii<CPTRA_MBOX_DATA_W/8;ii++) begin
             req.data[ii*8+:8] = ram[rsp.address][ii];
         end
-        req.data_ecc = ram[rsp.address][NUM_BYTES-1][MBOX_ECC_DATA_W-1:0];
+        req.data_ecc = ram[rsp.address][NUM_BYTES-1][CPTRA_MBOX_ECC_DATA_W-1:0];
         {req.ecc_double_bit_error,
          req.ecc_single_bit_error} = rvecc_decode(req.data, req.data_ecc);
       end
       else begin
         byte unsigned ii;
-        mbox_sram_data_t wdata;
-        mbox_sram_data_t wdata_mask;
+        cptra_mbox_sram_data_t wdata;
+        cptra_mbox_sram_data_t wdata_mask;
         wdata.data = rsp.data;
         wdata.ecc  = rsp.data_ecc;
         if (rsp.ecc_double_bit_error) begin
@@ -105,10 +105,10 @@ class mbox_sram_responder_sequence
             wdata ^= wdata_mask;
             `uvm_info("MBOX_SRAM_SEQ", $sformatf("Injecting ECC single bit flip to write data. Modified data: 0x%x [%p]", wdata, wdata), UVM_HIGH)
         end
-        for (ii=0;ii<MBOX_DATA_W/8;ii++) begin
+        for (ii=0;ii<CPTRA_MBOX_DATA_W/8;ii++) begin
             ram[rsp.address][ii] = wdata.data[ii*8+:8];
         end
-        ram[rsp.address][NUM_BYTES-1][MBOX_ECC_DATA_W-1:0] = wdata.ecc;
+        ram[rsp.address][NUM_BYTES-1][CPTRA_MBOX_ECC_DATA_W-1:0] = wdata.ecc;
       end
       `uvm_info("MBOX_SRAM_SEQ",$sformatf("Processed txn: %s",req.convert2string()),UVM_HIGH)
       // pragma uvmf custom body end
