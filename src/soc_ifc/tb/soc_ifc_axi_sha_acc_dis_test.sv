@@ -328,7 +328,6 @@ task display_test_results;
       axi_sub_if.arvalid = 0;
       axi_sub_if.rready = 0;
 
-      user_tb = $urandom();
       random_user_tb = 0;
       access = 1;
     end
@@ -398,9 +397,9 @@ task read_single_word(input [31 : 0]  address);
   end
 endtask // read_single_word
 //-----------------------------------------
-task soc_ifc_axi_test;
+task axi_sha_access_test;
 
-  access = 1; //$urandom_range(0,1);
+  access = $urandom_range(0,1);
 
   #(10*CLK_PERIOD);
   $display("Clearing SHA LOCK over AHB\n");
@@ -410,9 +409,11 @@ task soc_ifc_axi_test;
   #(CLK_PERIOD);
   hsel_i_tb       = 0;
 
+  #(2*CLK_PERIOD);
+
   //id = 0, user --> decoded in axi sub
   random_user_tb = access ? user_tb : $urandom();
-  $display("access = %0d", access);
+  
   $display("-----------------");
   $display("Testing access with user %h with strap set to user %h", random_user_tb, user_tb);
   $display("-----------------\n");
@@ -424,17 +425,6 @@ task soc_ifc_axi_test;
     .id($urandom()),
     .lock(0), 
     .data(rdata), 
-    .resp_user(resp_user),
-    .resp(resp)
-  );
-
-  $display("Read SHA ACC LOCK reg");
-  axi_sub_if.axi_read_single(
-    .addr(`CLP_SHA512_ACC_CSR_LOCK),
-    .user(random_user_tb),
-    .id(0),
-    .lock(0), 
-    .data(rdata),
     .resp_user(resp_user),
     .resp(resp)
   );
@@ -617,20 +607,22 @@ if (user_tb == random_user_tb) begin
   $display("SHA status read over AXI = %h\n", rdata);
 end
 
-  //reset test - strap needs to preserve value, lock is reset - TODO
-
 endtask
 
 initial begin
-  $display("Starting soc ifc AXI test\n");
+  $display("Starting AXI sha access test\n");
+  user_tb = $urandom();
   init_sim();
   reset_dut();
   $display("Init and reset done\n");
-  soc_ifc_axi_test();
-  $display("Issuing warm reset\n");
+  axi_sha_access_test();
+  $display("Issuing reset\n");
+  init_sim();
   reset_dut();
-  @(posedge clk_tb);
-  soc_ifc_axi_test();
+  #(CLK_PERIOD);
+  
+  $display("Restarting AXI sha access test\n");
+  axi_sha_access_test();
   repeat(100) @(posedge clk_tb);
   $display("TESTCASE PASSED");
   $finish;
