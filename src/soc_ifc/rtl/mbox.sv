@@ -44,6 +44,7 @@ module mbox
     input logic                         dir_req_dv,
     input logic [MBOX_IFC_ADDR_W-1:0]   req_data_addr,
     input logic [MBOX_IFC_DATA_W-1:0]   req_data_wdata,
+    input logic [MBOX_IFC_DATA_W/8-1:0] req_data_wstrb,
     input logic [MBOX_IFC_USER_W-1:0]   req_data_user,
     input logic                         req_data_write,
     input logic                         req_data_soc_req,
@@ -670,10 +671,18 @@ always_comb dmi_reg.MBOX_STATUS = {6'd0,                                        
                                    hwif_out.mbox_status.status.value            /* [3:0] */
                                    };
 
+logic [MBOX_IFC_DATA_W-1:0] s_cpuif_wr_biten;
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;
 logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
+
+genvar i;
+generate
+    for (i=0;i<MBOX_IFC_DATA_W;i++) begin: assign_biten_from_wstrb
+        assign s_cpuif_wr_biten[i] = req_data_wstrb[i/8];
+    end
+endgenerate
 
 mbox_csr
 mbox_csr1(
@@ -684,7 +693,7 @@ mbox_csr1(
     .s_cpuif_req_is_wr(req_data_write),
     .s_cpuif_addr(req_data_addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data_wdata),
-    .s_cpuif_wr_biten('1), // FIXME
+    .s_cpuif_wr_biten(s_cpuif_wr_biten),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),

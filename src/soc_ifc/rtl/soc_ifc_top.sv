@@ -960,10 +960,17 @@ always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
 
 
+logic [SOC_IFC_DATA_W-1:0] s_cpuif_wr_biten;
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;
 logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
+
+always_comb begin
+    for (int i=0;i<SOC_IFC_DATA_W;i++) begin: assign_biten_from_wstrb
+        s_cpuif_wr_biten[i] = soc_ifc_reg_req_data.wstrb[i/8];
+    end
+end
 
 soc_ifc_reg i_soc_ifc_reg (
     .clk(rdc_clk_cg),
@@ -973,7 +980,7 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_is_wr(soc_ifc_reg_req_data.write),
     .s_cpuif_addr(soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(soc_ifc_reg_req_data.wdata),
-    .s_cpuif_wr_biten('1), // FIXME
+    .s_cpuif_wr_biten(s_cpuif_wr_biten),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
@@ -1110,6 +1117,7 @@ i_mbox (
     .dir_req_dv(mbox_dir_req_dv),
     .req_data_addr(mbox_req_data.addr),
     .req_data_wdata(mbox_req_data.wdata),
+    .req_data_wstrb(mbox_req_data.wstrb),
     .req_data_user(mbox_req_data.user),
     .req_data_write(mbox_req_data.write),
     .req_data_soc_req(mbox_req_data.soc_req),
