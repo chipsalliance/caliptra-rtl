@@ -54,7 +54,7 @@ module soc_ifc_axi_sha_acc_dis_tb
   reg           cptra_rst_b_tb;
 
   logic [DW-1:0] rdata, wdata;
-  logic [UW-1:0] user_tb, random_user_tb;
+  logic [UW-1:0] strap_tb, random_user_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -169,7 +169,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     .strap_ss_strap_generic_1(0),
     .strap_ss_strap_generic_2(0),
     .strap_ss_strap_generic_3(0),
-    .strap_ss_caliptra_dma_axi_user(user_tb),
+    .strap_ss_caliptra_dma_axi_user(strap_tb),
     .ss_debug_intent(1'b0),
     .cptra_ss_debug_intent(),
 
@@ -412,10 +412,10 @@ task axi_sha_access_test;
   #(2*CLK_PERIOD);
 
   //id = 0, user --> decoded in axi sub
-  random_user_tb = access ? user_tb : $urandom();
+  random_user_tb = access ? strap_tb : $urandom();
   
   $display("-----------------");
-  $display("Testing access with user %h with strap set to user %h", random_user_tb, user_tb);
+  $display("Testing access with user %h with strap set to user %h", random_user_tb, strap_tb);
   $display("-----------------\n");
 
   $display("Attempt to acquire SHA ACC LOCK reg over AXI\n");
@@ -439,23 +439,27 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if (rdata == 1)
-    $display("SHA Acc lock acquired over AXI = %h\n", rdata);
-  else  
-    $display("SHA Acc lock not acquired over AXI\n");
+  if (rdata == 1) begin
+    $display("SHA Acc Lock acquired");
+    if (strap_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value) begin
+      $error("Strap was not correctly latched into the SHA USER reg!");
+      $display("* TESTCASE FAILED");
+      $finish;
+    end
+  end
+  else
+    $display("SHA Acc Lock not acquired");
 
-  if ((rdata == 'h1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //qualify with user here
+  if ((rdata == 'h1) & (strap_tb != random_user_tb)) begin
     $error("SHA Acc Lock acquired over AXI unexpectedly!");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata != 'h1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata != 'h1) & (strap_tb == random_user_tb)) begin
     $error("SHA Acc Lock not acquired over AXI as expected for the allowed user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
-
-  //reset test - strap needs to preserve value, lock is reset
 
   //Add checks here to make sure these accesses below don't go through for random users
   axi_sub_if.axi_write_single(
@@ -479,15 +483,15 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //TODO replace with variable for rdata
+  if ((rdata == 1) & (strap_tb == random_user_tb)) begin
     $display("SHA mode set to 1 over AXI");
   end
-  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata != 1) & (strap_tb == random_user_tb)) begin
     $error("SHA512 Mode not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata == 1) & (strap_tb != random_user_tb)) begin
     $error("SHA512 Mode set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -515,15 +519,15 @@ task axi_sha_access_test;
   );
 
   //TODO add dlen variable
-  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //TODO replace with variable for rdata
+  if ((rdata == 1) & (strap_tb == random_user_tb)) begin
     $display("SHA dlen set to 1 over AXI");
   end
-  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata != 1) & (strap_tb == random_user_tb)) begin
     $error("SHA512 dlen not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata == 1) & (strap_tb != random_user_tb)) begin
     $error("SHA512 dlen set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -551,15 +555,15 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == wdata) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  if ((rdata == wdata) & (strap_tb == random_user_tb)) begin
     $display("SHA datain set to 1 over AXI");
   end
-  else if ((rdata != wdata) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata != wdata) & (strap_tb == random_user_tb)) begin
     $error("SHA512 datain not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == wdata) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata == wdata) & (strap_tb != random_user_tb)) begin
     $error("SHA512 datain set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -587,21 +591,21 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  if ((rdata == 1) & (strap_tb == random_user_tb)) begin
     $display("SHA execute set to 1 over AXI");
   end
-  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata != 1) & (strap_tb == random_user_tb)) begin
     $error("SHA512 execute not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
+  else if ((rdata == 1) & (strap_tb != random_user_tb)) begin
     $error("SHA512 execute set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
 
-if (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value) begin
+if (strap_tb == random_user_tb) begin
   $display("Waiting for SHA status\n");
   while (rdata[1] != 1) begin
     axi_sub_if.axi_read_single(
@@ -621,7 +625,7 @@ endtask
 
 initial begin
   $display("Starting AXI sha access test\n");
-  user_tb = $urandom();
+  strap_tb = $urandom();
   init_sim();
   reset_dut();
   $display("Init and reset done\n");
