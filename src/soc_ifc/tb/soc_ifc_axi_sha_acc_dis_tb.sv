@@ -429,17 +429,27 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
+  axi_sub_if.axi_read_single(
+    .addr(`CLP_SHA512_ACC_CSR_LOCK),
+    .user(random_user_tb),
+    .id($urandom()),
+    .lock(0), 
+    .data(rdata), 
+    .resp_user(resp_user),
+    .resp(resp)
+  );
+
   if (rdata == 1)
     $display("SHA Acc lock acquired over AXI = %h\n", rdata);
   else  
     $display("SHA Acc lock not acquired over AXI\n");
 
-  if ((rdata == 'h1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != random_user_tb)) begin //qualify with user here
+  if ((rdata == 'h1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //qualify with user here
     $error("SHA Acc Lock acquired over AXI unexpectedly!");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata != 'h1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  else if ((rdata != 'h1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA Acc Lock not acquired over AXI as expected for the allowed user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -469,15 +479,15 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin //TODO replace with variable for rdata
+  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //TODO replace with variable for rdata
     $display("SHA mode set to 1 over AXI");
   end
-  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 Mode not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != random_user_tb)) begin
+  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 Mode set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -505,15 +515,15 @@ task axi_sha_access_test;
   );
 
   //TODO add dlen variable
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin //TODO replace with variable for rdata
+  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin //TODO replace with variable for rdata
     $display("SHA dlen set to 1 over AXI");
   end
-  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 dlen not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != random_user_tb)) begin
+  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 dlen set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -541,15 +551,15 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  if ((rdata == wdata) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $display("SHA datain set to 1 over AXI");
   end
-  else if ((rdata != wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  else if ((rdata != wdata) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 datain not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == wdata) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != random_user_tb)) begin
+  else if ((rdata == wdata) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 datain set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
@@ -577,21 +587,21 @@ task axi_sha_access_test;
     .resp(resp)
   );
 
-  if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  if ((rdata == 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $display("SHA execute set to 1 over AXI");
   end
-  else if ((rdata != 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value == random_user_tb)) begin
+  else if ((rdata != 1) & (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 execute not set to expected value for allowed user");
     $display("* TESTCASE FAILED");
     $finish;
   end
-  else if ((rdata == 1) & (dut.i_sha512_acc_top.hwif_out.USER.USER.value != random_user_tb)) begin
+  else if ((rdata == 1) & (user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value)) begin
     $error("SHA512 execute set by invalid user!");
     $display("* TESTCASE FAILED");
     $finish;
   end
 
-if (user_tb == random_user_tb) begin
+if (user_tb == dut.i_sha512_acc_top.hwif_out.USER.USER.value) begin
   $display("Waiting for SHA status\n");
   while (rdata[1] != 1) begin
     axi_sub_if.axi_read_single(
