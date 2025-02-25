@@ -441,8 +441,8 @@ task axi_sha_access_test;
 
   if (rdata == 1) begin
     $display("SHA Acc Lock acquired");
-    if (strap_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value) begin
-      $error("Strap was not correctly latched into the SHA USER reg!");
+    if (random_user_tb != dut.i_sha512_acc_top.hwif_out.USER.USER.value) begin
+      $error("AXI request USER was not correctly latched into the SHA USER reg!");
       $display("* TESTCASE FAILED");
       $finish;
     end
