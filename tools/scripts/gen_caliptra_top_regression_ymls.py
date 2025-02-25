@@ -18,7 +18,7 @@ logger.addHandler(file_handler)
 
 def generate_output_filename(csv_file_path, criteria):
     parts = []
-    for key in ["L0|L1", "Nightly|Weekly", "Directed|Random", "DUT"]:
+    for key in ["L0|L1", "Nightly|Weekly", "PromotePipeline", "Directed|Random", "DUT"]:
         if criteria.get(key):
             parts.append(criteria[key])
     directory = os.path.dirname(csv_file_path)
@@ -86,7 +86,7 @@ def csv_to_yaml(csv_file_path, yml_file_path, criteria, generations):
     generator_data['generator']['generations'] = generations
     
     # Use different formats based on PromotePipeline
-    if criteria.get("PromotePipeline") == "Yes":
+    if criteria.get("PromotePipeline") == "Promote":
         generator_data['generator']['formats'] = CommentedMap([
             ('generate', DoubleQuotedScalarString("reseed {template}.yml -seed 1")),
             ('path', DoubleQuotedScalarString("{template_basename}__1.yml"))
@@ -180,7 +180,7 @@ if __name__ == "__main__":
         {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "uvmf_caliptra_top", "PromotePipeline": None, "generations": 500, "timeout": 720},
         {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "caliptra_top_tb", "PromotePipeline": None, "generations": 2000},
         {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "uvmf_caliptra_top_itrng", "PromotePipeline": None, "generations": 1, "timeout": 1440},
-        {"Directed|Random": "Directed", "Nightly|Weekly": None, "L0|L1": "L0", "DUT": "uvmf_caliptra_top", "PromotePipeline": "Yes", "generations": 6}
+        {"Directed|Random": "Directed", "Nightly|Weekly": None, "L0|L1": "L0", "DUT": "uvmf_caliptra_top", "PromotePipeline": "Promote", "generations": 6}
     ]
 
     for criteria in combinations:
