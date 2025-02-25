@@ -669,6 +669,7 @@ always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;
 always_comb hwif_in.mbox_status.status.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_STATUS_ADDR) & (mbox_fsm_ps == MBOX_EXECUTE_TAP);
 always_comb hwif_in.mbox_status.status.next = dmi_reg_wdata[3:0];
 
+always_comb dmi_reg.MBOX_CMD = hwif_out.mbox_cmd.command.value;
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;
 always_comb dmi_reg.MBOX_STATUS = {6'd0,                                        /* [31:26] */

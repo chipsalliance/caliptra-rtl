@@ -1374,6 +1374,7 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
 always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_CMD)}} & mbox_dmi_reg.MBOX_CMD) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
