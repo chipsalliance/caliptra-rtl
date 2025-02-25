@@ -55,6 +55,31 @@ addrmap aes_clp_reg {
         
     } AES_VERSION[2];
 
+    /* ---- Entropy Interface Seed ---- */
+    reg {
+        name = "Entropy Interface Seed";
+        desc = "Nine 32-bit write-only registers for providing a new 288-bit state seed for the
+                Trivium stream cipher primitive driving the EDN interface of AES.
+
+                After reset and whenever firmware wants to reseed the Trivium stream cipher
+                primitive, it has to write every register once. The order in which the registers
+                are written doesn't matter. Upon writing the last register, the provided 288-bit
+                value is loaded into the Trivium primitive.
+
+                It's fine to write the registers while AES is busy and even while it's performing a
+                a reseed operation of the internal PRNGs via the EDN interface.
+
+                Note: Upon reset, the state of the Trivium primitive is initialized to a netlist
+                constant. The primitive thus always generates the same output after reset. It is the
+                responsibility of firmware to provide a new state seed after reset.";
+
+        default hw = r;
+        default sw = w;
+        default swmod = true;
+
+        field {desc = "Entropy Interface Seed field";} ENTROPY_IF_SEED[32];
+    } ENTROPY_IF_SEED[9] @0x00000110;
+
     /* ---- AES Key Vault Control Reg ---- */
     kv_read_ctrl_reg AES_KV_RD_KEY_CTRL @0x200;
     kv_status_reg AES_KV_RD_KEY_STATUS;
