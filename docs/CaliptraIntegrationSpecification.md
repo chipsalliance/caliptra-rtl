@@ -97,6 +97,7 @@ The following tables describe the interface signals.
 | rdata   | DW   | Output | Synchronous to clk | R channel read response data |
 | rresp   | 2    | Output | Synchronous to clk | R channel read response encoding |
 | rid     | IW   | Output | Synchronous to clk | R channel read response id signal |
+| ruser   | UW   | Output | Synchronous to clk | R channel read response user signal |
 | rlast   | 1    | Output | Synchronous to clk | R channel read response last beat signal |
 | rvalid  | 1    | Output | Synchronous to clk | R channel valid handhsake signal |
 | rready  | 1    | Input  | Synchronous to clk | R channel ready handshake signal |
@@ -110,12 +111,14 @@ The following tables describe the interface signals.
 | awvalid | 1    | Input  | Synchronous to clk | AW channel valid handhsake signal |
 | awready | 1    | Output | Synchronous to clk | AW channel ready handshake signal |
 | wdata   | DW   | Input  | Synchronous to clk | W channel write data |
+| wuser   | UW   | Input  | Synchronous to clk | W channel write user |
 | wstrb   | DW/8 | Input  | Synchronous to clk | W channel write strobe. Byte enable. |
 | wlast   | 1    | Input  | Synchronous to clk | W channel write last beat signal |
 | wvalid  | 1    | Input  | Synchronous to clk | W channel valid handhsake signal |
 | wready  | 1    | Output | Synchronous to clk | W channel ready handshake signal |
 | bresp   | 2    | Output | Synchronous to clk | B channel write response encoding |
 | bid     | IW   | Output | Synchronous to clk | B channel write response id signal |
+| buser   | UW   | Output | Synchronous to clk | B channel write response user signal |
 | bvalid  | 1    | Output | Synchronous to clk | B channel valid handhsake signal |
 | bready  | 1    | Input  | Synchronous to clk | B channel ready handshake signal |
 
@@ -253,11 +256,30 @@ Deassertion of cptra\_rst\_b indicates a warm reset cycle that resets all but th
 
 Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from reset after fuse download. Writing a 1 to the GO field of the CPTRA\_BOOTFSM\_GO register allows the boot flow to proceed.
 
-### AXI arbitration
+### AXI
 
-Caliptra is a client on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+#### Arbitration
 
-### Undefined address accesses
+Caliptra is a subordinate on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+
+#### Unsupported features
+
+The Caliptra AXI subordinate has the following usage restrictions:
+* SoC agents shall not initiate AXI burst transfers to the SoC interface, except as write bursts to the mbox_datain register or read bursts from the mbox_dataout register. Such bursts shall be of the AXI "FIXED" burst type.
+* Accesses to these registers shall not be "narrow". This means that AxSIZE must be set to 0x2 and WSTRB must be set to 0xF.
+  * mbox_datain
+  * mbox_dataout
+  * CPTRA_TRNG_DATA
+* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
+* Violations of the AXI specification by AXI managers will result in undefined behavior. Examples include:
+  * AxSIZE values larger than interface width (greater than 0x2).
+  * AxLEN larger than legal value (256 maximum burst size, 16 for FIXED bursts, and total burst length must be 4096 Bytes or less).
+  * Number of data beats on W channel does not match burst length indicated on AWLEN.
+  * RRESP or BRESP has an undefined value.
+  * WLAST is driven incorrectly, driven on multiple beats, or never driven.
+* Burst data interleaving is not supported
+
+#### Undefined address accesses
 
 All accesses that are outside of the defined address space of Caliptra are responded to by Caliptra’s SoC interface:
 * All reads to undefined addresses get completions with zero data.
@@ -265,7 +287,8 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * All other undefined opcodes are silently dropped.
 * Access to mailbox memory region with invalid AXI_USER are dropped.
 * Access to a fuse with invalid AXI_USER are dropped.
-* PSLVERR is asserted for any of the above conditions.
+* Access to the trng with invalid AXI_USER are dropped.
+* SLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
 
