@@ -45,7 +45,8 @@ interface axi_dma_top_cov_if
         input  logic [DW-1:0]          mb_rdata
     );
 
-    localparam DMA_WAIT_DATA = 2'b01;
+    localparam DMA_WAIT_DATA    = 2'h1;
+    localparam DMA_DONE         = 2'h2;
 
     logic w_valid;
     logic ctrl_fsm_ps;
@@ -53,9 +54,6 @@ interface axi_dma_top_cov_if
     logic mb_dv;
     logic mb_wr;
     logic [SOC_IFC_DATA_W-1:0] mb_wdata;
-    logic [31:0] block_size;
-    logic [31:0] byte_count;
-    logic [31:0] num_dwords;
     logic [1:0] rd_route;
     logic [1:0] wr_route;
 
@@ -71,27 +69,11 @@ interface axi_dma_top_cov_if
     assign mb_dv = axi_dma_top.mb_dv;
     assign mb_wr = axi_dma_top.mb_data.write;
     assign mb_wdata = axi_dma_top.mb_data.wdata;
-    assign byte_count = axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count;
-    assign block_size = axi_dma_top.i_axi_dma_ctrl.hwif_out.block_size;
-    assign num_dwords = byte_count >> 2;
     assign rd_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route;
     assign wr_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route;
 
-
     // AHB2AXI: Queue to store write data input Component INF
     logic [SOC_IFC_DATA_W-1:0] ahb2axi_rdata_queue[$];
-    logic [SOC_IFC_DATA_W-1:0] ahb2axi_rdata_queue_array[0:31];
-    logic [31:0] ahb2axi_queue_size;
-/*
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            ahb2axi_queue_size <= 0;
-        end
-        else begin
-            ahb2axi_queue_size <= ahb2axi_rdata_queue.size();
-        end
-    end
-        */
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -99,165 +81,66 @@ interface axi_dma_top_cov_if
         end 
         else if (rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE &&
                  wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO && 
-                 ctrl_fsm_ps == DMA_WAIT_DATA && dv && req_data.write) begin // && ahb2axi_rdata_queue.size() < num_dwords) begin
+                 ctrl_fsm_ps == DMA_WAIT_DATA && dv && req_data.write) begin 
             ahb2axi_rdata_queue.push_back(req_data.wdata);
-            //update_ahb2axi_queue_array();
         end
     end
 
     // MBOX2AXI: Queue to store read data input from MBOX
     logic [SOC_IFC_DATA_W-1:0] mbox2axi_rdata_queue[$];
-    logic [SOC_IFC_DATA_W-1:0] mbox2axi_rdata_queue_array[0:31];
-    logic [31:0] mbox2axi_queue_size;
-    /*
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            mbox2axi_queue_size <= 0;
-        end
-        else begin
-            mbox2axi_queue_size <= mbox2axi_rdata_queue.size();
-        end
-    end
-    */
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             mbox2axi_rdata_queue = {};
         end
         else if (rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE &&
                  wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX && 
-                 ctrl_fsm_ps == DMA_WAIT_DATA && mb_dv && !mb_hold && !mb_wr) begin // && mbox2axi_rdata_queue.size() < num_dwords) begin
+                 ctrl_fsm_ps == DMA_WAIT_DATA && mb_dv && !mb_hold && !mb_wr) begin 
             mbox2axi_rdata_queue.push_back(mb_rdata);
-            //update_mbox2axi_queue_array();
         end
     end
 
     // AXI2AXI: Queue to store AXI read data
     logic [SOC_IFC_DATA_W-1:0] axi2axi_rdata_queue[$];
-    logic [SOC_IFC_DATA_W-1:0] axi2axi_rdata_queue_array[0:31];
-    logic [31:0] axi2axi_queue_size;
-    /*
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            axi2axi_queue_size <= 0;
-        end
-        else begin
-            axi2axi_queue_size <= axi2axi_rdata_queue.size();
-        end
-    end
-    */
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             axi2axi_rdata_queue = {};
         end
-        else if (rd_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD &&
+        else if (rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR &&
                  wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD && 
-                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid) begin // && axi2axi_rdata_queue.size() < num_dwords) begin
+                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid) begin 
             axi2axi_rdata_queue.push_back(m_axi_r_if.rdata);
-            //update_axi2axi_queue_array();
         end
     end
 
     // AXI2AHB: Queue to store AXI read data
     logic [SOC_IFC_DATA_W-1:0] axi2ahb_rdata_queue[$];
-    logic [SOC_IFC_DATA_W-1:0] axi2ahb_rdata_queue_array[0:31];
-    logic [31:0] axi2ahb_queue_size;
-    
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            axi2ahb_queue_size <= 0;
-        end
-        else begin
-            axi2ahb_queue_size <= axi2ahb_rdata_queue.size();
-        end
-    end
-    
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             axi2ahb_rdata_queue = {};
         end
-        else if (rd_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD && 
+        else if (rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO && 
                  wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE && 
-                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid) begin // && axi2ahb_rdata_queue.size() < num_dwords) begin
+                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid) begin 
             axi2ahb_rdata_queue.push_back(m_axi_r_if.rdata);
-            update_axi2ahb_queue_array();
         end
     end
 
     // AXI2MBOX: Queue to store AXI read data
     logic [SOC_IFC_DATA_W-1:0] axi2mbox_rdata_queue[$];
-    logic [SOC_IFC_DATA_W-1:0] axi2mbox_rdata_queue_array[0:31];
-    logic [31:0] axi2mbox_queue_size;
-    /*
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            axi2mbox_queue_size <= 0;
-        end
-        else begin
-            axi2mbox_queue_size <= axi2mbox_rdata_queue.size();
-        end
-    end
-    */
+
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             axi2mbox_rdata_queue = {};
         end
         else if (rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX && 
                  wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE && 
-                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid && mb_wr) begin // && axi2mbox_rdata_queue.size() < num_dwords) begin
+                 ctrl_fsm_ps == DMA_WAIT_DATA && arvalid_seen && m_axi_r_if.rvalid && mb_wr) begin 
             axi2mbox_rdata_queue.push_back(m_axi_r_if.rdata);
-            //update_axi2mbox_queue_array();
         end
     end
-
-    task update_ahb2axi_queue_array();
-        for (int i = 0; i < ahb2axi_rdata_queue.size(); i++) begin
-            ahb2axi_rdata_queue_array[i] = ahb2axi_rdata_queue[i];
-        end
-        // Fill the rest of the array with zero or a default value
-        for (int i = ahb2axi_rdata_queue.size(); i < 32; i++) begin
-            ahb2axi_rdata_queue_array[i] = '0;
-        end
-    endtask
-
-    task update_mbox2axi_queue_array();
-        for (int i = 0; i < mbox2axi_rdata_queue.size(); i++) begin
-            mbox2axi_rdata_queue_array[i] = mbox2axi_rdata_queue[i];
-        end
-        // Fill the rest of the array with zero or a default value
-        for (int i = mbox2axi_rdata_queue.size(); i < 32; i++) begin
-            mbox2axi_rdata_queue_array[i] = '0;
-        end
-    endtask
-
-    task update_axi2axi_queue_array();
-        for (int i = 0; i < axi2axi_rdata_queue.size(); i++) begin
-            axi2axi_rdata_queue_array[i] = axi2axi_rdata_queue[i];
-        end
-        // Fill the rest of the array with zero or a default value
-        for (int i = axi2axi_rdata_queue.size(); i < 32; i++) begin
-            axi2axi_rdata_queue_array[i] = '0;
-        end
-    endtask
-
-    task update_axi2ahb_queue_array();
-        for (int i = 0; i < axi2ahb_rdata_queue.size(); i++) begin
-            axi2ahb_rdata_queue_array[i] = axi2ahb_rdata_queue[i];
-        end
-        // Fill the rest of the array with zero or a default value
-        for (int i = axi2ahb_rdata_queue.size(); i < 32; i++) begin
-            axi2ahb_rdata_queue_array[i] = '0;
-        end
-    endtask
-
-    task update_axi2mbox_queue_array();
-        for (int i = 0; i < axi2mbox_rdata_queue.size(); i++) begin
-            axi2mbox_rdata_queue_array[i] = axi2mbox_rdata_queue[i];
-        end
-        // Fill the rest of the array with zero or a default value
-        for (int i = axi2mbox_rdata_queue.size(); i < 32; i++) begin
-            axi2mbox_rdata_queue_array[i] = '0;
-        end
-    endtask
 
     // AXI MGR write in progress
     always_ff @(posedge clk or negedge rst_n) begin
@@ -376,7 +259,7 @@ interface axi_dma_top_cov_if
                 expected_axi2ahb_rdata <= axi2ahb_rdata_queue.pop_front();
             end
         end
-        else if (axi2ahb_rdata_queue.size() == 0) begin
+        else if (ctrl_fsm_ps == DMA_DONE && axi2ahb_rdata_queue.size() == 0) begin
             first_pop_done_axi2ahb_rdata <= 0;
             expected_axi2ahb_rdata <= 0;
         end
@@ -424,14 +307,12 @@ interface axi_dma_top_cov_if
         }
 
         // AXI2AXI_1DW Transfer with Data Comparison
-        axi2axi_1dw_data_compare: coverpoint (  rd_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD &&
-                                                wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD &&
-                                                awvalid_seen && m_axi_w_if.wvalid && m_axi_w_if.wdata == expected_axi_rdata) {
+        axi2axi_1dw_data_compare: coverpoint (awvalid_seen && m_axi_w_if.wvalid && m_axi_w_if.wready && m_axi_w_if.wdata == expected_axi_rdata) {
             bins single_4byte_axi2axi_match = {1};
         }
 
         // AXI2AHB_1DW Transfer with Data Comparison
-        axi2ahb_1dw_data_compare: coverpoint (rdata == expected_axi2ahb_rdata) {
+        axi2ahb_1dw_data_compare: coverpoint (dv && ahb_rd && rdata == expected_axi2ahb_rdata) {
             bins single_4byte_axi2ahb_match = {1};
         }
 
