@@ -240,7 +240,7 @@
         wrtrans_rsp_reg.randomize();
         //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
         //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
-        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK");
+        //ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK");
         //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_PROD_UNLOCK"), .exp_sts(FAIL));
 
@@ -250,7 +250,8 @@
         $display("\n4b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+        //Read data should match AHB write data from #3 above. 
+        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
           $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
           error_ctr += 1;
         end
@@ -260,7 +261,8 @@
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
         $display("\n4c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+        //Read data should match AHB write data from #3 above.
+        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
           $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
           error_ctr += 1;
         end
