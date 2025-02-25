@@ -123,11 +123,11 @@ logic arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN;
 logic arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA;
 logic arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC;
 logic arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC;
+logic arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP;
 logic arc_MBOX_EXECUTE_UC_MBOX_IDLE;
 logic arc_MBOX_EXECUTE_SOC_MBOX_IDLE;
 logic arc_MBOX_EXECUTE_TAP_MBOX_IDLE;
 logic arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
-logic arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP;
 logic arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC;
 logic arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
 logic arc_MBOX_RDY_FOR_CMD_MBOX_ERROR;
@@ -222,11 +222,12 @@ always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = (mbox_fsm_ps == MBOX_RDY_F
 //move from rdy for data to execute uc when SoC sets execute bit
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & soc_has_lock;
 //move from rdy for data to execute soc when uc writes to execute
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ~soc_has_lock;
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ~soc_has_lock & ~tap_mode;
+//move from rdy for data to execute tap when uc writes to execute in tap_mode
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ~soc_has_lock & tap_mode;
 //move from rdy to execute to idle when uc resets execute
 always_comb arc_MBOX_EXECUTE_UC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_UC) & ~hwif_out.mbox_execute.execute.value;
 always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_EXECUTE_UC) & soc_has_lock & ~tap_mode & (hwif_out.mbox_status.status.value != CMD_BUSY);
-always_comb arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP = (mbox_fsm_ps == MBOX_EXECUTE_UC) & soc_has_lock & tap_mode & (hwif_out.mbox_status.status.value != CMD_BUSY);
 //move from rdy to execute to idle when SoC resets execute
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_IDLE = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~hwif_out.mbox_execute.execute.value;
 always_comb arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_EXECUTE_SOC) & ~soc_has_lock & ~tap_mode & (hwif_out.mbox_status.status.value != CMD_BUSY);
@@ -272,7 +273,7 @@ always_comb arc_MBOX_EXECUTE_TAP_MBOX_ERROR  = 1'b0;
 //by the client filling the mailbox is used for masking the data
 //Store the dlen as a ptr to the last entry
 always_comb latch_dlen_in_dws = arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC | arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC | arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC |
-                                arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP | arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
+                                arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP | arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
 always_comb mbox_dlen_in_dws = (hwif_out.mbox_dlen.length.value >= MBOX_SIZE_BYTES) ? MBOX_SIZE_DWORDS[MBOX_DEPTH_LOG2:0] :
                                (hwif_out.mbox_dlen.length.value[MBOX_DEPTH_LOG2+2:2]) + (hwif_out.mbox_dlen.length.value[0] | hwif_out.mbox_dlen.length.value[1]);
 //latched dlen is the smaller of the programmed dlen or the current wrptr
@@ -356,6 +357,12 @@ always_comb begin : mbox_fsm_combo
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
             end
+            else if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP) begin
+                mbox_fsm_ns = MBOX_EXECUTE_TAP;
+                //reset wrptr so receiver can write response
+                rst_mbox_wrptr = 1;
+                rst_mbox_rdptr = 1;
+            end
             else if (arc_MBOX_RDY_FOR_DATA_MBOX_ERROR) begin
                 mbox_fsm_ns = MBOX_ERROR;
                 mbox_protocol_error_nxt.axs_incorrect_order = 1'b1;
@@ -379,11 +386,6 @@ always_comb begin : mbox_fsm_combo
             end
             else if (arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_SOC;
-                rst_mbox_wrptr = 1;
-                rst_mbox_rdptr = 1;
-            end
-            else if (arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP) begin
-                mbox_fsm_ns = MBOX_EXECUTE_TAP;
                 rst_mbox_wrptr = 1;
                 rst_mbox_rdptr = 1;
             end
