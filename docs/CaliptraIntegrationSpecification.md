@@ -921,6 +921,7 @@ The following set of constraints and assumptions must be provided before running
         - sha256.sha256_inst.i_sha256_reg.s_cpuif_req
         - csrng.u_reg.u_ahb_slv_sif.dv
         - entropy_src.u_reg.u_ahb_slv_sif.dv
+        - aes_inst.ahb_slv_sif_inst.dv
 6. Constrain the RDC false paths as per *Table 21*.
 
 
