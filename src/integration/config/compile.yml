@@ -136,7 +136,6 @@ global:
         - '-assert svaext'
 #        - '+define+CALIPTRA_INTERNAL_TRNG'
         - +define+CLP_ASSERT_ON
-        - +define+FCOV
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
