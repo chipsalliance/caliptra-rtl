@@ -19,6 +19,8 @@ module mbox
     import mbox_csr_pkg::*;
     #(
      parameter DMI_REG_MBOX_DLEN_ADDR = 7'h50
+    ,parameter DMI_REG_MBOX_CMD_ADDR = 7'h75
+    ,parameter DMI_REG_MBOX_STATUS_ADDR = 7'h52
      //Mailbox interface configuration
     ,parameter MBOX_IFC_DATA_W = 32
     ,parameter MBOX_IFC_USER_W = 32
@@ -597,8 +599,9 @@ rvecc_decode ecc_decode (
 //control for sram write and read pointer
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
 //uC accesses can specify the specific read or write address, or rely on mailbox to control
-always_comb sram_wdata = (dma_sram_req_dv_q && dma_sram_req_write ) ? dma_sram_req_wdata : 
-                         dmi_inc_wrptr ? dmi_reg_wdata : req_data_wdata;
+always_comb sram_wdata = (dma_sram_req_dv_q && dma_sram_req_write )          ? dma_sram_req_wdata : 
+                         (dmi_inc_wrptr & (mbox_fsm_ps == MBOX_EXECUTE_TAP)) ? dmi_reg_wdata : 
+                                                                               req_data_wdata;
 
 //in ready for data state we increment the pointer each time we write
 always_comb mbox_wrptr_nxt = rst_mbox_wrptr ? '0 :
@@ -657,8 +660,14 @@ always_comb begin
     end
 end
 
-always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR);
+always_comb hwif_in.mbox_cmd.command.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_CMD_ADDR) & (mbox_fsm_ps == MBOX_EXECUTE_TAP);
+always_comb hwif_in.mbox_cmd.command.next = dmi_reg_wdata;
+
+always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR) & (mbox_fsm_ps == MBOX_EXECUTE_TAP);
 always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;
+
+always_comb hwif_in.mbox_status.status.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_STATUS_ADDR) & (mbox_fsm_ps == MBOX_EXECUTE_TAP);
+always_comb hwif_in.mbox_status.status.next = dmi_reg_wdata[3:0];
 
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;

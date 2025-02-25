@@ -25,6 +25,15 @@ package mbox_csr_pkg;
     typedef struct packed{
         logic [31:0] next;
         logic we;
+    } mbox_csr__mbox_cmd__command__in_t;
+
+    typedef struct packed{
+        mbox_csr__mbox_cmd__command__in_t command;
+    } mbox_csr__mbox_cmd__in_t;
+
+    typedef struct packed{
+        logic [31:0] next;
+        logic we;
     } mbox_csr__mbox_dlen__length__in_t;
 
     typedef struct packed{
@@ -50,6 +59,8 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_execute__in_t;
 
     typedef struct packed{
+        logic [3:0] next;
+        logic we;
         logic hwclr;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__status__in_t;
 
@@ -90,6 +101,7 @@ package mbox_csr_pkg;
         logic valid_receiver;
         mbox_csr__mbox_lock__in_t mbox_lock;
         mbox_csr__mbox_user__in_t mbox_user;
+        mbox_csr__mbox_cmd__in_t mbox_cmd;
         mbox_csr__mbox_dlen__in_t mbox_dlen;
         mbox_csr__mbox_dataout__in_t mbox_dataout;
         mbox_csr__mbox_execute__in_t mbox_execute;
@@ -114,6 +126,7 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_user__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
         logic swmod;
     } mbox_csr__mbox_cmd__command__out_t;
 

@@ -72,9 +72,7 @@ package soc_ifc_pkg;
 
     //DMI Register encodings
     //Read only registers
-    parameter DMI_REG_MBOX_DLEN = 7'h50;
     parameter DMI_REG_MBOX_DOUT = 7'h51;
-    parameter DMI_REG_MBOX_STATUS = 7'h52;
     parameter DMI_REG_BOOT_STATUS = 7'h53;
     parameter DMI_REG_CPTRA_HW_ERRROR_ENC = 7'h54;
     parameter DMI_REG_CPTRA_FW_ERROR_ENC = 7'h55;
@@ -87,7 +85,9 @@ package soc_ifc_pkg;
     //RW registers
     parameter DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG = 7'h60;
     parameter DMI_REG_BOOTFSM_GO = 7'h61;
+    parameter DMI_REG_MBOX_DLEN = 7'h50;
     parameter DMI_REG_MBOX_DIN = 7'h62;
+    parameter DMI_REG_MBOX_STATUS = 7'h52;
     parameter DMI_REG_SS_DEBUG_INTENT = 7'h63;
     parameter DMI_REG_SS_CALIPTRA_BASE_ADDR_L = 7'h64;
     parameter DMI_REG_SS_CALIPTRA_BASE_ADDR_H = 7'h65;
@@ -106,6 +106,7 @@ package soc_ifc_pkg;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;
     parameter DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER = 7'h74;
+    parameter DMI_REG_MBOX_CMD = 7'h75;
 
     
     // This parameter describes the hard-coded implementation in the BOOT FSM

@@ -85,7 +85,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.command = new("command");
-            this.command.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.command.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(command_bit_cg[bt]) command_bit_cg[bt] = new();
             end
