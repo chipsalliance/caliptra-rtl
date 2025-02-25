@@ -1343,6 +1343,33 @@
 `ifndef AES_CLP_REG_AES_VERSION_1
 `define AES_CLP_REG_AES_VERSION_1                                                                   (32'hc)
 `endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_0
+`define AES_CLP_REG_ENTROPY_IF_SEED_0                                                               (32'h110)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_1
+`define AES_CLP_REG_ENTROPY_IF_SEED_1                                                               (32'h114)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_2
+`define AES_CLP_REG_ENTROPY_IF_SEED_2                                                               (32'h118)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_3
+`define AES_CLP_REG_ENTROPY_IF_SEED_3                                                               (32'h11c)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_4
+`define AES_CLP_REG_ENTROPY_IF_SEED_4                                                               (32'h120)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_5
+`define AES_CLP_REG_ENTROPY_IF_SEED_5                                                               (32'h124)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_6
+`define AES_CLP_REG_ENTROPY_IF_SEED_6                                                               (32'h128)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_7
+`define AES_CLP_REG_ENTROPY_IF_SEED_7                                                               (32'h12c)
+`endif
+`ifndef AES_CLP_REG_ENTROPY_IF_SEED_8
+`define AES_CLP_REG_ENTROPY_IF_SEED_8                                                               (32'h130)
+`endif
 `ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
 `define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (32'h200)
 `define AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_LOW                                                  (0)

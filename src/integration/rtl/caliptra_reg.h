@@ -1691,6 +1691,42 @@
 #ifndef AES_CLP_REG_AES_VERSION_1
 #define AES_CLP_REG_AES_VERSION_1                                                                   (0xc)
 #endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_0                                                           (0x10011910)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_0
+#define AES_CLP_REG_ENTROPY_IF_SEED_0                                                               (0x110)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_1                                                           (0x10011914)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_1
+#define AES_CLP_REG_ENTROPY_IF_SEED_1                                                               (0x114)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_2                                                           (0x10011918)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_2
+#define AES_CLP_REG_ENTROPY_IF_SEED_2                                                               (0x118)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_3                                                           (0x1001191c)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_3
+#define AES_CLP_REG_ENTROPY_IF_SEED_3                                                               (0x11c)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_4                                                           (0x10011920)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_4
+#define AES_CLP_REG_ENTROPY_IF_SEED_4                                                               (0x120)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_5                                                           (0x10011924)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_5
+#define AES_CLP_REG_ENTROPY_IF_SEED_5                                                               (0x124)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_6                                                           (0x10011928)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_6
+#define AES_CLP_REG_ENTROPY_IF_SEED_6                                                               (0x128)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_7                                                           (0x1001192c)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_7
+#define AES_CLP_REG_ENTROPY_IF_SEED_7                                                               (0x12c)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_8                                                           (0x10011930)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_8
+#define AES_CLP_REG_ENTROPY_IF_SEED_8                                                               (0x130)
+#endif
 #define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (0x10011a00)
 #ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (0x200)
