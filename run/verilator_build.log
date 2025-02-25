@@ -1,6 +1,0 @@
-%Error-ASSIGNIN: /home/ws/caliptra/michnorris/adams_bridge_mjn/chipsalliance/caliptra-rtl/src/integration/tb/caliptra_top_tb_services.sv:1454:58: Assigning to input/const variable: 'rst_l'
- 1454 |     initial force caliptra_top_tb.caliptra_top_dut.rvtop.rst_l = 1'b0;
-      |                                                          ^~~~~
-                 ... For error description see https://verilator.org/warn/ASSIGNIN?v=5.012
-%Error: Exiting due to 1 error(s)
-        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.
