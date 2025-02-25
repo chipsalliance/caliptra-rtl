@@ -286,6 +286,7 @@ logic wdt_error_t2_intr_serviced;
 
 logic valid_trng_user;
 logic valid_fuse_user;
+logic valid_sha_user;
 
 boot_fsm_state_e boot_fsm_ps;
 
@@ -413,6 +414,7 @@ soc_ifc_arb #(
     .rst_b(cptra_noncore_rst_b),
     .valid_mbox_users(valid_mbox_users),
     .valid_fuse_user(valid_fuse_user),
+    .valid_sha_user(valid_sha_user),
     //UC inf
     .uc_req_dv(uc_req_dv), 
     .uc_req_hold(uc_req_hold), 
@@ -477,9 +479,9 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.RSVD_en.next = 3'b0;
 // Hardcoded because all future revs will have LMS accelerator available
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
 `else
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.ACTIVE_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
 `endif
 
 //SOC Stepping ID update
@@ -500,7 +502,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
@@ -508,7 +510,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
@@ -923,6 +925,9 @@ generate
                                      (soc_req.user == soc_ifc_reg_hwif_out.CPTRA_FUSE_VALID_AXI_USER.AXI_USER.value[AXI_USER_WIDTH-1:0]));
     end
 endgenerate
+
+always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -955,10 +960,17 @@ always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
 
 
 
+logic [SOC_IFC_DATA_W-1:0] s_cpuif_wr_biten;
 logic s_cpuif_req_stall_wr_nc;
 logic s_cpuif_req_stall_rd_nc;
 logic s_cpuif_rd_ack_nc;
 logic s_cpuif_wr_ack_nc;
+
+always_comb begin
+    for (int i=0;i<SOC_IFC_DATA_W;i++) begin: assign_biten_from_wstrb
+        s_cpuif_wr_biten[i] = soc_ifc_reg_req_data.wstrb[i/8];
+    end
+end
 
 soc_ifc_reg i_soc_ifc_reg (
     .clk(rdc_clk_cg),
@@ -968,7 +980,7 @@ soc_ifc_reg i_soc_ifc_reg (
     .s_cpuif_req_is_wr(soc_ifc_reg_req_data.write),
     .s_cpuif_addr(soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(soc_ifc_reg_req_data.wdata),
-    .s_cpuif_wr_biten('1), // FIXME
+    .s_cpuif_wr_biten(s_cpuif_wr_biten),
     .s_cpuif_req_stall_wr(s_cpuif_req_stall_wr_nc),
     .s_cpuif_req_stall_rd(s_cpuif_req_stall_rd_nc),
     .s_cpuif_rd_ack(s_cpuif_rd_ack_nc),
@@ -1105,6 +1117,7 @@ i_mbox (
     .dir_req_dv(mbox_dir_req_dv),
     .req_data_addr(mbox_req_data.addr),
     .req_data_wdata(mbox_req_data.wdata),
+    .req_data_wstrb(mbox_req_data.wstrb),
     .req_data_user(mbox_req_data.user),
     .req_data_write(mbox_req_data.write),
     .req_data_soc_req(mbox_req_data.soc_req),

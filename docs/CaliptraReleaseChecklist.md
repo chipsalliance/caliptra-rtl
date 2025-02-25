@@ -27,6 +27,27 @@ When necessary, a patch release may be applied retroactively to earlier versions
 For each release, the following steps are followed to ensure code functionality and quality.
 
 - Ensure all critical [issues](https://github.com/chipsalliance/caliptra-rtl/issues) and [Pull Requests](https://github.com/chipsalliance/caliptra-rtl/pulls) are closed
+- Verify expected checks and scripts are in place
+  - Audit pipelines: Coverage logging enabled
+  - Audit pipelines: File list checks updated
+  - Audit pipelines: License header check targets updated
+  - Audit pipelines: RDL generator script is updated
+  - Audit pipelines: RDL file checker is updated
+  - Audit pipelines: Promote pipeline synth check enabled
+  - Audit pipelines: Promote pipeline lint check enabled (and test a false-negative)
+  - Audit pipelines: Promote pipeline L0 regression list updated
+  - Audit pipelines: Promote pipeline L0 regression enabled
+  - Audit pipelines: Promote pipeline unit tests enabled
+  - Audit pipelines: Nightly pipeline firmware regression test list updated
+  - Audit pipelines: Nightly pipeline firmware regression test list enabled
+  - Audit pipelines: Nightly pipeline unit testbench regression test list updated
+  - Audit pipelines: Nightly pipeline unit testbench regression test list enabled
+  - Audit pipelines: Nightly pipeline UVM UNIT regressions test list updated
+  - Audit pipelines: Nightly pipeline UVM UNIT regressions enabled
+  - Audit pipelines: Nightly pipeline UVM TOP regression test list updated
+  - Audit pipelines: Nightly pipeline UVM TOP regression enabled
+  - Audit pipelines: Nightly pipeline UVM TOP (ROM) regression enabled
+- Audit RTL and testbenches for FIXME/TODO items
 - Pre-Silicon Regressions
   - [L0 regression](../src/integration/stimulus/L0_regression.yml)
   - Directed/Random regression per the [Test Plan](./Caliptra_TestPlan.xlsx)
@@ -52,3 +73,4 @@ For each release, the following steps are followed to ensure code functionality 
   - Add latest synthesis results to the [CaliptraIntegrationSpecification](./CaliptraIntegrationSpecification.md#netlist-synthesis-data)
   - Update [Release_Notes](../Release_Notes.md)
   - Tag the main branch on GitHub to generate an official release
+  - Generate version-specific registers documentation page in the [Register Documentation Workflow](./.github/workflows/doc-gen.yml)

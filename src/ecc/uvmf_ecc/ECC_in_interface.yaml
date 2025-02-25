@@ -17,7 +17,7 @@ uvmf:
       - name: ecc_in_test_transactions
         type: enum bit[1:0] {ecc_reset_test = 2'b00, ecc_normal_test = 2'b01, ecc_otf_reset_test = 2'b10}
       - name: ecc_in_op_transactions
-        type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10 }
+        type: enum bit[1:0] {key_gen = 2'b00, key_sign = 2'b01, key_verify = 2'b10, ecdh_sharedkey = 2'b11 }
 
       ports:
       - name: ecc_rst_n
@@ -83,5 +83,5 @@ uvmf:
       - name: ecc_valid_test_constraints
         value: '{ test inside {ecc_normal_test, ecc_otf_reset_test, ecc_openssl_test}; }'
       - name: ecc_valid_op_constraints
-        value: '{ op inside {key_gen, key_sign, key_verify}; }'
+        value: '{ op inside {key_gen, key_sign, key_verify, ecdh_sharedkey}; }'
 
