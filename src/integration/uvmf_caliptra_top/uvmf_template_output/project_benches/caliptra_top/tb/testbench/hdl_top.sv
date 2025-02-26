@@ -60,13 +60,6 @@ import caliptra_aaxi_uvm_pkg::*;
         .EXT_CLK_RESET(1)
        ) uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl();
 
-//  hdl_qvip_apb5_slave 
-//      #(
-//        .APB5_MASTER_0_ACTIVE(1),
-//        .UNIQUE_ID("uvm_test_top.environment.soc_ifc_subenv.qvip_apb5_slave_subenv."),
-//        .EXT_CLK_RESET(1)
-//       ) uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl();
-
 // pragma uvmf custom clock_generator begin
   bit clk;
   // Instantiate a clk driver 
@@ -474,6 +467,10 @@ import caliptra_aaxi_uvm_pkg::*;
         s_ports_arr[0].ARLOCK  = m_axi_if.arlock;
         s_ports_arr[0].ARVALID = m_axi_if.arvalid;
         m_axi_if.arready = s_ports_arr[0].ARREADY;
+        s_ports_arr[0].ARCACHE  = '0;
+        s_ports_arr[0].ARPROT   = '0;
+        s_ports_arr[0].ARQOS    = '0;
+        s_ports_arr[0].ARREGION = '0;
 
         // AXI R
         m_axi_if.rdata  = s_ports_arr[0].RDATA;
@@ -494,6 +491,10 @@ import caliptra_aaxi_uvm_pkg::*;
         s_ports_arr[0].AWLOCK  = m_axi_if.awlock;
         s_ports_arr[0].AWVALID = m_axi_if.awvalid;
         m_axi_if.awready = s_ports_arr[0].AWREADY;
+        s_ports_arr[0].AWCACHE  = '0;
+        s_ports_arr[0].AWPROT   = '0;
+        s_ports_arr[0].AWQOS    = '0;
+        s_ports_arr[0].AWREGION = '0;
 
         // AXI W
         s_ports_arr[0].WDATA  = m_axi_if.wdata;
