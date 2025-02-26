@@ -139,7 +139,7 @@ module soc_ifc_tb
   reg                          penable_i_tb;
   reg                          pwrite_i_tb;
   reg [APB_DATA_WIDTH-1:0]     pwdata_i_tb;
-  reg [APB_USER_WIDTH-1:0]     axi_user_i_tb;
+  reg [AXI_USER_WIDTH-1:0]     axi_user_i_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -234,7 +234,8 @@ module soc_ifc_tb
   logic         mailbox_data_avail_tb;
 
   logic       ss_debug_intent_tb;
-  logic       cptra_ss_debug_intent_tb;
+
+  //logic [AXI_USER_WIDTH-1:0] strap_ss_cptra_dma_axi_user_tb;
 
   typedef enum logic {
     read = 0,
@@ -378,7 +379,7 @@ module soc_ifc_tb
              .strap_ss_strap_generic_1(0),
              .strap_ss_strap_generic_2(0),
              .strap_ss_strap_generic_3(0),
-             .strap_ss_caliptra_dma_axi_user(0),
+             .strap_ss_caliptra_dma_axi_user(strap_ss_cptra_dma_axi_user_tb),
              .ss_debug_intent(ss_debug_intent_tb),
              .cptra_ss_debug_intent(cptra_ss_debug_intent_tb),
 
@@ -549,7 +550,7 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // Updates registers that have wired connections for status
   //
-  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES
+  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
   //----------------------------------------------------------------
 
   always_comb update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
@@ -557,7 +558,7 @@ module soc_ifc_tb
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
   always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
-
+  //always_comb update_SS_CPTRA_DMA_AXI_USER(strap_ss_cptra_dma_axi_user_tb);
 
 
   //----------------------------------------------------------------
@@ -760,6 +761,7 @@ module soc_ifc_tb
 
       // SS Straps
       ss_debug_intent_tb = 1'b0;
+      strap_ss_cptra_dma_axi_user_tb = AXI_USER_DEFAULT;
 
     end
   endtask // init_sim

@@ -28,6 +28,9 @@ package soc_ifc_tb_pkg;
   localparam SOCIFC_BASE = `CLP_SOC_IFC_REG_BASE_ADDR;
   localparam SHAACC_BASE = `CLP_SHA512_ACC_CSR_BASE_ADDR;
   localparam ADDR_WIDTH = 32; // SHould be 18; will let APB & AHB bus widths truncate as needed
+  localparam AXI_USER_WIDTH = 32;
+
+  logic [AXI_USER_WIDTH-1:0] strap_ss_cptra_dma_axi_user_tb;
 
 
   // ================================================================================ 
@@ -118,6 +121,7 @@ package soc_ifc_tb_pkg;
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
+    "FUSE_SOC_MANIFEST_SVN"                 : 4,
     "INTERNAL_OBF_KEY"                      : 8,
     "SS_STRAP_GENERIC"                      : 4 ,
     "SS_SOC_DBG_UNLOCK_LEVEL"               : 2, 
@@ -191,6 +195,9 @@ package soc_ifc_tb_pkg;
     "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
     "FUSE_MANUF_DBG_UNLOCK_TOKEN"                   : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0,                        // 0x34c [4]  Manufcturing Debug Unlock Token
+    "FUSE_PQC_KEY_TYPE"                             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_PQC_KEY_TYPE,                                    // 0x35c 
+    "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x360 [4]
+    "FUSE_SOC_MANIFEST_NAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x370
     "SS_CPTRA_BASE_ADDR_L"                          : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                          : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
     "SS_MCI_BASE_ADDR_L"                            : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_L,                                    // 0x508
@@ -300,6 +307,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
+    '{addr_min: SOCIFC_BASE + 16'h0374, addr_max: SOCIFC_BASE + 16'h04fc},
     '{addr_min: SOCIFC_BASE + 16'h0538, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
@@ -340,6 +348,9 @@ package soc_ifc_tb_pkg;
     "FUSE_MLDSA_REVOCATION"                            : 32'hf,
     "FUSE_SOC_STEPPING_ID"                             : 32'hffff,       // field 15:0
     "FUSE_MANUF_DBG_UNLOCK_TOKEN"                      : 32'hffff_ffff,
+    "FUSE_PQC_KEY_TYPE"                                : 32'h3,          // field 1:0
+    "FUSE_SOC_MANIFEST_SVN"                            : 32'hffff_ffff, 
+    "FUSE_SOC_MANIFEST_MAX_SVN"                        : 32'hff,         // field 7:0
     "CPTRA_HW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_EXTENDED_ERROR_INFO"                     : 32'hffff_ffff,
@@ -362,7 +373,8 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_ERROR_ICCM_BLOCKED_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_MBOX_ECC_UNC_INTR_COUNT_R"         : 32'hffff_ffff,
     "INTR_BRF_ERROR_WDT_TIMER1_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
-    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff
+    "INTR_BRF_ERROR_WDT_TIMER2_TIMEOUT_INTR_COUNT_R"   : 32'hffff_ffff,
+    "SS_CPTRA_DMA_AXI_USER"                            : 32'hffff_ffff
   };
 
 
@@ -580,8 +592,12 @@ package soc_ifc_tb_pkg;
 
 
   function dword_t get_initval(string addr_name);
-
-    return _soc_register_initval_dict.exists(addr_name) ? _soc_register_initval_dict[addr_name] : '0; 
+    if (addr_name == "SS_CPTRA_DMA_AXI_USER") begin
+      return strap_ss_cptra_dma_axi_user_tb;
+    end
+    else begin
+      return _soc_register_initval_dict.exists(addr_name) ? _soc_register_initval_dict[addr_name] : '0; 
+    end
 
   endfunction // get_initval
 
@@ -941,6 +957,7 @@ package soc_ifc_tb_pkg;
             exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name)); 
           end
           "CPTRA_BOOTFSM_GO"                         : exp_data = ahb_rodata | axi_indata & get_mask(addr_name) ; 
+          "CPTRA_DBG_MANUF_SERVICE_REG"              : exp_data = ahb_indata | axi_indata;
           "CPTRA_BOOT_STATUS"                        : exp_data = ahb_indata | axi_rodata; 
           "CPTRA_CLK_GATING_EN"                      : exp_data = ahb_rodata | axi_indata & get_mask(addr_name) ; 
 
