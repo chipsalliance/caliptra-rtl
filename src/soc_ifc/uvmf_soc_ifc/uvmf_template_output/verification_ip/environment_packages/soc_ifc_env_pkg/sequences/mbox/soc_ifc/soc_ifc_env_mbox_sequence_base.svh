@@ -165,6 +165,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   //==========================================
   function new(string name = "" );
     super.new(name);
+    axi_user_obj = new();
     // Create an array of all defined mbox cmd values.
     // This can be used in constraints as appropriate
     defined_cmds = new[mbox_op_rand.cmd.cmd_e.num()];
@@ -719,7 +720,7 @@ endfunction
 //              This function uses the more restrictive definition to evaluate constraints.
 //==========================================
 function caliptra_axi_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_AXI_USER);
-    axi_user_obj = new();
+    //axi_user_obj = new();
     if (!this.axi_user_obj.randomize() with {if (axi_user_locked.locked)
                                                  (addr_user == axi_user_locked.axi_user) dist
                                                  {1 :/ 1000,

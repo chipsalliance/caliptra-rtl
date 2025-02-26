@@ -48,6 +48,11 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
     //
     function uvm_sequence_item reg2bus(const ref uvm_reg_bus_op rw);
         bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1; // FIXME default val
+        bit unsigned [15:0] ar_valid_delay = 1;
+        bit unsigned [15:0] resp_valid_ready_delay = 1;
+        bit unsigned [7:0] len = 0;
+        bit unsigned [1:0] burst = 0;
+
         caliptra_axi_user user_obj;
         uvm_sequence_item super_item = super.reg2bus(rw);
         aaxi_master_tr    trans;
@@ -58,10 +63,21 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
             `uvm_error("reg2bus", "uvm_reg_item provided to caliptra_reg2axi_adapter contains null extension object, which is needed to derive the AxUSER field")
         else if (!$cast(user_obj, item.extension))
             `uvm_error("reg2bus", "uvm_reg_item provided to caliptra_reg2axi_adapter contains invalid extension object, which is needed to derive the AxUSER field")
-        else
+        else begin
             addr_user = user_obj.get_addr_user();
+            ar_valid_delay = user_obj.get_ar_valid_delay();
+            resp_valid_ready_delay = user_obj.get_resp_valid_ready_delay();
+            len = user_obj.get_len();
+            burst = user_obj.get_burst();
+        end
         trans.aruser = addr_user;
         trans.awuser = addr_user;
+        
+        trans.ar_valid_delay = ar_valid_delay;
+        trans.resp_valid_ready_delay = resp_valid_ready_delay;
+        trans.len = len;
+        trans.burst = burst;
+
         `uvm_info(get_name(),
                   $psprintf("\n\treg2bus rw.addr = 'h%0h, rw.is_write = %0x, rw.n_bits = %0d, rw.data = 'h%h, rw.axuser = 'h%x", 
                   rw.addr, rw.kind inside {UVM_WRITE, UVM_BURST_WRITE}, rw.n_bits, rw.data, addr_user), UVM_FULL);
