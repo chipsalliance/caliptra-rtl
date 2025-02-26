@@ -32,6 +32,7 @@ class caliptra_axi_user extends uvm_object;
   bit unsigned [15:0] b_valid_ready_delay = 1;
   bit unsigned [7:0] len = 0;
   bit unsigned [1:0] burst = 0;
+  bit unsigned [3:0] wstrb [255:0];
 
   function new (string name="");
       super.new(name);
@@ -39,6 +40,9 @@ class caliptra_axi_user extends uvm_object;
           `uvm_fatal("CALIPTRA_AXI_USER", $sformatf("AWUSER WIDTH [%0d] does not match ARUSER WIDTH [%0d]!", aaxi_pkg::AAXI_AWUSER_WIDTH, aaxi_pkg::AAXI_ARUSER_WIDTH))
       if (aaxi_pkg::AAXI_AWUSER_WIDTH != 32)
           `uvm_fatal("CALIPTRA_AXI_USER", $sformatf("AxUSER WIDTH [%0d] is invalid - expected [%0d]!", aaxi_pkg::AAXI_AWUSER_WIDTH, 32))
+      // `uvm_info("KNU_USER_OBJ", "Setting default wstrb values to 'hf", UVM_MEDIUM)
+      for (int i = 0; i < 256; i++)
+        this.wstrb[i] = 'hf;
   endfunction
 
   function void set_addr_user(bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] value);
@@ -70,8 +74,16 @@ function void set_aw_valid_delay(bit unsigned [15:0] value);
     this.aw_valid_delay = value;
 endfunction
 
+function bit unsigned [15:0] get_aw_valid_delay();
+  return this.aw_valid_delay;
+endfunction
+
 function void set_b_valid_ready_delay(bit unsigned [15:0] value);
     this.b_valid_ready_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_b_valid_ready_delay();
+  return this.b_valid_ready_delay;
 endfunction
 
 function void set_len(bit unsigned [7:0] value);

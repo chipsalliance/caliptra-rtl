@@ -64,7 +64,7 @@ task soc_ifc_env_mbox_rw_rand_delay_small_sequence::mbox_push_datain();
 
     super.axi_user_obj.set_aw_valid_delay($urandom_range(1,20));
     super.axi_user_obj.set_b_valid_ready_delay($urandom_range(1,20));
-    super.axi_user_obj.set_wstrb();
+    // super.axi_user_obj.set_wstrb();
 
     reg_model.mbox_csr_rm.mbox_datain_sem.get();
     reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(super.axi_user_obj));
