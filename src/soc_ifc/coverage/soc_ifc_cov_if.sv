@@ -356,6 +356,7 @@ interface soc_ifc_cov_if
         arc_MBOX_EXECUTE_SOC_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_SOC_MBOX_IDLE;
         arc_MBOX_EXECUTE_TAP_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_TAP_MBOX_IDLE;
         arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_SOC;
+        arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_UC_MBOX_EXECUTE_TAP;
         arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_SOC_MBOX_EXECUTE_UC;
         arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_TAP_MBOX_EXECUTE_UC;
         arc_MBOX_RDY_FOR_CMD_MBOX_ERROR_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_CMD_MBOX_ERROR;
