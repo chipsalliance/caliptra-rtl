@@ -91,7 +91,7 @@ addrmap mbox_csr {
         desc="Mailbox execute register indicates to receiver that the sender is done
         [br]Caliptra Access: RW
         [br]SOC Access:      RW
-        [br]TAP Access [in debug/manuf mode]: RW";
+        [br]TAP Access [in debug/manuf mode]: WO";
         field {sw=rw; hw=rw; we; swwe=valid_requester; hwclr; precedence=hw; swmod=true;} execute=0;
     } mbox_execute;
 

@@ -1171,7 +1171,7 @@ axi_dma_top #(
     .UW(AXIM_USER_WIDTH),         // User Width
     .IW(AXIM_ID_WIDTH)            // ID Width
 ) i_axi_dma (
-    .clk          (clk                ),
+    .clk          (rdc_clk_cg         ),
     .cptra_pwrgood(cptra_pwrgood      ),
     .rst_n        (cptra_noncore_rst_b),
 
