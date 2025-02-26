@@ -503,6 +503,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b)begin
         mbox_fsm_ps <= MBOX_IDLE;
         soc_has_lock <= '0;
+        uc_has_lock <= '0;
         tap_has_lock <= '0;
         dir_req_rd_phase <= '0;
         dma_sram_req_rd_phase <= '0;
