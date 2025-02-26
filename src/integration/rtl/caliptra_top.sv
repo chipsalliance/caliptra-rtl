@@ -122,6 +122,15 @@ module caliptra_top
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
+    // RISC-V Trace Ports
+    output logic [31:0]         trace_rv_i_insn_ip,
+    output logic [31:0]         trace_rv_i_address_ip,
+    output logic                trace_rv_i_valid_ip,
+    output logic                trace_rv_i_exception_ip,
+    output logic [4:0]          trace_rv_i_ecause_ip,
+    output logic                trace_rv_i_interrupt_ip,
+    output logic [31:0]         trace_rv_i_tval_ip,
+
     input security_state_t             security_state,
     input logic                        scan_mode
 );
@@ -155,14 +164,6 @@ module caliptra_top
     logic        [63:0]         ic_hrdata       ;
     logic                       ic_hready       ;
     logic                       ic_hresp        ;
-
-    logic        [31:0]         trace_rv_i_insn_ip;
-    logic        [31:0]         trace_rv_i_address_ip;
-    logic                       trace_rv_i_valid_ip;
-    logic                       trace_rv_i_exception_ip;
-    logic        [4:0]          trace_rv_i_ecause_ip;
-    logic                       trace_rv_i_interrupt_ip;
-    logic        [31:0]         trace_rv_i_tval_ip;
 
     logic                       o_debug_mode_status;
 
