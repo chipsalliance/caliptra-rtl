@@ -8,6 +8,7 @@ package mbox_csr_pkg;
 
     typedef struct packed{
         logic hwclr;
+        logic hwset;
     } mbox_csr__mbox_lock__lock__in_t;
 
     typedef struct packed{
@@ -51,6 +52,8 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_dataout__in_t;
 
     typedef struct packed{
+        logic next;
+        logic we;
         logic hwclr;
     } mbox_csr__mbox_execute__execute__in_t;
 
@@ -85,12 +88,17 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__in_t;
 
     typedef struct packed{
+        logic next;
+    } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__tap_has_lock__in_t;
+
+    typedef struct packed{
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__status__in_t status;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__ecc_single_error_next_e066e214_wel_e066e214__in_t ecc_single_error;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__ecc_double_error_next_e066e214_wel_e066e214__in_t ecc_double_error;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_fsm_ps__in_t mbox_fsm_ps;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__soc_has_lock__in_t soc_has_lock;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__in_t mbox_rdptr;
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__tap_has_lock__in_t tap_has_lock;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__in_t;
 
     typedef struct packed{
@@ -195,12 +203,17 @@ package mbox_csr_pkg;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__out_t;
 
     typedef struct packed{
+        logic value;
+    } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__tap_has_lock__out_t;
+
+    typedef struct packed{
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__status__out_t status;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__ecc_single_error_next_e066e214_wel_e066e214__out_t ecc_single_error;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__ecc_double_error_next_e066e214_wel_e066e214__out_t ecc_double_error;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_fsm_ps__out_t mbox_fsm_ps;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__soc_has_lock__out_t soc_has_lock;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__mbox_rdptr__out_t mbox_rdptr;
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__tap_has_lock__out_t tap_has_lock;
     } mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760__out_t;
 
     typedef struct packed{

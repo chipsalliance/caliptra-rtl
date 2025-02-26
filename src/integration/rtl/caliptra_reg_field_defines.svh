@@ -7188,6 +7188,8 @@
 `define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (32'h200)
 `define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 `define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (32'h3fffc00)
+`define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+`define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (32'h4000000)
 `endif
 `ifndef MBOX_CSR_MBOX_UNLOCK
 `define MBOX_CSR_MBOX_UNLOCK                                                                        (32'h20)

@@ -9049,6 +9049,8 @@
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (0x200)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x3fffc00)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (0x4000000)
 #endif
 #define CLP_MBOX_CSR_MBOX_UNLOCK                                                                    (0x30020020)
 #ifndef MBOX_CSR_MBOX_UNLOCK

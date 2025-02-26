@@ -1101,8 +1101,10 @@ i_sha512_acc_top (
 //The SoC and uC can read and write to the mailbox by following the Caliptra Mailbox Protocol
 mbox
 #(
+    .DMI_REG_MBOX_LOCK_ADDR(soc_ifc_pkg::DMI_REG_MBOX_LOCK),
     .DMI_REG_MBOX_DLEN_ADDR(soc_ifc_pkg::DMI_REG_MBOX_DLEN),
     .DMI_REG_MBOX_CMD_ADDR(soc_ifc_pkg::DMI_REG_MBOX_CMD),
+    .DMI_REG_MBOX_EXECUTE_ADDR(soc_ifc_pkg::DMI_REG_MBOX_EXECUTE),
     .DMI_REG_MBOX_STATUS_ADDR(soc_ifc_pkg::DMI_REG_MBOX_STATUS),
     .MBOX_SIZE_KB(CPTRA_MBOX_SIZE_KB),
     .MBOX_DATA_W(CPTRA_MBOX_DATA_W),
@@ -1156,6 +1158,7 @@ i_mbox (
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_inc_wrptr(dmi_inc_wrptr),
     .dmi_reg_wen(cptra_uncore_dmi_locked_reg_wr_en),
+    .dmi_reg_ren(cptra_uncore_dmi_locked_reg_en & ~cptra_uncore_dmi_reg_wr_en),
     .dmi_reg_addr(cptra_uncore_dmi_reg_addr),
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
@@ -1339,6 +1342,8 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_DBG_MANUF_SERVICE_REG.DATA.next = cptra_un
 always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_CMD)}} & mbox_dmi_reg.MBOX_CMD) | 
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_LOCK)}} & mbox_dmi_reg.MBOX_LOCK) | 
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
@@ -1375,6 +1380,7 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DOUT)}} & mbox_dmi_reg.MBOX_DOUT) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_STATUS)}} & mbox_dmi_reg.MBOX_STATUS) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_CMD)}} & mbox_dmi_reg.MBOX_CMD) | 
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_LOCK)}} & mbox_dmi_reg.MBOX_LOCK) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOT_STATUS)}} & soc_ifc_reg_hwif_out.CPTRA_BOOT_STATUS.status.value) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_HW_ERRROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_ENC.error_code.value) | 
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |

@@ -50,6 +50,8 @@ set mbox_dlen_dmi_addr 0x50
 set mbox_dout_dmi_addr 0x51
 set mbox_status_dmi_addr 0x52
 set mbox_din_dmi_addr 0x62
-set mbox_cmd_dmi_addr 0x75
+set mbox_lock_dmi_addr 0x75
+set mbox_cmd_dmi_addr 0x76
+set mbox_execute_dmi_addr 0x77
 
 set dmstatus_addr 0x11

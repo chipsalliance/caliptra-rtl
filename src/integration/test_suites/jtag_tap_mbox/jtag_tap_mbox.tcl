@@ -94,9 +94,65 @@ for {set i 0} {$i < $dlen_words} {incr i} {
 riscv dmi_write $mbox_status_dmi_addr 0x00000001
 puts ""
 
+puts "Acquire mailbox lock..."
+set lock [riscv dmi_read $mbox_lock_dmi_addr]
+#check if in execute tap state
+while {($lock & 0x00000001) != 0x00000000} {
+    after 100    ;# Wait 1000ms between polls to avoid busy looping.
+    set lock [riscv dmi_read $mbox_lock_dmi_addr]
+}
+puts ""
+
+puts "Write req to mailbox..."
+riscv dmi_write $mbox_cmd_dmi_addr 0xaface0ff
+riscv dmi_write $mbox_dlen_dmi_addr $dlen_bytes
+for {set i 0} {$i < $dlen_words} {incr i} {
+    riscv dmi_write $mbox_din_dmi_addr $exp_data($i)
+}
+puts ""
+
+puts "Set execute..."
+riscv dmi_write $mbox_execute_dmi_addr 0x1
+
+puts "Poll mailbox status..."
+set status [riscv dmi_read $mbox_status_dmi_addr]
+#check if in execute tap state
+while {($status & 0x0000000F) != 0x00000001} {
+    after 100    ;# Wait 1000ms between polls to avoid busy looping.
+    set status [riscv dmi_read $mbox_status_dmi_addr]
+}
+puts ""
+
+puts "Read mailbox cmd..."
+set golden 0x4e110df7
+set actual [riscv dmi_read $mbox_cmd_dmi_addr]
+if {[compare $actual $golden] != 0} {
+    shutdown error
+}
+puts ""
+
+puts "Read mailbox dlen..."
+set golden $dlen_bytes
+set actual [riscv dmi_read $mbox_dlen_dmi_addr]
+if {[compare $actual $golden] != 0} {
+    shutdown error
+}
+puts ""
+
+puts "Read mailbox data..."
+for {set i 0} {$i < $dlen_words} {incr i} {
+    set golden $data($i)
+    set actual [riscv dmi_read $mbox_dout_dmi_addr]
+    if {[compare $actual $golden] != 0} {
+        shutdown error
+    }
+}
+
 puts "JTAG Mailbox flow completed successfully."
 
-after 10000; # Wait for c test to finish
+puts "Flagging test successful completion in TB..."
+
+write_memory $STDOUT 32 0xff phys
 
 shutdown
 

@@ -40,7 +40,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 void main() {
 
     printf("----------------------------------\n");
-    printf(" Mimicking ROM for TAP Mailbox Flow!!\n");
+    printf(" ROM to TAP Mailbox flow test\n");
     printf("----------------------------------\n");
 
     // Initialize interrupts (if any)
@@ -50,6 +50,7 @@ void main() {
     uint32_t ii;
     uint32_t data;
     enum mbox_fsm_e state;
+    enum mbox_status_e status;
     uint32_t mbox_data[] = { 0x00000000,
                              0x11111111,
                              0x22222222,
@@ -58,6 +59,7 @@ void main() {
                              0x55555555,
                              0x66666666,
                              0x77777777 };
+
     uint32_t exp_mbox_data[] = { 0x77777777,
                                  0x66666666,
                                  0x55555555,
@@ -66,6 +68,7 @@ void main() {
                                  0x22222222,
                                  0x11111111,
                                  0x00000000 };
+    uint32_t mbox_cmd = 0xaface0ff;
     uint32_t exp_mbox_cmd = 0x4e110df7;
     uint32_t read_data;
 
@@ -104,10 +107,10 @@ void main() {
     }
 
     //check data 
-    VPRINTF(LOW, "FW: Checking %d bytes from mailbox as if return data\n", MBOX_DLEN_VAL);
+    VPRINTF(LOW, "FW: Checking %d bytes from tap\n", MBOX_DLEN_VAL);
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
         VPRINTF(HIGH, "  datain: 0x%x\n", exp_mbox_data[ii]);
-        read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
+        read_data = soc_ifc_mbox_read_dataout_single();
         if (read_data != exp_mbox_data[ii]) {
             VPRINTF(ERROR, "ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, exp_mbox_data[ii]);
             SEND_STDOUT_CTRL( 0x1);
@@ -119,5 +122,56 @@ void main() {
     printf(" JTAG mailbox flow success!\n");
     printf("----------------------------------\n");
 
-    SEND_STDOUT_CTRL( 0xff);
+    //clear tap mode
+    lsu_write_32(CLP_MBOX_CSR_TAP_MODE,0);
+    soc_ifc_clear_execute_reg();
+
+    printf("----------------------------------\n");
+    printf(" TAP to ROM mailbox flow test\n");
+    printf("----------------------------------\n");
+
+    //Poll status until fsm is in EXECUTE UC
+    state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    while (state != MBOX_EXECUTE_UC) {
+      state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    }
+
+    //check cmd
+    VPRINTF(LOW, "FW: Checking cmd from tap\n");
+    read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_CMD);
+    if (read_data != mbox_cmd) {
+      VPRINTF(ERROR, "ERROR: mailbox cmd mismatch actual (0x%x) expected (0x%x)\n", read_data, mbox_cmd);
+      SEND_STDOUT_CTRL( 0x1);
+      while(1);
+    }
+
+    //check data 
+    VPRINTF(LOW, "FW: Checking %d bytes from tap\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        read_data = soc_ifc_mbox_read_dataout_single();
+        if (read_data != mbox_data[ii]) {
+            VPRINTF(ERROR, "ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, mbox_data[ii]);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        };
+    }
+
+    //write command
+    lsu_write_32(CLP_MBOX_CSR_MBOX_CMD,exp_mbox_cmd);
+
+    //write dlen
+    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN,MBOX_DLEN_VAL);
+
+    //write datain
+    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", exp_mbox_data[ii]);
+        lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
+    }
+
+    status = DATA_READY;
+
+    soc_ifc_set_mbox_status_field(status);
+
 }

@@ -173,6 +173,10 @@ module mbox_csr (
                 logic [15:0] next;
                 logic load_next;
             } mbox_rdptr;
+            struct packed{
+                logic next;
+                logic load_next;
+            } tap_has_lock;
         } mbox_status;
         struct packed{
             struct packed{
@@ -244,6 +248,9 @@ module mbox_csr (
             struct packed{
                 logic [15:0] value;
             } mbox_rdptr;
+            struct packed{
+                logic value;
+            } tap_has_lock;
         } mbox_status;
         struct packed{
             struct packed{
@@ -264,7 +271,10 @@ module mbox_csr (
         automatic logic load_next_c;
         next_c = field_storage.mbox_lock.lock.value;
         load_next_c = '0;
-        if(hwif_in.mbox_lock.lock.hwclr) begin // HW Clear
+        if(hwif_in.mbox_lock.lock.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.mbox_lock.lock.hwclr) begin // HW Clear
             next_c = '0;
             load_next_c = '1;
         end else if(decoded_reg_strb.mbox_lock && !decoded_req_is_wr) begin // SW set on read
@@ -406,7 +416,10 @@ module mbox_csr (
         automatic logic load_next_c;
         next_c = field_storage.mbox_execute.execute.value;
         load_next_c = '0;
-        if(hwif_in.mbox_execute.execute.hwclr) begin // HW Clear
+        if(hwif_in.mbox_execute.execute.we) begin // HW Write - we
+            next_c = hwif_in.mbox_execute.execute.next;
+            load_next_c = '1;
+        end else if(hwif_in.mbox_execute.execute.hwclr) begin // HW Clear
             next_c = '0;
             load_next_c = '1;
         end else if(decoded_reg_strb.mbox_execute && decoded_req_is_wr && hwif_in.valid_requester) begin // SW write
@@ -564,6 +577,27 @@ module mbox_csr (
         end
     end
     assign hwif_out.mbox_status.mbox_rdptr.value = field_storage.mbox_status.mbox_rdptr.value;
+    // Field: mbox_csr.mbox_status.tap_has_lock
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.mbox_status.tap_has_lock.value;
+        load_next_c = '0;
+        
+        // HW Write
+        next_c = hwif_in.mbox_status.tap_has_lock.next;
+        load_next_c = '1;
+        field_combo.mbox_status.tap_has_lock.next = next_c;
+        field_combo.mbox_status.tap_has_lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.mbox_status.tap_has_lock.value <= 1'h0;
+        end else if(field_combo.mbox_status.tap_has_lock.load_next) begin
+            field_storage.mbox_status.tap_has_lock.value <= field_combo.mbox_status.tap_has_lock.next;
+        end
+    end
+    assign hwif_out.mbox_status.tap_has_lock.value = field_storage.mbox_status.tap_has_lock.value;
     // Field: mbox_csr.mbox_unlock.unlock
     always_comb begin
         automatic logic [0:0] next_c;
@@ -642,7 +676,8 @@ module mbox_csr (
     assign readback_array[7][8:6] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.mbox_fsm_ps.value : '0;
     assign readback_array[7][9:9] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.soc_has_lock.value : '0;
     assign readback_array[7][25:10] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.mbox_rdptr.value : '0;
-    assign readback_array[7][31:26] = '0;
+    assign readback_array[7][26:26] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.tap_has_lock.value : '0;
+    assign readback_array[7][31:27] = '0;
     assign readback_array[8][0:0] = (decoded_reg_strb.mbox_unlock && !decoded_req_is_wr) ? field_storage.mbox_unlock.unlock.value : '0;
     assign readback_array[8][31:1] = '0;
     assign readback_array[9][0:0] = (decoded_reg_strb.tap_mode && !decoded_req_is_wr) ? field_storage.tap_mode.enabled.value : '0;
