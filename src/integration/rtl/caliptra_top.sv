@@ -152,6 +152,10 @@ module caliptra_top
     logic                       rdc_clk_cg      ;
     logic                       uc_clk_cg       ;
 
+    // Synchronized inputs
+    logic                       recovery_data_avail_sync;
+    logic                       recovery_image_activated_sync;
+
     logic        [2:0]          s_axi_active    ;
 
     logic        [31:0]         ic_haddr        ;
@@ -1229,6 +1233,27 @@ entropy_src #(
 
 `endif
 
+// Synchronizers for input from Subsystem Recovery Interface
+caliptra_prim_flop_2sync #(
+    .Width            (1),
+    .ResetValue       (0),
+    .EnablePrimCdcRand(1)
+) sync_payload_avail (
+    .clk_i (clk                     ),
+    .rst_ni(cptra_noncore_rst_b     ),
+    .d_i   (recovery_data_avail     ),
+    .q_o   (recovery_data_avail_sync)
+);
+caliptra_prim_flop_2sync #(
+    .Width            (1),
+    .ResetValue       (0),
+    .EnablePrimCdcRand(1)
+) sync_image_activated (
+    .clk_i (clk                          ),
+    .rst_ni(cptra_noncore_rst_b          ),
+    .d_i   (recovery_image_activated     ),
+    .q_o   (recovery_image_activated_sync)
+);
 
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
@@ -1258,8 +1283,8 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .recovery_data_avail(recovery_data_avail),
-    .recovery_image_activated(recovery_image_activated),
+    .recovery_data_avail     (recovery_data_avail_sync     ),
+    .recovery_image_activated(recovery_image_activated_sync),
 
     .security_state(cptra_security_state_Latched),
     
