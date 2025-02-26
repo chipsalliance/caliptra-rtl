@@ -23,11 +23,11 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * AXI subordinate replaces APB interface of Caliptra 1.x hardware
 * SHA Accelerator functionality now available exclusively over mailbox
     * SHA Accelerator adds new SHA save/restore functionality
-* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx))
+* Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md))
 * Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
     * ECDH hardware support
     * HMAC512 hardware support
-    * AXI Manager with DMA support
+    * AXI Manager with DMA support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-axi-manager--dma-assist))
     * Manufacturing and Debug Unlock
     * UDS programming
     * Read logic for Secret Fuses
@@ -1308,7 +1308,7 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 
 ## Adams Bridge - Dilithium (ML-DSA)
 
-Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/Adams%20bridge_HardwareSpecs.docx) 
+Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md) 
 
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
