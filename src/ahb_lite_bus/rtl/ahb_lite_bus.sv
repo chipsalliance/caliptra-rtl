@@ -86,7 +86,7 @@ module ahb_lite_bus #(
         end
     endgenerate
 
-    // Instanitate AHB Lite Address Decoder
+    // Instantiate AHB Lite Address Decoder
     ahb_lite_address_decoder #(
         .AHB_LITE_ADDR_WIDTH    (AHB_LITE_ADDR_WIDTH),
         .AHB_LITE_DATA_WIDTH    (AHB_LITE_DATA_WIDTH),
