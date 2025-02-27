@@ -201,7 +201,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; hw=rw; we;} LEVEL[32] = 32'h0;
+    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; hw=rw; we; resetsignal = cptra_pwrgood; } LEVEL[32] = 32'h0;
 } SS_SOC_DBG_UNLOCK_LEVEL[2];
 
 reg {

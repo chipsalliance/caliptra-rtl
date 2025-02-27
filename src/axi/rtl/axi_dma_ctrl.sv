@@ -92,6 +92,13 @@ import soc_ifc_pkg::*;
                                                                                  AXI_LEN_MAX_VALUE * BC;
     localparam MAX_BLOCK_SIZE = AXI_MAX_BLOCK_SIZE > FIFO_BC/2 ? FIFO_BC/2 :
                                                                  AXI_MAX_BLOCK_SIZE;
+    // Smaller of
+    //   a) MAX_BLOCK_SIZE
+    //   b) Configured data width X max supported AXI burst length value for FIXED bursts
+    localparam AXI_MAX_FIXED_BLOCK_SIZE = AXI_LEN_MAX_BYTES < AXI_FIXED_LEN_MAX_VALUE * BC ? AXI_LEN_MAX_BYTES :
+                                                                                             AXI_FIXED_LEN_MAX_VALUE * BC;
+    localparam MAX_FIXED_BLOCK_SIZE = AXI_MAX_FIXED_BLOCK_SIZE > MAX_BLOCK_SIZE ? MAX_BLOCK_SIZE :
+                                                                                  AXI_MAX_FIXED_BLOCK_SIZE;
     localparam DMA_MAX_XFER_SIZE = 32'h10_0000; // 1MiB
 
 
@@ -143,7 +150,7 @@ import soc_ifc_pkg::*;
     logic cmd_parse_error;
 
     logic rd_req_hshake, rd_req_hshake_bypass, rd_req_stall;
-    logic wr_req_hshake, wr_req_hshake_bypass, wr_req_stall;
+    logic wr_req_hshake, wr_req_hshake_bypass;
     logic [3:0] wr_resp_pending; // Counts up to 15 pending Write responses.
                                  // Once this counter saturates, we stall new requests
                                  // until further responses arrive.
@@ -360,6 +367,7 @@ import soc_ifc_pkg::*;
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
         endcase
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
+                              ~|hwif_out.byte_count.count.value ||
                               (hwif_out.byte_count.count.value > DMA_MAX_XFER_SIZE) ||
                               (hwif_out.byte_count.count.value > CPTRA_MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
@@ -468,14 +476,16 @@ import soc_ifc_pkg::*;
 
     always_comb block_size_mask = hwif_out.block_size.size.value - 1;
     always_comb begin
-        rd_align_req_byte_count = (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE < hwif_out.block_size.size.value)) ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
-                                                                                                                            AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
+        rd_align_req_byte_count = (hwif_out.ctrl.rd_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_FIXED_BLOCK_SIZE)-1:0]) :
+                                                                   (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE       - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
+                                                                                                                                                                    AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
         rd_final_req_byte_count = rd_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - rd_bytes_requested) :
                                                         {AXI_LEN_BC_WIDTH{1'b1}};
         rd_req_byte_count       = rd_final_req_byte_count < rd_align_req_byte_count ? rd_final_req_byte_count :
                                                                                       rd_align_req_byte_count;
-        wr_align_req_byte_count = (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE < hwif_out.block_size.size.value)) ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
-                                                                                                                            AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
+        wr_align_req_byte_count = (hwif_out.ctrl.wr_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_FIXED_BLOCK_SIZE)-1:0]) :
+                                                                   (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
+                                                                                                                                                                    AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
         wr_final_req_byte_count = wr_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - wr_bytes_requested) :
                                                         {AXI_LEN_BC_WIDTH{1'b1}};
         wr_req_byte_count       = wr_final_req_byte_count < wr_align_req_byte_count ? wr_final_req_byte_count :
@@ -484,12 +494,12 @@ import soc_ifc_pkg::*;
 
     always_comb begin
         r_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !rd_req_hshake_bypass && (rd_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(rd_credits) >= rd_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]) && !rd_req_stall;
-        r_req_if.addr     = src_addr + rd_bytes_requested;
+        r_req_if.addr     = src_addr + (hwif_out.ctrl.rd_fixed.value ? 0 : rd_bytes_requested);
         r_req_if.byte_len = rd_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
         r_req_if.lock     = 1'b0; // TODO
         w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(wr_credits) >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
-        w_req_if.addr     = dst_addr + wr_bytes_requested;
+        w_req_if.addr     = dst_addr + (hwif_out.ctrl.wr_fixed.value ? 0 : wr_bytes_requested);
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         w_req_if.fixed    = hwif_out.ctrl.wr_fixed.value;
         w_req_if.lock     = 1'b0; // TODO
@@ -718,6 +728,8 @@ import soc_ifc_pkg::*;
     // Requests must have valid length
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_LEN, rd_req_hshake |-> r_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_LEN, wr_req_hshake |-> w_req_if.byte_len < MAX_BLOCK_SIZE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_RD_REQ_LEN, rd_req_hshake && r_req_if.fixed |-> r_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_WR_REQ_LEN, wr_req_hshake && w_req_if.fixed |-> w_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
     // Requests must not cross AXI boundary (4KiB)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)

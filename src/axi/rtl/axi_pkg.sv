@@ -17,6 +17,8 @@ package axi_pkg;
 
     localparam AXI_LEN_MAX_VALUE = 256; // 8-bit LEN signal = 256 beats max
     localparam AXI_LEN_WIDTH     = $clog2(AXI_LEN_MAX_VALUE);
+    localparam AXI_FIXED_LEN_MAX_VALUE = 16; // When AxBURST = FIXED, max length is 16 beats (AXI spec A3.4.1)
+    localparam AXI_FIXED_LEN_WIDTH     = $clog2(AXI_FIXED_LEN_MAX_VALUE);
     localparam AXI_LEN_MAX_BYTES = 4096;
     localparam AXI_LEN_BC_WIDTH = $clog2(AXI_LEN_MAX_BYTES);
 
