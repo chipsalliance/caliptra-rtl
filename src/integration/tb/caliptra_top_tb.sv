@@ -373,6 +373,7 @@ always_comb begin
     m_axi_if.rid              = axi_sram_if.rid   ;
     m_axi_if.ruser            = axi_sram_if.ruser ;
     m_axi_if.rlast            = axi_sram_if.rlast ;
+    m_axi_if.ruser            = axi_sram_if.ruser ;
     m_axi_if.rvalid           = axi_sram_if.rvalid;
     axi_sram_if.rready        = m_axi_if.rready ;
                                                 
@@ -393,11 +394,13 @@ always_comb begin
     axi_sram_if.wuser         = m_axi_if.wuser  ;
     axi_sram_if.wvalid        = m_axi_if.wvalid ;
     axi_sram_if.wlast         = m_axi_if.wlast  ;
+    axi_sram_if.wuser         = m_axi_if.wuser  ;
     m_axi_if.wready           = axi_sram_if.wready ;
                                                 
     // AXI B                                    
     m_axi_if.bresp            = axi_sram_if.bresp  ;
     m_axi_if.bid              = axi_sram_if.bid    ;
+    m_axi_if.buser            = axi_sram_if.buser  ;
     m_axi_if.bvalid           = axi_sram_if.bvalid ;
     axi_sram_if.bready        = m_axi_if.bready ;
 end
