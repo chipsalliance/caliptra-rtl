@@ -196,6 +196,28 @@ void main() {
     hmac_zeroize();
 
     printf("----------------------------------\n");
+    printf(" Reseed AES entropy interface \n");
+    printf("----------------------------------\n");
+
+    // After reseeding the state of the Trivium stream cipher primitive with
+    // the seed below, it will produce the following key stream:
+    //
+    //   128'h7258_8CB7_89E3_8615_0DFC_DA03_BDA3_A5AE,
+    //   128'h2F98_426C_4C75_C0F1_3BFB_6B2D_E2DD_6E54,
+    //   128'hB8F0_AB03_51B7_F538_3C17_FAC1_E8B0_913B,
+    //   128'h1838_E884_56D9_D2D0_ADCB_4B13_C510_94DE
+    //
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0xB39511C4);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, 0xD8C04C75);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, 0xBC975171);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, 0xA15A3958);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, 0x0BADDAD5);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, 0xF21B0322);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, 0xC198620D);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0xEB4814D1);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0xE843DB60);
+
+    printf("----------------------------------\n");
     printf(" Run AES using key in KV\n");
     printf("----------------------------------\n");
 

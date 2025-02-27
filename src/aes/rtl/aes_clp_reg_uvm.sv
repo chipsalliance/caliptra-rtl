@@ -64,6 +64,36 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__AES_VERSION
 
+    // Reg - aes_clp_reg::ENTROPY_IF_SEED
+    class aes_clp_reg__ENTROPY_IF_SEED extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        aes_clp_reg__ENTROPY_IF_SEED_bit_cg ENTROPY_IF_SEED_bit_cg[32];
+        aes_clp_reg__ENTROPY_IF_SEED_fld_cg fld_cg;
+        rand uvm_reg_field ENTROPY_IF_SEED;
+
+        function new(string name = "aes_clp_reg__ENTROPY_IF_SEED");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.ENTROPY_IF_SEED = new("ENTROPY_IF_SEED");
+            this.ENTROPY_IF_SEED.configure(this, 32, 0, "WO", 0, 'h0, 0, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(ENTROPY_IF_SEED_bit_cg[bt]) ENTROPY_IF_SEED_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : aes_clp_reg__ENTROPY_IF_SEED
+
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -899,6 +929,7 @@ package aes_clp_reg_uvm;
     class aes_clp_reg extends uvm_reg_block;
         rand aes_clp_reg__AES_NAME AES_NAME[2];
         rand aes_clp_reg__AES_VERSION AES_VERSION[2];
+        rand aes_clp_reg__ENTROPY_IF_SEED ENTROPY_IF_SEED[9];
         rand kv_read_ctrl_reg AES_KV_RD_KEY_CTRL;
         rand kv_status_reg AES_KV_RD_KEY_STATUS;
         rand aes_clp_reg__intr_block_t intr_block_rf;
@@ -922,6 +953,13 @@ package aes_clp_reg_uvm;
                 
                 this.AES_VERSION[i0].build();
                 this.default_map.add_reg(this.AES_VERSION[i0], 'h8 + i0*'h4);
+            end
+            foreach(this.ENTROPY_IF_SEED[i0]) begin
+                this.ENTROPY_IF_SEED[i0] = new($sformatf("ENTROPY_IF_SEED[%0d]", i0));
+                this.ENTROPY_IF_SEED[i0].configure(this);
+                
+                this.ENTROPY_IF_SEED[i0].build();
+                this.default_map.add_reg(this.ENTROPY_IF_SEED[i0], 'h110 + i0*'h4);
             end
             this.AES_KV_RD_KEY_CTRL = new("AES_KV_RD_KEY_CTRL");
             this.AES_KV_RD_KEY_CTRL.configure(this);

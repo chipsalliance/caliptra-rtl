@@ -68,6 +68,7 @@ module aes_clp_reg (
     typedef struct packed{
         logic [2-1:0]AES_NAME;
         logic [2-1:0]AES_VERSION;
+        logic [9-1:0]ENTROPY_IF_SEED;
         logic AES_KV_RD_KEY_CTRL;
         logic AES_KV_RD_KEY_STATUS;
         struct packed{
@@ -105,6 +106,9 @@ module aes_clp_reg (
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.AES_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 11'h8 + i0*11'h4);
         end
+        for(int i0=0; i0<9; i0++) begin
+            decoded_reg_strb.ENTROPY_IF_SEED[i0] = cpuif_req_masked & (cpuif_addr == 11'h110 + i0*11'h4);
+        end
         decoded_reg_strb.AES_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 11'h200);
         decoded_reg_strb.AES_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 11'h204);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h400);
@@ -138,6 +142,12 @@ module aes_clp_reg (
     // Field logic
     //--------------------------------------------------------------------------
     typedef struct packed{
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } ENTROPY_IF_SEED;
+        } [9-1:0]ENTROPY_IF_SEED;
         struct packed{
             struct packed{
                 logic next;
@@ -344,6 +354,11 @@ module aes_clp_reg (
     typedef struct packed{
         struct packed{
             struct packed{
+                logic [31:0] value;
+            } ENTROPY_IF_SEED;
+        } [9-1:0]ENTROPY_IF_SEED;
+        struct packed{
+            struct packed{
                 logic value;
             } read_en;
             struct packed{
@@ -491,6 +506,29 @@ module aes_clp_reg (
     } field_storage_t;
     field_storage_t field_storage;
 
+    for(genvar i0=0; i0<9; i0++) begin
+        // Field: aes_clp_reg.ENTROPY_IF_SEED[].ENTROPY_IF_SEED
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.ENTROPY_IF_SEED[i0] && decoded_req_is_wr) begin // SW write
+                next_c = (field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.next = next_c;
+            field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.load_next = load_next_c;
+        end
+
+        always_ff @(posedge clk) begin
+            if(field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.load_next) begin
+                field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value <= field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.next;
+            end
+        end
+        assign hwif_out.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value = field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value;
+        assign hwif_out.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.swmod = decoded_reg_strb.ENTROPY_IF_SEED[i0] && decoded_req_is_wr;
+    end
     // Field: aes_clp_reg.AES_KV_RD_KEY_CTRL.read_en
     always_comb begin
         automatic logic [0:0] next_c;
