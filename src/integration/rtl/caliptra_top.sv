@@ -709,7 +709,7 @@ el2_veer_wrapper rvtop (
 //=========================================================================-
 always_ff@(posedge clk or negedge cptra_rst_b) begin
     if (!cptra_rst_b) begin
-        s_axi_active <= 2'd0;
+        s_axi_active <= '0;
     end
     else begin
         case ({s_axi_r_if.rvalid && s_axi_r_if.rready && s_axi_r_if.rlast,
