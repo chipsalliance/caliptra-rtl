@@ -284,6 +284,15 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires (generic_input_wires),
     .generic_output_wires(                   ),
 
+    // RISC-V Trace Ports
+    .trace_rv_i_insn_ip     (), // TODO
+    .trace_rv_i_address_ip  (), // TODO
+    .trace_rv_i_valid_ip    (), // TODO
+    .trace_rv_i_exception_ip(), // TODO
+    .trace_rv_i_ecause_ip   (), // TODO
+    .trace_rv_i_interrupt_ip(), // TODO
+    .trace_rv_i_tval_ip     (), // TODO
+
     .security_state(security_state),
     .scan_mode     (scan_mode)
 );
