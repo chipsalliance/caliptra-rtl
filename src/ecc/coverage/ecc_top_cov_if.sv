@@ -45,6 +45,8 @@ interface ecc_top_cov_if
     logic signing_process;
     logic verifying_process;
     logic sharedkey_process;
+    logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
+    logic sharedkey_outofrange;
 
 
     logic mod_p_q;
@@ -107,6 +109,10 @@ interface ecc_top_cov_if
     assign signing_process = ecc_top.ecc_dsa_ctrl_i.signing_process;
     assign verifying_process = ecc_top.ecc_dsa_ctrl_i.verifying_process;
     assign sharedkey_process = ecc_top.ecc_dsa_ctrl_i.sharedkey_process;
+    assign privkey_output_outofrange = ecc_top.ecc_dsa_ctrl_i.privkey_output_outofrange;
+    assign pubkeyx_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_output_outofrange;
+    assign pubkeyy_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyy_output_outofrange;
+    assign sharedkey_outofrange = ecc_top.ecc_dsa_ctrl_i.sharedkey_outofrange;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -130,6 +136,11 @@ interface ecc_top_cov_if
         pubkeyy_input_outofrange_cp: coverpoint pubkeyy_input_outofrange;
         pubkey_input_invalid_cp: coverpoint pubkey_input_invalid;
         pcr_sign_input_invalid_cp: coverpoint pcr_sign_input_invalid;
+
+        privkey_output_outofrange_cp: coverpoint privkey_output_outofrange;
+        pubkeyx_output_outofrange_cp: coverpoint pubkeyx_output_outofrange;
+        pubkeyy_output_outofrange_cp: coverpoint pubkeyy_output_outofrange;
+        sharedkey_outofrange_cp: coverpoint sharedkey_outofrange;
 
         cmd_ready_cp: cross ecc_sw_cmd, ready;
         cmd_kv_cp: cross ecc_cmd, dest_keyvault;

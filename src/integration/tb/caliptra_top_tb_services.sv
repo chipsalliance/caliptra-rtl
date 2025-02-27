@@ -471,7 +471,7 @@ module caliptra_top_tb_services
 
     genvar dword_i, slot_id;
     generate 
-        for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
+        for (slot_id=0; slot_id < 9; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
