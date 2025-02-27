@@ -1,0 +1,17 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "uvmf_caliptra_top_itrng", "Directed", "Nightly"]
+      path: ""
+      weight: 100
+      generations: 1
+      formats:
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rom_test:         {weight: 100}
+      config:
+        params:
+          timeout: 1440
