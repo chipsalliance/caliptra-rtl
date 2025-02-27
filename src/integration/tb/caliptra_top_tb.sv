@@ -371,6 +371,7 @@ always_comb begin
     m_axi_if.rdata            = axi_sram_if.rdata ;
     m_axi_if.rresp            = axi_sram_if.rresp ;
     m_axi_if.rid              = axi_sram_if.rid   ;
+    m_axi_if.ruser            = axi_sram_if.ruser ;
     m_axi_if.rlast            = axi_sram_if.rlast ;
     m_axi_if.rvalid           = axi_sram_if.rvalid;
     axi_sram_if.rready        = m_axi_if.rready ;
@@ -389,6 +390,7 @@ always_comb begin
     // AXI W                                    
     axi_sram_if.wdata         = m_axi_if.wdata  ;
     axi_sram_if.wstrb         = m_axi_if.wstrb  ;
+    axi_sram_if.wuser         = m_axi_if.wuser  ;
     axi_sram_if.wvalid        = m_axi_if.wvalid ;
     axi_sram_if.wlast         = m_axi_if.wlast  ;
     m_axi_if.wready           = axi_sram_if.wready ;
