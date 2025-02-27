@@ -740,10 +740,10 @@
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(data[0 + bt]);
             foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(data[1 + bt]);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(data[4 + bt]);
-            foreach(ACTIVE_MODE_en_bit_cg[bt]) this.ACTIVE_MODE_en_bit_cg[bt].sample(data[5 + bt]);
+            foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) this.SUBSYSTEM_MODE_en_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[3:1]/*RSVD_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*ACTIVE_MODE_en*/   );
+            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[3:1]/*RSVD_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*SUBSYSTEM_MODE_en*/   );
         end
     endfunction
 
@@ -752,10 +752,10 @@
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(iTRNG_en.get_mirrored_value() >> bt);
             foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(RSVD_en.get_mirrored_value() >> bt);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(LMS_acc_en.get_mirrored_value() >> bt);
-            foreach(ACTIVE_MODE_en_bit_cg[bt]) this.ACTIVE_MODE_en_bit_cg[bt].sample(ACTIVE_MODE_en.get_mirrored_value() >> bt);
+            foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) this.SUBSYSTEM_MODE_en_bit_cg[bt].sample(SUBSYSTEM_MODE_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  RSVD_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  ACTIVE_MODE_en.get_mirrored_value()   );
+            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  RSVD_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  SUBSYSTEM_MODE_en.get_mirrored_value()   );
         end
     endfunction
 

@@ -36,6 +36,7 @@
     word_addrq_t undef_regs; 
 
     automatic dword_t valid_hrdata; 
+    automatic dword_t valid_rdata;
 
     begin
       $display("Executing task soc_reg_invalid_test"); 
@@ -49,22 +50,31 @@
       repeat (1) @(posedge clk_tb); 
 
       soc_regnames = get_soc_regnames();
+
+      foreach (soc_regnames[ix]) begin
+        if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS") || 
+            (soc_regnames[ix] == "CPTRA_TRNG_DATA")) begin 
+          soc_regnames.delete(ix);  // can cause problem downstream if fuse_wr_done == True 
+          continue; 
+        end
+      end
+
       undef_regs = get_undef_regs();
 
 
-      $display( "\n** PHASE Ia. Testing undefined address locations over APB -- Expect writes to be dropped and reads to be 0's**\n" ); 
+      $display( "\n** PHASE Ia. Testing undefined address locations over AXI -- Expect writes to be dropped and reads to be 0's**\n" ); 
 
       foreach (undef_regs[i]) begin
 
         undef_addr = undef_regs[i];
         wdata = $urandom(); 
-        write_single_word_apb(undef_addr, wdata);
-        read_single_word_apb(undef_addr);
+        write_single_word_axi_sub(undef_addr, wdata);
+        read_single_word_axi_sub(undef_addr, valid_rdata);
 
-        $display("Write & read over APB : undefined addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", undef_addr, wdata, prdata_o_tb); 
+        $display("Write & read over AXI : undefined addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", undef_addr, wdata, valid_rdata); 
 
-        if (prdata_o_tb != 0) begin 
-          $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over APB!", undef_addr, prdata_o_tb); 
+        if (valid_rdata != 0) begin 
+          $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over AXI!", undef_addr, valid_rdata); 
           error_ctr += 1;
         end
       end
@@ -72,7 +82,7 @@
       repeat (5) @(posedge clk_tb);
 
 
-      $display( "\n** PHASE Ib. Testing unaligned address locations over APB -- Expect writes to be dropped and reads to be 0's**\n" ); 
+      $display( "\n** PHASE Ib. Testing unaligned address locations over AXI -- Expect writes and reads to go through (AXI sub aligns addresses internally)**\n" ); 
 
       foreach (soc_regnames[i]) begin
   
@@ -82,15 +92,15 @@
         unaligned_addr = addr + 'd1 + ($urandom() % 3);
 
         wdata = $urandom(); 
-        write_single_word_apb(unaligned_addr, wdata);
-        read_single_word_apb(unaligned_addr);
+        write_single_word_axi_sub(unaligned_addr, wdata);
+        read_single_word_axi_sub(unaligned_addr, valid_rdata);
 
-        $display("Write & read over APB : unaligned addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", unaligned_addr, wdata, prdata_o_tb); 
+        $display("Write & read over AXI : unaligned addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", unaligned_addr, wdata, valid_rdata); 
 
-        if (prdata_o_tb != 0) begin 
-          $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over APB!", unaligned_addr, prdata_o_tb); 
-          error_ctr += 1;
-        end
+        //if (valid_rdata != 0) begin 
+        //  $display("ERROR. undefined addr = 0x%08x, returns non-zero value 0x%08x over AXI!", unaligned_addr, valid_rdata); 
+        //  error_ctr += 1;
+        //end
       end
 
       repeat (5) @(posedge clk_tb);
@@ -98,7 +108,7 @@
 
       // Skip wrting & reading over AHB until post reset sequencing is done 
       // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using APB as part of Caliptra boot.  
+      // are written using AXI as part of Caliptra boot.  
       simulate_caliptra_boot();
 
 

@@ -18,5 +18,3 @@ plusargs:
 
 testname: soc_reg_test
 seed: ${PLAYBOOK_RANDOM_SEED}
-#seed: 1680126531
-

@@ -110,6 +110,7 @@ module sha512_acc_top
   sha512_acc_csr__out_t hwif_out;
 
   logic read_error, write_error;
+  logic [DATA_WIDTH-1:0] reg_biten;
 
   logic              core_ready;
   logic              core_ready_q;
@@ -394,6 +395,13 @@ always_comb begin
   end
 end
 
+genvar i;
+generate
+    for (i=0;i<DATA_WIDTH;i++) begin: assign_biten_from_wstrb
+        assign reg_biten[i] = req_data.wstrb[i/8];
+    end
+endgenerate
+
 //Register Block
 sha512_acc_csr i_sha512_acc_csr (
     .clk(clk),
@@ -403,7 +411,7 @@ sha512_acc_csr i_sha512_acc_csr (
     .s_cpuif_req_is_wr   (req_data.write),
     .s_cpuif_addr        (req_data.addr[SHA512_ACC_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data     (req_data.wdata),
-    .s_cpuif_wr_biten    ('1),// FIXME
+    .s_cpuif_wr_biten    (reg_biten),
     .s_cpuif_req_stall_wr( ),
     .s_cpuif_req_stall_rd( ),
     .s_cpuif_rd_ack      ( ),

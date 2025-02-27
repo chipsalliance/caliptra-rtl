@@ -139,7 +139,7 @@ end
   reg [383:0]   dh_sharedkey;
 
 
-  reg [2:0]     op;
+  reg [1:0]     op;
   reg [1:0]     test;
 
   // ****************************************************************************              
@@ -251,7 +251,7 @@ end
         //$display("***DEBUG*** transaction_flag_out_monitor is 1");
         transaction_flag = 1;
         repeat (2) @(posedge clk_i);
-        if (op == 3'b000) begin // KEY_GEN
+        if (op == 2'b00) begin // KEY_GEN
           @(posedge clk_i);
           privkey[383:352] = hrdata_i;
           //$display("**ECC_out_monitor_bfm: privkey[383:352] = %h, time = %0t", privkey[383:352], $time);
@@ -345,7 +345,7 @@ end
 
             
         end
-        else if (op == 3'b001) begin // KEY_SIGN
+        else if (op == 2'b01) begin // KEY_SIGN
           @(posedge clk_i);
           R[383:352] = hrdata_i;
           repeat (2) @(posedge clk_i);
@@ -414,7 +414,7 @@ end
           dh_sharedkey = 0;
 
         end
-        else if (op == 3'b010) begin // KEY_VERIFY
+        else if (op == 2'b10) begin // KEY_VERIFY
           @(posedge clk_i);
           verify_R[383:352] = hrdata_i;      
           repeat (2) @(posedge clk_i);
@@ -458,7 +458,7 @@ end
           dh_sharedkey = 0;
 
         end
-        else if (op == 3'b011) begin //ECDH sharedkey
+        else if (op == 2'b11) begin //ECDH sharedkey
           @(posedge clk_i);
           dh_sharedkey[383:352] = hrdata_i;
           repeat (2) @(posedge clk_i);

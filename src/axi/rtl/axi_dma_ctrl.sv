@@ -109,6 +109,7 @@ import soc_ifc_pkg::*;
         DMA_ERROR
     } ctrl_fsm_ns,ctrl_fsm_ps;
 
+    logic [SOC_IFC_DATA_W-1:0] reg_biten;
     logic reg_rd_err, reg_wr_err;
     logic reg_rd_stall, reg_wr_stall;
     logic reg_rd_ack_nc, reg_wr_ack_nc;
@@ -176,6 +177,12 @@ import soc_ifc_pkg::*;
     // --------------------------------------- //
     // Control Register Block                  //
     // --------------------------------------- //
+    genvar i;
+    generate
+        for (i=0;i<SOC_IFC_DATA_W;i++) begin: assign_biten_from_wstrb
+            assign reg_biten[i] = req_data.wstrb[i/8];
+        end
+    endgenerate
     axi_dma_reg i_axi_dma_reg (
         .clk(clk ),
         .rst(1'b0),
@@ -184,7 +191,7 @@ import soc_ifc_pkg::*;
         .s_cpuif_req_is_wr   (req_data.write                                                ),
         .s_cpuif_addr        (req_data.addr[axi_dma_reg_pkg::AXI_DMA_REG_MIN_ADDR_WIDTH-1:0]),
         .s_cpuif_wr_data     (req_data.wdata                                                ),
-        .s_cpuif_wr_biten    ('1/*FIXME req_data.wstrb*/                                    ),
+        .s_cpuif_wr_biten    (reg_biten                                                     ),
         .s_cpuif_req_stall_wr(reg_wr_stall                                                  ),
         .s_cpuif_req_stall_rd(reg_rd_stall                                                  ),
         .s_cpuif_rd_ack      (reg_rd_ack_nc                                                 ),

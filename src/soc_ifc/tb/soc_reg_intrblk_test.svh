@@ -168,7 +168,7 @@
 
       // Skip wrting & reading over AHB until post reset sequencing is done 
       // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using APB as part of Caliptra boot.  Scoreboard update not 
+      // are written using AXI as part of Caliptra boot.  Scoreboard update not 
       // needed for readonly fields which are set directly by wires.
       simulate_caliptra_boot();
       update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
@@ -191,49 +191,49 @@
 
 
       $display ("\n------------------------------------------------------------------------------");
-      $display ("1b. Read over AHB. Then Writing/Reading back to back using APB/APB every 3 cycles");
+      $display ("1b. Read over AHB. Then Writing/Reading back to back using AXI/AXI every 3 cycles");
       $display ("------------------------------------------------------------------------------");
       tphase = "1b";
 
-      // Read out the data over AHB. Ensure APB writes cannot modify the registers 
+      // Read out the data over AHB. Ensure AXI writes cannot modify the registers 
       // Implicity test neither can AHB reads. 
       foreach (intrblk_regnames[i]) begin
         $display("-- expect no modification over apb writes --");
         rname = intrblk_regnames[i];
         rdtrans.update(socregs.get_addr(rname), 32'hffff_ffff, tid); 
         read_reg_trans(GET_AHB, rdtrans); 
-        update_exp_regval(rname, rdtrans.data, SET_DIRECT);  // what has been just read cannot be changed by APB 
-        write_regs(SET_APB, {rname}, tid, 3);
+        update_exp_regval(rname, rdtrans.data, SET_DIRECT);  // what has been just read cannot be changed by AXI 
+        write_regs(SET_AXI, {rname}, tid, 3);
       end 
-      read_regs(GET_APB, intrblk_regnames, tid, 3);
+      read_regs(GET_AXI, intrblk_regnames, tid, 3);
 
       repeat (20) @(posedge clk_tb);
       // sb.del_all();   // Keep scoreboard entries of AHB writes from 1a for next phase 1c
 
 
       $display ("\n------------------------------------------------------------------------------");
-      $display ("1c. Read over APB. Then Writing/Reading back to back using APB/AHB every 3 cycles");
+      $display ("1c. Read over AXI. Then Writing/Reading back to back using AXI/AHB every 3 cycles");
       $display ("------------------------------------------------------------------------------");
       tphase = "1c";
 
-      // Read out the data over APB. Ensure APB writes cannot modify the registers either 
-      // Implicity test neither can APB reads. 
+      // Read out the data over AXI. Ensure AXI writes cannot modify the registers either 
+      // Implicity test neither can AXI reads. 
       foreach (intrblk_regnames[i]) begin
         $display("-- expect no modification over apb writes --");
         rname = intrblk_regnames[i];
         rname = intrblk_regnames[i];
         rdtrans.update(socregs.get_addr(rname), 32'hffff_ffff, tid); 
-        read_reg_trans(GET_APB, rdtrans); 
-        update_exp_regval(rname, rdtrans.data, SET_DIRECT);  // what has been read cannot be changed by APB 
-        write_regs(SET_APB, {rname}, tid, 3);
+        read_reg_trans(GET_AXI, rdtrans); 
+        update_exp_regval(rname, rdtrans.data, SET_DIRECT);  // what has been read cannot be changed by AXI 
+        write_regs(SET_AXI, {rname}, tid, 3);
       end 
       read_regs(GET_AHB, intrblk_regnames, tid, 3);
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();   
 
-      // Don't need to test AHB/APB write read anymore; included  in sequences above
-      // $display ("1d. Writing/Reading back to back using AHB/APB every 3 cycles");
+      // Don't need to test AHB/AXI write read anymore; included  in sequences above
+      // $display ("1d. Writing/Reading back to back using AHB/AXI every 3 cycles");
 
       $display ("\n------------------------------------------------------------------------------");
       $display ("2a. Handle WO special registers"); 

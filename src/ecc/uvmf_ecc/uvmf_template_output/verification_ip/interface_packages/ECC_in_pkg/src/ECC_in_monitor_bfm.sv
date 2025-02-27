@@ -85,7 +85,7 @@ end
   tri  hreadyout_i;
   tri  transaction_flag_out_monitor_i;
   tri [2:0] test_i;
-  tri [2:0] op_i;
+  tri [1:0] op_i;
   assign clk_i = bus.clk;
   assign rst_n_i = bus.rst_n;
   assign ecc_rst_n_i = bus.ecc_rst_n;

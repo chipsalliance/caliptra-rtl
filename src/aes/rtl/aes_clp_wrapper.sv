@@ -87,7 +87,7 @@ logic kv_key_ready, kv_key_done;
 
 logic kv_key_write_en;
 logic [2:0] kv_key_write_offset;
-logic [31:0] kv_key_write_data;
+logic [3:0][7:0] kv_key_write_data;
 
 edn_pkg::edn_req_t edn_req;
 
@@ -286,17 +286,21 @@ aes_key_kv_read
     .read_done(kv_key_done)
 );
 
-logic [(keymgr_pkg::KeyWidth/32)-1:0][31:0] kv_key_reg;
+logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 
 //load keyvault key into local reg
+//swizzle keyvault value to match endianness of aes engine
 genvar g_dword;
+genvar g_byte;
 generate
   for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
-    always_ff @(posedge clk or negedge reset_n) begin
-      if (~reset_n) begin
-        kv_key_reg[g_dword] <= '0;
-      end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
-        kv_key_reg[g_dword] <= kv_key_write_data;
+    for (g_byte = 0; g_byte < 4; g_byte++) begin
+      always_ff @(posedge clk or negedge reset_n) begin
+        if (~reset_n) begin
+          kv_key_reg[g_dword][g_byte] <= '0;
+        end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
+          kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
+        end
       end
     end
   end

@@ -82,8 +82,9 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
                           foreach (reg_addr[i]) { 
                             out_of_bounds == 0 -> reg_addr[i] <= addr_max_temp[slave_sel[i]];
                             out_of_bounds == 0 -> reg_addr[i] >= addr_min_temp[slave_sel[i]];
-                            out_of_bounds == 1 -> reg_addr[i] >= 32'h7000_0000;
-                            out_of_bounds == 1 -> reg_addr[i] <= 32'hFFFF_FFFF;
+                           (out_of_bounds == 0) && (slave_sel[i] == `CALIPTRA_SLAVE_SEL_AES) -> !(reg_addr[i] inside {[`CLP_AES_REG_CTRL_GCM_SHADOWED+4:`CLP_AES_CLP_REG_BASE_ADDR]}); // These throw AHB errors and cause NMI
+                            out_of_bounds == 1 -> (reg_addr[i] >= 32'h7000_0000) || (reg_addr[i] inside {[`CLP_AES_REG_CTRL_GCM_SHADOWED+4:`CLP_AES_CLP_REG_BASE_ADDR]});
+                            out_of_bounds == 1 ->  reg_addr[i] <= 32'hFFFF_FFFF;
                             reg_addr[i][1:0] == '0;
                             reg_addr[i] != `CLP_MBOX_CSR_MBOX_LOCK;
                             reg_addr[i] != `CLP_SHA512_ACC_CSR_LOCK; }

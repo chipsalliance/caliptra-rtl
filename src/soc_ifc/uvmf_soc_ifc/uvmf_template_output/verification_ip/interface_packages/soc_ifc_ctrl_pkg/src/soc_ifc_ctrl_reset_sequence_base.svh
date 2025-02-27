@@ -57,7 +57,8 @@ class soc_ifc_ctrl_reset_sequence_base
       req=soc_ifc_ctrl_transaction::type_id::create("pwr_req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
+      // Use a minimum delay of 10 clock cycles after the reset is asserted before next transaction
+      if(!req.randomize() with { wait_cycles >= 10; }) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1; // active-low assertion
       // Send the transaction to the soc_ifc_ctrl_driver_bfm via the sequencer and soc_ifc_ctrl_driver.
@@ -76,7 +77,8 @@ class soc_ifc_ctrl_reset_sequence_base
       req=soc_ifc_ctrl_transaction::type_id::create("rst_req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
+      // Use a minimum delay of 10 clock cycles after the reset is asserted before next transaction
+      if(!req.randomize() with { wait_cycles >= 10; }) `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b1;
       req.assert_rst = 1'b1; // active-low assertion
       if (warm_reset_only) begin

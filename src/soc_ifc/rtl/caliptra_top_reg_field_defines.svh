@@ -314,8 +314,8 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK                                           (32'he)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_LOW                                         (4)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                        (32'h10)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_ACTIVE_MODE_EN_LOW                                     (5)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_ACTIVE_MODE_EN_MASK                                    (32'h20)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                  (5)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                 (32'h20)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (32'he4)

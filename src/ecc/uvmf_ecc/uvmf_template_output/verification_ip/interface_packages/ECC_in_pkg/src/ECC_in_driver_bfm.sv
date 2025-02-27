@@ -120,8 +120,8 @@ end
   reg  transaction_flag_out_monitor_o = 'bz;
   tri [1:0] test_i;
   reg [1:0] test_o = 'bz;
-  tri [2:0] op_i;
-  reg [2:0] op_o = 'bz;
+  tri [1:0] op_i;
+  reg [1:0] op_o = 'bz;
 
   // Bi-directional signals
   
@@ -311,10 +311,10 @@ end
   parameter ADDR_VERSION1    = BASE_ADDR + 32'h0000000C;
 
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
-  parameter KEYGEN           = 2'b01;
-  parameter SIGN             = 2'b10;
-  parameter VERIFY           = 2'b11;
-  parameter DH_SHARED        = (1 << 4);
+  parameter KEYGEN_CMD       = 2'b01;
+  parameter SIGN_CMD         = 2'b10;
+  parameter VERIFY_CMD       = 2'b11;
+  parameter DH_SHARED_CMD    = (1 << 4);
 
 
   parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
@@ -654,7 +654,7 @@ end
       write_block(ADDR_NONCE_START, test_vector.nonce);
       write_block(ADDR_IV_START, test_vector.IV);
 
-      trig_ECC(KEYGEN);
+      trig_ECC(KEYGEN_CMD);
       @(posedge clk_i);
 
       if (!test_otf_reset) // regular operation
@@ -728,7 +728,7 @@ end
       write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
       write_block(ADDR_IV_START, test_vector.IV);
 
-      trig_ECC(SIGN);
+      trig_ECC(SIGN_CMD);
       @(posedge clk_i);
 
       if (!test_otf_reset) // regular operation
@@ -800,7 +800,7 @@ end
       write_block(ADDR_SIGNS_START, test_vector.S);
       write_block(ADDR_IV_START, 384'h1);
 
-      trig_ECC(VERIFY);
+      trig_ECC(VERIFY_CMD);
       @(posedge clk_i);
 
       if (!test_otf_reset) // regular operation
@@ -863,7 +863,7 @@ end
       write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
       write_block(ADDR_IV_START, test_vector.IV);
 
-      trig_ECC(DH_SHARED);
+      trig_ECC(DH_SHARED_CMD);
       @(posedge clk_i);
 
       if (!test_otf_reset) // regular operation
@@ -1037,7 +1037,7 @@ bit first_transfer=1;
        //      ECC_in_responder_struct.xyz = hsize_i;  //    [2:0] 
        //      ECC_in_responder_struct.xyz = transaction_flag_out_monitor_i;  //     
        //      ECC_in_responder_struct.xyz = test_i;  //    [2:0] 
-       //      ECC_in_responder_struct.xyz = op_i;  //    [2:0] 
+       //      ECC_in_responder_struct.xyz = op_i;  //    [1:0] 
        //    Responder inout signals
        //    How to assign a signal, named xyz, from an initiator struct member.   
        //    All available responder output and inout signals listed.

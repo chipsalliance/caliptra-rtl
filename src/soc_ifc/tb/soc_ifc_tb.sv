@@ -35,10 +35,12 @@ import "DPI-C" function string getenv(input string env_name);
 `define STR_RMPFX(astr, bstr) astr.substr(bstr.len(), astr.len() - 1).atoi()
 
 
+
 module soc_ifc_tb
   import soc_ifc_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_tb_pkg::*;
+  import axi_pkg::*;
   ();
 
 
@@ -56,6 +58,23 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  `ifndef VERILATOR
+  int MAX_CYCLES;
+  initial begin
+    // To use this from the command line, add "+CLP_MAX_CYCLES=<value>"
+    // to override the sim timeout
+    if ($value$plusargs("CLP_MAX_CYCLES=%d", MAX_CYCLES)) begin
+        $info("Received argument +CLP_MAX_CYCLES, with value %d", MAX_CYCLES);
+    end
+    else begin
+        MAX_CYCLES = 20_000_000;
+        $info("No argument provided for CLP_MAX_CYCLES, defaulting to %d", MAX_CYCLES);
+    end
+  end
+  `else
+  parameter MAX_CYCLES = 20_000_000;
+  `endif
+
   parameter DEBUG     = 0;
 
   parameter CLK_HALF_PERIOD = 1;
@@ -81,17 +100,26 @@ module soc_ifc_tb
 
   parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
   parameter AHB_DATA_WIDTH = `CALIPTRA_AHB_HDATA_SIZE; // 32 
-  parameter APB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
-  parameter APB_DATA_WIDTH = `CALIPTRA_APB_DATA_WIDTH; // 32 
-  parameter APB_USER_WIDTH = `CALIPTRA_APB_USER_WIDTH; // 32 
+  //TODO: Delete APB parameters
+  parameter APB_ADDR_WIDTH = 18; 
+  parameter APB_DATA_WIDTH = 32; 
+  parameter APB_USER_WIDTH = 32; 
 
+  parameter AXI_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18;
+  parameter AXI_DATA_WIDTH = `CALIPTRA_AXI_DATA_WIDTH; // 32
+  parameter AXI_ID_WIDTH   = `CALIPTRA_AXI_ID_WIDTH; // 32
+  parameter AXI_USER_WIDTH = `CALIPTRA_AXI_USER_WIDTH; // 32
+  parameter AXIM_ADDR_WIDTH = `CALIPTRA_AXI_DMA_ADDR_WIDTH; // 48
+  parameter AXIM_DATA_WIDTH = CPTRA_AXI_DMA_DATA_WIDTH;
+  parameter AXIM_ID_WIDTH   = CPTRA_AXI_DMA_ID_WIDTH;
+  parameter AXIM_USER_WIDTH = CPTRA_AXI_DMA_USER_WIDTH;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
 
-  localparam PAUSER_DEFAULT = 32'hffff_ffff;
+  localparam AXI_USER_DEFAULT = 32'hffff_ffff;
 
 
   //----------------------------------------------------------------
@@ -111,7 +139,7 @@ module soc_ifc_tb
   reg                          penable_i_tb;
   reg                          pwrite_i_tb;
   reg [APB_DATA_WIDTH-1:0]     pwdata_i_tb;
-  reg [APB_USER_WIDTH-1:0]     pauser_i_tb;
+  reg [APB_USER_WIDTH-1:0]     axi_user_i_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -120,6 +148,12 @@ module soc_ifc_tb
   reg           hready_i_tb;
   reg [1:0]     htrans_i_tb;
   reg [2:0]     hsize_i_tb;
+
+  reg                                 cptra_obf_field_entropy_vld;
+  reg [`CLP_OBF_FE_DWORDS-1 :0][31:0] cptra_obf_field_entropy;
+
+  reg                                 cptra_obf_uds_seed_vld;
+  reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed;
 
   wire                         pready_o_tb;
   wire [APB_DATA_WIDTH-1:0]    prdata_o_tb;
@@ -134,6 +168,7 @@ module soc_ifc_tb
 
   reg [127 : 0] result_data;
   logic ready_for_fuses;
+  logic ready_for_mb_processing;
   logic [31:0]  generic_input_wires0; 
   logic [31:0]  generic_input_wires1; 
 
@@ -145,7 +180,26 @@ module soc_ifc_tb
   logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
   logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
 
+/*
+  logic [63:0] strap_ss_caliptra_base_addr;
+  logic [63:0] strap_ss_mci_base_addr;
+  logic [63:0] strap_ss_recovery_ifc_base_addr;
+  logic [63:0] strap_ss_otp_fc_base_addr;
+  logic [63:0] strap_ss_uds_seed_base_addr;
+  logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
+  logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
+  logic [31:0] strap_ss_strap_generic_0;
+  logic [31:0] strap_ss_strap_generic_1;
+  logic [31:0] strap_ss_strap_generic_2;
+  logic [31:0] strap_ss_strap_generic_3;
+  logic        ss_debug_intent;
+  logic       cptra_ss_debug_intent;
 
+  logic        ss_dbg_manuf_enable;
+  logic [63:0] ss_soc_dbg_unlock_level;
+
+  logic [127:0] ss_generic_fw_exec_ctrl;
+*/
   //SRAM interface for mbox
   logic mbox_sram_cs;
   logic mbox_sram_we;
@@ -153,12 +207,15 @@ module soc_ifc_tb
   logic [CPTRA_MBOX_DATA_W-1:0] mbox_sram_wdata;
   logic [CPTRA_MBOX_DATA_W-1:0] mbox_sram_rdata;
 
-  logic [0:11][31:0]          cptra_uds_tb;
-  logic [0:31][31:0]          cptra_fe_tb;
+  logic [0:15][31:0]          cptra_uds_tb;
+  logic [0:7][31:0]          cptra_fe_tb;
+
+  logic     cptra_uds_vld_tb;
+  logic     cptra_fe_vld_tb;  
 
   //mailbox sram gasket
-  mbox_sram_req_t mbox_sram_req;
-  mbox_sram_resp_t mbox_sram_resp;
+  cptra_mbox_sram_req_t mbox_sram_req;
+  cptra_mbox_sram_resp_t mbox_sram_resp;
 
 
   //MH. Initialize to default device lifecycle later rather than TIE OFF
@@ -174,12 +231,25 @@ module soc_ifc_tb
 
   bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
 
-  logic [APB_DATA_WIDTH-1:0]    prdata_o_latched;
+  logic         mailbox_data_avail_tb;
 
+  logic       ss_debug_intent_tb;
+  logic       cptra_ss_debug_intent_tb;
 
-  always @(negedge clk_tb) begin
-    prdata_o_latched <= prdata_o_tb;
-  end
+  typedef enum logic {
+    read = 0,
+    write = 1
+  } rw_e;
+
+  typedef enum logic {
+    MGR = 0, 
+    SUB = 1 
+  } mgr_sub_e;
+
+  typedef enum logic {
+    FAIL = 0, 
+    PASS = 1
+  } exp_txn_sts_e;
 
   always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -191,6 +261,22 @@ module soc_ifc_tb
 
   assign hready_i_tb = hreadyout_o_tb;
 
+  // AXI Interface
+  axi_if #(
+      .AW(AXIM_ADDR_WIDTH),
+      .DW(AXIM_DATA_WIDTH),
+      .IW(AXIM_ID_WIDTH),
+      .UW(AXIM_USER_WIDTH)
+  ) m_axi_if (.clk(clk_tb), .rst_n(cptra_rst_b_tb));
+
+  // AXI Interface
+  axi_if #(
+      .AW(AXI_ADDR_WIDTH),
+      .DW(AXI_DATA_WIDTH),
+      .IW(AXI_ID_WIDTH),
+      .UW(AXI_USER_WIDTH)
+  ) s_axi_if (.clk(clk_tb), .rst_n(cptra_rst_b_tb));
+
   //bind coverage file
   soc_ifc_cov_bind i_soc_ifc_cov_bind();
 
@@ -198,11 +284,16 @@ module soc_ifc_tb
   // Device Under Test.
   //----------------------------------------------------------------
   soc_ifc_top #(
+             .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+             .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
+             .AXI_ID_WIDTH(AXI_ID_WIDTH),
+             .AXI_USER_WIDTH(AXI_USER_WIDTH),
+             .AXIM_ADDR_WIDTH(AXIM_ADDR_WIDTH),
+             .AXIM_DATA_WIDTH(AXIM_DATA_WIDTH),
+             .AXIM_ID_WIDTH(AXIM_ID_WIDTH),
+             .AXIM_USER_WIDTH(AXIM_USER_WIDTH),
              .AHB_DATA_WIDTH(AHB_DATA_WIDTH), 
-             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH), 
-             .APB_USER_WIDTH(APB_USER_WIDTH), 
-             .APB_ADDR_WIDTH(APB_ADDR_WIDTH), 
-             .APB_DATA_WIDTH(APB_DATA_WIDTH)  
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH) 
             )
             dut (
              .clk(clk_tb),
@@ -212,31 +303,26 @@ module soc_ifc_tb
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
-             .rdc_clk_dis(),
-             .fw_update_rst_window(),
+
 
              .ready_for_fuses(ready_for_fuses),
-             .ready_for_fw_push(ready_for_fw_push),
+             .ready_for_mb_processing(ready_for_mb_processing),
              .ready_for_runtime(),
 
-             .mailbox_data_avail(),
+             .mailbox_data_avail(mailbox_data_avail_tb),
              .mailbox_flow_done(),
 
+             .recovery_data_avail(1'b0),
+             .recovery_image_activated(1'b0),
+             
              .security_state(security_state),
 
              .generic_input_wires({generic_input_wires1, generic_input_wires0}),
              .BootFSM_BrkPoint(1'b0), // TODO
              .generic_output_wires(),
 
-             .paddr_i(paddr_i_tb),
-             .psel_i(psel_i_tb),
-             .penable_i(penable_i_tb),
-             .pwrite_i(pwrite_i_tb),
-             .pwdata_i(pwdata_i_tb),
-             .pauser_i(pauser_i_tb),
-             .pready_o(pready_o_tb),
-             .prdata_o(prdata_o_tb),
-             .pslverr_o(pslverr_o_tb),
+             .s_axi_w_if(s_axi_if.w_sub),
+             .s_axi_r_if(s_axi_if.r_sub),
 
              .haddr_i(haddr_i_tb),
              .hwdata_i(hwdata_i_tb),
@@ -250,6 +336,9 @@ module soc_ifc_tb
              .hreadyout_o(hreadyout_o_tb),
              .hrdata_o(hrdata_o_tb),
 
+             .m_axi_w_if(m_axi_if.w_mgr),
+             .m_axi_r_if(m_axi_if.r_mgr),
+
              .cptra_error_fatal(),
              .cptra_error_non_fatal(),
              .trng_req(),
@@ -258,6 +347,8 @@ module soc_ifc_tb
              .soc_ifc_notif_intr(),
              .sha_error_intr(),
              .sha_notif_intr(),
+             .dma_error_intr(),
+             .dma_notif_intr(),
              .timer_intr(),
 
              .mbox_sram_req(mbox_sram_req),
@@ -269,12 +360,35 @@ module soc_ifc_tb
              .scan_mode(scan_mode), 
              .cptra_obf_key('0),
              .cptra_obf_key_reg(cptra_obf_key_reg),
+             .cptra_obf_field_entropy_vld(cptra_fe_vld_tb),
+             .cptra_obf_field_entropy(cptra_fe_tb),
              .obf_field_entropy(obf_field_entropy),
+             .cptra_obf_uds_seed_vld(cptra_uds_vld_tb),
+             .cptra_obf_uds_seed(cptra_uds_tb),
              .obf_uds_seed(obf_uds_seed),
+
+             .strap_ss_caliptra_base_addr(64'h0),
+             .strap_ss_mci_base_addr(64'h0),
+             .strap_ss_recovery_ifc_base_addr(64'h0),
+             .strap_ss_otp_fc_base_addr(64'h0),
+             .strap_ss_uds_seed_base_addr(64'h0),
+             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(0),
+             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(0),
+             .strap_ss_strap_generic_0(0),
+             .strap_ss_strap_generic_1(0),
+             .strap_ss_strap_generic_2(0),
+             .strap_ss_strap_generic_3(0),
+             .strap_ss_caliptra_dma_axi_user(0),
+             .ss_debug_intent(ss_debug_intent_tb),
+             .cptra_ss_debug_intent(cptra_ss_debug_intent_tb),
+
+             .ss_dbg_manuf_enable(),
+             .ss_soc_dbg_unlock_level(),
+
+             .ss_generic_fw_exec_ctrl(),
 
              .nmi_vector(),
              .nmi_intr(),
-             .crypto_error('0),
 
              .iccm_lock(),
              .iccm_axs_blocked(1'b0), // MH. Tie off here unless need control
@@ -282,6 +396,10 @@ module soc_ifc_tb
              .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
              .clk_gating_en(),
+             .rdc_clk_dis(),
+             .fw_update_rst_window(),
+
+             .crypto_error('0),
 
              .cptra_uncore_dmi_reg_en     ( 1'h0),
              .cptra_uncore_dmi_reg_wr_en  ( 1'h0),
@@ -300,8 +418,10 @@ module soc_ifc_tb
 
   caliptra_sram 
   #(
-    .DATA_WIDTH(32),
-    .DEPTH('h8000)
+    .DATA_WIDTH(CPTRA_MBOX_DATA_W),
+    //.DATA_WIDTH(32),
+    .DEPTH(CPTRA_MBOX_DEPTH)
+    //.DEPTH('h8000)
   )
   mbox_ram1
   (
@@ -359,6 +479,10 @@ module soc_ifc_tb
     begin : sys_monitor
       #(CLK_PERIOD);
       cycle_ctr = cycle_ctr + 1;
+      if (cycle_ctr == MAX_CYCLES ) begin
+        $error("Hit max cycle count (%0d) .. stopping",cycle_ctr);
+        $finish;
+      end
     end
 
 
@@ -445,7 +569,7 @@ module soc_ifc_tb
     begin
       $display("*** Toggle reset.");
 
-      set_generic_input_wires(-1, -1);
+      //set_generic_input_wires(-1, -1);
 
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
@@ -454,8 +578,10 @@ module soc_ifc_tb
       set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1);  // after reset deassertion 
 
       repeat (5) @(posedge clk_tb);
+      $display("Waited 5 clock cycles");
 
       socregs.unlock_fuses();
+      $display("Fuses unlocked");
 
       cptra_pwrgood_tb = 1;
 
@@ -486,7 +612,7 @@ module soc_ifc_tb
 
       cptra_rst_b_tb = 1;
       repeat (5) @(posedge clk_tb);
-      $display("");
+      $display("*** Warm reset complete. ***");
     end
   endtask // reset_dut
 
@@ -497,18 +623,23 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task load_fuses;
     begin
+      $display("Loading Fuses");
       for (int i = 0; i < `CLP_OBF_UDS_DWORDS; i++)begin
-        write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
-      end
-      
+        //$display("Loading fuse #%d", i);
+        //$display(cptra_uds_tb[i]);
+        //write_single_word_apb(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+        write_single_word_axi_sub(MBOX_UDS_ADDR + i*4, cptra_uds_tb[i]);
+      end     
       $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
       for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++)begin
-          write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+          //write_single_word_apb(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
+          write_single_word_axi_sub(MBOX_FE_ADDR + i*4, cptra_fe_tb[i]);
       end
       
       $display ("SoC: Writing fuse done register\n");
       //set fuse done
-      write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
+      //write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
+      write_single_word_axi_sub(MBOX_FUSE_DONE_ADDR, 32'h00000001); 
       
       /*
       wait (ready_for_fw_push == 1'b1);
@@ -567,21 +698,68 @@ module soc_ifc_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
 
-      paddr_i_tb      = 'Z;
-      psel_i_tb       = 0;
-      penable_i_tb    = 0;
-      pwrite_i_tb     = 0;
-      pwdata_i_tb     = 0;
-      pauser_i_tb     = 0;
+      //paddr_i_tb      = 'Z;
+      //psel_i_tb       = 0;
+      //penable_i_tb    = 0;
+      //pwrite_i_tb     = 0;
+      //pwdata_i_tb     = 0;
+     // axi_user_i_tb     = 0;
+
+      //reset w_mgr
+      m_axi_if.awready = 0;
+      m_axi_if.wready = 0;
+      m_axi_if.bvalid = 0;
+      m_axi_if.bid = 0;
+      m_axi_if.bresp = 0;
+
+      //reset r_mgr
+      m_axi_if.arready = 0;
+      m_axi_if.rdata = 0;
+      m_axi_if.rresp = 0;
+      m_axi_if.rid = 0;
+      m_axi_if.rlast = 0;
+      m_axi_if.rvalid = 0;
+      
+      //reset w_sub
+      s_axi_if.awaddr = 0;
+      s_axi_if.awburst = 0;
+      s_axi_if.awsize = 0;
+      s_axi_if.awlen = 0;
+      s_axi_if.awuser = 0;
+      s_axi_if.awid = 0;
+      s_axi_if.awlock = 0;
+      s_axi_if.awvalid = 0;
+      s_axi_if.wdata = 0;
+      s_axi_if.wstrb = 0;
+      s_axi_if.wvalid = 0;
+      s_axi_if.wlast = 0;
+      s_axi_if.bready = 0;
+
+      //reset r_sub
+      s_axi_if.araddr = 0;
+      s_axi_if.arburst = 0;
+      s_axi_if.arsize = 0;
+      s_axi_if.arlen = 0;
+      s_axi_if.aruser = 0;
+      s_axi_if.arid = 0;
+      s_axi_if.arlock = 0;
+      s_axi_if.arvalid = 0;
+      s_axi_if.rready = 0;
 
       //Key for UDS 
-      cptra_uds_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
-                      256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
-                      256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
-                      256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
-
+      //cptra_uds_tb = {256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835,
+      //                256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
+      //                256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
+      //                256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
+      cptra_uds_tb = 512'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee8357dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b;
+      cptra_uds_vld_tb = 1'b1;
+      
       //Key for FE
       cptra_fe_tb = 256'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d46;
+      cptra_fe_vld_tb = 1'b1;
+
+      // SS Straps
+      ss_debug_intent_tb = 1'b0;
 
     end
   endtask // init_sim
@@ -615,59 +793,84 @@ module soc_ifc_tb
   endtask // write_single_word_ahb
 
   //----------------------------------------------------------------
-  // write_single_word_apb()
+  // axi_txn_check())
   //
-  // Write the given word to the DUT using the AHB-lite interface.
+  // Check if the AXI transaction was successful.
   //----------------------------------------------------------------
-  task write_single_word_apb(input [31 : 0] address,
-                             input [31 : 0] word);
+  task axi_txn_check(input axi_resp_e resp, input rw_e rw, input exp_txn_sts_e exp_txn_sts = PASS);
     begin
-      paddr_i_tb      <= address;
-      psel_i_tb       <= 1;
-      penable_i_tb    <= 0;
-      pwrite_i_tb     <= 1;
-      pwdata_i_tb     <= word;
-      pauser_i_tb     <= '1;
-      wait(pready_o_tb == 1'b1);
-      
-      @(posedge clk_tb);
-      penable_i_tb    <= 1;
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      psel_i_tb       <= 0;
-      penable_i_tb    <= 0;
+      logic error;
+      if (((resp == AXI_RESP_SLVERR) | (resp == AXI_RESP_DECERR)) & (exp_txn_sts == PASS)) begin
+        error = 1;
+        error_ctr += 1;
+      end
+      else begin
+        error = 0;
+        $display("AXI txnn was successful");
+      end 
+      $display("AXN txn tcheck");
+      if (error & (rw == read) & (exp_txn_sts == PASS)) begin //read     
+        $error("AXI Read error");
+      end
+      else if (error & (rw == write) & (exp_txn_sts == PASS)) begin //write
+        $error("AXI Write error");
+      end
     end
-  endtask // write_single_word_apb
-
+  endtask
 
   //----------------------------------------------------------------
-  // write_single_word_apb_wpauser()
+  // write_single_word_axi())
   //
-  // Write the given word to the DUT using the APB interface setting pauser.
+  // Write the given word to the DUT using the AXI interface.
   //----------------------------------------------------------------
-  task write_single_word_apb_wpauser(input [31 : 0] address,
-                                     input [31 : 0] word,
-                                     input [31 : 0] pauser);
+  task write_single_word_axi_sub(input [31 : 0] address,
+                                 input [31 : 0] word, 
+                                 input exp_txn_sts_e exp_txn_sts = PASS);
     begin
-      paddr_i_tb      <= address;
-      psel_i_tb       <= 1;
-      penable_i_tb    <= 0;
-      pwrite_i_tb     <= 1;
-      pwdata_i_tb     <= word;
-      pauser_i_tb     <= pauser; 
-      wait(pready_o_tb == 1'b1);
-      
-      @(posedge clk_tb);
-      penable_i_tb    <= 1;
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      psel_i_tb       <= 0;
-      penable_i_tb    <= 0;
+      axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
+      $display("AXI Write transaction to address 0x%x", address);
+      s_axi_if.axi_write_single(
+        .addr(address),
+        .user('hFFFFFFFF),
+        .id(0),
+        .lock(0),
+        .data(word),
+        .write_user(0),
+        .resp(resp),
+        .resp_user(resp_user));
+      //$display("Checking if AXI write was successful");
+      axi_txn_check(resp, write, exp_txn_sts);
+      //$display("Done writing to address 0x%x", address);
     end
-  endtask // write_single_word_apb_wpauser
+  endtask
 
+  //----------------------------------------------------------------
+  // write_single_word_axi_user_sub())
+  //
+  // Write the given word to the DUT using the AXI interface setting axi_user.
+  //----------------------------------------------------------------
+  task write_single_word_axi_user_sub(input [31 : 0] address,
+                                 input [31 : 0] word, 
+                                 input [31 : 0] axi_user,
+                                 input exp_txn_sts_e exp_txn_sts = PASS);
+    begin
+      axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
+      //$display("AXI Write transaction");
+      s_axi_if.axi_write_single(
+      .addr(address),
+      .user(axi_user),
+      .id(0),
+      .lock(0),
+      .data(word),
+      .write_user(0),
+      .resp(resp),
+      .resp_user(resp_user));
+      //$display("Checking if AXI write was successful");
+      axi_txn_check(resp, write, exp_txn_sts);
+    end
+  endtask
 
   //----------------------------------------------------------------
   // write_block_ahb()
@@ -684,18 +887,19 @@ module soc_ifc_tb
   endtask // write_block_ahb
 
   //----------------------------------------------------------------
-  // write_block_apb()
+  // write_block_axi_sub()
   //
   // Write the given block to the dut.
   //----------------------------------------------------------------
-  task write_block_apb(input [127 : 0] block);
+  task write_block_axi_sub(input [127 : 0] block);
     begin
-      write_single_word_apb(MBOX_ADDR_DATAIN, block[127  :  96]);
-      write_single_word_apb(MBOX_ADDR_DATAIN, block[95   :  64]);
-      write_single_word_apb(MBOX_ADDR_DATAIN, block[63   :  32]);
-      write_single_word_apb(MBOX_ADDR_DATAIN, block[31   :   0]);
+      write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[127  :  96]);
+      write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[95   :  64]);
+      write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[63   :  32]);
+      write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[31   :   0]);
     end
-  endtask // write_block_apb
+  endtask // write_block_axi_sub
+
 
 
   //----------------------------------------------------------------
@@ -724,53 +928,59 @@ module soc_ifc_tb
 
     end
   endtask // read_single_word_ahb
-
-  task read_single_word_apb(input [31 : 0] address);
-    begin
-      paddr_i_tb      <= address;
-      psel_i_tb       <= 1;
-      penable_i_tb    <= 0;
-      pwrite_i_tb     <= 0;
-      pwdata_i_tb     <= 0;
-      pauser_i_tb     <= '1;
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      penable_i_tb    <= 1;
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      psel_i_tb       <= 0;
-      penable_i_tb    <= 0;
-    end
-  endtask // read_single_word_apb
-
+  
   //----------------------------------------------------------------
-  // read_single_word_apb_wpauser()
+  // read_single_word_axi())
   //
-  // Read the given word to the DUT using the APB interface setting pauser.
+  // Read the given word to the DUT using the AXI interface.
   //----------------------------------------------------------------
-  task read_single_word_apb_wpauser(input [31 : 0] address,
-                                     input [31 : 0] word,
-                                     input [31 : 0] pauser);
+  task read_single_word_axi_sub(input [31 : 0] address,
+                                output [31 : 0] rdata, 
+                                input exp_txn_sts_e exp_txn_sts = PASS);
     begin
-      paddr_i_tb      <= address;
-      psel_i_tb       <= 1;
-      penable_i_tb    <= 0;
-      pwrite_i_tb     <= 0;
-      pwdata_i_tb     <= 0;
-      pauser_i_tb     <= pauser; 
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      penable_i_tb    <= 1;
-      wait(pready_o_tb == 1'b1);
-
-      @(posedge clk_tb);
-      psel_i_tb       <= 0;
-      penable_i_tb    <= 0;
+      axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
+      s_axi_if.axi_read_single(
+        .addr(address),
+        .user('hFFFFFFFF),
+        .id(0),
+        .lock(0),
+        .data(rdata),
+        .resp_user(resp_user),
+        .resp(resp));
+      //$display("AXi SUB read complete");
+      //$display("Checking if AXI read was successful");
+      axi_txn_check(resp, read, exp_txn_sts);
+      //$display("AXI txn check complete");
     end
-  endtask // read_single_word_apb_wpauser
+  endtask // read_single_word_axi_sub
+
+  //----------------------------------------------------------------
+  // read_single_word_axi_user_sub()
+  //
+  // Read the given word to the DUT using the AXI interface setting axi_user.
+  //----------------------------------------------------------------
+  task read_single_word_axi_user_sub(input [31 : 0] address,
+                                     input [31 : 0] word,
+                                     input [31 : 0] axi_user,
+                                     output [31 : 0] rdata);
+    begin
+      axi_resp_e resp;
+      logic [AXI_USER_WIDTH-1:0] resp_user;
+      s_axi_if.axi_read_single(
+        .addr(address),
+        .user(axi_user),
+        .id(0),
+        .lock(0),
+        .data(rdata),
+        .resp_user(resp_user),
+        .resp(resp));
+      //$display("AXi SUB read complete");
+      //$display("Checking if AXI read was successful");
+      axi_txn_check(resp, read);
+      //$display("AXI txn check complete");
+    end
+  endtask // read_single_word_axi_user_sub
 
   //----------------------------------------------------------------
   // read_result_ahb()
@@ -792,24 +1002,24 @@ module soc_ifc_tb
   endtask // read_result_ahb
 
   //----------------------------------------------------------------
-  // read_result_apb()
+  // read_result_axi_sub()
   //
   // Read the result block in the dut.
   //----------------------------------------------------------------
-  task read_result_apb(output [127:0]  r_data);
+  task read_result_axi_sub(output [127:0]  r_data);
     begin
 
-      read_single_word_apb(MBOX_ADDR_DATAOUT);
-      r_data[127:96] = prdata_o_tb;
-      read_single_word_apb(MBOX_ADDR_DATAOUT);
-      r_data[ 95:64] = prdata_o_tb;
-      read_single_word_apb(MBOX_ADDR_DATAOUT);
-      r_data[ 63:32] = prdata_o_tb;
-      read_single_word_apb(MBOX_ADDR_DATAOUT);
-      r_data[ 31: 0] = prdata_o_tb;
+      read_single_word_axi_sub(MBOX_ADDR_DATAOUT, r_data[127:96]);
+      //r_data[127:96] = ;
+      read_single_word_axi_sub(MBOX_ADDR_DATAOUT, r_data[ 95:64]);
+      //r_data[ 95:64] = prdata_o_tb;
+      read_single_word_axi_sub(MBOX_ADDR_DATAOUT, r_data[ 63:32]);
+      //r_data[ 63:32] = prdata_o_tb;
+      read_single_word_axi_sub(MBOX_ADDR_DATAOUT, r_data [ 31:0]);
+      //r_data[ 31: 0] = prdata_o_tb;
   
     end
-  endtask // read_result_apb
+  endtask // read_result_axi_sub
 
   //----------------------------------------------------------------
   // wait_unlock_ahb()
@@ -832,21 +1042,20 @@ module soc_ifc_tb
   endtask // wait_unlock_ahb
 
   //----------------------------------------------------------------
-  // wait_unlock_apb()
+  // wait_unlock_axi()
   //
   // wait for the mailbox to unlock before send in anything
   //----------------------------------------------------------------
-  task wait_unlock_apb;
+  task wait_unlock_axi();
+    logic [31:0] rdata;
     begin
-      read_single_word_apb(MBOX_ADDR_LOCK);
-      while (prdata_o_tb != 0)
+      read_single_word_axi_sub(MBOX_ADDR_LOCK, rdata);
+      while (rdata != 0)
         begin
-          read_single_word_apb(MBOX_ADDR_LOCK);
+          read_single_word_axi_sub(MBOX_ADDR_LOCK, rdata);
         end
     end
-  endtask // wait_unlock_apb
-
-
+  endtask // wait_unlock_axi
 
   //----------------------------------------------------------------
   // set_generic_input_wires()
@@ -891,9 +1100,10 @@ module soc_ifc_tb
                       );
     reg [31  : 0] start_time;
     reg [31 : 0] end_time;
+    logic [31:0] read_data;
     
     begin
-      $display("*** TC %0d mailbox test started.", tc_number);
+      $display("*** TC %0d mailbox AHB test started.", tc_number);
       tc_ctr = tc_ctr + 1;
       start_time = cycle_ctr;
 
@@ -914,12 +1124,28 @@ module soc_ifc_tb
       write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000001);
       repeat (20) @(posedge clk_tb);
 
+      // wait for mailbox_data_avail
+      wait(mailbox_data_avail_tb == 1);
+
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
-      read_result_apb(result_data);
+
+      // SOC read MBOX_ADDR_CMD
+      read_single_word_axi_sub(MBOX_ADDR_CMD, read_data);
+
+      // SOC read MBOX_ADDR_DLEN
+      read_single_word_axi_sub(MBOX_ADDR_DLEN, read_data);
+
+      // SOC read block data
+      read_result_axi_sub(result_data);
 
       //set status
-      write_single_word_apb(MBOX_ADDR_STATUS, 32'h00000002);
+      write_single_word_axi_sub(MBOX_ADDR_STATUS, 32'h00000002);
+
+      // read status 
+      read_single_word_ahb(MBOX_ADDR_STATUS);
+      read_data =  MBOX_ADDR_STATUS[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO];
+      $display("Status = 0x%x", read_data);
 
       // reset excecute
       write_single_word_ahb(MBOX_ADDR_EXECUTE, 32'h00000000);
@@ -942,87 +1168,95 @@ module soc_ifc_tb
   endtask // mbox_ahb_test
 
   //----------------------------------------------------------------
-  // mbox_apb_test()
+  // mbox_axi_test()
   //
-  // mailbox apb test for single block
+  // mailbox axi test for single block
   //----------------------------------------------------------------
-  task mbox_apb_test (input [7 : 0]   tc_number,
+  task mbox_axi_test (input [7 : 0]   tc_number,
                       input [127 : 0] block
-                      );
-    reg [31  : 0] start_time;
-    reg [31 : 0] end_time;
-    
+    );
+    reg [63 : 0] start_time;
+    reg [63 : 0] end_time;
+
     begin
       $display("*** TC %0d mailbox test started.", tc_number);
       tc_ctr = tc_ctr + 1;
       start_time = cycle_ctr;
 
       // poll for lock register
-      wait_unlock_apb();
+      wait_unlock_axi();
 
       //write to MBOX_ADDR_CMD
-      write_single_word_apb(MBOX_ADDR_CMD, 32'hDEADBEEF);
+      write_single_word_axi_sub(MBOX_ADDR_CMD, 32'hDEADBEEF);
 
       // write to MBOX_ADDR_DLEN
-      write_single_word_apb(MBOX_ADDR_DLEN, 32'h00000010);
+      write_single_word_axi_sub(MBOX_ADDR_DLEN, 32'h00000010);
 
       // write a block in
-      write_block_apb(block);
+      write_block_axi_sub(block);
       @(posedge clk_tb);
-      
+
       // execute
-      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000001);
+      write_single_word_axi_sub(MBOX_ADDR_EXECUTE, 32'h00000001);
       repeat (20) @(posedge clk_tb);
 
       // wait_ready();
 
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
+
+      // uC read MBOX_ADDR_CMD
+      read_single_word_ahb(MBOX_ADDR_CMD);
+
+      // uC read MBOX_ADDR_DLEN
+      read_single_word_ahb(MBOX_ADDR_DLEN);
+
+      // uC read MBOX_ADDR_DATAOUT
       read_result_ahb(result_data);
 
       //set status
       write_single_word_ahb(MBOX_ADDR_STATUS, 32'h00000002);
 
       // reset excecute
-      write_single_word_apb(MBOX_ADDR_EXECUTE, 32'h00000000);
+      write_single_word_axi_sub(MBOX_ADDR_EXECUTE, 32'h00000000);
 
-      if (result_data == block)
-        begin
-          $display("*** TC %0d successful.", tc_number);
-          $display("");
-        end
-      else
-        begin
-          $display("*** ERROR: TC %0d NOT successful.", tc_number);
-          $display("Expected: 0x%032x", block);
-          $display("Got:      0x%032x", result_data);
-          $display("");
+      if (result_data == block)begin
+        $display("*** TC %0d successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d NOT successful.", tc_number);
+        $display("Expected: 0x%032x", block);
+        $display("Got:      0x%032x", result_data);
+        $display("");
 
-          error_ctr = error_ctr + 1;
-        end
+        error_ctr = error_ctr + 1;
+      end
     end
-  endtask // mbox_apb_test
+  endtask // mbox_axi_test
 
-  //----------------------------------------------------------------
+    //----------------------------------------------------------------
   // mbox_test()
   //----------------------------------------------------------------
   task mbox_test;
     reg [127 : 0] ahb_message_1;
-    reg [127 : 0] apb_message_1;
+    reg [127 : 0] axi_message_1;
 
     begin
       ahb_message_1 = 128'h11111111222222223333333344444444;
 
-      apb_message_1 = 128'h66666666777777778888888899999999;
+      //apb_message_1 = 128'h66666666777777778888888899999999;
+      axi_message_1 = 128'h66666666777777778888888899999999;
 
 
       $display("mailbox ahb test");
       $display("---------------------");
       mbox_ahb_test(8'h01, ahb_message_1);
 
-      $display("mailbox apb test");
+      $display("mailbox axi test");
       $display("---------------------");
-      mbox_apb_test(8'h01, apb_message_1);
+      //mbox_apb_test(8'h01, apb_message_1);
+      mbox_axi_test(8'h01, axi_message_1);
 
 
     end
@@ -1034,7 +1268,7 @@ module soc_ifc_tb
   // 
   // common sim and dut initialization routines for register tests 
   //----------------------------------------------------------------
-  task sim_dut_init;
+  task sim_dut_init(input logic debug = 1'b0);
 
     // int sscode = -1;
     string ssname = "UNSET"; 
@@ -1050,10 +1284,12 @@ module soc_ifc_tb
 
       else begin
         init_sim();
+        if (debug == 1'b1)
+          ss_debug_intent_tb = 1'b1;
         reset_dut();
 
         wait (ready_for_fuses == 1'b1);
-        update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+        update_CPTRA_FLOW_STATUS(int'(ready_for_fuses), `REG_HIER_BOOT_FSM_PS);
         // set_initval("CPTRA_FLOW_STATUS", 32'h4000_0000); 
         // update_exp_regval("CPTRA_FLOW_STATUS", 32'h4000_0000, SET_DIRECT); 
 
@@ -1067,20 +1303,25 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // simulate_caliptra_boot();
   //
-  // Set boot fuse write and boot status over APB 
+  // Set boot fuse write and boot status over AXI 
   //----------------------------------------------------------------
   task simulate_caliptra_boot;
+    begin
+      $display("*** Perform caliptra boot simulation by writing CPTRA_FUSE_WR_DONE and CPTRA_BOOTFSM_GO. ***");
       // Enable release of Caliptra core from reset & simulate FW boot
-      write_single_word_apb(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1); 
-      update_exp_regval("CPTRA_FUSE_WR_DONE", 32'h1, SET_APB);
+      wait(ready_for_fuses == 1'b1);
+      write_single_word_axi_sub(socregs.get_addr("CPTRA_FUSE_WR_DONE"), 32'h1); 
+      //$display("Done writing CPTRA_FUSE_WR_DONE");
+      update_exp_regval("CPTRA_FUSE_WR_DONE", 32'h1, SET_AXI);
       socregs.lock_fuses();
 
       repeat (3) @(posedge clk_tb); 
-      write_single_word_apb(socregs.get_addr("CPTRA_BOOTFSM_GO"), 32'h1); 
-      update_exp_regval("CPTRA_BOOTFSM_GO", 32'h1, SET_APB);
+      write_single_word_axi_sub(socregs.get_addr("CPTRA_BOOTFSM_GO"), 32'h1); 
+      update_exp_regval("CPTRA_BOOTFSM_GO", 32'h1, SET_AXI);
 
       repeat (20) @(posedge clk_tb); // simulate FW boot
-
+      $display("*** Done caliptra boot simulation. ***");
+    end
   endtask // simulate_caliptra_boot
 
 
@@ -1088,9 +1329,9 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // write_regs()
   //
-  // Utility for tracking/writing to list of registers over APB/AHB
+  // Utility for tracking/writing to list of registers over AXI/AHB
   //----------------------------------------------------------------
-  task write_regs(input access_t modifier, strq_t reglist, int tid, int wait_cycles);
+  task write_regs(input access_t modifier, strq_t reglist, int tid, int wait_cycles, input exp_txn_sts_e exp_txn_sts=PASS);
     string rname;
     word_addr_t addr;
     WordTransaction wrtrans;
@@ -1117,9 +1358,9 @@ module soc_ifc_tb
         if (modifier == SET_AHB) begin
           write_single_word_ahb(addr, wrtrans.data); 
           $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
-        end else if (modifier == SET_APB) begin
-          write_single_word_apb(addr, wrtrans.data); 
-          $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+        end else if (modifier == SET_AXI) begin
+          write_single_word_axi_sub(addr, wrtrans.data, exp_txn_sts); 
+          $display("Write over AXI: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
@@ -1132,18 +1373,18 @@ module soc_ifc_tb
     end
   endtask // write_regs
 
-
   //-----------------------------------------------------------------------------
   // read_reg_chk_inrange()
   //
-  // Utility for reading single register over APB/AHB and check if within range.
+  // Utility for reading single register over AXI/AHB and check if within range.
   // NOTE. Wait times must be added explcitly outside routine
   //-----------------------------------------------------------------------------
-  task read_reg_chk_inrange(input access_t modifier, string rname, int tid, int minval, int maxval); 
+  task read_reg_chk_inrange(input access_t modifier, string rname, int tid, int minval, int maxval, input exp_txn_sts_e exp_txn_sts = PASS); 
 
     word_addr_t addr;
     WordTransaction rdtrans;
     automatic logic [31:0] valid_hrdata; 
+    automatic logic [31:0] valid_axi_rdata;
 
     begin
       rdtrans = new();
@@ -1154,13 +1395,12 @@ module soc_ifc_tb
           valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
           $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
           rdtrans.update(addr, valid_hrdata, tid); 
-      end else if (modifier == GET_APB) begin
-        read_single_word_apb(addr);
-        $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
-        rdtrans.update_byname(rname, prdata_o_tb,  tid); 
+      end else if (modifier == GET_AXI) begin
+        read_single_word_axi_sub(addr, valid_axi_rdata, exp_txn_sts);
+        $display(" Read over AXI: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_axi_rdata); 
+        rdtrans.update_byname(rname, valid_axi_rdata,  tid); 
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
-
       sb.record_entry(rdtrans, SET_DIRECT);
       sb.check_entry_inrange(rdtrans, minval, maxval); 
     end
@@ -1174,7 +1414,7 @@ module soc_ifc_tb
   // Utility for tracking/writing transaction to a register over APB/AHB
   // NOTE. Wait times must be added explcitly outside routine
   //----------------------------------------------------------------
-  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] pauser=PAUSER_DEFAULT);
+  task write_reg_trans(access_t modifier, WordTransaction wrtrans, logic [31:0] axi_user=AXI_USER_DEFAULT, string pfx="DEFAULT", input exp_txn_sts_e exp_sts=PASS);
     string rname;
     word_addr_t addr;
 
@@ -1185,19 +1425,19 @@ module soc_ifc_tb
         if (modifier == SET_AHB) begin
           write_single_word_ahb(addr, wrtrans.data); 
           $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
-        end else if (modifier == SET_APB) begin
-          if (pauser != PAUSER_DEFAULT) begin
-            write_single_word_apb_wpauser(addr, wrtrans.data, pauser); 
-            $display("Write over APB with non-default pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+        end else if (modifier == SET_AXI) begin
+          if (axi_user != AXI_USER_DEFAULT) begin
+            write_single_word_axi_user_sub(addr, wrtrans.data, axi_user, exp_sts); 
+            $display("Write over AXI with non-default axi_user: addr = %-40s (0x%08x), data = 0x%08x", 
               rname, addr, wrtrans.data);
           end else begin
-            write_single_word_apb(addr, wrtrans.data); 
-            $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+            write_single_word_axi_sub(addr, wrtrans.data, exp_sts); 
+            $display("Write over AXI: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
           end
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
-        sb.record_entry(wrtrans, modifier);
+        sb.record_entry(wrtrans, modifier, pfx);
       end
     endtask // write_reg_trans
 
@@ -1211,10 +1451,11 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task read_reg_trans(input access_t modifier, 
                       inout WordTransaction rdtrans, 
-                      input logic [31:0] pauser=PAUSER_DEFAULT); 
+                      input logic [31:0] axi_user=AXI_USER_DEFAULT); 
     string rname;
     word_addr_t addr;
     automatic logic [31:0] valid_hrdata; 
+    automatic logic [31:0] valid_rdata;
 
     begin
         addr = rdtrans.addr;
@@ -1225,16 +1466,16 @@ module soc_ifc_tb
           valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
           rdtrans.data = valid_hrdata; 
           $display(" Read over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
-        end else if (modifier == GET_APB) begin
-          if (pauser != PAUSER_DEFAULT) begin
-            read_single_word_apb_wpauser(addr, rdtrans.data, pauser); 
-            rdtrans.data = prdata_o_tb;
-            $display(" Read over APB with explicit pauser: addr = %-40s (0x%08x), data = 0x%08x", 
+        end else if (modifier == GET_AXI) begin
+          if (axi_user != AXI_USER_DEFAULT) begin
+            read_single_word_axi_user_sub(addr, rdtrans.data, axi_user, valid_rdata); 
+            rdtrans.data = valid_rdata;
+            $display(" Read over AXI with explicit axi_user: addr = %-40s (0x%08x), data = 0x%08x", 
               rname, addr, rdtrans.data);
           end else begin
-            read_single_word_apb(addr); 
-            rdtrans.data = prdata_o_tb;
-            $display(" Read over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
+            read_single_word_axi_sub(addr, valid_rdata); 
+            rdtrans.data = valid_rdata;
+            $display(" Read over AXI: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, rdtrans.data);
           end
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
@@ -1256,8 +1497,10 @@ module soc_ifc_tb
 
     int tid_autoinc; 
     automatic logic [31:0] valid_hrdata; 
+    automatic logic [31:0] valid_axi_rdata;
 
     begin
+      $display("Read regs");
       rdtrans = new();
 
       if (tid < 0) begin
@@ -1270,6 +1513,7 @@ module soc_ifc_tb
       foreach (reglist[i]) begin 
         rname = reglist[i];
         addr = socregs.get_addr(rname); 
+        $display("Current reg: %s", rname);
         if (tid_autoinc) 
           tid += 1;
 
@@ -1278,12 +1522,13 @@ module soc_ifc_tb
           valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
           $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_hrdata, cycle_ctr); 
           rdtrans.update(addr, valid_hrdata, tid); 
-        end else if (modifier == GET_APB) begin
-          read_single_word_apb(addr);
+        end else if (modifier == GET_AXI) begin
+          $display("read_regs::AXI SUB read");
+          read_single_word_axi_sub(addr, valid_axi_rdata);
           // $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x at time %12t (cycle %08d)", rname, addr, prdata_o_latched, $realtime, cycle_ctr); // used to be   prdata_o_tb
-          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, prdata_o_tb, cycle_ctr); // used to be   prdata_o_tb
+          $display(" Read over AXI: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_axi_rdata, cycle_ctr); // used to be   prdata_o_tb
           // rdtrans.update(addr, prdata_o_latched, tid);  // used to be prdata_o_tb
-          rdtrans.update(addr, prdata_o_tb, tid);  
+          rdtrans.update(addr, valid_axi_rdata, tid);  
         end else 
           $error("TB ERROR. Unsupported access modifier %s", modifier.name()); 
 
@@ -1312,6 +1557,7 @@ module soc_ifc_tb
 
     int tid_autoinc; 
     automatic logic [31:0] valid_hrdata; 
+    automatic logic [31:0] valid_axi_rdata;
 
     begin
       wrtrans = new();
@@ -1338,9 +1584,9 @@ module soc_ifc_tb
         if (wr_modifier == SET_AHB) begin
           write_single_word_ahb(addr, wrtrans.data); 
           $display("Write over AHB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
-        end else if (wr_modifier == SET_APB) begin
-          write_single_word_apb(addr, wrtrans.data); 
-          $display("Write over APB: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
+        end else if (wr_modifier == SET_AXI) begin
+          write_single_word_axi_sub(addr, wrtrans.data); 
+          $display("Write over AXI: addr = %-40s (0x%08x), data = 0x%08x", rname, addr, wrtrans.data);
         end else 
           $error("TB ERROR. Unsupported access modifier %s", wr_modifier.name()); 
 
@@ -1365,10 +1611,10 @@ module soc_ifc_tb
           valid_hrdata = addr[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
           $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_hrdata); 
           rdtrans.update(addr, valid_hrdata, tid); 
-        end else if (rd_modifier == GET_APB) begin
-          read_single_word_apb(addr);
-          $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, prdata_o_tb); 
-          rdtrans.update(addr, prdata_o_tb, tid); 
+        end else if (rd_modifier == GET_AXI) begin
+          read_single_word_axi_sub(addr, valid_axi_rdata);
+          $display(" Read over AXI: addr =  %-40s (0x%08x), data = 0x%08x", rname, addr, valid_axi_rdata); 
+          rdtrans.update(addr, valid_axi_rdata, tid); 
         end else 
           $error("TB ERROR. Unsupported access rd_modifier %s", rd_modifier.name()); 
 
@@ -1437,8 +1683,11 @@ module soc_ifc_tb
 //----------------------------------------------------------------
   `include "fuse_reg_lifecycle_test.svh"   
   `include "fuse_reg_perm_test.svh"     
-  `include "fuse_reg_pauser_test.svh"     
-  `include "fuse_reg_test.svh"     
+  `include "fuse_reg_axi_user_test.svh"     
+  `include "fuse_reg_test.svh"   
+  `include "fuse_cptra_cap_test.svh"  
+  `include "ss_strap_reg_test.svh"     
+  `include "ss_strap_reg_lifecycle_test.svh"   
   `include "single_soc_reg_test.svh"   
   `include "soc_reg_reset_test.svh"     
   `include "soc_reg_test.svh"     
@@ -1446,6 +1695,8 @@ module soc_ifc_tb
   `include "soc_reg_invalid_test.svh"     
   `include "soc_reg_intrblk_test.svh" 
   `include "sha_acc_intrblk_test.svh"
+  `include "debug_unlock_prod_test.svh"
+  `include "debug_unlock_manuf_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1486,12 +1737,28 @@ module soc_ifc_tb
           sim_dut_init();
           fuse_reg_test();
 
+        end else if (soc_ifc_testname == "fuse_cptra_cap_reg_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          fuse_cptra_cap_reg_test();
+
+        end else if (soc_ifc_testname == "ss_strap_reg_prod_test") begin 
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init();
+          ss_strap_reg_test();
+
         end else if (soc_ifc_testname == "fuse_reg_lifecycle_test") begin 
           if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
             fuse_reg_lifecycle_test(security_state_testname);
           else
             fuse_reg_lifecycle_test("RANDOM"); 
- 
+
+        end else if (soc_ifc_testname == "ss_strap_reg_lifecycle_test") begin 
+          if ($value$plusargs("SECURITY_STATE=%s", security_state_testname)) 
+            ss_strap_reg_lifecycle_test(security_state_testname);
+          else
+            ss_strap_reg_lifecycle_test("RANDOM"); 
+   
         end else if (soc_ifc_testname == "soc_reg_test") begin 
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
           sim_dut_init();
@@ -1519,7 +1786,7 @@ module soc_ifc_tb
 
         end else if (soc_ifc_testname == "single_socreg_test") begin 
           if (!($value$plusargs("SOCREG_METHOD_NAME=%s", socreg_method_name))) 
-            $display("ERROR with testing one soc_register; must provide method & name for +scoreg_method_name,eg. APB.CPTRA_TIMER_CONFIG");
+            $display("ERROR with testing one soc_register; must provide method & name for +scoreg_method_name,eg. AXI.CPTRA_TIMER_CONFIG");
           else begin
             $value$plusargs("SOCREG_WRCOUNT=%d", socreg_wrcount);
             set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
@@ -1532,10 +1799,20 @@ module soc_ifc_tb
           sim_dut_init();
           fuse_reg_perm_test();
 
-        end else if (soc_ifc_testname == "fuse_reg_pauser_test") begin 
+        end else if (soc_ifc_testname == "fuse_reg_axi_user_test") begin 
           set_security_state_byname("RANDOM");
           sim_dut_init();
-          fuse_reg_pauser_test();
+          fuse_reg_axi_user_test();
+
+        end else  if (soc_ifc_testname == "debug_unlock_prod_test") begin
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(1'b1);
+          debug_unlock_prod_test();
+
+        end else  if (soc_ifc_testname == "debug_unlock_manuf_test") begin
+          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(1'b1);
+          debug_unlock_manuf_test();
 
         end 
    
@@ -1549,6 +1826,7 @@ module soc_ifc_tb
     else 
       begin : default_test  // Keeping original default test structure 
 
+        logic [31:0] rdata;
         $display("    ==============================");  
         $display("   -= Testbench for MBOX started =-");
         $display("    ==============================");
@@ -1556,14 +1834,22 @@ module soc_ifc_tb
 
         set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
 
+        $display("Initialize simulation");
         init_sim();
+        $display("Reset DUT");
         reset_dut();
 
+        $display("Wait for ready_for_fuses to be asserted");
         wait (ready_for_fuses == 1'b1);
-        //load_fuses();
-        write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
+        $display("Ready for fuses has been asserted. Moving on");
+        load_fuses();
+        //write_single_word_ahb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
+        //write_single_word_axi(SUB, MBOX_FUSE_DONE_ADDR, 32'h00000001);
+        //read_single_word_axi_sub(MBOX_FUSE_DONE_ADDR, rdata);
+        //write_single_word_apb(MBOX_FUSE_DONE_ADDR, 32'h00000001);
         repeat (5) @(posedge clk_tb);
         
+        $display("MBOX test");
         mbox_test();
 
         display_test_results();

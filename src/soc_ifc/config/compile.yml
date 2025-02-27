@@ -103,3 +103,24 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+---
+provides: [soc_ifc_tb_ss]
+schema_version: 2.4.0
+requires:
+  - soc_ifc_tb
+targets:
+  tb:
+    tops: [soc_ifc_tb]
+global:
+  tool:
+    vcs:
+      default:  
+        - '-assert svaext'
+        - +define+CALIPTRA_MODE_SUBSYSTEM
+        - +define+CLP_ASSERT_ON
+        #- '-v2k_generate'
+        #- '-timescale=1ns/1ps'
+        - '-noinherit_timescale=1ns/1ps'
+        #- '-ucli -i dump.ucli'
+      #sim:
+        #- '-ucli -i dump.ucli'
