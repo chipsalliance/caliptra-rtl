@@ -127,7 +127,7 @@ void main() {
     soc_ifc_clear_execute_reg();
 
     printf("----------------------------------\n");
-    printf(" TAP to ROM mailbox flow test\n");
+    printf(" TAP to ROM mailbox flow test 1\n");
     printf("----------------------------------\n");
 
     //Poll status until fsm is in EXECUTE UC
@@ -167,6 +167,54 @@ void main() {
     VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
         VPRINTF(HIGH, "  datain: 0x%x\n", exp_mbox_data[ii]);
+        lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,exp_mbox_data[ii]);
+    }
+
+    status = DATA_READY;
+
+    soc_ifc_set_mbox_status_field(status);
+
+    printf("----------------------------------\n");
+    printf(" TAP to ROM mailbox flow test 2\n");
+    printf("----------------------------------\n");
+
+    //Poll status until fsm is in EXECUTE UC
+    state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    while (state != MBOX_EXECUTE_UC) {
+      state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
+    }
+
+    //check cmd
+    VPRINTF(LOW, "FW: Checking cmd from tap\n");
+    read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_CMD);
+    if (read_data != exp_mbox_cmd) {
+      VPRINTF(ERROR, "ERROR: mailbox cmd mismatch actual (0x%x) expected (0x%x)\n", read_data, exp_mbox_cmd);
+      SEND_STDOUT_CTRL( 0x1);
+      while(1);
+    }
+
+    //check data 
+    VPRINTF(LOW, "FW: Checking %d bytes from tap\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", exp_mbox_data[ii]);
+        read_data = soc_ifc_mbox_read_dataout_single();
+        if (read_data != exp_mbox_data[ii]) {
+            VPRINTF(ERROR, "ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, exp_mbox_data[ii]);
+            SEND_STDOUT_CTRL( 0x1);
+            while(1);
+        };
+    }
+
+    //write command
+    lsu_write_32(CLP_MBOX_CSR_MBOX_CMD,exp_mbox_cmd);
+
+    //write dlen
+    lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN,MBOX_DLEN_VAL);
+
+    //write datain
+    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
+        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
         lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
     }
 

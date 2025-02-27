@@ -671,9 +671,9 @@ always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but ne
 always_comb hwif_in.mbox_dataout.dataout.we = mbox_protocol_sram_rd_f;
 always_comb hwif_in.mbox_dataout.dataout.next = mbox_rd_valid_f ? sram_rdata_cor : '0;
 //clear the lock when moving from execute to idle
-always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
+always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
 //clear the mailbox status when we go back to IDLE
-always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
+always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
 //clear the execute register when we force unlock
 always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
 // Set mbox_csr status fields in response to ECC errors
