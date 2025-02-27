@@ -78,6 +78,7 @@ requires:
   - pcrvault_cov
   - keyvault_cov
   - mldsa_coverage
+  - axi_dma_coverage
 targets:
   dpi_compile:
     directories:

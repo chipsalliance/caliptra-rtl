@@ -24,6 +24,7 @@ jobs:
       run_vltr: ${{ needs.pre_run.outputs.run_vltr }}
   doc_gen:
     uses: ./.github/workflows/doc-gen.yml
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'push') }}
     permissions:
       pages: write
       id-token: write

@@ -54,7 +54,7 @@ addrmap axi_dma_reg {
         name="Caliptra AXI DMA Control";
         desc="Used to drive command parameters and initiate operations to DMA block.";
         field { desc="Initiate current configured operation."; sw=rw; swwel=dma_swwel; onwrite=woset; swmod; hw=r; hwclr=true; } go=1'b0;
-        field { desc="Flush active operations, reset state machines, clear FIFO data. Any in-flight AXI transactions will be gracefully completed."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
+        field { desc="Flush active operations, reset state machines, clear FIFO data. Not yet implemented: Any in-flight AXI transactions will be gracefully completed."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd0[14]=14'h0000;
         field { desc="Read Route. Configures how the AXI read channel operates for the current operation.";
                 enum rd_route_e {

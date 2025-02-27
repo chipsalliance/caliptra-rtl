@@ -30,12 +30,17 @@ package soc_ifc_reg_model_top_pkg;
 
    import uvm_pkg::*;
 // pragma uvmf custom additional_imports begin
+
+    // Generated UVM reg models from RDL
     import soc_ifc_reg_uvm::*;
     import mbox_csr_uvm::*;
     import sha512_acc_csr_uvm::*;
     import axi_dma_reg_uvm::*;
+    // SOC_IFC params
     import mbox_pkg::*;
     import soc_ifc_pkg::*;
+
+    // Avery VIP
     `include "avery_defines.svh"
     import aaxi_pkg::*;
     import aaxi_pkg_xactor::*;

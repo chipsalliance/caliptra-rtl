@@ -949,7 +949,7 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_e
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_avail_sts.hwset          = uc_cmd_avail_p;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_mbox_ecc_cor_sts.hwset       = sram_single_ecc_error;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_debug_locked_sts.hwset       = security_state_debug_locked_p; // Any transition results in interrupt
-always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.hwset          = scan_mode_p; // Any transition results in interrupt
+always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_scan_mode_sts.hwset          = scan_mode_p; // Posedge results in interrupt
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.hwset       = soc_req_mbox_lock;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.hwset      = |generic_input_toggle;
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.hwset = t1_timeout_p;
