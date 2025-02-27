@@ -696,7 +696,7 @@ module caliptra_top_tb_services
             disable_mldsa_sva <= 1'b0;
         end
         else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
-            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
+            if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.verifying_process) begin
                 inject_normcheck_failure    <= 1'b1;
                 normcheck_mode_random       <= 'h0;
                 inject_makehint_failure     <= 1'b0; 
@@ -741,12 +741,12 @@ module caliptra_top_tb_services
         else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
         else begin
-            release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+            release `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid;
             release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
         end
         
         if (inject_mldsa_timeout)
-            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
+            force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80;
     end
 
     `ifndef VERILATOR

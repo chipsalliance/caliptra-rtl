@@ -229,7 +229,7 @@ module soc_ifc_axi_sha_acc_dis_tb
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("*** Toggle reset.");
+      $display("*** Toggle pwrgood/reset.");
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
       #(2*CLK_PERIOD);
@@ -239,6 +239,23 @@ module soc_ifc_axi_sha_acc_dis_tb
       // repeat (2) @(posedge clk_tb);
       $display("");
     end
+endtask // reset_dut
+
+//----------------------------------------------------------------
+// warm_reset_dut()
+//
+// Toggle reset to put the DUT into a well known state.
+//----------------------------------------------------------------
+task warm_reset_dut;
+  begin
+    $display("*** Toggle reset.");
+    cptra_rst_b_tb = 0;
+    cptra_pwrgood_tb = 1;
+    #(4*CLK_PERIOD);
+    cptra_rst_b_tb = 1;
+    // repeat (2) @(posedge clk_tb);
+    $display("");
+  end
 endtask // reset_dut
 
 //----------------------------------------------------------------
@@ -630,13 +647,23 @@ initial begin
   reset_dut();
   $display("Init and reset done\n");
   axi_sha_access_test();
-  $display("Issuing reset\n");
+  
+  $display("Issuing cold reset\n");
   init_sim();
   reset_dut();
   #(CLK_PERIOD);
   
   $display("Restarting AXI sha access test\n");
   axi_sha_access_test();
+
+  $display("Issuing warm reset\n");
+  init_sim();
+  warm_reset_dut();
+  #(CLK_PERIOD);
+
+  $display("Restarting AXI sha access test\n");
+  axi_sha_access_test();
+
   repeat(100) @(posedge clk_tb);
   $display("TESTCASE PASSED");
   $finish;
