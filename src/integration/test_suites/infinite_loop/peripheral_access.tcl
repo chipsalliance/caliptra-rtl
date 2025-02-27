@@ -65,6 +65,4 @@ if {[compare $actual $golden] != 0} {
 }
 
 # Success
-echo "Flagging test successful completion in TB..."
-write_memory $STDOUT 32 0xff phys
 shutdown
