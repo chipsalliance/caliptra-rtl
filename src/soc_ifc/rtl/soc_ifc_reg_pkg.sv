@@ -472,61 +472,47 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__PROD_DBG_UNLOCK_IN_PROGRESS__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t;
 
     typedef struct packed{
-        logic next;
-        logic we;
         logic swwe;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t;
 
     typedef struct packed{
-        logic [22:0] next;
+        logic swwe;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__TAP_MAILBOX_AVAILABLE__in_t;
+
+    typedef struct packed{
+        logic [21:0] next;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__RSVD__in_t;
 
     typedef struct packed{
@@ -539,6 +525,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__in_t UDS_PROGRAM_SUCCESS;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__in_t UDS_PROGRAM_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__in_t UDS_PROGRAM_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__TAP_MAILBOX_AVAILABLE__in_t TAP_MAILBOX_AVAILABLE;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__RSVD__in_t RSVD;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t;
 
@@ -1267,6 +1254,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__TAP_MAILBOX_AVAILABLE__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_SUCCESS__out_t MANUF_DBG_UNLOCK_SUCCESS;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_FAIL__out_t MANUF_DBG_UNLOCK_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__MANUF_DBG_UNLOCK_IN_PROGRESS__out_t MANUF_DBG_UNLOCK_IN_PROGRESS;
@@ -1276,6 +1267,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_SUCCESS__out_t UDS_PROGRAM_SUCCESS;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_FAIL__out_t UDS_PROGRAM_FAIL;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__UDS_PROGRAM_IN_PROGRESS__out_t UDS_PROGRAM_IN_PROGRESS;
+        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__TAP_MAILBOX_AVAILABLE__out_t TAP_MAILBOX_AVAILABLE;
     } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t;
 
     typedef struct packed{

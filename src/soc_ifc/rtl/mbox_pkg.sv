@@ -40,6 +40,8 @@ package mbox_pkg;
   } mbox_protocol_error_t;
 
   typedef struct packed {
+    logic [31:0] MBOX_LOCK;
+    logic [31:0] MBOX_CMD;
     logic [31:0] MBOX_DLEN;
     logic [31:0] MBOX_DOUT;
     logic [31:0] MBOX_STATUS;
