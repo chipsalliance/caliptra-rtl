@@ -89,6 +89,7 @@ jobs:
   hash_check:
     name: Hash Check
     runs-on: ubuntu-22.04
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
@@ -211,7 +212,7 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (github.event_name == 'pull_request') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
