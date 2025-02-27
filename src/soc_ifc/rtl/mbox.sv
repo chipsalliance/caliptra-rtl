@@ -97,6 +97,7 @@ module mbox
     output logic mbox_inv_axi_user_axs,
 
     //DMI reg access
+    input logic dmi_mbox_avail,
     input logic dmi_inc_rdptr,
     input logic dmi_inc_wrptr,
     input logic dmi_reg_wen,
@@ -690,23 +691,24 @@ always_comb begin
 end
 
 //Set the lock if tap is reading a 0
-always_comb hwif_in.mbox_lock.lock.hwset = dmi_reg_ren & (dmi_reg_addr == DMI_REG_MBOX_LOCK_ADDR) & ~hwif_out.mbox_lock.lock.value & ~hwif_out.mbox_lock.lock.swmod;
+always_comb hwif_in.mbox_lock.lock.hwset = dmi_mbox_avail & dmi_reg_ren & (dmi_reg_addr == DMI_REG_MBOX_LOCK_ADDR) & ~hwif_out.mbox_lock.lock.value & ~hwif_out.mbox_lock.lock.swmod;
 
-always_comb hwif_in.mbox_cmd.command.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_CMD_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
+always_comb hwif_in.mbox_cmd.command.we = dmi_mbox_avail & dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_CMD_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
 always_comb hwif_in.mbox_cmd.command.next = dmi_reg_wdata;
 
-always_comb hwif_in.mbox_dlen.length.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
+always_comb hwif_in.mbox_dlen.length.we = dmi_mbox_avail & dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_DLEN_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
 always_comb hwif_in.mbox_dlen.length.next = dmi_reg_wdata;
 
-always_comb hwif_in.mbox_status.status.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_STATUS_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
+always_comb hwif_in.mbox_status.status.we = dmi_mbox_avail & dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_STATUS_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
 always_comb hwif_in.mbox_status.status.next = dmi_reg_wdata[3:0];
 
-always_comb hwif_in.mbox_execute.execute.we = dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_EXECUTE_ADDR) & (tap_has_lock);
+always_comb hwif_in.mbox_execute.execute.we = dmi_mbox_avail & dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_EXECUTE_ADDR) & (tap_has_lock);
 always_comb hwif_in.mbox_execute.execute.next = dmi_reg_wdata[0];
 
 
 //return a 1 on the lock if software is requesting the lock to avoid tap and sw thinking they got the lock
-always_comb dmi_reg.MBOX_LOCK = {31'b0, (hwif_out.mbox_lock.lock.value | hwif_out.mbox_lock.lock.swmod)};
+//always show locked if dmi mbox avail not set
+always_comb dmi_reg.MBOX_LOCK = {31'b0, (hwif_out.mbox_lock.lock.value | hwif_out.mbox_lock.lock.swmod | ~dmi_mbox_avail)};
 always_comb dmi_reg.MBOX_CMD = hwif_out.mbox_cmd.command.value;
 always_comb dmi_reg.MBOX_DLEN = hwif_out.mbox_dlen.length.value;
 always_comb dmi_reg.MBOX_DOUT = hwif_out.mbox_dataout.dataout.value;

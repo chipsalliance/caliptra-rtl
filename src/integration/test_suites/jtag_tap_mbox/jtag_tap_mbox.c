@@ -72,6 +72,9 @@ void main() {
     uint32_t exp_mbox_cmd = 0x4e110df7;
     uint32_t read_data;
 
+    //make tap mailbox available
+    lsu_write_32(CLP_SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP,SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK);
+
     //poll for mbox lock
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 1);
 
@@ -206,7 +209,7 @@ void main() {
     }
 
     //write command
-    lsu_write_32(CLP_MBOX_CSR_MBOX_CMD,exp_mbox_cmd);
+    lsu_write_32(CLP_MBOX_CSR_MBOX_CMD,mbox_cmd);
 
     //write dlen
     lsu_write_32(CLP_MBOX_CSR_MBOX_DLEN,MBOX_DLEN_VAL);
@@ -221,5 +224,7 @@ void main() {
     status = DATA_READY;
 
     soc_ifc_set_mbox_status_field(status);
+
+    while(1);//let jtag end the test
 
 }
