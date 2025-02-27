@@ -98,6 +98,9 @@ jobs:
             submodules: 'true'
 
       - name: Gen File List
+        env:
+            BASE_REF: ${{ (github.base_ref) }}
+            EVENT_NAME: ${{ (github.event_name) }}
         run: |
             # Search for all source code files, scripts, and configuration
             # files used to build/validate Caliptra RTL.
@@ -107,6 +110,8 @@ jobs:
             # - any files inside
             #   - .git
             #   - .github/workflows
+            echo $BASE_REF
+            echo $EVENT_NAME
             find "$GITHUB_WORKSPACE" -type f \( -name "*.sv" \
                                              -o -name "*.svh" \
                                              -o -name "*.rdl" \
