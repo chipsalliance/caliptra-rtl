@@ -485,7 +485,7 @@ class soc_ifc_predictor #(
             // If we're running uvmf_soc_ifc, RDC modelling is not supported (TODO)
             // so the wires driving FE/UDS cause them to be latched immediately on assertion
             // of 'vld' signals while soft reset is asserted
-            if (!p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE)) begin
+            if (!p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && fuse_update_enabled && (configuration.cptra_ctrl_agent_config.active_passive == ACTIVE)) begin
                 if (cptra_obf_field_entropy_vld) begin
                     foreach (cptra_obf_field_entropy[dw]) begin
                         send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
@@ -611,10 +611,18 @@ class soc_ifc_predictor #(
     end
     if (t.assert_clear_secrets) begin
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.predict(32'h0); // No "reset" value, so manually clear each field to 0
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset("HARD");
-        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset("HARD");
-        send_cptra_sts_txn = 1'b1;
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) begin
+            send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.get_mirrored_value() != 32'h0);
+            p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.predict(32'h0); // No "reset" value, so manually clear each field to 0
+        end
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii]) begin
+            send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.get_mirrored_value() != p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.get_reset("HARD"));
+            p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[ii].seed.reset("HARD");
+        end
+        foreach (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii]) begin
+            send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.get_mirrored_value() != p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.get_reset("HARD"));
+            p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[ii].seed.reset("HARD");
+        end
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
     end
     else begin
@@ -1624,13 +1632,15 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
                 "CPTRA_HW_CAPABILITIES": begin
-                    `uvm_error("TODO", "FIXME")
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_FW_CAPABILITIES": begin
-                    `uvm_error("TODO", "FIXME")
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 "CPTRA_CAP_LOCK": begin
-                    `uvm_error("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
                 ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
@@ -2780,13 +2790,15 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
             "CPTRA_HW_CAPABILITIES": begin
-                `uvm_error("TODO", "FIXME")
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_FW_CAPABILITIES": begin
-                `uvm_error("TODO", "FIXME")
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_CAP_LOCK": begin
-                `uvm_error("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["CPTRA_OWNER_PK_HASH[0]" :"CPTRA_OWNER_PK_HASH[9]"],
             ["CPTRA_OWNER_PK_HASH[10]":"CPTRA_OWNER_PK_HASH[11]"]: begin
@@ -4110,7 +4122,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                 wait(cptra_pwrgood_asserted == 1'b1);
 
                 // Grab the values that were captured from soc_ifc_ctrl_transaction
-                if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                if (cptra_obf_field_entropy_vld && fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
                     foreach (cptra_obf_field_entropy[dw]) begin
                         send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
                         p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
@@ -4119,7 +4131,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                         end
                     end
                 end
-                if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                if (cptra_obf_uds_seed_vld && fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
                     foreach (cptra_obf_uds_seed[dw]) begin
                         send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
                         p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);
@@ -4163,13 +4175,13 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
                     wait(rdc_clk_gate_active == 1'b0);
 
                     // Grab the values that were captured from soc_ifc_ctrl_transaction
-                    if (cptra_obf_field_entropy_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    if (cptra_obf_field_entropy_vld && fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
                         foreach (cptra_obf_field_entropy[dw]) begin
                             send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.get_mirrored_value() != cptra_obf_field_entropy[dw]);
                             p_soc_ifc_rm.soc_ifc_reg_rm.fuse_field_entropy[dw].seed.predict(cptra_obf_field_entropy[dw]);
                         end
                     end
-                    if (cptra_obf_uds_seed_vld && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
+                    if (cptra_obf_uds_seed_vld && fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets) begin
                         foreach (cptra_obf_uds_seed[dw]) begin
                             send_local_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.get_mirrored_value() != cptra_obf_uds_seed[dw]);
                             p_soc_ifc_rm.soc_ifc_reg_rm.fuse_uds_seed[dw].seed.predict(cptra_obf_uds_seed[dw]);

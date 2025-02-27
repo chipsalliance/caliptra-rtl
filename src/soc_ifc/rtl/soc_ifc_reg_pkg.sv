@@ -198,13 +198,13 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic next;
-    } soc_ifc_reg__CPTRA_HW_CONFIG__ACTIVE_MODE_en__in_t;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
-        soc_ifc_reg__CPTRA_HW_CONFIG__ACTIVE_MODE_en__in_t ACTIVE_MODE_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{

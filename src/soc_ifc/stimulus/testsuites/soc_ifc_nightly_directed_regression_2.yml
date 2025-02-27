@@ -1,0 +1,15 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L0", "directed", "nightly", "SOC_IFC"]
+      path: ""
+      weight: 100 
+      generations: 20 
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:        
+        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/debug_unlock_prod_test: {weight 10}
+        ${CALIPTRA_ROOT}/src/soc_ifc/stimulus/tests/directed/debug_unlock_manuf_test: {weight 10}
