@@ -368,6 +368,8 @@ interface soc_ifc_cov_if
 
         //controls
         soc_has_lock_cp: coverpoint i_mbox.soc_has_lock;
+        uc_has_lock_cp: coverpoint i_mbox.uc_has_lock;
+        tap_has_lock_cp: coverpoint i_mbox.tap_has_lock;
         mask_rdata_cp: coverpoint i_mbox.mask_rdata;
         dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws {
           bins zero = {0};
