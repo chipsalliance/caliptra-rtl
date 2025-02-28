@@ -17,13 +17,14 @@ SHELL = /usr/bin/env bash
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration
-# Current release version is 1.1 - smoke test uses this value to check HW_REV_ID register
-# Update the value here after 1.1
-CALIPTRA_HW_REV_ID=0x0011
+# Current release version is 2.0 - smoke test uses this value to check HW_REV_ID register
+# Update the value here after 2.0
+CALIPTRA_HW_REV_ID=0x0002
 # After 1.1, LMS accelerator is always available
 HWCFG_CFLAGS ?= -DCALIPTRA_HWCONFIG_LMS_EN -DCALIPTRA_HW_REV_ID=$(CALIPTRA_HW_REV_ID)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
 CALIPTRA_INTERNAL_TRNG ?= 1
+CALIPTRA_MODE_SUBSYSTEM ?= 0
 VERILATOR = verilator
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
@@ -210,6 +211,10 @@ TB_DEFS =
 ifeq ($(CALIPTRA_INTERNAL_TRNG), 1)
 TB_DEFS += +define+CALIPTRA_INTERNAL_TRNG
 HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_TRNG_EN
+endif
+ifeq ($(CALIPTRA_MODE_SUBSYSTEM), 1)
+TB_DEFS += +define+CALIPTRA_MODE_SUBSYSTEM
+HWCFG_CFLAGS += -DCALIPTRA_HWCONFIG_SUBSYSTEM_MODE
 endif
 
 # By default debugging (JTAG) is locked in Caliptra. Add "DEBUG_UNLOCKED=1" to

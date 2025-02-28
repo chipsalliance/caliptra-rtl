@@ -69,6 +69,7 @@ requires:
   - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
+  - physical_rng
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage

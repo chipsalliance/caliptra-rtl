@@ -48,6 +48,10 @@ targets:
     waiver_files:
       - $MSFT_REPO_ROOT/src/entropy_src/config/design_lint/sglint_waivers
     tops: [entropy_src]
+---
+provides: [physical_rng]
+schema_version: 2.4.0
+targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
     files:
@@ -57,11 +61,11 @@ provides: [entropy_src_tb]
 schema_version: 2.4.0
 requires:
   - entropy_src
+  - physical_rng
 targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
     files:
-      - $COMPILE_ROOT/tb/physical_rng.sv
       - $COMPILE_ROOT/tb/entropy_src_tb.sv
     tops: [entropy_src_tb]
 global:
