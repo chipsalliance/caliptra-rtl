@@ -239,7 +239,7 @@ reg {
 
 reg {
     name = "Fuse Write Done";
-    desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle or a warm reset or caliptra FW allows a write (negotiated through a mailbox command).
+    desc = "Writes to fuse registers are completed. After the done bit is set, any subsequent writes to a fuse register will be dropped unless there is a power cycle. 
              [br]Caliptra Access: RO
              [br]SOC Access:      RW1-S";
      field {sw=rw; hw=r; swmod=true; swwe; resetsignal=cptra_pwrgood;} done[1]=0;
