@@ -1699,7 +1699,7 @@ class soc_ifc_predictor #(
                 "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
                 "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
                 "SS_DEBUG_INTENT",
-                ["SS_STRAP_GENERIC[0]","SS_STRAP_GENERIC[3]"]: begin
+                ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
@@ -2871,7 +2871,7 @@ class soc_ifc_predictor #(
             "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
             "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
             "SS_DEBUG_INTENT",
-            ["SS_STRAP_GENERIC[0]","SS_STRAP_GENERIC[3]"]: begin
+            ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
