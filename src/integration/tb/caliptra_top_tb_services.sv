@@ -471,7 +471,7 @@ module caliptra_top_tb_services
 
     genvar dword_i, slot_id;
     generate 
-        for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
+        for (slot_id=0; slot_id < 9; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
@@ -653,7 +653,12 @@ module caliptra_top_tb_services
 `ifdef CALIPTRA_DEBUG_UNLOCKED
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 `else
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    initial begin
+        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+        else
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    end
 `endif
     always @(negedge clk) begin
         //lock debug mode
