@@ -65,6 +65,8 @@
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (0x200)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x3fffc00)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (0x4000000)
 #endif
 #define CALIPTRA_TOP_REG_MBOX_CSR_MBOX_UNLOCK                                                       (0x20020)
 #ifndef MBOX_CSR_MBOX_UNLOCK
@@ -1000,8 +1002,10 @@
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK                     (0x80)
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_LOW               (8)
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK              (0x100)
-#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (9)
-#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (0xfffffe00)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_LOW                 (9)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK                (0x200)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (10)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (0xfffffc00)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0                             (0x305c8)
 #ifndef GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0

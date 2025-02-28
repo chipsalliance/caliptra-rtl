@@ -85,7 +85,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.command = new("command");
-            this.command.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.command.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(command_bit_cg[bt]) command_bit_cg[bt] = new();
             end
@@ -226,6 +226,7 @@ package mbox_csr_uvm;
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg mbox_fsm_ps_bit_cg[3];
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg soc_has_lock_bit_cg[1];
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg mbox_rdptr_bit_cg[16];
+        mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_bit_cg tap_has_lock_bit_cg[1];
         mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760_fld_cg fld_cg;
         rand uvm_reg_field status;
         rand uvm_reg_field ecc_single_error;
@@ -233,6 +234,7 @@ package mbox_csr_uvm;
         rand uvm_reg_field mbox_fsm_ps;
         rand uvm_reg_field soc_has_lock;
         rand uvm_reg_field mbox_rdptr;
+        rand uvm_reg_field tap_has_lock;
 
         function new(string name = "mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -256,6 +258,8 @@ package mbox_csr_uvm;
             this.soc_has_lock.configure(this, 1, 9, "RO", 1, 'h0, 1, 1, 0);
             this.mbox_rdptr = new("mbox_rdptr");
             this.mbox_rdptr.configure(this, 16, 10, "RO", 1, 'h0, 1, 1, 0);
+            this.tap_has_lock = new("tap_has_lock");
+            this.tap_has_lock.configure(this, 1, 26, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(status_bit_cg[bt]) status_bit_cg[bt] = new();
                 foreach(ecc_single_error_bit_cg[bt]) ecc_single_error_bit_cg[bt] = new();
@@ -263,6 +267,7 @@ package mbox_csr_uvm;
                 foreach(mbox_fsm_ps_bit_cg[bt]) mbox_fsm_ps_bit_cg[bt] = new();
                 foreach(soc_has_lock_bit_cg[bt]) soc_has_lock_bit_cg[bt] = new();
                 foreach(mbox_rdptr_bit_cg[bt]) mbox_rdptr_bit_cg[bt] = new();
+                foreach(tap_has_lock_bit_cg[bt]) tap_has_lock_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

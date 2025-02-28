@@ -205,9 +205,10 @@
             foreach(mbox_fsm_ps_bit_cg[bt]) this.mbox_fsm_ps_bit_cg[bt].sample(data[6 + bt]);
             foreach(soc_has_lock_bit_cg[bt]) this.soc_has_lock_bit_cg[bt].sample(data[9 + bt]);
             foreach(mbox_rdptr_bit_cg[bt]) this.mbox_rdptr_bit_cg[bt].sample(data[10 + bt]);
+            foreach(tap_has_lock_bit_cg[bt]) this.tap_has_lock_bit_cg[bt].sample(data[11 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[3:0]/*status*/  ,  data[4:4]/*ecc_single_error*/  ,  data[5:5]/*ecc_double_error*/  ,  data[8:6]/*mbox_fsm_ps*/  ,  data[9:9]/*soc_has_lock*/  ,  data[24:10]/*mbox_rdptr*/   );
+            this.fld_cg.sample( data[3:0]/*status*/  ,  data[4:4]/*ecc_single_error*/  ,  data[5:5]/*ecc_double_error*/  ,  data[8:6]/*mbox_fsm_ps*/  ,  data[9:9]/*soc_has_lock*/  ,  data[24:10]/*mbox_rdptr*/   ,  data[25:25]/*tap_has_lock*/);
         end
     endfunction
 
@@ -219,9 +220,10 @@
             foreach(mbox_fsm_ps_bit_cg[bt]) this.mbox_fsm_ps_bit_cg[bt].sample(mbox_fsm_ps.get_mirrored_value() >> bt);
             foreach(soc_has_lock_bit_cg[bt]) this.soc_has_lock_bit_cg[bt].sample(soc_has_lock.get_mirrored_value() >> bt);
             foreach(mbox_rdptr_bit_cg[bt]) this.mbox_rdptr_bit_cg[bt].sample(mbox_rdptr.get_mirrored_value() >> bt);
+            foreach(tap_has_lock_bit_cg[bt]) this.tap_has_lock_bit_cg[bt].sample(tap_has_lock.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( status.get_mirrored_value()  ,  ecc_single_error.get_mirrored_value()  ,  ecc_double_error.get_mirrored_value()  ,  mbox_fsm_ps.get_mirrored_value()  ,  soc_has_lock.get_mirrored_value()  ,  mbox_rdptr.get_mirrored_value()   );
+            this.fld_cg.sample( status.get_mirrored_value()  ,  ecc_single_error.get_mirrored_value()  ,  ecc_double_error.get_mirrored_value()  ,  mbox_fsm_ps.get_mirrored_value()  ,  soc_has_lock.get_mirrored_value()  ,  mbox_rdptr.get_mirrored_value()   ,  tap_has_lock.get_mirrored_value()  );
         end
     endfunction
 
