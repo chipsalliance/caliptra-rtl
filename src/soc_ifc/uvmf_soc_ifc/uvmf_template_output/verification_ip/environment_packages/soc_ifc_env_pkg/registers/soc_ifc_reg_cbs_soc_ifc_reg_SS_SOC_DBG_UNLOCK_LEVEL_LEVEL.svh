@@ -47,12 +47,13 @@ class soc_ifc_reg_cbs_soc_ifc_reg_SS_SOC_DBG_UNLOCK_LEVEL_LEVEL extends uvm_reg_
                                        input uvm_reg_map    map);
         soc_ifc_reg_ext rm; /* soc_ifc_reg_rm */
         uvm_reg_block blk = fld.get_parent().get_parent(); /* soc_ifc_reg_rm */
+        uvm_reg_field dbg_intent = blk.get_reg_by_name("SS_DEBUG_INTENT").get_field_by_name("debug_intent");
         if (!$cast(rm,blk)) `uvm_fatal ("SOC_IFC_REG_CBS", "Failed to get valid class handle")
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_WRITE: begin
-                    if (blk.SS_SOC_DBG_UNLOCK_LEVEL.LEVEL.get_mirrored_value()) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to reg %s field %s on map %s due to debug_intent %x. value: 0x%x previous: 0x%x", fld.get_parent().get_full_name(), fld.get_name(), map.get_name(), blk.SS_SOC_DBG_UNLOCK_LEVEL.get_mirrored_value(), value, previous), UVM_LOW)
+                    if (dbg_intent.get_mirrored_value()) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to reg %s field %s on map %s due to debug_intent %x. value: 0x%x previous: 0x%x", fld.get_parent().get_full_name(), fld.get_name(), map.get_name(), dbg_intent.get_mirrored_value(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin
