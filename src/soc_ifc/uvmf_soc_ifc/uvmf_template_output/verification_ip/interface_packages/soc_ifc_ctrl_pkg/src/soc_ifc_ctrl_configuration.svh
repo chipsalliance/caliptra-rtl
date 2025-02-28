@@ -180,6 +180,14 @@ class soc_ifc_ctrl_configuration  extends uvmf_parameterized_agent_configuration
   endtask
 
   // ****************************************************************************
+  // TASK: wait_for_negedge
+  // *[Required]* Blocks until the next clock negedge. The wait_for_negedge
+  // operation is performed by a task in the monitor bfm.
+  virtual task wait_for_negedge();
+    monitor_bfm.wait_for_negedge();
+  endtask
+
+  // ****************************************************************************
   // FUNCTION : convert2string()
   // This function is used to convert variables in this class into a string for log messaging.
   // 
