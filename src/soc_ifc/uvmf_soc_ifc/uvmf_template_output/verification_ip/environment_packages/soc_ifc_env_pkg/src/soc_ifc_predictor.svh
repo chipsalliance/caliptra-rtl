@@ -1310,6 +1310,11 @@ class soc_ifc_predictor #(
                         `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                     end
                 end
+                // TODO
+                "tap_mode": begin
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
+                    // TODO coverage?
+                end
                 //SHA Accelerator Functions
                 "LOCK": begin
                     // Reading sha_lock when it is already locked has no effect, so
@@ -1685,7 +1690,6 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 // subsystem regs/straps
-                // TODO
                 "SS_CALIPTRA_BASE_ADDR_L",
                 "SS_CALIPTRA_BASE_ADDR_H",
                 "SS_MCI_BASE_ADDR_L",
@@ -1700,24 +1704,40 @@ class soc_ifc_predictor #(
                 "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
                 "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
                 "SS_DEBUG_INTENT",
-                "SS_STRAP_GENERIC[4]": begin
-                    `uvm_warning("TODO", "FIXME")
+                ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
+                // TODO
                 "SS_DBG_MANUF_SERVICE_REG_REQ": begin
-                    `uvm_warning("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
+                // TODO
                 "SS_DBG_MANUF_SERVICE_REG_RSP": begin
-                    `uvm_warning("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 "SS_SOC_DBG_UNLOCK_LEVEL[0]",
                 "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
-                    `uvm_warning("TODO", "FIXME")
+                    // Handled in callbacks via reg predictor
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_ss_mode_sts_txn = data_active != axs_reg.get_mirrored_value();
+                        `uvm_info("PRED_AHB", $sformatf("On access to SS mode register %s, send_ss_mode_sts_txn: %x", axs_reg.get_name(), send_ss_mode_sts_txn), UVM_DEBUG)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling read to SS mode register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
                 end
                 "SS_GENERIC_FW_EXEC_CTRL[0]",
                 "SS_GENERIC_FW_EXEC_CTRL[1]",
                 "SS_GENERIC_FW_EXEC_CTRL[2]",
                 "SS_GENERIC_FW_EXEC_CTRL[3]": begin
-                    `uvm_warning("TODO", "FIXME")
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        send_ss_mode_sts_txn = data_active != axs_reg.get_mirrored_value();
+                        `uvm_info("PRED_AHB", $sformatf("On access to SS mode register %s, send_ss_mode_sts_txn: %x", axs_reg.get_name(), send_ss_mode_sts_txn), UVM_DEBUG)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", $sformatf("Handling read to SS mode register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                    end
                 end
                 // Caliptra Internal Registers
                 "internal_iccm_lock": begin
@@ -2596,6 +2616,11 @@ class soc_ifc_predictor #(
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
+            // TODO
+            "tap_mode": begin
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
+                // TODO coverage?
+            end
             //SHA Accelerator Functions
             "LOCK": begin 
                 // Reading sha_lock when it is already locked has no effect, so
@@ -2843,7 +2868,6 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             // subsystem regs/straps
-            // TODO
             "SS_CALIPTRA_BASE_ADDR_L",
             "SS_CALIPTRA_BASE_ADDR_H",
             "SS_MCI_BASE_ADDR_L",
@@ -2858,24 +2882,27 @@ class soc_ifc_predictor #(
             "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
             "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
             "SS_DEBUG_INTENT",
-            "SS_STRAP_GENERIC[4]": begin
-                `uvm_warning("TODO", "FIXME")
+            ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
+            // TODO
             "SS_DBG_MANUF_SERVICE_REG_REQ": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
+            // TODO
             "SS_DBG_MANUF_SERVICE_REG_RSP": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             "SS_SOC_DBG_UNLOCK_LEVEL[0]",
             "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("Handling access to SS mode register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "SS_GENERIC_FW_EXEC_CTRL[0]",
             "SS_GENERIC_FW_EXEC_CTRL[1]",
             "SS_GENERIC_FW_EXEC_CTRL[2]",
             "SS_GENERIC_FW_EXEC_CTRL[3]": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("Handling access to SS mode register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "internal_iccm_lock": begin
                 // Handled in callbacks via reg predictor
