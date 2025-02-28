@@ -368,7 +368,7 @@ package soc_ifc_reg_model_top_pkg;
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     )
-                                                              /* TODO tap mailbox available */
+                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE       )
                                                               `FLD_NO_CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD                        )
             foreach(this.SS_SOC_DBG_UNLOCK_LEVEL[ii])         `REG_NO_CP_NONCORE_RST(this.SS_SOC_DBG_UNLOCK_LEVEL[ii]              )
             foreach(this.SS_GENERIC_FW_EXEC_CTRL[ii])         `REG_NO_CP_NONCORE_RST(this.SS_GENERIC_FW_EXEC_CTRL[ii]              )
