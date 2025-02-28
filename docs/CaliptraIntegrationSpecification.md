@@ -439,8 +439,11 @@ The following figure shows the receiver protocol flow.
 
 ## TAP mailbox mode
 
-When Caliptra sets the tap_mode register, the mailbox will transition from EXECUTE_UC to EXECUTE_TAP instead of EXECUTE_SOC.
+When Caliptra sets the tap_mode register, the mailbox will transition from RDY_FOR_DATA to EXECUTE_TAP instead of EXECUTE_SOC.
 This will pass control of the mailbox to the TAP. TAP will follow the **Receiving data from the mailbox** protocol detailed above.
+
+When TAP acquires the mailbox lock, the mailbox will transition from RDY_FOR_DATA_to EXECUTE_UC asserting mailbox_data_avail.
+This will pass control of the mailbox to the UC. UC will follow the **Receiving data from the mailbox** protocol detailed above.
 
 ## Mailbox arbitration
 

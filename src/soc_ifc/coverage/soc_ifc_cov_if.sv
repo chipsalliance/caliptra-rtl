@@ -351,6 +351,7 @@ interface soc_ifc_cov_if
         arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA;
         arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC;
         arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC;
+        arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP_cp: coverpoint i_mbox.arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_TAP;
         arc_MBOX_EXECUTE_UC_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_UC_MBOX_IDLE;
         arc_MBOX_EXECUTE_SOC_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_SOC_MBOX_IDLE;
         arc_MBOX_EXECUTE_TAP_MBOX_IDLE_cp: coverpoint i_mbox.arc_MBOX_EXECUTE_TAP_MBOX_IDLE;
@@ -367,6 +368,8 @@ interface soc_ifc_cov_if
 
         //controls
         soc_has_lock_cp: coverpoint i_mbox.soc_has_lock;
+        uc_has_lock_cp: coverpoint i_mbox.uc_has_lock;
+        tap_has_lock_cp: coverpoint i_mbox.tap_has_lock;
         mask_rdata_cp: coverpoint i_mbox.mask_rdata;
         dlen_in_dws_cp: coverpoint i_mbox.dlen_in_dws {
           bins zero = {0};

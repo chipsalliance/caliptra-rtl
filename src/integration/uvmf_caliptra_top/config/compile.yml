@@ -17,6 +17,7 @@ requires:
   - uvmf_caliptra_top_vip
   - asserts
   - caliptra_top
+  - physical_rng
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage

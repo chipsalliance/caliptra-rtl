@@ -949,6 +949,10 @@ module soc_ifc_reg (
                 logic next;
                 logic load_next;
             } UDS_PROGRAM_IN_PROGRESS;
+            struct packed{
+                logic next;
+                logic load_next;
+            } TAP_MAILBOX_AVAILABLE;
         } SS_DBG_MANUF_SERVICE_REG_RSP;
         struct packed{
             struct packed{
@@ -1943,6 +1947,9 @@ module soc_ifc_reg (
             struct packed{
                 logic value;
             } UDS_PROGRAM_IN_PROGRESS;
+            struct packed{
+                logic value;
+            } TAP_MAILBOX_AVAILABLE;
         } SS_DBG_MANUF_SERVICE_REG_RSP;
         struct packed{
             struct packed{
@@ -4403,9 +4410,6 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next;
-            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.load_next = load_next_c;
@@ -4426,9 +4430,6 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.next = next_c;
@@ -4451,9 +4452,6 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next;
-            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.load_next = load_next_c;
@@ -4474,9 +4472,6 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.next = next_c;
@@ -4499,9 +4494,6 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next;
-            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.load_next = load_next_c;
@@ -4522,9 +4514,6 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.next = next_c;
@@ -4547,9 +4536,6 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next;
-            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.load_next = load_next_c;
@@ -4570,9 +4556,6 @@ module soc_ifc_reg (
         load_next_c = '0;
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next;
             load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.next = next_c;
@@ -4595,9 +4578,6 @@ module soc_ifc_reg (
         if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.swwe) begin // SW write
             next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
-        end else if(hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.we) begin // HW Write - we
-            next_c = hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next;
-            load_next_c = '1;
         end
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.next = next_c;
         field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.load_next = load_next_c;
@@ -4610,6 +4590,27 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value;
+    // Field: soc_ifc_reg.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && decoded_req_is_wr && hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.swwe) begin // SW write
+            next_c = (field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
+            load_next_c = '1;
+        end
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.next = next_c;
+        field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value <= 1'h0;
+        end else if(field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.load_next) begin
+            field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value <= field_combo.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.next;
+        end
+    end
+    assign hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value = field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value;
     for(genvar i0=0; i0<2; i0++) begin
         // Field: soc_ifc_reg.SS_SOC_DBG_UNLOCK_LEVEL[].LEVEL
         always_comb begin
@@ -7105,7 +7106,7 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 51][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;
     end
-    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h11 : '0;
+    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h2 : '0;
     assign readback_array[53][31:16] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_REV_ID.SOC_STEPPING_ID.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.CPTRA_FW_REV_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value : '0;
@@ -7217,7 +7218,8 @@ module soc_ifc_reg (
     assign readback_array[169][6:6] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value : '0;
     assign readback_array[169][7:7] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value : '0;
     assign readback_array[169][8:8] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value : '0;
-    assign readback_array[169][31:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
+    assign readback_array[169][9:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value : '0;
+    assign readback_array[169][31:10] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 170][31:0] = (decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && !decoded_req_is_wr) ? field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value : '0;
     end

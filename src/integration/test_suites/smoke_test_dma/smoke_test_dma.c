@@ -74,8 +74,27 @@ void main(void) {
             0xc9a6e724,
             0x667f9dd5
         };
+        uint32_t fixed_send_payload[17] = {
+            0x00000000,
+            0x11111111,
+            0x22222222,
+            0x33333333,
+            0x44444444,
+            0x55555555,
+            0x66666666,
+            0x77777777,
+            0x88888888,
+            0x99999999,
+            0xaaaaaaaa,
+            0xbbbbbbbb,
+            0xcccccccc,
+            0xdddddddd,
+            0xeeeeeeee,
+            0xffffffff,
+            0x234562ab
+        };
         uint32_t read_payload[16];
-        uint32_t mbox_read_payload[16];
+        uint32_t mbox_read_payload[17];
 
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
 
@@ -111,10 +130,15 @@ void main(void) {
             fail = 1;
         }
 
+        // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+        // Use a FIXED transfer (only the final beat should be present at the target address)
+        VPRINTF(LOW, "Sending fixed payload via AHB i/f\n");
+        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR + 2*16*4, 1, fixed_send_payload, 17*4, 0);
+
         // Move data from one address to another in AXI SRAM
         // Use the block-size feature
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, 2*16*4, 16*2);
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 16*2);
 
         // Read data back from AXI SRAM and confirm it matches
         VPRINTF(LOW, "Reading payload via AHB i/f\n");
@@ -128,7 +152,7 @@ void main(void) {
 
         // Read data back through mailbox using direct-mode
         VPRINTF(LOW, "Reading payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 16*4, 0)) {
+        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 17*4, 0)) {
             fail = 1;
         }
         VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
@@ -143,6 +167,11 @@ void main(void) {
                 VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
                 fail = 1;
             }
+        }
+        mbox_read_payload[16] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (16 << 2));
+        if (mbox_read_payload[16] != fixed_send_payload[16]) {
+            VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", 16, mbox_read_payload[16], 16, fixed_send_payload[16]);
+            fail = 1;
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 

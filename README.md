@@ -42,7 +42,9 @@ Simulation:
  - Verilator
    - `Version 5.012`
  - Mentor Graphics QVIP
-   - `Version 2021.2.1` of AHB/APB models
+   - `Version 2021.2.1` of AHB models
+ - Avery AXI VIP
+   - `Version 2024.3` of axixactor
  - UVM installation
    - `Version 1.1d`
  - Mentor Graphics UVM-Frameworks
@@ -249,20 +251,25 @@ Verilog file lists are generated via VCS and included in the config directory fo
 The UVM Framework generation tool was used to create the baseline UVM testbench for verification of the top-level Caliptra image. The top-level bench leverages the `soc_ifc_top` testbench as a subenvironment, to reuse environment level sequences, agents, register models, and predictors.
 
 **Prerequisites**:<BR>
-- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
+- AXI VIP 2024.3 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
 **Environment Variables**:<BR>
 `UVM_HOME`: Filesystem path to the parent directory containing SystemVerilog source code for the UVM library of the desired version.
 `UVMF_HOME`: Filesystem path to the parent directory containing source code (uvmf_base_pkg) for the UVM Frameworks library, a tool available from Mentor Graphics for generating baseline UVM projects.
-`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB/APB UVM agents are pulled in the Caliptra UVM environment.
+`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_SIM`: Filesystem path to the parent directory containing source code for Avery UVM VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_PLI`: Filesystem path to the parent directory containing source code for Avery UVM PLI, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_AXI`: Filesystem path to the parent directory containing source code for Avery AXI VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
 
 **Steps:**<BR>
 1. Compile UVM 1.1d library
-1. Compile the AHB/APB QVIP source
+1. Compile the AHB/AXI VIP source
 1. Compile the Mentor Graphics UVM-Frameworks base library
-1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the UVMF wrapper for AHB in Caliptra/src/libs/uvmf
+1. Compile the custom Caliptra extended library components from Avery AXI VIP
 1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
 1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
 1. ALL compilation steps may be completed by using the file-list found at `src/integration/uvmf_caliptra_top/config/uvmf_caliptra_top.vf`
@@ -290,15 +297,17 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 - [SOC_IFC](src/soc_ifc/uvmf_soc_ifc)
 
 **Prerequisites**:<BR>
-- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
+- AXI VIP 2024.3 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
 **Steps:**<BR>
 1. Compile UVM 1.1d library
-1. Compile the AHB/APB QVIP source
+1. Compile the AHB/AXI VIP source
 1. Compile the Mentor Graphics UVM-Frameworks base library
-1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the UVMF wrapper for AHB in Caliptra/src/libs/uvmf
+1. Compile the custom Caliptra extended library components from Avery AXI VIP
 1. Compile the `verification_ip` provided for the target testbench
 1. ALL compilation steps may be completed by using the file-list found at `src/<block>/uvmf_<name>/config/<name>.vf`
 1. NOTE: `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
