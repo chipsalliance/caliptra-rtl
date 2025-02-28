@@ -909,6 +909,7 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute.svh"
     `include "soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock.svh"
+    `include "soc_ifc_reg_cbs_mbox_csr_tap_mode_enabled.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_global_intr_en_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base.svh"
     `include "soc_ifc_reg_cbs_intr_block_rf_ext_error_intr_en_r_base.svh"
@@ -1076,6 +1077,7 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps mbox_csr_mbox_status_mbox_fsm_ps_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute    mbox_csr_mbox_execute_execute_cb;
         soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock      mbox_csr_mbox_unlock_unlock_cb;
+        soc_ifc_reg_cbs_mbox_csr_tap_mode_enabled        mbox_csr_tap_mode_enabled_cb;
 
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL                 soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL             soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb;
@@ -1218,6 +1220,7 @@ package soc_ifc_reg_model_top_pkg;
         mbox_csr_mbox_status_mbox_fsm_ps_cb = soc_ifc_reg_cbs_mbox_csr_mbox_status_mbox_fsm_ps::type_id::create("mbox_csr_mbox_status_mbox_fsm_ps_cb");
         mbox_csr_mbox_execute_execute_cb    = soc_ifc_reg_cbs_mbox_csr_mbox_execute_execute   ::type_id::create("mbox_csr_mbox_execute_execute_cb"   );
         mbox_csr_mbox_unlock_unlock_cb      = soc_ifc_reg_cbs_mbox_csr_mbox_unlock_unlock     ::type_id::create("mbox_csr_mbox_unlock_unlock_cb"     );
+        mbox_csr_tap_mode_enabled_cb        = soc_ifc_reg_cbs_mbox_csr_tap_mode_enabled       ::type_id::create("mbox_csr_tap_mode_enabled_cb"       );
 
         soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_FATAL          ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_FATAL_cb"          );
         soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb        = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL      ::type_id::create("soc_ifc_reg_CPTRA_HW_ERROR_NON_FATAL_cb"      );
@@ -1384,7 +1387,7 @@ package soc_ifc_reg_model_top_pkg;
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .mbox_fsm_ps, mbox_csr_mbox_status_mbox_fsm_ps_cb);
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute    , mbox_csr_mbox_execute_execute_cb   );
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock     , mbox_csr_mbox_unlock_unlock_cb     );
-                                      uvm_reg_field_cb::add(mbox_csr_rm.tap_mode    .enabled    , soc_ifc_reg_internal_cb);
+                                      uvm_reg_field_cb::add(mbox_csr_rm.tap_mode    .enabled    , mbox_csr_tap_mode_enabled_cb       );
 
         /* -- soc_ifc_reg -- */
         soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );
