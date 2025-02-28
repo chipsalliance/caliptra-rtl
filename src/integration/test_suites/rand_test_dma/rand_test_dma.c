@@ -117,7 +117,6 @@ void main(void) {
         VPRINTF(LOW, "Sending payload via AHB i/f\n");
         soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, num_dwords_send*4, 0);
 
-        /*
         // Send data through Mailbox to AXI_DMA, target the AXI SRAM
         VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
         // Acquire the mailbox lock
@@ -169,7 +168,7 @@ void main(void) {
             }
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-        */
+        
 
         if (fail) {
             VPRINTF(FATAL, "smoke_test_dma failed!\n");
