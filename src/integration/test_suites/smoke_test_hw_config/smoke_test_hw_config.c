@@ -86,6 +86,15 @@ void main(void) {
             VPRINTF(FATAL, "HW Config register reports [%d] for LMS Acc EN, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK), data_exp);
             fail = 1;
         }
+        #ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
+        data_exp = SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK;
+        #else
+        data_exp = 0;
+        #endif
+        if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) != data_exp) {
+            VPRINTF(FATAL, "HW Config register reports [%d] for SUBSYSTEM MODE, expected [%d]!\n", (data & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK), data_exp);
+            fail = 1;
+        }
 
         // Ending status
         if (fail) {
