@@ -58,7 +58,7 @@ schema_version: 2.4.0
 requires:
   - entropy_src
 targets:
-  rtl:
+  tb:
     directories: [$COMPILE_ROOT/tb]
     files:
       - $COMPILE_ROOT/tb/physical_rng.sv
