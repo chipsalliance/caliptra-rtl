@@ -212,6 +212,10 @@ end
     @(posedge clk_i);
     repeat (count-1) @(posedge clk_i);                                                    
   endtask      
+
+  task automatic wait_for_negedge();
+      @(negedge clk_i);
+  endtask
   // pragma uvmf custom wait_for_num_clocks end                                                                
 
   //******************************************************************                         

@@ -99,10 +99,10 @@ module axi_sub_arb import axi_pkg::*; #(
             r_pri <= 1'b1;
         else if (r_dv && !r_hld &&  r_last)
             r_pri <= 1'b0;
-        // Keep priority when burst starts
-        else if (w_dv && !r_win && !w_last)
+        // Keep priority when xfer is in progress
+        else if (w_dv && !r_win)
             r_pri <= 1'b0;
-        else if (r_dv &&  r_win && !r_last)
+        else if (r_dv &&  r_win)
             r_pri <= 1'b1;
     end
 

@@ -45,6 +45,7 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
+${CALIPTRA_ROOT}/src/entropy_src/tb/entropy_src_tb.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/kmac/rtl/sha3_pkg.sv
 ${CALIPTRA_ROOT}/src/kmac/rtl/keccak_round.sv
@@ -127,4 +128,3 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_core.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_repcnt_ht.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src.sv
-${CALIPTRA_ROOT}/src/entropy_src/tb/entropy_src_tb.sv

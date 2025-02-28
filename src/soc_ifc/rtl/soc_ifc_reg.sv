@@ -4627,8 +4627,8 @@ module soc_ifc_reg (
             field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next = next_c;
             field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-            if(~hwif_in.cptra_rst_b) begin
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
                 field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value <= 32'h0;
             end else if(field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.load_next) begin
                 field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value <= field_combo.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.next;

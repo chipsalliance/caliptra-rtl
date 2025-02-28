@@ -284,6 +284,15 @@ caliptra_top caliptra_top_dut (
     .generic_input_wires (generic_input_wires),
     .generic_output_wires(                   ),
 
+    // RISC-V Trace Ports
+    .trace_rv_i_insn_ip     (), // TODO
+    .trace_rv_i_address_ip  (), // TODO
+    .trace_rv_i_valid_ip    (), // TODO
+    .trace_rv_i_exception_ip(), // TODO
+    .trace_rv_i_ecause_ip   (), // TODO
+    .trace_rv_i_interrupt_ip(), // TODO
+    .trace_rv_i_tval_ip     (), // TODO
+
     .security_state(security_state),
     .scan_mode     (scan_mode)
 );
@@ -371,7 +380,9 @@ always_comb begin
     m_axi_if.rdata            = axi_sram_if.rdata ;
     m_axi_if.rresp            = axi_sram_if.rresp ;
     m_axi_if.rid              = axi_sram_if.rid   ;
+    m_axi_if.ruser            = axi_sram_if.ruser ;
     m_axi_if.rlast            = axi_sram_if.rlast ;
+    m_axi_if.ruser            = axi_sram_if.ruser ;
     m_axi_if.rvalid           = axi_sram_if.rvalid;
     axi_sram_if.rready        = m_axi_if.rready ;
                                                 
@@ -389,13 +400,16 @@ always_comb begin
     // AXI W                                    
     axi_sram_if.wdata         = m_axi_if.wdata  ;
     axi_sram_if.wstrb         = m_axi_if.wstrb  ;
+    axi_sram_if.wuser         = m_axi_if.wuser  ;
     axi_sram_if.wvalid        = m_axi_if.wvalid ;
     axi_sram_if.wlast         = m_axi_if.wlast  ;
+    axi_sram_if.wuser         = m_axi_if.wuser  ;
     m_axi_if.wready           = axi_sram_if.wready ;
                                                 
     // AXI B                                    
     m_axi_if.bresp            = axi_sram_if.bresp  ;
     m_axi_if.bid              = axi_sram_if.bid    ;
+    m_axi_if.buser            = axi_sram_if.buser  ;
     m_axi_if.bvalid           = axi_sram_if.bvalid ;
     axi_sram_if.bready        = m_axi_if.bready ;
 end

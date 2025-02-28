@@ -21,7 +21,8 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
 
-    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+    uvm_queue #(soc_ifc_reg_delay_job)      delay_jobs;
+    soc_ifc_reg_delay_job_intr_block_rf_ext last_swclr_job[uvm_reg_field];
 
     function new(string name = "uvm_reg_cbs");
         super.new(name);
@@ -114,12 +115,19 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
         // where previous=0) because occasionally an actual hwset will occur when
         // the interrupt is already pending, and we still must protect against W1C
         // in that case.
+        // If we observe a hwset, then we must nullify any scheduled delay jobs _from the same
+        // same clock cycle_ that will result in clearing the interrupt bit, since hwset has
+        // priority (again, only true when they occur in the same clock cycle).
+        // This handles the inverse case that is handled by hwset_active (i.e., this handles
+        // the scenario where the SWCLR job is processed first, schedules a job, then the hwset
+        // event is observed next, but at the same sim-time).
         if (value) begin
+            if (last_swclr_job.exists(fld)) last_swclr_job[fld].nullify_job();
             if (sir_intr_rm != null) begin
                 sir_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
+                    #1ps;
                     sir_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
@@ -128,7 +136,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
                 sac_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
+                    #1ps;
                     sac_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
@@ -137,7 +145,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
                 dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
+                    #1ps;
                     dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
@@ -185,6 +193,13 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_error_internal_intr_r_base extends uvm_r
             delay_job.en_glb  = en_glb;
             delay_job.grab_values();
             delay_jobs.push_back(delay_job);
+            last_swclr_job[fld] = delay_job;
+            fork
+                begin
+                    #1ps;
+                    last_swclr_job.delete(fld);
+                end
+            join_none
         end
         else begin
             `uvm_info("SOC_IFC_REG_CBS",

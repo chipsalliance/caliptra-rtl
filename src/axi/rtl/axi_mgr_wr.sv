@@ -187,6 +187,7 @@ module axi_mgr_wr import axi_pkg::*; #(
     // --------------------------------------- //
     `CALIPTRA_ASSERT(AXI_MGR_REQ_BND, req_if.valid |-> ((req_if.addr[11:0] + req_if.byte_len) <= 4096), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_MGR_LEGAL_LEN, req_if.valid |-> (req_if.byte_len[AXI_LEN_BC_WIDTH-1:BW]) < AXI_LEN_MAX_VALUE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_MGR_LEGAL_FIXED_LEN, req_if.valid && req_if.fixed |-> (req_if.byte_len[AXI_LEN_BC_WIDTH-1:BW]) < AXI_FIXED_LEN_MAX_VALUE, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_MGR_DATA_WHILE_ACTIVE, ready_o |-> txn_active, clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(AXI_MGR_UFLOW, m_axi_if.wvalid && !valid_i, clk, !rst_n)
 
