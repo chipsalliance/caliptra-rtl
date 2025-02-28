@@ -239,6 +239,7 @@ logic uc_mbox_lock;
 logic iccm_unlock;
 logic fw_upd_rst_executed;
 logic fuse_wr_done_reg_write_observed;
+logic fuse_done;
 
 logic unmasked_hw_error_fatal_write;
 logic unmasked_hw_error_non_fatal_write;
@@ -288,7 +289,11 @@ logic valid_trng_user;
 logic valid_fuse_user;
 logic valid_sha_user;
 
+logic strap_cptra_noncore_rst_b;
+
 boot_fsm_state_e boot_fsm_ps;
+
+assign fuse_done = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
 //Boot FSM
 //This module contains the logic required to control the Caliptra Boot Flow
@@ -304,7 +309,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .ready_for_fuses(ready_for_fuses),
     .boot_fsm_ps(boot_fsm_ps),
 
-    .fuse_done(soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value),
+    .fuse_done(fuse_done),
     .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
 
     .BootFSM_BrkPoint(BootFSM_BrkPoint_valid),
@@ -721,9 +726,11 @@ always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
 always_comb cptra_uncore_dmi_unlocked_reg_wr_en = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_unlocked_reg_en);
 always_comb cptra_uncore_dmi_locked_reg_wr_en   = (cptra_uncore_dmi_reg_wr_en & cptra_uncore_dmi_locked_reg_en);
 
-// Subsystem straps capture the initial value from input port on rising edge of cptra_pwrgood
+assign strap_cptra_noncore_rst_b = cptra_noncore_rst_b | fuse_done;
+
+// Subsystem straps capture the initial value from input port on rising edge of noncore_rst
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-     if(~cptra_noncore_rst_b) begin
+     if(~strap_cptra_noncore_rst_b) begin
         strap_we <= 1'b1;
     end
     else begin

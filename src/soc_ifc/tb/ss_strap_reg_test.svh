@@ -21,14 +21,9 @@
 task ss_strap_reg_test;
     // SS Straps  Register Test 
   
-    word_addr_t addr; 
     int tid = 0; // optional to increment UNLESS multiple writes to same address 
     strq_t ss_strap_soc_rw_regnames;
     strq_t ss_strap_soc_ro_regnames;
-  
-    WordTransaction wrtrans, rdtrans;
-    dword_t exp_data; 
-    string rname;
   
     begin
       $display("\nExecuting task ss_strap_reg_test"); 
@@ -37,9 +32,6 @@ task ss_strap_reg_test;
       $display("Current security state = 0b%03b", security_state);
       tc_ctr = tc_ctr + 1;
   
-      wrtrans = new();
-      rdtrans = new();
-  
       ss_strap_soc_rw_regnames = get_ss_strap_regnames();
   
       foreach (ss_strap_soc_rw_regnames[ix]) begin
@@ -47,9 +39,9 @@ task ss_strap_reg_test;
         //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
         if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
             (ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
-            (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT") ||
-            (ss_strap_soc_rw_regnames[ix] == "SS_CALIPTRA_DMA_AXI_USER")) begin //writeable only by TAP
-          //$display("Found %s", ss_strap_soc_rw_regnames[ix]);
+            (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin ////||
+            //(ss_strap_soc_rw_regnames[ix] == "SS_CALIPTRA_DMA_AXI_USER")) begin //writeable only by TAP
+          $display("Found %s", ss_strap_soc_rw_regnames[ix]);
           ss_strap_soc_rw_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
           continue; 
         end
