@@ -653,7 +653,12 @@ module caliptra_top_tb_services
 `ifdef CALIPTRA_DEBUG_UNLOCKED
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 `else
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    initial begin
+        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+        else
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    end
 `endif
     always @(negedge clk) begin
         //lock debug mode

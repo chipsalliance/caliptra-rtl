@@ -2039,10 +2039,11 @@
             foreach(UDS_PROGRAM_SUCCESS_bit_cg[bt]) this.UDS_PROGRAM_SUCCESS_bit_cg[bt].sample(data[6 + bt]);
             foreach(UDS_PROGRAM_FAIL_bit_cg[bt]) this.UDS_PROGRAM_FAIL_bit_cg[bt].sample(data[7 + bt]);
             foreach(UDS_PROGRAM_IN_PROGRESS_bit_cg[bt]) this.UDS_PROGRAM_IN_PROGRESS_bit_cg[bt].sample(data[8 + bt]);
-            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[9 + bt]);
+            foreach(TAP_MAILBOX_AVAILABLE_bit_cg[bt]) this.TAP_MAILBOX_AVAILABLE_bit_cg[bt].sample(data[9 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[10 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_SUCCESS*/  ,  data[1:1]/*MANUF_DBG_UNLOCK_FAIL*/  ,  data[2:2]/*MANUF_DBG_UNLOCK_IN_PROGRESS*/  ,  data[3:3]/*PROD_DBG_UNLOCK_SUCCESS*/  ,  data[4:4]/*PROD_DBG_UNLOCK_FAIL*/  ,  data[5:5]/*PROD_DBG_UNLOCK_IN_PROGRESS*/  ,  data[6:6]/*UDS_PROGRAM_SUCCESS*/  ,  data[7:7]/*UDS_PROGRAM_FAIL*/  ,  data[8:8]/*UDS_PROGRAM_IN_PROGRESS*/  ,  data[31:9]/*RSVD*/   );
+            this.fld_cg.sample( data[0:0]/*MANUF_DBG_UNLOCK_SUCCESS*/  ,  data[1:1]/*MANUF_DBG_UNLOCK_FAIL*/  ,  data[2:2]/*MANUF_DBG_UNLOCK_IN_PROGRESS*/  ,  data[3:3]/*PROD_DBG_UNLOCK_SUCCESS*/  ,  data[4:4]/*PROD_DBG_UNLOCK_FAIL*/  ,  data[5:5]/*PROD_DBG_UNLOCK_IN_PROGRESS*/  ,  data[6:6]/*UDS_PROGRAM_SUCCESS*/  ,  data[7:7]/*UDS_PROGRAM_FAIL*/  ,  data[8:8]/*UDS_PROGRAM_IN_PROGRESS*/  ,  data[9:9]/*TAP_MAILBOX_AVAILABLE*/  ,  data[31:10]/*RSVD*/   );
         end
     endfunction
 
@@ -2057,10 +2058,11 @@
             foreach(UDS_PROGRAM_SUCCESS_bit_cg[bt]) this.UDS_PROGRAM_SUCCESS_bit_cg[bt].sample(UDS_PROGRAM_SUCCESS.get_mirrored_value() >> bt);
             foreach(UDS_PROGRAM_FAIL_bit_cg[bt]) this.UDS_PROGRAM_FAIL_bit_cg[bt].sample(UDS_PROGRAM_FAIL.get_mirrored_value() >> bt);
             foreach(UDS_PROGRAM_IN_PROGRESS_bit_cg[bt]) this.UDS_PROGRAM_IN_PROGRESS_bit_cg[bt].sample(UDS_PROGRAM_IN_PROGRESS.get_mirrored_value() >> bt);
+            foreach(TAP_MAILBOX_AVAILABLE_bit_cg[bt]) this.TAP_MAILBOX_AVAILABLE_bit_cg[bt].sample(TAP_MAILBOX_AVAILABLE.get_mirrored_value() >> bt);
             foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( MANUF_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  PROD_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  UDS_PROGRAM_SUCCESS.get_mirrored_value()  ,  UDS_PROGRAM_FAIL.get_mirrored_value()  ,  UDS_PROGRAM_IN_PROGRESS.get_mirrored_value()  ,  RSVD.get_mirrored_value()   );
+            this.fld_cg.sample( MANUF_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  MANUF_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_SUCCESS.get_mirrored_value()  ,  PROD_DBG_UNLOCK_FAIL.get_mirrored_value()  ,  PROD_DBG_UNLOCK_IN_PROGRESS.get_mirrored_value()  ,  UDS_PROGRAM_SUCCESS.get_mirrored_value()  ,  UDS_PROGRAM_FAIL.get_mirrored_value()  ,  UDS_PROGRAM_IN_PROGRESS.get_mirrored_value()  ,  TAP_MAILBOX_AVAILABLE.get_mirrored_value()  ,  RSVD.get_mirrored_value()   );
         end
     endfunction
 
