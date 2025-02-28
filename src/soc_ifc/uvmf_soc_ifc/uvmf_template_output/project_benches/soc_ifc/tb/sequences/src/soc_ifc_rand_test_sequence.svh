@@ -86,7 +86,7 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_SMALL_UNLOCK           := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_MEDIUM_UNLOCK          := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_LARGE_UNLOCK           := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION                  := 0, // TODO re-enable this // := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_CONTENTION                  := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL         := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_MEDIUM        := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_LARGE         := 1,
@@ -96,17 +96,17 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_SMALL            := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_MEDIUM           := 25,
           IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE            := 1,
-          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL           := 0, // TODO re-enable this := 25,
-          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM          := 0, // TODO re-enable this := 25,
-          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE           := 0, // TODO re-enable this := 1,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_SMALL           := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_MEDIUM          := 25,
+          IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE           := 1,
           IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION              := 25,
-          IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT                 := 0, // TODO re-enable this // := 10,
+          IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT                 := 10,
           IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_RAND_SMALL            := 25,
-          IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL     := 0, // TODO re-enable this := 25,
-          IDX_SOC_IFC_ENV_RST_WARM                             := 0, // TODO re-enable this //:= 1,
-          IDX_SOC_IFC_ENV_RST_COLD                             := 0, // TODO re-enable this //:= 1,
-          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 0, // TODO re-enable this //:= 10,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 0  // TODO re-enable this //:= 10
+          IDX_SOC_IFC_ENV_CPTRA_MBOX_TOP_REG_AXS_INV_SMALL     := 25,
+          IDX_SOC_IFC_ENV_RST_WARM                             := 1,
+          IDX_SOC_IFC_ENV_RST_COLD                             := 1,
+          IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 10,
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 10
       };
   }
   constraint disable_long_env_seqs_c {
