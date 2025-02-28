@@ -118,6 +118,7 @@ import aaxi_uvm_pkg::*;
   // enable the support of all user-defined signaling
   defparam monitor0.USER_SUPPORT= 5'b11111;
   defparam monitor0.VER= "AXI4";
+  defparam monitor0.checker0.MAXWAITS = 'd100;
 
   initial begin
     uc = new();

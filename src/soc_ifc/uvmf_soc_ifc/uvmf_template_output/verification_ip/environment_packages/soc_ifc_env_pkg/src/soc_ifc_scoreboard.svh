@@ -573,7 +573,16 @@ class soc_ifc_scoreboard #(
 
     if (axi_expected_q.size() > 0) begin
         t_exp = axi_expected_q.pop_front();
+        `uvm_info("KNU_SCBD_AXI", $sformatf("exp strobes is %b, act strobes is %b", {t_exp.strobes[3],t_exp.strobes[2],t_exp.strobes[1],t_exp.strobes[0]}, {t.strobes[3],t.strobes[2],t.strobes[1],t.strobes[0]}), UVM_MEDIUM)
+        `uvm_info("KNU_SCBD_AXI", "--------Expected txn---------", UVM_MEDIUM)
+        // t_exp.packet_sprint(4,);
+        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+        `uvm_info("KNU_SCBD_AXI", "--------Actual txn---------", UVM_MEDIUM)
+        // t.packet_sprint(4,);
+        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+
         txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+        `uvm_info("KNU_SCBD_AXI", $sformatf("diff is %s", diff), UVM_MEDIUM)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)

@@ -62,10 +62,10 @@ class soc_ifc_env_generic_2_sequence_base extends aaxi_uvm_seq_base; //soc_ifc_e
         //     end
         // join
         
-        // write_reg();
-        // read_reg();
+        write_reg();
+        read_reg();
 
-        outstanding_write_reg();
+        // outstanding_write_reg();
         
     endtask
   

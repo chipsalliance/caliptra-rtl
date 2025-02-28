@@ -32,6 +32,8 @@ class soc_ifc_env_gen_rand_rw_sequence extends soc_ifc_env_generic_2_sequence_ba
     soc_ifc_reg_model_top reg_model;
     aaxi_cfg_info aaxi_ci;
     uvm_reg_data_t reg_write_data[$];
+    uvm_reg_data_t act_read_data;
+    uvm_reg_data_t exp_write_data;
 
     extern virtual task read_reg();
     extern virtual task write_reg();
@@ -125,8 +127,8 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
         trans.len = 0; //$urandom_range(0,1); //0;
         trans.size = $urandom_range(0,2); 
         trans.burst = $urandom_range(0,1);
-        trans.ar_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //0; //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.resp_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.ar_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //0; //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.resp_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
         
         `uvm_info("KNU_GEN_RW", "Starting AAXI read txn", UVM_MEDIUM)
         
@@ -141,10 +143,28 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
         end
 
         if (found) begin
-            if ({rsp.data[3], rsp.data[2],rsp.data[1],rsp.data[0]} == reg_write_data[idx])
+            case(trans.size)
+                0: begin
+                    act_read_data = {'h00,'h00,'h00,rsp.data[0]};
+                    exp_write_data = {'h00,'h00,'h00,reg_write_data[idx][7:0]};
+                end
+                1: begin
+                    act_read_data = {'h00,'h00,rsp.data[1],rsp.data[0]};
+                    exp_write_data = {'h00,'h00,reg_write_data[idx][15:0]};
+                end
+                2: begin
+                    act_read_data = {rsp.data[3],rsp.data[2],rsp.data[1],rsp.data[0]};
+                    exp_write_data = reg_write_data[idx];
+                end
+                default: begin
+                    act_read_data = {rsp.data[3],rsp.data[2],rsp.data[1],rsp.data[0]};
+                    exp_write_data = reg_write_data[idx];
+                end
+            endcase
+            if (act_read_data == exp_write_data)
                 `uvm_info("KNU_GEN_RW", "Read data matches write data", UVM_MEDIUM)
             else
-                `uvm_error("KNU_GEN_RW", $sformatf("Read data %h does not match write data %h", {rsp.data[3], rsp.data[2],rsp.data[1],rsp.data[0]}, reg_write_data[idx]))
+                `uvm_error("KNU_GEN_RW", $sformatf("Read data %h does not match write data %h", act_read_data, exp_write_data))
         end
     end
 endtask
@@ -159,6 +179,7 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
     reg[3:0][7:0] random_dword;
 
     automatic int i;
+    automatic bit strb;
 
     reg_model.soc_ifc_reg_rm.soc_ifc_reg_AXI_map.get_registers(regs, UVM_HIER);
 
@@ -192,19 +213,35 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
                 `uvm_info("KNU_ERR", $sformatf("Random byte = %h", random_byte), UVM_MEDIUM)
             end
             trans.data.push_back(random_byte);
-            trans.strobes[i] = $urandom_range(0,1);
-            if (trans.strobes[i])
+            strb = $urandom_range(0,1);
+            if (strb == 1)
                 random_dword[i] = random_byte;
             else
                 random_dword[i] = 8'h00;
+            trans.strobes.push_back(strb);
+            `uvm_info("KNU_STRB", $sformatf("strb = %0d for index i = %0d --> random dword at index = %h", strb, i, random_dword[i]), UVM_MEDIUM)
         end
 
-        trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
 
         `uvm_info("KNU_ERR", $sformatf("Random dword = %h %h %h %h", random_dword[3], random_dword[2], random_dword[1], random_dword[0]), UVM_MEDIUM)
-        reg_write_data[idx] = random_dword[3:0];
+        // reg_write_data[idx] = random_dword[3:0];
+        case(trans.size)
+            0: begin
+                reg_write_data[idx] = {'h00,'h00,'h00,random_dword[0]};
+            end
+            1: begin
+                reg_write_data[idx] = {'h00,'h00,random_dword[1:0]};
+            end
+            2: begin
+                reg_write_data[idx] = random_dword[3:0];
+            end
+            default: begin
+                reg_write_data[idx] = random_dword[3:0];
+            end
+        endcase
         `uvm_info("KNU_GEN_RW", "Starting AAXI write txn", UVM_MEDIUM)
 
         finish_item(trans);
@@ -246,9 +283,9 @@ task soc_ifc_env_gen_rand_rw_sequence::outstanding_write_reg();
         //     random_dword[i] = 8'h00;
     end
 
-    // trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-    // trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-    trans.b_valid_ready_delay = 100; //$urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+    // trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+    // trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+    trans.b_valid_ready_delay = 100; //$urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1); //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
 
     finish_item(trans);
     #10;
@@ -297,8 +334,8 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
         trans.len = 0;
         trans.size = 1; //$urandom_range(0,7);
         trans.burst = 0; //$urandom_range(0,1);
-        trans.ar_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.resp_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.ar_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.resp_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
         
         `uvm_info("KNU_GEN_RW", "Starting AAXI read txn", UVM_MEDIUM)
         
@@ -352,9 +389,9 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
             trans.data.push_back($urandom());
             trans.strobes[i] = $urandom_range(0,1);
         end
-        trans.adw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.aw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
-        trans.b_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.adw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.aw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
+        trans.b_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
         
         `uvm_info("KNU_GEN_RW", "Starting AAXI write txn", UVM_MEDIUM)
         

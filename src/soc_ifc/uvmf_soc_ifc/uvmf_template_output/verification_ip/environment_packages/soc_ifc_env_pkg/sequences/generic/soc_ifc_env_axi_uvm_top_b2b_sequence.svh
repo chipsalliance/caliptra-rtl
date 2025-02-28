@@ -65,6 +65,7 @@ class soc_ifc_env_axi_uvm_top_b2b_sequence extends soc_ifc_env_sequence_base #(.
         configuration.aaxi_ci.id_outstanding_depth = 10;
         
         soc_ifc_env_axi_uvm_gen_b2b_rand_seq.aaxi_ci = configuration.aaxi_ci;
+        `uvm_info("[TOP b2b]", $sformatf("maxwait = %d, outstanding depth = %d", configuration.aaxi_ci.maxwaits, configuration.aaxi_ci.total_outstanding_depth), UVM_MEDIUM)
         soc_ifc_env_axi_uvm_gen_b2b_rand_seq.start(reg_model.soc_ifc_AXI_map.get_sequencer());
         // repeat(4) begin
         //     outstanding_write_seq.start(reg_model.soc_ifc_AXI_map.get_sequencer());

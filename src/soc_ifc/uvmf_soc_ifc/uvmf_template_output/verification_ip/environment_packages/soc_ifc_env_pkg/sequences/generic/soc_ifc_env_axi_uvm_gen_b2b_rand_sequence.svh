@@ -45,11 +45,19 @@ class soc_ifc_env_axi_uvm_gen_b2b_rand_sequence extends soc_ifc_env_axi_uvm_b2b_
 endclass
 
 task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_reg();
+    
     aaxi_master_tr trans;
     reg [31:0] base;
     automatic int k;
 
     base = 'h30000;
+
+    // `uvm_info("[Read reg]", "setting maxwaits", UVM_MEDIUM)
+    // aaxi_ci.maxwaits = 50;
+    // aaxi_ci.total_outstanding_depth = 10;
+    // aaxi_ci.id_outstanding_depth = 10;
+    `uvm_info("[Read reg]", $sformatf("maxwait = %d, outstanding depth = %d", aaxi_ci.maxwaits, aaxi_ci.total_outstanding_depth), UVM_MEDIUM)
+
     for (int i = 0; i < 10; i++) begin
         k = i;
         trans = aaxi_master_tr::type_id::create("trans");
@@ -83,6 +91,11 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::write_reg(int id);
     automatic int k;
 
     base = 'h30000;
+
+    // aaxi_ci.maxwaits = 50;
+    // aaxi_ci.total_outstanding_depth = 10;
+    // aaxi_ci.id_outstanding_depth = 10;
+
     for (int i = 0; i < 10; i++) begin
         k = i;
     // repeat(10) begin
