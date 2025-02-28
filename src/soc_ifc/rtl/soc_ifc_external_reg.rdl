@@ -314,7 +314,7 @@ reg {
                    [br][lb]15:8[rb] Patch version
                    [br][lb] 7:4[rb] Minor version
                    [br][lb] 3:0[rb] Major version";
-           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0011;
+           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0002;
     field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
