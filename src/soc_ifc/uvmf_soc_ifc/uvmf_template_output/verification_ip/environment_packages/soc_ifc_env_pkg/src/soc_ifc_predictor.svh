@@ -1310,6 +1310,11 @@ class soc_ifc_predictor #(
                         `uvm_info("PRED_AHB", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
                     end
                 end
+                // TODO
+                "tap_mode": begin
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
+                    // TODO coverage?
+                end
                 //SHA Accelerator Functions
                 "LOCK": begin
                     // Reading sha_lock when it is already locked has no effect, so
@@ -1705,10 +1710,11 @@ class soc_ifc_predictor #(
                 end
                 // TODO
                 "SS_DBG_MANUF_SERVICE_REG_REQ": begin
-                    `uvm_warning("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
+                // TODO
                 "SS_DBG_MANUF_SERVICE_REG_RSP": begin
-                    `uvm_warning("TODO", "FIXME")
+                    `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 "SS_SOC_DBG_UNLOCK_LEVEL[0]",
                 "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin
@@ -2610,6 +2616,11 @@ class soc_ifc_predictor #(
                 next_step = '{null_action: 1'b1, default: 1'b0};
                 `uvm_info("PRED_AXI", $sformatf("Logged mailbox step [%p]", next_step), UVM_HIGH)
             end
+            // TODO
+            "tap_mode": begin
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
+                // TODO coverage?
+            end
             //SHA Accelerator Functions
             "LOCK": begin 
                 // Reading sha_lock when it is already locked has no effect, so
@@ -2877,10 +2888,11 @@ class soc_ifc_predictor #(
             end
             // TODO
             "SS_DBG_MANUF_SERVICE_REG_REQ": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
+            // TODO
             "SS_DBG_MANUF_SERVICE_REG_RSP": begin
-                `uvm_warning("TODO", "FIXME")
+                `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             "SS_SOC_DBG_UNLOCK_LEVEL[0]",
             "SS_SOC_DBG_UNLOCK_LEVEL[1]": begin

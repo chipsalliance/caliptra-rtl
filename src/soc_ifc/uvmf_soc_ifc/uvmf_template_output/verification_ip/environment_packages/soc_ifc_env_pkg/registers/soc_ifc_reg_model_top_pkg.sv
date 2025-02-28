@@ -1384,6 +1384,7 @@ package soc_ifc_reg_model_top_pkg;
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_status .mbox_fsm_ps, mbox_csr_mbox_status_mbox_fsm_ps_cb);
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_execute.execute    , mbox_csr_mbox_execute_execute_cb   );
                                       uvm_reg_field_cb::add(mbox_csr_rm.mbox_unlock .unlock     , mbox_csr_mbox_unlock_unlock_cb     );
+                                      uvm_reg_field_cb::add(mbox_csr_rm.tap_mode    .enabled    , soc_ifc_reg_internal_cb);
 
         /* -- soc_ifc_reg -- */
         soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL    .get_fields(cptra_fatal_flds    );
