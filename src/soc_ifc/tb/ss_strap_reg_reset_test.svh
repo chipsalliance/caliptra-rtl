@@ -49,7 +49,6 @@
         if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
             (ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
             (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin ////||
-            //(ss_strap_soc_rw_regnames[ix] == "SS_CALIPTRA_DMA_AXI_USER")) begin //writeable only by TAP
           $display("Found %s", ss_strap_soc_rw_regnames[ix]);
           ss_strap_soc_rw_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
           continue; 
