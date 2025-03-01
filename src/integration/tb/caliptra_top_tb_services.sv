@@ -471,7 +471,7 @@ module caliptra_top_tb_services
 
     genvar dword_i, slot_id;
     generate 
-        for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
+        for (slot_id=0; slot_id < 9; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
@@ -653,7 +653,12 @@ module caliptra_top_tb_services
 `ifdef CALIPTRA_DEBUG_UNLOCKED
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 `else
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    initial begin
+        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+        else
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    end
 `endif
     always @(negedge clk) begin
         //lock debug mode
@@ -696,7 +701,7 @@ module caliptra_top_tb_services
             disable_mldsa_sva <= 1'b0;
         end
         else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
-            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
+            if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.verifying_process) begin
                 inject_normcheck_failure    <= 1'b1;
                 normcheck_mode_random       <= 'h0;
                 inject_makehint_failure     <= 1'b0; 
@@ -741,12 +746,12 @@ module caliptra_top_tb_services
         else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
         else begin
-            release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+            release `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid;
             release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
         end
         
         if (inject_mldsa_timeout)
-            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
+            force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80;
     end
 
     `ifndef VERILATOR
@@ -2277,6 +2282,7 @@ ecc_top_cov_bind i_ecc_top_cov_bind();
 mldsa_top_cov_bind i_mldsa_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
+axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

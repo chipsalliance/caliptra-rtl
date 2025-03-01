@@ -222,7 +222,8 @@
     input bit [1-1:0] ecc_double_error,
     input bit [3-1:0] mbox_fsm_ps,
     input bit [1-1:0] soc_has_lock,
-    input bit [15-1:0] mbox_rdptr
+    input bit [15-1:0] mbox_rdptr,
+    input bit [1-1:0] tap_has_lock
     );
         option.per_instance = 1;
         status_cp : coverpoint status;
@@ -280,6 +281,7 @@
         }
         soc_has_lock_cp : coverpoint soc_has_lock;
         mbox_rdptr_cp : coverpoint mbox_rdptr;
+        tap_has_lock_cp : coverpoint tap_has_lock;
         status_edge_cp : coverpoint status {
             bins rise = (0 => 1);
             bins fall = (1 => 0);
@@ -293,6 +295,10 @@
             bins fall = (1 => 0);
         }
         soc_has_lock_edge_cp : coverpoint soc_has_lock {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+        tap_has_lock_edge_cp : coverpoint tap_has_lock {
             bins rise = (0 => 1);
             bins fall = (1 => 0);
         }

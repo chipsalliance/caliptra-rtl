@@ -5,7 +5,6 @@
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
-+incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
 +incdir+${CALIPTRA_ROOT}/src/kmac/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
@@ -44,7 +43,6 @@ ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
-${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/kmac/rtl/sha3_pkg.sv
 ${CALIPTRA_ROOT}/src/kmac/rtl/keccak_round.sv

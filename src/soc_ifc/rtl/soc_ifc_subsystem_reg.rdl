@@ -182,16 +182,17 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {desc="Manufacturing debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_SUCCESS     = 1'b0;
-    field {desc="Manufacturing debug unlock failed. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                           ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_FAIL        = 1'b0;
-    field {desc="Manufacturing debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                   ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_IN_PROGRESS = 1'b0;
-    field {desc="Production debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."      ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_SUCCESS      = 1'b0;
-    field {desc="Production debug unlock failed. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                                 ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_FAIL         = 1'b0;
-    field {desc="Production debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                         ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_IN_PROGRESS  = 1'b0;
-    field {desc="UDS Programming was successful. Only writable by Caliptra. Sticky once set, until warm reset."                                                                                              ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_SUCCESS          = 1'b0;
-    field {desc="UDS Programming failed. Only writable by Caliptra."                                                                                                                                         ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_FAIL             = 1'b0;
-    field {desc="UDS Programming is in progress. Only writable by Caliptra."                                                                                                                                 ; sw=rw; hw=rw; we; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_IN_PROGRESS      = 1'b0;
-    field {desc="RSVD"                                                                                                                                                                                       ; sw=r ; hw= w;                                          } RSVD[23];
+    field {desc="Manufacturing debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_SUCCESS     = 1'b0;
+    field {desc="Manufacturing debug unlock failed. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                           ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_FAIL        = 1'b0;
+    field {desc="Manufacturing debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."                                   ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_IN_PROGRESS = 1'b0;
+    field {desc="Production debug unlock was successful. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1. Sticky once set, until warm reset."      ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_SUCCESS      = 1'b0;
+    field {desc="Production debug unlock failed. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                                 ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_FAIL         = 1'b0;
+    field {desc="Production debug unlock is in progress. Only writable by Caliptra, and only when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."                                         ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_IN_PROGRESS  = 1'b0;
+    field {desc="UDS Programming was successful. Only writable by Caliptra. Sticky once set, until warm reset."                                                                                              ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_SUCCESS          = 1'b0;
+    field {desc="UDS Programming failed. Only writable by Caliptra."                                                                                                                                         ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_FAIL             = 1'b0;
+    field {desc="UDS Programming is in progress. Only writable by Caliptra."                                                                                                                                 ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_IN_PROGRESS      = 1'b0;
+    field {desc="Enables the TAP to acquire the mailbox lock. Only writable by Caliptra."                                                                                                                    ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} TAP_MAILBOX_AVAILABLE        = 1'b0;
+    field {desc="RSVD"                                                                                                                                                                                       ; sw=r ; hw=w;                                      } RSVD[22];
 } SS_DBG_MANUF_SERVICE_REG_RSP;
 
 reg {
@@ -201,7 +202,7 @@ reg {
             [br]Caliptra Access: RW
             [br]SOC Access:      RO
             [br]TAP Access [in debug/manuf mode]: RO";
-    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; hw=rw; we;} LEVEL[32] = 32'h0;
+    field {desc="Debug unlock level"; sw=rw; swwel=true/*soc_req || !debug_intent*/; hw=rw; we; resetsignal = cptra_pwrgood; } LEVEL[32] = 32'h0;
 } SS_SOC_DBG_UNLOCK_LEVEL[2];
 
 reg {

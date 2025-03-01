@@ -1737,7 +1737,8 @@
     input bit [1-1:0] UDS_PROGRAM_SUCCESS,
     input bit [1-1:0] UDS_PROGRAM_FAIL,
     input bit [1-1:0] UDS_PROGRAM_IN_PROGRESS,
-    input bit [23-1:0] RSVD
+    input bit [1-1:0] TAP_MAILBOX_AVAILABLE,
+    input bit [22-1:0] RSVD
     );
         option.per_instance = 1;
         MANUF_DBG_UNLOCK_SUCCESS_cp : coverpoint MANUF_DBG_UNLOCK_SUCCESS;
@@ -1749,6 +1750,7 @@
         UDS_PROGRAM_SUCCESS_cp : coverpoint UDS_PROGRAM_SUCCESS;
         UDS_PROGRAM_FAIL_cp : coverpoint UDS_PROGRAM_FAIL;
         UDS_PROGRAM_IN_PROGRESS_cp : coverpoint UDS_PROGRAM_IN_PROGRESS;
+        TAP_MAILBOX_AVAILABLE_cp : coverpoint TAP_MAILBOX_AVAILABLE;
         RSVD_cp : coverpoint RSVD;
 
     endgroup
