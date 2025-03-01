@@ -378,7 +378,7 @@ import soc_ifc_pkg::*;
         cmd_inv_rd_fixed    = hwif_out.ctrl.rd_fixed.value && hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE;
         cmd_inv_wr_fixed    = hwif_out.ctrl.wr_fixed.value && hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE;
         cmd_inv_mbox_lock   = !mbox_lock && ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) || (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX));
-        cmd_inv_sha_lock    = !sha_lock && (1'b0/*FIXME addr decode*/);
+        cmd_inv_sha_lock    = !sha_lock && (1'b0/*addr decode? NOTE: Direct-access to sha accelerator not implemented. Disable this check.*/);
         cmd_parse_error     = cmd_inv_rd_route    ||
                               cmd_inv_wr_route    ||
                               cmd_inv_route_combo ||
@@ -425,7 +425,7 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_rd_sts        .hwset = r_req_if.resp_valid && r_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_wr_sts        .hwset = w_req_if.resp_valid && w_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts     .hwset = mb_lock_dropped && !mb_lock_error; // pulse to set
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = (ctrl_fsm_ps == DMA_IDLE) && hwif_out.ctrl.go.value && cmd_inv_mbox_lock; // FIXME with real-time checking
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = 1'b0; // SHA accelerator direct-mode not enabled; sha locking should be checked by API user (i.e. FW) instead of in HW
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts    .hwset = (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) &&  fifo_w_valid && !fifo_w_ready;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts    .hwset = (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !fifo_r_valid &&  fifo_r_ready;
 
@@ -497,12 +497,12 @@ import soc_ifc_pkg::*;
         r_req_if.addr     = src_addr + (hwif_out.ctrl.rd_fixed.value ? 0 : rd_bytes_requested);
         r_req_if.byte_len = rd_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
-        r_req_if.lock     = 1'b0; // TODO
+        r_req_if.lock     = 1'b0;
         w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(wr_credits) >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         w_req_if.addr     = dst_addr + (hwif_out.ctrl.wr_fixed.value ? 0 : wr_bytes_requested);
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         w_req_if.fixed    = hwif_out.ctrl.wr_fixed.value;
-        w_req_if.lock     = 1'b0; // TODO
+        w_req_if.lock     = 1'b0;
     end
 
     always_comb begin
@@ -693,7 +693,7 @@ import soc_ifc_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth            (FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
-      .Secure           (1'b0)  // use prim count for pointers TODO review if this is needed
+      .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
     ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
