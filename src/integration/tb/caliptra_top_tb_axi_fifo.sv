@@ -29,7 +29,12 @@ module caliptra_top_tb_axi_fifo #(
 
     // AXI INF
     axi_if.w_sub s_axi_w_if,
-    axi_if.r_sub s_axi_r_if
+    axi_if.r_sub s_axi_r_if,
+
+    // Control
+    input logic auto_push,
+    input logic auto_pop,
+    input logic fifo_clear
 );
 
     // --------------------------------------- //
@@ -59,6 +64,12 @@ module caliptra_top_tb_axi_fifo #(
     logic [FIFO_BW-1:0] fifo_depth;
     logic               fifo_full, fifo_full_r;
     logic               fifo_empty, fifo_empty_r;
+
+    // Random stimulus generators
+    int stall_down_count;
+    logic [31:0] rand_w_data;
+    logic        rand_w_valid;
+    logic        rand_r_ready;
 
 
     axi_sub #(
@@ -108,7 +119,7 @@ module caliptra_top_tb_axi_fifo #(
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (),
+      .clr_i   (fifo_clear),
       // write port
       .wvalid_i(fifo_w_valid  ),
       .wready_o(fifo_w_ready  ),
@@ -136,11 +147,32 @@ module caliptra_top_tb_axi_fifo #(
     end
 
     always_comb begin
-        fifo_w_valid = dv &&  write;
-        fifo_r_ready = dv && !write;
+        fifo_w_valid = (dv &&  write) || rand_w_valid;
+        fifo_r_ready = (dv && !write) || rand_r_ready;
         hold = write ? !fifo_w_ready : !fifo_r_valid;
         rdata = fifo_r_data;
-        fifo_w_data = wdata;
+        fifo_w_data = rand_w_valid ? rand_w_data : wdata;
+    end
+
+    // --------------------------------------- //
+    // Random Stimulus                         //
+    // --------------------------------------- //
+    initial begin
+        if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 15, [2:7] :/ 4, [8:31] :/ 1}; })
+            $fatal("Randomize failed");
+        forever begin
+            @(posedge clk)
+            if (auto_pop || auto_push) begin
+                if (|stall_down_count)
+                    stall_down_count <= stall_down_count - 1;
+                else if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 15, [2:7] :/ 4, [8:31] :/ 1}; })
+                    $fatal("Randomize failed");
+                if (!std::randomize(rand_w_data))
+                    $fatal("Randomize failed");
+            end
+            rand_w_valid <= (auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready); // Hold valid until data is accepted
+            rand_r_ready <= (auto_pop  && (stall_down_count == 0));
+        end
     end
 
 endmodule

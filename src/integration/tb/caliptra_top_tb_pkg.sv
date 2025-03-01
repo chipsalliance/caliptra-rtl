@@ -72,6 +72,12 @@ typedef struct packed {
     logic do_ooo_access;
 } ras_test_ctrl_t;
 
+typedef struct packed {
+    logic fifo_auto_push;
+    logic fifo_auto_pop;
+    logic fifo_clear;
+} axi_complex_ctrl_t;
+
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing
 localparam MBOX_NON_FATAL_OBSERVED         = 32'h600dab1e;
 localparam PROT_NO_LOCK_NON_FATAL_OBSERVED = 32'h600dbabe;

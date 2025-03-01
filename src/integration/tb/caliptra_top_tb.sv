@@ -103,6 +103,7 @@ module caliptra_top_tb (
     security_state_t security_state;
 
     ras_test_ctrl_t ras_test_ctrl;
+    axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
     logic        etrng_req;
     logic  [3:0] itrng_data;
@@ -277,8 +278,8 @@ caliptra_top caliptra_top_dut (
     // Subsystem mode firmware execution control
     .ss_generic_fw_exec_ctrl(/*TODO*/),
 
-    .generic_input_wires (generic_input_wires),
-    .generic_output_wires(                   ),
+    .generic_input_wires (generic_input_wires ),
+    .generic_output_wires(                    ),
 
     // RISC-V Trace Ports
     .trace_rv_i_insn_ip     (), // TODO
@@ -341,6 +342,7 @@ caliptra_top_tb_services #(
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
     .cycleCnt(cycleCnt),
+    .axi_complex_ctrl(axi_complex_ctrl),
 
     //Interrupt flags
     .int_flag(int_flag),
@@ -363,7 +365,8 @@ caliptra_top_tb_axi_complex tb_axi_complex_i (
     .core_clk           (core_clk           ),
     .cptra_rst_b        (cptra_rst_b        ),
     .m_axi_if           (m_axi_if           ),
-    .recovery_data_avail(recovery_data_avail)
+    .recovery_data_avail(recovery_data_avail),
+    .ctrl               (axi_complex_ctrl   )
 );
 
 //=========================================================================-

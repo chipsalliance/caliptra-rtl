@@ -70,6 +70,7 @@ module caliptra_top_tb_services
     // TB Controls
     output var   ras_test_ctrl_t ras_test_ctrl,
     output int   cycleCnt,
+    output var   axi_complex_ctrl_t axi_complex_ctrl,
 
     //Interrupt flags
     output logic int_flag,
@@ -295,6 +296,11 @@ module caliptra_top_tb_services
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
+    //         8'h8a        - Enable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8b        - Enable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8c        - Disable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8d        - Disable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8e        - Flush the FIFO in caliptra_top_tb_axi_complex
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -453,6 +459,33 @@ module caliptra_top_tb_services
     initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
     always@(negedge clk) begin
         ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
+    end
+
+    // AXI Complex Control
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b0;
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
+            axi_complex_ctrl.fifo_clear     <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8a) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8b) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8c) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8d) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8e) && mailbox_write) begin
+            axi_complex_ctrl.fifo_clear     <= axi_complex_ctrl.fifo_clear;
+        end
+        else begin
+            axi_complex_ctrl.fifo_clear     <= 1'b0;
+        end
     end
 
     //keyvault injection hooks

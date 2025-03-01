@@ -14,16 +14,16 @@
 //
 `default_nettype none
 
-module caliptra_top_tb_axi_complex (
+module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     input logic core_clk,
     input logic cptra_rst_b,
     axi_if m_axi_if,
-    output logic recovery_data_avail
+    output logic recovery_data_avail,
+    input var axi_complex_ctrl_t ctrl
 );
 
     import axi_pkg::*;
     import soc_ifc_pkg::*;
-    import caliptra_top_tb_pkg::*;
 
     //=========================================================================-
     // Local i/fs
@@ -325,7 +325,12 @@ module caliptra_top_tb_axi_complex (
 
         // AXI INF
         .s_axi_w_if(axi_fifo_if.w_sub),
-        .s_axi_r_if(axi_fifo_if.r_sub)
+        .s_axi_r_if(axi_fifo_if.r_sub),
+
+        // Control
+        .auto_push (ctrl.fifo_auto_push),
+        .auto_pop  (ctrl.fifo_auto_pop ),
+        .fifo_clear(ctrl.fifo_clear    )
     );
 
     // --------------------- REG Endpoint TODO ---------------------
