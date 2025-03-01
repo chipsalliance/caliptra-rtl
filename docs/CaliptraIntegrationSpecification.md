@@ -349,6 +349,17 @@ The following table describes the allocation of functionality on generic\_input\
 | 0    | Zeroization status | Used by SoC to provide zeroization status of fuses. |
 | 63:1 | RESERVED           | No allocated function.                              |
 
+The following table describes the allocation of functionality to strap\_ss\_strap\_generic\_N. All straps not listed in this table must be tied to 0.
+
+*Table 14: strap\_ss\_strap\_generic\_N function binding*
+
+| N          | Name               | Description                                                                                                                 |
+| :--------- | :---------         | :---------                                                                                                                  |
+| 0          | RESERVED           | No allocated function.                                                                                                      |
+| 1          | RESERVED           | No allocated function.                                                                                                      |
+| 2          | RESERVED           | No allocated function.                                                                                                      |
+| 3          | RESERVED           | No allocated function.                                                                                                      |
+
 # SoC interface operation
 
 The Caliptra mailbox is the primary communication method between Caliptra and the SoC that Caliptra is integrated into.
@@ -463,7 +474,7 @@ It is strongly recommended that these AXI_USER registers are either set at integ
 
 Caliptra provides 5 programmable registers that SoC can set at boot time to limit access to the mailbox peripheral. The default AXI_USER set by the integration parameter CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER is valid at all times. CPTRA\_MBOX\_VALID\_AXI\_USER registers become valid once the corresponding lock bit CPTRA\_MBOX\_AXI\_USER\_LOCK is set.
 
-*Table 14: AXI\_USER register definition*
+*Table 15: AXI\_USER register definition*
 
 | Register                               | Description |
 | :--------- | :--------- |
@@ -474,7 +485,7 @@ Caliptra provides 5 programmable registers that SoC can set at boot time to limi
 
 Another option for limiting access to the mailbox peripheral are the integration time parameters that override the programmable AXI_USER registers. At integration time, the CPTRA\_SET\_MBOX\_AXI\_USER\_INTEG parameters can be set to 1 which enables the corresponding CPTRA\_MBOX\_VALID\_AXI\_USER parameters to override the programmable register.
 
-*Table 15: AXI_USER Parameter definition*
+*Table 16: AXI_USER Parameter definition*
 
 | Parameter                          | Description                                                                                                                            |
 | :--------- | :--------- |
@@ -512,7 +523,7 @@ After a mailbox protocol violation is flagged, it is reported to the system in s
 
 The following table describes AXI transactions that cause the Mailbox FSM to enter the ERROR state, given that the register “mbox\_user” contains the value of the AXI USER that was used to originally acquire the mailbox lock.
 
-*Table 16: Mailbox protocol error trigger conditions*
+*Table 17: Mailbox protocol error trigger conditions*
 
 | FSM state         | SoC HAS LOCK | AXI USER eq mbox_user | Error state trigger condition                                                        |
 | :--------- | :--------- | :--------- | :--------- |
@@ -625,7 +636,7 @@ The following figure shows the SRAM interface timing.
 
 Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. The following configuration options from the RISC-V Core dictate this behavior:
 
-*Table 17: SRAM parameterization*
+*Table 18: SRAM parameterization*
 
 | Parameter       | Value | Description |
 | :--------- | :--------- | :--------- |
@@ -704,7 +715,7 @@ The following table describes SoC integration requirements.
 
 For additional information, see [Caliptra assets and threats](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-assets-and-threats).
 
-*Table 18: SoC integration requirements*
+*Table 19: SoC integration requirements*
 
 | Category | Requirement | Definition of done | Rationale |
 | :--------- | :--------- | :--------- | :--------- |
@@ -776,7 +787,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Implementation                   | SoC shall apply size-only constraints on cells tagged with the "u\_\_size\_only\_\_" string and shall ensure that these are not optimized in synthesis and PNR                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                                                                             | GLS simulations pass                 | Functional requirement                |
 
-*Table 19: Caliptra synthesis warnings for FEV evaluation*
+*Table 20: Caliptra synthesis warnings for FEV evaluation*
 
 | Module                    | Warning | Line No. | Description |
 | :--------- | :--------- | :--------- | :--------- |
@@ -790,7 +801,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 
 Several files contain code that may be specific to an integrator's implementation and should be overridden. This overridable code is either configuration parameters with integrator-specific values or modules that implement process-specific functionality. Code in these files should be modified or replaced by integrators using components from the cell library of their fabrication vendor. The following table describes recommended modifications for each file.
 
-*Table 20: Caliptra integrator custom RTL file list*
+*Table 21: Caliptra integrator custom RTL file list*
 
 | File                                                                                   | Description                                                            |
 | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
@@ -852,7 +863,7 @@ In an unconstrained environment, several RDC violations are anticipated. RDC ana
 ### Reset domains
 The following table identifies the major reset domains in Caliptra core IP design.
 
-*Table 21: Reset definitions (functional resets are marked in **bold**)*
+*Table 22: Reset definitions (functional resets are marked in **bold**)*
 
 | Reset name | Reset type | Reset polarity | Definition point | Reset generated by |
 | ---------- | ---------- | -------------- | ---------------- | ------------------ |
@@ -877,7 +888,7 @@ The reset definitions can be visually represented as shown in the following diag
 
 The following table shows the false paths between various reset groups.
 
-*Table 22: Reset domain crossing false paths*
+*Table 23: Reset domain crossing false paths*
 
 | Launch flop reset | Capture flop reset | Comment |
 | ------------------| ------------------ | ------- |
@@ -890,7 +901,7 @@ The following table shows the false paths between various reset groups.
 
 ## Reset sequencing scenarios
 
-The resets defined in *Table 21* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset.
+The resets defined in *Table 22* have the following sequencing phases, which are applicable for different reset scenarios: cold boot, cold reset, warm reset and firmware reset.
 
 The reset sequencing is illustrated in the following waveform.
 
@@ -902,7 +913,7 @@ The reset sequencing is illustrated in the following waveform.
 
 The following table defines the order in which resets can get asserted. A ">>" in a cell at row X and column Y indicates that if the reset in row X is asserted, the reset in row Y is also asserted. For rest of the cells (in which symbol ">>" is not present) the preceding assumption is not true and so the paths between those resets are potential RDC violations. The black cells are ignored because they are between the same resets.
 
-*Table 23: Reset sequence ordering constraints*
+*Table 24: Reset sequence ordering constraints*
 
 ![](./images/reset_ordering.png)
 
@@ -916,7 +927,7 @@ The following set of constraints and assumptions must be provided before running
 2. The following debug register, which is driven from JTAG, is not toggled during functional flow.
     - u_caliptra.rvtop.veer.dbg.dmcontrol_reg[0] = 0
 3. Set *scan_mode* to 0 for functional analysis.
-4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 21*.
+4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 22*.
 5. Create funtional reset grouping - This step must be customized as per the EDA tool, which is being used for RDC analysis. The goal of this customization is to achieve the following three sequencing requirements/constraints.
     - Gate all clocks when *cptra_noncore_rst_b* is asserted. This ensures that the capture flop clock is gated while the source flop's reset is getting asserted, thereby preventing the capture flop from becoming metastable. The result is when *cptra_noncore_rst_b* is going to be asserted, the following signals are constrained to be at 1 at around that time.
         - soc_ifc_top1.i_soc_ifc_boot_fsm.rdc_clk_dis
@@ -936,14 +947,14 @@ The following set of constraints and assumptions must be provided before running
         - csrng.u_reg.u_ahb_slv_sif.dv
         - entropy_src.u_reg.u_ahb_slv_sif.dv
         - aes_inst.ahb_slv_sif_inst.dv
-6. Constrain the RDC false paths as per *Table 22*.
+6. Constrain the RDC false paths as per *Table 23*.
 
 
 ## RDC violations and waivers
 
-Considering the given constraints, three sets of crossings were identified as RDC violations. All of them can be waived as explained in *Table 24*. Note that the report may differ across EDA tools due to variations in structural analysis, which can be influenced by a range of settings.
+Considering the given constraints, three sets of crossings were identified as RDC violations. All of them can be waived as explained in *Table 25*. Note that the report may differ across EDA tools due to variations in structural analysis, which can be influenced by a range of settings.
 
-*Table 24: Reset domain crossing violations*
+*Table 25: Reset domain crossing violations*
 
 | Sl no | Launch reset | Launch flop | Capture reset | Capture flop |
 | ------| ------------ | ----------- | ------------- | ------------ |
@@ -985,7 +996,7 @@ The following scenarios can occur.
 
 <br>
 
-*Table 25: Reset domain crossing scenarios for #3 and #4 crossing*
+*Table 26: Reset domain crossing scenarios for #3 and #4 crossing*
 
 | #Case | *es_bypass_mode* | *fw_ov_mode_entropy_insert* | *pfifo_bypass_push* | *pfifo_bypass_wdata* | Comment |
 | ------| ---------------- | --------------------------- | ------------------- | -------------------- | ------- |
@@ -1013,7 +1024,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, moderately advanced technology node as of 2024 June.
 
-*Table 26: Netlist synthesis data*
+*Table 27: Netlist synthesis data*
 
 | **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
 | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -1035,7 +1046,7 @@ A standardized set of lint rules is used to sign off on each release. The lint p
 
 The following terminology is used in this document.
 
-*Table 27: Terminology*
+*Table 28: Terminology*
 
 | Abbreviation | Description                                                                                      |
 | :--------- | :--------- |
