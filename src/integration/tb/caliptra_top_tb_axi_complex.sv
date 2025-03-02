@@ -55,7 +55,9 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             .WUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    ),
             .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    ),
             .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH    ),
-            .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    )
+            .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    ),
+//            .MAXWAITS    (256                         ),
+            .RecMaxWaitOn(0                           )
         ) axi4_pc_inst (
             // Global Signals
             .ACLK   (core_clk   ),
