@@ -64,6 +64,7 @@ provides: [caliptra_top_tb_pkg]
 schema_version: 2.4.0
 requires:
   - asserts
+  - axi_pc
   - libs
   - caliptra_axi_sram
   - caliptra_top
