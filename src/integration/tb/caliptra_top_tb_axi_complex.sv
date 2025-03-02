@@ -43,6 +43,77 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
 
     //=========================================================================-
+    // AXI Protocol Checker
+    //=========================================================================-
+    `ifdef AXI4PC
+        Axi4PC axi4_pc_inst (
+            // Global Signals
+            .ACLK(core_clk),
+            .ARESETn(cptra_rst_b),
+
+            // Write Address Channel
+            .AWID    (m_axi_if.awid),
+            .AWADDR  (m_axi_if.awaddr),
+            .AWLEN   (m_axi_if.awlen),
+            .AWSIZE  (m_axi_if.awsize),
+            .AWBURST (m_axi_if.awburst),
+            .AWLOCK  (m_axi_if.awlock),
+            .AWCACHE (),
+            .AWPROT  (),
+            .AWQOS   (),
+            .AWREGION(),
+            .AWUSER  (m_axi_if.awuser),
+            .AWVALID (m_axi_if.awvalid),
+            .AWREADY (m_axi_if.awready),
+
+            // Write Channel
+            .WLAST   (m_axi_if.wlast),
+            .WDATA   (m_axi_if.wdata),
+            .WSTRB   (m_axi_if.wstrb),
+            .WUSER   (m_axi_if.wuser),
+            .WVALID  (m_axi_if.wvalid),
+            .WREADY  (m_axi_if.wready),
+
+            // Write Response Channel
+            .BID     (m_axi_if.bid),
+            .BRESP   (m_axi_if.bresp),
+            .BUSER   (m_axi_if.buser),
+            .BVALID  (m_axi_if.bvalid),
+            .BREADY  (m_axi_if.bready),
+
+            // Read Address Channel
+            .ARID    (m_axi_if.arid),
+            .ARADDR  (m_axi_if.araddr),
+            .ARLEN   (m_axi_if.arlen),
+            .ARSIZE  (m_axi_if.arsize),
+            .ARBURST (m_axi_if.arburst),
+            .ARLOCK  (m_axi_if.arlock),
+            .ARCACHE (),
+            .ARPROT  (),
+            .ARQOS   (),
+            .ARREGION(),
+            .ARUSER  (m_axi_if.aruser),
+            .ARVALID (m_axi_if.arvalid),
+            .ARREADY (m_axi_if.arready),
+
+            // Read Channel
+            .RID     (m_axi_if.rid),
+            .RLAST   (m_axi_if.rlast),
+            .RDATA   (m_axi_if.rdata),
+            .RRESP   (m_axi_if.rresp),
+            .RUSER   (m_axi_if.ruser),
+            .RVALID  (m_axi_if.rvalid),
+            .RREADY  (m_axi_if.rready),
+
+            // Low power interface
+            .CACTIVE (1'b0),
+            .CSYSREQ (1'b0),
+            .CSYSACK (1'b0)
+        );
+    `endif
+
+
+    //=========================================================================-
     // Delay Injection
     //=========================================================================-
     `define GENERIC_2SIG_DLY_TEMPLATE(GEN_NAME, cnt_var, rdy_sig_path, vld_sig_path)                                                        \
