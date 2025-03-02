@@ -409,7 +409,7 @@ module axi_sub_rd import axi_pkg::*; #(
     genvar sva_ii;
     generate
         if (C_LAT > 0) begin
-            for (sva_ii = 0; sva_ii < C_LAT; sva_ii++) begin
+            for (sva_ii = 0; sva_ii < C_LAT-1; sva_ii++) begin
                 // Last stage should be first to fill and first to go empty
                 `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_FILL,  $fell(dp_rready[sva_ii+1]) && !dp_rready[sva_ii], clk, !rst_n)
                 `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_DRAIN, $rose(dp_rready[sva_ii+1]) &&  dp_rready[sva_ii], clk, !rst_n)
