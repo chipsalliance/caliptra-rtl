@@ -14,7 +14,8 @@
 //
 
 module dma_testcase_generator(
-  output logic dma_gen_done
+  input logic preload_dccm_done
+  //output logic dma_gen_done
 );//dma_if dma_xfer_if);
   `include "dma_transfer_randomizer.sv"
 
@@ -39,6 +40,9 @@ module dma_testcase_generator(
       num_iterations = 100; // Default
     end
     
+    // Wait for caliptra_top_tb to complete preload_dccm before running slam_dccm_ram
+    wait(preload_dccm_done);
+
     // Test cases cases are stored in DCCM starting from the end address and filling backwards
     // 0x5003_FFFC: num_iterations
     // 0x5003_FFF8: tc #1
@@ -77,7 +81,8 @@ module dma_testcase_generator(
       end
     end
 
-    dma_gen_done = 1;
+    $display("Writing random generated test cases to DCCM completed.")
+    //dma_gen_done = 1;
   end
 
   // Task to provide the test cases
