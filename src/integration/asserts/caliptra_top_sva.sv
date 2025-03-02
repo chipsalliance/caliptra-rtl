@@ -552,15 +552,8 @@ module caliptra_top_sva
       for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank0_zero_check
         ZERO_MLDSA_sk_mem_bank0_zero: assert property (
             @(posedge `SVA_RDC_CLK)
-            (
-              ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1
-                ( (!`MLDSA_PATH.zeroize_mem_done)[*0:$] ##1
-                  ( `MLDSA_PATH.zeroize_mem_done &&
-                    (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword] == 0)
-                  )
-                )
-              )
-            )
+            $rose(`MLDSA_PATH.zeroize_mem_done) |-> 
+            (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword] == 0)
         )
         else $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero", dword);
       end
@@ -569,20 +562,25 @@ module caliptra_top_sva
       for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank1_zero_check
         ZERO_MLDSA_sk_mem_bank1_zero: assert property (
             @(posedge `SVA_RDC_CLK)
-            (
-              ((`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |-> ##1
-                ( (!`MLDSA_PATH.zeroize_mem_done)[*0:$] ##1
-                  ( `MLDSA_PATH.zeroize_mem_done &&
-                    (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword] == 0)
-                  )
-                )
-              )
-            )
+            $rose(`MLDSA_PATH.zeroize_mem_done) |-> 
+            (`MLDSA_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword] == 0)
         )
         else $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero", dword);
       end
+
+      // Assertion to check that `MLDSA_PATH.zeroize_mem_done` transitions from low to high 
+      // when (`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) is active
+      ZEROIZE_MEM_DONE_TRANSITION: assert property (
+        @(posedge `SVA_RDC_CLK)
+        (`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |=> 
+        ( !`MLDSA_PATH.zeroize_mem_done )[*0:$] ##1 
+        $rose(`MLDSA_PATH.zeroize_mem_done)
+      )
+      else $display("SVA ERROR: [MLDSA zeroize] zeroize_mem_done did not rise when expected");
+
     end
   endgenerate
+
   
 
 
