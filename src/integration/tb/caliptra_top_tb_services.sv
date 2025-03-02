@@ -1886,6 +1886,26 @@ caliptra_sram #(
     .rdata_o (        )
 );
 
+// DMA Test case generator
+// Interface instance
+//dma_transfer_if dma_xfer_if;
+
+// Testcase generator instance 
+dma_transfer_randomizer dma_xfers[];
+logic dma_gen_done;
+
+dma_testcase_generator i_dma_gen (
+    .dma_gen_done (dma_gen_done)
+    );
+/*
+initial begin
+    // Wait for the test cases to be generated
+    wait (dma_gen_done);
+
+    // Retrieve the generated test cases
+    i_dma_gen.get_dma_xfers(dma_xfers);
+end
+*/
 
    //=========================================================================-
    // SRAM preload services
