@@ -36,7 +36,7 @@
     dword_t prod_debug_unlock_data = 32'h00000002;
     dword_t manuf_debug_unlock_data = 32'h00000001;
     dword_t ss_debug_rsp_data;
-    dword_t ss_debug_intent_exp = 32'h00000001;
+    dword_t ss_debug_intent_exp; // = 32'h00000001;
 
     begin
         $display();
@@ -53,20 +53,26 @@
 
         tc_ctr = tc_ctr + 1;
 
+        if (subsystem_mode_tb == 1)
+          ss_debug_intent_exp = 32'h00000001;
+        else
+          ss_debug_intent_exp = 32'h0;
+
         update_exp_regval("SS_DEBUG_INTENT", ss_debug_intent_exp, SET_DIRECT);
 
-        
+        $display("subsystem_mode_tb = 0x%0x", subsystem_mode_tb) ;
+        $display("ss_debug_intent_exp = 0x%0x", ss_debug_intent_exp) ;
+
         // Read SS_DEBUG_INTENT register over AHB
         read_single_word_ahb(_soc_register_dict["SS_DEBUG_INTENT"]);
         read_data = _soc_register_dict["SS_DEBUG_INTENT"][2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO];
         $display("SS_DEBUG_INTENT = 0x%08x", read_data);
         assert(read_data == ss_debug_intent_exp) else begin
-          $display("TB ERROR. Failes to SS_DEBUG_INTENT");
+          $display("TB ERROR. Failed to set SS_DEBUG_INTENT");
           error_ctr += 1;
         end
 
         print_banner("1. Write to SS_DEBUG_MANUF_SERVICE_REG_REQ - PRODUCTION DEBUG UNLOCK REQUEST and verify successful write");
-
         //SOC Write SS_DEBUG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ = 1
         $display ("\n1a. AXI Write To Debug Manuf Service Request register bit 1: production debug unlock request  ");
         wrtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", prod_debug_unlock_data, tid);
@@ -78,18 +84,34 @@
         $display("\n1b. Reading over AXI");
         rdtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", 0, tid);
         read_reg_trans(GET_AXI, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
 
         $display("\n1c. Reading over AHB");
         read_reg_trans(GET_AHB, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
         repeat (10) @(posedge clk_tb);
 
@@ -104,18 +126,34 @@
         $display("\n1e. Reading over AXI");
         rdtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", 0, tid);
         read_reg_trans(GET_AXI, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
 
         $display("\n1f. Reading over AHB");
         read_reg_trans(GET_AHB, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
         repeat (10) @(posedge clk_tb);
 
@@ -130,18 +168,33 @@
         $display("\n1h. Reading over AXI");
         rdtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", 0, tid);
         read_reg_trans(GET_AXI, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
-
         $display("\n1i. Reading over AHB");
         read_reg_trans(GET_AHB, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data == prod_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
         repeat (10) @(posedge clk_tb);
 
@@ -158,21 +211,36 @@
         $display("\n2b. Reading over AXI");
         rdtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", 0, tid);
         read_reg_trans(GET_AXI, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
 
         $display("\n2c. Reading over AHB");
         read_reg_trans(GET_AHB, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
         repeat (10) @(posedge clk_tb);
-
         //SOC Write SS_DEBUG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ = 1
         $display ("\n2d. AHB Write To Debug Manuf Service Request register bit 0: manufacturing debug unlock request  ");
         wrtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", manuf_debug_unlock_data, tid);
@@ -184,18 +252,34 @@
         $display("\n2e. Reading over AXI");
         rdtrans_req_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_REQ", 0, tid);
         read_reg_trans(GET_AXI, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
 
         $display("\n2f. Reading over AHB");
         read_reg_trans(GET_AHB, rdtrans_req_reg);
-        assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_req_reg.data != manuf_debug_unlock_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
         repeat (10) @(posedge clk_tb);
 
@@ -217,9 +301,17 @@
         $display("\n3b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
@@ -227,9 +319,17 @@
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
         $display("\n3c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         print_banner("4. AXI Write to SS_DEBUG_MANUF_SERVICE_REG_RSP - PRODUCTION DEBUG UNLOCK RESPONSE and verify write fails.");
@@ -251,9 +351,17 @@
         rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
         //Read data should match AHB write data from #3 above. 
-        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
@@ -262,9 +370,17 @@
         $display("\n4c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
         //Read data should match AHB write data from #3 above.
-        assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         print_banner("5. AXI/AHB Write to SS_DEBUG_MANUF_SERVICE_REG_RSP - MANUFACTURING DEBUG UNLOCK RESPONSE and verify write fails."); // Success only when device_lifecycle = MANUFACTURING
@@ -285,9 +401,17 @@
         $display("\n5b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
@@ -295,9 +419,17 @@
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
         $display("\n5c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         // Caliptra (AHB) write to SS_DEBUG_MANUF_SERVICE_REG_RSP register
@@ -316,9 +448,17 @@
         $display("\n5e. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
         rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         repeat (10) @(posedge clk_tb);
@@ -326,9 +466,17 @@
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
         $display("\n5f. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
-        assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-          $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
-          error_ctr += 1;
+        if (subsystem_mode_tb) begin
+          assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            error_ctr += 1;
+          end
+        end
+        else begin
+          assert(rdtrans_req_reg.data == '0) else begin
+            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_RSP should be disabled in passive mode");
+            error_ctr += 1;
+          end
         end
 
         error_ctr += sb.err_count;

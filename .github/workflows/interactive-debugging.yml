@@ -346,3 +346,12 @@ jobs:
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
             -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_cg.tcl
+
+      - name: Test JTAG register accesses
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_reg_access.tcl
