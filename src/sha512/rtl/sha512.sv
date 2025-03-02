@@ -231,6 +231,7 @@ module sha512
       pcr_sign_reg         <= '0;
       kv_read_data_present <= '0;
       digest_we            <= '0;
+      block_reg_lock       <= '0;
     end
     else begin
       ready_reg        <= core_ready;
