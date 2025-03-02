@@ -130,7 +130,7 @@ void main(void) {
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
         VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + num_dwords_mbox*4, 0, num_dwords_mbox*4, 0)) {
+        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + num_dwords_send*4, 0, num_dwords_mbox*4, 0)) {
             fail = 1;
         }
 
@@ -141,7 +141,7 @@ void main(void) {
 
         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
         VPRINTF(LOW, "Reading payload via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, *read_payload, num_dwords_send*4, 0);
+        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, num_dwords_send*4, 0);
         for (uint8_t ii = 0; ii < num_dwords_send; ii++) {
             if (read_payload[ii] != send_payload[ii]) {
                 VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
@@ -149,7 +149,7 @@ void main(void) {
             }
         }
 
-        // MBOX2AXI: Read data back through mailbox using direct-mode
+        // AXI2MBOX: Read data back through mailbox using direct-mode
         VPRINTF(LOW, "Reading payload to Mailbox\n");
         if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + num_dwords_send*4, 0x8800, 0, num_dwords_send*4, 0)) {
             fail = 1;
