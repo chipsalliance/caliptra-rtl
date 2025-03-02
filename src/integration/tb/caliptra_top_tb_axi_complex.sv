@@ -43,6 +43,54 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
 
     //=========================================================================-
+    // Delay Injection
+    //=========================================================================-
+    `define GENERIC_2SIG_DLY_TEMPLATE(GEN_NAME, cnt_var, rdy_sig_path, vld_sig_path)                                                        \
+        logic [11:0] cnt_var;                                                                                                               \
+        initial begin: GEN_NAME                                                                                                             \
+            bit past_hshake_stall = 1'b0;                                                                                                   \
+            if (!std::randomize(cnt_var) with {cnt_var dist {[0:1] :/ 500, [2:7] :/ 75, [8:31] :/ 3, [32:255] :/ 1}; })                     \
+                $fatal("Randomize %s failed", `"cnt_var`");                                                                                 \
+            forever begin                                                                                                                   \
+                @(negedge core_clk)                                                                                                         \
+                if (ctrl.rand_delays) begin                                                                                                 \
+                    if (|cnt_var && !past_hshake_stall) begin                                                                               \
+                        cnt_var <= cnt_var - 1;                                                                                             \
+                        force rdy_sig_path = 1'b0;                                                                                          \
+                        force vld_sig_path = 1'b0;                                                                                          \
+                    end                                                                                                                     \
+                    else if (!std::randomize(cnt_var) with {cnt_var dist {[0:1] :/ 500, [2:7] :/ 75, [8:31] :/ 3, [32:255] :/ 1}; }) begin  \
+                        $fatal("Randomize %s failed", `"cnt_var`");                                                                         \
+                    end                                                                                                                     \
+                    else begin                                                                                                              \
+                        release rdy_sig_path;                                                                                               \
+                        release vld_sig_path;                                                                                               \
+                    end                                                                                                                     \
+                end                                                                                                                         \
+                else begin                                                                                                                  \
+                    release rdy_sig_path;                                                                                                   \
+                    release vld_sig_path;                                                                                                   \
+                end                                                                                                                         \
+                @(posedge core_clk)                                                                                                         \
+                past_hshake_stall <= vld_sig_path && !rdy_sig_path;                                                                         \
+            end                                                                                                                             \
+        end: GEN_NAME                                                                                                                       \
+
+    // --------------------- SRAM ---------------------
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AR_DLY, i_axi_sram_ar_dly_cnt, i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.arready, i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.arvalid)
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_R_DLY , i_axi_sram_r_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.rready , i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.rvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AW_DLY, i_axi_sram_aw_dly_cnt, i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_W_DLY , i_axi_sram_w_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_B_DLY , i_axi_sram_b_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_wr.s_axi_if.bready , i_axi_sram.i_axi_sub.i_axi_sub_wr.s_axi_if.bvalid )
+    // --------------------- FIFO ---------------------
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AR_DLY, i_axi_fifo_ar_dly_cnt, i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.arready, i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.arvalid)
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_R_DLY , i_axi_fifo_r_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.rready , i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.rvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AW_DLY, i_axi_fifo_aw_dly_cnt, i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_W_DLY , i_axi_fifo_w_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_B_DLY , i_axi_fifo_b_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_wr.s_axi_if.bready , i_axi_fifo.i_axi_sub.i_axi_sub_wr.s_axi_if.bvalid )
+
+
+    //=========================================================================-
     // Dummy interconnect
     //=========================================================================-
     // --------------------- Endpoint mux ---------------------
@@ -167,41 +215,39 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         end
     end
     `CALIPTRA_ASSERT_NEVER(SRAM_GT2_WR_PENDING, sram_w_active > 2, core_clk, !cptra_rst_b)
-    always_comb begin
-        // AXI AR
-        axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
-        axi_sram_if.araddr        = m_axi_if.araddr[AXI_SRAM_ADDR_WIDTH-1:0];
-        axi_sram_if.arburst       = m_axi_if.arburst;
-        axi_sram_if.arsize        = m_axi_if.arsize ;
-        axi_sram_if.arlen         = m_axi_if.arlen  ;
-        axi_sram_if.aruser        = m_axi_if.aruser ;
-        axi_sram_if.arid          = m_axi_if.arid   ;
-        axi_sram_if.arlock        = m_axi_if.arlock ;
-                                                    
-        // AXI R                                    
-        axi_sram_if.rready        = sram_r_active ? m_axi_if.rready : '0;
-                                                    
-        // AXI AW                                   
-        axi_sram_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
-        axi_sram_if.awaddr        = m_axi_if.awaddr[AXI_SRAM_ADDR_WIDTH-1:0];
-        axi_sram_if.awburst       = m_axi_if.awburst;
-        axi_sram_if.awsize        = m_axi_if.awsize ;
-        axi_sram_if.awlen         = m_axi_if.awlen  ;
-        axi_sram_if.awuser        = m_axi_if.awuser ;
-        axi_sram_if.awid          = m_axi_if.awid   ;
-        axi_sram_if.awlock        = m_axi_if.awlock ;
-                                                    
-        // AXI W                                    
-        axi_sram_if.wvalid        = sram_w_active ? m_axi_if.wvalid : '0;
-        axi_sram_if.wdata         = sram_w_active ? m_axi_if.wdata  : '0;
-        axi_sram_if.wstrb         = sram_w_active ? m_axi_if.wstrb  : '0;
-        axi_sram_if.wuser         = sram_w_active ? m_axi_if.wuser  : '0;
-        axi_sram_if.wlast         = sram_w_active ? m_axi_if.wlast  : '0;
-        axi_sram_if.wuser         = sram_w_active ? m_axi_if.wuser  : '0;
 
-        // AXI B
-        axi_sram_if.bready        = sram_w_active ? m_axi_if.bready : '0;
-    end
+    // AXI AR
+    assign axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    assign axi_sram_if.araddr        = m_axi_if.araddr[AXI_SRAM_ADDR_WIDTH-1:0];
+    assign axi_sram_if.arburst       = m_axi_if.arburst;
+    assign axi_sram_if.arsize        = m_axi_if.arsize ;
+    assign axi_sram_if.arlen         = m_axi_if.arlen  ;
+    assign axi_sram_if.aruser        = m_axi_if.aruser ;
+    assign axi_sram_if.arid          = m_axi_if.arid   ;
+    assign axi_sram_if.arlock        = m_axi_if.arlock ;
+
+    // AXI R                                    
+    assign axi_sram_if.rready        = sram_r_active ? m_axi_if.rready : '0;
+
+    // AXI AW                                   
+    assign axi_sram_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    assign axi_sram_if.awaddr        = m_axi_if.awaddr[AXI_SRAM_ADDR_WIDTH-1:0];
+    assign axi_sram_if.awburst       = m_axi_if.awburst;
+    assign axi_sram_if.awsize        = m_axi_if.awsize ;
+    assign axi_sram_if.awlen         = m_axi_if.awlen  ;
+    assign axi_sram_if.awuser        = m_axi_if.awuser ;
+    assign axi_sram_if.awid          = m_axi_if.awid   ;
+    assign axi_sram_if.awlock        = m_axi_if.awlock ;
+
+    // AXI W                                    
+    assign axi_sram_if.wvalid        = sram_w_active ? m_axi_if.wvalid : '0;
+    assign axi_sram_if.wdata         = sram_w_active ? m_axi_if.wdata  : '0;
+    assign axi_sram_if.wstrb         = sram_w_active ? m_axi_if.wstrb  : '0;
+    assign axi_sram_if.wuser         = sram_w_active ? m_axi_if.wuser  : '0;
+    assign axi_sram_if.wlast         = sram_w_active ? m_axi_if.wlast  : '0;
+
+    // AXI B
+    assign axi_sram_if.bready        = sram_w_active ? m_axi_if.bready : '0;
 
     // Fake "MCU" SRAM block
     caliptra_axi_sram #(
@@ -275,41 +321,40 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         end
     end
     `CALIPTRA_ASSERT_NEVER(FIFO_GT2_WR_PENDING, fifo_w_active > 2, core_clk, !cptra_rst_b)
-    always_comb begin
-        // AXI AR
-        axi_fifo_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
-        axi_fifo_if.araddr        = m_axi_if.araddr[AXI_FIFO_ADDR_WIDTH-1:0];
-        axi_fifo_if.arburst       = m_axi_if.arburst;
-        axi_fifo_if.arsize        = m_axi_if.arsize ;
-        axi_fifo_if.arlen         = m_axi_if.arlen  ;
-        axi_fifo_if.aruser        = m_axi_if.aruser ;
-        axi_fifo_if.arid          = m_axi_if.arid   ;
-        axi_fifo_if.arlock        = m_axi_if.arlock ;
+
+    // AXI AR
+    assign axi_fifo_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
+    assign axi_fifo_if.araddr        = m_axi_if.araddr[AXI_FIFO_ADDR_WIDTH-1:0];
+    assign axi_fifo_if.arburst       = m_axi_if.arburst;
+    assign axi_fifo_if.arsize        = m_axi_if.arsize ;
+    assign axi_fifo_if.arlen         = m_axi_if.arlen  ;
+    assign axi_fifo_if.aruser        = m_axi_if.aruser ;
+    assign axi_fifo_if.arid          = m_axi_if.arid   ;
+    assign axi_fifo_if.arlock        = m_axi_if.arlock ;
+
+    // AXI R                                    
+    assign axi_fifo_if.rready        = fifo_r_active ? m_axi_if.rready : '0;
+
+    // AXI AW                                   
+    assign axi_fifo_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
+    assign axi_fifo_if.awaddr        = m_axi_if.awaddr[AXI_FIFO_ADDR_WIDTH-1:0];
+    assign axi_fifo_if.awburst       = m_axi_if.awburst;
+    assign axi_fifo_if.awsize        = m_axi_if.awsize ;
+    assign axi_fifo_if.awlen         = m_axi_if.awlen  ;
+    assign axi_fifo_if.awuser        = m_axi_if.awuser ;
+    assign axi_fifo_if.awid          = m_axi_if.awid   ;
+    assign axi_fifo_if.awlock        = m_axi_if.awlock ;
+
+    // AXI W                                    
+    assign axi_fifo_if.wvalid        = fifo_w_active ? m_axi_if.wvalid : '0;
+    assign axi_fifo_if.wdata         = fifo_w_active ? m_axi_if.wdata  : '0;
+    assign axi_fifo_if.wstrb         = fifo_w_active ? m_axi_if.wstrb  : '0;
+    assign axi_fifo_if.wuser         = fifo_w_active ? m_axi_if.wuser  : '0;
+    assign axi_fifo_if.wlast         = fifo_w_active ? m_axi_if.wlast  : '0;
                                                     
-        // AXI R                                    
-        axi_fifo_if.rready        = fifo_r_active ? m_axi_if.rready : '0;
-                                                    
-        // AXI AW                                   
-        axi_fifo_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
-        axi_fifo_if.awaddr        = m_axi_if.awaddr[AXI_FIFO_ADDR_WIDTH-1:0];
-        axi_fifo_if.awburst       = m_axi_if.awburst;
-        axi_fifo_if.awsize        = m_axi_if.awsize ;
-        axi_fifo_if.awlen         = m_axi_if.awlen  ;
-        axi_fifo_if.awuser        = m_axi_if.awuser ;
-        axi_fifo_if.awid          = m_axi_if.awid   ;
-        axi_fifo_if.awlock        = m_axi_if.awlock ;
-                                                    
-        // AXI W                                    
-        axi_fifo_if.wvalid        = fifo_w_active ? m_axi_if.wvalid : '0;
-        axi_fifo_if.wdata         = fifo_w_active ? m_axi_if.wdata  : '0;
-        axi_fifo_if.wstrb         = fifo_w_active ? m_axi_if.wstrb  : '0;
-        axi_fifo_if.wuser         = fifo_w_active ? m_axi_if.wuser  : '0;
-        axi_fifo_if.wlast         = fifo_w_active ? m_axi_if.wlast  : '0;
-        axi_fifo_if.wuser         = fifo_w_active ? m_axi_if.wuser  : '0;
-                                                    
-        // AXI B                                    
-        axi_fifo_if.bready        = fifo_w_active ? m_axi_if.bready : '0;
-    end
+    // AXI B                                    
+    assign axi_fifo_if.bready        = fifo_w_active ? m_axi_if.bready : '0;
+
     `CALIPTRA_ASSERT_NEVER(FIFO_RD_NOT_FIXED, fifo_ar_hshake && (axi_fifo_if.arburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_NEVER(FIFO_WR_NOT_FIXED, fifo_aw_hshake && (axi_fifo_if.awburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
 

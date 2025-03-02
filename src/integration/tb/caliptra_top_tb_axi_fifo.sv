@@ -66,7 +66,7 @@ module caliptra_top_tb_axi_fifo #(
     logic               fifo_empty, fifo_empty_r;
 
     // Random stimulus generators
-    int stall_down_count;
+    logic [11:0] stall_down_count;
     logic [31:0] rand_w_data;
     logic        rand_w_valid;
     logic        rand_r_ready;
@@ -158,20 +158,20 @@ module caliptra_top_tb_axi_fifo #(
     // Random Stimulus                         //
     // --------------------------------------- //
     initial begin
-        if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 15, [2:7] :/ 4, [8:31] :/ 1}; })
+        if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
             $fatal("Randomize failed");
         forever begin
             @(posedge clk)
             if (auto_pop || auto_push) begin
                 if (|stall_down_count)
                     stall_down_count <= stall_down_count - 1;
-                else if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 15, [2:7] :/ 4, [8:31] :/ 1}; })
+                else if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
                     $fatal("Randomize failed");
                 if (!std::randomize(rand_w_data))
                     $fatal("Randomize failed");
             end
             rand_w_valid <= (auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready); // Hold valid until data is accepted
-            rand_r_ready <= (auto_pop  && (stall_down_count == 0));
+            rand_r_ready <= (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
         end
     end
 

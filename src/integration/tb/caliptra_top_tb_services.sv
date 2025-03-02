@@ -301,6 +301,7 @@ module caliptra_top_tb_services
     //         8'h8c        - Disable FIFO in caliptra_top_tb_axi_complex to auto-read data
     //         8'h8d        - Disable FIFO in caliptra_top_tb_axi_complex to auto-write data
     //         8'h8e        - Flush the FIFO in caliptra_top_tb_axi_complex
+    //         8'h8f        - Toggle random delays in AXI complex (FIFO and SRAM endpoints)
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -467,6 +468,7 @@ module caliptra_top_tb_services
             axi_complex_ctrl.fifo_auto_push <= 1'b0;
             axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
             axi_complex_ctrl.fifo_clear     <= 1'b0;
+            axi_complex_ctrl.rand_delays    <= 1'b0;
         end
         else if((WriteData[7:0] == 8'h8a) && mailbox_write) begin
             axi_complex_ctrl.fifo_auto_pop  <= 1'b1;
@@ -481,7 +483,10 @@ module caliptra_top_tb_services
             axi_complex_ctrl.fifo_auto_push <= 1'b0;
         end
         else if((WriteData[7:0] == 8'h8e) && mailbox_write) begin
-            axi_complex_ctrl.fifo_clear     <= axi_complex_ctrl.fifo_clear;
+            axi_complex_ctrl.fifo_clear     <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8f) && mailbox_write) begin
+            axi_complex_ctrl.rand_delays    <= ~axi_complex_ctrl.rand_delays; // Toggle option
         end
         else begin
             axi_complex_ctrl.fifo_clear     <= 1'b0;
