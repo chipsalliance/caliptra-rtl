@@ -1449,6 +1449,14 @@ endgenerate //IV_NO
             deassert_rst_flag <= 'b0;
         end
     end
+`ifdef CALIPTRA_FORCE_CPU_RESET
+    initial force `CPTRA_TOP_PATH.rvtop.rst_l = 1'b0;
+`else
+    initial begin
+        if ($test$plusargs("CALIPTRA_FORCE_CPU_RESET"))
+            force `CPTRA_TOP_PATH.rvtop.rst_l = 1'b0;
+    end
+`endif
 
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
