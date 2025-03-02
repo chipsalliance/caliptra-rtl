@@ -45,6 +45,11 @@ module caliptra_top_tb_axi_fifo #(
     
     localparam FIFO_BC = DEPTH; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
+    `ifndef CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE
+    localparam RECOVERY_BURST_TEST_SIZE = 256;
+    `else
+    localparam RECOVERY_BURST_TEST_SIZE = `CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE;
+    `endif
 
     //COMPONENT INF
     logic          dv;
@@ -197,8 +202,8 @@ module caliptra_top_tb_axi_fifo #(
             recovery_data_avail_d   <= recovery_data_avail && en_recovery_emulation;
         end
     end
-    // assert once 256 bytes are pushed to FIFO
-    // deassert once 1 entry is ready from FIFO, unless another 256 bytes have already
+    // assert once RECOVERY_BURST_TEST_SIZE bytes are pushed to FIFO
+    // deassert once 1 entry is ready from FIFO, unless another RECOVERY_BURST_TEST_SIZE bytes have already
     // been pushed since it first asserted
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -207,8 +212,9 @@ module caliptra_top_tb_axi_fifo #(
         else if (!en_recovery_emulation) begin
             recovery_data_avail <= 1'b0;
         end
-        else if (fifo_writes_since_avail >= 256/*FIXME hardcoded*/) begin
+        else if (fifo_writes_since_avail >= RECOVERY_BURST_TEST_SIZE/BC) begin
             recovery_data_avail <= 1'b1;
+            $display("SoC [%t]: Set recovery_data_avail", $time);
         end
         else if (fifo_r_valid && fifo_r_ready) begin
             recovery_data_avail <= 1'b0;
@@ -225,13 +231,15 @@ module caliptra_top_tb_axi_fifo #(
         else begin
             case ({(fifo_w_valid && fifo_w_ready),recovery_data_avail_p}) inside
                 2'b00: fifo_writes_since_avail <= fifo_writes_since_avail;
-                2'b01: fifo_writes_since_avail <= fifo_writes_since_avail - 256/BC;
+                2'b01: fifo_writes_since_avail <= fifo_writes_since_avail - RECOVERY_BURST_TEST_SIZE/BC;
                 2'b10: fifo_writes_since_avail <= fifo_writes_since_avail + 1;
-                2'b11: fifo_writes_since_avail <= fifo_writes_since_avail - 256/BC + 1;
+                2'b11: fifo_writes_since_avail <= fifo_writes_since_avail - RECOVERY_BURST_TEST_SIZE/BC + 1;
             endcase
         end
     end
 
+    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_POW2, $onehot(RECOVERY_BURST_TEST_SIZE)) /* power of 2 requirement */
+    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_GT_BC, RECOVERY_BURST_TEST_SIZE >= BC)
     `CALIPTRA_ASSERT(AXI_COMPLEX_EMPTY_ON_RCVY, en_recovery_emulation_p |-> fifo_depth == 0, clk, !rst_n)
 
 
