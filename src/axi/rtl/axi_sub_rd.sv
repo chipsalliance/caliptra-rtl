@@ -367,15 +367,13 @@ module axi_sub_rd import axi_pkg::*; #(
         end: DATA_PIPELINE
     endgenerate
 
-    always_comb dp_rready[C_LAT+1] = s_axi_if.rready;
-    always_comb begin
-        s_axi_if.rvalid = dp_rvalid[C_LAT+1];
-        s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
-        s_axi_if.rdata  = dp_rdata[C_LAT+1];
-        s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
-        s_axi_if.ruser  = '0;
-        s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
-    end
+    assign dp_rready[C_LAT+1] = s_axi_if.rready;
+    assign s_axi_if.rvalid = dp_rvalid[C_LAT+1];
+    assign s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
+    assign s_axi_if.rdata  = dp_rdata[C_LAT+1];
+    assign s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
+    assign s_axi_if.ruser  = '0;
+    assign s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
 
 
     // --------------------------------------- //

@@ -142,8 +142,8 @@ module axi_sub_wr import axi_pkg::*; #(
             axi_out_of_rst <= 1'b1;
         end
     end
-    always_comb axi_awvalid_q    = s_axi_if.awvalid & axi_out_of_rst;
-    always_comb s_axi_if.awready = axi_awready_q    & axi_out_of_rst;
+    assign axi_awvalid_q    = s_axi_if.awvalid & axi_out_of_rst;
+    assign s_axi_if.awready = axi_awready_q    & axi_out_of_rst;
 
     always_comb begin
         s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
@@ -306,8 +306,8 @@ module axi_sub_wr import axi_pkg::*; #(
     // Data/Response                           //
     // --------------------------------------- //
 
-    always_comb txn_wvalid = s_axi_if.wvalid && txn_active;
-    always_comb s_axi_if.wready = txn_wready && txn_active;
+    assign txn_wvalid = s_axi_if.wvalid && txn_active;
+    assign s_axi_if.wready = txn_wready && txn_active;
 
     // skidbuffer instance to pipeline data payload from AXI.
     skidbuffer #(
