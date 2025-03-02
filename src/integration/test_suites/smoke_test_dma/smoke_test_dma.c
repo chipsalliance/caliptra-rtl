@@ -19,6 +19,7 @@
 #include "riscv_hw_if.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "printf.h"
 #include "soc_ifc.h"
 
@@ -32,6 +33,17 @@ volatile uint32_t intr_count       = 0;
 #endif
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+
+uint32_t rand_payload[AXI_FIFO_SIZE_BYTES*2];
+
+const enum tb_fifo_mode {
+    FIFO_AUTO_READ_ON   = 0x8a,
+    FIFO_AUTO_WRITE_ON  = 0x8b,
+    FIFO_AUTO_READ_OFF  = 0x8c,
+    FIFO_AUTO_WRITE_OFF = 0x8d,
+    FIFO_CLEAR          = 0x8e,
+    RAND_DELAY_TOGGLE   = 0x8f
+};
 
 void main(void) {
         int argc=0;
@@ -95,6 +107,7 @@ void main(void) {
         };
         uint32_t read_payload[16];
         uint32_t mbox_read_payload[17];
+        uint32_t fixed_read_payload[17];
 
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
 
@@ -109,11 +122,18 @@ void main(void) {
         // Test each malformed command check
         // TODO
 
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+        // ===========================================================================
         // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+        // ===========================================================================
         VPRINTF(LOW, "Sending payload via AHB i/f\n");
         soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, 16*4, 0);
 
+
+        // ===========================================================================
         // Send data through Mailbox to AXI_DMA, target the AXI SRAM
+        // ===========================================================================
         VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
         // Acquire the mailbox lock
         if (soc_ifc_mbox_acquire_lock(1)) {
@@ -130,17 +150,26 @@ void main(void) {
             fail = 1;
         }
 
+
+        // ===========================================================================
         // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+        // ===========================================================================
         // Use a FIXED transfer (only the final beat should be present at the target address)
         VPRINTF(LOW, "Sending fixed payload via AHB i/f\n");
         soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR + 2*16*4, 1, fixed_send_payload, 17*4, 0);
 
+
+        // ===========================================================================
         // Move data from one address to another in AXI SRAM
         // Use the block-size feature
+        // ===========================================================================
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
         soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 16*2);
 
+
+        // ===========================================================================
         // Read data back from AXI SRAM and confirm it matches
+        // ===========================================================================
         VPRINTF(LOW, "Reading payload via AHB i/f\n");
         soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, 16*4, 0);
         for (uint8_t ii = 0; ii < 16; ii++) {
@@ -150,7 +179,10 @@ void main(void) {
             }
         }
 
+
+        // ===========================================================================
         // Read data back through mailbox using direct-mode
+        // ===========================================================================
         VPRINTF(LOW, "Reading payload to Mailbox\n");
         if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 17*4, 0)) {
             fail = 1;
@@ -174,6 +206,102 @@ void main(void) {
             fail = 1;
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+        // ===========================================================================
+        // FIFO test
+        // ===========================================================================
+        // Send data through AHB interface to AXI_DMA, target the AXI FIFO
+        // Use a FIXED transfer
+        VPRINTF(LOW, "Sending fixed payload to FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_send_payload, 17*4, 0);
+
+        // Read data back from AXI FIFO and confirm it matches
+        VPRINTF(LOW, "Reading fixed payload from FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_read_payload, 17*4, 0);
+        for (uint8_t ii = 0; ii < 17; ii++) {
+            if (fixed_read_payload[ii] != fixed_send_payload[ii]) {
+                VPRINTF(ERROR, "fixed_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", ii, fixed_read_payload[ii], ii, fixed_send_payload[ii]);
+                fail = 1;
+            }
+        }
+
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+        // ===========================================================================
+        // Read rand FIFO data into mailbox
+        // ===========================================================================
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        VPRINTF(LOW, "Reading rand payload to Mailbox\n");
+        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+            fail = 1;
+        }
+
+        // Clear auto-write
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+
+        // ===========================================================================
+        // Send rand data through Mailbox to AXI_DMA, target the AXI FIFO
+        // ===========================================================================
+
+        // Set auto-read
+        VPRINTF(LOW, "Set FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+        VPRINTF(LOW, "Sending payload from Mailbox\n");
+        if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+            fail = 1;
+        }
+
+        // Clear auto-read
+        VPRINTF(LOW, "Disable FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+
+        // ===========================================================================
+        // Auto FIFO test
+        // ===========================================================================
+
+        // Set auto-read
+        VPRINTF(LOW, "Set FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+        // Generate rand data
+        srand(17);
+        for (uint32_t ii = 0; ii < (AXI_FIFO_SIZE_BYTES/2); ii++) {
+            rand_payload[ii] = rand();
+            if ((ii & 0x7f) == 0x40) putchar('.');
+        }
+        putchar('\n');
+
+        // Send data through AHB interface to AXI_DMA, target the AXI FIFO
+        // Use a FIXED transfer
+        // Use total byte-count that is 2x FIFO depth
+        VPRINTF(LOW, "Sending large rand payload to FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+
+        // Clear auto-read
+        VPRINTF(LOW, "Disable FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        // Read data from AXI FIFO
+        VPRINTF(LOW, "Reading large payload from FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+
+        // Clear auto-write
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
 
 
         if (fail) {

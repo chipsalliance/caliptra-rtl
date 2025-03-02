@@ -46,7 +46,7 @@ addrmap axi_dma_reg {
     reg {
         name="Caliptra AXI DMA Capabilities";
         desc="Provides information about configuration and enabled capabilities for the DMA block.";
-        field { desc="FIFO MAX DEPTH. Indicates number of available slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
+        field { desc="FIFO MAX DEPTH. Indicates number of available data-width-sized slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
         field { desc="Reserved"; sw=r; } rsvd[20] = 20'h00000;
     } cap;
 
@@ -109,7 +109,7 @@ addrmap axi_dma_reg {
                       When set, this field will prevent any further operations until it is cleared by setting the ctrl.flush field.";
                 sw=r; hw=w; } error=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd0[2]=2'h0;
-        field { desc="FIFO DEPTH. Indicates number of populated slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
+        field { desc="FIFO DEPTH. Indicates number of populated data-width-sized slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
         field {
             name = "Caliptra AXI DMA FSM Present State";
             desc = "Indicates the present state of the Caliptra AXI DMA FSM.";
@@ -154,24 +154,24 @@ addrmap axi_dma_reg {
     // Source Address
     reg {
         name="Caliptra AXI DMA Source Address Low";
-        desc="Contains lower 32-bits of address from which current operation will read data.";
+        desc="Contains lower 32-bits of address from which current operation will read data. Defines the AXI read address when read route is enabled; defines the offset into the mailbox when write route is set to MBOX.";
         field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } src_addr_l;
     reg {
         name="Caliptra AXI DMA Source Address High";
-        desc="Contains upper 32-bits of address from which current operation will read data.";
+        desc="Contains upper 32-bits of address from which current operation will read data. Defines the AXI read address when read route is enabled; defines the offset into the mailbox when write route is set to MBOX.";
         field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } src_addr_h;
 
     // Destination Address
     reg {
         name="Caliptra AXI DMA Destination Address Low";
-        desc="Contains lower 32-bits of address to which current operation will write data.";
+        desc="Contains lower 32-bits of address to which current operation will write data. Defines the AXI write address when write route is enabled; defines the offset into the mailbox when read route is set to MBOX.";
         field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } dst_addr_l;
     reg {
         name="Caliptra AXI DMA Destination Address High";
-        desc="Contains upper 32-bits of address to which current operation will write data.";
+        desc="Contains upper 32-bits of address to which current operation will write data. Defines the AXI write address when write route is enabled; defines the offset into the mailbox when read route is set to MBOX.";
         field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } dst_addr_h;
 
