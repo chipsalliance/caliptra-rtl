@@ -103,6 +103,9 @@ targets:
       - $COMPILE_ROOT/tb
       - $COMPILE_ROOT/coverage
     files:
+      - $COMPILE_ROOT/tb/dma_transfer_randomizer.sv
+      - $COMPILE_ROOT/tb/dma_transfer_if.sv
+      - $COMPILE_ROOT/tb/dma_testcase_generator.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
@@ -111,6 +114,7 @@ targets:
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
+
 ---
 provides: [caliptra_top_tb]
 schema_version: 2.4.0
