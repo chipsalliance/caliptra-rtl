@@ -19,6 +19,7 @@
 #include "riscv_hw_if.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "printf.h"
 #include "soc_ifc.h"
 
@@ -32,6 +33,17 @@ volatile uint32_t intr_count       = 0;
 #endif
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+
+uint32_t rand_payload[AXI_FIFO_SIZE_BYTES*2];
+
+const enum tb_fifo_mode {
+    FIFO_AUTO_READ_ON   = 0x8a,
+    FIFO_AUTO_WRITE_ON  = 0x8b,
+    FIFO_AUTO_READ_OFF  = 0x8c,
+    FIFO_AUTO_WRITE_OFF = 0x8d,
+    FIFO_CLEAR          = 0x8e,
+    RAND_DELAY_TOGGLE   = 0x8f
+};
 
 void main(void) {
         int argc=0;
@@ -110,6 +122,7 @@ void main(void) {
         // Test each malformed command check
         // TODO
 
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
         // ===========================================================================
         // Send data through AHB interface to AXI_DMA, target the AXI SRAM
@@ -211,6 +224,84 @@ void main(void) {
                 fail = 1;
             }
         }
+
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+        // ===========================================================================
+        // Read rand FIFO data into mailbox
+        // ===========================================================================
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        VPRINTF(LOW, "Reading rand payload to Mailbox\n");
+        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+            fail = 1;
+        }
+
+        // Clear auto-write
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+
+        // ===========================================================================
+        // Send rand data through Mailbox to AXI_DMA, target the AXI FIFO
+        // ===========================================================================
+
+        // Set auto-read
+        VPRINTF(LOW, "Set FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+        VPRINTF(LOW, "Sending payload from Mailbox\n");
+        if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+            fail = 1;
+        }
+
+        // Clear auto-read
+        VPRINTF(LOW, "Disable FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+
+        // ===========================================================================
+        // Auto FIFO test
+        // ===========================================================================
+
+        // Set auto-read
+        VPRINTF(LOW, "Set FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+        // Generate rand data
+        srand(17);
+        for (uint32_t ii = 0; ii < (AXI_FIFO_SIZE_BYTES/2); ii++) {
+            rand_payload[ii] = rand();
+            if ((ii & 0x7f) == 0x40) putchar('.');
+        }
+        putchar('\n');
+
+        // Send data through AHB interface to AXI_DMA, target the AXI FIFO
+        // Use a FIXED transfer
+        // Use total byte-count that is 2x FIFO depth
+        VPRINTF(LOW, "Sending large rand payload to FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+
+        // Clear auto-read
+        VPRINTF(LOW, "Disable FIFO to auto-read\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        // Read data from AXI FIFO
+        VPRINTF(LOW, "Reading large payload from FIFO via AHB i/f\n");
+        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+
+        // Clear auto-write
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
 
 
         if (fail) {
