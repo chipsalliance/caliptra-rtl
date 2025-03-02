@@ -145,19 +145,17 @@ module axi_sub_wr import axi_pkg::*; #(
     assign axi_awvalid_q    = s_axi_if.awvalid & axi_out_of_rst;
     assign s_axi_if.awready = axi_awready_q    & axi_out_of_rst;
 
-    always_comb begin
-        s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
-        s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
-        s_axi_if_ctx.size  = s_axi_if.awsize ;
-        s_axi_if_ctx.len   = s_axi_if.awlen  ;
-        s_axi_if_ctx.user  = s_axi_if.awuser ;
-        s_axi_if_ctx.id    = s_axi_if.awid   ;
-        `ifdef CALIPTRA_AXI_SUB_EX_EN
-        s_axi_if_ctx.lock  = s_axi_if.awlock;
-        `else
-        s_axi_if_ctx.lock  = 1'b0;
-        `endif
-    end
+    assign s_axi_if_ctx.addr  = s_axi_if.awaddr[AW-1:0] ;
+    assign s_axi_if_ctx.burst = axi_burst_e'(s_axi_if.awburst);
+    assign s_axi_if_ctx.size  = s_axi_if.awsize ;
+    assign s_axi_if_ctx.len   = s_axi_if.awlen  ;
+    assign s_axi_if_ctx.user  = s_axi_if.awuser ;
+    assign s_axi_if_ctx.id    = s_axi_if.awid   ;
+    `ifdef CALIPTRA_AXI_SUB_EX_EN
+    assign s_axi_if_ctx.lock  = s_axi_if.awlock;
+    `else
+    assign s_axi_if_ctx.lock  = 1'b0;
+    `endif
 
     // skidbuffer instance to pipeline request context from AXI.
     skidbuffer #(
@@ -200,9 +198,9 @@ module axi_sub_wr import axi_pkg::*; #(
 
 
     `ifdef CALIPTRA_AXI_SUB_EX_EN
-        always_comb req_matches_ex = (req_ctx.addr & ex_ctx[req_ctx.id].addr_mask) == ex_ctx[req_ctx.id].addr;
+        assign req_matches_ex = (req_ctx.addr & ex_ctx[req_ctx.id].addr_mask) == ex_ctx[req_ctx.id].addr;
     `else
-        always_comb txn_allow = 1'b1;
+        assign txn_allow = 1'b1;
     `endif
 
     always_ff@(posedge clk or negedge rst_n) begin
@@ -244,17 +242,17 @@ module axi_sub_wr import axi_pkg::*; #(
 
     // Asserts on the final COMPONENT INF beat, which means data does not
     // arrive at endpoint until after C_LAT clocks
-    always_comb txn_final_beat = dv_pre && (!txn_allow || !hld) && last;
+    assign txn_final_beat = dv_pre && (!txn_allow || !hld) && last;
 
 
     // --------------------------------------- //
     // Address Calculations                    //
     // --------------------------------------- //
     // Force aligned address to component
-    always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
-    always_comb user = txn_ctx.user;
-    always_comb id   = txn_ctx.id;
-    always_comb wsize = txn_ctx.size;
+    assign addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
+    assign user = txn_ctx.user;
+    assign id   = txn_ctx.id;
+    assign wsize = txn_ctx.size;
 
     // Use full address to calculate next address (in case of AxSIZE < data width)
     axi_addr #(
@@ -281,11 +279,11 @@ module axi_sub_wr import axi_pkg::*; #(
             // Component address aligned to exclusive tracking context
             // Don't use aligned 'addr' signal, because exclusive access alignment may
             // be smaller than component inf (since single-byte exclusive access is legal)
-            always_comb addr_ex_algn = txn_ctx.addr & ex_ctx[ex].addr_mask;
+            assign addr_ex_algn = txn_ctx.addr & ex_ctx[ex].addr_mask;
 
             // Match on each beat in case a burst transaction only overlaps
             // the exclusive context partially
-            always_comb txn_ex_match[ex] = (addr_ex_algn == ex_ctx[ex].addr);
+            assign txn_ex_match[ex] = (addr_ex_algn == ex_ctx[ex].addr);
 
         end: EX_AXS_TRACKER
         endgenerate
@@ -331,7 +329,7 @@ module axi_sub_wr import axi_pkg::*; #(
                   last }         )
     );
 
-    always_comb dv = dv_pre && txn_allow;
+    assign dv = dv_pre && txn_allow;
 
     // Registered skidbuffer to pipeline response signals.
     // Skid buffer captures any response transfer if the
@@ -339,13 +337,11 @@ module axi_sub_wr import axi_pkg::*; #(
     // stalled.
     // There is guaranteed to be space in the skid buffer because new
     // requests are stalled (AWREADY=0) until this buffer is ready.
-    always_comb begin
-        rp_valid = txn_final_beat;
-        rp_resp  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
-                   txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
-                                                   AXI_RESP_OKAY;
-        rp_id    = txn_ctx.id;
-    end
+    assign rp_valid = txn_final_beat;
+    assign rp_resp  = txn_allow && (txn_err || err) ? AXI_RESP_SLVERR :
+                      txn_allow && txn_ctx.lock     ? AXI_RESP_EXOKAY :
+                                                      AXI_RESP_OKAY;
+    assign rp_id    = txn_ctx.id;
 
     skidbuffer #(
         .OPT_LOWPOWER   (0   ),
@@ -366,7 +362,7 @@ module axi_sub_wr import axi_pkg::*; #(
                   s_axi_if.bid}  )
     );
 
-    always_comb s_axi_if.buser = '0;
+    assign s_axi_if.buser = '0;
 
 
     // --------------------------------------- //
