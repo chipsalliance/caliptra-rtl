@@ -32,6 +32,7 @@ class soc_ifc_env_axi_uvm_gen_b2b_rand_sequence extends soc_ifc_env_axi_uvm_b2b_
 
     extern virtual task read_reg();
     extern virtual task write_reg(int id);
+    extern virtual task read_write_reg(int id);
 
     function new(string name = "");
         super.new(name);
@@ -131,6 +132,70 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::write_reg(int id);
     // repeat(10) begin
     for (int i = 0; i < 10; i++) begin
         `uvm_info("KNU_RESP", $sformatf("queuing get response for txn %0d", i), UVM_MEDIUM)
+        get_response(rsp);
+        `uvm_info("KNU_RESP", $sformatf("received response for txn %0d", i), UVM_MEDIUM)
+    end
+endtask
+
+
+task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_write_reg(int id);
+    aaxi_master_tr trans;
+    reg [31:0] base, prev_addr;
+    automatic int k;
+    bit is_write;
+
+    base = 'h30010;
+
+    // aaxi_ci.maxwaits = 50;
+    // aaxi_ci.total_outstanding_depth = 10;
+    // aaxi_ci.id_outstanding_depth = 10;
+    prev_addr = base;
+    for (int i = 0; i < 20; i++) begin
+        k = i;
+
+        if (k%2 == 0) begin
+            is_write = 1;
+            prev_addr = prev_addr + 4; //update addr only for writes
+        end
+        else is_write = 0;
+    // repeat(10) begin
+        // trans = aaxi_master_tr::type_id::create("trans");
+
+        // start_item(trans);
+        // trans.randomize();
+        `uvm_create(trans);
+
+        trans.kind = is_write ? AAXI_WRITE : AAXI_READ;
+        trans.vers = AAXI4;
+        trans.addr = prev_addr;
+        trans.id = id+k;
+        trans.len = 0;
+        trans.size = 2;
+        trans.burst = AAXI_BURST_FIXED;
+
+        if (is_write) begin
+            for (int j = 0; j < 4; j++) begin
+                trans.data.push_back($urandom());
+                trans.strobes[j] = 1; //$urandom_range(0,1);
+            end
+        end
+        trans.ar_valid_delay = 0;
+        trans.aw_valid_delay = 0; //$urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
+        // trans.b_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits);
+        trans.b_ready_delay = 0;
+        trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits); //0;
+        trans.resp_valid_ready_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits); //0;
+        `uvm_info("KNU_GEN_RW", $sformatf("Starting AAXI txn with addr = %h, is_write = %h", trans.addr, is_write), UVM_MEDIUM)
+     
+        // finish_item(trans);
+        `uvm_send(trans);
+        // #10;
+        // wait(10);
+    end
+    // repeat(10) begin
+    for (int i = 0; i < 20; i++) begin
+        // `uvm_info("KNU_RESP", $sformatf("queuing get response for txn %0d", i), UVM_MEDIUM)
         get_response(rsp);
         `uvm_info("KNU_RESP", $sformatf("received response for txn %0d", i), UVM_MEDIUM)
     end

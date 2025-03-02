@@ -34,6 +34,7 @@ class soc_ifc_env_axi_uvm_b2b_rand_sequence extends aaxi_uvm_seq_base; //soc_ifc
 
     extern virtual task read_reg();
     extern virtual task write_reg(int id);
+    extern virtual task read_write_reg(int id);
 
     function new(string name = "");
         super.new(name);
@@ -46,6 +47,8 @@ class soc_ifc_env_axi_uvm_b2b_rand_sequence extends aaxi_uvm_seq_base; //soc_ifc
     virtual task body();
         write_reg(0);
         read_reg();
+        #1000ns;
+        read_write_reg('h0);
     endtask
   
 endclass
@@ -56,3 +59,5 @@ endtask
 task soc_ifc_env_axi_uvm_b2b_rand_sequence::write_reg(int id);
 endtask
 
+task soc_ifc_env_axi_uvm_b2b_rand_sequence::read_write_reg(int id);
+endtask

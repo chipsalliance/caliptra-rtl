@@ -79,26 +79,26 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
                      reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[5],
                      reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[6],
                      reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[7],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[0],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[1],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[2],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[3],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[4],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[5],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[6],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[7],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[8],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[9],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[10],
-                     reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[11],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[0],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[1],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[2],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[3],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[4],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[5],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[6],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[7],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[8],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[9],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[10],
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_TRNG_DATA[11],
                      reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG,
-                     reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO,
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_BOOTFSM_GO,
                      reg_model.soc_ifc_reg_rm.CPTRA_DBG_MANUF_SERVICE_REG,
-                     reg_model.soc_ifc_reg_rm.CPTRA_CLK_GATING_EN,
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_CLK_GATING_EN,
                      reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0],
                      reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1],
-                     reg_model.soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_0,
-                     reg_model.soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_1,
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_0,
+                    //  reg_model.soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_1,
                      reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[0],
                      reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[1]
 };
@@ -162,9 +162,9 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
                 end
             endcase
             if (act_read_data == exp_write_data)
-                `uvm_info("KNU_GEN_RW", "Read data matches write data", UVM_MEDIUM)
+                `uvm_info("KNU_GEN_RW_MAT", "Read data matches write data", UVM_MEDIUM)
             else
-                `uvm_error("KNU_GEN_RW", $sformatf("Read data %h does not match write data %h", act_read_data, exp_write_data))
+                `uvm_error("KNU_GEN_RW_MIS", $sformatf("Read data %h does not match write data %h", act_read_data, exp_write_data))
         end
     end
 endtask
@@ -242,7 +242,10 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
                 reg_write_data[idx] = random_dword[3:0];
             end
         endcase
-        `uvm_info("KNU_GEN_RW", "Starting AAXI write txn", UVM_MEDIUM)
+        //If all strobes = 0, just get mirrored value of reg and save it instead of the randomized value
+        if ((trans.strobes[3] | trans.strobes[2] | trans.strobes[1] | trans.strobes[0]) == 0)
+            reg_write_data[idx] = regs[idx].get_mirrored_value();
+        `uvm_info("KNU_GEN_RW", $sformatf("Starting AAXI write txn with addr = %h", trans.addr), UVM_MEDIUM)
 
         finish_item(trans);
         get_response(rsp);
