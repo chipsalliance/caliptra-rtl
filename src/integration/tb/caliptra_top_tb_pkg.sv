@@ -77,6 +77,7 @@ typedef struct packed {
     logic fifo_auto_pop;
     logic fifo_clear;
     logic rand_delays;
+    logic en_recovery_emulation;
 } axi_complex_ctrl_t;
 
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing

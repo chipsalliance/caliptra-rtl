@@ -37,6 +37,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 uint32_t rand_payload[AXI_FIFO_SIZE_BYTES*2];
 
 const enum tb_fifo_mode {
+    RCVY_EMU_TOGGLE     = 0x88,
     FIFO_AUTO_READ_ON   = 0x8a,
     FIFO_AUTO_WRITE_ON  = 0x8b,
     FIFO_AUTO_READ_OFF  = 0x8c,
@@ -161,10 +162,9 @@ void main(void) {
 
         // ===========================================================================
         // Move data from one address to another in AXI SRAM
-        // Use the block-size feature
         // ===========================================================================
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 16*2);
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 0);
 
 
         // ===========================================================================
@@ -302,8 +302,33 @@ void main(void) {
         // Clear auto-write
         VPRINTF(LOW, "Disable FIFO to auto-write\n");
         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
 
 
+        // ===========================================================================
+        // Block Size test - AXItoMBOX Read
+        // ===========================================================================
+        VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+            fail = 1;
+        }
+
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
+        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        soc_ifc_axi_dma_wait_idle (1);
+
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+
+
+        // ===========================================================================
+        // Ending Status
+        // ===========================================================================
         if (fail) {
             VPRINTF(FATAL, "smoke_test_dma failed!\n");
             SEND_STDOUT_CTRL(0x1);

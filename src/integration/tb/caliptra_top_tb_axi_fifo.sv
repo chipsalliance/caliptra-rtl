@@ -32,9 +32,11 @@ module caliptra_top_tb_axi_fifo #(
     axi_if.r_sub s_axi_r_if,
 
     // Control
-    input logic auto_push,
-    input logic auto_pop,
-    input logic fifo_clear
+    input  logic auto_push,
+    input  logic auto_pop,
+    input  logic fifo_clear,
+    input  logic en_recovery_emulation,
+    output logic recovery_data_avail
 );
 
     // --------------------------------------- //
@@ -170,9 +172,67 @@ module caliptra_top_tb_axi_fifo #(
                 if (!std::randomize(rand_w_data))
                     $fatal("Randomize failed");
             end
-            rand_w_valid <= (auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready); // Hold valid until data is accepted
-            rand_r_ready <= (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
+            rand_w_valid <= !fifo_clear && ((auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready)); // Hold valid until data is accepted
+            rand_r_ready <=                 (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
         end
     end
+
+    //=========================================================================-
+    // Recovery Interface Model
+    //=========================================================================-
+    logic en_recovery_emulation_d, en_recovery_emulation_p;
+    logic recovery_data_avail_d, recovery_data_avail_p;
+    logic [FIFO_BW-1:0] fifo_writes_since_avail;
+
+    assign en_recovery_emulation_p = en_recovery_emulation && !en_recovery_emulation_d;
+    assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
+
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            en_recovery_emulation_d <= 1'b0;
+            recovery_data_avail_d   <= 1'b0;
+        end
+        else begin
+            en_recovery_emulation_d <= en_recovery_emulation;
+            recovery_data_avail_d   <= recovery_data_avail && en_recovery_emulation;
+        end
+    end
+    // assert once 256 bytes are pushed to FIFO
+    // deassert once 1 entry is ready from FIFO, unless another 256 bytes have already
+    // been pushed since it first asserted
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            recovery_data_avail <= 1'b0;
+        end
+        else if (!en_recovery_emulation) begin
+            recovery_data_avail <= 1'b0;
+        end
+        else if (fifo_writes_since_avail >= 256/*FIXME hardcoded*/) begin
+            recovery_data_avail <= 1'b1;
+        end
+        else if (fifo_r_valid && fifo_r_ready) begin
+            recovery_data_avail <= 1'b0;
+        end
+    end
+    // start counting when recovery emulation enabled
+    // decrement on the edge of recovery_data_avail
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            fifo_writes_since_avail <= '0;
+        end
+        else if (!en_recovery_emulation)
+            fifo_writes_since_avail <= '0;
+        else begin
+            case ({(fifo_w_valid && fifo_w_ready),recovery_data_avail_p}) inside
+                2'b00: fifo_writes_since_avail <= fifo_writes_since_avail;
+                2'b01: fifo_writes_since_avail <= fifo_writes_since_avail - 256/BC;
+                2'b10: fifo_writes_since_avail <= fifo_writes_since_avail + 1;
+                2'b11: fifo_writes_since_avail <= fifo_writes_since_avail - 256/BC + 1;
+            endcase
+        end
+    end
+
+    `CALIPTRA_ASSERT(AXI_COMPLEX_EMPTY_ON_RCVY, en_recovery_emulation_p |-> fifo_depth == 0, clk, !rst_n)
+
 
 endmodule
