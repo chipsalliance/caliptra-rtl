@@ -1169,7 +1169,7 @@ axi_dma_top #(
 
     // SOC_IFC Internal Signaling
     .mbox_lock(uc_mbox_lock),
-    .sha_lock (1'b0 /*FIXME*/ ),
+    .sha_lock (1'b0), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
 
     // Configuration for requests
     .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value)),

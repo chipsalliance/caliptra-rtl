@@ -72,6 +72,13 @@ typedef struct packed {
     logic do_ooo_access;
 } ras_test_ctrl_t;
 
+typedef struct packed {
+    logic fifo_auto_push;
+    logic fifo_auto_pop;
+    logic fifo_clear;
+    logic rand_delays;
+} axi_complex_ctrl_t;
+
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing
 localparam MBOX_NON_FATAL_OBSERVED         = 32'h600dab1e;
 localparam PROT_NO_LOCK_NON_FATAL_OBSERVED = 32'h600dbabe;
@@ -88,5 +95,11 @@ localparam AXI_SRAM_SIZE_BYTES   = 65536;
 localparam AXI_SRAM_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
 localparam AXI_SRAM_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
 localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2345_0000; 
+
+// AXI FIFO config
+localparam AXI_FIFO_SIZE_BYTES   = 1024;
+localparam AXI_FIFO_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
+localparam AXI_FIFO_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
+localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_FIFO_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0000_fa57_f100; 
 
 endpackage
