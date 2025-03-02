@@ -46,9 +46,19 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     // AXI Protocol Checker
     //=========================================================================-
     `ifdef AXI4PC
-        Axi4PC axi4_pc_inst (
+        Axi4PC #(
+            .DATA_WIDTH  (CPTRA_AXI_DMA_DATA_WIDTH    ),
+            .WID_WIDTH   (CPTRA_AXI_DMA_ID_WIDTH      ),
+            .RID_WIDTH   (CPTRA_AXI_DMA_ID_WIDTH      ),
+            .ADDR_WIDTH  (`CALIPTRA_AXI_DMA_ADDR_WIDTH),
+            .AWUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH    ),
+            .WUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    ),
+            .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    ),
+            .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH    ),
+            .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH    )
+        ) axi4_pc_inst (
             // Global Signals
-            .ACLK(core_clk),
+            .ACLK   (core_clk   ),
             .ARESETn(cptra_rst_b),
 
             // Write Address Channel
@@ -58,10 +68,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             .AWSIZE  (m_axi_if.awsize),
             .AWBURST (m_axi_if.awburst),
             .AWLOCK  (m_axi_if.awlock),
-            .AWCACHE (),
-            .AWPROT  (),
-            .AWQOS   (),
-            .AWREGION(),
+            .AWCACHE (4'h0),
+            .AWPROT  (3'h0),
+            .AWQOS   (4'h0),
+            .AWREGION(4'h0),
             .AWUSER  (m_axi_if.awuser),
             .AWVALID (m_axi_if.awvalid),
             .AWREADY (m_axi_if.awready),
@@ -88,10 +98,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             .ARSIZE  (m_axi_if.arsize),
             .ARBURST (m_axi_if.arburst),
             .ARLOCK  (m_axi_if.arlock),
-            .ARCACHE (),
-            .ARPROT  (),
-            .ARQOS   (),
-            .ARREGION(),
+            .ARCACHE (4'h0),
+            .ARPROT  (3'h0),
+            .ARQOS   (4'h0),
+            .ARREGION(4'h0),
             .ARUSER  (m_axi_if.aruser),
             .ARVALID (m_axi_if.arvalid),
             .ARREADY (m_axi_if.arready),
