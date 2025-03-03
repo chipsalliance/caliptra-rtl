@@ -47,6 +47,7 @@ module dma_testcase_generator (
       dma_transfer_type_e  dma_xfer_type;  // Randomized transfer type
     } type_dword;
     logic [31:0] data;  // Assuming a 39-bit data format
+    $warning("assign real value for total_testcase_bytes_to_check based on rand_dma_test MAP file, and update rand_dma_test.ld");
 
     if (!$value$plusargs("NUM_ITERATIONS=%d", num_iterations)) begin 
       num_iterations = 100; // Default
