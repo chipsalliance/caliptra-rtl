@@ -135,7 +135,7 @@ package soc_ifc_tb_pkg;
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
     "FUSE_SOC_MANIFEST_SVN"                 : 4,
     "INTERNAL_OBF_KEY"                      : 8,
-    "SS_GENERIC"                      : 4 ,
+    "SS_STRAP_GENERIC"                      : 4 ,
     "SS_SOC_DBG_UNLOCK_LEVEL"               : 2, 
     "SS_GENERIC_FW_EXEC_CTRL"               : 4
   };
@@ -225,7 +225,7 @@ package soc_ifc_tb_pkg;
     "SS_DEBUG_INTENT"                               : SOCIFC_BASE + `SOC_IFC_REG_SS_DEBUG_INTENT,                                       // 0x530
     "SS_CPTRA_DMA_AXI_USER"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER,                              // 0x534
     // 0x538..0x59c
-    "SS_GENERIC"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_GENERIC_0,                                    // 0x5a0 [4]
+    "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_MANUF_SERVICE_REG_REQ"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ,                          // 0x5c0
     "SS_DBG_MANUF_SERVICE_REG_RSP"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP,                           // 0x5c4
@@ -408,7 +408,7 @@ package soc_ifc_tb_pkg;
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : 32'hffff_ffff,
     "SS_DEBUG_INTENT"                                  : 32'h1,
     "SS_CPTRA_DMA_AXI_USER"                            : 32'hffff_ffff,
-    "SS_GENERIC"                                 : 32'hffff_ffff
+    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
   };
 
 
@@ -958,7 +958,7 @@ package soc_ifc_tb_pkg;
       end  else if (str_startswith(addr_name, "SS_GENERIC_FW_EXEC_CTRL")) begin
         exp_data = axi_rodata | ahb_indata;
 
-      end else if (str_startswith(addr_name, "SS_GENERIC")) begin // all bits are AHB-RO
+      end else if (str_startswith(addr_name, "SS_STRAP_GENERIC")) begin // all bits are AHB-RO
         exp_data = fuses_locked ? curr_data : axi_indata;
 
       end  else if (str_startswith(addr_name, "SS_SOC_DBG_UNLOCK_LEVEL")) begin
