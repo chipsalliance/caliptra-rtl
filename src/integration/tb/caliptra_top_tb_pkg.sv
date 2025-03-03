@@ -92,7 +92,7 @@ localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
 
 // AXI SRAM config
-localparam AXI_SRAM_SIZE_BYTES   = 65536;
+localparam AXI_SRAM_SIZE_BYTES   = 262144;
 localparam AXI_SRAM_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
 localparam AXI_SRAM_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
 localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2345_0000; 
