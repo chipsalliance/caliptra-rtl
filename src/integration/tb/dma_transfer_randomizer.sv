@@ -61,27 +61,37 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 65536);
   constraint blk_size_c {
       test_block_size dist { 0 := 2, 1 := 1 };
       test_block_size -> src_is_fifo;
+      test_block_size -> dma_xfer_type inside {AXI2AXI,AXI2AHB,AXI2MBOX};
+      solve dma_xfer_type before test_block_size;
   };
   constraint fifo_access_c {
       !(src_is_fifo && dst_is_fifo);
+      dma_xfer_type inside {AHB2AXI,MBOX2AXI} -> !src_is_fifo;
+      dma_xfer_type inside {AXI2AHB,AXI2MBOX} -> !dst_is_fifo;
       src_is_fifo -> use_rd_fixed;
       dst_is_fifo -> use_wr_fixed;
       solve test_block_size before src_is_fifo;
   };
   constraint fixed_access_c {
+      dma_xfer_type inside {AHB2AXI,MBOX2AXI} -> !use_rd_fixed;
+      dma_xfer_type inside {AXI2AHB,AXI2MBOX} -> !use_wr_fixed;
       use_rd_fixed dist { 0 := 1, 1 := 1 };
       use_wr_fixed dist { 0 := 1, 1 := 1 };
+      solve dma_xfer_type before use_rd_fixed;
+      solve dma_xfer_type before use_wr_fixed;
       solve src_is_fifo before use_rd_fixed;
       solve dst_is_fifo before use_wr_fixed;
   };
 
   // addresses
+  // src unused for AHB2AXI, still calculate it...
   constraint src_addr_c {
        src_is_fifo ->  src_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
       !src_is_fifo ->  src_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
       !src_is_fifo -> (src_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
       src_offset[1:0] == 2'b0;
   };
+  // dst unused for AXI2AHB, still calculate it...
   constraint dst_addr_c {
        dst_is_fifo ->  dst_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
       !dst_is_fifo ->  dst_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
