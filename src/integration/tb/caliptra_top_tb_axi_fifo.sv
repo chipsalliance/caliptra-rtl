@@ -188,10 +188,32 @@ module caliptra_top_tb_axi_fifo #(
     logic en_recovery_emulation_d, en_recovery_emulation_p;
     logic recovery_data_avail_d, recovery_data_avail_p;
     logic [FIFO_BW-1:0] fifo_writes_since_avail;
+    int fifo_writes_since_recovery_emu_start;
+    int fifo_reads_since_recovery_emu_start;
+    int recovery_data_avail_deassert_at_fifo_read_count;
 
     assign en_recovery_emulation_p = en_recovery_emulation && !en_recovery_emulation_d;
     assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
 
+    always_ff@(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            fifo_writes_since_recovery_emu_start <= '0;
+            fifo_reads_since_recovery_emu_start  <= '0;
+            recovery_data_avail_deassert_at_fifo_read_count <= '0;
+        end
+        else if (!en_recovery_emulation) begin
+            fifo_writes_since_recovery_emu_start <= '0;
+            fifo_reads_since_recovery_emu_start  <= '0;
+            recovery_data_avail_deassert_at_fifo_read_count <= '0;
+        end
+        else begin
+            fifo_writes_since_recovery_emu_start <= fifo_writes_since_recovery_emu_start + 32'(fifo_w_valid && fifo_w_ready);
+            fifo_reads_since_recovery_emu_start  <= fifo_reads_since_recovery_emu_start  + 32'(fifo_r_valid && fifo_r_ready);
+            recovery_data_avail_deassert_at_fifo_read_count <= recovery_data_avail_p && ~|recovery_data_avail_deassert_at_fifo_read_count ? 1 :
+                                                               recovery_data_avail_p                                                      ? (recovery_data_avail_deassert_at_fifo_read_count + RECOVERY_BURST_TEST_SIZE/BC) :
+                                                                                                                                             recovery_data_avail_deassert_at_fifo_read_count;
+        end
+    end
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             en_recovery_emulation_d <= 1'b0;
@@ -214,9 +236,10 @@ module caliptra_top_tb_axi_fifo #(
         end
         else if (fifo_writes_since_avail >= RECOVERY_BURST_TEST_SIZE/BC) begin
             recovery_data_avail <= 1'b1;
-            $display("SoC [%t]: Set recovery_data_avail", $time);
+            if (recovery_data_avail == 1'b0)
+                $display("SoC [%t]: Set recovery_data_avail", $time);
         end
-        else if (fifo_r_valid && fifo_r_ready) begin
+        else if (fifo_r_valid && fifo_r_ready && (fifo_reads_since_recovery_emu_start == (recovery_data_avail_deassert_at_fifo_read_count - 1))) begin
             recovery_data_avail <= 1'b0;
         end
     end
