@@ -295,6 +295,7 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
     //         8'h8a        - Enable FIFO in caliptra_top_tb_axi_complex to auto-read data
     //         8'h8b        - Enable FIFO in caliptra_top_tb_axi_complex to auto-write data
@@ -465,10 +466,14 @@ module caliptra_top_tb_services
     // AXI Complex Control
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
-            axi_complex_ctrl.fifo_auto_push <= 1'b0;
-            axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
-            axi_complex_ctrl.fifo_clear     <= 1'b0;
-            axi_complex_ctrl.rand_delays    <= 1'b0;
+            axi_complex_ctrl.fifo_auto_push        <= 1'b0;
+            axi_complex_ctrl.fifo_auto_pop         <= 1'b0;
+            axi_complex_ctrl.fifo_clear            <= 1'b0;
+            axi_complex_ctrl.rand_delays           <= 1'b0;
+            axi_complex_ctrl.en_recovery_emulation <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h88) && mailbox_write) begin
+            axi_complex_ctrl.en_recovery_emulation <= ~axi_complex_ctrl.en_recovery_emulation; // Toggle option
         end
         else if((WriteData[7:0] == 8'h8a) && mailbox_write) begin
             axi_complex_ctrl.fifo_auto_pop  <= 1'b1;

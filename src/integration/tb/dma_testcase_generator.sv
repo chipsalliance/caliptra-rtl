@@ -13,14 +13,16 @@
 // limitations under the License.
 //
 
-module dma_testcase_generator(
+module dma_testcase_generator (
   input logic preload_dccm_done
   //output logic dma_gen_done
 );//dma_if dma_xfer_if);
-  `include "dma_transfer_randomizer.sv"
+  import caliptra_top_tb_pkg::*; // provides dma_transfer_randomizer, etc...
+
+  localparam MAX_SIZE_TO_CHECK = 65536;
 
   // Dynamic array to store test cases
-  dma_transfer_randomizer dma_xfers[];
+  dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_xfers[];
 
   //----------------------------------------------------------------
   // main
@@ -31,10 +33,21 @@ module dma_testcase_generator(
   initial begin : main
     int num_iterations;
     int end_addr = `RV_DCCM_EADR;  // Base address for DCCM
-    int addr;
     int tc_start_addr;
     int dccm_addr;
+    int total_testcase_bytes_to_check = 32'h18000; // FIXME initialize with the value indicating how many DCCM bytes can be used for TC stuffing
+    struct packed {
+      bit                  src_is_fifo;
+      bit                  dst_is_fifo;
+      bit                  use_rd_fixed;
+      bit                  use_wr_fixed;
+      bit                  inject_rand_delays;
+      bit                  inject_rst;
+      bit                  test_block_size; // Requires accessing the axi_fifo with recovery_data_avail emulation
+      dma_transfer_type_e  dma_xfer_type;  // Randomized transfer type
+    } type_dword;
     logic [31:0] data;  // Assuming a 39-bit data format
+    $warning("assign real value for total_testcase_bytes_to_check based on rand_dma_test MAP file, and update rand_dma_test.ld");
 
     if (!$value$plusargs("NUM_ITERATIONS=%d", num_iterations)) begin 
       num_iterations = 100; // Default
@@ -53,6 +66,8 @@ module dma_testcase_generator(
     // 0x5000_xxxx - 4: tc #2 xfer_type
     // ...
     slam_dccm_ram(end_addr - 3, {riscv_ecc32(num_iterations), num_iterations});
+    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 4;
+    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 16;
 
     tc_start_addr = end_addr - 7; 
     dccm_addr = tc_start_addr;
@@ -66,7 +81,7 @@ module dma_testcase_generator(
         
     // Generate and store test cases
     for (int i = 0; i < num_iterations; i++) begin: gen_dma_tc
-      dma_transfer_randomizer dma_gen = new();
+      dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check);
       if (!dma_gen.randomize()) begin
         $error("Randomization failed for dma_transfer_generator %d", i);
       end
@@ -76,7 +91,15 @@ module dma_testcase_generator(
         //dccm_addr = tc_start_addr - (i * ((2 + dma_gen.xfer_size) * 4));  // 1dw = xfer_type, 1dw = xfer_size, xfer_size dws = payload data
         
         // Write DMA transfer_type tp DCCM
-        data = dma_gen.dma_xfer_type;  
+        type_dword.src_is_fifo         = dma_gen.src_is_fifo       ;
+        type_dword.dst_is_fifo         = dma_gen.dst_is_fifo       ;
+        type_dword.use_rd_fixed        = dma_gen.use_rd_fixed      ;
+        type_dword.use_wr_fixed        = dma_gen.use_wr_fixed      ;
+        type_dword.inject_rand_delays  = dma_gen.inject_rand_delays;
+        type_dword.inject_rst          = dma_gen.inject_rst        ;
+        type_dword.test_block_size     = dma_gen.test_block_size   ;
+        type_dword.dma_xfer_type       = dma_gen.dma_xfer_type     ;
+        data = 32'(type_dword);
         $display("dccm_addr = 0x%0x, xfer_type = 0x%0x", dccm_addr, data);
         slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
@@ -84,6 +107,18 @@ module dma_testcase_generator(
         dccm_addr = dccm_addr - 4;
         data = dma_gen.xfer_size;
         $display("dccm_addr = 0x%0x, xfer_size = 0x%0x", dccm_addr, data);
+        slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+
+        // Write DMA src offset to DCCM
+        dccm_addr = dccm_addr - 4;
+        data = dma_gen.src_offset;
+        $display("dccm_addr = 0x%0x, src_offset = 0x%0x", dccm_addr, data);
+        slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+
+        // Write DMA dst offset to DCCM
+        dccm_addr = dccm_addr - 4;
+        data = dma_gen.dst_offset;
+        $display("dccm_addr = 0x%0x, dst_offset = 0x%0x", dccm_addr, data);
         slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
         // Write payload data to DCCM
@@ -100,14 +135,21 @@ module dma_testcase_generator(
         // Move to the next 4-byte boundary for the next transfer
         dccm_addr = dccm_addr - 4;
       end
+      total_testcase_bytes_to_check = total_testcase_bytes_to_check - ((MAX_SIZE_TO_CHECK > dma_gen.xfer_size) ? dma_gen.xfer_size + 16 : 16);
+      if (total_testcase_bytes_to_check == 0) begin
+          num_iterations = i+1;
+          break;
+      end
     end
 
     $display("Writing random generated test cases to DCCM completed.");
+    slam_dccm_ram(end_addr - 3, {riscv_ecc32(num_iterations), num_iterations}); // Rewrite in case we had to truncate the num_iterations
+    $display("  * Final iteration count of rand_test_dma: %d", num_iterations);
     //dma_gen_done = 1;
   end
 
   // Task to provide the test cases
-  function void get_dma_xfers(dma_transfer_randomizer t[]);
+  function void get_dma_xfers(dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) t[]);
     t = dma_xfers;
   endfunction
 endmodule

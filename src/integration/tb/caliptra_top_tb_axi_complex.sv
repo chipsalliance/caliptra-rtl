@@ -456,19 +456,16 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         .s_axi_r_if(axi_fifo_if.r_sub),
 
         // Control
-        .auto_push (ctrl.fifo_auto_push),
-        .auto_pop  (ctrl.fifo_auto_pop ),
-        .fifo_clear(ctrl.fifo_clear    )
+        .auto_push            (ctrl.fifo_auto_push       ),
+        .auto_pop             (ctrl.fifo_auto_pop        ),
+        .fifo_clear           (ctrl.fifo_clear           ),
+        .en_recovery_emulation(ctrl.en_recovery_emulation),
+        .recovery_data_avail  (recovery_data_avail       )
     );
 
     // --------------------- REG Endpoint TODO ---------------------
 
     `CALIPTRA_ASSERT_MUTEX(DMA_NO_SIMULT_RD, {|sram_r_active,|fifo_r_active/*TODO*/}, core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_MUTEX(DMA_NO_SIMULT_WR, {|sram_w_active,|fifo_w_active/*TODO*/}, core_clk, !cptra_rst_b)
-
-    //=========================================================================-
-    // Recovery Interface Model
-    //=========================================================================-
-    assign recovery_data_avail = 1'b1;
 
 endmodule
