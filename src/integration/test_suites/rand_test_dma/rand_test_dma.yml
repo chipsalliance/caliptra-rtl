@@ -15,3 +15,5 @@
 ---
 seed: ${PLAYBOOK_RANDOM_SEED}
 testname: rand_test_dma
+plusargs:
+  - +CPTRA_RAND_TEST_DMA
