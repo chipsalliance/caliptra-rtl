@@ -31,6 +31,13 @@ module dma_testcase_generator (
   //----------------------------------------------------------------        
 
   initial begin : main
+    // 0: no prints
+    // 1: reduced prints
+    // 2: all prints
+    int verbosity;
+    if (!$value$plusargs("CPTRA_VERBOSITY=%d", verbosity)) begin
+        verbosity = 1;
+    end
     if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
       int num_iterations;
       int end_addr = `RV_DCCM_EADR;  // Base address for DCCM
@@ -82,7 +89,7 @@ module dma_testcase_generator (
           
       // Generate and store test cases
       for (int i = 0; i < num_iterations; i++) begin: gen_dma_tc
-        dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check);
+        dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check, verbosity);
         if (!dma_gen.randomize()) begin
           $error("Randomization failed for dma_transfer_generator %d", i);
         end
@@ -101,36 +108,48 @@ module dma_testcase_generator (
           type_dword.test_block_size     = dma_gen.test_block_size   ;
           type_dword.dma_xfer_type       = dma_gen.dma_xfer_type     ;
           data = 32'(type_dword);
-          $display("dccm_addr = 0x%0x, xfer_type = 0x%0x", dccm_addr, data);
+          if (verbosity >= 1) begin
+              $display("dccm_addr = 0x%0x, xfer_type = 0x%0x", dccm_addr, data);
+          end
           slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
           // Write DMA transfer size to DCCM
           dccm_addr = dccm_addr - 4;
           data = dma_gen.xfer_size;
-          $display("dccm_addr = 0x%0x, xfer_size = 0x%0x", dccm_addr, data);
+          if (verbosity >= 1) begin
+              $display("dccm_addr = 0x%0x, xfer_size = 0x%0x", dccm_addr, data);
+          end
           slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
           // Write DMA src offset to DCCM
           dccm_addr = dccm_addr - 4;
           data = dma_gen.src_offset;
-          $display("dccm_addr = 0x%0x, src_offset = 0x%0x", dccm_addr, data);
+          if (verbosity >= 1) begin
+              $display("dccm_addr = 0x%0x, src_offset = 0x%0x", dccm_addr, data);
+          end
           slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
           // Write DMA dst offset to DCCM
           dccm_addr = dccm_addr - 4;
           data = dma_gen.dst_offset;
-          $display("dccm_addr = 0x%0x, dst_offset = 0x%0x", dccm_addr, data);
+          if (verbosity >= 1) begin
+              $display("dccm_addr = 0x%0x, dst_offset = 0x%0x", dccm_addr, data);
+          end
           slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
           // Write payload data to DCCM
           for (int j = 0; j < dma_gen.xfer_size; j++) begin 
             dccm_addr = dccm_addr - 4;
             data = dma_gen.payload_data[j];
-            $display("dccm_addr = 0x%0x, data = 0x%0x", dccm_addr, data);
+            if ((verbosity >= 2) || ((verbosity >= 1) && (j == dma_gen.xfer_size-1))) begin
+                $display("dccm_addr = 0x%0x, data = 0x%0x", dccm_addr, data);
+            end
             slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data), data});
           end
-          dma_gen.display(i);
-          $display("-------------------------------");
+          dma_gen.display(i, verbosity);
+          if (verbosity >= 1) begin
+              $display("-------------------------------");
+          end
 
           // After writing the entire transfer, move to a new address for the next transfer
           // Move to the next 4-byte boundary for the next transfer
@@ -146,9 +165,11 @@ module dma_testcase_generator (
         end
       end
 
-      $display("Writing random generated test cases to DCCM completed.");
+      $display("    ======================================================");
+      $display("    Writing random generated test cases to DCCM completed.");
       slam_dccm_ram(end_addr - 3, {riscv_ecc32(num_iterations), num_iterations}); // Rewrite in case we had to truncate the num_iterations
-      $display("  * Final iteration count of rand_test_dma: %d", num_iterations);
+      $display("    * Final iteration count of rand_test_dma: %d", num_iterations);
+      $display("    ======================================================");
       //dma_gen_done = 1;
     end
   end
