@@ -27,7 +27,7 @@ SECTIONS {
    * when copying to DCCM */
   _data_lma_start = ALIGN(4);
   _data_vma_start = 0x50000000;
-  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
+  .data _data_vma_start : AT(_data_lma_start) { *(.*data.*) ; . = ALIGN(4);} =0x0000,
   _data_lma_end = _data_lma_start + SIZEOF(.data);
   _data_vma_end = _data_vma_start + SIZEOF(.data);
 
@@ -44,7 +44,7 @@ SECTIONS {
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) *(.*data) *(.rodata*) *(.srodata*) . = ALIGN(4); } =0x0000,
   iccm_code0_start = .;
 
   /* ICCM as VMA */
