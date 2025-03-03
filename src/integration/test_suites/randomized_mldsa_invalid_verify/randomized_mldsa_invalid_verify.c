@@ -473,9 +473,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("------------------------------------------------\n");
-    printf(" Running MLDSA Smoke Test with invalid verify !!\n");
-    printf("------------------------------------------------\n");
+    printf("-------------------------------------\n");
+    printf(" Running MLDSA with invalid verify !!\n");
+    printf("-------------------------------------\n");
 
     /* Intializes random number generator */
     srand(time);
