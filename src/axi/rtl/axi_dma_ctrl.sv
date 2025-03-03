@@ -81,6 +81,9 @@ import soc_ifc_pkg::*;
     // --------------------------------------- //
     // Localparams/Typedefs                    //
     // --------------------------------------- //
+
+    `define MIN_OF(a,b) ((a < b) ? a : b)
+    `define MAX_OF(a,b) ((a > b) ? a : b)
     
     localparam FIFO_BC = 512; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
@@ -88,17 +91,16 @@ import soc_ifc_pkg::*;
     // Smaller of
     //   a) 4096 (AXI max burst size)
     //   b) Configured data width X max supported AXI burst length value
-    localparam AXI_MAX_BLOCK_SIZE = AXI_LEN_MAX_BYTES < AXI_LEN_MAX_VALUE * BC ? AXI_LEN_MAX_BYTES :
-                                                                                 AXI_LEN_MAX_VALUE * BC;
-    localparam MAX_BLOCK_SIZE = AXI_MAX_BLOCK_SIZE > FIFO_BC/2 ? FIFO_BC/2 :
-                                                                 AXI_MAX_BLOCK_SIZE;
+    localparam AXI_MAX_BLOCK_SIZE = `MIN_OF(AXI_LEN_MAX_BYTES,(AXI_LEN_MAX_VALUE * BC));
+    // Smaller of
+    //   a) Largest legal AXI block size
+    //   b) Largest burst that can fit in the FIFO
+    localparam MAX_BLOCK_SIZE     = `MIN_OF(AXI_MAX_BLOCK_SIZE,FIFO_BC/2);
     // Smaller of
     //   a) MAX_BLOCK_SIZE
     //   b) Configured data width X max supported AXI burst length value for FIXED bursts
-    localparam AXI_MAX_FIXED_BLOCK_SIZE = AXI_LEN_MAX_BYTES < AXI_FIXED_LEN_MAX_VALUE * BC ? AXI_LEN_MAX_BYTES :
-                                                                                             AXI_FIXED_LEN_MAX_VALUE * BC;
-    localparam MAX_FIXED_BLOCK_SIZE = AXI_MAX_FIXED_BLOCK_SIZE > MAX_BLOCK_SIZE ? MAX_BLOCK_SIZE :
-                                                                                  AXI_MAX_FIXED_BLOCK_SIZE;
+    localparam AXI_MAX_FIXED_BLOCK_SIZE = `MIN_OF(AXI_LEN_MAX_BYTES,(AXI_FIXED_LEN_MAX_VALUE * BC));
+    localparam MAX_FIXED_BLOCK_SIZE     = `MIN_OF(AXI_MAX_FIXED_BLOCK_SIZE,MAX_BLOCK_SIZE);
     localparam DMA_MAX_XFER_SIZE = 32'h10_0000; // 1MiB
 
 
@@ -149,8 +151,21 @@ import soc_ifc_pkg::*;
     logic cmd_inv_sha_lock;
     logic cmd_parse_error;
 
-    logic rd_req_hshake, rd_req_hshake_bypass, rd_req_stall;
+    logic rd_req_hshake, rd_req_hshake_bypass;
     logic wr_req_hshake, wr_req_hshake_bypass;
+    // Count read requests that have been enqueued due to recovery_data_avail.
+    // Width of signal is sufficient to track 2x the maximum number of requests
+    // possible for any given "block" of data.
+    // This allows the counter to schedule the next set of requests if
+    // recovery_data_avail pulse is observed while there are still requests
+    // that have not been issued from the prior pulse.
+    // The maximum number of requests for a given "block" is calculated as:
+    //   max_block_size / min_size_per_request
+    // Where
+    //   max_block_size = AXI_LEN_MAX_BYTES
+    //   min_size_per_request = BC
+    logic [AXI_LEN_BC_WIDTH-BW:0] rd_req_count_for_payload, rd_req_count_for_payload_next;
+    logic rd_req_stall;
     logic [3:0] wr_resp_pending; // Counts up to 15 pending Write responses.
                                  // Once this counter saturates, we stall new requests
                                  // until further responses arrive.
@@ -179,6 +194,8 @@ import soc_ifc_pkg::*;
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
+
+    logic recovery_data_avail_d, recovery_data_avail_p;
 
 
     // --------------------------------------- //
@@ -442,18 +459,51 @@ import soc_ifc_pkg::*;
     // --------------------------------------- //
     // Control Logic                           //
     // --------------------------------------- //
+
+    // Detect recovery_data_avail rising edge
+    assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
+
+    // When block_size != 0, we are guaranteed to be interacting with the SS recovery interface
+    // which means transactions will also be of FIXED burst type.
+    // This guarantees that each read request will be sized according to the constraints of
+    // block_size and MAX_FIXED_BLOCK_SIZE, without regard for address alignment boundaries or
+    // other conditions.
+    always_comb begin
+        case ({recovery_data_avail_p,rd_req_hshake}) inside
+            2'b00: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            2'b01: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            2'b10: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
+            2'b11: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1) - 1;
+        endcase
+    end
+
+    // Requirement:
+    //   * never stall read requests if block_size == 0, i.e. not using recovery mode
+    //   * upon observing recovery_data_avail, request block_size bytes of data
+    //   * after all requests are made, stall until another rising edge on recovery_data_avail
+    //   * Final burst size may be less than block_size - so 'rd_req_count_for_payload' may remain non-zero
+    //     until it is cleared by returning to IDLE state
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            rd_req_stall <= 1'b1;
+            recovery_data_avail_d    <= 1'b0;
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b0;
         end
-        else if (hwif_out.block_size.size.value == 0) begin
-            rd_req_stall <= 1'b0;
+        else if (hwif_out.block_size.size.value == '0) begin
+            recovery_data_avail_d    <= 1'b0;
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b0;
         end
-        else if (recovery_data_avail) begin
-            rd_req_stall <= 1'b0;
+        // Treat 'go' as the rising edge-detection if recovery_data_avail is already set before DMA is armed
+        else if (ctrl_fsm_ps == DMA_IDLE) begin
+            recovery_data_avail_d    <= 1'b0;
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b1;
         end
-        else if (rd_req_hshake || hwif_out.ctrl.go.value) begin
-            rd_req_stall <= 1'b1;
+        else begin
+            recovery_data_avail_d    <= recovery_data_avail;
+            rd_req_count_for_payload <= rd_req_count_for_payload_next;
+            rd_req_stall             <= ~|rd_req_count_for_payload_next;
         end
     end
 
