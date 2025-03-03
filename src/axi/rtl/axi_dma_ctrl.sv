@@ -476,14 +476,16 @@ import soc_ifc_pkg::*;
 
     always_comb block_size_mask = hwif_out.block_size.size.value - 1;
     always_comb begin
-        rd_align_req_byte_count = (hwif_out.ctrl.rd_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_FIXED_BLOCK_SIZE)-1:0]) :
-                                                                   (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE       - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
+        rd_align_req_byte_count = (hwif_out.ctrl.rd_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE) :
+                                  (hwif_out.ctrl.rd_fixed.value)                                                                                                  ? AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value) :
+                                                                   (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
                                                                                                                                                                     AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(r_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
         rd_final_req_byte_count = rd_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - rd_bytes_requested) :
                                                         {AXI_LEN_BC_WIDTH{1'b1}};
         rd_req_byte_count       = rd_final_req_byte_count < rd_align_req_byte_count ? rd_final_req_byte_count :
                                                                                       rd_align_req_byte_count;
-        wr_align_req_byte_count = (hwif_out.ctrl.wr_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_FIXED_BLOCK_SIZE)-1:0]) :
+        wr_align_req_byte_count = (hwif_out.ctrl.wr_fixed.value && (~|hwif_out.block_size.size.value || (MAX_FIXED_BLOCK_SIZE < hwif_out.block_size.size.value))) ? AXI_LEN_BC_WIDTH'(MAX_FIXED_BLOCK_SIZE) :
+                                  (hwif_out.ctrl.wr_fixed.value)                                                                                                  ? AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value) :
                                                                    (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
                                                                                                                                                                     AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
         wr_final_req_byte_count = wr_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - wr_bytes_requested) :
