@@ -1717,6 +1717,7 @@ endgenerate //IV_NO
         end
     endgenerate
 
+    logic preload_dccm_done;
 
     initial begin
         abi_reg[0] = "zero";
@@ -1929,6 +1930,27 @@ caliptra_sram #(
     .rdata_o (        )
 );
 
+// DMA Test case generator
+// Interface instance
+//dma_transfer_if dma_xfer_if;
+
+// Testcase generator instance 
+dma_transfer_randomizer dma_xfers[];
+//logic dma_gen_done;
+
+dma_testcase_generator i_dma_gen (
+    .preload_dccm_done (preload_dccm_done)
+    //.dma_gen_done (dma_gen_done)
+    );
+/*
+initial begin
+    // Wait for the test cases to be generated
+    wait (dma_gen_done);
+
+    // Retrieve the generated test cases
+    i_dma_gen.get_dma_xfers(dma_xfers);
+end
+*/
 
    //=========================================================================-
    // SRAM preload services
@@ -1992,7 +2014,7 @@ task static preload_iccm;
 endtask
 
 
-task static preload_dccm;
+task static preload_dccm ();
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -2019,6 +2041,7 @@ task static preload_dccm;
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");
+    preload_dccm_done = 1;
 
 endtask
 
