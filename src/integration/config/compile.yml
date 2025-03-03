@@ -105,7 +105,6 @@ targets:
       - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/tb/dma_transfer_randomizer.sv
-      - $COMPILE_ROOT/tb/dma_transfer_if.sv
       - $COMPILE_ROOT/tb/dma_testcase_generator.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
