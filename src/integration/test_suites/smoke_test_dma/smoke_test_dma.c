@@ -36,7 +36,8 @@ volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-uint32_t rand_payload[AXI_FIFO_SIZE_BYTES*2];
+#define MAX_FIFO_SIZE 1024
+uint32_t rand_payload[MAX_FIFO_SIZE*2];
 
 const enum tb_fifo_mode {
     RCVY_EMU_TOGGLE     = 0x88,
@@ -289,7 +290,7 @@ void main(void) {
         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
         VPRINTF(LOW, "Reading rand payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*2, 0)) {
             fail = 1;
         }
 
@@ -308,7 +309,7 @@ void main(void) {
         SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
         VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+        if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, MAX_FIFO_SIZE*2, 0)) {
             fail = 1;
         }
 
@@ -328,7 +329,7 @@ void main(void) {
 
         // Generate rand data
         srand(17);
-        for (uint32_t ii = 0; ii < (AXI_FIFO_SIZE_BYTES/2); ii++) {
+        for (uint32_t ii = 0; ii < (MAX_FIFO_SIZE/2); ii++) {
             rand_payload[ii] = rand();
             if ((ii & 0x7f) == 0x40) putchar('.');
         }
@@ -338,7 +339,7 @@ void main(void) {
         // Use a FIXED transfer
         // Use total byte-count that is 2x FIFO depth
         VPRINTF(LOW, "Sending large rand payload to FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
 
         // Clear auto-read
         VPRINTF(LOW, "Disable FIFO to auto-read\n");
@@ -350,7 +351,7 @@ void main(void) {
 
         // Read data from AXI FIFO
         VPRINTF(LOW, "Reading large payload from FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, AXI_FIFO_SIZE_BYTES*2, 0);
+        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
 
         // Clear auto-write
         VPRINTF(LOW, "Disable FIFO to auto-write\n");
@@ -412,7 +413,7 @@ void main(void) {
         // Read data from AXI FIFO
         VPRINTF(LOW, "Request random reset and read large payload from FIFO to Mailbox\n");
         SEND_STDOUT_CTRL(0xee);
-        soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*32, 0);
+        soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*32, 0);
 
         // Clear auto-write
         // This shouldn't execute - the reset will clear the FIFO and auto-write flag
