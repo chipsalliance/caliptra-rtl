@@ -80,6 +80,15 @@ typedef struct packed {
     logic en_recovery_emulation;
 } axi_complex_ctrl_t;
 
+// Transfer types enum
+typedef enum logic [2:0] {
+    AHB2AXI, 
+    MBOX2AXI,
+    AXI2AXI,
+    AXI2MBOX,
+    AXI2AHB
+} dma_transfer_type_e;
+
 // Values to drive onto GENERIC INPUT WIRES in response to RAS testing
 localparam MBOX_NON_FATAL_OBSERVED         = 32'h600dab1e;
 localparam PROT_NO_LOCK_NON_FATAL_OBSERVED = 32'h600dbabe;
@@ -102,5 +111,7 @@ localparam AXI_FIFO_SIZE_BYTES   = 65536;
 localparam AXI_FIFO_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
 localparam AXI_FIFO_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
 localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_FIFO_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0000_fa57_f100; 
+
+`include "dma_transfer_randomizer.sv"
 
 endpackage
