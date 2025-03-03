@@ -109,6 +109,8 @@ module caliptra_top_tb_axi_fifo #(
         .rd_err  (rd_error),
         .wr_err  (wr_error)
     );
+    `CALIPTRA_ASSERT(AXI_FIFO_WR_FIXED_ONLY, s_axi_w_if.awvalid && s_axi_w_if.awready |-> s_axi_if.awburst == AXI_BURST_FIXED, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_FIFO_RD_FIXED_ONLY, s_axi_r_if.arvalid && s_axi_r_if.arready |-> s_axi_if.arburst == AXI_BURST_FIXED, clk, !rst_n)
 
     assign rd_error = 1'b0;
     assign wr_error = 1'b0;
