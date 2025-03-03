@@ -66,8 +66,8 @@ module dma_testcase_generator (
     // 0x5000_xxxx - 4: tc #2 xfer_type
     // ...
     slam_dccm_ram(end_addr - 3, {riscv_ecc32(num_iterations), num_iterations});
-    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 4;
-    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 16;
+    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 4; // 4-bytes for "num_iterations"
+    total_testcase_bytes_to_check = total_testcase_bytes_to_check - 16; // 16-bytes for 4-dwords of xfer_type, xfer_size, src_addr, dst_addr for first xfer
 
     tc_start_addr = end_addr - 7; 
     dccm_addr = tc_start_addr;
@@ -135,7 +135,7 @@ module dma_testcase_generator (
         // Move to the next 4-byte boundary for the next transfer
         dccm_addr = dccm_addr - 4;
       end
-      total_testcase_bytes_to_check = total_testcase_bytes_to_check - ((MAX_SIZE_TO_CHECK > 4*dma_gen.xfer_size) ? 4*dma_gen.xfer_size + 16 : 16);
+      total_testcase_bytes_to_check = total_testcase_bytes_to_check - ((4*MAX_SIZE_TO_CHECK > 4*dma_gen.xfer_size) ? 4*dma_gen.xfer_size + 16 : 16);
       if (total_testcase_bytes_to_check == 0) begin
           num_iterations = i+1;
           break;
