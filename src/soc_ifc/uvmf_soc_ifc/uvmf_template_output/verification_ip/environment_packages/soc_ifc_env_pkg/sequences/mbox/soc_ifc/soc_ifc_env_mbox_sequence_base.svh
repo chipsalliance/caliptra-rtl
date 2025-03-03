@@ -93,7 +93,6 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task mbox_acquire_lock(output op_sts_e op_sts);
   extern virtual task mbox_set_cmd(input mbox_op_s op);
   extern virtual task mbox_push_datain();
-  extern virtual task mbox_push_datain_axi();
   extern virtual task mbox_execute();
   extern virtual task mbox_check_status(output mbox_status_e data, output mbox_fsm_state_e state);
   extern virtual task mbox_read_resp_data();
@@ -252,7 +251,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
         end
     join_none
     mbox_set_cmd(mbox_op_rand); if (rand_delay_en) do_rand_delay(1, step_delay);
-    mbox_push_datain_axi();         if (rand_delay_en) do_rand_delay(1, step_delay);
+    mbox_push_datain();         if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_execute();             if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_poll_status();         if (rand_delay_en) do_rand_delay(1, step_delay);
     mbox_clr_execute();         if (rand_delay_en) do_rand_delay(1, step_delay);
@@ -467,79 +466,6 @@ task soc_ifc_env_mbox_sequence_base::mbox_push_datain();
             report_reg_sts(reg_sts, "mbox_datain");
         end
         if (rand_delay_en) do_rand_delay(1, data_delay);
-    end
-endtask
-
-//==========================================
-// Task:        mbox_push_datain_axi
-// Description: Write data in a loop to mbox_datain register
-// NOTE:        This should be overridden with real data to write
-//==========================================
-task soc_ifc_env_mbox_sequence_base::mbox_push_datain_axi();
-    uvm_reg_data_t data;
-    aaxi_master_tr trans;
-    for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
-        if (datain_ii == 0) begin
-            data = uvm_reg_data_t'(mbox_op_rand.dlen - 8);
-            `uvm_info("KNU_MBOX", $sformatf("datain_ii = 0, data = %h", data), UVM_MEDIUM)
-        end
-        else if (datain_ii == 4) begin
-            data = uvm_reg_data_t'(mbox_resp_expected_dlen);
-            `uvm_info("KNU_MBOX", $sformatf("datain_ii = 4, data = %h", data), UVM_MEDIUM)
-        end
-        else begin
-            if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
-        end
-        `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
-        // reg_model.mbox_csr_rm.mbox_datain_sem.get();
-        // reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
-        // reg_model.mbox_csr_rm.mbox_datain_sem.put();
-        // report_reg_sts(reg_sts, "mbox_datain");
-
-        `uvm_create(trans);
-
-        trans.kind = AAXI_WRITE;
-        trans.vers = AAXI4;
-        trans.addr = reg_model.mbox_csr_rm.mbox_datain.get_address(reg_model.soc_ifc_AXI_map);
-        trans.id = 0;
-        trans.len = 0;
-        trans.size = 2;
-        trans.burst = 0;
-        trans.awuser = get_rand_user(FORCE_VALID_AXI_USER).get_addr_user();
-        if ((datain_ii == 0) | (datain_ii == 4)) begin
-            trans.data.push_back(data[7:0]);
-            trans.data.push_back(data[15:8]);
-            trans.data.push_back(data[23:16]);
-            trans.data.push_back(data[31:24]);
-        end
-        else begin
-            for (int k = 0; k < 4; k++)
-                trans.data.push_back($urandom);
-        end
-        for (int k = 0; k < 4; k++)
-            trans.strobes[k] = 1;
-        trans.set_sequencer(reg_model.soc_ifc_AXI_map.get_sequencer());
-
-        trans.adw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
-        trans.aw_valid_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
-        trans.b_valid_ready_delay = $urandom_range(configuration.aaxi_ci.minwaits, configuration.aaxi_ci.maxwaits-1);
-
-        `uvm_send(trans);
-
-        // get_response(rsp);
-
-        if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
-            if (rand_delay_en) do_rand_delay(1, data_delay);
-            `uvm_info("MBOX_SEQ", "Re-do datain write with valid AxUSER", UVM_HIGH)
-            reg_model.mbox_csr_rm.mbox_datain_sem.get();
-            reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
-            reg_model.mbox_csr_rm.mbox_datain_sem.put();
-            report_reg_sts(reg_sts, "mbox_datain");
-        end
-        if (rand_delay_en) do_rand_delay(1, data_delay);
-    end
-    for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
-        get_response(rsp);
     end
 endtask
 

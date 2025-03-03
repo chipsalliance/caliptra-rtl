@@ -164,6 +164,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_mbox_rand_axi_user_sequence soc_ifc_env_mbox_rand_axi_user_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_axi_user_small_sequence.svh"
   typedef soc_ifc_env_mbox_rand_axi_user_small_sequence soc_ifc_env_mbox_rand_axi_user_small_sequence_t;
+  `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_axi_user_small_axi_txn_sequence.svh"
+  typedef soc_ifc_env_mbox_rand_axi_user_small_axi_txn_sequence soc_ifc_env_mbox_rand_axi_user_small_axi_txn_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_axi_user_medium_sequence.svh"
   typedef soc_ifc_env_mbox_rand_axi_user_medium_sequence soc_ifc_env_mbox_rand_axi_user_medium_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_mbox_rand_axi_user_large_sequence.svh"
@@ -295,6 +297,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_trng_reset_sequence soc_ifc_env_top_trng_reset_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_axi_user_small_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_axi_user_small_sequence soc_ifc_env_top_mbox_rand_axi_user_small_sequence_t;
+  `include "sequences/mbox/soc_ifc_env_top_mbox_rand_axi_user_small_axi_txn_sequence.svh"
+  typedef soc_ifc_env_top_mbox_rand_axi_user_small_axi_txn_sequence soc_ifc_env_top_mbox_rand_axi_user_small_axi_txn_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_axi_user_medium_sequence.svh"
   typedef soc_ifc_env_top_mbox_rand_axi_user_medium_sequence soc_ifc_env_top_mbox_rand_axi_user_medium_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_rand_axi_user_large_sequence.svh"
