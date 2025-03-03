@@ -26,6 +26,8 @@
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
@@ -50,7 +52,6 @@ void main(void) {
         int argc=0;
         char *argv[1];
         uint32_t reg;
-        uint8_t fail = 0;
         uint32_t send_payload[16] = {
             0xabadface,
             0xba5eba11,
@@ -106,11 +107,30 @@ void main(void) {
             0xffffffff,
             0x234562ab
         };
+        uint32_t post_rst_send_payload[16] = {
+            0xC8F518D4,
+            0xF3AA1BD4,
+            0x6ED56C1C,
+            0x3C9E16FB,
+            0x5112DBBD,
+            0x0AAE67FE,
+            0xF26B465B,
+            0xE935B48E,
+            0x800AF504,
+            0xDB988435,
+            0x48C5F623,
+            0xEE115F73,
+            0xD4C62ABC,
+            0x06D303B5,
+            0xD90D9A17,
+            0x5087290D
+        };
         uint32_t read_payload[16];
         uint32_t mbox_read_payload[17];
         uint32_t fixed_read_payload[17];
 
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
+        rst_count++;
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -122,6 +142,39 @@ void main(void) {
 
         // Test each malformed command check
         // TODO
+
+        // ===========================================================================
+        // If reset was executed, try to run another simple DMA test to check for life
+        // ===========================================================================
+        if (rst_count == 2) {
+            VPRINTF(LOW, "Observed reset! Running some short DMA tests for life\n");
+
+            // ===========================================================================
+            // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+            // ===========================================================================
+            VPRINTF(LOW, "Sending payload via AHB i/f\n");
+            soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, post_rst_send_payload, 16*4, 0);
+
+
+            // ===========================================================================
+            // Move data from one address to another in AXI SRAM
+            // ===========================================================================
+            VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
+            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (16)*4, 0);
+
+            // ===========================================================================
+            // Read data back from AXI SRAM and confirm it matches
+            // ===========================================================================
+            VPRINTF(LOW, "Reading payload via AHB i/f\n");
+            soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, 16*4, 0);
+            for (uint8_t ii = 0; ii < 16; ii++) {
+                if (read_payload[ii] != post_rst_send_payload[ii]) {
+                    VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match post_rst_send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, post_rst_send_payload[ii]);
+                    fail = 1;
+                }
+            }
+
+        } else if (rst_count == 1) {
 
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
@@ -324,6 +377,50 @@ void main(void) {
         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
         SEND_STDOUT_CTRL(FIFO_CLEAR);
         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+
+
+        // ===========================================================================
+        // Move data in AXI SRAM using same src/dst addr, rand delays
+        // ===========================================================================
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+        VPRINTF(LOW, "Moving payload within SRAM via axi-to-axi xfer\n");
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR, 0, (2*16+1)*4, 0);
+
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+        // ===========================================================================
+        // Move data in AXI SRAM using dst_addr == src_addr + 256B, rand delays
+        // ===========================================================================
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+        VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer; R/W non-determinism is expected!\n");
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + 256, 0, (137)*4, 0); // arbitrary number > 512, i.e. more than 2 AXI transactions
+
+        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+        // ===========================================================================
+        // Auto FIFO test with very large transfer and random RESET
+        // ===========================================================================
+
+        // Set auto-write
+        VPRINTF(LOW, "Enable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        // Read data from AXI FIFO
+        VPRINTF(LOW, "Request random reset and read large payload from FIFO to Mailbox\n");
+        SEND_STDOUT_CTRL(0xee);
+        soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*32, 0);
+
+        // Clear auto-write
+        // This shouldn't execute - the reset will clear the FIFO and auto-write flag
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+        }
 
 
         // ===========================================================================
