@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 65536);
+class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
 
   // =============================================
   // Class properties
@@ -38,13 +38,13 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 65536);
   // sizes
   constraint transfer_size_c {
       xfer_size dist {
-          [1:15] :/ 500,
-          [16:255] :/ 1000,
-          [256:1023] :/ 500,
-          [1024:8191] :/ 200,
-          [8192:16383] :/ 100,
-          [16384:65535] :/ 20,
-          [65536:262144] :/ 5
+          [1:4] :/ 500,
+          [5:64] :/ 1000,
+          [65:256] :/ 500,
+          [257:2048] :/ 200,
+          [2049:4096] :/ 100,
+          [4097:16384] :/ 20,
+          [16385:65536] :/ 5
       };
       (xfer_size <= max_checked_xfer_size) || (xfer_size >= MAX_SIZE_TO_CHECK);
       solve dma_xfer_type before xfer_size;

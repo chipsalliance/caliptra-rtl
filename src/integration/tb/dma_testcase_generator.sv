@@ -19,7 +19,7 @@ module dma_testcase_generator (
 );//dma_if dma_xfer_if);
   import caliptra_top_tb_pkg::*; // provides dma_transfer_randomizer, etc...
 
-  localparam MAX_SIZE_TO_CHECK = 65536;
+  localparam MAX_SIZE_TO_CHECK = 16384; // dwords
 
   // Dynamic array to store test cases
   dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_xfers[];
@@ -136,10 +136,13 @@ module dma_testcase_generator (
           // Move to the next 4-byte boundary for the next transfer
           dccm_addr = dccm_addr - 4;
         end
-        total_testcase_bytes_to_check = total_testcase_bytes_to_check - ((4*MAX_SIZE_TO_CHECK > 4*dma_gen.xfer_size) ? 4*dma_gen.xfer_size + 16 : 16);
-        if (total_testcase_bytes_to_check == 0) begin
+        if (total_testcase_bytes_to_check <= ((4*MAX_SIZE_TO_CHECK > 4*dma_gen.xfer_size) ? 4*dma_gen.xfer_size + 16 : 16)) begin
+            total_testcase_bytes_to_check = 0;
             num_iterations = i+1;
             break;
+        end
+        else begin
+            total_testcase_bytes_to_check = total_testcase_bytes_to_check - ((4*MAX_SIZE_TO_CHECK > 4*dma_gen.xfer_size) ? 4*dma_gen.xfer_size + 16 : 16);
         end
       end
 
