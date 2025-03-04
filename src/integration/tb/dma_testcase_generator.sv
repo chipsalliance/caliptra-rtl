@@ -138,13 +138,18 @@ module dma_testcase_generator (
           slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data),data});
 
           // Write payload data to DCCM
-          for (int j = 0; j < dma_gen.xfer_size; j++) begin 
-            dccm_addr = dccm_addr - 4;
-            data = dma_gen.payload_data[j];
-            if ((verbosity >= 2) || ((verbosity >= 1) && (j == dma_gen.xfer_size-1))) begin
-                $display("dccm_addr = 0x%0x, data = 0x%0x", dccm_addr, data);
-            end
-            slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data), data});
+          if (dma_gen.xfer_size <= MAX_SIZE_TO_CHECK) begin 
+              for (int j = 0; j < dma_gen.xfer_size; j++) begin 
+                dccm_addr = dccm_addr - 4;
+                data = dma_gen.payload_data[j];
+                if ((verbosity >= 2) || ((verbosity >= 1) && (j == dma_gen.xfer_size-1))) begin
+                    $display("dccm_addr = 0x%0x, data = 0x%0x", dccm_addr, data);
+                end
+                slam_dccm_ram(dccm_addr, data == 0 ? 0 : {riscv_ecc32(data), data});
+              end
+          end
+          else if (verbosity >= 1) begin
+              $display("payload skipped");
           end
           dma_gen.display(i, verbosity);
           if (verbosity >= 1) begin
