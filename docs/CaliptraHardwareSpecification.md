@@ -70,8 +70,8 @@ The RISC-V core is highly configurable and has the following settings.
 | Parameter               | Configuration |
 | :---------------------- | :------------ |
 | Interface               | AHB-Lite      |
-| DCCM                    | 128 KiB       |
-| ICCM                    | 128 KiB       |
+| DCCM                    | 256 KiB       |
+| ICCM                    | 256 KiB       |
 | I-Cache                 | Disabled      |
 | Reset Vector            | 0x00000000    |
 | Fast Interrupt Redirect | Enabled       |
@@ -88,12 +88,12 @@ The 32-bit address region is subdivided into 16 fixed-sized, contiguous 256 MB r
 
 | Subsystem           | Address size | Start address | End address |
 | :------------------ | :----------- | :------------ | :---------- |
-| ROM                 | 48 KiB       | 0x0000_0000   | 0x0000_BFFF |
+| ROM                 | 96 KiB       | 0x0000_0000   | 0x0000_BFFF |
 | Cryptographic       | 512 KiB      | 0x1000_0000   | 0x1007_FFFF |
 | Peripherals         | 32 KiB       | 0x2000_0000   | 0x2000_7FFF |
-| SoC IFC             | 256 KiB      | 0x3000_0000   | 0x3003_FFFF |
-| RISC-V Core ICCM    | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| RISC-V Core DCCM    | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| SoC IFC             | 512 KiB      | 0x3000_0000   | 0x3007_FFFF |
+| RISC-V Core ICCM    | 256 KiB      | 0x4000_0000   | 0x4003_FFFF |
+| RISC-V Core DCCM    | 256 KiB      | 0x5000_0000   | 0x5003_FFFF |
 | RISC-V MM CSR (PIC) | 256 MiB      | 0x6000_0000   | 0x6FFF_FFFF |
 
 #### Cryptographic subsystem
@@ -128,9 +128,11 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral              | Target \# | Address size | Start address | End address |
 | :------------------------- | :-------- | :----------- | :------------ | :---------- |
-| Mailbox SRAM Direct Access | 7         | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
 | Mailbox CSR                | 7         | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| Mailbox                    | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| SHA512 Accelerator         | 7         | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
+| AXI DMA                    | 7         | 4 KiB        | 0x3002_2000   | 0x3002_2FFF |
+| SOC IFC CSR                | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| Mailbox SRAM Direct Access | 7         | 256 KiB      | 0x3004_0000   | 0x3007_FFFF |
 
 #### RISC-V core local memory blocks
 
@@ -138,8 +140,8 @@ The following table shows the memory map address ranges for each of the local me
 
 | IP/Peripheral   | Target \# | Address size | Start address | End address |
 | :-------------- | :-------- | :----------- | :------------ | :---------- |
-| ICCM0 (via DMA) | 9         | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| DCCM            | 8         | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| ICCM0 (via DMA) | 9         | 256 KiB      | 0x4000_0000   | 0x4003_FFFF |
+| DCCM            | 8         | 256 KiB      | 0x5000_0000   | 0x5003_FFFF |
 
 ### Interrupts
 
