@@ -92,7 +92,7 @@ jobs:
     if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Echo Reason
-        run: echo $GITHUB_EVENT_NAME
+        run: echo "$GITHUB_EVENT_NAME"
       - name: Checkout RTL repo
         uses: actions/checkout@v4
         with:
