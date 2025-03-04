@@ -319,7 +319,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
-    '{addr_min: SOCIFC_BASE + 16'h0374, addr_max: SOCIFC_BASE + 16'h04fc},
+    '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h04fc},
     '{addr_min: SOCIFC_BASE + 16'h0538, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
