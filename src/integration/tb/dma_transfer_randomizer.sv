@@ -35,6 +35,20 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // =============================================
   // Constraints
   // =============================================
+  // Transfer type constrained to enum values
+  constraint valid_transfer_type {
+    dma_xfer_type inside {[0:4]}; 
+
+    // Weight distribution to ensure each type is chosen at least once
+    dma_xfer_type dist {
+      0 := 20,  // AHB2AXI
+      1 := 20,  // MBOX2AXI
+      2 := 20,  // AXI2AXI
+      3 := 20,  // AXI2MBOX
+      4 := 20   // AXI2AHB
+    };
+  }
+
   // sizes
   constraint transfer_size_c {
       xfer_size dist {
@@ -42,9 +56,9 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
           [5:64] :/ 1000,
           [65:256] :/ 500,
           [257:2048] :/ 200,
-          [2049:4096] :/ 100,
-          [4097:16384] :/ 20,
-          [16385:65536] :/ 5
+          [2049:4096] :/ 20,
+          [4097:16384] :/ 5,
+          [16385:65536] :/ 2
       };
       (xfer_size <= max_checked_xfer_size) || (xfer_size >= MAX_SIZE_TO_CHECK);
       solve dma_xfer_type before xfer_size;
