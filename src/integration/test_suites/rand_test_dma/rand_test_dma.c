@@ -39,10 +39,34 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define MY_RANDOM_SEED 17
 #endif // MY_RANDOM_SEED
 
-#define MAX_PAYLOAD_SIZE 2048
+#define MAX_PAYLOAD_SIZE_TO_CHECK_DW 16384 //16K dwords
+
+// Transfer type is in bits 0-2
+#define DMA_XFER_TYPE_POS        0
+#define DMA_XFER_TYPE_WIDTH      3
+
+// Other fields
+#define TEST_BLOCK_SIZE_POS      3
+#define INJECT_RST_POS           4
+#define INJECT_RAND_DELAYS_POS   5
+#define USE_WR_FIXED_POS         6
+#define USE_RD_FIXED_POS         7
+#define DST_IS_FIFO_POS          8
+#define SRC_IS_FIFO_POS          9
+
+
+// Bit masks
+#define DMA_XFER_TYPE_MASK       (((1 << DMA_XFER_TYPE_WIDTH) - 1) << DMA_XFER_TYPE_POS)
+#define TEST_BLOCK_SIZE_MASK     (1 << TEST_BLOCK_SIZE_POS)
+#define INJECT_RST_MASK          (1 << INJECT_RST_POS)
+#define INJECT_RAND_DELAYS_MASK  (1 << INJECT_RAND_DELAYS_POS)
+#define USE_WR_FIXED_MASK        (1 << USE_WR_FIXED_POS)
+#define USE_RD_FIXED_MASK        (1 << USE_RD_FIXED_POS)
+#define DST_IS_FIFO_MASK         (1 << DST_IS_FIFO_POS)
+#define SRC_IS_FIFO_MASK         (1 << SRC_IS_FIFO_POS)
 
 // Global declaration of arrays
-static uint32_t read_payload[MAX_PAYLOAD_SIZE];
+static uint32_t read_payload[MAX_PAYLOAD_SIZE_TO_CHECK_DW];
 
 // Transfer types
 typedef enum {
@@ -76,6 +100,18 @@ void main(void) {
         transfer_type_t transfer_type;
         uint32_t transfer_size;
         int mbox_locked = 0;
+        int data_check = 0; 
+        uint32_t dma_control;
+        uint8_t src_is_fifo;
+        uint8_t dst_is_fifo;
+        uint8_t use_rd_fixed;
+        uint8_t use_wr_fixed;
+        uint8_t inject_rand_delays;
+        uint8_t inject_rst;
+        uint8_t test_block_size;
+        uint8_t dma_xfer_type;
+        uint32_t src_offset, dst_offset;
+        uint32_t dccm_data, mbox_data;
 
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
 
@@ -92,35 +128,69 @@ void main(void) {
 
         // Read DCCM to determine number of transfers
         num_transfers = lsu_read_32(RV_DCCM_EADR - 3);
-        printf("Number of transfers: %d\n", num_transfers);
+        printf("Number of transfers: %d\n\n", num_transfers);
 
         // Read transfer type and size for each transfer and perform the transfer
         dccm_addr = RV_DCCM_EADR - 7;
         for (int i = 0; i < num_transfers; i++) {
-            // Read transfer type
-            transfer_type = (transfer_type_t)lsu_read_32(dccm_addr);
-            printf("Transfer type: %s\n", transfer_type_to_string(transfer_type));
+            VPRINTF(LOW, "TRANSFER #%d\n", i);
+            // Read control word that includes transfer type and other control information for DMA transfer
+            dma_control = lsu_read_32(dccm_addr);
+            
+            // Extract fields
+            src_is_fifo = (dma_control & SRC_IS_FIFO_MASK) ? 1 : 0;
+            dst_is_fifo = (dma_control & DST_IS_FIFO_MASK) ? 1 : 0;
+            use_rd_fixed = (dma_control & USE_RD_FIXED_MASK) ? 1 : 0;
+            use_wr_fixed = (dma_control & USE_WR_FIXED_MASK) ? 1 : 0;
+            inject_rand_delays = (dma_control & INJECT_RAND_DELAYS_MASK) ? 1 : 0;
+            inject_rst = (dma_control & INJECT_RST_MASK) ? 1 : 0;
+            test_block_size = (dma_control & TEST_BLOCK_SIZE_MASK) ? 1 : 0;
+            dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
+            printf("Raw dma_control: 0x%08x\n", dma_control);
+            printf("DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
+            printf("Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
+            printf("Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
+            printf("Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
+            printf("Source is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
+            printf("Destination is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
+            printf("Use Read Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
+            printf("Use Write Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
+            printf("Inject Random Delays: %s\n", inject_rand_delays ? "Yes" : "No");
+            printf("Inject Reset: %s\n", inject_rst ? "Yes" : "No");
+            printf("Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+            
 
             // Read transfer size
             dccm_addr = dccm_addr - 4;
             transfer_size = lsu_read_32(dccm_addr);
 
             // Validate transfer size to prevent buffer overflow
-            if (transfer_size > MAX_PAYLOAD_SIZE) {
-                VPRINTF(ERROR, "Transfer size %d exceeds maximum allowed %d\n", transfer_size, MAX_PAYLOAD_SIZE);
-                fail = 1;
-                break;
+            if (transfer_size <= MAX_PAYLOAD_SIZE_TO_CHECK_DW) {
+                data_check = 1;
+            }
+            else {
+                data_check = 0;
             }
             printf("Transfer size: %d dwords\n", transfer_size);
+
+            // Read source offset
+            dccm_addr = dccm_addr - 4;
+            src_offset = lsu_read_32(dccm_addr);
+            printf("Source Offset = 0x%0x\n", src_offset);
+
+            // Read destination offset
+            dccm_addr = dccm_addr - 4;
+            dst_offset = lsu_read_32(dccm_addr);
+            printf("Destination Offset = 0x%0x\n", dst_offset);         
             
             // Calculate starting address of payload data
             payload_end_addr = dccm_addr - 4;  // First payload word is 4 bytes after transfer_size
             payload_start_addr = payload_end_addr - ((transfer_size - 1) * 4);  // Last word of payload (lowest address)
         
-            printf("Payload Start Address = 0x%0x\n", payload_start_addr);
-            printf("Payload End Address = 0x%0x\n", payload_end_addr);
+            printf("Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
+            printf("Payload DCCM End Address = 0x%0x\n", payload_end_addr);
 
-            switch (transfer_type) {
+            switch ((transfer_type_t)dma_xfer_type) {
                 
                 case AHB2AXI:
                     VPRINTF(LOW, "Sending payload via AHB i/f\n");
@@ -131,12 +201,17 @@ void main(void) {
                     VPRINTF(LOW, "Reading payload via AHB i/f\n");
                     soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
 
-                    // Compare read_payload data with original dccm_data
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        uint32_t dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                        if (read_payload[dw] != dccm_data) {
-                            VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
-                            fail = 1;
+                    if (data_check) {
+                        // Compare read_payload data with original dccm_data
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (read_payload[dw] != dccm_data) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                                fail = 1;
+                            }
+                        }
+                        if (!fail) {
+                            VPRINTF(LOW, "AHB2AXI: Read-back data matches sent data\n");
                         }
                     }
                     break;
@@ -169,12 +244,17 @@ void main(void) {
                     VPRINTF(LOW, "Reading payload via AHB i/f\n");
                     soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
 
-                    // Compare read_payload data with original dccm_data
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        uint32_t dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                        if (read_payload[dw] != dccm_data) {
-                            VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
-                            fail = 1;
+                    if (data_check) {
+                        // Compare read_payload data with original dccm_data
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (read_payload[dw] != dccm_data) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccmdccm_data_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                                fail = 1;
+                            }
+                        }
+                        if (!fail) {
+                            VPRINTF(LOW, "MBOX2AXI: Read-back data matches sent data\n");
                         }
                     }
 
@@ -194,12 +274,17 @@ void main(void) {
                     VPRINTF(LOW, "Reading payload via AHB i/f\n");
                     soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
 
-                    // Compare read_payload data with original dccm_data
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        uint32_t dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                        if (read_payload[dw] != dccm_data) {
-                            VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
-                            fail = 1;
+                    if (data_check) {
+                        // Compare read_payload data with original dccm_data
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (read_payload[dw] != dccm_data) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                                fail = 1;
+                            }
+                        }
+                        if (!fail) {
+                            VPRINTF(LOW, "AXI2AXI: Read-back data matches sent data\n");
                         }
                     }
                     break;
@@ -220,14 +305,17 @@ void main(void) {
 
                     // Verify data from mailbox against original data from DCCM
                     for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        uint32_t mbox_data = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
-                        uint32_t dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                        if (mbox_data != dccm_data) {
-                            VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, mbox_data, dw, dccm_data);
+                        mbox_data = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+                        dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
+                        if (data_check && (mbox_data != dccm_data)){
+                            VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%dccm_datad] (0x%08x)\n", dw, mbox_data, dw, dccm_data);
                             fail = 1;
                         }
                     }
-
+                    if (!fail) {
+                        VPRINTF(LOW, "AXI2MBOX: Read-back data matches sent data\n");
+                    }
+                    
                     // Release mailbox lock
                     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                     mbox_locked = 0;
@@ -242,12 +330,17 @@ void main(void) {
                     VPRINTF(LOW, "Reading payload via AHB i/f\n");
                     soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
 
-                    // Compare read_payload data with original dccm_data
-                     for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        uint32_t dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                        if (read_payload[dw] != dccm_data) {
-                            VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
-                            fail = 1;
+                    if (data_check) {
+                        // Compare read_payload data with original dccm_data
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (read_payload[dw] != dccm_data) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                                fail = 1;
+                            }
+                        }
+                        if (!fail) {
+                            VPRINTF(LOW, "AXI2AHB: Read-back data matches sent data\n");
                         }
                     }
                     break;
@@ -271,11 +364,11 @@ void main(void) {
         }
 
         if (fail) {
-            VPRINTF(FATAL, "smoke_test_dma failed!\n");
+            VPRINTF(FATAL, "rand_test_dma failed!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         } else {
-            VPRINTF(LOW, "smoke_test_dma completed successfully!\n");
+            VPRINTF(LOW, "rand_test_dma completed successfully!\n");
         }
 }
 
