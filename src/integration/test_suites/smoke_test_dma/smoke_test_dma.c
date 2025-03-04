@@ -49,6 +49,9 @@ const enum tb_fifo_mode {
     RAND_DELAY_TOGGLE   = 0x8f
 };
 
+void nmi_handler() {
+    VPRINTF(FATAL, "NMI");
+}
 void main(void) {
         int argc=0;
         char *argv[1];
@@ -133,6 +136,9 @@ void main(void) {
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
         rst_count++;
 
+        //set NMI vector
+        lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
+
         // Setup the interrupt CSR configuration
         init_interrupts();
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
@@ -176,6 +182,12 @@ void main(void) {
             }
 
         } else if (rst_count == 1) {
+
+        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) == SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK) {
+            VPRINTF(FATAL, "rst_count is still 1 after warm reset!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
 
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
