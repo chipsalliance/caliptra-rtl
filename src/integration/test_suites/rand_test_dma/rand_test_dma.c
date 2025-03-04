@@ -89,6 +89,15 @@ const char* transfer_type_to_string(transfer_type_t transfer_type) {
     }
 }
 
+const enum tb_fifo_mode {
+    FIFO_AUTO_READ_ON   = 0x8a,
+    FIFO_AUTO_WRITE_ON  = 0x8b,
+    FIFO_AUTO_READ_OFF  = 0x8c,
+    FIFO_AUTO_WRITE_OFF = 0x8d,
+    FIFO_CLEAR          = 0x8e,
+    RAND_DELAY_TOGGLE   = 0x8f
+};
+
 void main(void) {
         int argc=0;
         char *argv[1];
@@ -111,9 +120,13 @@ void main(void) {
         uint8_t test_block_size;
         uint8_t dma_xfer_type;
         uint32_t src_offset, dst_offset;
-        uint32_t dccm_data, mbox_data;
+        uint32_t *dccm_data;
+        uint32_t mbox_data;
+        uint32_t block_size;
 
-        VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
+        uint64_t src_addr, dst_addr;
+
+        VPRINTF(LOW, "----------------------------------\nRand Test AXI DMA  !!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -146,18 +159,26 @@ void main(void) {
             inject_rst = (dma_control & INJECT_RST_MASK) ? 1 : 0;
             test_block_size = (dma_control & TEST_BLOCK_SIZE_MASK) ? 1 : 0;
             dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
-            printf("Raw dma_control: 0x%08x\n", dma_control);
-            printf("DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
-            printf("Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
-            printf("Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
-            printf("Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
-            printf("Source is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
-            printf("Destination is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
-            printf("Use Read Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
-            printf("Use Write Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
-            printf("Inject Random Delays: %s\n", inject_rand_delays ? "Yes" : "No");
-            printf("Inject Reset: %s\n", inject_rst ? "Yes" : "No");
-            printf("Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Raw dma_control: 0x%08x\n", dma_control);
+            VPRINTF(MEDIUM, "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
+            VPRINTF(MEDIUM, "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
+            VPRINTF(MEDIUM, "Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
+            VPRINTF(MEDIUM, "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
+            VPRINTF(MEDIUM, "Source is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Destination is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Use Read Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Use Write Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Inject Random Delays: %s\n", inject_rand_delays ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Inject Reset: %s\n", inject_rst ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+
+            // Block_size
+            if (!test_block_size) {
+                block_size = 0;
+            }
+            else {
+                block_size = 256; //TODO This needs to be randomized
+            }
             
 
             // Read transfer size
@@ -176,16 +197,29 @@ void main(void) {
             // Read source offset
             dccm_addr = dccm_addr - 4;
             src_offset = lsu_read_32(dccm_addr);
+            src_addr = (uint64_t) src_offset + 
+                       ((dma_xfer_type == MBOX2AXI) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
+                                        src_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
+                                                      (uint64_t) AXI_SRAM_BASE_ADDR);
             printf("Source Offset = 0x%0x\n", src_offset);
 
             // Read destination offset
             dccm_addr = dccm_addr - 4;
             dst_offset = lsu_read_32(dccm_addr);
+            dst_addr = (uint64_t) dst_offset + 
+                       ((dma_xfer_type == AXI2MBOX) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
+                                        dst_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
+                                                      (uint64_t) AXI_SRAM_BASE_ADDR);
             printf("Destination Offset = 0x%0x\n", dst_offset);         
             
             // Calculate starting address of payload data
-            payload_end_addr = dccm_addr - 4;  // First payload word is 4 bytes after transfer_size
-            payload_start_addr = payload_end_addr - ((transfer_size - 1) * 4);  // Last word of payload (lowest address)
+            if (data_check) {
+                payload_end_addr = dccm_addr - 4;  // First payload word is 4 bytes after transfer_size
+                payload_start_addr = payload_end_addr - ((transfer_size - 1) * 4);  // Last word of payload (lowest address)
+            } else {
+                payload_end_addr = dccm_addr;  // No payload, point to the last member of testcase (dst offset)
+                payload_start_addr = payload_end_addr;
+            }
         
             printf("Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
             printf("Payload DCCM End Address = 0x%0x\n", payload_end_addr);
@@ -193,154 +227,206 @@ void main(void) {
             switch ((transfer_type_t)dma_xfer_type) {
                 
                 case AHB2AXI:
-                    VPRINTF(LOW, "Sending payload via AHB i/f\n");
-                    soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, (uint32_t*)payload_start_addr, transfer_size*4, 0);
-
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(LOW, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+                    VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                    soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
 
                     if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(MEDIUM, "Reading payload via AHB i/f\n");
+                        // Use the same 'fixed' value that was used to send data
+                        soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
+
+                    
                         // Compare read_payload data with original dccm_data
+                        dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                            if (read_payload[dw] != dccm_data) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                fail = 1;
+                            }
+                            else if ((!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(LOW, "AHB2AXI: Read-back data matches sent data\n");
+                            VPRINTF(HIGH, "AHB2AXI: Read-back data matches sent data\n");
                         }
                     }
                     break;
                 
                 case MBOX2AXI:
                     // Send data through Mailbox to AXI_DMA, target the AXI SRAM
-                    VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
-                    // Acquire the mailbox lock
-                    soc_ifc_mbox_acquire_lock(1);
-                    mbox_locked = 1;
-
-                    // Source = dccm address
-                    // Destination = mailbox memory
-                    uint32_t* dccm_ptr = (uint32_t*)payload_start_addr;
-
-                    // MBOX2AXI: Write data into mailbox using direct-mode
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), dccm_ptr[dw]);
-                    }
-
-                    // Relese mailbox lock
-                    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-                    mbox_locked = 0;
-
-                    VPRINTF(LOW, "Sending payload from Mailbox\n");
-                    soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR, 0, transfer_size*4, 0);
-                    
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(LOW, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+                    VPRINTF(MEDIUM, "Writing payload to Mailbox via Direct Mode\n");
 
                     if (data_check) {
-                        // Compare read_payload data with original dccm_data
+                        // Acquire the mailbox lock
+                        soc_ifc_mbox_acquire_lock(1);
+                        mbox_locked = 1;
+
+                        // Source = dccm address
+                        // Destination = mailbox memory
+                        uint32_t* dccm_ptr = (uint32_t*)payload_start_addr;
+
+                        // MBOX2AXI: Write data into mailbox using direct-mode
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                            if (read_payload[dw] != dccm_data) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccmdccm_data_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                            lsu_write_32((uint32_t) src_addr + (dw << 2), dccm_ptr[dw]);
+                        }
+
+                        // Relese mailbox lock
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        mbox_locked = 0;
+                    } else {
+                        VPRINTF(FATAL, "FIXME\n"); // source data?
+                        SEND_STDOUT_CTRL(0x1);
+                    }
+
+                    VPRINTF(HIGH, "Sending payload from Mailbox\n");
+                    soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
+                    
+                    if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
+
+                    
+                        // Compare read_payload data with original dccm_data
+                        dccm_data = (uint32_t*) payload_start_addr;
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                fail = 1;
+                            }
+                            else if ((!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccmdccm_data_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(LOW, "MBOX2AXI: Read-back data matches sent data\n");
+                            VPRINTF(HIGH, "MBOX2AXI: Read-back data matches sent data\n");
                         }
                     }
 
                     break;
                 
                 case AXI2AXI:
-                    // Populate AXI SRAM via AHB2AXI transfer
-                    VPRINTF(LOW, "Sending payload via AHB i/f\n");
-                    soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                    if (data_check) {
+                        // Populate AXI SRAM via AHB2AXI transfer
+                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                    } else {
+                        VPRINTF(FATAL, "FIXME");
+                        SEND_STDOUT_CTRL(0x1);
+                    }
 
-                    // Use the block-size feature
-                    VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-                    soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (transfer_size)*4, 16*2);
-
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(LOW, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+                    // Test AXI2AXI
+                    VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
+                    soc_ifc_axi_dma_send_axi_to_axi(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, 0); // block_size to be updated with random value based on parameters
 
                     if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
+
+                    
                         // Compare read_payload data with original dccm_data
+                        dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                            if (read_payload[dw] != dccm_data) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (((use_rd_fixed && !src_is_fifo) || (use_wr_fixed && !dst_is_fifo)) && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                fail = 1;
+                            }
+                            else if ((!use_rd_fixed || src_is_fifo) && (!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(LOW, "AXI2AXI: Read-back data matches sent data\n");
+                            VPRINTF(HIGH, "AXI2AXI: Read-back data matches sent data\n");
                         }
                     }
                     break;
 
                 case AXI2MBOX:
-                    // Populate AXI SRAM via AHB2AXI transfer
-                    VPRINTF(LOW, "Sending payload via AHB i/f\n");
-                    soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                    if (data_check) {
+                        // Populate AXI SRAM via AHB2AXI transfer
+                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                    } else {
+                        VPRINTF(FATAL, "FIXME");
+                        SEND_STDOUT_CTRL(0x1);
+                    }
 
                     // AXI2MBOX: Read data back through mailbox using direct-mode
-                    VPRINTF(LOW, "Reading payload to Mailbox\n");
-                    soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR, 0x8800, 0, transfer_size*4, 0);
-
-                    VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
-                    // Acquire the mailbox lock
-                    soc_ifc_mbox_acquire_lock(1);
-                    mbox_locked = 1;
-
-                    // Verify data from mailbox against original data from DCCM
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        mbox_data = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
-                        dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
-                        if (data_check && (mbox_data != dccm_data)){
-                            VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%dccm_datad] (0x%08x)\n", dw, mbox_data, dw, dccm_data);
-                            fail = 1;
-                        }
-                    }
-                    if (!fail) {
-                        VPRINTF(LOW, "AXI2MBOX: Read-back data matches sent data\n");
-                    }
-                    
-                    // Release mailbox lock
-                    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-                    mbox_locked = 0;
-                    break;
-
-                case AXI2AHB:
-                    // Populate AXI SRAM via AHB2AXI transfer
-                    VPRINTF(LOW, "Sending payload via AHB i/f\n");
-                    soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, (uint32_t*)payload_start_addr, transfer_size*4, 0);
-
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(LOW, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+                    VPRINTF(HIGH, "Reading payload to Mailbox\n");
+                    soc_ifc_axi_dma_read_mbox_payload(src_addr, dst_offset, use_rd_fixed, transfer_size*4, 0);
 
                     if (data_check) {
-                        // Compare read_payload data with original dccm_data
+                        VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
+                        // Acquire the mailbox lock
+                        soc_ifc_mbox_acquire_lock(1);
+                        mbox_locked = 1;
+
+                        // Verify data from mailbox against original data from DCCM
+                        dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
-                            if (read_payload[dw] != dccm_data) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data);
+                            mbox_data = lsu_read_32(((uint32_t) dst_addr) + (dw << 2));
+//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
+                            if (use_rd_fixed && !src_is_fifo && (mbox_data != lsu_read_32(payload_end_addr))) {
+                                VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, mbox_data, lsu_read_32(payload_end_addr));
+                                fail = 1;
+                            }
+                            else if ((!use_rd_fixed || src_is_fifo) && (mbox_data != dccm_data[dw])){
+                                VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, mbox_data, dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(LOW, "AXI2AHB: Read-back data matches sent data\n");
+                            VPRINTF(HIGH, "AXI2MBOX: Read-back data matches sent data\n");
+                        }
+                    
+                        // Release mailbox lock
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        mbox_locked = 0;
+                    }
+                    break;
+
+                case AXI2AHB:
+                    if (data_check) {
+                        // Populate AXI SRAM via AHB2AXI transfer
+                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                    } else {
+                        VPRINTF(FATAL, "FIXME");
+                        SEND_STDOUT_CTRL(0x1);
+                    }
+
+                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                    VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                    soc_ifc_axi_dma_read_ahb_payload(src_addr, use_rd_fixed, read_payload, transfer_size*4, 0);
+
+                    if (data_check) {
+                        // Compare read_payload data with original dccm_data
+                        dccm_data = (uint32_t*) payload_start_addr;
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
+                            if (use_rd_fixed && !src_is_fifo && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                fail = 1;
+                            }
+                            else if ((!use_rd_fixed || src_is_fifo) && read_payload[dw] != dccm_data[dw]) {
+                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
+                                fail = 1;
+                            }
+                        }
+                        if (!fail) {
+                            VPRINTF(HIGH, "AXI2AHB: Read-back data matches sent data\n");
                         }
                     }
                     break;
@@ -372,118 +458,3 @@ void main(void) {
         }
 }
 
-//const long seed = MY_RANDOM_SEED;
-
-/*
-const enum tb_fifo_mode {
-    FIFO_AUTO_READ_ON   = 0x8a,
-    FIFO_AUTO_WRITE_ON  = 0x8b,
-    FIFO_AUTO_READ_OFF  = 0x8c,
-    FIFO_AUTO_WRITE_OFF = 0x8d,
-    FIFO_CLEAR          = 0x8e,
-    RAND_DELAY_TOGGLE   = 0x8f
-};
-*/
-
-/*
-// Function to generate random payloads and number of dwords
-void generate_random_payloads(int *num_dwords_send, int *num_dwords_mbox) {
-    
-    printf("In generate_random_payloads function\n");
-    // Initialize random number generator
-    srand(seed);
-    printf("Random number generator initialized\n");
-
-    // Possible cases for num_dwords_send
-    int cases[] = {15, 17, 31, 32, 33, 48, 64, 256};
-    int num_cases = sizeof(cases) / sizeof(cases[0]);
-
-    printf ("Number of cases = %d\n", num_cases);
-
-    // Randomly select one of the cases for num_dwords_send
-    *num_dwords_send = cases[rand() % num_cases];
-    printf("Num dwords_send = %d\n", *num_dwords_send);
-    
-    // Random number of dwords (between 1 and 16) for num_dwords_mbox
-    *num_dwords_mbox = cases[rand() % num_cases];
-    printf("Num dwords_mbox = %d\n", *num_dwords_mbox);
-
-    // Randomize data in send_payload and mbox_payload and print the values
-    printf("Randomized send_payload:\n");
-    for (int i = 0; i < *num_dwords_send; i++) {
-        send_payload[i] = rand();
-        printf("0x%08x ", send_payload[i]);
-    }
-    printf("\n");
-
-    printf("Randomized mbox_send_payload:\n");
-    for (int i = 0; i < *num_dwords_mbox; i++) {
-        mbox_send_payload[i] = rand();
-        printf("0x%08x ", mbox_send_payload[i]);
-    }
-    printf("\n");
-
-}
-*/
-
-/*
-        printf("Generating random payloads\n");
-        //Generate payload of random size and randomly generated data
-        generate_random_payloads(&num_dwords_send, &num_dwords_mbox);
-
-        // AHB2AXI: Send data through AHB interface to AXI_DMA, target the AXI SRAM
-        VPRINTF(LOW, "Sending payload via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, num_dwords_send*4, 0);
-
-        // Send data through Mailbox to AXI_DMA, target the AXI SRAM
-        VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
-        // Acquire the mailbox lock
-        if (soc_ifc_mbox_acquire_lock(1)) {
-            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
-            fail = 1;
-        }
-        // MBOX2AXI: Write data into mailbox using direct-mode
-        for (uint32_t dw = 0; dw < num_dwords_mbox; dw++) {
-            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
-        }
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-        VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + num_dwords_send*4, 0, num_dwords_mbox*4, 0)) {
-            fail = 1;
-        }
-
-        // AXI2AXI: Move data from one address to another in AXI SRAM
-        // Use the block-size feature
-        VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (num_dwords_send + num_dwords_mbox)*4, 16*2);
-
-        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-        VPRINTF(LOW, "Reading payload via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, num_dwords_send*4, 0);
-        for (uint8_t ii = 0; ii < num_dwords_send; ii++) {
-            if (read_payload[ii] != send_payload[ii]) {
-                VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
-                fail = 1;
-            }
-        }
-
-        // AXI2MBOX: Read data back through mailbox using direct-mode
-        VPRINTF(LOW, "Reading payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + num_dwords_send*4, 0x8800, 0, num_dwords_send*4, 0)) {
-            fail = 1;
-        }
-        VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
-        // Acquire the mailbox lock
-        if (soc_ifc_mbox_acquire_lock(1)) {
-            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
-            fail = 1;
-        }
-        for (uint32_t dw = 0; dw < num_dwords_send; dw++) {
-            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
-            if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
-                VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
-                fail = 1;
-            }
-        }
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-        */
