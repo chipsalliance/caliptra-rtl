@@ -156,9 +156,6 @@ import soc_ifc_pkg::*;
     // Count read requests that have been enqueued due to recovery_data_avail.
     // Width of signal is sufficient to track 2x the maximum number of requests
     // possible for any given "block" of data.
-    // This allows the counter to schedule the next set of requests if
-    // recovery_data_avail pulse is observed while there are still requests
-    // that have not been issued from the prior pulse.
     // The maximum number of requests for a given "block" is calculated as:
     //   max_block_size / min_size_per_request
     // Where
@@ -195,7 +192,7 @@ import soc_ifc_pkg::*;
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
 
-    logic recovery_data_avail_d, recovery_data_avail_p;
+//    logic recovery_data_avail_d, recovery_data_avail_p;
 
 
     // --------------------------------------- //
@@ -460,22 +457,28 @@ import soc_ifc_pkg::*;
     // Control Logic                           //
     // --------------------------------------- //
 
-    // Detect recovery_data_avail rising edge
-    assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
+//    // Detect recovery_data_avail rising edge
+//    assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
 
     // When block_size != 0, we are guaranteed to be interacting with the SS recovery interface
     // which means transactions will also be of FIXED burst type.
     // This guarantees that each read request will be sized according to the constraints of
     // block_size and MAX_FIXED_BLOCK_SIZE, without regard for address alignment boundaries or
     // other conditions.
+    // Treat recovery_data_avail as a level signal indicating there is some data in the FIFO
     always_comb begin
-        case ({recovery_data_avail_p,rd_req_hshake}) inside
-            2'b00: rd_req_count_for_payload_next = rd_req_count_for_payload;
-            2'b01: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
-            2'b10: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
-            2'b11: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1) - 1;
+        case ({|rd_req_count_for_payload,recovery_data_avail,rd_req_hshake}) inside
+            3'b000: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b001: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b010: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
+            3'b011: rd_req_count_for_payload_next = '0; // ERROR case
+            3'b100: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b101: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b110: rd_req_count_for_payload_next = rd_req_count_for_payload; // Don't queue new requests when current requests are pending
+            3'b111: rd_req_count_for_payload_next = rd_req_count_for_payload - 1; // Don't queue new requests when current requests are pending
         endcase
     end
+    // TODO detect overflow ???
 
     // Requirement:
     //   * never stall read requests if block_size == 0, i.e. not using recovery mode
@@ -485,23 +488,23 @@ import soc_ifc_pkg::*;
     //     until it is cleared by returning to IDLE state
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            recovery_data_avail_d    <= 1'b0;
+//            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b0;
         end
         else if (hwif_out.block_size.size.value == '0) begin
-            recovery_data_avail_d    <= 1'b0;
+//            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b0;
         end
-        // Treat 'go' as the rising edge-detection if recovery_data_avail is already set before DMA is armed
+//        // Treat 'go' as the rising edge-detection if recovery_data_avail is already set before DMA is armed
         else if (ctrl_fsm_ps == DMA_IDLE) begin
-            recovery_data_avail_d    <= 1'b0;
+//            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b1;
         end
         else begin
-            recovery_data_avail_d    <= recovery_data_avail;
+//            recovery_data_avail_d    <= recovery_data_avail;
             rd_req_count_for_payload <= rd_req_count_for_payload_next;
             rd_req_stall             <= ~|rd_req_count_for_payload_next;
         end
