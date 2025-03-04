@@ -35,7 +35,7 @@ module soc_ifc_axi_sha_acc_dis_tb
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 18;
+  parameter AHB_ADDR_WIDTH       = 19;
   parameter AHB_DATA_WIDTH       = 32;
 
 
@@ -86,7 +86,8 @@ module soc_ifc_axi_sha_acc_dis_tb
 
   soc_ifc_top #(
     .AXI_ADDR_WIDTH(SOC_IFC_ADDR_W),
-    .AXI_ID_WIDTH(8)
+    .AXI_ID_WIDTH(8),
+    .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
     ) dut (
     .clk(clk_tb),
     .clk_cg(clk_tb),

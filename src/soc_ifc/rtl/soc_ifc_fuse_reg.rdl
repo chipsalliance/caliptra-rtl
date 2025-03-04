@@ -112,7 +112,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     Fuse token[32]=0;
-} fuse_manuf_dbg_unlock_token[4];
+} fuse_manuf_dbg_unlock_token[16];
 reg {
     name = "PQC Key Type Fuse";
     desc = "One-hot encoded selection of PQC key type for firmware validation.

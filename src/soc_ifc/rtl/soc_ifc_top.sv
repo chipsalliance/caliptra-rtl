@@ -688,7 +688,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_runtime_svn[i].svn.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
-    for (int i=0; i<4; i++) begin
+    foreach(soc_ifc_reg_hwif_in.fuse_manuf_dbg_unlock_token[i]) begin
         soc_ifc_reg_hwif_in.fuse_manuf_dbg_unlock_token[i].token.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 

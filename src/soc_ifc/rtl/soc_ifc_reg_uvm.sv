@@ -4628,7 +4628,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_lms_revocation fuse_lms_revocation;
         rand soc_ifc_reg__fuse_mldsa_revocation fuse_mldsa_revocation;
         rand soc_ifc_reg__fuse_soc_stepping_id fuse_soc_stepping_id;
-        rand soc_ifc_reg__fuse_manuf_dbg_unlock_token fuse_manuf_dbg_unlock_token[4];
+        rand soc_ifc_reg__fuse_manuf_dbg_unlock_token fuse_manuf_dbg_unlock_token[16];
         rand soc_ifc_reg__fuse_pqc_key_type fuse_pqc_key_type;
         rand soc_ifc_reg__fuse_soc_manifest_svn fuse_soc_manifest_svn[4];
         rand soc_ifc_reg__fuse_soc_manifest_max_svn fuse_soc_manifest_max_svn;
@@ -5009,19 +5009,19 @@ package soc_ifc_reg_uvm;
             this.fuse_pqc_key_type.configure(this);
 
             this.fuse_pqc_key_type.build();
-            this.default_map.add_reg(this.fuse_pqc_key_type, 'h35c);
+            this.default_map.add_reg(this.fuse_pqc_key_type, 'h38c);
             foreach(this.fuse_soc_manifest_svn[i0]) begin
                 this.fuse_soc_manifest_svn[i0] = new($sformatf("fuse_soc_manifest_svn[%0d]", i0));
                 this.fuse_soc_manifest_svn[i0].configure(this);
                 
                 this.fuse_soc_manifest_svn[i0].build();
-                this.default_map.add_reg(this.fuse_soc_manifest_svn[i0], 'h360 + i0*'h4);
+                this.default_map.add_reg(this.fuse_soc_manifest_svn[i0], 'h390 + i0*'h4);
             end
             this.fuse_soc_manifest_max_svn = new("fuse_soc_manifest_max_svn");
             this.fuse_soc_manifest_max_svn.configure(this);
 
             this.fuse_soc_manifest_max_svn.build();
-            this.default_map.add_reg(this.fuse_soc_manifest_max_svn, 'h370);
+            this.default_map.add_reg(this.fuse_soc_manifest_max_svn, 'h3a0);
             this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
             this.SS_CALIPTRA_BASE_ADDR_L.configure(this);
 
