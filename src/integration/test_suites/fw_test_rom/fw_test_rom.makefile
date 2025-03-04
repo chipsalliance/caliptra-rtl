@@ -80,19 +80,17 @@ owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
 	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=owner_pk_val.bin skip=$(OWNER_ECC_PK_ROM_OFFSET) count=$(OWNER_PK_LENGTH)
 
 # Extract compiled FW from latest retrieved release
-$(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0.zip
+$(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0-2.x.zip
+	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
+	 7z x -o"$(TEST_DIR)" $< image-bundle.bin
+	 rm $<
+	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
+	 mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
 	 touch $(TEST_DIR)/$(TESTNAME).extracted
-	 # TODO re-enable the image extraction
-#	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
-#	 7z x -o"$(TEST_DIR)" $< image-bundle.bin
-#	 rm $<
-#	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
-#	 mv $(TEST_DIR)/image-bundle.bin          $(TEST_DIR)/$(TESTNAME_fw)
-#	 touch $(TEST_DIR)/$(TESTNAME).extracted
 
 # Retrieve latest build from caliptra-sw repo
 # Fail if a build from within the last 30 days is not found
-caliptra_release_v$(today)_0.zip: $(TEST_DIR)/$(TESTNAME)
+caliptra_release_v$(today)_0-2.x.zip: $(TEST_DIR)/$(TESTNAME)
 	@base_url='https://github.com/chipsalliance/caliptra-sw/releases/download/'
 	found=0
 	full_path=""
@@ -100,7 +98,7 @@ caliptra_release_v$(today)_0.zip: $(TEST_DIR)/$(TESTNAME)
 	  test_date=$$(date +%Y%m%d --date="$(today) -$${days_ago} days")
 	  echo "Checking date $${test_date} for package"
 	  super_base="release_v$${test_date}_0"
-	  zipfile_base="caliptra_release_v$${test_date}_0"
+	  zipfile_base="caliptra_release_v$${test_date}_0-2.x"
 	  full_path="$${base_url}/$${super_base}/$${zipfile_base}.zip"
 	  if wget --spider --quiet $${full_path}; then
 	    echo "Found $${full_path}";
@@ -114,8 +112,8 @@ caliptra_release_v$(today)_0.zip: $(TEST_DIR)/$(TESTNAME)
 	  exit 1
 	fi
 	# Cheesy rename to satisfy makefile dependency
-	if [[ ! -f "caliptra_release_v$(today)_0.zip" ]]; then
-	  mv $${zipfile_base}.zip "caliptra_release_v$(today)_0.zip"
+	if [[ ! -f "caliptra_release_v$(today)_0-2.x.zip" ]]; then
+	  mv $${zipfile_base}.zip "caliptra_release_v$(today)_0-2.x.zip"
 	fi
 
 help:
