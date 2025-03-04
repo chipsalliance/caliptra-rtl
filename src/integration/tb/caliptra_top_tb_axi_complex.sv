@@ -440,6 +440,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
     `CALIPTRA_ASSERT_NEVER(FIFO_RD_NOT_FIXED, fifo_ar_hshake && (axi_fifo_if.arburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_NEVER(FIFO_WR_NOT_FIXED, fifo_aw_hshake && (axi_fifo_if.awburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
+    `CALIPTRA_ASSERT_NEVER(FIFO_1RD_FOR_RCVY_EMU, (fifo_r_active > 1) && ctrl.en_recovery_emulation, core_clk, !cptra_rst_b)
 
     caliptra_top_tb_axi_fifo #(
         .AW(AXI_FIFO_ADDR_WIDTH     ),
