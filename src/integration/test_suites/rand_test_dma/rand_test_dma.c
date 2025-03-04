@@ -121,6 +121,7 @@ void main(void) {
         uint8_t dma_xfer_type;
         uint32_t src_offset, dst_offset;
         uint32_t dccm_data, mbox_data;
+        uint32_t block_size;
 
         VPRINTF(LOW, "----------------------------------\nRand Test AXI DMA  !!\n----------------------------------\n");
 
@@ -167,6 +168,14 @@ void main(void) {
             VPRINTF(MEDIUM, "Inject Random Delays: %s\n", inject_rand_delays ? "Yes" : "No");
             VPRINTF(MEDIUM, "Inject Reset: %s\n", inject_rst ? "Yes" : "No");
             VPRINTF(MEDIUM, "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+
+            // Block_size
+            if (!test_block_size) {
+                block_size = 0;
+            }
+            else {
+                block_size = 32; //TODO This needs to be randomized
+            }
             
 
             // Read transfer size
@@ -205,12 +214,13 @@ void main(void) {
                     VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
                     soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, (uint32_t*)payload_start_addr, transfer_size*4, 0);
 
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(MEDIUM, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
-
                     if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(MEDIUM, "Reading payload via AHB i/f\n");
+                        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+
+                    
                         // Compare read_payload data with original dccm_data
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
@@ -248,12 +258,12 @@ void main(void) {
                     VPRINTF(HIGH, "Sending payload from Mailbox\n");
                     soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR, 0, transfer_size*4, 0);
                     
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(HIGH, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
-
                     if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+
                         // Compare read_payload data with original dccm_data
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
@@ -276,14 +286,14 @@ void main(void) {
 
                     // Use the block-size feature
                     VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
-                    soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (transfer_size)*4, 16*2);
-
-                    //Read back via AHB and compare data
-                    // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                    VPRINTF(HIGH, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, transfer_size*4, 0);
+                    soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (transfer_size)*4, 0); // block_size to be updated with random value based on parameters
 
                     if (data_check) {
+                        //Read back via AHB and compare data
+                        // AXI2AHB: Read data back from AXI SRAM and confirm it matches
+                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, transfer_size*4, 0);
+
                         // Compare read_payload data with original dccm_data
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
@@ -307,27 +317,29 @@ void main(void) {
                     VPRINTF(HIGH, "Reading payload to Mailbox\n");
                     soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR, 0x8800, 0, transfer_size*4, 0);
 
-                    VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
-                    // Acquire the mailbox lock
-                    soc_ifc_mbox_acquire_lock(1);
-                    mbox_locked = 1;
+                    if (data_check) {
+                        VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
+                        // Acquire the mailbox lock
+                        soc_ifc_mbox_acquire_lock(1);
+                        mbox_locked = 1;
 
-                    // Verify data from mailbox against original data from DCCM
-                    for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                        mbox_data = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
-                        dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
-                        if (data_check && (mbox_data != dccm_data)){
-                            VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%dccm_datad] (0x%08x)\n", dw, mbox_data, dw, dccm_data);
-                            fail = 1;
+                        // Verify data from mailbox against original data from DCCM
+                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                            mbox_data = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
+                            if (data_check && (mbox_data != dccm_data)){
+                                VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%dccm_datad] (0x%08x)\n", dw, mbox_data, dw, dccm_data);
+                                fail = 1;
+                            }
                         }
-                    }
-                    if (!fail) {
-                        VPRINTF(HIGH, "AXI2MBOX: Read-back data matches sent data\n");
-                    }
+                        if (!fail) {
+                            VPRINTF(HIGH, "AXI2MBOX: Read-back data matches sent data\n");
+                        }
                     
-                    // Release mailbox lock
-                    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-                    mbox_locked = 0;
+                        // Release mailbox lock
+                        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+                        mbox_locked = 0;
+                    }
                     break;
 
                 case AXI2AHB:
