@@ -71,8 +71,8 @@ set num_ro_regs_mem [array size ro_regs_mem]
 puts "Read Debug Module Status Register..."
 set val [riscv dmi_read $dmstatus_addr]
 puts "dmstatus: $val"
-if {($val & 0x00000c00) == 0} {
-    echo "The hart is halted!"
+if {($val & 0x00000c00) != 0} {
+    echo "Debug is unlocked!"
     shutdown error
 }
 puts ""
@@ -87,63 +87,20 @@ for {set i 0} {$i < $num_rw_regs} {incr i} {
     #write golden5a
     riscv dmi_write [set $rw_regs($i)] $golden5a
     set actual [riscv dmi_read [set $rw_regs($i)]]
-    if {[compare $actual $golden5a] != 0} {
+    if {[compare $actual 0] != 0} {
         shutdown error
     }
     #write goldena5
     riscv dmi_write [set $rw_regs($i)] $goldena5
     set actual [riscv dmi_read [set $rw_regs($i)]]
-    if {[compare $actual $goldena5] != 0} {
+    if {[compare $actual 0] != 0} {
         shutdown error
     }
     #write variable
     riscv dmi_write [set $rw_regs($i)] $i$i$i
     set actual [riscv dmi_read [set $rw_regs($i)]]
-    if {[compare $actual $i$i$i] != 0} {
-        shutdown error
-    }
-}
-
-puts "Reading the writable registers again..."
-for {set i 0} {$i < $num_rw_regs} {incr i} {
-    set golden $i$i$i
-    set actual [riscv dmi_read [set $rw_regs($i)]]
-    if {[compare $actual $golden] != 0} {
-        shutdown error
-    }
-}
-
-#Check read only registers
-puts "Checking the read only registers..."
-for {set i 0} {$i < $num_ro_regs} {incr i} {
-    #write golden5a
-    riscv dmi_write [set $ro_regs($i)] $golden5a
-    set actual [riscv dmi_read [set $ro_regs($i)]]
     if {[compare $actual 0] != 0} {
         shutdown error
-    }
-    #write goldena5
-    riscv dmi_write [set $ro_regs($i)] $goldena5
-    set actual [riscv dmi_read [set $ro_regs($i)]]
-    if {[compare $actual 0] != 0} {
-        shutdown error
-    }
-}
-
-#Write RO from uc and read back on dmi
-puts "Checking the read only registers..."
-for {set i 0} {$i < $num_ro_regs_mem} {incr i} {
-    #write golden5a
-    write_memory [set $ro_regs_mem($i)] 32 $golden5a phys
-    set actual [riscv dmi_read [set $ro_regs($i)]]
-    if {[compare $actual $golden5a] != 0} {
-        #shutdown error
-    }
-    #write goldena5
-    write_memory [set $ro_regs_mem($i)] 32 $goldena5 phys
-    set actual [riscv dmi_read [set $ro_regs($i)]]
-    if {[compare $actual $goldena5] != 0} {
-        #shutdown error
     }
 }
 
