@@ -18,6 +18,8 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // =============================================
   // Class properties
   // =============================================
+  int verbosity;
+
   rand dma_transfer_type_e  dma_xfer_type;  // Randomized transfer type
        int unsigned         max_checked_xfer_size = 0;  // From the TB, based on space in DCCM
   rand int unsigned         xfer_size;      // Randomized transfer size in dwords
@@ -122,8 +124,9 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // =============================================
   // Constructor
   // =============================================
-  function new(int max_checked_size);
+  function new(int max_checked_size, int verbosity);
       this.max_checked_xfer_size = max_checked_size;
+      this.verbosity = verbosity;
   endfunction
 
   // =============================================
@@ -140,14 +143,18 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // =============================================
   function void post_randomize();
     //Verify post_randomize() is being called
-    $display("post_randomize called with xfer_size = %0d", xfer_size);
+    if (this.verbosity >= 1) begin
+        $display("post_randomize called with xfer_size = %0d", xfer_size);
+    end
 
     // Report payload_data array size
-    if (xfer_size <= MAX_SIZE_TO_CHECK) begin
-        $display("payload_data initialized with size: %d", payload_data.size());
-    end
-    else begin
-        $display("payload_data will not be initialized or checked for very large transfer test. Size: %d", payload_data.size());
+    if (this.verbosity >= 1) begin
+        if (xfer_size <= MAX_SIZE_TO_CHECK) begin
+                $display("payload_data initialized with size: %d", payload_data.size());
+        end
+        else begin
+                $display("payload_data will not be initialized or checked for very large transfer test. Size: %d", payload_data.size());
+        end
     end
 
     // Ensure array is porperly sized
@@ -168,25 +175,29 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // =============================================
   // Display method
   // =============================================
-  function void display(int index = -1);
-    if (index != -1) begin
-      $display("Transfer %0d:", index);
+  function void display(int index = -1, int local_verbosity = 1);
+    if (local_verbosity >= 1) begin
+        if (index != -1) begin
+          $display("Transfer %0d:", index);
+        end
+        $display("  Type: %s", dma_xfer_type.name());
+        $display("  Size: %0d dwords", xfer_size);
+        if (local_verbosity >= 2) begin
+            $display("  Payload Data:");
+            foreach (payload_data[i]) begin
+              $display("    %0d: %h", i, payload_data[i]);
+            end
+        end
+        $display("  src_is_fifo       : 0x%x", src_is_fifo       );
+        $display("  dst_is_fifo       : 0x%x", dst_is_fifo       );
+        $display("  src_offset        : 0x%x", src_offset        );
+        $display("  dst_offset        : 0x%x", dst_offset        );
+        $display("  use_rd_fixed      : 0x%x", use_rd_fixed      );
+        $display("  use_wr_fixed      : 0x%x", use_wr_fixed      );
+        $display("  inject_rand_delays: 0x%x", inject_rand_delays);
+        $display("  inject_rst        : 0x%x", inject_rst        );
+        $display("  test_block_size   : 0x%x", test_block_size   );
     end
-    $display("  Type: %s", dma_xfer_type.name());
-    $display("  Size: %0d dwords", xfer_size);
-    $display("  Payload Data:");
-    foreach (payload_data[i]) begin
-      $display("    %0d: %h", i, payload_data[i]);
-    end
-    $display("  src_is_fifo       : 0x%x", src_is_fifo       );
-    $display("  dst_is_fifo       : 0x%x", dst_is_fifo       );
-    $display("  src_offset        : 0x%x", src_offset        );
-    $display("  dst_offset        : 0x%x", dst_offset        );
-    $display("  use_rd_fixed      : 0x%x", use_rd_fixed      );
-    $display("  use_wr_fixed      : 0x%x", use_wr_fixed      );
-    $display("  inject_rand_delays: 0x%x", inject_rand_delays);
-    $display("  inject_rst        : 0x%x", inject_rst        );
-    $display("  test_block_size   : 0x%x", test_block_size   );
   endfunction
 
 endclass

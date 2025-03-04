@@ -1481,7 +1481,7 @@ endgenerate //IV_NO
                 assert_rst_flag <= 'b1;
                 deassert_rst_flag <= 'b0;
             end
-            else if(assert_rst_flag) begin //prandom rst was already issued, so deassert rst now
+            else if(assert_rst_flag && (cycleCnt >= (rst_cyclecnt + wait_time_to_rst + 10))) begin //prandom rst was already issued, so deassert rst now
                 assert_rst_flag <= 'b0;
                 deassert_rst_flag <= 'b1;
                 prandom_warm_rst <= 'b0;
