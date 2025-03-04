@@ -71,6 +71,10 @@ endclass
 
 task soc_ifc_env_mbox_rom_fw_sequence::mbox_setup();
     super.mbox_setup();
+    // Choose non-default AXI_USER
+    if (!mbox_valid_users_initialized) `uvm_fatal("MBOX_ROM_SEQ", "mbox_valid_users must be initialized!")
+    override_mbox_user = 1'b1;
+    std::randomize(mbox_user_override_val) with { mbox_user_override_val inside {mbox_valid_users[0],mbox_valid_users[1],mbox_valid_users[2],mbox_valid_users[3],mbox_valid_users[4]}; };
     //read FW from file to write to mailbox
     $readmemh("fw_update.hex", fw_img);
 endtask

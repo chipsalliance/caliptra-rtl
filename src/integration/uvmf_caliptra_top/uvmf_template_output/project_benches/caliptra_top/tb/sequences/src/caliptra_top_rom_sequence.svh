@@ -33,6 +33,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
   rand soc_ifc_env_trng_write_data_sequence_t soc_ifc_env_trng_write_data_seq;
   rand soc_ifc_env_mbox_rom_fw_sequence_t soc_ifc_env_mbox_rom_seq;
   rand soc_ifc_env_sequence_base_t soc_ifc_env_seq_ii[];
+  rand soc_ifc_env_axi_user_init_sequence_t soc_ifc_env_axi_user_init_seq;
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
 
@@ -68,6 +69,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_rom_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
     soc_ifc_env_mbox_rom_seq = soc_ifc_env_mbox_rom_fw_sequence_t::type_id::create("soc_ifc_env_mbox_rom_seq");
+    soc_ifc_env_axi_user_init_seq = soc_ifc_env_axi_user_init_sequence_t::type_id::create("soc_ifc_env_axi_user_init_seq");
 
     soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq     = soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_ctrl_agent_random_seq");
     soc_ifc_subenv_soc_ifc_status_agent_responder_seq  = soc_ifc_subenv_soc_ifc_status_agent_responder_seq_t::type_id::create("soc_ifc_subenv_soc_ifc_status_agent_responder_seq");
@@ -80,6 +82,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_bringup_seq.ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
     soc_ifc_env_mbox_rom_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
     soc_ifc_env_mbox_rom_seq.ss_mode_status_agent_rsp_seq = soc_ifc_subenv_ss_mode_status_agent_responder_seq;
+    soc_ifc_env_axi_user_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
 
     reg_model.reset();
     // Start RESPONDER sequences here
@@ -116,6 +119,10 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     `uvm_info("CALIPTRA_TOP_ROM_TEST", "Not initiating TRNG responder sequence to handle ROM TRNG requests because INTERNAL TRNG is enabled", UVM_LOW)
 `endif
 
+    if(!soc_ifc_env_axi_user_init_seq.randomize())
+        `uvm_fatal("CALIPTRA_TOP_ROM_TEST", "caliptra_top_rom_sequence::body() - soc_ifc_env_axi_user_init_seq randomization failed");
+    soc_ifc_env_axi_user_init_seq.start(top_configuration.soc_ifc_subenv_config.vsqr);
+
     run_firmware_init(soc_ifc_env_mbox_rom_seq);
 
     // After firmware init, wait for ICCM_LOCK to be set, indicating transition from ROM to FMC
@@ -126,7 +133,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     // the last sequence to allow for the last sequence item to flow 
     // through the design.
     fork
-      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(4000);
+      soc_ifc_subenv_soc_ifc_ctrl_agent_config.wait_for_num_clocks(400000);
       soc_ifc_subenv_cptra_ctrl_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_ss_mode_ctrl_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_soc_ifc_status_agent_config.wait_for_num_clocks(4000);
