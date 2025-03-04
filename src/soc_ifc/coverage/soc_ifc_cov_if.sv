@@ -791,13 +791,25 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_fuse_soc_stepping_id;
   logic [31:0]   full_addr_fuse_soc_stepping_id = `CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID;
 
-  logic          hit_fuse_manuf_dbg_unlock_token[0:3];
-  logic [3:0]    bus_fuse_manuf_dbg_unlock_token[0:3];
-  logic [31:0]   full_addr_fuse_manuf_dbg_unlock_token[0:3];
+  logic          hit_fuse_manuf_dbg_unlock_token[0:15];
+  logic [3:0]    bus_fuse_manuf_dbg_unlock_token[0:15];
+  logic [31:0]   full_addr_fuse_manuf_dbg_unlock_token[0:15];
   assign         full_addr_fuse_manuf_dbg_unlock_token[0] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0;
   assign         full_addr_fuse_manuf_dbg_unlock_token[1] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_1;
   assign         full_addr_fuse_manuf_dbg_unlock_token[2] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_2;
   assign         full_addr_fuse_manuf_dbg_unlock_token[3] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[4] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[5] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[6] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[7] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[8] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[9] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[10] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[11] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[12] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[13] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[14] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14;
+  assign         full_addr_fuse_manuf_dbg_unlock_token[15] = `CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15;
 
   logic          hit_fuse_pqc_key_type;
   logic [3:0]    bus_fuse_pqc_key_type;
@@ -1613,6 +1625,42 @@ interface soc_ifc_cov_if
 
   assign hit_fuse_manuf_dbg_unlock_token[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[3][18-1:0]);
   assign bus_fuse_manuf_dbg_unlock_token[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[3]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[4][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[4]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[5][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[5]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[6][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[6]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[7][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[7]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[8] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[8][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[8]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[9] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[9][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[9]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[10] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[10][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[10]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[11] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[11][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[11]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[12] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[12][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[12] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[12]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[13] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[13][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[13] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[13]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[14] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[14][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[14] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[14]}};
+
+  assign hit_fuse_manuf_dbg_unlock_token[15] = (soc_ifc_reg_req_data.addr == full_addr_fuse_manuf_dbg_unlock_token[15][18-1:0]);
+  assign bus_fuse_manuf_dbg_unlock_token[15] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_manuf_dbg_unlock_token[15]}};
 
   assign hit_fuse_pqc_key_type = (soc_ifc_reg_req_data.addr == full_addr_fuse_pqc_key_type[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_pqc_key_type = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_pqc_key_type}};
@@ -2933,8 +2981,8 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_manuf_dbg_unlock_token [0:3] -----------------------
-  covergroup soc_ifc_fuse_manuf_dbg_unlock_token_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
+  // ----------------------- COVERGROUP fuse_manuf_dbg_unlock_token [0:15] -----------------------
+  covergroup soc_ifc_fuse_manuf_dbg_unlock_token_cg (ref logic [3:0] bus_event[0:15]) @(posedge clk);
     fuse_manuf_dbg_unlock_token0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[0];
     bus_fuse_manuf_dbg_unlock_token0_cp : coverpoint bus_event[0] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
@@ -2952,6 +3000,66 @@ interface soc_ifc_cov_if
     }
     fuse_manuf_dbg_unlock_token3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[3];
     bus_fuse_manuf_dbg_unlock_token3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[4];
+    bus_fuse_manuf_dbg_unlock_token4_cp : coverpoint bus_event[4] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[5];
+    bus_fuse_manuf_dbg_unlock_token5_cp : coverpoint bus_event[5] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[6];
+    bus_fuse_manuf_dbg_unlock_token6_cp : coverpoint bus_event[6] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[7];
+    bus_fuse_manuf_dbg_unlock_token7_cp : coverpoint bus_event[7] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token8_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[8];
+    bus_fuse_manuf_dbg_unlock_token8_cp : coverpoint bus_event[8] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token9_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[9];
+    bus_fuse_manuf_dbg_unlock_token9_cp : coverpoint bus_event[9] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token10_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[10];
+    bus_fuse_manuf_dbg_unlock_token10_cp : coverpoint bus_event[10] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token11_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[11];
+    bus_fuse_manuf_dbg_unlock_token11_cp : coverpoint bus_event[11] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token12_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[12];
+    bus_fuse_manuf_dbg_unlock_token12_cp : coverpoint bus_event[12] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token13_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[13];
+    bus_fuse_manuf_dbg_unlock_token13_cp : coverpoint bus_event[13] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token14_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[14];
+    bus_fuse_manuf_dbg_unlock_token14_cp : coverpoint bus_event[14] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_manuf_dbg_unlock_token15_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_manuf_dbg_unlock_token[15];
+    bus_fuse_manuf_dbg_unlock_token15_cp : coverpoint bus_event[15] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }

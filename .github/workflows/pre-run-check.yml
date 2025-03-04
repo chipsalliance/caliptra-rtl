@@ -91,6 +91,8 @@ jobs:
     runs-on: ubuntu-22.04
     if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
     steps:
+      - name: Echo Reason
+        run: echo "$GITHUB_EVENT_NAME"
       - name: Checkout RTL repo
         uses: actions/checkout@v4
         with:
@@ -141,7 +143,7 @@ jobs:
             # Start the search with the second parent of the PR merge commit
             # in order to only traverse the feature branch commits
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png\|.github\/workflows' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png\|.github\/workflows\|\.xls\|\.xlsx' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
