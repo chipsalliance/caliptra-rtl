@@ -30,6 +30,7 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   `uvm_object_utils( soc_ifc_env_sha_accel_sequence )
 
   caliptra_axi_user axi_user_obj;
+  bit valid_user;
   rand sha_accel_op_s sha_accel_op_rand;
   rand int test_case;
   reg [31:0] dlen;
@@ -94,7 +95,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
 
     //`uvm_info("SHA_ACCEL_SEQ", $sformatf("Initiating command sequence to mailbox with cmd: [%p] dlen: [%p] resp_dlen: [%p]", sha_accel_op_rand.cmd.cmd_e, sha_accel_op_rand.dlen, sha_accel_resp_expected_dlen), UVM_MEDIUM)
     axi_user_obj = new();
-    axi_user_obj.randomize();
+    axi_user_obj.randomize() with { (addr_user == reg_model.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value()) dist { 0 := 1, 1 := 1 }; };
+    valid_user = axi_user_obj.get_addr_user() == reg_model.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value();
 
     //open appropriate file for test vectors
     if (this.sha_accel_op_rand.sha512_mode) begin
@@ -167,20 +169,20 @@ endclass
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_setup();
     `uvm_info("SHA_ACCEL_SEQ", $sformatf("Start of SHA Accelerator sequence"), UVM_MEDIUM)
+    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Using AXI USER 0x%x (valid: %x)", axi_user_obj.get_addr_user(), valid_user), UVM_HIGH)
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_acquire_lock(output op_sts_e op_sts);
     uvm_reg_data_t data;
 
     op_sts = CPTRA_TIMEOUT;
-    reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
-    report_reg_sts(reg_sts, "LOCK");
-    // Wait for read data to return with '0', indicating no other agent has lock
-    while (data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()]) begin
+    do begin
+        // Wait for read data to return with '0', indicating no other agent has lock
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
         reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "LOCK");
     end
+    while (data[reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos()]);
     //Read the lock again to test predictor
     configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
     reg_model.sha512_acc_csr_rm.LOCK.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
@@ -237,15 +239,15 @@ endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_poll_status();
     uvm_reg_data_t data;
-    reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
-    report_reg_sts(reg_sts, "STATUS");
 
-    // Wait for read data to return with '0', indicating no other agent has lock
-    while (!data[reg_model.sha512_acc_csr_rm.STATUS.VALID.get_lsb_pos()]) begin
+    // Wait for read data to return with 'VALID == 1', indicating operation is successful
+    do begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(200); // FIXME add more randomization on delay
         reg_model.sha512_acc_csr_rm.STATUS.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "STATUS");
+        if (!valid_user) break;
     end
+    while (!data[reg_model.sha512_acc_csr_rm.STATUS.VALID.get_lsb_pos()]);
 endtask
 
 task soc_ifc_env_sha_accel_sequence::sha_accel_read_result(reg [15:0][31:0] sha_digest);
@@ -255,8 +257,11 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_read_result(reg [15:0][31:0] sha_
     for (ii=0; ii < digest_dwords; ii++) begin
         reg_model.sha512_acc_csr_rm.DIGEST[ii].read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
         report_reg_sts(reg_sts, "DIGEST");
-        if (data != sha_digest[digest_dwords-1-ii]) begin
+        if (valid_user && (data != sha_digest[digest_dwords-1-ii])) begin
             `uvm_error("SHA_ACCEL_SEQ",$sformatf("SHA512 Digest Mismatch - Digest[%x] Expected: %x Actual: %x", ii, sha_digest[digest_dwords-1-ii], data))
+        end
+        else if (!valid_user && (data == sha_digest[digest_dwords-1-ii])) begin
+            `uvm_error("SHA_ACCEL_SEQ",$sformatf("SHA512 Digest Matches, but SHA Accelerator was not accessed with valid user! - Digest[%x] Expected: %x Actual: %x", ii, sha_digest[digest_dwords-1-ii], data))
         end
     end
 endtask
@@ -275,6 +280,8 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_teardown();
 endtask
 
 function void soc_ifc_env_sha_accel_sequence::report_reg_sts(uvm_status_e reg_sts, string name);
-    if (reg_sts != UVM_IS_OK)
-        `uvm_error("SHA_ACCEL_SEQ",$sformatf("Register access failed unexpectedly (%s)", name))
+    if ( valid_user && (reg_sts != UVM_IS_OK))
+        `uvm_error("SHA_ACCEL_SEQ",$sformatf("Register access failed unexpectedly (%s) when using valid SHA user 0x%x", name, axi_user_obj.get_addr_user()))
+    if (!valid_user && (reg_sts == UVM_IS_OK))
+        `uvm_error("SHA_ACCEL_SEQ",$sformatf("Register access succeeded unexpectedly (%s) when using invalid SHA user 0x%x", name, axi_user_obj.get_addr_user()))
 endfunction

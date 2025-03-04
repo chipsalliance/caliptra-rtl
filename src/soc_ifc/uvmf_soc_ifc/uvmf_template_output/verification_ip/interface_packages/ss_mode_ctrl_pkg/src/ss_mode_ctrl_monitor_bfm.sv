@@ -254,34 +254,34 @@ end
     // exited with captured values, it is then called again to wait for and observe
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
     while (!any_signal_changed()) @(posedge clk_i);
-    strap_ss_caliptra_base_addr_r                             <= strap_ss_caliptra_base_addr_i;
-    strap_ss_mci_base_addr_r                                  <= strap_ss_mci_base_addr_i;
-    strap_ss_recovery_ifc_base_addr_r                         <= strap_ss_recovery_ifc_base_addr_i;
-    strap_ss_otp_fc_base_addr_r                               <= strap_ss_otp_fc_base_addr_i;
-    strap_ss_uds_seed_base_addr_r                             <= strap_ss_uds_seed_base_addr_i;
-    strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_r <= strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
-    strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_r        <= strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;
-    strap_ss_strap_generic_0_r                                <= strap_ss_strap_generic_0_i;
-    strap_ss_strap_generic_1_r                                <= strap_ss_strap_generic_1_i;
-    strap_ss_strap_generic_2_r                                <= strap_ss_strap_generic_2_i;
-    strap_ss_strap_generic_3_r                                <= strap_ss_strap_generic_3_i;
-    ss_debug_intent_r                                         <= ss_debug_intent_i;
-    strap_ss_caliptra_dma_axi_user_r                          <= strap_ss_caliptra_dma_axi_user_i;
+    strap_ss_caliptra_base_addr_r                             = strap_ss_caliptra_base_addr_i;
+    strap_ss_mci_base_addr_r                                  = strap_ss_mci_base_addr_i;
+    strap_ss_recovery_ifc_base_addr_r                         = strap_ss_recovery_ifc_base_addr_i;
+    strap_ss_otp_fc_base_addr_r                               = strap_ss_otp_fc_base_addr_i;
+    strap_ss_uds_seed_base_addr_r                             = strap_ss_uds_seed_base_addr_i;
+    strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_r = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
+    strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_r        = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;
+    strap_ss_strap_generic_0_r                                = strap_ss_strap_generic_0_i;
+    strap_ss_strap_generic_1_r                                = strap_ss_strap_generic_1_i;
+    strap_ss_strap_generic_2_r                                = strap_ss_strap_generic_2_i;
+    strap_ss_strap_generic_3_r                                = strap_ss_strap_generic_3_i;
+    ss_debug_intent_r                                         = ss_debug_intent_i;
+    strap_ss_caliptra_dma_axi_user_r                          = strap_ss_caliptra_dma_axi_user_i;
     begin: build_return_struct
     // Available struct members:
-        ss_mode_ctrl_monitor_struct.strap_ss_caliptra_base_addr                             <= strap_ss_caliptra_base_addr_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_mci_base_addr                                  <= strap_ss_mci_base_addr_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_recovery_ifc_base_addr                         <= strap_ss_recovery_ifc_base_addr_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_otp_fc_base_addr                               <= strap_ss_otp_fc_base_addr_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_uds_seed_base_addr                             <= strap_ss_uds_seed_base_addr_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset <= strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes        <= strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_0                                <= strap_ss_strap_generic_0_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_1                                <= strap_ss_strap_generic_1_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_2                                <= strap_ss_strap_generic_2_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_3                                <= strap_ss_strap_generic_3_i;
-        ss_mode_ctrl_monitor_struct.ss_debug_intent                                         <= ss_debug_intent_i;
-        ss_mode_ctrl_monitor_struct.strap_ss_caliptra_dma_axi_user                          <= strap_ss_caliptra_dma_axi_user_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_caliptra_base_addr                             = strap_ss_caliptra_base_addr_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_mci_base_addr                                  = strap_ss_mci_base_addr_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_recovery_ifc_base_addr                         = strap_ss_recovery_ifc_base_addr_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_otp_fc_base_addr                               = strap_ss_otp_fc_base_addr_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_uds_seed_base_addr                             = strap_ss_uds_seed_base_addr_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes        = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_0                                = strap_ss_strap_generic_0_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_1                                = strap_ss_strap_generic_1_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_2                                = strap_ss_strap_generic_2_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_strap_generic_3                                = strap_ss_strap_generic_3_i;
+        ss_mode_ctrl_monitor_struct.ss_debug_intent                                         = ss_debug_intent_i;
+        ss_mode_ctrl_monitor_struct.strap_ss_caliptra_dma_axi_user                          = strap_ss_caliptra_dma_axi_user_i;
     end
     // pragma uvmf custom do_monitor end
   endtask
