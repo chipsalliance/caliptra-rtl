@@ -47,6 +47,7 @@ module caliptra_top_tb_axi_fifo #(
     
     localparam FIFO_BC = DEPTH; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
+    // TODO randomize this and send to FW to use in tests
     `ifndef CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE
     localparam RECOVERY_BURST_TEST_SIZE = 256;
     `else
@@ -189,6 +190,32 @@ module caliptra_top_tb_axi_fifo #(
     //=========================================================================-
     // Recovery Interface Model
     //=========================================================================-
+
+    bit recovery_data_avail_in_not_empty;
+    bit recovery_data_avail_in_thresh;
+    bit recovery_data_avail_in_pulse;
+    bit mode_not_empty;
+    bit mode_thresh;
+    bit mode_pulse;
+    int thresh;
+
+    initial begin
+        if ($test$plusargs("CLP_DMA_TB_MODE_NOT_EMPTY")) begin
+            mode_not_empty = 1;
+        end
+        else if ($test$plusargs("CLP_DMA_TB_MODE_THRESH")) begin
+            mode_thresh = 1;
+            thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
+        end
+        else begin
+            mode_pulse = 1;
+        end
+    end
+
+    assign recovery_data_avail = recovery_data_avail_in_not_empty | recovery_data_avail_in_thresh | recovery_data_avail_in_pulse;
+    assign recovery_data_avail_in_not_empty = !fifo_empty & mode_not_empty;
+    assign recovery_data_avail_in_thresh = (fifo_depth >= thresh) & mode_thresh;
+
     logic en_recovery_emulation_d, en_recovery_emulation_p;
     logic recovery_data_avail_d, recovery_data_avail_p;
     logic [FIFO_BW-1:0] fifo_writes_since_avail;
@@ -225,30 +252,32 @@ module caliptra_top_tb_axi_fifo #(
         end
         else begin
             en_recovery_emulation_d <= en_recovery_emulation;
-            recovery_data_avail_d   <= recovery_data_avail && en_recovery_emulation;
+            recovery_data_avail_d   <= recovery_data_avail_in_pulse && en_recovery_emulation;
         end
     end
+    // TODO ASSERT on first dword to FIFO
     // assert once RECOVERY_BURST_TEST_SIZE bytes are pushed to FIFO
+    // TODO deassert after full FIFO payload is read
     // deassert once 1 entry is ready from FIFO, unless another RECOVERY_BURST_TEST_SIZE bytes have already
     // been pushed since it first asserted
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            recovery_data_avail <= 1'b0;
+            recovery_data_avail_in_pulse <= 1'b0;
         end
-        else if (!en_recovery_emulation) begin
-            recovery_data_avail <= 1'b0;
+        else if (!en_recovery_emulation || !mode_pulse) begin
+            recovery_data_avail_in_pulse <= 1'b0;
         end
         else if (fifo_writes_since_avail >= RECOVERY_BURST_TEST_SIZE/BC) begin
-            recovery_data_avail <= 1'b1;
-            if (recovery_data_avail == 1'b0)
-                $display("SoC [%t]: Set recovery_data_avail", $time);
+            recovery_data_avail_in_pulse <= 1'b1;
+            if (recovery_data_avail_in_pulse == 1'b0)
+                $display("SoC [%t]: Set recovery_data_avail_in_pulse", $time);
         end
         else if (fifo_r_valid && fifo_r_ready && (fifo_reads_since_recovery_emu_start == (recovery_data_avail_deassert_at_fifo_read_count - 1))) begin
-            recovery_data_avail <= 1'b0;
+            recovery_data_avail_in_pulse <= 1'b0;
         end
     end
     // start counting when recovery emulation enabled
-    // decrement on the edge of recovery_data_avail
+    // decrement on the edge of recovery_data_avail_in_pulse
     always_ff@(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             fifo_writes_since_avail <= '0;

@@ -292,7 +292,6 @@ void main(void) {
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
                         soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
 
-                    
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
@@ -333,7 +332,6 @@ void main(void) {
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
                         soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
 
-                    
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
@@ -457,4 +455,5 @@ void main(void) {
             VPRINTF(LOW, "rand_test_dma completed successfully!\n");
         }
 }
+
 
