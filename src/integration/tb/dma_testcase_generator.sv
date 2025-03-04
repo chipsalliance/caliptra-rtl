@@ -89,7 +89,7 @@ module dma_testcase_generator (
           
       // Generate and store test cases
       for (int i = 0; i < num_iterations; i++) begin: gen_dma_tc
-        dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check, verbosity);
+        dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check/4, verbosity);
         if (!dma_gen.randomize()) begin
           $error("Randomization failed for dma_transfer_generator %d", i);
         end
