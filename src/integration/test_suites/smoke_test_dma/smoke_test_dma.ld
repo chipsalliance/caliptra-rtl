@@ -33,7 +33,7 @@ SECTIONS {
 
   _bss_lma_start = _data_lma_end;
   _bss_vma_start = _data_vma_end;
-  .bss _bss_vma_start : AT(_bss_lma_start) { *(.sbss) *(.bss) ; . = ALIGN(4);} =0x0000,
+  .bss _bss_vma_start : AT(_bss_lma_start) { . = ALIGN(4);} =0x0000,
   _bss_lma_end = _bss_lma_start + SIZEOF(.bss);
   _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
 
@@ -44,7 +44,7 @@ SECTIONS {
   . = _bss_vma_end;
   _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
   _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) *(.*data) *(.rodata*) *(.srodata*) . = ALIGN(4); } =0x0000,
+  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) *(.*data) *(.rodata*) *(.srodata*) *(.sbss) *(.bss) . = ALIGN(4); } =0x0000,
   iccm_code0_start = .;
 
   /* ICCM as VMA */
@@ -63,6 +63,6 @@ SECTIONS {
 
   /* Stack is at the end of DCCM after .data_iccm2 */
   . = ALIGN(iccm_code2_end,16);
-  STACK = ALIGN(16) + 0x4000;
+  STACK = ALIGN(16) + 0x8000;
   ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM")
 }
