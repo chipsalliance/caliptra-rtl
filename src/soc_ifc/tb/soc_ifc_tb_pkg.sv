@@ -129,7 +129,7 @@ package soc_ifc_tb_pkg;
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_VENDOR_PK_HASH"                   : 12,
     //"FUSE_KEY_MANIFEST_PK_HASH_MASK"        : 8,
-    "FUSE_MANUF_DBG_UNLOCK_TOKEN"           : 4,
+    "FUSE_MANUF_DBG_UNLOCK_TOKEN"           : 16,
     "FUSE_RUNTIME_SVN"                      : 4,  
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
@@ -206,10 +206,10 @@ package soc_ifc_tb_pkg;
     "FUSE_LMS_REVOCATION"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_LMS_REVOCATION,                                  // 0x340      -
     "FUSE_MLDSA_REVOCATION"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MLDSA_REVOCATION,                                // 0x344      -
     "FUSE_SOC_STEPPING_ID"                          : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_STEPPING_ID,                                 // 0x348      - 
-    "FUSE_MANUF_DBG_UNLOCK_TOKEN"                   : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0,                        // 0x34c [4]  Manufcturing Debug Unlock Token
-    "FUSE_PQC_KEY_TYPE"                             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_PQC_KEY_TYPE,                                    // 0x35c 
-    "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x360 [4]
-    "FUSE_SOC_MANIFEST_MAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x370
+    "FUSE_MANUF_DBG_UNLOCK_TOKEN"                   : SOCIFC_BASE + `SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_0,                        // 0x34c [16]  Manufcturing Debug Unlock Token
+    "FUSE_PQC_KEY_TYPE"                             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_PQC_KEY_TYPE,                                    // 0x38c 
+    "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x390 [4]
+    "FUSE_SOC_MANIFEST_MAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x3a0
     "SS_CPTRA_BASE_ADDR_L"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
     "SS_MCI_BASE_ADDR_L"                      : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_L,                                    // 0x508
@@ -319,7 +319,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
-    '{addr_min: SOCIFC_BASE + 16'h0374, addr_max: SOCIFC_BASE + 16'h04fc},
+    '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h04fc},
     '{addr_min: SOCIFC_BASE + 16'h0538, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
@@ -335,7 +335,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_AXI_USER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_AXI_USER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h11,
+    "CPTRA_HW_REV_ID"                      : 32'h02,
     //"CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,

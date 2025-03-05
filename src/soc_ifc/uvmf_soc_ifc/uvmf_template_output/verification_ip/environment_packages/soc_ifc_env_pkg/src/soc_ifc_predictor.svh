@@ -1681,7 +1681,8 @@ class soc_ifc_predictor #(
                 "fuse_lms_revocation",
                 "fuse_mldsa_revocation",
                 "fuse_soc_stepping_id",
-                ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+                ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[9]"],
+                ["fuse_manuf_dbg_unlock_token[10]":"fuse_manuf_dbg_unlock_token[15]"],
                 "fuse_pqc_key_type",
                 ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
                 "fuse_soc_manifest_max_svn",
@@ -2316,11 +2317,13 @@ class soc_ifc_predictor #(
             // SHA Accelerator Functions are screened based on AXI_USER
             "LOCK",
             "USER": begin
-                if (axi_txn.is_read()/* && (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY)*/) begin
+                if (axi_txn.is_read() && (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
             end
             "MODE",
@@ -2330,44 +2333,54 @@ class soc_ifc_predictor #(
                     do_reg_prediction = sha_valid_user(axi_txn)/* && (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                 end
                 else begin
-//                    if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
+                    if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
                         soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                         soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-//                    end
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    end
                 end
             end
             "DATAIN": begin
-//                if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
+                if (!sha_valid_user(axi_txn)) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-//                end
+                end
+                if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
             end
             "EXECUTE": begin
                 if (axi_txn.is_write()) begin
                     do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                 end
                 else begin
-//                    if (aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY) begin
+                    if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                         do_reg_prediction = 1'b0;
                         // "Expected" read data is 0
                         soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                         soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-//                    end
+                        // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    end
                 end
             end
             "STATUS",
             ["DIGEST[0]":"DIGEST[9]"],
             ["DIGEST[10]":"DIGEST[15]"]:begin
-//                if ((aaxi_resp_type'(axi_txn.resp) != AAXI_RESP_OKAY)) begin
+                if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-//                end
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
             end
             "CONTROL": begin
             end
@@ -2859,7 +2872,8 @@ class soc_ifc_predictor #(
             "fuse_lms_revocation",
             "fuse_mldsa_revocation",
             "fuse_soc_stepping_id",
-            ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[3]"],
+            ["fuse_manuf_dbg_unlock_token[0]":"fuse_manuf_dbg_unlock_token[9]"],
+            ["fuse_manuf_dbg_unlock_token[10]":"fuse_manuf_dbg_unlock_token[15]"],
             "fuse_pqc_key_type",
             ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
             "fuse_soc_manifest_max_svn",
@@ -4274,6 +4288,33 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
 
         trng_data_req = 1'b0;
 
+        // Value changes on reset DE-assertion
+        fork
+        begin: WAIT_NONCORE_RESET_DEASSERTION
+            ss_mode_sb_ap_output_transaction_t local_ss_mode_sb_ap_txn;
+            bit send_ss_mode_sts_txn = 1'b0;
+            wait(noncore_rst_out_asserted == 1'b0);
+            `uvm_info("PRED_RESET", {"While processing reset of kind ", kind, ", observed noncore reset deassertion"}, UVM_MEDIUM)
+            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
+            // START TODO
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()   != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()   != fixme_signal;
+            // END TODO
+            predict_strap_values();
+            if (send_ss_mode_sts_txn) begin
+                local_ss_mode_sb_ap_txn = ss_mode_sb_ap_output_transaction_t::type_id::create("local_ss_mode_sb_ap_txn");
+                populate_expected_ss_mode_status_txn(local_ss_mode_sb_ap_txn);
+                ss_mode_sb_ap.write(local_ss_mode_sb_ap_txn);
+                `uvm_info("PRED_RESET", "Transaction submitted through ss_mode_sb_ap", UVM_MEDIUM)
+            end
+        end: WAIT_NONCORE_RESET_DEASSERTION
+        join_none
+
         // Mailbox 'step' represents how the current transaction affects the mailbox
         // flow, and is used for coverage.
         if (p_soc_ifc_rm.mbox_csr_rm.mbox_fn_state_sigs.mbox_idle)
@@ -4300,34 +4341,6 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
         timer_intr_pending = 1'b1;
         fuse_update_enabled = 1'b1; // Fuses only latch new values from AXI write after a cold-reset (which clears CPTRA_FUSE_WR_DONE)
     end: RESET_VAL_CHANGES_HARD
-
-    if (kind == "NONCORE") begin: RESET_VAL_CHANGES_NONCORE
-        // Value changes on reset DE-assertion
-        fork
-        begin: WAIT_NONCORE_RESET_DEASSERTION
-            ss_mode_sb_ap_output_transaction_t local_ss_mode_sb_ap_txn;
-            bit send_ss_mode_sts_txn = 1'b0;
-            wait(noncore_rst_out_asserted == 1'b0);
-            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
-            // START TODO
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[1].get_mirrored_value()   != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[2].get_mirrored_value()   != fixme_signal;
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()   != fixme_signal;
-            // END TODO
-            predict_strap_values();
-            if (send_ss_mode_sts_txn) begin
-                local_ss_mode_sb_ap_txn = ss_mode_sb_ap_output_transaction_t::type_id::create("local_ss_mode_sb_ap_txn");
-                populate_expected_ss_mode_status_txn(local_ss_mode_sb_ap_txn);
-                ss_mode_sb_ap.write(local_ss_mode_sb_ap_txn);
-                `uvm_info("PRED_RESET", "Transaction submitted through ss_mode_sb_ap", UVM_MEDIUM)
-            end
-        end: WAIT_NONCORE_RESET_DEASSERTION
-        join_none
-    end: RESET_VAL_CHANGES_NONCORE
 
     // HARD reset is the default for a reg-model
     // FIXME move this to env?
@@ -4373,6 +4386,7 @@ endfunction
 
 function void soc_ifc_predictor::predict_strap_values();
     if (!p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
+        `uvm_info("PRED_STRAPS", $sformatf("Running SS-mode strap prediction due to CPTRA_FUSE_WR_DONE: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()), UVM_HIGH)
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.predict                          (this.strap_ss_val.caliptra_base_addr[31:00]                     );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.predict                          (this.strap_ss_val.caliptra_base_addr[63:32]                     );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.predict                               (this.strap_ss_val.mci_base_addr[31:00]                          );
@@ -4391,6 +4405,27 @@ function void soc_ifc_predictor::predict_strap_values();
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2].predict                              (this.strap_ss_val.generic[2]                                    );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3].predict                              (this.strap_ss_val.generic[3]                                    );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.predict                                  (this.strap_ss_val.debug_intent                                  );
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L                               .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L                               .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES       .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES       .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER                         .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER                         .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0]                              .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[0]                              .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1]                              .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[1]                              .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2]                              .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[2]                              .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3]                              .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_STRAP_GENERIC[3]                              .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT                                  .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT                                  .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+    end
+    else begin
+        `uvm_info("PRED_STRAPS", $sformatf("Skipping SS-mode strap prediction due to CPTRA_FUSE_WR_DONE: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()), UVM_HIGH)
     end
 endfunction
 
