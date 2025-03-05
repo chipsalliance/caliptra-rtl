@@ -156,9 +156,6 @@ import soc_ifc_pkg::*;
     // Count read requests that have been enqueued due to recovery_data_avail.
     // Width of signal is sufficient to track 2x the maximum number of requests
     // possible for any given "block" of data.
-    // This allows the counter to schedule the next set of requests if
-    // recovery_data_avail pulse is observed while there are still requests
-    // that have not been issued from the prior pulse.
     // The maximum number of requests for a given "block" is calculated as:
     //   max_block_size / min_size_per_request
     // Where
@@ -166,6 +163,7 @@ import soc_ifc_pkg::*;
     //   min_size_per_request = BC
     logic [AXI_LEN_BC_WIDTH-BW:0] rd_req_count_for_payload, rd_req_count_for_payload_next;
     logic rd_req_stall;
+    logic rd_wait_to_ack_avail;
     logic [3:0] wr_resp_pending; // Counts up to 15 pending Write responses.
                                  // Once this counter saturates, we stall new requests
                                  // until further responses arrive.
@@ -194,8 +192,6 @@ import soc_ifc_pkg::*;
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
-
-    logic recovery_data_avail_d, recovery_data_avail_p;
 
 
     // --------------------------------------- //
@@ -460,50 +456,54 @@ import soc_ifc_pkg::*;
     // Control Logic                           //
     // --------------------------------------- //
 
-    // Detect recovery_data_avail rising edge
-    assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
+    // Don't queue any more requests up in response to recovery_data_avail unless both:
+    //  * the current request count is 0
+    //  * there is no data transfer pending
+    assign rd_wait_to_ack_avail = |rd_req_count_for_payload || (rd_credits < FIFO_BC/BC);
 
     // When block_size != 0, we are guaranteed to be interacting with the SS recovery interface
     // which means transactions will also be of FIXED burst type.
     // This guarantees that each read request will be sized according to the constraints of
     // block_size and MAX_FIXED_BLOCK_SIZE, without regard for address alignment boundaries or
     // other conditions.
+    // Treat recovery_data_avail as a level signal indicating there is some data in the FIFO
     always_comb begin
-        case ({recovery_data_avail_p,rd_req_hshake}) inside
-            2'b00: rd_req_count_for_payload_next = rd_req_count_for_payload;
-            2'b01: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
-            2'b10: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
-            2'b11: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1) - 1;
+        case ({rd_wait_to_ack_avail,recovery_data_avail,rd_req_hshake}) inside
+            3'b000: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b001: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b010: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
+            3'b011: rd_req_count_for_payload_next = '0; // ERROR case
+            3'b100: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b101: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b110: rd_req_count_for_payload_next = rd_req_count_for_payload; // Don't queue new requests when current requests are pending
+            3'b111: rd_req_count_for_payload_next = rd_req_count_for_payload - 1; // Don't queue new requests when current requests are pending
         endcase
     end
 
     // Requirement:
     //   * never stall read requests if block_size == 0, i.e. not using recovery mode
     //   * upon observing recovery_data_avail, request block_size bytes of data
-    //   * after all requests are made, stall until another rising edge on recovery_data_avail
+    //   * make AXI requests one at a time
+    //   * after all requests are made, stall until all data is transferred
+    //   * after all data is transferred, continue stalling until recovery_data_avail
     //   * Final burst size may be less than block_size - so 'rd_req_count_for_payload' may remain non-zero
-    //     until it is cleared by returning to IDLE state
+    //     until it is cleared by returning to IDLE state, although this is not a bug
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b0;
         end
         else if (hwif_out.block_size.size.value == '0) begin
-            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b0;
         end
-        // Treat 'go' as the rising edge-detection if recovery_data_avail is already set before DMA is armed
         else if (ctrl_fsm_ps == DMA_IDLE) begin
-            recovery_data_avail_d    <= 1'b0;
             rd_req_count_for_payload <= '0;
             rd_req_stall             <= 1'b1;
         end
         else begin
-            recovery_data_avail_d    <= recovery_data_avail;
             rd_req_count_for_payload <= rd_req_count_for_payload_next;
-            rd_req_stall             <= ~|rd_req_count_for_payload_next;
+            rd_req_stall             <= ~|rd_req_count_for_payload_next || rd_req_hshake || (rd_credits < FIFO_BC/BC); // Force requests for "block_size != 0" to go out one at a time
         end
     end
 
