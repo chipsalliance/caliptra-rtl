@@ -167,7 +167,7 @@ void main(void) {
             dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
             block_size = test_block_size ? ((dma_control & DMA_BLOCK_SIZE_MASK) >> DMA_BLOCK_SIZE_POS) : 0;
             VPRINTF(HIGH,   "Raw dma_control: 0x%08x\n", dma_control);
-            VPRINTF(DEBUG,  "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
+            VPRINTF(ALL,    "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
             VPRINTF(HIGH,   "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
             VPRINTF(MEDIUM, "Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
             VPRINTF(LOW,    "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
