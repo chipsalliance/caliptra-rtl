@@ -473,9 +473,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("------------------------------------------------\n");
-    printf(" Running MLDSA Smoke Test with invalid verify !!\n");
-    printf("------------------------------------------------\n");
+    printf("-------------------------------------\n");
+    printf(" Running MLDSA with invalid verify !!\n");
+    printf("-------------------------------------\n");
 
     /* Intializes random number generator */
     srand(time);
@@ -516,7 +516,7 @@ void main() {
     uint8_t fail_cmd = 0x1;
     uint32_t mask;
 
-    uint32_t select_input_random = rand() % 3;
+    uint32_t select_input_random = rand() % 4;
 
     if(select_input_random == 0) {
         printf("\n Manipulating the message\n");
@@ -562,6 +562,21 @@ void main() {
         sign[sign_dword_index] ^= mask;
 
         printf("flip bit [%x] to signature dword %x!\n", sign_bit_offset, sign_dword_index);
+    }
+    else if(select_input_random == 3) {
+        printf("\n Manipulating the h section of signature\n");
+
+        // Select a random coefficient to make invalid
+        uint32_t h_random_index = rand() % 21; // omega+k+1(additional byte)=75+8+1=84 bytes = 21 Dwords
+        uint32_t h_dword_index = h_random_index / 32;
+        uint32_t h_bit_offset = h_random_index % 32;
+
+        mask = 1 << h_bit_offset;
+
+        // Flip the bit using XOR
+        sign[h_dword_index] ^= mask;
+
+        printf("flip bit [%x] to signature dword %x!\n", h_bit_offset, h_dword_index);
     }
 
     /* VERIFY OPERATION*/

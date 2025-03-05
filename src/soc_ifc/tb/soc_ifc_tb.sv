@@ -139,7 +139,7 @@ module soc_ifc_tb
   reg                          penable_i_tb;
   reg                          pwrite_i_tb;
   reg [APB_DATA_WIDTH-1:0]     pwdata_i_tb;
-  reg [APB_USER_WIDTH-1:0]     axi_user_i_tb;
+  reg [AXI_USER_WIDTH-1:0]     axi_user_i_tb;
 
   reg [AHB_ADDR_WIDTH-1:0]  haddr_i_tb;
   reg [AHB_DATA_WIDTH-1:0]  hwdata_i_tb;
@@ -233,8 +233,11 @@ module soc_ifc_tb
 
   logic         mailbox_data_avail_tb;
 
-  logic       ss_debug_intent_tb;
-  logic       cptra_ss_debug_intent_tb;
+  always_comb begin
+    subsystem_mode_tb = dut.soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en;
+    $display("Subsystem Mode updated: 0x%0x", subsystem_mode_tb);
+  end
+
 
   typedef enum logic {
     read = 0,
@@ -367,18 +370,18 @@ module soc_ifc_tb
              .cptra_obf_uds_seed(cptra_uds_tb),
              .obf_uds_seed(obf_uds_seed),
 
-             .strap_ss_caliptra_base_addr(64'h0),
-             .strap_ss_mci_base_addr(64'h0),
-             .strap_ss_recovery_ifc_base_addr(64'h0),
-             .strap_ss_otp_fc_base_addr(64'h0),
-             .strap_ss_uds_seed_base_addr(64'h0),
-             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(0),
-             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(0),
-             .strap_ss_strap_generic_0(0),
-             .strap_ss_strap_generic_1(0),
-             .strap_ss_strap_generic_2(0),
-             .strap_ss_strap_generic_3(0),
-             .strap_ss_caliptra_dma_axi_user(0),
+             .strap_ss_caliptra_base_addr(strap_ss_caliptra_base_addr_tb),
+             .strap_ss_mci_base_addr(strap_ss_mci_base_addr_tb),
+             .strap_ss_recovery_ifc_base_addr(strap_ss_recovery_ifc_base_addr_tb),
+             .strap_ss_otp_fc_base_addr(strap_ss_otp_fc_base_addr_tb),
+             .strap_ss_uds_seed_base_addr(strap_ss_uds_seed_base_addr_tb),
+             .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb),
+             .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb),
+             .strap_ss_strap_generic_0(strap_ss_strap_generic_0_tb),
+             .strap_ss_strap_generic_1(strap_ss_strap_generic_1_tb),
+             .strap_ss_strap_generic_2(strap_ss_strap_generic_2_tb),
+             .strap_ss_strap_generic_3(strap_ss_strap_generic_3_tb),
+             .strap_ss_caliptra_dma_axi_user(strap_ss_caliptra_dma_axi_user_tb),
              .ss_debug_intent(ss_debug_intent_tb),
              .cptra_ss_debug_intent(cptra_ss_debug_intent_tb),
 
@@ -549,7 +552,7 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // Updates registers that have wired connections for status
   //
-  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES
+  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
   //----------------------------------------------------------------
 
   always_comb update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
@@ -557,7 +560,7 @@ module soc_ifc_tb
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
   always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
-
+  always_comb update_CPTRA_HW_CONFIG();
 
 
   //----------------------------------------------------------------
@@ -573,6 +576,9 @@ module soc_ifc_tb
 
       cptra_pwrgood_tb = '0;
       cptra_rst_b_tb = 0;
+
+      //subsystem_mode_tb = dut.soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en;
+      //$display("Subsystem Mode: 0x%0x", subsystem_mode_tb);
 
       set_initval("CPTRA_GENERIC_INPUT_WIRES0", generic_input_wires0);  // The init val will take effect 
       set_initval("CPTRA_GENERIC_INPUT_WIRES1", generic_input_wires1);  // after reset deassertion 
@@ -760,6 +766,19 @@ module soc_ifc_tb
 
       // SS Straps
       ss_debug_intent_tb = 1'b0;
+      strap_ss_caliptra_dma_axi_user_tb = AXI_USER_DEFAULT;
+      strap_ss_caliptra_base_addr_tb = '0;
+      strap_ss_mci_base_addr_tb = '0;
+      strap_ss_recovery_ifc_base_addr_tb = '0;
+      strap_ss_otp_fc_base_addr_tb = '0;
+      strap_ss_uds_seed_base_addr_tb = '0;
+      strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = '0;
+      strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb = '0;
+      strap_ss_strap_generic_0_tb = '0;
+      strap_ss_strap_generic_1_tb = '0;
+      strap_ss_strap_generic_2_tb = '0;
+      strap_ss_strap_generic_3_tb = '0;
+
 
     end
   endtask // init_sim
@@ -806,7 +825,7 @@ module soc_ifc_tb
       end
       else begin
         error = 0;
-        $display("AXI txnn was successful");
+        $display("AXI txn was successful");
       end 
       $display("AXN txn tcheck");
       if (error & (rw == read) & (exp_txn_sts == PASS)) begin //read     
@@ -1268,7 +1287,7 @@ module soc_ifc_tb
   // 
   // common sim and dut initialization routines for register tests 
   //----------------------------------------------------------------
-  task sim_dut_init(input logic debug = 1'b0);
+  task sim_dut_init(input logic debug = 1'b0, input logic drive_straps = 1'b0);
 
     // int sscode = -1;
     string ssname = "UNSET"; 
@@ -1284,8 +1303,22 @@ module soc_ifc_tb
 
       else begin
         init_sim();
-        if (debug == 1'b1)
+        if (debug)
           ss_debug_intent_tb = 1'b1;
+        if (drive_straps) begin
+          strap_ss_caliptra_base_addr_tb = {$urandom, $urandom};
+          strap_ss_mci_base_addr_tb = {$urandom, $urandom};
+          strap_ss_recovery_ifc_base_addr_tb = {$urandom, $urandom};
+          strap_ss_otp_fc_base_addr_tb = {$urandom, $urandom};
+          strap_ss_uds_seed_base_addr_tb = {$urandom, $urandom};
+          strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = $urandom;
+          strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb = $urandom;
+          strap_ss_strap_generic_0_tb = $urandom;
+          strap_ss_strap_generic_1_tb = $urandom;
+          strap_ss_strap_generic_2_tb = $urandom;
+          strap_ss_strap_generic_3_tb = $urandom;
+          strap_ss_caliptra_dma_axi_user_tb = $urandom;
+        end
         reset_dut();
 
         wait (ready_for_fuses == 1'b1);
@@ -1513,7 +1546,7 @@ module soc_ifc_tb
       foreach (reglist[i]) begin 
         rname = reglist[i];
         addr = socregs.get_addr(rname); 
-        $display("Current reg: %s", rname);
+        //$display("Current reg: %s", rname);
         if (tid_autoinc) 
           tid += 1;
 
@@ -1523,7 +1556,7 @@ module soc_ifc_tb
           $display(" Read over AHB: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_hrdata, cycle_ctr); 
           rdtrans.update(addr, valid_hrdata, tid); 
         end else if (modifier == GET_AXI) begin
-          $display("read_regs::AXI SUB read");
+          //$display("read_regs::AXI SUB read");
           read_single_word_axi_sub(addr, valid_axi_rdata);
           // $display(" Read over APB: addr =  %-40s (0x%08x), data = 0x%08x at time %12t (cycle %08d)", rname, addr, prdata_o_latched, $realtime, cycle_ctr); // used to be   prdata_o_tb
           $display(" Read over AXI: addr =  %-40s (0x%08x), data = 0x%08x on cycle %08d", rname, addr, valid_axi_rdata, cycle_ctr); // used to be   prdata_o_tb
@@ -1697,6 +1730,7 @@ module soc_ifc_tb
   `include "sha_acc_intrblk_test.svh"
   `include "debug_unlock_prod_test.svh"
   `include "debug_unlock_manuf_test.svh"
+  `include "ss_strap_reg_reset_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1806,15 +1840,25 @@ module soc_ifc_tb
 
         end else  if (soc_ifc_testname == "debug_unlock_prod_test") begin
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
-          sim_dut_init(1'b1);
+          sim_dut_init(.debug(1'b1));
           debug_unlock_prod_test();
 
         end else  if (soc_ifc_testname == "debug_unlock_manuf_test") begin
           set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
-          sim_dut_init(1'b1);
+          sim_dut_init(.debug(1'b1));
           debug_unlock_manuf_test();
 
-        end 
+        end else if (soc_ifc_testname == "ss_strap_reg_pwron_test") begin
+          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(.drive_straps(1'b1));
+          ss_strap_reg_pwron_test();
+
+        end else if (soc_ifc_testname == "ss_strap_reg_wrmrst_test") begin
+          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          sim_dut_init(.drive_straps(1'b1));
+          ss_strap_reg_wrmrst_test();
+
+        end
    
         @(posedge clk_tb);
         display_test_results();

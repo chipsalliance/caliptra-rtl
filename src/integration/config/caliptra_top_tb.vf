@@ -614,7 +614,6 @@ ${CALIPTRA_ROOT}/src/aes/rtl/aes_prng_clearing.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reduced_round.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_status.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_top.sv
-${CALIPTRA_ROOT}/src/aes/rtl/aes_wrap.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg.sv
