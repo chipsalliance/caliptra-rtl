@@ -246,6 +246,8 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                                     fifo_w_active ? axi_fifo_if.bvalid :
                                                     '0;
     end
+    `CALIPTRA_ASSERT(AXI_COMPLEX_RD_DECODE, m_axi_if.arvalid |-> (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
+    `CALIPTRA_ASSERT(AXI_COMPLEX_WR_DECODE, m_axi_if.awvalid |-> (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
 
     // --------------------- SRAM Endpoint ---------------------
     always_comb begin
