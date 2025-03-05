@@ -47,12 +47,9 @@ module caliptra_top_tb_axi_fifo #(
     
     localparam FIFO_BC = DEPTH; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
-    // TODO randomize this and send to FW to use in tests
-    `ifndef CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE
-    localparam RECOVERY_BURST_TEST_SIZE = 256;
-    `else
-    localparam RECOVERY_BURST_TEST_SIZE = `CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE;
-    `endif
+
+    int RECOVERY_BURST_TEST_SIZE;
+    bit rand_done;
 
     //COMPONENT INF
     logic          dv;
@@ -200,6 +197,13 @@ module caliptra_top_tb_axi_fifo #(
     int thresh;
 
     initial begin
+        rand_done = 0;
+        if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
+            if (!std::randomize(RECOVERY_BURST_TEST_SIZE) with { $onehot(RECOVERY_BURST_TEST_SIZE); RECOVERY_BURST_TEST_SIZE inside {[BC:2048]}; })
+                $fatal("Failed to randomize RECOVERY_BURST_TEST_SIZE");
+        end else begin
+            RECOVERY_BURST_TEST_SIZE = 256;
+        end
         if ($test$plusargs("CLP_DMA_TB_MODE_NOT_EMPTY")) begin
             mode_not_empty = 1;
         end
@@ -207,9 +211,15 @@ module caliptra_top_tb_axi_fifo #(
             mode_thresh = 1;
             thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
         end
-        else begin
+        else if ($test$plusargs("CLP_DMA_TB_MODE_PULSE")) begin
             mode_pulse = 1;
         end
+        else if (!std::randomize(mode_pulse,mode_thresh,mode_not_empty) with { $onehot({mode_pulse,mode_thresh,mode_not_empty}); }) begin
+            $fatal("Failed to randomize recovery_data_avail behavior model!");
+        end
+        $display("Randomized RECOVERY_BURST_TEST_SIZE (aka block_size) to %d", RECOVERY_BURST_TEST_SIZE);
+        $display("Randomized mode to %s", mode_pulse ? "mode_pulse" : mode_thresh ? "mode_thresh" : mode_not_empty ? "mode_not_empty" : "null");
+        rand_done = 1;
     end
 
     assign recovery_data_avail = recovery_data_avail_in_not_empty | recovery_data_avail_in_thresh | recovery_data_avail_in_pulse;

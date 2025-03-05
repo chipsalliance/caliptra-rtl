@@ -54,6 +54,10 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DST_IS_FIFO_POS          8
 #define SRC_IS_FIFO_POS          9
 
+// Block Size is in bits 10-21
+#define DMA_BLOCK_SIZE_POS        10
+#define DMA_BLOCK_SIZE_WIDTH      12
+
 
 // Bit masks
 #define DMA_XFER_TYPE_MASK       (((1 << DMA_XFER_TYPE_WIDTH) - 1) << DMA_XFER_TYPE_POS)
@@ -64,6 +68,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define USE_RD_FIXED_MASK        (1 << USE_RD_FIXED_POS)
 #define DST_IS_FIFO_MASK         (1 << DST_IS_FIFO_POS)
 #define SRC_IS_FIFO_MASK         (1 << SRC_IS_FIFO_POS)
+#define DMA_BLOCK_SIZE_MASK      (((1 << DMA_BLOCK_SIZE_WIDTH) - 1) << DMA_BLOCK_SIZE_POS)
 
 // Global declaration of arrays
 static uint32_t read_payload[MAX_PAYLOAD_SIZE_TO_CHECK_DW];
@@ -90,6 +95,7 @@ const char* transfer_type_to_string(transfer_type_t transfer_type) {
 }
 
 const enum tb_fifo_mode {
+    RCVY_EMU_TOGGLE     = 0x88,
     FIFO_AUTO_READ_ON   = 0x8a,
     FIFO_AUTO_WRITE_ON  = 0x8b,
     FIFO_AUTO_READ_OFF  = 0x8c,
@@ -159,11 +165,13 @@ void main(void) {
             inject_rst = (dma_control & INJECT_RST_MASK) ? 1 : 0;
             test_block_size = (dma_control & TEST_BLOCK_SIZE_MASK) ? 1 : 0;
             dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
+            block_size = test_block_size ? ((dma_control & DMA_BLOCK_SIZE_MASK) >> DMA_BLOCK_SIZE_POS) : 0;
             VPRINTF(MEDIUM, "Raw dma_control: 0x%08x\n", dma_control);
             VPRINTF(MEDIUM, "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
             VPRINTF(MEDIUM, "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
             VPRINTF(MEDIUM, "Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
             VPRINTF(MEDIUM, "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
+            VPRINTF(MEDIUM, "Block Size: %d\n", block_size);
             VPRINTF(MEDIUM, "Source is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
             VPRINTF(MEDIUM, "Destination is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
             VPRINTF(MEDIUM, "Use Read Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
@@ -172,14 +180,6 @@ void main(void) {
             VPRINTF(MEDIUM, "Inject Reset: %s\n", inject_rst ? "Yes" : "No");
             VPRINTF(MEDIUM, "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
 
-            // Block_size
-            if (!test_block_size) {
-                block_size = 0;
-            }
-            else {
-                block_size = 256; //TODO This needs to be randomized
-            }
-            
 
             // Read transfer size
             dccm_addr = dccm_addr - 4;
@@ -313,10 +313,19 @@ void main(void) {
                     break;
                 
                 case AXI2AXI:
+                    if (test_block_size) {
+                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
+
                     if (data_check) {
-                        // Populate AXI SRAM via AHB2AXI transfer
+                        // Populate AXI source via AHB2AXI transfer
                         VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                        if (test_block_size && src_is_fifo) {
+                            uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
+                            soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
+                        }
                     } else {
                         VPRINTF(FATAL, "FIXME");
                         SEND_STDOUT_CTRL(0x1);
@@ -324,7 +333,12 @@ void main(void) {
 
                     // Test AXI2AXI
                     VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
-                    soc_ifc_axi_dma_send_axi_to_axi(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, 0); // block_size to be updated with random value based on parameters
+
+                    soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
+                    soc_ifc_axi_dma_wait_idle(0);
+                    if (test_block_size) {
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
 
                     if (data_check) {
                         //Read back via AHB and compare data
@@ -349,13 +363,23 @@ void main(void) {
                             VPRINTF(HIGH, "AXI2AXI: Read-back data matches sent data\n");
                         }
                     }
+                    SEND_STDOUT_CTRL(FIFO_CLEAR);
                     break;
 
                 case AXI2MBOX:
+                    if (test_block_size) {
+                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
+
                     if (data_check) {
                         // Populate AXI SRAM via AHB2AXI transfer
                         VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                        if (test_block_size && src_is_fifo) {
+                            uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
+                            soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
+                        }
                     } else {
                         VPRINTF(FATAL, "FIXME");
                         SEND_STDOUT_CTRL(0x1);
@@ -363,7 +387,11 @@ void main(void) {
 
                     // AXI2MBOX: Read data back through mailbox using direct-mode
                     VPRINTF(HIGH, "Reading payload to Mailbox\n");
-                    soc_ifc_axi_dma_read_mbox_payload(src_addr, dst_offset, use_rd_fixed, transfer_size*4, 0);
+                    soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_offset, use_rd_fixed, transfer_size*4, block_size);
+                    soc_ifc_axi_dma_wait_idle(0);
+                    if (test_block_size) {
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
 
                     if (data_check) {
                         VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
@@ -393,13 +421,23 @@ void main(void) {
                         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         mbox_locked = 0;
                     }
+                    SEND_STDOUT_CTRL(FIFO_CLEAR);
                     break;
 
                 case AXI2AHB:
+                    if (test_block_size) {
+                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
+
                     if (data_check) {
                         // Populate AXI SRAM via AHB2AXI transfer
                         VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
+                        if (test_block_size && src_is_fifo) {
+                            uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
+                            soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
+                        }
                     } else {
                         VPRINTF(FATAL, "FIXME");
                         SEND_STDOUT_CTRL(0x1);
@@ -407,7 +445,12 @@ void main(void) {
 
                     // AXI2AHB: Read data back from AXI SRAM and confirm it matches
                     VPRINTF(HIGH, "Reading payload via AHB i/f\n");
-                    soc_ifc_axi_dma_read_ahb_payload(src_addr, use_rd_fixed, read_payload, transfer_size*4, 0);
+                    soc_ifc_axi_dma_arm_read_ahb_payload(src_addr, use_rd_fixed, read_payload, transfer_size*4, block_size);
+                    soc_ifc_axi_dma_get_read_ahb_payload(read_payload, transfer_size*4);
+                    soc_ifc_axi_dma_wait_idle(0);
+                    if (test_block_size) {
+                        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                    }
 
                     if (data_check) {
                         // Compare read_payload data with original dccm_data
@@ -427,6 +470,7 @@ void main(void) {
                             VPRINTF(HIGH, "AXI2AHB: Read-back data matches sent data\n");
                         }
                     }
+                    SEND_STDOUT_CTRL(FIFO_CLEAR);
                     break;
 
                 default:

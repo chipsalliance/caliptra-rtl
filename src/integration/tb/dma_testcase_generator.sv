@@ -47,6 +47,7 @@ module dma_testcase_generator (
                                                      // Compiled rand_test_dma is about 0x1b170 bytes
                                                      // 0x1b170 + 0x18000 = 0x33170, which leaves a fair margin until the DCCM size of 0x40000
       struct packed {
+        bit [11:0]           block_size;
         bit                  src_is_fifo;
         bit                  dst_is_fifo;
         bit                  use_rd_fixed;
@@ -64,6 +65,8 @@ module dma_testcase_generator (
       
       // Wait for caliptra_top_tb to complete preload_dccm before running slam_dccm_ram
       wait(preload_dccm_done);
+      // Wait for block-size to be randomized by TB AXI FIFO
+      wait(tb_axi_complex_i.i_axi_fifo.rand_done);
 
       // Test cases cases are stored in DCCM starting from the end address and filling backwards
       // 0x5003_FFFC: num_iterations
@@ -100,6 +103,7 @@ module dma_testcase_generator (
           //dccm_addr = tc_start_addr - (i * ((2 + dma_gen.xfer_size) * 4));  // 1dw = xfer_type, 1dw = xfer_size, xfer_size dws = payload data
           
           // Write DMA transfer_type tp DCCM
+          type_dword.block_size          = tb_axi_complex_i.i_axi_fifo.RECOVERY_BURST_TEST_SIZE;
           type_dword.src_is_fifo         = dma_gen.src_is_fifo       ;
           type_dword.dst_is_fifo         = dma_gen.dst_is_fifo       ;
           type_dword.use_rd_fixed        = dma_gen.use_rd_fixed      ;
