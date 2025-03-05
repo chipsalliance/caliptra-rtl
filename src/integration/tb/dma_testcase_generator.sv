@@ -43,7 +43,9 @@ module dma_testcase_generator (
       int end_addr = `RV_DCCM_EADR;  // Base address for DCCM
       int tc_start_addr;
       int dccm_addr;
-      int total_testcase_bytes_to_check = 32'h18000; // FIXME initialize with the value indicating how many DCCM bytes can be used for TC stuffing
+      int total_testcase_bytes_to_check = 32'h18000; // Initialize with the value indicating how many DCCM bytes can be used for TC stuffing
+                                                     // Compiled rand_test_dma is about 0x1b170 bytes
+                                                     // 0x1b170 + 0x18000 = 0x33170, which leaves a fair margin until the DCCM size of 0x40000
       struct packed {
         bit                  src_is_fifo;
         bit                  dst_is_fifo;
@@ -55,7 +57,6 @@ module dma_testcase_generator (
         dma_transfer_type_e  dma_xfer_type;  // Randomized transfer type
       } type_dword;
       logic [31:0] data;  // Assuming a 39-bit data format
-      $warning("assign real value for total_testcase_bytes_to_check based on rand_dma_test MAP file, and update rand_dma_test.ld");
 
       if (!$value$plusargs("NUM_ITERATIONS=%d", num_iterations)) begin 
         num_iterations = 100; // Default

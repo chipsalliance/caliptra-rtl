@@ -64,5 +64,5 @@ SECTIONS {
   /* Stack is at the end of DCCM after .data_iccm2 */
   . = ALIGN(iccm_code2_end,16);
   STACK = ALIGN(16) + 0x8000;
-  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM")
+  ASSERT( (STACK < 0x50020000), "ERROR: Stack is too large, not enough space for random testcase data")
 }
