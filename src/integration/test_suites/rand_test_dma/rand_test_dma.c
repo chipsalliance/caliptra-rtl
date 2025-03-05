@@ -147,7 +147,7 @@ void main(void) {
 
         // Read DCCM to determine number of transfers
         num_transfers = lsu_read_32(RV_DCCM_EADR - 3);
-        printf("Number of transfers: %d\n\n", num_transfers);
+        VPRINTF(LOW, "Number of transfers: %d\n\n", num_transfers);
 
         // Read transfer type and size for each transfer and perform the transfer
         dccm_addr = RV_DCCM_EADR - 7;
@@ -166,19 +166,19 @@ void main(void) {
             test_block_size = (dma_control & TEST_BLOCK_SIZE_MASK) ? 1 : 0;
             dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
             block_size = test_block_size ? ((dma_control & DMA_BLOCK_SIZE_MASK) >> DMA_BLOCK_SIZE_POS) : 0;
-            VPRINTF(MEDIUM, "Raw dma_control: 0x%08x\n", dma_control);
-            VPRINTF(MEDIUM, "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
-            VPRINTF(MEDIUM, "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
+            VPRINTF(HIGH,   "Raw dma_control: 0x%08x\n", dma_control);
+            VPRINTF(DEBUG,  "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
+            VPRINTF(HIGH,   "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
             VPRINTF(MEDIUM, "Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
-            VPRINTF(MEDIUM, "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
+            VPRINTF(LOW,    "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
             VPRINTF(MEDIUM, "Block Size: %d\n", block_size);
-            VPRINTF(MEDIUM, "Source is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Destination is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Use Read Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Use Write Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Inject Random Delays: %s\n", inject_rand_delays ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Inject Reset: %s\n", inject_rst ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+            VPRINTF(LOW,    "Src is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
+            VPRINTF(LOW,    "Dst is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
+            VPRINTF(LOW,    "Use Rd Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
+            VPRINTF(LOW,    "Use Wr Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Inject Rand Delays: %s\n", inject_rand_delays ? "Yes" : "No");
+            VPRINTF(MEDIUM, "Inject Rst: %s\n", inject_rst ? "Yes" : "No");
+            VPRINTF(LOW,    "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
 
 
             // Read transfer size
@@ -192,7 +192,7 @@ void main(void) {
             else {
                 data_check = 0;
             }
-            printf("Transfer size: %d dwords\n", transfer_size);
+            VPRINTF(LOW, "Transfer size: %d dwords\n", transfer_size);
 
             // Read source offset
             dccm_addr = dccm_addr - 4;
@@ -201,7 +201,7 @@ void main(void) {
                        ((dma_xfer_type == MBOX2AXI) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
                                         src_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
                                                       (uint64_t) AXI_SRAM_BASE_ADDR);
-            printf("Source Offset = 0x%0x\n", src_offset);
+            VPRINTF(LOW, "Source Offset = 0x%0x\n", src_offset);
 
             // Read destination offset
             dccm_addr = dccm_addr - 4;
@@ -210,7 +210,7 @@ void main(void) {
                        ((dma_xfer_type == AXI2MBOX) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
                                         dst_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
                                                       (uint64_t) AXI_SRAM_BASE_ADDR);
-            printf("Destination Offset = 0x%0x\n", dst_offset);         
+            VPRINTF(LOW, "Destination Offset = 0x%0x\n", dst_offset);
             
             // Calculate starting address of payload data
             if (data_check) {
@@ -221,8 +221,8 @@ void main(void) {
                 payload_start_addr = payload_end_addr;
             }
         
-            printf("Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
-            printf("Payload DCCM End Address = 0x%0x\n", payload_end_addr);
+            VPRINTF(LOW,    "Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
+            VPRINTF(MEDIUM, "Payload DCCM End Address = 0x%0x\n", payload_end_addr);
 
             switch ((transfer_type_t)dma_xfer_type) {
                 
@@ -241,7 +241,6 @@ void main(void) {
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
                             if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
                                 VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
@@ -295,7 +294,6 @@ void main(void) {
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
                             if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
                                 VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
@@ -349,7 +347,6 @@ void main(void) {
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
                             if (((use_rd_fixed && !src_is_fifo) || (use_wr_fixed && !dst_is_fifo)) && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
                                 VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
@@ -403,7 +400,6 @@ void main(void) {
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             mbox_data = lsu_read_32(((uint32_t) dst_addr) + (dw << 2));
-//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4)); 
                             if (use_rd_fixed && !src_is_fifo && (mbox_data != lsu_read_32(payload_end_addr))) {
                                 VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, mbox_data, lsu_read_32(payload_end_addr));
                                 fail = 1;
@@ -456,7 +452,6 @@ void main(void) {
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-//                            dccm_data = lsu_read_32(payload_start_addr + (dw * 4));
                             if (use_rd_fixed && !src_is_fifo && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
                                 VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
@@ -482,7 +477,7 @@ void main(void) {
             // Calculate address for the next transfer
             // Need to move past: transfer_type (4 bytes) + transfer_size (4 bytes) + payload (transfer_size*4 bytes) + gap (4 bytes)
             dccm_addr = payload_start_addr - 4;
-            printf("Next Transfer start address = 0x%0x\n", dccm_addr);
+            VPRINTF(MEDIUM, "Next Transfer start address = 0x%0x\n", dccm_addr);
 
         }
 
