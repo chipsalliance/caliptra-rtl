@@ -32,6 +32,7 @@ _*Last Update: 2025/03/04*_
 - Production Debug Unlock Support
 - Caliptra subsystem mode hardware support
 - Caliptra Core 2.0 Validation Enhancements
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
 ## Previous Releases ##
 
