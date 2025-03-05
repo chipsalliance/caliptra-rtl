@@ -302,6 +302,20 @@ void main() {
         printf("Inject MSG into SHA512 digest\n");
         printf("%c", 0x90);
 
+        // Enable ECC PCR
+        printf("\nECC PCR without Signing\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+
+        // check if ECC accepts the cmd
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0){
+            printf("\nECC PCR without Signing is correctly ignored .\n");
+        }
+        else {
+            printf("\nECC PCR without Signing error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
         // Enable ECC PCR VERIFYING core
         printf("\nECC PCR VERIFYING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING | 
