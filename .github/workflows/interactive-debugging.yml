@@ -355,3 +355,21 @@ jobs:
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
             -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_reg_access.tcl
+
+      - name: Build Verilated simulation
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          rm -rf run/*
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop \
+            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
+
+      - name: Test JTAG access locked
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_locked.tcl

@@ -93,7 +93,10 @@
 // #define STATUS_VALID_BIT          0x1
 /* ---- AXI SRAM ---- */
 #define AXI_SRAM_BASE_ADDR  (uint64_t) 0x000123450000ULL
-#define AXI_SRAM_SIZE_BYTES 65536
+#define AXI_SRAM_SIZE_BYTES 262144
+/* ---- AXI FIFO ---- */
+#define AXI_FIFO_BASE_ADDR  (uint64_t) 0x0000fa57f100ULL
+#define AXI_FIFO_SIZE_BYTES 65536
 
 /* ---- Interrupts ---- */
 #define VEER_INTR_VEC_DOE_ERROR        1

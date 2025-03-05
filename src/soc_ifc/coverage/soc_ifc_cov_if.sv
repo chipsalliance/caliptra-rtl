@@ -37,6 +37,8 @@ interface soc_ifc_cov_if
     import soc_ifc_pkg::*;
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
+    import axi_pkg::*;
+    import axi_dma_reg_pkg::*;
     #(
          parameter AXI_ADDR_WIDTH = 18
         ,parameter AXI_DATA_WIDTH = 32
@@ -160,6 +162,9 @@ interface soc_ifc_cov_if
     input logic iccm_lock,
     input logic iccm_axs_blocked,
 
+    //soc ifc register HW inf
+    input soc_ifc_reg__out_t soc_ifc_reg_hwif_out,
+
     //Other blocks reset
     input logic cptra_noncore_rst_b,
     //uC reset
@@ -175,11 +180,30 @@ interface soc_ifc_cov_if
     input soc_ifc_req_t uc_req,
     input logic soc_req_dv,
     input soc_ifc_req_t soc_req,
+    input logic soc_ifc_reg_req_dv,
     input soc_ifc_req_t soc_ifc_reg_req_data
 
 );
 
-  enum bit [3:0] {IDLE = '0, AHB_RD = 4'h8, AHB_WR = 4'h4,  AXI_RD = 4'h2, AXI_WR = 4'h1} bus_event_e;  
+  `define AXI_DMA_TOP i_axi_dma
+  `define AXI_DMA_CTRL `AXI_DMA_TOP.i_axi_dma_ctrl
+
+  enum bit [3:0] {IDLE = '0, AHB_RD = 4'h8, AHB_WR = 4'h4,  AXI_RD = 4'h2, AXI_WR = 4'h1} bus_event_e;
+
+  typedef enum logic [1:0] {
+    DMA_IDLE,
+    DMA_WAIT_DATA,
+    DMA_DONE,
+    DMA_ERROR
+  } dma_ctrl_fsm_e;
+
+  axi_dma_reg__ctrl__rd_route__rd_route_e_e dma_rd_route;
+  axi_dma_reg__ctrl__wr_route__wr_route_e_e dma_wr_route;
+  dma_ctrl_fsm_e dma_ctrl_fsm_ps;
+
+  assign dma_rd_route = axi_dma_reg__ctrl__rd_route__rd_route_e_e'(`AXI_DMA_CTRL.hwif_out.ctrl.rd_route.value);
+  assign dma_wr_route = axi_dma_reg__ctrl__wr_route__wr_route_e_e'(`AXI_DMA_CTRL.hwif_out.ctrl.wr_route.value);
+  assign dma_ctrl_fsm_ps = dma_ctrl_fsm_e'(`AXI_DMA_CTRL.ctrl_fsm_ps);
 
   logic uc_rd, uc_wr, soc_rd, soc_wr;
 
@@ -408,12 +432,79 @@ interface soc_ifc_cov_if
             bins one = {1};}
 
     endgroup
-   
+
+  covergroup axi_dma_cov_grp @(posedge clk iff cptra_rst_b);
+    //DMA Accesses in progress
+    AHBtoAXI_ip_cp: coverpoint (dma_ctrl_fsm_ps != DMA_IDLE) &
+                               (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE) &
+                               (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) {
+                                  option.comment = "DMA Access: AHB FIFO data sent to AXI location";
+                                  bins one = {1};}
+    AXItoAHB_ip_cp: coverpoint (dma_ctrl_fsm_ps != DMA_IDLE) &
+                               (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) &
+                               (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE) {
+                                  option.comment = "DMA Access: AXI read into AHB FIFO";
+                                  bins one = {1};}
+    AXItoAXI_ip_cp: coverpoint (dma_ctrl_fsm_ps != DMA_IDLE) &
+                               (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) &
+                               (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD) {
+                                  option.comment = "DMA Access: AXI to AXI";
+                                  bins one = {1};}
+    MBOXtoAXI_ip_cp: coverpoint (dma_ctrl_fsm_ps != DMA_IDLE) &
+                                (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE) &
+                                (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX) {
+                                  option.comment = "DMA Access: MBOX data sent to AXI location";
+                                  bins one = {1};}
+    AXItoMBOX_ip_cp: coverpoint (dma_ctrl_fsm_ps != DMA_IDLE) &
+                                (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) &
+                                (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE) {
+                                  option.comment = "DMA Access: AXI read into MBOX";
+                                  bins one = {1};}
+    AXItoSHA_ip_cp: coverpoint (sha_fsm_ps != SHA_IDLE) & 
+                               (i_sha512_acc_top.hwif_out.USER.USER.value == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value) &
+                               (dma_ctrl_fsm_ps != DMA_IDLE) &
+                               (dma_rd_route == axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) &
+                               (dma_wr_route == axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD) {
+                                  option.comment = "DMA Access: AXI to SHA";
+                                  bins one = {1};}
+
+    //Other accesses to cross with
+    MBOX_ip_cp: coverpoint (mbox_fsm_ps != MBOX_IDLE)  {
+      option.comment = "Mailbox access in progress";
+      bins one = {1};}
+    TRNG_ip_cp: coverpoint (trng_req)  {
+      option.comment = "TRNG access in progress";
+      bins one = {1};}
+    REG_ip_cp: coverpoint (soc_ifc_reg_req_dv)  {
+      option.comment = "SOC Reg access in progress";
+      bins one = {1};}
+
+      AHBtoAXIxMailbox: cross AHBtoAXI_ip_cp, MBOX_ip_cp;
+      AHBtoAXIxTRNG: cross AHBtoAXI_ip_cp, TRNG_ip_cp;
+      AHBtoAXIxREG: cross AHBtoAXI_ip_cp, REG_ip_cp;
+      MBOXtoAXIxMailbox: cross MBOXtoAXI_ip_cp, MBOX_ip_cp;
+      MBOXtoAXIxTRNG: cross MBOXtoAXI_ip_cp, TRNG_ip_cp;
+      MBOXtoAXIxREG: cross MBOXtoAXI_ip_cp, REG_ip_cp;
+      AXItoAXIxMailbox: cross AXItoAXI_ip_cp, MBOX_ip_cp;
+      AXItoAXIxTRNG: cross AXItoAXI_ip_cp, TRNG_ip_cp;
+      AXItoAXIxREG: cross AXItoAXI_ip_cp, REG_ip_cp;
+      AXItoAHBxMailbox: cross AXItoAHB_ip_cp, MBOX_ip_cp;
+      AXItoAHBxTRNG: cross AXItoAHB_ip_cp, TRNG_ip_cp;
+      AXItoAHBxREG: cross AXItoAHB_ip_cp, REG_ip_cp;
+      AXItoMBOXxMailbox: cross AXItoMBOX_ip_cp, MBOX_ip_cp;
+      AXItoMBOXxTRNG: cross AXItoMBOX_ip_cp, TRNG_ip_cp;
+      AXItoMBOXxREG: cross AXItoMBOX_ip_cp, REG_ip_cp;
+      AXItoSHAxMailbox: cross AXItoSHA_ip_cp, MBOX_ip_cp;
+      AXItoSHAxTRNG: cross AXItoSHA_ip_cp, TRNG_ip_cp;
+      AXItoSHAxREG: cross AXItoSHA_ip_cp, REG_ip_cp;
+  endgroup
+
     soc_ifc_top_cov_grp soc_ifc_top_cov_grp1 = new();
     soc_ifc_arb_cov_grp soc_ifc_arb_cov_grp1 = new();
     soc_ifc_boot_fsm_cov_grp soc_ifc_boot_fsm_cov_grp1 = new();
     sha512_acc_cov_grp sha512_acc_cov_grp1 = new();
     mbox_cov_grp mbox_cov_grp1 = new();
+    axi_dma_cov_grp axi_dma_cov_grp1 = new();
 
 /*  -- Working Reference -- 
     for(genvar i = 0; i < 4; i++) begin : fuse_runtime_svn_blk

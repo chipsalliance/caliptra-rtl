@@ -193,23 +193,23 @@ module axi_sub_rd import axi_pkg::*; #(
     // To check this, look at the 'ready' output from all stages of the
     // skidbuffer pipeline (but omit the C_LAT+1 index because that comes from
     // axi rready)
-    always_comb dv = txn_active && &dp_rready[C_LAT:0];
-    always_comb txn_rvalid[0] = dv && !hld;
+    assign dv = txn_active && &dp_rready[C_LAT:0];
+    assign txn_rvalid[0] = dv && !hld;
 
     // Asserts on the final beat of the COMPONENT INF which means it lags the
     // final AXI beat by at least C_LAT clocks (or more depending on backpressure)
-    always_comb txn_final_beat = txn_rvalid[0] && txn_xfer_ctx[0].last;
+    assign txn_final_beat = txn_rvalid[0] && txn_xfer_ctx[0].last;
 
 
     // --------------------------------------- //
     // Address Calculations                    //
     // --------------------------------------- //
     // Force aligned address to component
-    always_comb addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
-    always_comb user = txn_ctx.user;
-    always_comb id   = txn_ctx.id;
-    always_comb size = txn_ctx.size;
-    always_comb last = txn_cnt == 0;
+    assign addr = {txn_ctx.addr[AW-1:BW],BW'(0)};
+    assign user = txn_ctx.user;
+    assign id   = txn_ctx.id;
+    assign size = txn_ctx.size;
+    assign last = txn_cnt == 0;
 
     // Use full address to calculate next address (in case of arsize < data width)
     axi_addr #(
@@ -227,16 +227,14 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Request Context Pipeline                //
     // --------------------------------------- //
-    always_comb begin
-        txn_xfer_ctx[0].id   = txn_ctx.id;
-        txn_xfer_ctx[0].user = txn_ctx.user;
-        txn_xfer_ctx[0].last = txn_cnt == 0;
-        txn_xfer_ctx[0].resp =
+    assign txn_xfer_ctx[0].id   = txn_ctx.id;
+    assign txn_xfer_ctx[0].user = txn_ctx.user;
+    assign txn_xfer_ctx[0].last = txn_cnt == 0;
+    assign txn_xfer_ctx[0].resp =
     `ifdef CALIPTRA_AXI_SUB_EX_EN
-                               txn_ctx.lock ? AXI_RESP_EXOKAY :
+                                  txn_ctx.lock ? AXI_RESP_EXOKAY :
     `endif
-                               AXI_RESP_OKAY;
-    end
+                                  AXI_RESP_OKAY;
 
     // Shift Register to track requests made to component
     generate
@@ -324,19 +322,17 @@ module axi_sub_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Data/Response                           //
     // --------------------------------------- //
-    always_comb dp_rvalid[0]   = txn_rvalid[C_LAT];
-    always_comb dp_rdata[0]    = rdata;
-    always_comb begin
-        dp_xfer_ctx[0].id   = txn_xfer_ctx[C_LAT].id;
-        dp_xfer_ctx[0].user = txn_xfer_ctx[C_LAT].user; // NOTE: Unused after it enters data pipeline
-        dp_xfer_ctx[0].resp = err   ? AXI_RESP_SLVERR :
+    assign dp_rvalid[0]   = txn_rvalid[C_LAT];
+    assign dp_rdata[0]    = rdata;
+    assign dp_xfer_ctx[0].id   = txn_xfer_ctx[C_LAT].id;
+    assign dp_xfer_ctx[0].user = txn_xfer_ctx[C_LAT].user; // NOTE: Unused after it enters data pipeline
+    assign dp_xfer_ctx[0].resp = err   ? AXI_RESP_SLVERR :
     `ifdef CALIPTRA_AXI_SUB_EX_EN
-                                      txn_xfer_ctx[C_LAT].resp;
+                                         txn_xfer_ctx[C_LAT].resp;
     `else
-                                      AXI_RESP_OKAY;
+                                         AXI_RESP_OKAY;
     `endif
-        dp_xfer_ctx[0].last = txn_xfer_ctx[C_LAT].last;
-    end
+    assign dp_xfer_ctx[0].last = txn_xfer_ctx[C_LAT].last;
 
     generate
         for (dp = 0; dp <= C_LAT; dp++) begin: DATA_PIPELINE
@@ -367,15 +363,13 @@ module axi_sub_rd import axi_pkg::*; #(
         end: DATA_PIPELINE
     endgenerate
 
-    always_comb dp_rready[C_LAT+1] = s_axi_if.rready;
-    always_comb begin
-        s_axi_if.rvalid = dp_rvalid[C_LAT+1];
-        s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
-        s_axi_if.rdata  = dp_rdata[C_LAT+1];
-        s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
-        s_axi_if.ruser  = '0;
-        s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
-    end
+    assign dp_rready[C_LAT+1] = s_axi_if.rready;
+    assign s_axi_if.rvalid = dp_rvalid[C_LAT+1];
+    assign s_axi_if.rlast  = dp_xfer_ctx[C_LAT+1].last;
+    assign s_axi_if.rdata  = dp_rdata[C_LAT+1];
+    assign s_axi_if.rid    = dp_xfer_ctx[C_LAT+1].id;
+    assign s_axi_if.ruser  = '0;
+    assign s_axi_if.rresp  = dp_xfer_ctx[C_LAT+1].resp;
 
 
     // --------------------------------------- //
@@ -415,7 +409,7 @@ module axi_sub_rd import axi_pkg::*; #(
     genvar sva_ii;
     generate
         if (C_LAT > 0) begin
-            for (sva_ii = 0; sva_ii < C_LAT; sva_ii++) begin
+            for (sva_ii = 0; sva_ii < C_LAT-1; sva_ii++) begin
                 // Last stage should be first to fill and first to go empty
                 `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_FILL,  $fell(dp_rready[sva_ii+1]) && !dp_rready[sva_ii], clk, !rst_n)
                 `CALIPTRA_ASSERT_NEVER(ERR_RD_SKD_BUF_DRAIN, $rose(dp_rready[sva_ii+1]) &&  dp_rready[sva_ii], clk, !rst_n)

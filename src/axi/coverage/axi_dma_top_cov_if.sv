@@ -45,11 +45,13 @@ interface axi_dma_top_cov_if
         input  logic [DW-1:0]          mb_rdata
     );
 
+    localparam DMA_IDLE         = 2'h0;
     localparam DMA_WAIT_DATA    = 2'h1;
     localparam DMA_DONE         = 2'h2;
 
     logic w_valid;
     logic ctrl_fsm_ps;
+    logic ctrl_fsm_ns;
     logic ahb_rd;
     logic mb_dv;
     logic mb_wr;
@@ -62,8 +64,14 @@ interface axi_dma_top_cov_if
 
     logic [SOC_IFC_DATA_W-1:0] rdata;
 
+    logic [11:0] total_expected_byte_count;
+    logic [11:0] bytes_remaining;
+
+    logic        dma_xfer_start_pulse;
+
     assign w_valid = axi_dma_top.w_valid;
     assign ctrl_fsm_ps = axi_dma_top.i_axi_dma_ctrl.ctrl_fsm_ps;
+    assign ctrl_fsm_ns = axi_dma_top.i_axi_dma_ctrl.ctrl_fsm_ns;
     assign ahb_rd = axi_dma_top.i_axi_dma_ctrl.hwif_out.read_data;
     assign rdata = axi_dma_top.rdata;
     assign mb_dv = axi_dma_top.mb_dv;
@@ -71,6 +79,34 @@ interface axi_dma_top_cov_if
     assign mb_wdata = axi_dma_top.mb_data.wdata;
     assign rd_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route;
     assign wr_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route;
+    assign bytes_remaining = axi_dma_top.i_axi_dma_ctrl.bytes_remaining;
+
+    // Pulse dma_xfer_start_pulse at beginning to DMA_WAIT_DATA state
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dma_xfer_start_pulse <= 0;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE && ctrl_fsm_ns == DMA_WAIT_DATA) begin
+            dma_xfer_start_pulse <= 1;
+        end
+        else begin
+            dma_xfer_start_pulse <= 0;
+        end
+    end
+
+    // Capture expected total byte count
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            total_expected_byte_count <= 0;
+        end
+        else if (dma_xfer_start_pulse) begin
+            total_expected_byte_count <= bytes_remaining;
+        end
+        else if (bytes_remaining == 0) begin
+            total_expected_byte_count <= 0;
+        end
+    end
+
 
     // AHB2AXI: Queue to store write data input Component INF
     logic [SOC_IFC_DATA_W-1:0] ahb2axi_rdata_queue[$];
@@ -296,6 +332,10 @@ interface axi_dma_top_cov_if
         // Edge Function Coverpoints
         //-------------------------------------------------------------
 
+        //-------------------------------------------
+        // 1DW Transfers Data Check
+        // ------------------------------------------
+
         // AHB2AXI_1DW Transfer with Data Comparison
         ahb2axi_1dw_data_compare: coverpoint (awvalid_seen && m_axi_w_if.wvalid && m_axi_w_if.wdata == expected_wdata) {
             bins single_4byte_ahb2axi_match = {1}; // Cover 4-byte write transfers with matching data
@@ -320,6 +360,13 @@ interface axi_dma_top_cov_if
         axi2mbox_1dw_data_compare: coverpoint (mb_dv && mb_wr && mb_wdata == expected_axi2mbox_rdata) {
             bins single_4byte_axi2mbox_match = {1};
         }
+
+        // -------------------------------------------------------------------
+        // N-DW Transfers with total byte count check and transfer split check
+        // -------------------------------------------------------------------
+        //ah2axi_ndw_byte_count: coverpoint () {
+        //    bins total_byte_count_ahb2axi_match = {1};
+        //}
     endgroup
     
 

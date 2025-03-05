@@ -165,6 +165,7 @@ module axi_mgr_rd import axi_pkg::*; #(
         end
         // Accumulate status codes...
         // TODO what if ERROR is interleaved with EXOKAY?
+        //      That would be a mistake by the slave, since we don't use Exclusive Access feature
         else if (m_axi_if.rvalid && m_axi_if.rready) begin
             req_if.resp       <= req_if.resp | m_axi_if.rresp;
             req_if.resp_valid <= m_axi_if.rlast;

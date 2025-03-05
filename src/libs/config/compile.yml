@@ -88,10 +88,24 @@ targets:
     options:
       - +define+MAP_PROT_ATTR
 ---
+provides: [axi_pc]
+schema_version: 2.4.0
+requires: []
+targets:
+  tb:
+    directories:
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
+      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
+    files:
+#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
+      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
+---
 provides: [avery_axi_uvm_lib]
 schema_version: 2.4.0
 requires:
   - uvm_lib
+  - axi_pc
 targets:
   tb:
     directories:
@@ -102,9 +116,6 @@ targets:
       - $AVERY_AXI/testbench
       - $AVERY_SIM/src
       - $AVERY_SIM/src.IEEE
-#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
-#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
-      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
       - $COMPILE_ROOT/aaxi_uvm
     files:
       - $AVERY_SIM/src/avery_pkg.sv 
@@ -112,8 +123,6 @@ targets:
       - $AVERY_AXI/src.axi/aaxi_pkg.sv 
       - $AVERY_AXI/src.axi/aaxi_pkg_xactor.sv 
       - $AVERY_AXI/src.axi/aaxi_class_pll.sv 
-#      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
-      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
       - $AVERY_AXI/checker/monitor_wrapper/BP063/aaxi_monitor_wrapper.sv
       - $AVERY_AXI/src.VCS/aaxi_busmonitor.v
       - $AVERY_AXI/src.axi/aaxi_coverage_metrics.sv 
