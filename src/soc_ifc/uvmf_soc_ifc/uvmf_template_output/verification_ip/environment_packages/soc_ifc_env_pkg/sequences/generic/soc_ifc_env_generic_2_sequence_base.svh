@@ -25,7 +25,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_generic_2_sequence_base extends aaxi_uvm_seq_base; //soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
+class soc_ifc_env_generic_2_sequence_base extends aaxi_uvm_seq_base;
 
 
     `uvm_object_utils( soc_ifc_env_generic_2_sequence_base )
@@ -34,7 +34,6 @@ class soc_ifc_env_generic_2_sequence_base extends aaxi_uvm_seq_base; //soc_ifc_e
 
     extern virtual task read_reg();
     extern virtual task write_reg();
-    extern virtual task outstanding_write_reg();
 
     function new(string name = "");
         super.new(name);
@@ -42,31 +41,11 @@ class soc_ifc_env_generic_2_sequence_base extends aaxi_uvm_seq_base; //soc_ifc_e
 
     virtual task pre_body();
         super.pre_body();
-        // if (configuration == null)
-        //     `uvm_info("KNU_CONFIG", "config is null inside generic2 seq", UVM_MEDIUM)
-        // reg_model = configuration.soc_ifc_rm;
     endtask
 
-    virtual task body();
-        
-        // fork
-        //     begin
-        //         `uvm_info("KNU_GEN2", "Starting write task", UVM_MEDIUM)
-        //         write_reg();
-        //         #10;
-        //     end
-        //     begin
-        //         `uvm_info("KNU_GEN2", "Starting read task", UVM_MEDIUM)
-        //         read_reg();
-        //         #10;
-        //     end
-        // join
-        
+    virtual task body();    
         write_reg();
         read_reg();
-
-        // outstanding_write_reg();
-        
     endtask
   
 endclass
@@ -77,6 +56,4 @@ endtask
 task soc_ifc_env_generic_2_sequence_base::write_reg();
 endtask
 
-task soc_ifc_env_generic_2_sequence_base::outstanding_write_reg();
-endtask
 

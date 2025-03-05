@@ -25,7 +25,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_axi_uvm_b2b_rand_sequence extends aaxi_uvm_seq_base; //soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
+class soc_ifc_env_axi_uvm_b2b_rand_sequence extends aaxi_uvm_seq_base;
 
 
     `uvm_object_utils( soc_ifc_env_axi_uvm_b2b_rand_sequence )

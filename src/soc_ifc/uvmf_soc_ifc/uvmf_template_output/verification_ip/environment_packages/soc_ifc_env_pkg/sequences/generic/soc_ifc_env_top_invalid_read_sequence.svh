@@ -26,12 +26,28 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_top_invalid_read_sequence extends soc_ifc_env_top_generic_sequence_base; //soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t)); //uvmf_sequence_base #(uvm_sequence_item);
+class soc_ifc_env_top_invalid_read_sequence extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t)); 
 
 
   `uvm_object_utils( soc_ifc_env_top_invalid_read_sequence )
 
+  soc_ifc_env_gen_rand_rw_sequence_t soc_ifc_env_gen_rand_rw_seq;
+
   extern virtual function create_seqs();
+
+  function new(string name = "");
+    super.new(name);
+    create_seqs();
+  endfunction
+
+  virtual task body();
+    reg_model = configuration.soc_ifc_rm;
+    soc_ifc_env_gen_rand_rw_seq.reg_model = reg_model;
+    soc_ifc_env_gen_rand_rw_seq.aaxi_ci = configuration.aaxi_ci;
+
+
+    soc_ifc_env_gen_rand_rw_seq.start(reg_model.soc_ifc_AXI_map.get_sequencer());
+  endtask
 
   
 endclass
@@ -39,13 +55,11 @@ endclass
 function soc_ifc_env_top_invalid_read_sequence::create_seqs();
   uvm_object obj;
   
-  obj = soc_ifc_env_gen_rand_rw_sequence_t::get_type().create_object("soc_ifc_env_gen_rand_rw_seq");
-  `uvm_info("KNU_CREATE", "In create seq", UVM_MEDIUM)
-  
-  if (obj == null)
-    `uvm_info("KNU_CREATE", "obj is null", UVM_MEDIUM)
-  
-  if (!$cast(soc_ifc_env_gen_rand_rw_seq, obj)) `uvm_fatal("KNU_INVALID", "create seq failed")
+  obj = soc_ifc_env_gen_rand_rw_sequence_t::get_type().create_object("soc_ifc_env_gen_rand_rw_seq"); 
+  if (!$cast(soc_ifc_env_gen_rand_rw_seq, obj)) `uvm_fatal("SOC_IFC_TOP_INVALID_READ", "soc_ifc_env_top_invalid_read_sequence::create_seqs() - <seq_type>.create_object() failed")
+
+  if (!soc_ifc_env_gen_rand_rw_seq.randomize())
+    `uvm_fatal("SOC_IFC_INVALID", $sformatf("soc_ifc_env_top_invalid_read_sequence::body() - %s randomization failed", soc_ifc_env_gen_rand_rw_seq.get_type_name()))
     
 endfunction
 

@@ -345,19 +345,19 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_gen_rand_rw_sequence soc_ifc_env_gen_rand_rw_sequence_t;
   // `include "sequences/generic/soc_ifc_env_b2b_read_sequence.svh"
   // typedef soc_ifc_env_b2b_read_sequence soc_ifc_env_b2b_read_sequence_t;
-  `include "sequences/generic/soc_ifc_env_top_generic_sequence_base.svh"
-  typedef soc_ifc_env_top_generic_sequence_base soc_ifc_env_top_generic_sequence_base_t;
+  // `include "sequences/generic/soc_ifc_env_top_generic_sequence_base.svh"
+  // typedef soc_ifc_env_top_generic_sequence_base soc_ifc_env_top_generic_sequence_base_t;
   `include "sequences/generic/soc_ifc_env_top_invalid_read_sequence.svh"
   typedef soc_ifc_env_top_invalid_read_sequence soc_ifc_env_top_invalid_read_sequence_t;
-  `include "sequences/generic/soc_ifc_env_b2b_rand_sequence.svh"
-  typedef soc_ifc_env_b2b_rand_sequence soc_ifc_env_b2b_rand_sequence_t;
-  `include "sequences/generic/soc_ifc_env_gen_b2b_rand_sequence.svh"
-  typedef soc_ifc_env_gen_b2b_rand_sequence soc_ifc_env_gen_b2b_rand_sequence_t;
-  `include "sequences/generic/soc_ifc_env_top_b2b_sequence_base.svh"
-  typedef soc_ifc_env_top_b2b_sequence_base soc_ifc_env_top_b2b_sequence_base_t;
+  // `include "sequences/generic/soc_ifc_env_b2b_rand_sequence.svh"
+  // typedef soc_ifc_env_b2b_rand_sequence soc_ifc_env_b2b_rand_sequence_t;
+  // `include "sequences/generic/soc_ifc_env_gen_b2b_rand_sequence.svh"
+  // typedef soc_ifc_env_gen_b2b_rand_sequence soc_ifc_env_gen_b2b_rand_sequence_t;
+  // `include "sequences/generic/soc_ifc_env_top_b2b_sequence_base.svh"
+  // typedef soc_ifc_env_top_b2b_sequence_base soc_ifc_env_top_b2b_sequence_base_t;
 
-  `include "sequences/generic/soc_ifc_env_axi_uvm_nonblocking_write_sequence.svh"
-  typedef soc_ifc_env_axi_uvm_nonblocking_write_sequence soc_ifc_env_axi_uvm_nonblocking_write_sequence_t;
+  // `include "sequences/generic/soc_ifc_env_axi_uvm_nonblocking_write_sequence.svh"
+  // typedef soc_ifc_env_axi_uvm_nonblocking_write_sequence soc_ifc_env_axi_uvm_nonblocking_write_sequence_t;
   `include "sequences/generic/soc_ifc_env_axi_uvm_b2b_rand_sequence.svh"
   typedef soc_ifc_env_axi_uvm_b2b_rand_sequence soc_ifc_env_axi_uvm_b2b_rand_sequence_t;
   `include "sequences/generic/soc_ifc_env_axi_uvm_gen_b2b_rand_sequence.svh"
@@ -365,10 +365,10 @@ package soc_ifc_env_pkg;
   `include "sequences/generic/soc_ifc_env_axi_uvm_top_b2b_sequence.svh"
   typedef soc_ifc_env_axi_uvm_top_b2b_sequence soc_ifc_env_axi_uvm_top_b2b_sequence_t;
 
-  `include "sequences/generic/soc_ifc_env_gen_burst_rand_sequence.svh"
-  typedef soc_ifc_env_gen_burst_rand_sequence soc_ifc_env_gen_burst_rand_sequence_t;
-  `include "sequences/generic/soc_ifc_env_top_burst_sequence_base.svh"
-  typedef soc_ifc_env_top_burst_sequence_base soc_ifc_env_top_burst_sequence_base_t;
+  // `include "sequences/generic/soc_ifc_env_gen_burst_rand_sequence.svh"
+  // typedef soc_ifc_env_gen_burst_rand_sequence soc_ifc_env_gen_burst_rand_sequence_t;
+  // `include "sequences/generic/soc_ifc_env_top_burst_sequence_base.svh"
+  // typedef soc_ifc_env_top_burst_sequence_base soc_ifc_env_top_burst_sequence_base_t;
 
 
   // pragma uvmf custom package_item_additional end
