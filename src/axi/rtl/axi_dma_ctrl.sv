@@ -480,7 +480,12 @@ import soc_ifc_pkg::*;
             3'b000: rd_req_count_for_payload_next = rd_req_count_for_payload;
             3'b001: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
             3'b010: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
-            3'b011: rd_req_count_for_payload_next = '0; // ERROR case
+            3'b011: rd_req_count_for_payload_next = '0; // If block_size != 0, we would only expect to see rd_req_hshake when rd_wait_to_ack_avail is 1
+                                                        // If we see a rd_req_hshake in this case it would be erroneous, so reset the pending req count to 0
+                                                        // and watch for another indicator on recovery_data_avail.
+                                                        // If block_size == 0, this case might occur. E.g., while Caliptra is reading registers from the
+                                                        // recovery interface in response to the initial assertion of recovery_data_avail.
+                                                        // rd_req_count_for_payload is only used when block_size != 0, so hold it at a 0 value.
             3'b100: rd_req_count_for_payload_next = rd_req_count_for_payload;
             3'b101: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
             3'b110: rd_req_count_for_payload_next = rd_req_count_for_payload; // Don't queue new requests when current requests are pending
