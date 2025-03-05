@@ -14,9 +14,28 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/07/02*_
+_*Last Update: 2025/03/04*_
 
-## Rev 1p1 ##
+## Rev 2p0 ##
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge with ML-DSA 87
+- ECDH Support
+- AES (AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).)
+- PQC Key Vault & Derivation Support
+- OCP Recovery Support
+- Updated VeeR core pointing to VeeR 2.0 release (PMP)
+- APB -> AXI Subordinate
+- Increased ROM, ICCM/DCCM, and Mailbox sizes for Caliptra 2.0
+- Manufacturing Debug Unlock Support
+- Production Debug Unlock Support
+- Caliptra subsystem mode hardware support
+- Caliptra Core 2.0 Validation Enhancements
+
+## Previous Releases ##
+
+### Rev 1p1 ###
 
 #### Rev 1p1 release date: 2024/07/02 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes, Key Vault updates
@@ -65,8 +84,6 @@ _*Last Update: 2024/07/02*_
 [KV] Resolve a potential vulnerability in Key Vault usage [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
 [JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
 [JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint [#541](https://github.com/chipsalliance/caliptra-rtl/pull/541)
-
-## Previous Releases ##
 
 ### Rev 1p0 ###
 
