@@ -297,7 +297,11 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             endcase
         end
     end
-    `CALIPTRA_ASSERT_NEVER(SRAM_GT2_WR_PENDING, sram_w_active > 2, core_clk, !cptra_rst_b)
+    // In rare cases, small write requests while generating backpressure on Write response channel can cause
+    // 1 write response pending in response buffer
+    // 1 write request active
+    // 1 write request accepted and pending
+    `CALIPTRA_ASSERT_NEVER(SRAM_GT3_WR_PENDING, (sram_w_active == 3) && sram_aw_hshake && !sram_b_hshake, core_clk, !cptra_rst_b)
 
     // AXI AR
     assign axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
