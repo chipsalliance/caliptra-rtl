@@ -24,7 +24,7 @@ _*Last Update: 2025/03/04*_
 - ECDH Support
 - AES (AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).)
 - PQC Key Vault & Derivation Support
-- OCP Recovery Support
+- OCP Streaming Boot
 - Updated VeeR core pointing to VeeR 2.0 release (PMP)
 - APB -> AXI Subordinate
 - Increased ROM, ICCM/DCCM, and Mailbox sizes for Caliptra 2.0
