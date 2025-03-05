@@ -758,7 +758,7 @@ clk_gate cg (
 // AHB I$ instance
 //=========================================================================-
 
-    // Instanitate AHB Lite Address Decoder
+    // Instantiate AHB Lite Address Decoder
 ahb_lite_2to1_mux #(
     .AHB_LITE_ADDR_WIDTH(`CALIPTRA_IMEM_BYTE_ADDR_W),
     .AHB_LITE_DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH)

@@ -55,7 +55,6 @@ targets:
       - $COMPILE_ROOT/rtl/aes_reduced_round.sv      
       - $COMPILE_ROOT/rtl/aes_reg_status.sv
       - $COMPILE_ROOT/rtl/aes_reg_top.sv
-      - $COMPILE_ROOT/rtl/aes_wrap.sv
       - $COMPILE_ROOT/rtl/aes.sv
       - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
       - $COMPILE_ROOT/rtl/aes_clp_reg.sv
