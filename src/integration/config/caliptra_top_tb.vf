@@ -1,7 +1,7 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
-+incdir+${MSFT_REPO_ROOT}/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
++incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
@@ -32,7 +32,6 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/mldsa_top/coverage
 +incdir+${CALIPTRA_ROOT}/src/axi/coverage
-+incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include
 +incdir+${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl
@@ -64,7 +63,7 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/asserts/caliptra_top_sva.sv
-${MSFT_REPO_ROOT}/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
+${CALIPTRA_ROOT}/src/integration/tb/Axi4PC.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
@@ -180,6 +179,7 @@ ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_props.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
+${CALIPTRA_ROOT}/src/integration/tb/dma_testcase_generator.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_services.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_soc_bfm.sv
