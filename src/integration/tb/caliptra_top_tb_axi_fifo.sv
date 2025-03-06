@@ -313,8 +313,8 @@ module caliptra_top_tb_axi_fifo #(
         end
     end
 
-    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_POW2, $onehot(RECOVERY_BURST_TEST_SIZE)) /* power of 2 requirement */
-    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_GT_BC, RECOVERY_BURST_TEST_SIZE >= BC)
+    `CALIPTRA_ASSERT(RCVY_TEST_BYTE_SIZE_POW2, $onehot(RECOVERY_BURST_TEST_SIZE), clk, !rst_n) /* power of 2 requirement */
+    `CALIPTRA_ASSERT(RCVY_TEST_BYTE_SIZE_GT_BC, RECOVERY_BURST_TEST_SIZE >= BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_COMPLEX_EMPTY_ON_RCVY, en_recovery_emulation_p |-> fifo_depth == 0, clk, !rst_n)
 
 
