@@ -55,7 +55,7 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
             val_en_reg  = en_reg .get_mirrored_value();
             val_en_glb  = en_glb .get_mirrored_value();
             val_sts_glb = sts_glb.get_mirrored_value();
-            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Grabbed val_sts_reg 0x%x", val_sts_reg), UVM_LOW)
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Grabbed val_sts_reg 0x%x", val_sts_reg), UVM_DEBUG)
             end
         join_none
     endfunction

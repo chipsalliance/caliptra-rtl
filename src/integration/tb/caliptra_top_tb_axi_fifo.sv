@@ -219,7 +219,6 @@ module caliptra_top_tb_axi_fifo #(
         end
         else if ($test$plusargs("CLP_DMA_TB_MODE_THRESH")) begin
             mode_thresh = 1;
-            thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
         end
         else if ($test$plusargs("CLP_DMA_TB_MODE_PULSE")) begin
             mode_pulse = 1;
@@ -237,10 +236,13 @@ module caliptra_top_tb_axi_fifo #(
         `ifndef VERILATOR
         if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
             int block_size_idx = 0;
+            RECOVERY_BURST_TEST_SIZE = 4; // dummy init value
             wait(dma_gen_done);
+            @(posedge en_recovery_emulation);
             forever begin
                 if (dma_gen_block_size[block_size_idx] != 0) begin
                     RECOVERY_BURST_TEST_SIZE = dma_gen_block_size[block_size_idx];
+                    thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
                     $display("TB is modelling a block_size of %d from array index %d for recovery_data_avail", RECOVERY_BURST_TEST_SIZE, block_size_idx);
                     // Hold the value until the next FALLING edge on en_recovery_emulation
                     // indicating that current testcase using the value is completed
