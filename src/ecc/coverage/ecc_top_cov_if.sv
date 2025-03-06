@@ -118,7 +118,9 @@ interface ecc_top_cov_if
         reset_cp: coverpoint reset_n;
         cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
-        ecc_cmd_cp: coverpoint ecc_cmd;
+        ecc_cmd_cp: coverpoint ecc_cmd {
+            illegal_bins illegal_values = {5, 6, 7};
+        }
         pcr_sign_cp: coverpoint pcr_sign_mode;
         zeroize_cp: coverpoint zeroize;
         ready_cp: coverpoint ready;
@@ -142,7 +144,9 @@ interface ecc_top_cov_if
         pubkeyy_output_outofrange_cp: coverpoint pubkeyy_output_outofrange;
         sharedkey_outofrange_cp: coverpoint sharedkey_outofrange;
 
-        cmd_ready_cp: cross ecc_sw_cmd, ready;
+        cmd_ready_cp: cross ecc_sw_cmd, ready{
+            ignore_bins illegal_sw_cmd = binsof(ecc_sw_cmd) intersect {5, 6, 7};
+        }
         cmd_kv_cp: cross ecc_cmd, dest_keyvault;
         pcr_ready_cp: cross ready, pcr_sign_mode;
         pcr_cmd_cp: cross pcr_sign_mode, ecc_cmd;
