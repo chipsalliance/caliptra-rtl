@@ -467,7 +467,9 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         .auto_pop             (ctrl.fifo_auto_pop        ),
         .fifo_clear           (ctrl.fifo_clear           ),
         .en_recovery_emulation(ctrl.en_recovery_emulation),
-        .recovery_data_avail  (recovery_data_avail       )
+        .recovery_data_avail  (recovery_data_avail       ),
+        .dma_gen_done         (ctrl.dma_gen_done         ),
+        .dma_gen_block_size   (ctrl.dma_gen_block_size   )
     );
 
     // --------------------- REG Endpoint TODO ---------------------

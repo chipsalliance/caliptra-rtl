@@ -14,8 +14,9 @@
 //
 
 module dma_testcase_generator (
-  input logic preload_dccm_done
-  //output logic dma_gen_done
+  input logic preload_dccm_done,
+  output logic dma_gen_done,
+  output logic [99:0] [11:0] dma_gen_block_size
 );//dma_if dma_xfer_if);
   import caliptra_top_tb_pkg::*; // provides dma_transfer_randomizer, etc...
 
@@ -62,11 +63,12 @@ module dma_testcase_generator (
       if (!$value$plusargs("NUM_ITERATIONS=%d", num_iterations)) begin 
         num_iterations = 100; // Default
       end
+      if (num_iterations > 100) begin
+          $fatal("num_iterations cannot exceed 100 due to width of dma_gen_block_size output signal...");
+      end
       
       // Wait for caliptra_top_tb to complete preload_dccm before running slam_dccm_ram
       wait(preload_dccm_done);
-      // Wait for block-size to be randomized by TB AXI FIFO
-      wait(tb_axi_complex_i.i_axi_fifo.rand_done);
 
       // Test cases cases are stored in DCCM starting from the end address and filling backwards
       // 0x5003_FFFC: num_iterations
@@ -103,7 +105,7 @@ module dma_testcase_generator (
           //dccm_addr = tc_start_addr - (i * ((2 + dma_gen.xfer_size) * 4));  // 1dw = xfer_type, 1dw = xfer_size, xfer_size dws = payload data
           
           // Write DMA transfer_type tp DCCM
-          type_dword.block_size          = tb_axi_complex_i.i_axi_fifo.RECOVERY_BURST_TEST_SIZE;
+          type_dword.block_size          = dma_gen.block_size        ;
           type_dword.src_is_fifo         = dma_gen.src_is_fifo       ;
           type_dword.dst_is_fifo         = dma_gen.dst_is_fifo       ;
           type_dword.use_rd_fixed        = dma_gen.use_rd_fixed      ;
@@ -161,6 +163,9 @@ module dma_testcase_generator (
               $display("-------------------------------");
           end
 
+          // Drive out the block_size on the array to caliptra_top_tb_axi_fifo
+          dma_gen_block_size[i] = dma_gen.block_size;
+
           // After writing the entire transfer, move to a new address for the next transfer
           // Move to the next 4-byte boundary for the next transfer
           dccm_addr = dccm_addr - 4;
@@ -180,8 +185,8 @@ module dma_testcase_generator (
       slam_dccm_ram(end_addr - 3, {riscv_ecc32(num_iterations), num_iterations}); // Rewrite in case we had to truncate the num_iterations
       $display("    * Final iteration count of rand_test_dma: %d", num_iterations);
       $display("    ======================================================");
-      //dma_gen_done = 1;
     end
+    dma_gen_done = 1;
   end
 
   // Task to provide the test cases

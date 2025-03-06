@@ -1936,11 +1936,11 @@ caliptra_sram #(
 
 // Testcase generator instance 
 dma_transfer_randomizer dma_xfers[];
-//logic dma_gen_done;
 
 dma_testcase_generator i_dma_gen (
-    .preload_dccm_done (preload_dccm_done)
-    //.dma_gen_done (dma_gen_done)
+    .preload_dccm_done (preload_dccm_done                  ),
+    .dma_gen_done      (axi_complex_ctrl.dma_gen_done      ),
+    .dma_gen_block_size(axi_complex_ctrl.dma_gen_block_size)
     );
 /*
 initial begin

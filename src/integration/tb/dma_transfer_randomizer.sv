@@ -33,6 +33,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   rand bit                  inject_rand_delays;
   rand bit                  inject_rst;
   rand bit                  test_block_size; // Requires accessing the axi_fifo with recovery_data_avail emulation
+  rand bit [11:0]           block_size;
 
   // =============================================
   // Constraints
@@ -74,12 +75,25 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   }
   
   // access properties
-  constraint blk_size_c {
+  constraint test_blk_size_c {
       test_block_size dist { 0 := 2, 1 := 1 };
       test_block_size -> src_is_fifo;
       test_block_size -> dma_xfer_type inside {AXI2AXI,AXI2AHB,AXI2MBOX};
       solve dma_xfer_type before test_block_size;
   };
+
+  constraint blk_size_c {
+      !test_block_size -> block_size == 0;
+      test_block_size -> $onehot(block_size);
+      test_block_size -> block_size inside {[4:2048]};
+      solve test_block_size before block_size;
+  };
+
+  constraint blk_size_with_axi2axi_restriction_c {
+      test_block_size && (dma_xfer_type == AXI2AXI) -> block_size <= AXI_FIXED_LEN_MAX_VALUE*CPTRA_AXI_DMA_DATA_WIDTH; // 64 is the maximum burst size for AXI FIXED bursts assuming a 32-bit data width
+      test_block_size && (dma_xfer_type == AXI2AXI) -> dst_offset & (block_size - 1) == 0; // Force destination address to be aligned to the block_size
+  };
+
   constraint fifo_access_c {
       !(src_is_fifo && dst_is_fifo);
       dma_xfer_type inside {AHB2AXI,MBOX2AXI} -> !src_is_fifo;
@@ -88,6 +102,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       dst_is_fifo -> use_wr_fixed;
       solve test_block_size before src_is_fifo;
   };
+
   constraint fixed_access_c {
       dma_xfer_type inside {AHB2AXI,MBOX2AXI} -> !use_rd_fixed;
       dma_xfer_type inside {AXI2AHB,AXI2MBOX} -> !use_wr_fixed;
@@ -107,12 +122,14 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       !src_is_fifo -> (src_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
       src_offset[1:0] == 2'b0;
   };
+
   // dst unused for AXI2AHB, still calculate it...
   constraint dst_addr_c {
        dst_is_fifo ->  dst_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
       !dst_is_fifo ->  dst_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
       !dst_is_fifo -> (dst_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
       dst_offset[1:0] == 2'b0;
+      solve block_size before dst_offset;
   };
 
   // TB stimulus injection

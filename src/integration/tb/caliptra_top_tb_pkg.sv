@@ -15,6 +15,7 @@
 
 package caliptra_top_tb_pkg;
 import soc_ifc_pkg::*;
+import axi_pkg::*;
 
 `ifndef VERILATOR
 class bitflip_mask_generator #(int CPTRA_MBOX_DATA_AND_ECC_W = 39);
@@ -78,6 +79,8 @@ typedef struct packed {
     logic fifo_clear;
     logic rand_delays;
     logic en_recovery_emulation;
+    logic dma_gen_done;
+    logic [99:0] [11:0] dma_gen_block_size;
 } axi_complex_ctrl_t;
 
 // Transfer types enum
