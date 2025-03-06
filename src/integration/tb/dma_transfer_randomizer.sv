@@ -214,6 +214,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
         $display("  inject_rand_delays: 0x%x", inject_rand_delays);
         $display("  inject_rst        : 0x%x", inject_rst        );
         $display("  test_block_size   : 0x%x", test_block_size   );
+        $display("  block_size        : 0x%x", block_size        );
     end
   endfunction
 
