@@ -70,6 +70,7 @@ module caliptra_top_tb_services
     // TB Controls
     output var   ras_test_ctrl_t ras_test_ctrl,
     output int   cycleCnt,
+    output var   axi_complex_ctrl_t axi_complex_ctrl,
 
     //Interrupt flags
     output logic int_flag,
@@ -294,7 +295,14 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
+    //         8'h8a        - Enable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8b        - Enable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8c        - Disable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8d        - Disable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8e        - Flush the FIFO in caliptra_top_tb_axi_complex
+    //         8'h8f        - Toggle random delays in AXI complex (FIFO and SRAM endpoints)
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -453,6 +461,41 @@ module caliptra_top_tb_services
     initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
     always@(negedge clk) begin
         ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
+    end
+
+    // AXI Complex Control
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            axi_complex_ctrl.fifo_auto_push        <= 1'b0;
+            axi_complex_ctrl.fifo_auto_pop         <= 1'b0;
+            axi_complex_ctrl.fifo_clear            <= 1'b0;
+            axi_complex_ctrl.rand_delays           <= 1'b0;
+            axi_complex_ctrl.en_recovery_emulation <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h88) && mailbox_write) begin
+            axi_complex_ctrl.en_recovery_emulation <= ~axi_complex_ctrl.en_recovery_emulation; // Toggle option
+        end
+        else if((WriteData[7:0] == 8'h8a) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8b) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8c) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8d) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8e) && mailbox_write) begin
+            axi_complex_ctrl.fifo_clear     <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8f) && mailbox_write) begin
+            axi_complex_ctrl.rand_delays    <= ~axi_complex_ctrl.rand_delays; // Toggle option
+        end
+        else begin
+            axi_complex_ctrl.fifo_clear     <= 1'b0;
+        end
     end
 
     //keyvault injection hooks
@@ -1448,7 +1491,7 @@ endgenerate //IV_NO
                 assert_rst_flag <= 'b1;
                 deassert_rst_flag <= 'b0;
             end
-            else if(assert_rst_flag) begin //prandom rst was already issued, so deassert rst now
+            else if(assert_rst_flag && (cycleCnt >= (rst_cyclecnt + wait_time_to_rst + 10))) begin //prandom rst was already issued, so deassert rst now
                 assert_rst_flag <= 'b0;
                 deassert_rst_flag <= 'b1;
                 prandom_warm_rst <= 'b0;
@@ -1684,6 +1727,7 @@ endgenerate //IV_NO
         end
     endgenerate
 
+    logic preload_dccm_done;
 
     initial begin
         abi_reg[0] = "zero";
@@ -1896,6 +1940,32 @@ caliptra_sram #(
     .rdata_o (        )
 );
 
+// DMA Test case generator
+// Interface instance
+//dma_transfer_if dma_xfer_if;
+
+`ifndef VERILATOR
+// Testcase generator instance 
+dma_transfer_randomizer dma_xfers[];
+
+dma_testcase_generator i_dma_gen (
+    .preload_dccm_done (preload_dccm_done                  ),
+    .dma_gen_done      (axi_complex_ctrl.dma_gen_done      ),
+    .dma_gen_block_size(axi_complex_ctrl.dma_gen_block_size)
+    );
+/*
+initial begin
+    // Wait for the test cases to be generated
+    wait (dma_gen_done);
+
+    // Retrieve the generated test cases
+    i_dma_gen.get_dma_xfers(dma_xfers);
+end
+*/
+`else
+    always@(posedge clk) axi_complex_ctrl.dma_gen_done       <= 1'b0;
+    always@(posedge clk) axi_complex_ctrl.dma_gen_block_size <= '0;
+`endif
 
    //=========================================================================-
    // SRAM preload services
@@ -1959,7 +2029,7 @@ task static preload_iccm;
 endtask
 
 
-task static preload_dccm;
+task static preload_dccm ();
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -1986,6 +2056,7 @@ task static preload_dccm;
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");
+    preload_dccm_done = 1;
 
 endtask
 

@@ -46,7 +46,7 @@ addrmap axi_dma_reg {
     reg {
         name="Caliptra AXI DMA Capabilities";
         desc="Provides information about configuration and enabled capabilities for the DMA block.";
-        field { desc="FIFO MAX DEPTH. Indicates number of available slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
+        field { desc="FIFO MAX DEPTH. Indicates number of available data-width-sized slots in the internal FIFO."; sw=r; hw=w; } fifo_max_depth[12];
         field { desc="Reserved"; sw=r; } rsvd[20] = 20'h00000;
     } cap;
 
@@ -109,7 +109,7 @@ addrmap axi_dma_reg {
                       When set, this field will prevent any further operations until it is cleared by setting the ctrl.flush field.";
                 sw=r; hw=w; } error=1'b0;
         field { desc="RESERVED."; sw=r; } rsvd0[2]=2'h0;
-        field { desc="FIFO DEPTH. Indicates number of populated slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
+        field { desc="FIFO DEPTH. Indicates number of populated data-width-sized slots in the internal FIFO."; sw=r; hw=w; } fifo_depth[12];
         field {
             name = "Caliptra AXI DMA FSM Present State";
             desc = "Indicates the present state of the Caliptra AXI DMA FSM.";
@@ -154,24 +154,24 @@ addrmap axi_dma_reg {
     // Source Address
     reg {
         name="Caliptra AXI DMA Source Address Low";
-        desc="Contains lower 32-bits of address from which current operation will read data.";
+        desc="Contains lower 32-bits of address from which current operation will read data. Defines the AXI read address when read route is enabled; defines the offset into the mailbox when write route is set to MBOX.";
         field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } src_addr_l;
     reg {
         name="Caliptra AXI DMA Source Address High";
-        desc="Contains upper 32-bits of address from which current operation will read data.";
+        desc="Contains upper 32-bits of address from which current operation will read data. Defines the AXI read address when read route is enabled; defines the offset into the mailbox when write route is set to MBOX.";
         field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } src_addr_h;
 
     // Destination Address
     reg {
         name="Caliptra AXI DMA Destination Address Low";
-        desc="Contains lower 32-bits of address to which current operation will write data.";
+        desc="Contains lower 32-bits of address to which current operation will write data. Defines the AXI write address when write route is enabled; defines the offset into the mailbox when read route is set to MBOX.";
         field { desc="Addr_L"; sw=rw; swwel=dma_swwel; hw=r; } addr_l[32]=32'h00000000;
     } dst_addr_l;
     reg {
         name="Caliptra AXI DMA Destination Address High";
-        desc="Contains upper 32-bits of address to which current operation will write data.";
+        desc="Contains upper 32-bits of address to which current operation will write data. Defines the AXI write address when write route is enabled; defines the offset into the mailbox when read route is set to MBOX.";
         field { desc="Addr_H"; sw=rw; swwel=dma_swwel; hw=r; } addr_h[32]=32'h00000000;
     } dst_addr_h;
 
@@ -189,9 +189,15 @@ addrmap axi_dma_reg {
               Byte Count. This register indicates what granularity of AXI
               transactions are issued at a time.
               When non-zero, this field instructs the DMA to wait for the
-              input “WIRE” to pulse high before issuing each transaction.
+              input “recovery_data_avail” (a.k.a. payload_available) to be
+              set to 1 before issuing each transaction.
               Total burst is done once “Byte_count/block_size” transactions
               have completed.
+              After completion of a burst, if recovery_data_avail is set,
+              the subsequent burst will be issued. Otherwise, DMA will wait
+              for recovery_data_avail to be set.
+              If block_size is larger than the maximum legal AXI burst length,
+              it will be further subdivided to multiple smaller bursts.
               When zero, DMA issues AXI transactions of maximum size
               without any stalls in between transactions.
               Must be a multiple of AXI data width. If block size is not
