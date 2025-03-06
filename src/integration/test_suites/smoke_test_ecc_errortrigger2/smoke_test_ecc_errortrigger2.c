@@ -308,12 +308,12 @@ void main() {
 
         // check if ECC accepts the cmd
         if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0){
-            printf("\nECC PCR without Signing is correctly ignored .\n");
-        }
-        else {
             printf("\nECC PCR without Signing error is not detected.\n");
             printf("%c", 0x1);
             while(1);
+        }
+        else {
+            printf("\nECC PCR without Signing is correctly ignored .\n");
         }
 
         // Enable ECC PCR VERIFYING core
