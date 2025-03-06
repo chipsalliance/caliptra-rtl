@@ -1323,7 +1323,7 @@ Additional registers have been added to support key vault integration. Keys from
 
 ### Operation
 
-For more information, see the [AES Programmer's Guide](https://opentitan.org/book/hw/ip/aes/doc/programmers_guide.html).
+For more information, see the [AES Programmer's Guide](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/programmers_guide.md).
 
 ### Signal descriptions
 
@@ -1359,6 +1359,22 @@ The AES architecture inputs and outputs are described in the following table.
 ### Address map
 
 The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
+
+### SCA countermeasures
+
+The AES unit employs separate SCA countermeasures for the AES cipher core used for the encryption/decryption part and for the GHASH module used for computing the integrity tag in GCM.
+
+### AES cipher core
+
+A detailed specification of the SCA countermeasure employed in the AES cipher core is shown here: [AES cipher core SCA countermeasure](https://opentitan.org/book/hw/ip/aes/doc/theory_of_operation.html#1st-order-masking-of-the-cipher-core).
+The most critical building block of the SCA countermeasure, i.e., the masked AES S-Box, successfully passes formal masking verification at the netlist level using [Alma: Execution-aware Masking Verification](https://github.com/IAIK/coco-alma).
+The flow required for repeating the formal masking verification using Alma together with a Howto can be found [here](https://github.com/lowRISC/opentitan/blob/master/hw/ip/aes/pre_sca/alma/README.md).
+The entire AES cipher core including the masked S-Boxes and as well as the PRNG generating the randomness for remasking successfully passes masking evaluation at the netlist level using [PROLEAD - A Probing-Based Leakage Detection Tool for Hardware and Software](https://github.com/ChairImpSec/PROLEAD).
+The flow required for repeating the masking evaluation using PROLEAD together with a Howto can be found [here](https://github.com/lowRISC/opentitan/blob/aes-gcm-review/hw/ip/aes/pre_sca/prolead/README.md).
+
+### GHASH module
+
+A detailed specification of the SCA countermeasure employed in the GHASH module is shown here: [GHASH module SCA countermeasure](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/theory_of_operation.md#1st-order-masking-of-the-ghash-module).
 
 ## PCR vault
 
