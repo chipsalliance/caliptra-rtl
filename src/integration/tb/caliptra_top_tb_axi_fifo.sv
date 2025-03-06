@@ -225,12 +225,17 @@ module caliptra_top_tb_axi_fifo #(
             forever begin
                 if (dma_gen_block_size[block_size_idx] != 0) begin
                     RECOVERY_BURST_TEST_SIZE = dma_gen_block_size[block_size_idx];
+                    $display("TB is modelling a block_size of %d from array index %d for recovery_data_avail", RECOVERY_BURST_TEST_SIZE, block_size_idx);
                     // Hold the value until the next FALLING edge on en_recovery_emulation
                     // indicating that current testcase using the value is completed
                     // and we should grab the next value...
-                    @(!en_recovery_emulation && en_recovery_emulation_d);
+                    @(negedge en_recovery_emulation);
                 end
                 block_size_idx++;
+                if (block_size_idx >= 100) begin
+                    $display("TB Reached end of block_size array, exiting watch loop");
+                    break;
+                end
             end
         end
         else begin
