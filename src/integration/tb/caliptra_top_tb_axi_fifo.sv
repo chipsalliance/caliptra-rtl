@@ -221,6 +221,7 @@ module caliptra_top_tb_axi_fifo #(
         $display("Randomized mode to %s", mode_pulse ? "mode_pulse" : mode_thresh ? "mode_thresh" : mode_not_empty ? "mode_not_empty" : "null");
         if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
             int block_size_idx = 0;
+            wait(dma_gen_done);
             forever begin
                 if (dma_gen_block_size[block_size_idx] != 0) begin
                     RECOVERY_BURST_TEST_SIZE = dma_gen_block_size[block_size_idx];
