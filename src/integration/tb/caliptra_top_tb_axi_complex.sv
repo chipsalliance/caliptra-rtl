@@ -130,22 +130,33 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     //=========================================================================-
     `define GENERIC_2SIG_DLY_TEMPLATE(GEN_NAME, cnt_var, rdy_sig_path, vld_sig_path)                                                        \
         logic [11:0] cnt_var;                                                                                                               \
+        bit GEN_NAME``_past_shake_stall;                                                                                                    \
+        always@(posedge core_clk)                                                                                                           \
+            GEN_NAME``_past_shake_stall <= vld_sig_path && !rdy_sig_path;                                                                   \
         initial begin: GEN_NAME                                                                                                             \
-            bit past_hshake_stall = 1'b0;                                                                                                   \
+            `ifndef VERILATOR                                                                                                               \
             if (!std::randomize(cnt_var) with {cnt_var dist {[0:1] :/ 500, [2:7] :/ 75, [8:31] :/ 3, [32:255] :/ 1}; })                     \
                 $fatal("Randomize %s failed", `"cnt_var`");                                                                                 \
+            `else                                                                                                                           \
+            cnt_var = $urandom_range(7,0);                                                                                                  \
+            `endif                                                                                                                          \
             forever begin                                                                                                                   \
                 @(negedge core_clk)                                                                                                         \
                 if (ctrl.rand_delays) begin                                                                                                 \
-                    if (|cnt_var && !past_hshake_stall) begin                                                                               \
-                        cnt_var <= cnt_var - 1;                                                                                             \
+                    if (|cnt_var && !GEN_NAME``_past_shake_stall) begin                                                                     \
+                        cnt_var = cnt_var - 1;                                                                                              \
                         force rdy_sig_path = 1'b0;                                                                                          \
                         force vld_sig_path = 1'b0;                                                                                          \
                     end                                                                                                                     \
+                    `ifndef VERILATOR                                                                                                       \
                     else if (!std::randomize(cnt_var) with {cnt_var dist {[0:1] :/ 500, [2:7] :/ 75, [8:31] :/ 3, [32:255] :/ 1}; }) begin  \
                         $fatal("Randomize %s failed", `"cnt_var`");                                                                         \
                     end                                                                                                                     \
+                    `endif                                                                                                                  \
                     else begin                                                                                                              \
+                        `ifdef VERILATOR                                                                                                    \
+                        cnt_var = $urandom_range(7,0);                                                                                      \
+                        `endif                                                                                                              \
                         release rdy_sig_path;                                                                                               \
                         release vld_sig_path;                                                                                               \
                     end                                                                                                                     \
@@ -154,23 +165,21 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                     release rdy_sig_path;                                                                                                   \
                     release vld_sig_path;                                                                                                   \
                 end                                                                                                                         \
-                @(posedge core_clk)                                                                                                         \
-                past_hshake_stall <= vld_sig_path && !rdy_sig_path;                                                                         \
             end                                                                                                                             \
         end: GEN_NAME                                                                                                                       \
 
     // --------------------- SRAM ---------------------
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AR_DLY, i_axi_sram_ar_dly_cnt, i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.arready, i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.arvalid)
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_R_DLY , i_axi_sram_r_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.rready , i_axi_sram.i_axi_sub.i_axi_sub_rd.s_axi_if.rvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AR_DLY, i_axi_sram_ar_dly_cnt, axi_sram_if.arready                               , axi_sram_if.arvalid                               )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_R_DLY , i_axi_sram_r_dly_cnt,  axi_sram_if.rready                                , axi_sram_if.rvalid                                )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AW_DLY, i_axi_sram_aw_dly_cnt, i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_W_DLY , i_axi_sram_w_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_B_DLY , i_axi_sram_b_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_wr.s_axi_if.bready , i_axi_sram.i_axi_sub.i_axi_sub_wr.s_axi_if.bvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_B_DLY , i_axi_sram_b_dly_cnt,  axi_sram_if.bready                                , axi_sram_if.bvalid                                )
     // --------------------- FIFO ---------------------
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AR_DLY, i_axi_fifo_ar_dly_cnt, i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.arready, i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.arvalid)
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_R_DLY , i_axi_fifo_r_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.rready , i_axi_fifo.i_axi_sub.i_axi_sub_rd.s_axi_if.rvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AR_DLY, i_axi_fifo_ar_dly_cnt, axi_fifo_if.arready                               , axi_fifo_if.arvalid                               )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_R_DLY , i_axi_fifo_r_dly_cnt,  axi_fifo_if.rready                                , axi_fifo_if.rvalid                                )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AW_DLY, i_axi_fifo_aw_dly_cnt, i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_W_DLY , i_axi_fifo_w_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_B_DLY , i_axi_fifo_b_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_wr.s_axi_if.bready , i_axi_fifo.i_axi_sub.i_axi_sub_wr.s_axi_if.bvalid )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_B_DLY , i_axi_fifo_b_dly_cnt,  axi_fifo_if.bready                                , axi_fifo_if.bvalid                                )
 
 
     //=========================================================================-

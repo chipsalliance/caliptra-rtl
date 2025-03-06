@@ -1953,8 +1953,8 @@ initial begin
 end
 */
 `else
-    assign axi_complex_ctrl.dma_gen_done       = 1'b0;
-    assign axi_complex_ctrl.dma_gen_block_size = '0;
+    always@(posedge clk) axi_complex_ctrl.dma_gen_done       <= 1'b0;
+    always@(posedge clk) axi_complex_ctrl.dma_gen_block_size <= '0;
 `endif
 
    //=========================================================================-

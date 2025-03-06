@@ -35,6 +35,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   rand bit                  test_block_size; // Requires accessing the axi_fifo with recovery_data_avail emulation
   rand bit [11:0]           block_size;
 
+  `ifndef VERILATOR
   // =============================================
   // Constraints
   // =============================================
@@ -137,6 +138,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       inject_rand_delays dist { 0 := 5, 1 := 1 };
       inject_rst dist { 0 := 25, 1 := 1 };
   };
+  `endif
 
   // =============================================
   // Constructor
@@ -146,6 +148,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       this.verbosity = verbosity;
   endfunction
 
+  `ifndef VERILATOR
   // =============================================
   // Pre-randomize function
   // =============================================
@@ -188,6 +191,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
 //      $display("  Setting payload_data[%0d] = 0x%0x", i, payload_data[i]);
 //    end
   endfunction
+  `endif
 
   // =============================================
   // Display method
