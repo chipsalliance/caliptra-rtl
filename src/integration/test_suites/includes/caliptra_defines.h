@@ -92,7 +92,7 @@
 // #define STATUS_READY_BIT          0x0
 // #define STATUS_VALID_BIT          0x1
 /* ---- AXI SRAM ---- */
-#define AXI_SRAM_BASE_ADDR  (uint64_t) 0x000123450000ULL
+#define AXI_SRAM_BASE_ADDR  (uint64_t) 0x000123440000ULL
 #define AXI_SRAM_SIZE_BYTES 262144
 /* ---- AXI FIFO ---- */
 #define AXI_FIFO_BASE_ADDR  (uint64_t) 0x0000fa570000ULL
