@@ -1934,6 +1934,7 @@ caliptra_sram #(
 // Interface instance
 //dma_transfer_if dma_xfer_if;
 
+`ifndef VERILATOR
 // Testcase generator instance 
 dma_transfer_randomizer dma_xfers[];
 
@@ -1951,6 +1952,10 @@ initial begin
     i_dma_gen.get_dma_xfers(dma_xfers);
 end
 */
+`else
+    assign axi_complex_ctrl.dma_gen_done       = 1'b0;
+    assign axi_complex_ctrl.dma_gen_block_size = '0;
+`endif
 
    //=========================================================================-
    // SRAM preload services
