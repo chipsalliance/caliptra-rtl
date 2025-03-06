@@ -789,6 +789,12 @@ module caliptra_top_tb_services
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
         end
+        else begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+        end
     end
 
     genvar mldsa_dword;
@@ -797,10 +803,12 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_keygen | mldsa_keygen_signing) begin
-                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we = 'b1;
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
                 end
                 else begin
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next;
                 end
             end
         end
@@ -809,10 +817,12 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < MSG_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing | mldsa_verify | mldsa_keygen_signing) begin
-                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we = 'b1;
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
                 end
                 else begin
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next;
                 end
             end
         end
