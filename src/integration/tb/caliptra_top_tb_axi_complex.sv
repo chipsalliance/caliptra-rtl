@@ -246,6 +246,8 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                                     fifo_w_active ? axi_fifo_if.bvalid :
                                                     '0;
     end
+    `CALIPTRA_ASSERT(AXI_COMPLEX_RD_DECODE, m_axi_if.arvalid |-> (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
+    `CALIPTRA_ASSERT(AXI_COMPLEX_WR_DECODE, m_axi_if.awvalid |-> (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
 
     // --------------------- SRAM Endpoint ---------------------
     always_comb begin
@@ -297,7 +299,11 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             endcase
         end
     end
-    `CALIPTRA_ASSERT_NEVER(SRAM_GT2_WR_PENDING, sram_w_active > 2, core_clk, !cptra_rst_b)
+    // In rare cases, small write requests while generating backpressure on Write response channel can cause
+    // 1 write response pending in response buffer
+    // 1 write request active
+    // 1 write request accepted and pending
+    `CALIPTRA_ASSERT_NEVER(SRAM_GT3_WR_PENDING, (sram_w_active == 3) && sram_aw_hshake && !sram_b_hshake, core_clk, !cptra_rst_b)
 
     // AXI AR
     assign axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
@@ -440,6 +446,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
     `CALIPTRA_ASSERT_NEVER(FIFO_RD_NOT_FIXED, fifo_ar_hshake && (axi_fifo_if.arburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_NEVER(FIFO_WR_NOT_FIXED, fifo_aw_hshake && (axi_fifo_if.awburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
+    `CALIPTRA_ASSERT_NEVER(FIFO_1RD_FOR_RCVY_EMU, (fifo_r_active > 1) && ctrl.en_recovery_emulation, core_clk, !cptra_rst_b)
 
     caliptra_top_tb_axi_fifo #(
         .AW(AXI_FIFO_ADDR_WIDTH     ),
@@ -460,7 +467,9 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         .auto_pop             (ctrl.fifo_auto_pop        ),
         .fifo_clear           (ctrl.fifo_clear           ),
         .en_recovery_emulation(ctrl.en_recovery_emulation),
-        .recovery_data_avail  (recovery_data_avail       )
+        .recovery_data_avail  (recovery_data_avail       ),
+        .dma_gen_done         (ctrl.dma_gen_done         ),
+        .dma_gen_block_size   (ctrl.dma_gen_block_size   )
     );
 
     // --------------------- REG Endpoint TODO ---------------------

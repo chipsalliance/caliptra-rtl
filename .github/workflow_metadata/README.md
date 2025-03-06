@@ -24,4 +24,5 @@ The Pull Request run ignores updates to documentation files. That is, commits co
 * Markdown (.md)
 * Images (.png)
 * Github Workflows (.github/workflows/**)
+* Spreadsheets (.xlsx, .xls)
 

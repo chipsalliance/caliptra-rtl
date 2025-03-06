@@ -36,7 +36,9 @@ module caliptra_top_tb_axi_fifo #(
     input  logic auto_pop,
     input  logic fifo_clear,
     input  logic en_recovery_emulation,
-    output logic recovery_data_avail
+    output logic recovery_data_avail,
+    input  logic dma_gen_done,
+    input  logic [99:0] [11:0] dma_gen_block_size
 );
 
     // --------------------------------------- //
@@ -47,12 +49,8 @@ module caliptra_top_tb_axi_fifo #(
     
     localparam FIFO_BC = DEPTH; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
-    // TODO randomize this and send to FW to use in tests
-    `ifndef CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE
-    localparam RECOVERY_BURST_TEST_SIZE = 256;
-    `else
-    localparam RECOVERY_BURST_TEST_SIZE = `CALIPTRA_OVERRIDE_RECOVERY_BURST_TEST_SIZE;
-    `endif
+
+    int RECOVERY_BURST_TEST_SIZE;
 
     //COMPONENT INF
     logic          dv;
@@ -199,6 +197,13 @@ module caliptra_top_tb_axi_fifo #(
     bit mode_pulse;
     int thresh;
 
+    logic en_recovery_emulation_d, en_recovery_emulation_p;
+    logic recovery_data_avail_d, recovery_data_avail_p;
+    logic [FIFO_BW-1:0] fifo_writes_since_avail;
+    int fifo_writes_since_recovery_emu_start;
+    int fifo_reads_since_recovery_emu_start;
+    int recovery_data_avail_deassert_at_fifo_read_count;
+
     initial begin
         if ($test$plusargs("CLP_DMA_TB_MODE_NOT_EMPTY")) begin
             mode_not_empty = 1;
@@ -207,21 +212,35 @@ module caliptra_top_tb_axi_fifo #(
             mode_thresh = 1;
             thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
         end
-        else begin
+        else if ($test$plusargs("CLP_DMA_TB_MODE_PULSE")) begin
             mode_pulse = 1;
+        end
+        else if (!std::randomize(mode_pulse,mode_thresh,mode_not_empty) with { $onehot({mode_pulse,mode_thresh,mode_not_empty}); }) begin
+            $fatal("Failed to randomize recovery_data_avail behavior model!");
+        end
+        $display("Randomized mode to %s", mode_pulse ? "mode_pulse" : mode_thresh ? "mode_thresh" : mode_not_empty ? "mode_not_empty" : "null");
+        if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
+            int block_size_idx = 0;
+            wait(dma_gen_done);
+            forever begin
+                if (dma_gen_block_size[block_size_idx] != 0) begin
+                    RECOVERY_BURST_TEST_SIZE = dma_gen_block_size[block_size_idx];
+                    // Hold the value until the next FALLING edge on en_recovery_emulation
+                    // indicating that current testcase using the value is completed
+                    // and we should grab the next value...
+                    @(!en_recovery_emulation && en_recovery_emulation_d);
+                end
+                block_size_idx++;
+            end
+        end
+        else begin
+            RECOVERY_BURST_TEST_SIZE = 256; // Used for smoke_test_dma, etc.
         end
     end
 
     assign recovery_data_avail = recovery_data_avail_in_not_empty | recovery_data_avail_in_thresh | recovery_data_avail_in_pulse;
     assign recovery_data_avail_in_not_empty = !fifo_empty & mode_not_empty;
     assign recovery_data_avail_in_thresh = (fifo_depth >= thresh) & mode_thresh;
-
-    logic en_recovery_emulation_d, en_recovery_emulation_p;
-    logic recovery_data_avail_d, recovery_data_avail_p;
-    logic [FIFO_BW-1:0] fifo_writes_since_avail;
-    int fifo_writes_since_recovery_emu_start;
-    int fifo_reads_since_recovery_emu_start;
-    int recovery_data_avail_deassert_at_fifo_read_count;
 
     assign en_recovery_emulation_p = en_recovery_emulation && !en_recovery_emulation_d;
     assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
@@ -294,8 +313,8 @@ module caliptra_top_tb_axi_fifo #(
         end
     end
 
-    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_POW2, $onehot(RECOVERY_BURST_TEST_SIZE)) /* power of 2 requirement */
-    `CALIPTRA_ASSERT_INIT(RCVY_TEST_BYTE_SIZE_GT_BC, RECOVERY_BURST_TEST_SIZE >= BC)
+    `CALIPTRA_ASSERT(RCVY_TEST_BYTE_SIZE_POW2, $onehot(RECOVERY_BURST_TEST_SIZE), clk, !rst_n) /* power of 2 requirement */
+    `CALIPTRA_ASSERT(RCVY_TEST_BYTE_SIZE_GT_BC, RECOVERY_BURST_TEST_SIZE >= BC, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_COMPLEX_EMPTY_ON_RCVY, en_recovery_emulation_p |-> fifo_depth == 0, clk, !rst_n)
 
 

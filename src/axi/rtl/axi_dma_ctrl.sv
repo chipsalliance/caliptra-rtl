@@ -156,16 +156,21 @@ import soc_ifc_pkg::*;
     // Count read requests that have been enqueued due to recovery_data_avail.
     // Width of signal is sufficient to track 2x the maximum number of requests
     // possible for any given "block" of data.
-    // This allows the counter to schedule the next set of requests if
-    // recovery_data_avail pulse is observed while there are still requests
-    // that have not been issued from the prior pulse.
     // The maximum number of requests for a given "block" is calculated as:
     //   max_block_size / min_size_per_request
     // Where
     //   max_block_size = AXI_LEN_MAX_BYTES
     //   min_size_per_request = BC
+    // In payload_available edge-detection configuration, this allows the counter to schedule
+    // the next set of requests if recovery_data_avail pulse is observed
+    // while there are still requests that have not been issued from the prior pulse.
     logic [AXI_LEN_BC_WIDTH-BW:0] rd_req_count_for_payload, rd_req_count_for_payload_next;
     logic rd_req_stall;
+    `ifndef CALIPTRA_AXI_DMA_PAYLOAD_AVAILABLE_EDGE_DETECTION_MODE
+    logic rd_wait_to_ack_avail; // Used to enforce that requests go one at a time
+    `else 
+    logic recovery_data_avail_d, recovery_data_avail_p; // Edge detection
+    `endif
     logic [3:0] wr_resp_pending; // Counts up to 15 pending Write responses.
                                  // Once this counter saturates, we stall new requests
                                  // until further responses arrive.
@@ -194,8 +199,6 @@ import soc_ifc_pkg::*;
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
-
-    logic recovery_data_avail_d, recovery_data_avail_p;
 
 
     // --------------------------------------- //
@@ -460,6 +463,64 @@ import soc_ifc_pkg::*;
     // Control Logic                           //
     // --------------------------------------- //
 
+    `ifndef CALIPTRA_AXI_DMA_PAYLOAD_AVAILABLE_EDGE_DETECTION_MODE
+    // Don't queue any more requests up in response to recovery_data_avail unless both:
+    //  * the current request count is 0
+    //  * there is no data transfer pending
+    assign rd_wait_to_ack_avail = |rd_req_count_for_payload || (rd_credits < FIFO_BC/BC);
+
+    // When block_size != 0, we are guaranteed to be interacting with the SS recovery interface
+    // which means transactions will also be of FIXED burst type.
+    // This guarantees that each read request will be sized according to the constraints of
+    // block_size and MAX_FIXED_BLOCK_SIZE, without regard for address alignment boundaries or
+    // other conditions.
+    // Treat recovery_data_avail as a level signal indicating there is some data in the FIFO
+    always_comb begin
+        case ({rd_wait_to_ack_avail,recovery_data_avail,rd_req_hshake}) inside
+            3'b000: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b001: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b010: rd_req_count_for_payload_next = rd_req_count_for_payload + `MAX_OF(hwif_out.block_size.size.value>>$clog2(MAX_FIXED_BLOCK_SIZE),1);
+            3'b011: rd_req_count_for_payload_next = '0; // If block_size != 0, we would only expect to see rd_req_hshake when rd_wait_to_ack_avail is 1
+                                                        // If we see a rd_req_hshake in this case it would be erroneous, so reset the pending req count to 0
+                                                        // and watch for another indicator on recovery_data_avail.
+                                                        // If block_size == 0, this case might occur. E.g., while Caliptra is reading registers from the
+                                                        // recovery interface in response to the initial assertion of recovery_data_avail.
+                                                        // rd_req_count_for_payload is only used when block_size != 0, so hold it at a 0 value.
+            3'b100: rd_req_count_for_payload_next = rd_req_count_for_payload;
+            3'b101: rd_req_count_for_payload_next = rd_req_count_for_payload - 1;
+            3'b110: rd_req_count_for_payload_next = rd_req_count_for_payload; // Don't queue new requests when current requests are pending
+            3'b111: rd_req_count_for_payload_next = rd_req_count_for_payload - 1; // Don't queue new requests when current requests are pending
+        endcase
+    end
+
+    // Requirement:
+    //   * never stall read requests if block_size == 0, i.e. not using recovery mode
+    //   * upon observing recovery_data_avail, request block_size bytes of data
+    //   * make AXI requests one at a time
+    //   * after all requests are made, stall until all data is transferred
+    //   * after all data is transferred, continue stalling until recovery_data_avail
+    //   * Final burst size may be less than block_size - so 'rd_req_count_for_payload' may remain non-zero
+    //     until it is cleared by returning to IDLE state, although this is not a bug
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b0;
+        end
+        else if (hwif_out.block_size.size.value == '0) begin
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b0;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE) begin
+            rd_req_count_for_payload <= '0;
+            rd_req_stall             <= 1'b1;
+        end
+        else begin
+            rd_req_count_for_payload <= rd_req_count_for_payload_next;
+            rd_req_stall             <= ~|rd_req_count_for_payload_next || rd_req_hshake || (rd_credits < FIFO_BC/BC); // Force requests for "block_size != 0" to go out one at a time
+        end
+    end
+
+    `else
     // Detect recovery_data_avail rising edge
     assign recovery_data_avail_p = recovery_data_avail && !recovery_data_avail_d;
 
@@ -506,6 +567,8 @@ import soc_ifc_pkg::*;
             rd_req_stall             <= ~|rd_req_count_for_payload_next;
         end
     end
+
+    `endif
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -783,8 +846,8 @@ import soc_ifc_pkg::*;
     `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_RD_REQ_LEN, rd_req_hshake && r_req_if.fixed |-> r_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_FIXED_WR_REQ_LEN, wr_req_hshake && w_req_if.fixed |-> w_req_if.byte_len < MAX_FIXED_BLOCK_SIZE, clk, !rst_n)
     // Requests must not cross AXI boundary (4KiB)
-    `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake && !r_req_if.fixed |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake && !w_req_if.fixed |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     // Proper configuration
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == CPTRA_MBOX_DATA_W)

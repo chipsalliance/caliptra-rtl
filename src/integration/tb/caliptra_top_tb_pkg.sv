@@ -15,6 +15,7 @@
 
 package caliptra_top_tb_pkg;
 import soc_ifc_pkg::*;
+import axi_pkg::*;
 
 `ifndef VERILATOR
 class bitflip_mask_generator #(int CPTRA_MBOX_DATA_AND_ECC_W = 39);
@@ -78,6 +79,8 @@ typedef struct packed {
     logic fifo_clear;
     logic rand_delays;
     logic en_recovery_emulation;
+    logic dma_gen_done;
+    logic [99:0] [11:0] dma_gen_block_size;
 } axi_complex_ctrl_t;
 
 // Transfer types enum
@@ -104,7 +107,7 @@ localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for 
 localparam AXI_SRAM_SIZE_BYTES   = 262144;
 localparam AXI_SRAM_ADDR_WIDTH   = $clog2(AXI_SRAM_SIZE_BYTES);
 localparam AXI_SRAM_DEPTH        = AXI_SRAM_SIZE_BYTES / (CPTRA_AXI_DMA_DATA_WIDTH/8);
-localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2345_0000; 
+localparam logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] AXI_SRAM_BASE_ADDR = `CALIPTRA_AXI_DMA_ADDR_WIDTH'h0001_2344_0000; 
 
 // AXI FIFO config
 localparam AXI_FIFO_SIZE_BYTES   = 65536;

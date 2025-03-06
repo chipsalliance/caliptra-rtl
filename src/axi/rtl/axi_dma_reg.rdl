@@ -189,9 +189,13 @@ addrmap axi_dma_reg {
               Byte Count. This register indicates what granularity of AXI
               transactions are issued at a time.
               When non-zero, this field instructs the DMA to wait for the
-              input “recovery_data_avail” to pulse high before issuing each transaction.
+              input “recovery_data_avail” (a.k.a. payload_available) to be
+              set to 1 before issuing each transaction.
               Total burst is done once “Byte_count/block_size” transactions
               have completed.
+              After completion of a burst, if recovery_data_avail is set,
+              the subsequent burst will be issued. Otherwise, DMA will wait
+              for recovery_data_avail to be set.
               If block_size is larger than the maximum legal AXI burst length,
               it will be further subdivided to multiple smaller bursts.
               When zero, DMA issues AXI transactions of maximum size

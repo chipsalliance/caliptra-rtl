@@ -87,17 +87,30 @@ import aaxi_uvm_pkg::*;
   //uc
   aaxi_uvm_container  uc;             //VAR: UVM container
 
+  // FIXME
+  // This reset timing hack is necessary to work around a race condition bug
+  // in Avery VIP that results in Null Object Access error when reset asserts
+  // on the same clock cycle that a Read request is ending (RVALID == 1, RLAST == 1)
+  // Applied when using Avery 2024.3. Might be able to remove it by 2025.1+
+  logic cptra_rst_b_d;
+  logic cptra_rst_b_dly_assert_simult_deassert;
+  initial cptra_rst_b_d = 1'b0;
+  always@(*) begin
+      #1ps cptra_rst_b_d = soc_ifc_ctrl_agent_bus.cptra_rst_b;
+  end
+  assign cptra_rst_b_dly_assert_simult_deassert = cptra_rst_b_d | soc_ifc_ctrl_agent_bus.cptra_rst_b;
+
   aaxi_intf #(
       .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
       .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
       .SCB_INPUT (aaxi_pkg::AAXI_SCB_INPUT ),
       .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
   ) ports[1] (
-      .ACLK   (clk                               ),
-      .ARESETn(soc_ifc_ctrl_agent_bus.cptra_rst_b),
-      .CACTIVE(                                  ),
-      .CSYSREQ(1'b0                              ),
-      .CSYSACK(                                  )
+      .ACLK   (clk                                   ),
+      .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
+      .CACTIVE(                                      ),
+      .CSYSREQ(1'b0                                  ),
+      .CSYSACK(                                      )
   );
   aaxi_monitor_wrapper monitor0 (ports[0]);
   defparam monitor0.ID_WIDTH= AAXI_ID_WIDTH;

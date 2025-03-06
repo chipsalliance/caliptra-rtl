@@ -195,8 +195,8 @@ aes_clp_reg aes_clp_reg_inst (
 );
 
 edn_pkg::edn_rsp_t edn_i;
-
-assign edn_i = '{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:'0}; //FIXME
+logic [edn_pkg::ENDPOINT_BUS_WIDTH-1:0] edn_bus;
+assign edn_i = '{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:edn_bus};
 
 //AES Engine
 aes
@@ -214,7 +214,7 @@ aes_inst (
   .clk_edn_i(clk),
   .rst_edn_ni(reset_n),
   .edn_o(edn_req),
-  .edn_i(edn_i), //FIXME
+  .edn_i(edn_i),
 
   // Key manager (keymgr) key sideload interface
   .keymgr_key_i(keymgr_key), //FIXME
@@ -324,5 +324,83 @@ always_ff @(posedge clk or negedge reset_n) begin
   end
 end
 
+// Entropy interface
+// We use a Trivium stream cipher primitive which is parameterized as follows:
+// - It takes 288 bits of seed material at a time provided by firmware via the ENTROPY_IF_SEED
+//   registers to reseed the entire Trivium state in one shot. Firmware has to perform 9 write
+//   operations to the ENTROPY_IF_SEED registers.
+// - It delivers 32 bits per clock cycle to AES via the EDN interface. AES will repeatedly request
+//   fresh entropy via this interface. The rate depends on the value of
+//   CTRL_SHADOWED.PRNG_RESEED_RATE.
+//
+// Note: Upon reset, the state of the Trivium primitive is initialized to a netlist constant. The
+//       primitive thus always generates the same output after reset. It is the responsibility of
+//       firmware to provide a new state seed after reset.
+localparam int unsigned NumSeedChunks =
+    caliptra_prim_trivium_pkg::TriviumStateWidth / aes_clp_reg_pkg::AES_CLP_REG_DATA_WIDTH;
+logic [caliptra_prim_trivium_pkg::TriviumStateWidth-1:0] trivium_seed;
+logic [NumSeedChunks-1:0] trivium_seed_qe;
+logic [NumSeedChunks-1:0] trivium_seed_chunk_vld_q, trivium_seed_chunk_vld_d;
+logic trivium_seed_en;
+
+// Concatenate the register values to produce the full state seed.
+assign trivium_seed = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[7].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[6].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[5].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[4].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[3].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[2].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[1].ENTROPY_IF_SEED.value,
+                       hwif_out.ENTROPY_IF_SEED[0].ENTROPY_IF_SEED.value};
+
+// Concatenate the register write enables.
+assign trivium_seed_qe = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[7].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[6].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[5].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[4].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[3].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[2].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[1].ENTROPY_IF_SEED.swmod,
+                          hwif_out.ENTROPY_IF_SEED[0].ENTROPY_IF_SEED.swmod};
+
+// Track write operations:
+// - Perform the reseed once every register has been written at least once.
+// - Clear the tracking upon doing the reseed operation.
+assign trivium_seed_chunk_vld_d = trivium_seed_en ? '0 : trivium_seed_chunk_vld_q | trivium_seed_qe;
+assign trivium_seed_en = &trivium_seed_chunk_vld_q;
+
+always_ff @(posedge clk or negedge reset_n) begin
+  if (~reset_n) begin
+    trivium_seed_chunk_vld_q <= '0;
+  end else begin
+    trivium_seed_chunk_vld_q <= trivium_seed_chunk_vld_d;
+  end
+end
+
+caliptra_prim_trivium #(
+  .OutputWidth(edn_pkg::ENDPOINT_BUS_WIDTH),
+  .SeedType   (caliptra_prim_trivium_pkg::SeedTypeStateFull)
+)
+u_caliptra_prim_trivium
+(
+    .clk_i(clk),
+    .rst_ni(reset_n),
+
+    .en_i                (edn_req.edn_req),
+    .allow_lockup_i      ('0), // Not used.
+    .seed_en_i           (trivium_seed_en),
+    .seed_done_o         (), // Not used.
+    .seed_req_o          (), // Not used.
+    .seed_ack_i          (trivium_seed_en),
+    .seed_key_i          ('0), // Not used.
+    .seed_iv_i           ('0), // Not used.
+    .seed_state_full_i   (trivium_seed),
+    .seed_state_partial_i('0), // Not used.
+
+    .key_o(edn_bus),
+    .err_o()
+);
 
 endmodule

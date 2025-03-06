@@ -391,6 +391,23 @@ void main(void) {
         SEND_STDOUT_CTRL(FIFO_CLEAR);
         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
 
+        // Set auto-write and enable recovery emulation _before_ arming DMA
+        VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
+        VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
+        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+            fail = 1;
+        }
+
+        soc_ifc_axi_dma_wait_idle (1);
+
+        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+        SEND_STDOUT_CTRL(FIFO_CLEAR);
+        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+
 
         // ===========================================================================
         // Move data in AXI SRAM using same src/dst addr, rand delays
