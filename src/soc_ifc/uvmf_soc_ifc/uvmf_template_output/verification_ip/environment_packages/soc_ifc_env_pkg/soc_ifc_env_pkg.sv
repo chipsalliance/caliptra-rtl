@@ -72,9 +72,11 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_actual_cptra_analysis_export)
   `uvm_analysis_imp_decl(_actual_ss_mode_analysis_export)
   `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
-  `uvm_analysis_imp_decl(_expected_axi_analysis_export)
+  `uvm_analysis_imp_decl(_expected_axi_wr_analysis_export)
+  `uvm_analysis_imp_decl(_expected_axi_rd_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
-  `uvm_analysis_imp_decl(_actual_axi_analysis_export)
+  `uvm_analysis_imp_decl(_actual_axi_wr_analysis_export)
+  `uvm_analysis_imp_decl(_actual_axi_rd_analysis_export)
  
   `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)

@@ -35,5 +35,7 @@ uvmf:
                                            ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                                            ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                                            ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'
-      - name: actual_axi_analysis_export
+      - name: actual_axi_wr_analysis_export
+        type: 'aaxi_master_tr'
+      - name: actual_axi_rd_analysis_export
         type: 'aaxi_master_tr'

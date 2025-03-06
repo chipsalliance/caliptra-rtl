@@ -291,7 +291,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     soc_ifc_pred.cptra_sb_ap.connect(soc_ifc_sb.expected_cptra_analysis_export);
     soc_ifc_pred.ss_mode_sb_ap.connect(soc_ifc_sb.expected_ss_mode_analysis_export);
     soc_ifc_pred.soc_ifc_sb_ahb_ap.connect(soc_ifc_sb.expected_ahb_analysis_export);
-    soc_ifc_pred.soc_ifc_sb_axi_ap.connect(soc_ifc_sb.expected_axi_analysis_export);
+    soc_ifc_pred.soc_ifc_sb_axi_wr_ap.connect(soc_ifc_sb.expected_axi_wr_analysis_export);
+    soc_ifc_pred.soc_ifc_sb_axi_rd_ap.connect(soc_ifc_sb.expected_axi_rd_analysis_export);
     soc_ifc_status_agent.monitored_ap.connect(soc_ifc_sb.actual_analysis_export);
     cptra_status_agent.monitored_ap.connect(soc_ifc_sb.actual_cptra_analysis_export);
     ss_mode_status_agent.monitored_ap.connect(soc_ifc_sb.actual_ss_mode_analysis_export);
@@ -300,8 +301,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
     aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
-    aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_wr_analysis_export);
+    aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_rd_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.axi_slave_subenv_interface_activity[0] == ACTIVE )

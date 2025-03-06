@@ -107,21 +107,31 @@ class soc_ifc_scoreboard #(
                               .BASE_T(BASE_T)
                               )
 ) expected_ahb_analysis_export;
-  uvm_analysis_imp_expected_axi_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
+  uvm_analysis_imp_expected_axi_wr_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-) expected_axi_analysis_export;
+  ) expected_axi_wr_analysis_export;
+  uvm_analysis_imp_expected_axi_rd_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) expected_axi_rd_analysis_export;
   uvm_analysis_imp_actual_ahb_analysis_export #(mvc_sequence_item_base, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
 ) actual_ahb_analysis_export;
-  uvm_analysis_imp_actual_axi_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
+  uvm_analysis_imp_actual_axi_wr_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-) actual_axi_analysis_export;
+  ) actual_axi_wr_analysis_export;
+  uvm_analysis_imp_actual_axi_rd_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) actual_axi_rd_analysis_export;
 
 
   // pragma uvmf custom class_item_additional begin
@@ -138,7 +148,8 @@ class soc_ifc_scoreboard #(
                               ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                               ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                               ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
-  aaxi_master_tr axi_expected_q [$];
+  aaxi_master_tr axi_wr_expected_q [$];
+  aaxi_master_tr axi_rd_expected_q [$];
 
   // Use an soc_ifc_status_monitor_struct to track the expected state of the
   // soc_ifc_status interface.
@@ -202,9 +213,11 @@ class soc_ifc_scoreboard #(
     actual_cptra_analysis_export = new("actual_cptra_analysis_export", this);
     actual_ss_mode_analysis_export = new("actual_ss_mode_analysis_export", this);
     expected_ahb_analysis_export = new("expected_ahb_analysis_export", this);
-    expected_axi_analysis_export = new("expected_axi_analysis_export", this);
+    expected_axi_wr_analysis_export = new("expected_axi_wr_analysis_export", this);
+    expected_axi_rd_analysis_export = new("expected_axi_rd_analysis_export", this);
     actual_ahb_analysis_export = new("actual_ahb_analysis_export", this);
-    actual_axi_analysis_export = new("actual_axi_analysis_export", this);
+    actual_axi_wr_analysis_export = new("actual_axi_wr_analysis_export", this);
+    actual_axi_rd_analysis_export = new("actual_axi_rd_analysis_export", this);
   // pragma uvmf custom build_phase begin
     reset_handled = new("reset_handled");
     hard_reset_flag = new("hard_reset_flag"); // Used as trigger data for reset events. In UVM 1.2, data changes from a uvm_object to a string
@@ -497,20 +510,41 @@ class soc_ifc_scoreboard #(
     // pragma uvmf custom expected_ahb_analysis_export_scoreboard end
   endfunction
   
-  // FUNCTION: write_expected_axi_analysis_export
+  // FUNCTION: write_expected_axi_wr_analysis_export
   // QVIP transactions received through expected_axi_analysis_export initiate the execution of this function.
   // This function casts incoming QVIP transactions into the correct protocol type and then performs prediction 
   // of DUT output values based on DUT input, configuration and state
-  virtual function void write_expected_axi_analysis_export(aaxi_master_tr _t);
+  virtual function void write_expected_axi_wr_analysis_export(aaxi_master_tr _t);
     // pragma uvmf custom expected_axi_analysis_export_scoreboard begin
     aaxi_master_tr t;
     if (!$cast(t,_t)) begin
-      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_expected_axi_analysis_export failed!")
+      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_expected_axi_wr_analysis_export failed!")
     end
     `uvm_info("SCBD_AXI", "Transaction Received through expected_axi_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
-    axi_expected_q.push_back(t);
+    axi_wr_expected_q.push_back(t);
+
+    transaction_count++;
+    -> entry_received;
+ 
+    // pragma uvmf custom expected_axi_analysis_export_scoreboard end
+  endfunction
+
+  // FUNCTION: write_expected_axi_rd_analysis_export
+  // QVIP transactions received through expected_axi_analysis_export initiate the execution of this function.
+  // This function casts incoming QVIP transactions into the correct protocol type and then performs prediction 
+  // of DUT output values based on DUT input, configuration and state
+  virtual function void write_expected_axi_rd_analysis_export(aaxi_master_tr _t);
+    // pragma uvmf custom expected_axi_analysis_export_scoreboard begin
+    aaxi_master_tr t;
+    if (!$cast(t,_t)) begin
+      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_expected_axi_rd_analysis_export failed!")
+    end
+    `uvm_info("SCBD_AXI", "Transaction Received through expected_axi_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
+
+    axi_rd_expected_q.push_back(t);
 
     transaction_count++;
     -> entry_received;
@@ -555,24 +589,24 @@ class soc_ifc_scoreboard #(
     // pragma uvmf custom actual_ahb_analysis_export_scoreboard end
   endfunction
   
-  // FUNCTION: write_actual_axi_analysis_export
-  // AVERY AXI transactions received through actual_axi_analysis_export initiate the execution of this function.
+  // FUNCTION: write_actual_axi_wr_analysis_export
+  // AVERY AXI transactions received through actual_axi_wr_analysis_export initiate the execution of this function.
   // This function casts incoming AVERY AXI transactions into the correct protocol type and then performs prediction 
   // of DUT output values based on DUT input, configuration and state
-  virtual function void write_actual_axi_analysis_export(aaxi_master_tr _t);
-    // pragma uvmf custom actual_axi_analysis_export_scoreboard begin
+  virtual function void write_actual_axi_wr_analysis_export(aaxi_master_tr _t);
+    // pragma uvmf custom actual_axi_wr_analysis_export_scoreboard begin
     aaxi_master_tr t;
     aaxi_master_tr t_exp;
     string diff;
     bit txn_eq;
     if (!$cast(t,_t)) begin
-      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_actual_axi_analysis_export failed!")
+      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_actual_axi_wr_analysis_export failed!")
     end
-    `uvm_info("SCBD_AXI", "Transaction Received through actual_axi_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_AXI", "Transaction Received through actual_axi_wr_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
-    if (axi_expected_q.size() > 0) begin
-        t_exp = axi_expected_q.pop_front();
+    if (axi_wr_expected_q.size() > 0) begin
+        t_exp = axi_wr_expected_q.pop_front();
         `uvm_info("KNU_SCBD_AXI", $sformatf("exp strobes is %b, act strobes is %b", {t_exp.strobes[3],t_exp.strobes[2],t_exp.strobes[1],t_exp.strobes[0]}, {t.strobes[3],t.strobes[2],t.strobes[1],t.strobes[0]}), UVM_MEDIUM)
         `uvm_info("KNU_SCBD_AXI", "--------Expected txn---------", UVM_MEDIUM)
         // t_exp.packet_sprint(4,);
@@ -581,7 +615,58 @@ class soc_ifc_scoreboard #(
         // t.packet_sprint(4,);
         `uvm_info("KNU_SCBD_AXI", {"            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
 
-        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+        // txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind); //use in 2024.3
+        txn_eq = t.do_compare(t_exp, uvm_default_comparer); //use in 2025.1
+        `uvm_info("KNU_SCBD_AXI", $sformatf("diff is %s", diff), UVM_MEDIUM)
+        if (txn_eq) begin
+            match_count++;
+            `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected {Address: 0x%x} {Data: 0x%x} {read_or_write: %p}",t.addr,t.beatQ[0],t.kind, t_exp.addr, t_exp.beatQ.pop_front(), t_exp.kind), UVM_HIGH)
+        end
+        else begin
+            mismatch_count++;
+            `uvm_error("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p}",
+                                             t.addr,    t.beatQ[0],    t.kind,    axi_resp_e'(t.resp    [$bits(axi_resp_e)-1:0]),
+                                             t_exp.addr,t_exp.beatQ.pop_front(),t_exp.kind,axi_resp_e'(t_exp.resp[$bits(axi_resp_e)-1:0])))
+        end
+    end
+    else begin
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_axi_wr_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
+        `uvm_error("SCBD_AXI",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
+        nothing_to_compare_against_count++;
+    end
+    -> entry_received;
+ 
+    // pragma uvmf custom actual_axi_wr_analysis_export_scoreboard end
+  endfunction
+
+  // FUNCTION: write_actual_axi_rd_analysis_export
+  // AVERY AXI transactions received through actual_axi_rd_analysis_export initiate the execution of this function.
+  // This function casts incoming AVERY AXI transactions into the correct protocol type and then performs prediction 
+  // of DUT output values based on DUT input, configuration and state
+  virtual function void write_actual_axi_rd_analysis_export(aaxi_master_tr _t);
+    // pragma uvmf custom actual_axi_rd_analysis_export_scoreboard begin
+    aaxi_master_tr t;
+    aaxi_master_tr t_exp;
+    string diff;
+    bit txn_eq;
+    if (!$cast(t,_t)) begin
+      `uvm_fatal("SCBD_AXI","Cast from aaxi_master_tr to aaxi_master_tr in write_actual_axi_rd_analysis_export failed!")
+    end
+    `uvm_info("SCBD_AXI", "Transaction Received through actual_axi_rd_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
+
+    if (axi_rd_expected_q.size() > 0) begin
+        t_exp = axi_rd_expected_q.pop_front();
+        `uvm_info("KNU_SCBD_AXI", $sformatf("exp strobes is %b, act strobes is %b", {t_exp.strobes[3],t_exp.strobes[2],t_exp.strobes[1],t_exp.strobes[0]}, {t.strobes[3],t.strobes[2],t.strobes[1],t.strobes[0]}), UVM_MEDIUM)
+        `uvm_info("KNU_SCBD_AXI", "--------Expected txn---------", UVM_MEDIUM)
+        // t_exp.packet_sprint(4,);
+        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+        `uvm_info("KNU_SCBD_AXI", "--------Actual txn---------", UVM_MEDIUM)
+        // t.packet_sprint(4,);
+        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+
+        // txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+        txn_eq = t.do_compare(t_exp, uvm_default_comparer);
         `uvm_info("KNU_SCBD_AXI", $sformatf("diff is %s", diff), UVM_MEDIUM)
         if (txn_eq) begin
             match_count++;
@@ -595,13 +680,13 @@ class soc_ifc_scoreboard #(
         end
     end
     else begin
-        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_axi_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
+        `uvm_info("FIXME_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The soc_ifc_scoreboard::write_actual_axi_rd_analysis_export function needs to be completed with custom scoreboard functionality for unexpected actual transactions",UVM_LOW)
         `uvm_error("SCBD_AXI",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
         nothing_to_compare_against_count++;
     end
     -> entry_received;
  
-    // pragma uvmf custom actual_axi_analysis_export_scoreboard end
+    // pragma uvmf custom actual_axi_rd_analysis_export_scoreboard end
   endfunction
   
 
@@ -673,7 +758,8 @@ endclass
           cptra_expected_hash  .delete();
           ss_mode_expected_hash.delete();
           ahb_expected_q.delete();
-          axi_expected_q.delete();
+          axi_wr_expected_q.delete();
+          axi_rd_expected_q.delete();
 
           // Clear toggle counter
           soc_ifc_status_monitor_struct      = '{default:0};
@@ -708,15 +794,17 @@ endclass
       if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
       if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
       if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
-      if (axi_expected_q.size() != 0)        entries_remaining |= 1;
+      if (axi_wr_expected_q.size() != 0)     entries_remaining |= 1;
+      if (axi_rd_expected_q.size() != 0)     entries_remaining |= 1;
       while (entries_remaining) begin : while_entries_remaining
-          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ss_mode_exp[%d] ahb_exp[%d] axi_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ss_mode_expected_hash.size(), ahb_expected_q.size(), axi_expected_q.size()),UVM_NONE)
+          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ss_mode_exp[%d] ahb_exp[%d] axi_wr_exp[%d] axi_rd_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ss_mode_expected_hash.size(), ahb_expected_q.size(), axi_wr_expected_q.size(), axi_rd_expected_q.size()),UVM_NONE)
           begin: VERBOSE_TXN_DUMP
               foreach (soc_ifc_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("soc_ifc_expected[%0d]: %s",ii,soc_ifc_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (cptra_expected_hash  [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("cptra_expected[%0d]:   %s",ii,cptra_expected_hash  [ii].convert2string()), UVM_FULL) end
               foreach (ss_mode_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ss_mode_expected[%0d]: %s",ii,ss_mode_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (ahb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ahb_expected[%0d]:     %s",ii,ahb_expected_q       [ii].convert2string()), UVM_FULL) end
-              foreach (axi_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_expected[%0d]:     %s",ii,axi_expected_q       [ii].convert2string()), UVM_FULL) end
+              foreach (axi_wr_expected_q    [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_wr_expected[%0d]:  %s",ii,axi_wr_expected_q    [ii].convert2string()), UVM_FULL) end
+              foreach (axi_rd_expected_q    [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_rd_expected[%0d]:  %s",ii,axi_rd_expected_q    [ii].convert2string()), UVM_FULL) end
           end
           @entry_received;
           entries_remaining=0;
@@ -724,7 +812,8 @@ endclass
           if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
           if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
           if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
-          if (axi_expected_q.size() != 0)        entries_remaining |= 1;
+          if (axi_wr_expected_q.size() != 0)        entries_remaining |= 1;
+          if (axi_rd_expected_q.size() != 0)        entries_remaining |= 1;
       end : while_entries_remaining
   endtask
 
