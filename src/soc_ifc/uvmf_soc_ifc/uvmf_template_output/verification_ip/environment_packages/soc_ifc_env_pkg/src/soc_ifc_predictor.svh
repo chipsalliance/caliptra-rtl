@@ -2326,54 +2326,34 @@ class soc_ifc_predictor #(
                     soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
             end
-            "MODE",
-            "START_ADDRESS",
-            "DLEN": begin
+            "EXECUTE": begin
                 if (axi_txn.is_write()) begin
-                    do_reg_prediction = sha_valid_user(axi_txn)/* && (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
+                    do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
+                    // "Expected" resp is SLVERR for blocked writes
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else begin
-                    if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
-                        do_reg_prediction = 1'b0;
-                        // "Expected" read data is 0
-                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
-                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-                        // "Expected" resp is SLVERR
-                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-                    end
-                end
-            end
-            "DATAIN": begin
-                if (!sha_valid_user(axi_txn)) begin
+                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-                end
-                if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     // "Expected" resp is SLVERR
                     soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
             end
-            "EXECUTE": begin
-                if (axi_txn.is_write()) begin
-                    do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
-                end
-                else begin
-                    if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
-                        do_reg_prediction = 1'b0;
-                        // "Expected" read data is 0
-                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
-                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
-                        // "Expected" resp is SLVERR
-                        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-                    end
-                end
-            end
+            "MODE",
+            "START_ADDRESS",
+            "DLEN",
+            "DATAIN",
             "STATUS",
             ["DIGEST[0]":"DIGEST[9]"],
             ["DIGEST[10]":"DIGEST[15]"]:begin
-                if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                if (axi_txn.is_write()) begin
+                    do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
+                    // "Expected" resp is SLVERR for blocked writes
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
