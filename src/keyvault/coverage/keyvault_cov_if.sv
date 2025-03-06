@@ -91,6 +91,13 @@ interface keyvault_cov_if
             bins bin3 = {['h1_0000:'hF_FFFF]};
             bins bin4 = {['h10_0000: 'hFF_FFFF]};
         }
+        kv_write_en_cp: coverpoint kv_write_en {
+            bins bin0 = {0};
+            bins bin1 = {1};
+            bins bin2 = {2};
+            bins bin4 = {4};
+            bins bin8 = {8};
+        }
         cp_clear_secrets_sel: coverpoint clear_secrets_sel;
         cp_clear_secrets_wr : coverpoint clear_secrets_wr;
         cp_ahb_write        : coverpoint ahb_write;
@@ -102,7 +109,7 @@ interface keyvault_cov_if
         debugXclear:                    cross debug, clear;
         debugXlock_wrXlock_useXclear:   cross debug, lock_wr, lock_use, clear;
         debugXclear_secrets:            cross debug, cp_clear_secrets_wr, cp_clear_secrets_sel;
-        debugXkv_write:                 cross debug, kv_write_en;
+        debugXkv_write:                 cross debug, kv_write_en_cp;
 
         //Cover warm reset assertion while regs are locked/cleared
         // lock_wrXwarm_rst:   cross lock_wr, rst_b;
@@ -124,16 +131,16 @@ interface keyvault_cov_if
         
         //Cross with crypto write. There's no cross with read since reads are async
         //Due to this, at any given time, all signals are by default crossed with read IF
-        lock_wrXkv_write:   cross lock_wr, kv_write_en;
-        lock_useXkv_write:  cross lock_use, kv_write_en;
-        clearXkv_write:     cross clear, kv_write_en;
+        lock_wrXkv_write:   cross lock_wr, kv_write_en_cp;
+        lock_useXkv_write:  cross lock_use, kv_write_en_cp;
+        clearXkv_write:     cross clear, kv_write_en_cp;
 
-        clear_secretsXkv_write: cross kv_write_en, cp_clear_secrets_wr, cp_clear_secrets_sel;
+        clear_secretsXkv_write: cross kv_write_en_cp, cp_clear_secrets_wr, cp_clear_secrets_sel;
 
         //Cover ahb write/read during crypto write and debug mode unlocked
-        ahb_writeXkv_write:      cross cp_ahb_write, kv_write_en;
+        ahb_writeXkv_write:      cross cp_ahb_write, kv_write_en_cp;
         ahb_writeXdebug:         cross cp_ahb_write, debug;
-        ahb_readXkv_write:       cross cp_ahb_read, kv_write_en;
+        ahb_readXkv_write:       cross cp_ahb_read, kv_write_en_cp;
         ahb_readXdebug:          cross cp_ahb_read, debug;
         
 
