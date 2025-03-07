@@ -146,7 +146,7 @@ jobs:
             # in order to only traverse the feature branch commits
             # Use an explicit list of files instead of an exclusion list
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep --exclude-dir='.github/workflows' '.sv\|.svh\|.rdl\|.json\|.v\|.vh\|.rsp\|.s\|.c\|.cpp\|.h\|.hex\|.ld\|.gdb\|.yml\|.sh\|.py\|pr_timestamp' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
