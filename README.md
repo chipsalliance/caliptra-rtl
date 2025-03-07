@@ -14,11 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/09/20*_
-
-:warning:**$${\textsf{\color{red}DISCLAIMER:\ This\ repository\ is\ under\ active\ development\ towards\ a\ Gen2\ release\ on\ branch\ main.}}$$**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Functionality\ or\ quality\ is\ not\ guaranteed.}}$$**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Do\ not\ integrate\ this\ into\ a\ production\ design!}}$$**<br>
+_*Last Update: 2025/03/07*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
@@ -120,8 +116,10 @@ caliptra-rtl
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
+|   |-- axi
 |   |-- caliptra_prim
 |   |-- caliptra_prim_generic
+|   |-- caliptra_tlul
 |   |-- csrng
 |   |-- datavault
 |   |-- doe
@@ -135,6 +133,7 @@ caliptra-rtl
 |   |-- kmac
 |   |-- lc_ctrl
 |   |-- libs
+|   |-- mldsa
 |   |-- pcrvault
 |   |-- riscv_core
 |   |-- sha256
@@ -161,6 +160,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 
 `demo.rdl`:Sample RDL file<BR>
 `Makefile`: Makefile to generate SRAM initialization files from test firmware and to run Verilator simulation<BR>
+`gen_soc_ifc_covergroups.py`: Python script to generate a template of covergroups for all registers in soc_ifc<BR>
 `reg_gen.py`: Used to compile/export RDL files to register source code<BR>
 `reg_gen.sh`: Wrapper used to call `reg_gen.py` for all IP cores in Caliptra<BR>
 `reg_doc_gen.py`: Used to compile/export top-level RDL address map to register source code, defining complete Caliptra address space, and produces HTML documentation<BR>
@@ -338,5 +338,8 @@ These three programs are designed to be run within the context of a UVM simulati
 
 ## **NOTES** ##
 
-* The internal registers are auto rendered at the [GitHub page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
-* So are the [external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+* Register documentation is auto-rendered at the GitHub page
+  * [v2.0 internal registers](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
+  * [v2.0 external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+  * [v1.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/internal-regs)
+  * [v1.1 external registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/external-regs)
