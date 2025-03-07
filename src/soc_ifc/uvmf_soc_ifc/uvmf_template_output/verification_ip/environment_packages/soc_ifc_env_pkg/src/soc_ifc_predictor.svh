@@ -2393,7 +2393,7 @@ class soc_ifc_predictor #(
                         soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                         // "Expected" resp is SLVERR
                         soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-//                    end
+                    end
                 end
             end
             "DATAIN": begin
