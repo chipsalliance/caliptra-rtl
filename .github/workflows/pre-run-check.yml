@@ -299,8 +299,11 @@ jobs:
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
           excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
           extensions='.sv\|.svh\|.rdl\|.json\|.v\|.vh\|.rsp\|.s\|.c\|.cpp\|.h\|.hex\|.ld\|.gdb\|.yml\|.sh\|.py\|pr_timestamp'
-          if [[ $(IFS='\n' grep -v "${excludes}" | grep -c "${extensions}" <<< "$mods") -gt 0 ]]; then
-            echo "Found modified source files in ${SOURCE_BR}"
+          mod_count=$(IFS='\n' grep -v "${excludes}" | grep -c "${extensions}" <<< "$mods")
+          if [[ ${mod_count} -gt 0 ]]; then
+            echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
+            echo " ============== modified files ============="
+            echo "$(IFS='\n' grep -v \"${excludes}\" | grep \"${extensions}\" <<< \"$mods\")"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "Only modified files in ${SOURCE_BR} are for documentation"
