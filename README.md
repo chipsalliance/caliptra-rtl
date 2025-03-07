@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2025/03/06*_
+_*Last Update: 2025/03/07*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
