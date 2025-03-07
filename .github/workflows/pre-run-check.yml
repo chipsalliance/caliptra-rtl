@@ -106,6 +106,8 @@ jobs:
             # File type exclusions:
             # - *.md
             # - *.png
+            # - *.jpg
+            # - *.xlsx/*.xls
             # - any files inside
             #   - .git
             #   - .github/workflows
@@ -142,8 +144,9 @@ jobs:
             # Find the last commit that modified any design file (not documentation)
             # Start the search with the second parent of the PR merge commit
             # in order to only traverse the feature branch commits
+            # Use an explicit list of files instead of an exclusion list
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png\|.github\/workflows\|\.xls\|\.xlsx' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep --exclude-dir='.github/workflows' '.sv\|.svh\|.rdl\|.json\|.v\|.vh\|.rsp\|.s\|.c\|.cpp\|.h\|.hex\|.ld\|.gdb\|.yml\|.sh\|.py\|pr_timestamp' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
@@ -294,7 +297,7 @@ jobs:
           echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
           echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
-          if [[ $(IFS='\n' grep -c -v '\.md\|\.png\|\.xlsx\|\.xls' <<< "$mods") -gt 0 ]]; then
+          if [[ $(IFS='\n' grep -c '.github/workflows/build-test-verilator.yml\|.github/workflows/interactive-debugging.yml\|.sv\|.svh\|.rdl\|.json\|.v\|.vh\|.rsp\|.s\|.c\|.cpp\|.h\|.hex\|.ld\|.gdb\|.yml\|.sh\|.py\|pr_timestamp' <<< "$mods") -gt 0 ]]; then
             echo "Found modified source files in ${SOURCE_BR}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
