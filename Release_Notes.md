@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/03/04*_
+_*Last Update: 2025/03/06*_
 
-### Rev 2p0 ###
+### Rev 2p0-rc1 ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
-- Adams Bridge with ML-DSA 87
+- Adams Bridge with ML-DSA 87 ([v1.0 Release Notes](https://github.com/chipsalliance/adams-bridge/blob/20cfd1be318eec3d1d118a31aa135ba5cbf66791/Release_Notes.md))
 - ECDH Support
 - AES (AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).)
 - PQC Key Vault & Derivation Support
