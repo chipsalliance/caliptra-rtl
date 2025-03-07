@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/03/06*_
+_*Last Update: 2025/03/07*_
 
 ### Rev 2p0-rc1 ###
+
+#### Rev 2p0-rc1 release date: 2025/03/07 (2p0 version pending final security audits for official declaration) ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
