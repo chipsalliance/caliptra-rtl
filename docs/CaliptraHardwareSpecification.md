@@ -3,7 +3,6 @@
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
 <p style="text-align: center;">Revision 2.0</p>
-<p style="text-align: center;">Version 0.8</p>
 
 <div style="page-break-after: always"></div>
 
