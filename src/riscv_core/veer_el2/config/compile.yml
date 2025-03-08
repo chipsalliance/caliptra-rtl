@@ -54,6 +54,7 @@ targets:
       - $COMPILE_ROOT/rtl/lib/el2_lib.sv
       - $COMPILE_ROOT/rtl/lib/mem_lib.sv
       - $COMPILE_ROOT/rtl/lib/el2_mem_if.sv
+      - $COMPILE_ROOT/rtl/lib/el2_regfile_if.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_addrcheck.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_bus_buffer.sv
       - $COMPILE_ROOT/rtl/lsu/el2_lsu_bus_intf.sv
@@ -70,6 +71,7 @@ targets:
       - $COMPILE_ROOT/rtl/el2_pic_ctrl.sv
       - $COMPILE_ROOT/rtl/el2_pmp.sv
       - $COMPILE_ROOT/rtl/el2_veer.sv
+      - $COMPILE_ROOT/rtl/el2_veer_lockstep.sv
       - $COMPILE_ROOT/rtl/el2_veer_wrapper.sv
     tops: [el2_veer_wrapper]
   rtl_lint:
