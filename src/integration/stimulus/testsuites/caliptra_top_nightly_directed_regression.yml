@@ -30,7 +30,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
+        # - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml  // TODO: uncomment when External_Mu is enabled
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
@@ -65,6 +65,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml

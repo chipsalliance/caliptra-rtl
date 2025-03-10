@@ -15,3 +15,5 @@
 ---
 seed: 1
 testname: smoke_test_dma
+plusargs:
+  - +CLP_DMA_TB_MODE_NOT_EMPTY

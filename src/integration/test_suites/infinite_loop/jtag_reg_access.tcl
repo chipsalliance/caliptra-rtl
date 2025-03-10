@@ -79,12 +79,6 @@ puts ""
 
 riscv set_mem_access sysbus
 
-#puts "Enable clock gating..."
-#write_memory $STDOUT 32 $mbox_clk_gate_en phys
-#read_memory $mbox_lock_mem_addr 32 1 phys
-#riscv dmi_write $mbox_din_dmi_addr $data
-#riscv dmi_read $dmstatus_addr
-
 set golden5a {0x5a5a5a5a}
 set goldena5 {0xa5a5a5a5}
 

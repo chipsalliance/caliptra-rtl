@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Release Checklist</p>
 
-<p style="text-align: center;">Version 1.1</p>
+<p style="text-align: center;">Version 2.0</p>
 
 <div style="page-break-after: always"></div>
 

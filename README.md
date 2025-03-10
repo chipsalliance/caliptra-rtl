@@ -14,11 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2024/09/20*_
-
-:warning:**$${\textsf{\color{red}DISCLAIMER:\ This\ repository\ is\ under\ active\ development\ towards\ a\ Gen2\ release\ on\ branch\ main.}}$$**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Functionality\ or\ quality\ is\ not\ guaranteed.}}$$**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**$${\textsf{\color{red}Do\ not\ integrate\ this\ into\ a\ production\ design!}}$$**<br>
+_*Last Update: 2025/03/07*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
@@ -42,7 +38,9 @@ Simulation:
  - Verilator
    - `Version 5.012`
  - Mentor Graphics QVIP
-   - `Version 2021.2.1` of AHB/APB models
+   - `Version 2021.2.1` of AHB models
+ - Avery AXI VIP
+   - `Version 2024.3` of axixactor
  - UVM installation
    - `Version 1.1d`
  - Mentor Graphics UVM-Frameworks
@@ -118,8 +116,10 @@ caliptra-rtl
 |-- src
 |   |-- aes
 |   |-- ahb_lite_bus
+|   |-- axi
 |   |-- caliptra_prim
 |   |-- caliptra_prim_generic
+|   |-- caliptra_tlul
 |   |-- csrng
 |   |-- datavault
 |   |-- doe
@@ -133,6 +133,7 @@ caliptra-rtl
 |   |-- kmac
 |   |-- lc_ctrl
 |   |-- libs
+|   |-- mldsa
 |   |-- pcrvault
 |   |-- riscv_core
 |   |-- sha256
@@ -159,6 +160,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 
 `demo.rdl`:Sample RDL file<BR>
 `Makefile`: Makefile to generate SRAM initialization files from test firmware and to run Verilator simulation<BR>
+`gen_soc_ifc_covergroups.py`: Python script to generate a template of covergroups for all registers in soc_ifc<BR>
 `reg_gen.py`: Used to compile/export RDL files to register source code<BR>
 `reg_gen.sh`: Wrapper used to call `reg_gen.py` for all IP cores in Caliptra<BR>
 `reg_doc_gen.py`: Used to compile/export top-level RDL address map to register source code, defining complete Caliptra address space, and produces HTML documentation<BR>
@@ -249,20 +251,25 @@ Verilog file lists are generated via VCS and included in the config directory fo
 The UVM Framework generation tool was used to create the baseline UVM testbench for verification of the top-level Caliptra image. The top-level bench leverages the `soc_ifc_top` testbench as a subenvironment, to reuse environment level sequences, agents, register models, and predictors.
 
 **Prerequisites**:<BR>
-- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
+- AXI VIP 2024.3 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
 **Environment Variables**:<BR>
 `UVM_HOME`: Filesystem path to the parent directory containing SystemVerilog source code for the UVM library of the desired version.
 `UVMF_HOME`: Filesystem path to the parent directory containing source code (uvmf_base_pkg) for the UVM Frameworks library, a tool available from Mentor Graphics for generating baseline UVM projects.
-`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB/APB UVM agents are pulled in the Caliptra UVM environment.
+`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_SIM`: Filesystem path to the parent directory containing source code for Avery UVM VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_PLI`: Filesystem path to the parent directory containing source code for Avery UVM PLI, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
+`AVERY_AXI`: Filesystem path to the parent directory containing source code for Avery AXI VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
 
 **Steps:**<BR>
 1. Compile UVM 1.1d library
-1. Compile the AHB/APB QVIP source
+1. Compile the AHB/AXI VIP source
 1. Compile the Mentor Graphics UVM-Frameworks base library
-1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the UVMF wrapper for AHB in Caliptra/src/libs/uvmf
+1. Compile the custom Caliptra extended library components from Avery AXI VIP
 1. Compile the `verification_ip` provided for `soc_ifc` found in `Caliptra/src/soc_ifc/uvmf_soc_ifc`
 1. Compile the `caliptra_top` testbench found in `Caliptra/src/integration/uvmf_caliptra_top`
 1. ALL compilation steps may be completed by using the file-list found at `src/integration/uvmf_caliptra_top/config/uvmf_caliptra_top.vf`
@@ -290,15 +297,17 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 - [SOC_IFC](src/soc_ifc/uvmf_soc_ifc)
 
 **Prerequisites**:<BR>
-- QVIP 2021.2.1 for Mentor Graphics (provides the AHB/APB VIP)
+- QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
+- AXI VIP 2024.3 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
 **Steps:**<BR>
 1. Compile UVM 1.1d library
-1. Compile the AHB/APB QVIP source
+1. Compile the AHB/AXI VIP source
 1. Compile the Mentor Graphics UVM-Frameworks base library
-1. Compile the UVMF wrapper for APB/AHB in Caliptra/src/libs/uvmf
+1. Compile the UVMF wrapper for AHB in Caliptra/src/libs/uvmf
+1. Compile the custom Caliptra extended library components from Avery AXI VIP
 1. Compile the `verification_ip` provided for the target testbench
 1. ALL compilation steps may be completed by using the file-list found at `src/<block>/uvmf_<name>/config/<name>.vf`
 1. NOTE: `Caliptra/src/<block>/uvmf_<name>/uvmf_template_output/project_benches/<block>/tb/testbench/hdl_top.sv` is the top-level TB wrapper for the system
@@ -329,5 +338,8 @@ These three programs are designed to be run within the context of a UVM simulati
 
 ## **NOTES** ##
 
-* The internal registers are auto rendered at the [GitHub page](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
-* So are the [external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+* Register documentation is auto-rendered at the GitHub page
+  * [v2.0 internal registers](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
+  * [v2.0 external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+  * [v1.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/internal-regs)
+  * [v1.1 external registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/external-regs)
