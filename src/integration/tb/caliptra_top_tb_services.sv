@@ -838,13 +838,6 @@ module caliptra_top_tb_services
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b0;
         end
-        else if((WriteData[7:0] == 8'hdc) && mailbox_write) begin
-            mldsa_keygen <= 'b0;
-            mldsa_signing <= 'b0;
-            mldsa_verify <= 'b0;
-            mldsa_keygen_signing <= 'b1;
-            $display("In keygen+sign branch\n");
-        end
     end
 
     genvar mldsa_dword;

@@ -231,6 +231,7 @@ void main(void) {
                     soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
 
                     if (data_check) {
+                        VPRINTF(LOW, "Check data\n");
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
                         VPRINTF(MEDIUM, "Reading payload via AHB i/f\n");
@@ -286,6 +287,7 @@ void main(void) {
                     soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
                     
                     if (data_check) {
+                        VPRINTF(LOW, "Check data\n");
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
@@ -339,6 +341,7 @@ void main(void) {
                     }
 
                     if (data_check) {
+                        VPRINTF(LOW, "Check data\n");
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
@@ -391,6 +394,7 @@ void main(void) {
                     }
 
                     if (data_check) {
+                        VPRINTF(LOW, "Check data\n");
                         VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
                         // Acquire the mailbox lock
                         soc_ifc_mbox_acquire_lock(1);
@@ -449,6 +453,7 @@ void main(void) {
                     }
 
                     if (data_check) {
+                        VPRINTF(LOW, "Check data\n");
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
