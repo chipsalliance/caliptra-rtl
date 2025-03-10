@@ -253,8 +253,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     begin: AVERY_AXI_CFG
         aaxi_tb.env0.master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
         aaxi_tb.env0.master[0].driver.cfg_info.uvm_resp = 1;    
-        aaxi_tb.env0.master[0].driver.cfg_info.total_outstanding_depth= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.id_outstanding_depth   = 1;
+        aaxi_tb.env0.master[0].driver.cfg_info.total_outstanding_depth= 1; //0;
+        aaxi_tb.env0.master[0].driver.cfg_info.id_outstanding_depth   = 1; //0;
         aaxi_tb.env0.master[0].driver.cfg_info.opt_awuser_enable= 1;
         aaxi_tb.env0.master[0].driver.cfg_info.opt_wuser_enable = 1;
         aaxi_tb.env0.master[0].driver.cfg_info.opt_buser_enable = 1;
@@ -267,6 +267,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         `ifdef AVERY_PASSIVE_MASTER
             aaxi_tb.env0.psv_master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
             aaxi_tb.env0.psv_master[0].driver.cfg_info.uvm_resp = 1;
+            // aaxi_tb.env0.psv_master[0].driver.cfg_info.total_outstanding_depth= 10;
+            // aaxi_tb.env0.psv_master[0].driver.cfg_info.id_outstanding_depth   = 10;
             aaxi_tb.env0.psv_master[0].driver.cfg_info.passive_mode   = 1;
             aaxi_tb.env0.psv_master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
             aaxi_tb.env0.psv_master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
@@ -277,6 +279,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
             aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_aruser_enable= 1;
             aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_ruser_enable = 1;
 	    `endif
+            // aaxi_tb.env0.psv_master[0].driver.cfg_info.maxwaits = 100;
+            // aaxi_tb.env0.slave[0].driver.cfg_info.maxwaits = 100;
         `endif
         aaxi_tb.env0.slave[0].driver.cfg_info.passive_mode     = 1'b1;
         aaxi_tb.env0.slave[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
@@ -300,6 +304,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
     aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
+    // aaxi_tb.env0.master[0].  ms_tx_AW_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_wr_analysis_export);
     aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_rd_analysis_export);

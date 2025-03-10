@@ -166,13 +166,101 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
 
     automatic int i;
     automatic bit strb;
+    automatic bit zero_strb;
+    automatic bit [3:0] wstrb;
 
     reg_model.soc_ifc_reg_rm.soc_ifc_reg_AXI_map.get_registers(regs, UVM_HIER);
     
     foreach(regs[idx]) begin
+        zero_strb = 1;
+        mirror_data_mask = 32'h0000_00FF;
+        mirror_data = regs[idx].get_mirrored_value();
+
+        trans = aaxi_master_tr::type_id::create("trans");
+        start_item(trans);
+        trans.randomize();
+
+        trans.kind = AAXI_WRITE;
+        trans.vers = AAXI4;
+        trans.addr = regs[idx].get_address(reg_model.soc_ifc_AXI_map);
+        trans.id = 0;
+        trans.len = 0;
+        trans.size = $urandom_range(0,2);
+        trans.burst = $urandom_range(0,1);
+        trans.awuser = $urandom();
+
+        //populate data and strobes
+        for (int i=0; i<4; i++) begin
+            random_byte = $urandom();
+            if ((i==0) & (regs[idx] == reg_model.soc_ifc_reg_rm.internal_hw_error_fatal_mask)) begin
+                random_byte[3] = 0;
+            end
+            trans.data[i] = random_byte;
+            strb = $urandom_range(0,1);
+            $display("************strb = %h", strb);
+            trans.strobes[i] = strb;
+            random_dword[i] = random_byte;
+        end
+
+        trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
+        trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
+        trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
+        `uvm_info("KNU_RANDOM_DWORD", $sformatf("random_dword = %h", random_dword[3:0]), UVM_MEDIUM)
+        for (int i =0; i < 4; i++)
+            `uvm_info("KNU_RANDOM_DWORD", $sformatf("txn data = %h strb = %h", trans.data[i], trans.strobes[i]), UVM_MEDIUM)
+
+        //Calculate wstrb based on strobes and size
+        for (int i=0; i<4; i++) begin
+            if (trans.strobes[i])
+                wstrb[i] = 1;
+            else
+                wstrb[i] = 0;
+        end
+        case(trans.size)
+            0: wstrb = {3'b000, wstrb[0]};
+            1: wstrb = {2'b00, wstrb[1:0]};
+            default: wstrb = wstrb[3:0];
+        endcase
+
+        $display("********wstrb = %4b", wstrb);
+
+        //adjust data based on wstrb
+        
+        for (int i=0; i<4; i++) begin
+            mirror_data_mask = 32'h0000_00FF;
+            if (!wstrb[i]) begin
+                mirror_data_mask = mirror_data_mask << ((i)*8);
+                random_dword[i] = ((mirror_data & mirror_data_mask) >> ((i)*8));
+            end
+        end
+        //Save write data for comparison during read
+        reg_write_data[idx] = random_dword;
+        
+        `uvm_info("KNU_GEN_RW_WRITE", $sformatf("reg_write_data = %h", reg_write_data[idx]), UVM_MEDIUM)
+
+        for (int i =0; i<4; i++) begin
+            if (trans.strobes[i])//((trans.strobes[3] | trans.strobes[2] | trans.strobes[1] | trans.strobes[0]) == 0)
+                zero_strb = 0;
+                `uvm_info("FORLOOP", $sformatf("Inside for loop, zero_strb = %h", zero_strb), UVM_MEDIUM)
+            end
+            if (zero_strb) begin
+                reg_write_data[idx] = regs[idx].get_mirrored_value();
+                $display("*******inside zero strb block!, reg write data = %h", reg_write_data[idx]);
+            end
+            `uvm_info("KNU_GEN_RW_WRITE", $sformatf("reg_write_data = %h, mirror data = %h %h", reg_write_data[idx], mirror_data, regs[idx].get_mirrored_value()), UVM_MEDIUM)
+    
+            finish_item(trans);
+            get_response(rsp);
+
+    end
+/*
+    foreach(regs[idx]) begin
+        zero_strb = 1;
         mirror_data_mask = 32'h0000_00FF;
         mirror_data = regs[idx].get_mirrored_value();
         `uvm_info("KNU_MIR_DATA", $sformatf("mirror data = %h", mirror_data), UVM_MEDIUM)
+
+        // strb = $urandom_range(0,15);
         
         trans = aaxi_master_tr::type_id::create("trans");
         start_item(trans);
@@ -194,38 +282,55 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
             end
             trans.data.push_back(random_byte);
             strb = $urandom_range(0,1);
+            $display("************strb = %h", strb);
             if (strb == 1)
-                random_dword[i] = random_byte;
+                random_dword[3-i] = random_byte;
             else begin
-                mirror_data_mask = mirror_data_mask << (i*8);
-                random_dword[i] = ((mirror_data & mirror_data_mask) >> (i*8)); //Grab mirrored value if strobe is 0
+                mirror_data_mask = mirror_data_mask << ((3-i)*8);
+                random_dword[3-i] = ((mirror_data & mirror_data_mask) >> ((3-i)*8)); //Grab mirrored value if strobe is 0
             end
             trans.strobes.push_back(strb);
+            // `uvm_info("KNU_FORLOOP", $sformatf("i=%0d, random byte = %h, trans.data = %h, strb = %h, trans strobe = %h", i, random_byte, trans.data.pop_back(), strb, trans.strobes.pop_back()), UVM_MEDIUM)
         end
 
         trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
         trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
         trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
-        
+        `uvm_info("KNU_RANDOM_DWORD", $sformatf("random_dword = %h", random_dword[3:0]), UVM_MEDIUM)
+        for (int i =0; i < 4; i++)
+        `uvm_info("KNU_RANDOM_DWORD", $sformatf("txn data = %h", trans.data[i]), UVM_MEDIUM)
         case(trans.size)
             0: begin
-                reg_write_data[idx] = {24'h0,random_dword[0]};
+                reg_write_data[idx] = {24'h0,random_dword[3]};
             end
             1: begin
-                reg_write_data[idx] = {16'h0,random_dword[1:0]};
+                reg_write_data[idx] = {16'h0,random_dword[3:2]};
             end
             2: begin
-                reg_write_data[idx] = random_dword[3:0];
+                reg_write_data[idx] = {random_dword[0],random_dword[1],random_dword[2],random_dword[3]};
             end
             default: begin
-                reg_write_data[idx] = random_dword[3:0];
+                reg_write_data[idx] = {random_dword[0],random_dword[1],random_dword[2],random_dword[3]};
             end
         endcase
+        `uvm_info("KNU_GEN_RW_WRITE", $sformatf("reg_write_data = %h", reg_write_data[idx]), UVM_MEDIUM)
         //If all strobes = 0, just get mirrored value of reg and save it instead of the randomized value
-        if ((trans.strobes[3] | trans.strobes[2] | trans.strobes[1] | trans.strobes[0]) == 0)
+        for (int i =0; i<4; i++) begin
+        //     `uvm_info("KNU_STRB", $sformatf("strobes = %h %h", trans.strobes.pop_front(), trans.strobes[i]), UVM_MEDIUM)
+        // end
+            if (trans.strobes.pop_front())//((trans.strobes[3] | trans.strobes[2] | trans.strobes[1] | trans.strobes[0]) == 0)
+                zero_strb = 0;
+            `uvm_info("FORLOOP", $sformatf("Inside for loop, zero_strb = %h", zero_strb), UVM_MEDIUM)
+            
+        end
+        if (zero_strb) begin
             reg_write_data[idx] = regs[idx].get_mirrored_value();
+            $display("*******inside zero strb block!, reg write data = %h", reg_write_data[idx]);
+        end
+        `uvm_info("KNU_GEN_RW_WRITE", $sformatf("reg_write_data = %h, mirror data = %h %h", reg_write_data[idx], mirror_data, regs[idx].get_mirrored_value()), UVM_MEDIUM)
 
         finish_item(trans);
         get_response(rsp);
     end
+        */
 endtask

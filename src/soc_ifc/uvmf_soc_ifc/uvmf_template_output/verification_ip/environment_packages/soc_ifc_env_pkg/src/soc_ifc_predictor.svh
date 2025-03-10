@@ -146,7 +146,7 @@ class soc_ifc_predictor #(
   // be constructed for the next predicted transaction. 
   aaxi_master_tr soc_ifc_sb_axi_wr_ap_output_transaction;
   aaxi_master_tr soc_ifc_sb_axi_rd_ap_output_transaction;
-  // Code for sending output transaction out through soc_ifc_sb_axi_ap
+  // Code for sending output transaction out through soc_ifc_sb_axi_wr/rd_ap
   // soc_ifc_sb_axi_ap.write(soc_ifc_sb_axi_ap_output_transaction);
 
   // Transaction variable for predicted values to be sent out ss_mode_sb_ap
@@ -621,6 +621,7 @@ class soc_ifc_predictor #(
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_iccm_blocked_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
     end
     if (t.assert_clear_secrets) begin
+        $display("inside assert clear secrets");
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) begin
             send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.get_mirrored_value() != 32'h0);
@@ -637,6 +638,7 @@ class soc_ifc_predictor #(
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
     end
     else begin
+        $display("done with assert clear secrets");
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b0;
     end
     if (t.pulse_rv_ecc_error) begin
@@ -2172,31 +2174,31 @@ class soc_ifc_predictor #(
     `uvm_info("PRED_AXI", "Transaction Received through axi_sub_0_ae", UVM_MEDIUM)
     `uvm_info("PRED_AXI", {"            Data: ",t.sprint(uvm_top.uvm_get_max_verbosity(), "AXI_SUB_0_AE")}, UVM_HIGH)
 
-    while(t.data.size())
-    `uvm_info("CW_PRED_AXI", $sformatf("size: %d   data : %x",t.data.size(), t.data.pop_front()), UVM_LOW)
-    while(t.beatQ.size())
-    `uvm_info("CW_PRED_AXI", $sformatf("size: %d   beatQ: %x",t.data.size(), t.beatQ.pop_front()), UVM_LOW)
-
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
     ss_mode_sb_ap_output_transaction = ss_mode_sb_ap_output_transaction_t::type_id::create("ss_mode_sb_ap_output_transaction");
     soc_ifc_sb_ahb_ap_output_transaction = soc_ifc_sb_ahb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ahb_ap_output_transaction");
-//    soc_ifc_sb_axi_wr_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_wr_ap_output_transaction");
-//    soc_ifc_sb_axi_rd_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_rd_ap_output_transaction");
+//    soc_ifc_sb_axi_ap_output_transaction = aaxi_master_tr::type_id::create("soc_ifc_sb_axi_ap_output_transaction");
 
     // Extract info
     $cast(axi_txn, t);
 //    soc_ifc_sb_axi_ap_output_transaction.copy(axi_txn);
-    if (axi_txn.kind == AAXI_WRITE) begin
+    if (axi_txn.is_write()) begin
         send_axi_wr_txn = 1;
+        $display("^^^^^^^^^^^^^ axi txn beatQ = %h, t beatQ = %h", axi_txn.beatQ[0], t.beatQ[0]);
         soc_ifc_sb_axi_wr_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
-        soc_ifc_sb_axi_wr_ap_output_transaction.beatQ[0] = t.beatQ.pop_front();
-        // while(soc_ifc_sb_axi_wr_ap_output_transaction.data.size())
+        $display("txn is write, copying axi_txn to wr ap txn, sb beatQ = %h", soc_ifc_sb_axi_wr_ap_output_transaction.beatQ[0]);
+        soc_ifc_sb_axi_wr_ap_output_transaction.artagop = axi_txn.artagop;
+	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_aw_c = axi_txn.aaxi_aw_c;
+	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ar_c = axi_txn.aaxi_ar_c;
+	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ac_c = axi_txn.aaxi_ac_c;
+        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY; //TODO: temp, move to each reg and calc based on axi user and reg type
     end
-    else begin
+    if (!axi_txn.is_write()) begin
         send_axi_rd_txn = 1;
-        soc_ifc_sb_axi_rd_ap_output_transaction = axi_txn.copy();
+        soc_ifc_sb_axi_rd_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
+        $display("txn is read, copying axi_txn to rd ap txn");
     end
     axs_reg = p_soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
@@ -2228,12 +2230,12 @@ class soc_ifc_predictor #(
                 if (!((axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser) inside {mbox_valid_users})) begin
                     // Access to mbox_lock is dropped if AXI_USER is not valid
                     do_reg_prediction = 1'b0;
-                    // "Expected" read data is 0 //KNU_TODO: also set wr txn data to 0? 
+                    // "Expected" read data is 0
                     soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                     // "Expected" resp is SLVERR
-                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     // Complete any scheduled predictions to 0 (due to other delay jobs)
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
@@ -2289,6 +2291,7 @@ class soc_ifc_predictor #(
                         do_reg_prediction = 1'b0;
                         if (!(axi_txn.awuser inside {mbox_valid_users})) begin
                             // "Expected" resp is SLVERR
+                            soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                             soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                         end
                     end
@@ -2300,6 +2303,7 @@ class soc_ifc_predictor #(
                         soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
                         soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                         // "Expected" resp is SLVERR
+                        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                         soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
                 end
@@ -2406,9 +2410,8 @@ class soc_ifc_predictor #(
                 if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     // "Expected" resp is SLVERR
                     soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR; //TODO revisit
                 end
-
-//                end
             end
             "EXECUTE": begin
                 if (axi_txn.is_write()) begin
@@ -2423,8 +2426,6 @@ class soc_ifc_predictor #(
                         // "Expected" resp is SLVERR
                         soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
-
-//                    end
                 end
             end
             "STATUS",
@@ -2438,8 +2439,6 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR
                     soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
-
-//                end
             end
             "CONTROL": begin
             end
@@ -2735,6 +2734,10 @@ class soc_ifc_predictor #(
                 if (axi_txn.is_write() && |axi_txn.beatQ[0] && ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_fatal_mask.get_mirrored_value()) == 0)) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in all unmasked bits cleared, but has no effect on cptra_error_fatal (requires reset)", axs_reg.get_name()), UVM_MEDIUM)
                 end
+                if (axi_txn.is_write()) begin
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
+                end
+
             end
             "CPTRA_HW_ERROR_NON_FATAL": begin
                 if ((p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_HW_ERROR_NON_FATAL.get_mirrored_value() & ~p_soc_ifc_rm.soc_ifc_reg_rm.internal_hw_error_non_fatal_mask.get_mirrored_value()) == 0 &&
@@ -2907,6 +2910,7 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
+                $display("fuse_update_en = %h, clear_obf_secrets = %h, axi txn is write = %h, beatQ[0] = %h", fuse_update_enabled, !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets, axi_txn.is_write(), axi_txn.beatQ[0]);
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
