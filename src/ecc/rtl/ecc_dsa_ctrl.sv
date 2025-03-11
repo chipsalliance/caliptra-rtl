@@ -204,6 +204,8 @@ module ecc_dsa_ctrl
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
     logic pcr_sign_input_invalid;
+    logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
+    logic sharedkey_outofrange;
 
     logic error_flag;
     logic error_flag_reg;
@@ -306,18 +308,18 @@ module ecc_dsa_ctrl
     always_ff @(posedge clk or negedge reset_n) 
     begin : ecc_kv_reg
         if (!reset_n) begin
-            privkey_we_reg      <= '0;
-            sharedkey_we_reg    <= '0;
-            kv_reg    <= '0;
+            privkey_we_reg       <= '0;
+            sharedkey_we_reg     <= '0;
+            kv_reg               <= '0;
             kv_seed_data_present <= '0;
-            kv_key_data_present <= '0;
+            kv_key_data_present  <= '0;
         end
         else if (zeroize_reg) begin
-            privkey_we_reg      <= '0;
-            sharedkey_we_reg    <= '0;
-            kv_reg    <= '0;
+            privkey_we_reg       <= '0;
+            sharedkey_we_reg     <= '0;
+            kv_reg               <= '0;
             kv_seed_data_present <= '0;
-            kv_key_data_present <= '0;
+            kv_key_data_present  <= '0;
         end
         //Store private key here before pushing to keyvault
         else begin
@@ -662,8 +664,8 @@ module ecc_dsa_ctrl
     assign error_flag_edge = error_flag & (!error_flag_reg);
 
     assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
-    assign r_output_outofrange      = signing_process & (hw_r_we & (read_reg == 0));
-    assign s_output_outofrange      = signing_process & (hw_s_we & (read_reg == 0));
+    assign r_output_outofrange      = signing_process & (hw_r_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
+    assign s_output_outofrange      = signing_process & (hw_s_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
 
     assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
     assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
@@ -671,9 +673,19 @@ module ecc_dsa_ctrl
     assign pubkeyy_input_outofrange = verifying_process & (pubkeyy_reg >= PRIME);
     assign pubkey_input_invalid     = verifying_process & (pk_chk_reg != 0);
 
-    assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY)) & pcr_sign_mode;
+    assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
 
-    assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | pubkey_input_invalid | pcr_sign_input_invalid;
+    assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
+    assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= PRIME));
+    assign pubkeyy_output_outofrange = keygen_process & (hw_pubkeyy_we & (read_reg >= PRIME));
+
+    assign sharedkey_outofrange = sharedkey_process & (hw_sharedkey_we & (read_reg >= PRIME));
+
+    assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
+                        r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
+                        pubkey_input_invalid | pcr_sign_input_invalid |
+                        privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
+                        sharedkey_outofrange;
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow

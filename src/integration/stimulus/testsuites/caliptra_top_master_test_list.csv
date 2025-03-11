@@ -106,3 +106,5 @@ $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_mldsa_edge/smoke_test_mlds
 $CALIPTRA_ROOT/src/integration/test_suites/mldsa_pcr_inject_failure/mldsa_pcr_inject_failure, Random, Nightly, L1, caliptra_top_tb, None, None, 50
 $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_aes_kv_rand/smoke_test_aes_kv_rand, Random, Nightly, L1, caliptra_top_tb, None, None, 100
 $CALIPTRA_ROOT/src/integration/test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow, Random, Nightly, L1, caliptra_top_tb, None, None, 20
+$CALIPTRA_ROOT/src/integration/test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize, Random, Nightly, L1, caliptra_top_tb, None, None, 50
+        $CALIPTRA_ROOT/src/integration/test_suites/rand_test_dma/rand_test_dma, Random, Nightly, L1, caliptra_top_tb, None, None, 50                       

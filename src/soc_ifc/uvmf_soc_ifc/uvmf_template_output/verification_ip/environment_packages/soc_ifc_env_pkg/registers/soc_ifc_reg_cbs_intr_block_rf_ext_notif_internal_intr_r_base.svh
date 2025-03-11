@@ -21,7 +21,8 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
 
-    uvm_queue #(soc_ifc_reg_delay_job) delay_jobs;
+    uvm_queue #(soc_ifc_reg_delay_job)      delay_jobs;
+    soc_ifc_reg_delay_job_intr_block_rf_ext last_swclr_job[uvm_reg_field];
 
     function new(string name = "uvm_reg_cbs");
         super.new(name);
@@ -114,12 +115,19 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // where previous=0) because occasionally an actual hwset will occur when
         // the interrupt is already pending, and we still must protect against W1C
         // in that case.
+        // If we observe a hwset, then we must nullify any scheduled delay jobs _from the same
+        // same clock cycle_ that will result in clearing the interrupt bit, since hwset has
+        // priority (again, only true when they occur in the same clock cycle).
+        // This handles the inverse case that is handled by hwset_active (i.e., this handles
+        // the scenario where the SWCLR job is processed first, schedules a job, then the hwset
+        // event is observed next, but at the same sim-time).
         if (value) begin
+            if (last_swclr_job.exists(fld)) last_swclr_job[fld].nullify_job();
             if (sir_intr_rm != null) begin
                 sir_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
+                    #1ps;
                     sir_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
@@ -128,17 +136,17 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
                 sac_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
+                    #1ps;
                     sac_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
             end
             else if (dma_intr_rm != null) begin
-                dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
+                dma_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b1;
                 fork
                     begin
-                    uvm_wait_for_nba_region();
-                    dma_intr_rm.error_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
+                    #1ps;
+                    dma_intr_rm.notif_internal_intr_r_hwset_active[fld.get_lsb_pos()] = 1'b0;
                     end
                 join_none
             end
@@ -152,6 +160,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // Global interrupt pin "agg_sts" is non-sticky
         if ((value & ~previous))
         begin
+            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
             delay_job.req_fld = fld;
             delay_job.sts_reg = sts_reg;
             delay_job.en_reg  = en_reg;
@@ -159,15 +168,14 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
             delay_job.en_glb  = en_glb;
             delay_job.grab_values();
             delay_jobs.push_back(delay_job);
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
         end
         // On falling edge of field value, caused by W1C, check if another thread
         // is already attempting to perform hwset to this interrupt field (hwset is
         // higher priority than W1C).
         else if ((~value & previous) && fld_hwset_active)
         begin
-            value = previous;
             `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " attempts to clear the interrupt bit but is preempted by an active hwset"}, UVM_MEDIUM)
+            value = previous;
             // NOTE: No delay job is scheduled because no changes are predicted to
             //       other interrupt register fields based on this activity
         end
@@ -177,6 +185,7 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
         // Global interrupt pin "agg_sts" is non-sticky
         else if ((~value & previous))
         begin
+            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
             delay_job.req_fld = fld;
             delay_job.sts_reg = sts_reg;
             delay_job.en_reg  = en_reg;
@@ -184,7 +193,13 @@ class soc_ifc_reg_cbs_intr_block_rf_ext_notif_internal_intr_r_base extends uvm_r
             delay_job.en_glb  = en_glb;
             delay_job.grab_values();
             delay_jobs.push_back(delay_job);
-            `uvm_info("SOC_IFC_REG_CBS", {"Predicted update to ", fld.get_name(), " triggers interrupt output pin check delay job"}, UVM_MEDIUM)
+            last_swclr_job[fld] = delay_job;
+            fork
+                begin
+                    #1ps;
+                    last_swclr_job.delete(fld);
+                end
+            join_none
         end
         else begin
             `uvm_info("SOC_IFC_REG_CBS",

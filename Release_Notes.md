@@ -14,9 +14,31 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2024/07/02*_
+_*Last Update: 2025/03/07*_
 
-## Rev 1p1 ##
+### Rev 2p0-rc1 ###
+
+#### Rev 2p0-rc1 release date: 2025/03/07 (2p0 version pending final security audits for official declaration) ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge with ML-DSA 87 ([v1.0 Release Notes](https://github.com/chipsalliance/adams-bridge/blob/20cfd1be318eec3d1d118a31aa135ba5cbf66791/Release_Notes.md))
+- ECDH Support
+- AES (AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).)
+- PQC Key Vault & Derivation Support
+- OCP Streaming Boot
+- Updated VeeR core using VeeR 2.0 release (added PMP support)
+- APB interface is replaced by AXI Subordinate interface
+- Increased ROM, ICCM/DCCM, and Mailbox sizes for Caliptra 2.0
+- Manufacturing Debug Unlock Support
+- Production Debug Unlock Support
+- Caliptra subsystem mode hardware support
+- Caliptra Core 2.0 Validation Enhancements
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
+
+## Previous Releases ##
+
+### Rev 1p1 ###
 
 #### Rev 1p1 release date: 2024/07/02 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes, Key Vault updates
@@ -65,8 +87,6 @@ _*Last Update: 2024/07/02*_
 [KV] Resolve a potential vulnerability in Key Vault usage [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
 [JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
 [JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint [#541](https://github.com/chipsalliance/caliptra-rtl/pull/541)
-
-## Previous Releases ##
 
 ### Rev 1p0 ###
 

@@ -65,6 +65,8 @@
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (0x200)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x3fffc00)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (0x4000000)
 #endif
 #define CALIPTRA_TOP_REG_MBOX_CSR_MBOX_UNLOCK                                                       (0x20020)
 #ifndef MBOX_CSR_MBOX_UNLOCK
@@ -865,31 +867,79 @@
 #ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3
 #define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3                                          (0x358)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                     (0x3035c)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4                         (0x3035c)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4                                          (0x35c)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5                         (0x30360)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5                                          (0x360)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6                         (0x30364)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6                                          (0x364)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7                         (0x30368)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7                                          (0x368)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8                         (0x3036c)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8                                          (0x36c)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9                         (0x30370)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9                                          (0x370)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10                        (0x30374)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10                                         (0x374)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11                        (0x30378)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11                                         (0x378)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12                        (0x3037c)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12                                         (0x37c)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13                        (0x30380)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13                                         (0x380)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14                        (0x30384)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14                                         (0x384)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15                        (0x30388)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15
+#define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15                                         (0x388)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                     (0x3038c)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE
-#define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                                      (0x35c)
+#define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                                      (0x38c)
 #define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_LOW                                         (0)
 #define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_MASK                                        (0x3)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                               (0x30360)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                               (0x30390)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0
-#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                                                (0x360)
+#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                                                (0x390)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                               (0x30364)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                               (0x30394)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1
-#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                                                (0x364)
+#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                                                (0x394)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                               (0x30368)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                               (0x30398)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2
-#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                                                (0x368)
+#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                                                (0x398)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                               (0x3036c)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                               (0x3039c)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3
-#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                                                (0x36c)
+#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                                                (0x39c)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                             (0x30370)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                             (0x303a0)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN
-#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                                              (0x370)
+#define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                                              (0x3a0)
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                      (0)
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                     (0xff)
 #endif
@@ -1000,8 +1050,10 @@
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK                     (0x80)
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_LOW               (8)
 #define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK              (0x100)
-#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (9)
-#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (0xfffffe00)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_LOW                 (9)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK                (0x200)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (10)
+#define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (0xfffffc00)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0                             (0x305c8)
 #ifndef GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0

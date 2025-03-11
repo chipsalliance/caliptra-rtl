@@ -54,6 +54,8 @@ module caliptra_top_tb (
     logic                       BootFSM_BrkPoint;
     logic                       scan_mode;
 
+    logic                       recovery_data_avail;
+
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
     
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
@@ -83,12 +85,6 @@ module caliptra_top_tb (
         .IW(CPTRA_AXI_DMA_ID_WIDTH),
         .UW(CPTRA_AXI_DMA_USER_WIDTH)
     ) m_axi_if (.clk(core_clk), .rst_n(cptra_rst_b));
-    axi_if #(
-        .AW(AXI_SRAM_ADDR_WIDTH),
-        .DW(CPTRA_AXI_DMA_DATA_WIDTH),
-        .IW(CPTRA_AXI_DMA_ID_WIDTH),
-        .UW(CPTRA_AXI_DMA_USER_WIDTH)
-    ) axi_sram_if (.clk(core_clk), .rst_n(cptra_rst_b));
 
     logic ready_for_fuses;
     logic ready_for_mb_processing;
@@ -107,6 +103,7 @@ module caliptra_top_tb (
     security_state_t security_state;
 
     ras_test_ctrl_t ras_test_ctrl;
+    axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
     logic        etrng_req;
     logic  [3:0] itrng_data;
@@ -242,7 +239,7 @@ caliptra_top caliptra_top_dut (
     .mailbox_flow_done(),
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
-    .recovery_data_avail(1'b1/*TODO*/),
+    .recovery_data_avail(recovery_data_avail),
     .recovery_image_activated(1'b0/*TODO*/),
 
     //SoC Interrupts
@@ -281,8 +278,17 @@ caliptra_top caliptra_top_dut (
     // Subsystem mode firmware execution control
     .ss_generic_fw_exec_ctrl(/*TODO*/),
 
-    .generic_input_wires (generic_input_wires),
-    .generic_output_wires(                   ),
+    .generic_input_wires (generic_input_wires ),
+    .generic_output_wires(                    ),
+
+    // RISC-V Trace Ports
+    .trace_rv_i_insn_ip     (), // TODO
+    .trace_rv_i_address_ip  (), // TODO
+    .trace_rv_i_valid_ip    (), // TODO
+    .trace_rv_i_exception_ip(), // TODO
+    .trace_rv_i_ecause_ip   (), // TODO
+    .trace_rv_i_interrupt_ip(), // TODO
+    .trace_rv_i_tval_ip     (), // TODO
 
     .security_state(security_state),
     .scan_mode     (scan_mode)
@@ -336,6 +342,7 @@ caliptra_top_tb_services #(
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
     .cycleCnt(cycleCnt),
+    .axi_complex_ctrl(axi_complex_ctrl),
 
     //Interrupt flags
     .int_flag(int_flag),
@@ -354,73 +361,17 @@ caliptra_top_tb_services #(
 
 );
 
-// Dummy interconnect
-always_comb begin
-    // AXI AR
-    axi_sram_if.araddr        = m_axi_if.araddr[AXI_SRAM_ADDR_WIDTH-1:0];
-    axi_sram_if.arburst       = m_axi_if.arburst;
-    axi_sram_if.arsize        = m_axi_if.arsize ;
-    axi_sram_if.arlen         = m_axi_if.arlen  ;
-    axi_sram_if.aruser        = m_axi_if.aruser ;
-    axi_sram_if.arid          = m_axi_if.arid   ;
-    axi_sram_if.arlock        = m_axi_if.arlock ;
-    axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
-    m_axi_if.arready          = axi_sram_if.arready;
-                                                
-    // AXI R                                    
-    m_axi_if.rdata            = axi_sram_if.rdata ;
-    m_axi_if.rresp            = axi_sram_if.rresp ;
-    m_axi_if.rid              = axi_sram_if.rid   ;
-    m_axi_if.rlast            = axi_sram_if.rlast ;
-    m_axi_if.rvalid           = axi_sram_if.rvalid;
-    axi_sram_if.rready        = m_axi_if.rready ;
-                                                
-    // AXI AW                                   
-    axi_sram_if.awaddr        = m_axi_if.awaddr[AXI_SRAM_ADDR_WIDTH-1:0];
-    axi_sram_if.awburst       = m_axi_if.awburst;
-    axi_sram_if.awsize        = m_axi_if.awsize ;
-    axi_sram_if.awlen         = m_axi_if.awlen  ;
-    axi_sram_if.awuser        = m_axi_if.awuser ;
-    axi_sram_if.awid          = m_axi_if.awid   ;
-    axi_sram_if.awlock        = m_axi_if.awlock ;
-    axi_sram_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
-    m_axi_if.awready          = axi_sram_if.awready;
-                                                
-    // AXI W                                    
-    axi_sram_if.wdata         = m_axi_if.wdata  ;
-    axi_sram_if.wstrb         = m_axi_if.wstrb  ;
-    axi_sram_if.wvalid        = m_axi_if.wvalid ;
-    axi_sram_if.wlast         = m_axi_if.wlast  ;
-    m_axi_if.wready           = axi_sram_if.wready ;
-                                                
-    // AXI B                                    
-    m_axi_if.bresp            = axi_sram_if.bresp  ;
-    m_axi_if.bid              = axi_sram_if.bid    ;
-    m_axi_if.bvalid           = axi_sram_if.bvalid ;
-    axi_sram_if.bready        = m_axi_if.bready ;
-end
-
-// Fake "MCU" SRAM block
-caliptra_axi_sram #(
-    .AW(AXI_SRAM_ADDR_WIDTH),
-    .DW(CPTRA_AXI_DMA_DATA_WIDTH),
-    .UW(CPTRA_AXI_DMA_USER_WIDTH),
-    .IW(CPTRA_AXI_DMA_ID_WIDTH),
-    .EX_EN(0)
-) i_axi_sram (
-    .clk(core_clk),
-    .rst_n(cptra_rst_b),
-
-    // AXI INF
-    .s_axi_w_if(axi_sram_if.w_sub),
-    .s_axi_r_if(axi_sram_if.r_sub)
+caliptra_top_tb_axi_complex tb_axi_complex_i (
+    .core_clk           (core_clk           ),
+    .cptra_rst_b        (cptra_rst_b        ),
+    .m_axi_if           (m_axi_if           ),
+    .recovery_data_avail(recovery_data_avail),
+    .ctrl               (axi_complex_ctrl   )
 );
-`ifdef VERILATOR
-initial i_axi_sram.i_sram.ram = '{default:'{default:8'h00}};
-`else
-initial i_axi_sram.i_sram.ram = '{default:8'h00};
-`endif
 
+//=========================================================================-
+// SVA
+//=========================================================================-
 caliptra_top_sva sva();
 
 endmodule

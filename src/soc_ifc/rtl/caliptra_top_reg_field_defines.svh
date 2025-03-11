@@ -55,6 +55,8 @@
 `define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (32'h200)
 `define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 `define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (32'h3fffc00)
+`define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+`define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (32'h4000000)
 `endif
 `ifndef MBOX_CSR_MBOX_UNLOCK
 `define MBOX_CSR_MBOX_UNLOCK                                                                        (32'h20)
@@ -684,25 +686,61 @@
 `ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3
 `define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3                                          (32'h358)
 `endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4                                          (32'h35c)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5                                          (32'h360)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6                                          (32'h364)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7                                          (32'h368)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8                                          (32'h36c)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9                                          (32'h370)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10                                         (32'h374)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11                                         (32'h378)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12                                         (32'h37c)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13                                         (32'h380)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14                                         (32'h384)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15
+`define GENERIC_AND_FUSE_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15                                         (32'h388)
+`endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE
-`define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                                      (32'h35c)
+`define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE                                                      (32'h38c)
 `define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_LOW                                         (0)
 `define GENERIC_AND_FUSE_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_MASK                                        (32'h3)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0
-`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                                                (32'h360)
+`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_0                                                (32'h390)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1
-`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                                                (32'h364)
+`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_1                                                (32'h394)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2
-`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                                                (32'h368)
+`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_2                                                (32'h398)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3
-`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                                                (32'h36c)
+`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_SVN_3                                                (32'h39c)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN
-`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                                              (32'h370)
+`define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN                                              (32'h3a0)
 `define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                      (0)
 `define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                     (32'hff)
 `endif
@@ -793,8 +831,10 @@
 `define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK                     (32'h80)
 `define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_LOW               (8)
 `define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK              (32'h100)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (9)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (32'hfffffe00)
+`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_LOW                 (9)
+`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK                (32'h200)
+`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                  (10)
+`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                 (32'hfffffc00)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0
 `define GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0                                              (32'h5c8)

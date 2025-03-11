@@ -33,6 +33,7 @@ module caliptra_sram #(
     //storage element
     logic [7:0] ram [DEPTH][NUM_BYTES-1:0];
 
+    initial rdata_o = '{default:0};
     always @(posedge clk_i) begin
         if (cs_i & we_i) begin
             for (int i = 0; i < NUM_BYTES; i++) begin

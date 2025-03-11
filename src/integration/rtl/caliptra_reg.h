@@ -1691,6 +1691,42 @@
 #ifndef AES_CLP_REG_AES_VERSION_1
 #define AES_CLP_REG_AES_VERSION_1                                                                   (0xc)
 #endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_0                                                           (0x10011910)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_0
+#define AES_CLP_REG_ENTROPY_IF_SEED_0                                                               (0x110)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_1                                                           (0x10011914)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_1
+#define AES_CLP_REG_ENTROPY_IF_SEED_1                                                               (0x114)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_2                                                           (0x10011918)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_2
+#define AES_CLP_REG_ENTROPY_IF_SEED_2                                                               (0x118)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_3                                                           (0x1001191c)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_3
+#define AES_CLP_REG_ENTROPY_IF_SEED_3                                                               (0x11c)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_4                                                           (0x10011920)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_4
+#define AES_CLP_REG_ENTROPY_IF_SEED_4                                                               (0x120)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_5                                                           (0x10011924)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_5
+#define AES_CLP_REG_ENTROPY_IF_SEED_5                                                               (0x124)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_6                                                           (0x10011928)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_6
+#define AES_CLP_REG_ENTROPY_IF_SEED_6                                                               (0x128)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_7                                                           (0x1001192c)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_7
+#define AES_CLP_REG_ENTROPY_IF_SEED_7                                                               (0x12c)
+#endif
+#define CLP_AES_CLP_REG_ENTROPY_IF_SEED_8                                                           (0x10011930)
+#ifndef AES_CLP_REG_ENTROPY_IF_SEED_8
+#define AES_CLP_REG_ENTROPY_IF_SEED_8                                                               (0x130)
+#endif
 #define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (0x10011a00)
 #ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (0x200)
@@ -9049,6 +9085,8 @@
 #define MBOX_CSR_MBOX_STATUS_SOC_HAS_LOCK_MASK                                                      (0x200)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_LOW                                                         (10)
 #define MBOX_CSR_MBOX_STATUS_MBOX_RDPTR_MASK                                                        (0x3fffc00)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_LOW                                                       (26)
+#define MBOX_CSR_MBOX_STATUS_TAP_HAS_LOCK_MASK                                                      (0x4000000)
 #endif
 #define CLP_MBOX_CSR_MBOX_UNLOCK                                                                    (0x30020020)
 #ifndef MBOX_CSR_MBOX_UNLOCK
@@ -10425,31 +10463,79 @@
 #ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3
 #define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_3                                                   (0x358)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_PQC_KEY_TYPE                                                           (0x3003035c)
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4                                               (0x3003035c)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_4                                                   (0x35c)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5                                               (0x30030360)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_5                                                   (0x360)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6                                               (0x30030364)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_6                                                   (0x364)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7                                               (0x30030368)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_7                                                   (0x368)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8                                               (0x3003036c)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_8                                                   (0x36c)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9                                               (0x30030370)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_9                                                   (0x370)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10                                              (0x30030374)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_10                                                  (0x374)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11                                              (0x30030378)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_11                                                  (0x378)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12                                              (0x3003037c)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_12                                                  (0x37c)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13                                              (0x30030380)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_13                                                  (0x380)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14                                              (0x30030384)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_14                                                  (0x384)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15                                              (0x30030388)
+#ifndef SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15
+#define SOC_IFC_REG_FUSE_MANUF_DBG_UNLOCK_TOKEN_15                                                  (0x388)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_PQC_KEY_TYPE                                                           (0x3003038c)
 #ifndef SOC_IFC_REG_FUSE_PQC_KEY_TYPE
-#define SOC_IFC_REG_FUSE_PQC_KEY_TYPE                                                               (0x35c)
+#define SOC_IFC_REG_FUSE_PQC_KEY_TYPE                                                               (0x38c)
 #define SOC_IFC_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_LOW                                                  (0)
 #define SOC_IFC_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_MASK                                                 (0x3)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0                                                     (0x30030360)
+#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0                                                     (0x30030390)
 #ifndef SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0
-#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0                                                         (0x360)
+#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0                                                         (0x390)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1                                                     (0x30030364)
+#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1                                                     (0x30030394)
 #ifndef SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1
-#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1                                                         (0x364)
+#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_1                                                         (0x394)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2                                                     (0x30030368)
+#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2                                                     (0x30030398)
 #ifndef SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2
-#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2                                                         (0x368)
+#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_2                                                         (0x398)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3                                                     (0x3003036c)
+#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3                                                     (0x3003039c)
 #ifndef SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3
-#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3                                                         (0x36c)
+#define SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_3                                                         (0x39c)
 #endif
-#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN                                                   (0x30030370)
+#define CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN                                                   (0x300303a0)
 #ifndef SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN
-#define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN                                                       (0x370)
+#define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN                                                       (0x3a0)
 #define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                               (0)
 #define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                              (0xff)
 #endif
@@ -10560,8 +10646,10 @@
 #define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK                              (0x80)
 #define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_LOW                        (8)
 #define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK                       (0x100)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                           (9)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                          (0xfffffe00)
+#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_LOW                          (9)
+#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK                         (0x200)
+#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_LOW                                           (10)
+#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_RSVD_MASK                                          (0xfffffc00)
 #endif
 #define CLP_SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0                                                   (0x300305c8)
 #ifndef SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0

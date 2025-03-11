@@ -69,3 +69,20 @@ targets:
       - $COMPILE_ROOT/rtl/axi_dma_ctrl.sv
       - $COMPILE_ROOT/rtl/axi_dma_top.sv
     tops: [axi_dma_top]
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/axi_dma_reg_pkg.sv
+---
+provides: [axi_dma_coverage]
+schema_version: 2.4.0
+requires:
+  - axi_dma
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/axi_dma_top_cov_if.sv
+      - $COMPILE_ROOT/coverage/axi_dma_top_cov_bind.sv
+      - $COMPILE_ROOT/coverage/axi_dma_top_cov_props.sv

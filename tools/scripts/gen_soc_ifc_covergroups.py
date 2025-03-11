@@ -80,7 +80,7 @@ soc_regs_txt = """
     fuse_lms_revocation
     fuse_mldsa_revocation
     fuse_soc_stepping_id
-    fuse_manuf_dbg_unlock_token 4
+    fuse_manuf_dbg_unlock_token 16
     fuse_pqc_key_type
     fuse_soc_manifest_svn 4
     fuse_soc_manifest_max_svn

@@ -165,6 +165,7 @@ module axi_mgr_rd import axi_pkg::*; #(
         end
         // Accumulate status codes...
         // TODO what if ERROR is interleaved with EXOKAY?
+        //      That would be a mistake by the slave, since we don't use Exclusive Access feature
         else if (m_axi_if.rvalid && m_axi_if.rready) begin
             req_if.resp       <= req_if.resp | m_axi_if.rresp;
             req_if.resp_valid <= m_axi_if.rlast;
@@ -182,8 +183,9 @@ module axi_mgr_rd import axi_pkg::*; #(
     // --------------------------------------- //
     // Assertions                              //
     // --------------------------------------- //
-    `CALIPTRA_ASSERT(AXI_MGR_REQ_BND, req_if.valid |-> ((req_if.addr[11:0] + req_if.byte_len) <= 4096), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_MGR_REQ_BND, req_if.valid && !req_if.fixed |-> ((req_if.addr[11:0] + req_if.byte_len) <= 4096), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_MGR_LEGAL_LEN, req_if.valid |-> (req_if.byte_len[AXI_LEN_BC_WIDTH-1:BW]) < AXI_LEN_MAX_VALUE, clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_MGR_LEGAL_FIXED_LEN, req_if.valid && req_if.fixed |-> (req_if.byte_len[AXI_LEN_BC_WIDTH-1:BW]) < AXI_FIXED_LEN_MAX_VALUE, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_MGR_DATA_WHILE_ACTIVE, valid_o |-> txn_active, clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(AXI_MGR_OFLOW, m_axi_if.rready && !ready_i, clk, !rst_n)
 

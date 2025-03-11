@@ -89,7 +89,10 @@ jobs:
   hash_check:
     name: Hash Check
     runs-on: ubuntu-22.04
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
     steps:
+      - name: Echo Reason
+        run: echo "$GITHUB_EVENT_NAME"
       - name: Checkout RTL repo
         uses: actions/checkout@v4
         with:
@@ -103,6 +106,8 @@ jobs:
             # File type exclusions:
             # - *.md
             # - *.png
+            # - *.jpg
+            # - *.xlsx/*.xls
             # - any files inside
             #   - .git
             #   - .github/workflows
@@ -139,8 +144,9 @@ jobs:
             # Find the last commit that modified any design file (not documentation)
             # Start the search with the second parent of the PR merge commit
             # in order to only traverse the feature branch commits
+            # Use an explicit list of files instead of an exclusion list
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png\|.github\/workflows' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
@@ -211,7 +217,7 @@ jobs:
   rdl_check:
     name: RDL File Check
     runs-on: ubuntu-22.04
-    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
+    if: ${{ (github.event_name == 'pull_request') || (github.event_name == 'workflow_dispatch') }}
     steps:
       - name: Checkout RTL repo
         uses: actions/checkout@v4
@@ -291,8 +297,13 @@ jobs:
           echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
           echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
-          if [[ $(IFS='\n' grep -c -v '\.md\|\.png' <<< "$mods") -gt 0 ]]; then
-            echo "Found modified source files in ${SOURCE_BR}"
+          excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
+          extensions='\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp'
+          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c "${extensions}" | true)
+          if [[ ${mod_count} -gt 0 ]]; then
+            echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
+            echo " ============== modified files ============="
+            IFS='\n' grep -v "${excludes}" <<< "$mods" | grep "${extensions}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "Only modified files in ${SOURCE_BR} are for documentation"

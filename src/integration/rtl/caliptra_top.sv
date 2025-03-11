@@ -122,6 +122,15 @@ module caliptra_top
     input logic  [63:0]                generic_input_wires,
     output logic [63:0]                generic_output_wires,
 
+    // RISC-V Trace Ports
+    output logic [31:0]         trace_rv_i_insn_ip,
+    output logic [31:0]         trace_rv_i_address_ip,
+    output logic                trace_rv_i_valid_ip,
+    output logic                trace_rv_i_exception_ip,
+    output logic [4:0]          trace_rv_i_ecause_ip,
+    output logic                trace_rv_i_interrupt_ip,
+    output logic [31:0]         trace_rv_i_tval_ip,
+
     input security_state_t             security_state,
     input logic                        scan_mode
 );
@@ -155,14 +164,6 @@ module caliptra_top
     logic        [63:0]         ic_hrdata       ;
     logic                       ic_hready       ;
     logic                       ic_hresp        ;
-
-    logic        [31:0]         trace_rv_i_insn_ip;
-    logic        [31:0]         trace_rv_i_address_ip;
-    logic                       trace_rv_i_valid_ip;
-    logic                       trace_rv_i_exception_ip;
-    logic        [4:0]          trace_rv_i_ecause_ip;
-    logic                       trace_rv_i_interrupt_ip;
-    logic        [31:0]         trace_rv_i_tval_ip;
 
     logic                       o_debug_mode_status;
 
@@ -709,7 +710,7 @@ el2_veer_wrapper rvtop (
 //=========================================================================-
 always_ff@(posedge clk or negedge cptra_rst_b) begin
     if (!cptra_rst_b) begin
-        s_axi_active <= 2'd0;
+        s_axi_active <= '0;
     end
     else begin
         case ({s_axi_r_if.rvalid && s_axi_r_if.rready && s_axi_r_if.rlast,
@@ -757,7 +758,7 @@ clk_gate cg (
 // AHB I$ instance
 //=========================================================================-
 
-    // Instanitate AHB Lite Address Decoder
+    // Instantiate AHB Lite Address Decoder
 ahb_lite_2to1_mux #(
     .AHB_LITE_ADDR_WIDTH(`CALIPTRA_IMEM_BYTE_ADDR_W),
     .AHB_LITE_DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH)
@@ -1228,7 +1229,6 @@ entropy_src #(
 
 `endif
 
-
 soc_ifc_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
@@ -1257,7 +1257,7 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
-    .recovery_data_avail(recovery_data_avail),
+    .recovery_data_avail     (recovery_data_avail     ),
     .recovery_image_activated(recovery_image_activated),
 
     .security_state(cptra_security_state_Latched),

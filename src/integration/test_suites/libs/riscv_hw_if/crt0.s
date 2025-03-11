@@ -61,6 +61,7 @@ _start:
     la t0, _data_lma_start
     la t1, _data_lma_end
     la t2, _data_vma_start
+    bgeu t0, t1, bss_cp_setup
 data_cp_loop:
     lw t3, 0(t0)
     sw t3, 0(t2)
@@ -68,10 +69,12 @@ data_cp_loop:
     addi t2, t2, 4
     bltu t0, t1, data_cp_loop
 
+bss_cp_setup:
     // Copy .bss from ROM (imem) to DCCM
     la t0, _bss_lma_start
     la t1, _bss_lma_end
     la t2, _bss_vma_start
+    bgeu t0, t1, post_cp_loops
 bss_cp_loop:
     lw t3, 0(t0)
     sw t3, 0(t2)
@@ -79,6 +82,7 @@ bss_cp_loop:
     addi t2, t2, 4
     bltu t0, t1, bss_cp_loop
 
+post_cp_loops:
     // Init. the stack and transfer operation to main
     la sp, STACK
 

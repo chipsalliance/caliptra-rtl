@@ -18,6 +18,8 @@
 class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
     `uvm_object_utils( soc_ifc_reg_delay_job_intr_block_rf_ext )
 
+    bit nullify = 1'b0;
+
     uvm_reg_field req_fld; /* used to report the reg field that caused the delay job */
     uvm_reg       sts_reg;
     uvm_reg       en_reg ;
@@ -30,27 +32,40 @@ class soc_ifc_reg_delay_job_intr_block_rf_ext extends soc_ifc_reg_delay_job;
     uvm_reg_data_t val_en_glb ;
     uvm_reg_data_t val_sts_glb;
 
+    virtual function void nullify_job();
+        nullify = 1'b1;
+    endfunction
+
     virtual function void grab_values();
+//        soc_ifc_ctrl_configuration cfg;
+//        if( !uvm_config_db #( soc_ifc_ctrl_configuration )::get( null , "CONFIGURATIONS" , "soc_ifc_ctrl_agent_BFM" , cfg ) ) 
+//          `uvm_fatal("CFG" , "uvm_config_db #( soc_ifc_ctrl_configuration )::get cannot find resource soc_ifc_ctrl_agent_BFM" )
         fork
             begin
             // Wait for all predictor callbacks to run for every intr bit accessed
             // during the current clock cycle, so mirrors are up to date
-            uvm_wait_for_nba_region();
+//            uvm_wait_for_nba_region();
             // There might be delay_jobs running additional bit updates
             // at this point, so wait again
             // FIXME -- find a better way to capture field updates at each clock edge
-            uvm_wait_for_nba_region();
+//            uvm_wait_for_nba_region();
+            #1ps;
             // Snapshot of current value, since next cycle may see value changes again
             val_sts_reg = sts_reg.get_mirrored_value();
             val_en_reg  = en_reg .get_mirrored_value();
             val_en_glb  = en_glb .get_mirrored_value();
             val_sts_glb = sts_glb.get_mirrored_value();
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Grabbed val_sts_reg 0x%x", val_sts_reg), UVM_DEBUG)
             end
         join_none
     endfunction
 
     virtual task do_job();
         `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Running delayed job for %s", req_fld.get_full_name()), UVM_MEDIUM)
+        if (nullify) begin
+            `uvm_info("SOC_IFC_REG_DELAY_JOB", $sformatf("Delayed job for %s is nullified. Exiting...", req_fld.get_full_name()), UVM_MEDIUM)
+            return;
+        end
         if (!sts_glb.get_mirrored_value() && |(val_sts_reg & val_en_reg)) begin
             sts_glb.predict(1'b1);
             `uvm_info("SOC_IFC_REG_DELAY_JOB",

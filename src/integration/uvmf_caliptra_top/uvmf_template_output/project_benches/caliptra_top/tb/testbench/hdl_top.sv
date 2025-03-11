@@ -209,6 +209,19 @@ import aaxi_uvm_pkg::*;
     //uc
     aaxi_uvm_container  uc;             //VAR: UVM container
 
+    // FIXME
+    // This reset timing hack is necessary to work around a race condition bug
+    // in Avery VIP that results in Null Object Access error when reset asserts
+    // on the same clock cycle that a Read request is ending (RVALID == 1, RLAST == 1)
+    // Applied when using Avery 2024.3. Might be able to remove it by 2025.1+
+    logic cptra_rst_b_d;
+    logic cptra_rst_b_dly_assert_simult_deassert;
+    initial cptra_rst_b_d = 1'b0;
+    always@(*) begin
+        #1ps cptra_rst_b_d = soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+    end
+    assign cptra_rst_b_dly_assert_simult_deassert = cptra_rst_b_d | soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+
     aaxi_intf #(
         .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
         .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
@@ -216,7 +229,7 @@ import aaxi_uvm_pkg::*;
         .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
     ) ports[1] (
         .ACLK   (clk                                              ),
-        .ARESETn(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b/*1'b1*/),
+        .ARESETn(cptra_rst_b_dly_assert_simult_deassert/*1'b1*/   ),
         .CACTIVE(                                                 ),
         .CSYSREQ(1'b0                                             ),
         .CSYSACK(                                                 )
@@ -365,6 +378,15 @@ import aaxi_uvm_pkg::*;
 
         .generic_input_wires (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.generic_input_wires),
         .generic_output_wires(soc_ifc_subenv_soc_ifc_status_agent_bus.generic_output_wires),
+
+        // RISC-V Trace Ports
+        .trace_rv_i_insn_ip     (), // TODO
+        .trace_rv_i_address_ip  (), // TODO
+        .trace_rv_i_valid_ip    (), // TODO
+        .trace_rv_i_exception_ip(), // TODO
+        .trace_rv_i_ecause_ip   (), // TODO
+        .trace_rv_i_interrupt_ip(), // TODO
+        .trace_rv_i_tval_ip     (), // TODO
 
         .security_state(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.security_state),
         .scan_mode     (1'b0) // TODO

@@ -64,11 +64,13 @@ provides: [caliptra_top_tb_pkg]
 schema_version: 2.4.0
 requires:
   - asserts
+  - axi_pc
   - libs
   - caliptra_axi_sram
   - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
+  - physical_rng
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage
@@ -78,6 +80,7 @@ requires:
   - pcrvault_cov
   - keyvault_cov
   - mldsa_coverage
+  - axi_dma_coverage
 targets:
   dpi_compile:
     directories:
@@ -101,14 +104,19 @@ targets:
       - $COMPILE_ROOT/tb
       - $COMPILE_ROOT/coverage
     files:
+#      - $COMPILE_ROOT/tb/dma_transfer_randomizer.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_pkg.sv
+      - $COMPILE_ROOT/tb/dma_testcase_generator.sv
       - $COMPILE_ROOT/tb/caliptra_veer_sram_export.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_services.sv
       - $COMPILE_ROOT/tb/caliptra_top_tb_soc_bfm.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_axi_complex.sv
+      - $COMPILE_ROOT/tb/caliptra_top_tb_axi_fifo.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_if.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
+
 ---
 provides: [caliptra_top_tb]
 schema_version: 2.4.0

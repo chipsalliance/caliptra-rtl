@@ -70,6 +70,7 @@ module caliptra_top_tb_services
     // TB Controls
     output var   ras_test_ctrl_t ras_test_ctrl,
     output int   cycleCnt,
+    output var   axi_complex_ctrl_t axi_complex_ctrl,
 
     //Interrupt flags
     output logic int_flag,
@@ -294,7 +295,14 @@ module caliptra_top_tb_services
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Do nothing
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
+    //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
+    //         8'h8a        - Enable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8b        - Enable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8c        - Disable FIFO in caliptra_top_tb_axi_complex to auto-read data
+    //         8'h8d        - Disable FIFO in caliptra_top_tb_axi_complex to auto-write data
+    //         8'h8e        - Flush the FIFO in caliptra_top_tb_axi_complex
+    //         8'h8f        - Toggle random delays in AXI complex (FIFO and SRAM endpoints)
     //         8'h90        - Issue PCR signing with fixed vector   
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
@@ -455,6 +463,41 @@ module caliptra_top_tb_services
         ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
     end
 
+    // AXI Complex Control
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            axi_complex_ctrl.fifo_auto_push        <= 1'b0;
+            axi_complex_ctrl.fifo_auto_pop         <= 1'b0;
+            axi_complex_ctrl.fifo_clear            <= 1'b0;
+            axi_complex_ctrl.rand_delays           <= 1'b0;
+            axi_complex_ctrl.en_recovery_emulation <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h88) && mailbox_write) begin
+            axi_complex_ctrl.en_recovery_emulation <= ~axi_complex_ctrl.en_recovery_emulation; // Toggle option
+        end
+        else if((WriteData[7:0] == 8'h8a) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8b) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8c) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_pop  <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8d) && mailbox_write) begin
+            axi_complex_ctrl.fifo_auto_push <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'h8e) && mailbox_write) begin
+            axi_complex_ctrl.fifo_clear     <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h8f) && mailbox_write) begin
+            axi_complex_ctrl.rand_delays    <= ~axi_complex_ctrl.rand_delays; // Toggle option
+        end
+        else begin
+            axi_complex_ctrl.fifo_clear     <= 1'b0;
+        end
+    end
+
     //keyvault injection hooks
     //Inject data to KV key reg
     logic [0:15][31:0]   ecc_seed_tb      = 512'h_8FA8541C82A392CA74F23ED1DBFD73541C5966391B97EA73D744B0E34B9DF59ED0158063E39C09A5A055371EDF7A5441_00000000000000000000000000000000;
@@ -471,7 +514,7 @@ module caliptra_top_tb_services
 
     genvar dword_i, slot_id;
     generate 
-        for (slot_id=0; slot_id < 8; slot_id++) begin : inject_slot_loop
+        for (slot_id=0; slot_id < 9; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid seed dest and seed value to key reg
@@ -653,7 +696,12 @@ module caliptra_top_tb_services
 `ifdef CALIPTRA_DEBUG_UNLOCKED
     initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
 `else
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    initial begin
+        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+        else
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+    end
 `endif
     always @(negedge clk) begin
         //lock debug mode
@@ -696,7 +744,7 @@ module caliptra_top_tb_services
             disable_mldsa_sva <= 1'b0;
         end
         else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
-            if (caliptra_top_dut.mldsa.mldsa_ctrl_inst.verifying_process) begin
+            if (`CPTRA_TOP_PATH.mldsa.mldsa_ctrl_inst.verifying_process) begin
                 inject_normcheck_failure    <= 1'b1;
                 normcheck_mode_random       <= 'h0;
                 inject_makehint_failure     <= 1'b0; 
@@ -741,12 +789,12 @@ module caliptra_top_tb_services
         else if (inject_normcheck_failure && `CPTRA_TOP_PATH.mldsa.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.mldsa.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid = 'b1;
         else begin
-            release caliptra_top_dut.mldsa.norm_check_inst.invalid;
+            release `CPTRA_TOP_PATH.mldsa.norm_check_inst.invalid;
             release `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum;
         end
         
         if (inject_mldsa_timeout)
-            force caliptra_top_dut.mldsa.makehint_inst.hintsum = 'd80;
+            force `CPTRA_TOP_PATH.mldsa.makehint_inst.hintsum = 'd80;
     end
 
     `ifndef VERILATOR
@@ -784,6 +832,12 @@ module caliptra_top_tb_services
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
         end
+        else begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+        end
     end
 
     genvar mldsa_dword;
@@ -792,10 +846,12 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_keygen | mldsa_keygen_signing) begin
-                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we = 'b1;
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next = {mldsa_test_vector.seed[7-mldsa_dword][7:0], mldsa_test_vector.seed[7-mldsa_dword][15:8], mldsa_test_vector.seed[7-mldsa_dword][23:16], mldsa_test_vector.seed[7-mldsa_dword][31:24]};
                 end
                 else begin
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_SEED[mldsa_dword].SEED.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next;
                 end
             end
         end
@@ -804,10 +860,12 @@ module caliptra_top_tb_services
         for (mldsa_dword = 0; mldsa_dword < MSG_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
                 if (mldsa_signing | mldsa_verify | mldsa_keygen_signing) begin
-                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we = 'b1;
+                    force `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next = {mldsa_test_vector.msg[15-mldsa_dword][7:0], mldsa_test_vector.msg[15-mldsa_dword][15:8], mldsa_test_vector.msg[15-mldsa_dword][23:16], mldsa_test_vector.msg[15-mldsa_dword][31:24]};
                 end
                 else begin
-                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_out.MLDSA_MSG[mldsa_dword].MSG.value;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we;
+                    release `CPTRA_TOP_PATH.mldsa.mldsa_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next;
                 end
             end
         end
@@ -1433,7 +1491,7 @@ endgenerate //IV_NO
                 assert_rst_flag <= 'b1;
                 deassert_rst_flag <= 'b0;
             end
-            else if(assert_rst_flag) begin //prandom rst was already issued, so deassert rst now
+            else if(assert_rst_flag && (cycleCnt >= (rst_cyclecnt + wait_time_to_rst + 10))) begin //prandom rst was already issued, so deassert rst now
                 assert_rst_flag <= 'b0;
                 deassert_rst_flag <= 'b1;
                 prandom_warm_rst <= 'b0;
@@ -1669,6 +1727,7 @@ endgenerate //IV_NO
         end
     endgenerate
 
+    logic preload_dccm_done;
 
     initial begin
         abi_reg[0] = "zero";
@@ -1881,6 +1940,32 @@ caliptra_sram #(
     .rdata_o (        )
 );
 
+// DMA Test case generator
+// Interface instance
+//dma_transfer_if dma_xfer_if;
+
+`ifndef VERILATOR
+// Testcase generator instance 
+dma_transfer_randomizer dma_xfers[];
+
+dma_testcase_generator i_dma_gen (
+    .preload_dccm_done (preload_dccm_done                  ),
+    .dma_gen_done      (axi_complex_ctrl.dma_gen_done      ),
+    .dma_gen_block_size(axi_complex_ctrl.dma_gen_block_size)
+    );
+/*
+initial begin
+    // Wait for the test cases to be generated
+    wait (dma_gen_done);
+
+    // Retrieve the generated test cases
+    i_dma_gen.get_dma_xfers(dma_xfers);
+end
+*/
+`else
+    always@(posedge clk) axi_complex_ctrl.dma_gen_done       <= 1'b0;
+    always@(posedge clk) axi_complex_ctrl.dma_gen_block_size <= '0;
+`endif
 
    //=========================================================================-
    // SRAM preload services
@@ -1944,7 +2029,7 @@ task static preload_iccm;
 endtask
 
 
-task static preload_dccm;
+task static preload_dccm ();
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
@@ -1971,6 +2056,7 @@ task static preload_dccm;
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
     end
     $display("DCCM pre-load completed");
+    preload_dccm_done = 1;
 
 endtask
 
@@ -2277,6 +2363,7 @@ ecc_top_cov_bind i_ecc_top_cov_bind();
 mldsa_top_cov_bind i_mldsa_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
+axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

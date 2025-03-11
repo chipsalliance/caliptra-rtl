@@ -45,6 +45,8 @@ interface ecc_top_cov_if
     logic signing_process;
     logic verifying_process;
     logic sharedkey_process;
+    logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
+    logic sharedkey_outofrange;
 
 
     logic mod_p_q;
@@ -107,12 +109,18 @@ interface ecc_top_cov_if
     assign signing_process = ecc_top.ecc_dsa_ctrl_i.signing_process;
     assign verifying_process = ecc_top.ecc_dsa_ctrl_i.verifying_process;
     assign sharedkey_process = ecc_top.ecc_dsa_ctrl_i.sharedkey_process;
+    assign privkey_output_outofrange = ecc_top.ecc_dsa_ctrl_i.privkey_output_outofrange;
+    assign pubkeyx_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_output_outofrange;
+    assign pubkeyy_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyy_output_outofrange;
+    assign sharedkey_outofrange = ecc_top.ecc_dsa_ctrl_i.sharedkey_outofrange;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
         cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
-        ecc_cmd_cp: coverpoint ecc_cmd;
+        ecc_cmd_cp: coverpoint ecc_cmd {
+            illegal_bins illegal_values = {5, 6, 7};
+        }
         pcr_sign_cp: coverpoint pcr_sign_mode;
         zeroize_cp: coverpoint zeroize;
         ready_cp: coverpoint ready;
@@ -131,7 +139,14 @@ interface ecc_top_cov_if
         pubkey_input_invalid_cp: coverpoint pubkey_input_invalid;
         pcr_sign_input_invalid_cp: coverpoint pcr_sign_input_invalid;
 
-        cmd_ready_cp: cross ecc_sw_cmd, ready;
+        privkey_output_outofrange_cp: coverpoint privkey_output_outofrange;
+        pubkeyx_output_outofrange_cp: coverpoint pubkeyx_output_outofrange;
+        pubkeyy_output_outofrange_cp: coverpoint pubkeyy_output_outofrange;
+        sharedkey_outofrange_cp: coverpoint sharedkey_outofrange;
+
+        cmd_ready_cp: cross ecc_sw_cmd, ready{
+            ignore_bins illegal_sw_cmd = binsof(ecc_sw_cmd) intersect {5, 6, 7};
+        }
         cmd_kv_cp: cross ecc_cmd, dest_keyvault;
         pcr_ready_cp: cross ready, pcr_sign_mode;
         pcr_cmd_cp: cross pcr_sign_mode, ecc_cmd;
