@@ -390,9 +390,9 @@ module axi_sub_wr import axi_pkg::*; #(
     `CALIPTRA_ASSERT_KNOWN(AXI_SUB_X_BUSER  , (s_axi_if.bvalid ? s_axi_if.buser : '0), clk, !rst_n)
 
     // Handshake rules
-    `CALIPTRA_ASSERT      (AXI_SUB_AW_HSHAKE_ERR, (s_axi_if.awvalid && !s_axi_if.awready) |=> s_axi_if.awvalid, clk, !rst_n)
-    `CALIPTRA_ASSERT      (AXI_SUB_W_HSHAKE_ERR,  (s_axi_if.wvalid  && !s_axi_if.wready ) |=> s_axi_if.wvalid,  clk, !rst_n)
-    `CALIPTRA_ASSERT      (AXI_SUB_B_HSHAKE_ERR,  (s_axi_if.bvalid  && !s_axi_if.bready ) |=> s_axi_if.bvalid,  clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_AW_HSHAKE_ERR, ((s_axi_if.awvalid && !s_axi_if.awready) ##1 !s_axi_if.awvalid) |-> eventually [0:5] not(rst_n), clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_W_HSHAKE_ERR,  ((s_axi_if.wvalid  && !s_axi_if.wready ) ##1 !s_axi_if.wvalid ) |-> eventually [0:5] not(rst_n), clk, !rst_n)
+    `CALIPTRA_ASSERT      (AXI_SUB_B_HSHAKE_ERR,  ((s_axi_if.bvalid  && !s_axi_if.bready ) ##1 !s_axi_if.bvalid ) |-> eventually [0:5] not(rst_n), clk, !rst_n)
 
     // Exclusive access rules:
     //   - Must have an address that is aligned to burst byte count
