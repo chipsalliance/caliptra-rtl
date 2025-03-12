@@ -298,12 +298,12 @@ jobs:
           echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
           excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
-          extensions='\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp'
-          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c "${extensions}" || true)
+          extensions='\.sv\b\|\.svh\b\|\.rdl\b\|\.json\b\|\.v\b\|\.vh\b\|\.rsp\b\|\.s\b\|\.c\b\|\.cpp\b\|\.h\b\|\.hex\b\|\.ld\b\|\.gdb\b\|\.yml\b\|\.sh\b\|\.py\b\|pr_timestamp\b'
+          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c -E "${extensions}" || true)
           if [[ ${mod_count} -gt 0 ]]; then
             echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
             echo " ============== modified files ============="
-            IFS='\n' grep -v "${excludes}" <<< "$mods" | grep "${extensions}"
+            IFS='\n' grep -v "${excludes}" <<< "$mods" | grep -E "${extensions}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "Only modified files in ${SOURCE_BR} are for documentation"
