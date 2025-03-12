@@ -299,7 +299,7 @@ jobs:
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
           excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
           extensions='\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp'
-          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c "${extensions}" | true)
+          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c "${extensions}" || true)
           if [[ ${mod_count} -gt 0 ]]; then
             echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
             echo " ============== modified files ============="
