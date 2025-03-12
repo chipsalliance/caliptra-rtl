@@ -47,7 +47,7 @@ package soc_ifc_reg_model_top_pkg;
     import aaxi_pkg_test::*;
     import aaxi_pll::*;
 
-    import aaxi_uvm_pkg::*; /* for aaxi_master_tr and aaxi_uvm_mem_adapter definitions */
+    import caliptra_aaxi_uvm_pkg::*; /* for aaxi_master_tr and aaxi_uvm_mem_adapter definitions */
     `include "caliptra_axi_user.svh"
     `include "caliptra_reg2axi_adapter.svh"
 

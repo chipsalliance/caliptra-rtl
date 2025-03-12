@@ -94,7 +94,7 @@ package soc_ifc_env_pkg;
   import aaxi_pkg_xactor::*;
   import aaxi_pkg_test::*;
   import aaxi_pll::*;
-  import aaxi_uvm_pkg::*;
+  import caliptra_aaxi_uvm_pkg::*;
 
   import mbox_pkg::*;
   import soc_ifc_pkg::*;

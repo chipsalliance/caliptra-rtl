@@ -498,8 +498,8 @@ class soc_ifc_scoreboard #(
   endfunction
   
   // FUNCTION: write_expected_axi_analysis_export
-  // QVIP transactions received through expected_axi_analysis_export initiate the execution of this function.
-  // This function casts incoming QVIP transactions into the correct protocol type and then performs prediction 
+  // AVERY AXI transactions received through expected_axi_analysis_export initiate the execution of this function.
+  // This function casts incoming AVERY AXI transactions into the correct protocol type and then performs prediction 
   // of DUT output values based on DUT input, configuration and state
   virtual function void write_expected_axi_analysis_export(aaxi_master_tr _t);
     // pragma uvmf custom expected_axi_analysis_export_scoreboard begin
