@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
+// NOTE: Testbench pre-loads AXI SRAM with random data
+
 #include "defines.h"
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -33,11 +36,14 @@ typedef enum {
     AXI2AHB
 } transfer_type_t;
 
+#define MAX_TRANSFER_SIZE = 100
+
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
 volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t num_transfers __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t dccm_addr __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint32_t next_transfer_dccm_addr __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t payload_start_addr __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t payload_end_addr __attribute__((section(".dccm.persistent"))) = 0;
 volatile transfer_type_t transfer_type __attribute__((section(".dccm.persistent"))) = 0;
@@ -51,12 +57,15 @@ volatile uint8_t use_rd_fixed __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint8_t use_wr_fixed __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint8_t inject_rand_delays __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint8_t inject_rst __attribute__((section(".dccm.persistent"))) = 0;
+volatile uint8_t rst_done __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint8_t test_block_size __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint8_t dma_xfer_type __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t src_offset __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t dst_offset __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t block_size __attribute__((section(".dccm.persistent"))) = 0;
 volatile uint32_t curr_transfer __attribute__((section(".dccm.persistent"))) = 0;
+
+//volatile uint8_t dma_trasnfer_done[MAX_TRANSFER_ELEMENTS] __attribute__((section(".dccm.persistent"))) = {0};
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -88,6 +97,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DST_IS_FIFO_POS          8
 #define SRC_IS_FIFO_POS          9
 
+#define WRM_RST_BIT_POS          1
+
 // Block Size is in bits 10-21
 #define DMA_BLOCK_SIZE_POS        10
 #define DMA_BLOCK_SIZE_WIDTH      12
@@ -103,6 +114,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DST_IS_FIFO_MASK         (1 << DST_IS_FIFO_POS)
 #define SRC_IS_FIFO_MASK         (1 << SRC_IS_FIFO_POS)
 #define DMA_BLOCK_SIZE_MASK      (((1 << DMA_BLOCK_SIZE_WIDTH) - 1) << DMA_BLOCK_SIZE_POS)
+#define WARM_RESET_MASK          (1 << WRM_RST_BIT_POS)
 
 // Global declaration of arrays
 static uint32_t read_payload[MAX_PAYLOAD_SIZE_TO_CHECK_DW];
@@ -139,26 +151,8 @@ void main(void) {
         char *argv[1];
         uint32_t reg;
         uint8_t fail = 0;
-        //uint32_t num_transfers;
-        //uint32_t dccm_addr;
-        //uint32_t payload_start_addr, payload_end_addr;
-        //transfer_type_t transfer_type;
-        //uint32_t transfer_size;
-        //uint8_t mbox_locked = 0;
-        //uint8_t data_check = 0; 
-        //uint32_t dma_control;
-        //uint8_t src_is_fifo;
-        //uint8_t dst_is_fifo;
-        //uint8_t use_rd_fixed;
-        //uint8_t use_wr_fixed;
-        //uint8_t inject_rand_delays;
-        //uint8_t inject_rst;
-        //uint8_t test_block_size;
-        //uint8_t dma_xfer_type;
-        //uint32_t src_offset, dst_offset;
         uint32_t *dccm_data;
         uint32_t mbox_data;
-        //uint32_t block_size;
         uint32_t ahb_rdata;
         uint32_t ahb_wdata = 0xc001c0de;
 
@@ -182,8 +176,15 @@ void main(void) {
         // If reset was executed, read some status registers for sign of life
         // ===========================================================================
         if (rst_count > 1) {
+            // Set rst_done = 1 so that reset is not injected again for the same test
+            rst_done = 1;
+
             VPRINTF(LOW, "Observed reset! Reading status registers for sign of life\n");
             //TODO: Read RESET_REASON register
+            uint32_t reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) & WARM_RESET_MASK;
+            if (reset_reason == 0x2) {
+                VPRINTF(LOW, "Reset Reason: Warm reset\n");
+            }
         }
 
 
@@ -192,13 +193,19 @@ void main(void) {
         VPRINTF(LOW, "Number of transfers: %d\n\n", num_transfers);
 
         // Read transfer type and size for each transfer and perform the transfer
-        if (rst_count == 1) {
-            dccm_addr = RV_DCCM_EADR - 7;
-        }
+        dccm_addr = RV_DCCM_EADR - 7;
 
-        for (curr_transfer = 0; curr_transfer < num_transfers; curr_transfer++) {
-            VPRINTF(LOW, "TRANSFER #%d\n", curr_transfer);
+        for (int i = curr_transfer; i < num_transfers; i++) {
+            // Keep track of transfer number so transfer can resume after reset
+            curr_transfer = i; 
+
+            VPRINTF(LOW, "TRANSFER #%d\n", i);
             // Read control word that includes transfer type and other control information for DMA transfer
+            
+            if (next_transfer_dccm_addr != 0) { 
+                dccm_addr = next_transfer_dccm_addr;
+            }
+            VPRINTF(HIGH, "dccm_addr = 0x%0x", dccm_addr);
             dma_control = lsu_read_32(dccm_addr);
             
             // Extract fields
@@ -280,19 +287,35 @@ void main(void) {
                     if (data_check) {
                         VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done == 0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
                         soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
                     } else {
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done == 0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
-                        for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, 4, 0);
+                        if (!dst_is_fifo) {
+                            for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                                soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, 4, 0);
+                            }
+                        } else {
+                            // Set auto-read
+                            VPRINTF(LOW, "Set FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+                            VPRINTF(LOW, "Sending payload from AHB\n");
+                            for (uint32_t dw = 0; dw < transfer_size; dw++) {
+                                soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, 4, 0);
+                            }
+
+                            // Clear auto-read
+                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
                     }
 
@@ -363,7 +386,7 @@ void main(void) {
                         SEND_STDOUT_CTRL(FIFO_CLEAR);
                     }
 
-                    // Inject random dela0x5001B0E8y
+                    // Inject random delay
                     if (inject_rand_delays) {
                         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
                     }
@@ -371,7 +394,7 @@ void main(void) {
                     if (data_check) {
                         VPRINTF(HIGH, "Sending payload from Mailbox\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -380,12 +403,26 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Sending large payload from Mailbox\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
+                        if (!dst_is_fifo) {
+                            soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
+                        }
+                        else {
+                            // Set auto-read
+                            VPRINTF(LOW, "Set FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-                        soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, AXI_FIFO_SIZE_BYTES*2, 0);
+                            VPRINTF(LOW, "Sending payload from Mailbox\n");
+                            soc_ifc_axi_dma_send_mbox_payload(src_offset, AXI_FIFO_BASE_ADDR, use_wr_fixed, transfer_size*4, 0);
+
+                            // Clear auto-read
+                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
+                        }
                     }
 
                     if (inject_rand_delays) {
@@ -432,14 +469,23 @@ void main(void) {
                             soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
                         }
                     } else {
-                        VPRINTF(MEDIUM, "Large transfer - auto-write FIFO --> MBOX --> auto-read FIFO\n");
-                        VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
-                        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+                        VPRINTF(MEDIUM, "Large transfer\n");
+                        
 
-                        if (!src_is_fifo) { 
-                            // TRasnfer FIFO --> AXI  SRAM
-                            VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
-                            soc_ifc_axi_dma_send_axi_to_axi(AXI_FIFO_BASE_ADDR, use_rd_fixed, src_addr, use_wr_fixed, AXI_FIFO_SIZE_BYTES*2, 0);
+                        if (src_is_fifo) { 
+                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+                            // Transfer FIFO --> AXI  SRAM
+                            VPRINTF(HIGH, "Moving large payload from FIFO to SRAM\n");
+                            soc_ifc_axi_dma_send_axi_to_axi(AXI_FIFO_BASE_ADDR, use_rd_fixed, src_addr, use_wr_fixed, transfer_size*4, 0);
+
+                            // Clear auto-write
+                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
+                        } else {
+                            VPRINTF(LOW, "Data pre-loaded into SRAM will be transferred to destination") ;
                         }
                     }
 
@@ -451,7 +497,7 @@ void main(void) {
                     if (data_check) {
                         VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
                         
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -464,15 +510,34 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
-                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
-                        soc_ifc_axi_dma_wait_idle(0);
-                        if (test_block_size) {
-                            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                        if (!dst_is_fifo) {
+                            soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
+                            soc_ifc_axi_dma_wait_idle(0);
+                            if (test_block_size) {
+                                SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                            }
+                        }
+                        else {
+                            VPRINTF(MEDIUM, "Set FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+
+                            // Transfer SRAM --> FIFO
+                            VPRINTF(HIGH, "Moving large payload from SRAM to FIFO\n");
+                            soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, transfer_size*4, block_size);
+                            soc_ifc_axi_dma_wait_idle(0);
+                            if (test_block_size) {
+                                SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+                            }
+
+                            // Clear auto-read
+                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
                     }
                     if (inject_rand_delays) {
@@ -538,7 +603,7 @@ void main(void) {
                     if (data_check) {
                         VPRINTF(HIGH, "Reading payload to Mailbox\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -550,7 +615,7 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Reading rand payload to Mailbox\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -634,7 +699,7 @@ void main(void) {
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -648,7 +713,7 @@ void main(void) {
                         // AXI2AHB: Read data from AXI FIFO 
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
 
-                        if (inject_rst) {
+                        if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
@@ -691,7 +756,13 @@ void main(void) {
             // Calculate address for the next transfer
             // Need to move past: transfer_type (4 bytes) + transfer_size (4 bytes) + payload (transfer_size*4 bytes) + gap (4 bytes)
             dccm_addr = payload_start_addr - 4;
-            VPRINTF(MEDIUM, "Next Transfer start address = 0x%0x\n", dccm_addr);
+
+            // CUrrent iteration complete. Reset rst_done
+            rst_done = 0;
+
+            next_transfer_dccm_addr = dccm_addr;
+            VPRINTF(MEDIUM, "Next Transfer start address (dccm_addr) = 0x%0x\n", dccm_addr);
+            VPRINTF(MEDIUM, "Next Transfer start address (next_transfer_dccm_addr) = 0x%0x\n", next_transfer_dccm_addr);
 
         }
 
@@ -709,7 +780,3 @@ void main(void) {
         }
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> chips/cwhitehead-msft-axi-dma-tb-updates

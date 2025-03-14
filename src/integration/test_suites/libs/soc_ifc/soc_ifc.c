@@ -562,6 +562,12 @@ uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_f
           (dst_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
+    for (uint32_t i; i < byte_count; i++) {
+        if (i % 1024 == 0) {
+            VPRINTF(LOW, "Completed %d dwords\n", i/4);
+        }
+    }
+
 }
 
 uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {

@@ -135,7 +135,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // TB stimulus injection
   constraint inject_c {
       inject_rand_delays dist { 0 := 5, 1 := 1 };
-      inject_rst dist { 0 := 25, 1 := 1 };
+      inject_rst dist { 0 := 1, 1 := 2 };
   };
 
   // =============================================

@@ -1753,6 +1753,8 @@ endgenerate //IV_NO
         abi_reg[30] = "t5";
         abi_reg[31] = "t6";
 
+        //generate_memory_hex_file(AXI_SRAM_BASE_ADDR, 65536, getenv("PLAYBOOK_RANDOM_SEED"));
+
         `ifndef VERILATOR
         imem_inst1.ram           = '{default:8'h0};
         dummy_mbox_preloader.ram = '{default:8'h0};
@@ -1767,6 +1769,10 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
+        
+        $display("Initializing AXI SRAM with random data");
+        initialize_caliptra_axi_sram();
+        
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
@@ -1974,6 +1980,7 @@ task static preload_mbox;
 
     // Slam
     $display("MBOX pre-load from %h to %h", 0, CPTRA_MBOX_DEPTH);
+    
     for (addr = 0; addr < CPTRA_MBOX_DEPTH; addr++) begin
         ecc_data.data = {dummy_mbox_preloader.ram[addr][3],
                          dummy_mbox_preloader.ram[addr][2],
@@ -2298,6 +2305,35 @@ task static dump_memory_contents;
     end
 endtask
 
+// Initialize AXI SRAM with random data 
+task initialize_caliptra_axi_sram;
+    
+    integer addr, byte_idx;
+    reg [7:0] random_byte;
+    
+    begin
+        
+        $display("Starting Caliptra SRAM initialization with random data (64K addresses, 4 bytes per address)...");
+        
+        // Loop through all addresses (64K) and all bytes per address (4 for 32-bit data)
+        for (addr = 0; addr < 65536; addr = addr + 1) begin
+            // For each address, initialize all bytes
+            for (byte_idx = 0; byte_idx < 4; byte_idx = byte_idx + 1) begin
+                random_byte = $random & 8'hFF;  // Generate random byte (8 bits)
+                
+                // Direct assignment
+                caliptra_top_tb.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
+            end
+            
+            // Progress reporting every 12.5% (8192 addresses)
+            if ((addr % 8192) == 0) begin
+                $display("  SRAM initialization progress: %0d%%", (addr * 100) / 65536);
+            end
+        end
+        
+        $display("Caliptra SRAM initialization complete!");
+    end
+endtask
 
 
 function[6:0] riscv_ecc32(input[31:0] data);
