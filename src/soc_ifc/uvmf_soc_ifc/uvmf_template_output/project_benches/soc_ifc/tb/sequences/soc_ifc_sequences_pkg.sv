@@ -63,7 +63,7 @@ package soc_ifc_sequences_pkg;
   import aaxi_pkg_test::*;
   import aaxi_pll::*;
 
-  import caliptra_aaxi_uvm_pkg::*;
+  import aaxi_uvm_pkg::*;
 
   `include "uvm_macros.svh"
 

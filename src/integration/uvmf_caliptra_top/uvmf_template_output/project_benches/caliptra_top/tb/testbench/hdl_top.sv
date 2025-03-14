@@ -49,7 +49,9 @@ import aaxi_pll::*;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-import caliptra_aaxi_uvm_pkg::*;
+import aaxi_uvm_pkg::*;
+import soc_ifc_env_pkg::*;
+import caliptra_top_env_pkg::*;
 `include "config_defines.svh"
 
   // pragma attribute hdl_top partition_module_xrtl                                            
@@ -199,8 +201,8 @@ import caliptra_aaxi_uvm_pkg::*;
 
   // pragma uvmf custom avery_vip_components begin
     // Avery VIP signals
-    //uc
-    caliptra_aaxi_uvm_container  uc;             //VAR: UVM container
+    // aaxi_ports
+    caliptra_aaxi_ports  aaxi_ports;
 
     // FIXME
     // This reset timing hack is necessary to work around a race condition bug
@@ -235,10 +237,10 @@ import caliptra_aaxi_uvm_pkg::*;
     defparam monitor0.VER= "AXI4";
 
     initial begin
-      uc = new();
-      uvm_config_db #(caliptra_aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
+      aaxi_ports = new();
+      uvm_config_db #(caliptra_aaxi_ports)::set(uvm_root::get(), "*", "intf_aaxi_ports", aaxi_ports);
 
-      uc.m_ports_arr = m_ports_arr;
+      aaxi_ports.m_ports_arr = m_ports_arr;
       //uvm_config_db #(virtual aaxi_intf)::set(uvm_root::get(), "intf_uc", "ports", ports[0]);
     end
   // pragma uvmf custom avery_vip_components end

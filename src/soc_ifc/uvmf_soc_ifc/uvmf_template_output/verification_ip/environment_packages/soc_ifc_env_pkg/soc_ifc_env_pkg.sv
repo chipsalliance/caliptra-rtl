@@ -94,7 +94,7 @@ package soc_ifc_env_pkg;
   import aaxi_pkg_xactor::*;
   import aaxi_pkg_test::*;
   import aaxi_pll::*;
-  import caliptra_aaxi_uvm_pkg::*;
+  import aaxi_uvm_pkg::*;
 
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
@@ -104,6 +104,8 @@ package soc_ifc_env_pkg;
 
   // Parameters defined as HVL parameters
 
+  `include "caliptra_aaxi_ports.svh"
+  `include "caliptra_aaxi_uvm_env.svh"
   `include "src/soc_ifc_env_typedefs.svh"
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
