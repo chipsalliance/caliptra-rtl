@@ -67,6 +67,9 @@ volatile uint32_t curr_transfer __attribute__((section(".dccm.persistent"))) = 0
 
 //volatile uint8_t dma_trasnfer_done[MAX_TRANSFER_ELEMENTS] __attribute__((section(".dccm.persistent"))) = {0};
 
+
+volatile char* stdout = (char *)STDOUT;
+volatile uint32_t intr_count       = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else

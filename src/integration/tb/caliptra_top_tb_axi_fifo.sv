@@ -168,21 +168,30 @@ module caliptra_top_tb_axi_fifo #(
     // Random Stimulus                         //
     // --------------------------------------- //
     initial begin
-        if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
-            $fatal("Randomize failed");
-        forever begin
-            @(posedge clk)
-            if (auto_pop || auto_push) begin
-                if (|stall_down_count)
-                    stall_down_count <= stall_down_count - 1;
-                else if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
-                    $fatal("Randomize failed");
-                if (!std::randomize(rand_w_data))
-                    $fatal("Randomize failed");
-            end
-            rand_w_valid <= !fifo_clear && ((auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready)); // Hold valid until data is accepted
-            rand_r_ready <=                 (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
+        `ifndef VERILATOR
+            if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
+                $fatal("Randomize failed");
+        `else
+            stall_down_count = $urandom_range(7,0);
+        `endif
+    end
+    always@(posedge clk) begin
+        if (auto_pop || auto_push) begin
+            if (|stall_down_count)
+                stall_down_count <= stall_down_count - 1;
+            `ifndef VERILATOR
+            else if (!std::randomize(stall_down_count) with {stall_down_count dist {[0:1] :/ 75, [2:7] :/ 20, [8:31] :/ 3, [32:255] :/ 1}; })
+                $fatal("Randomize failed");
+            if (!std::randomize(rand_w_data))
+                $fatal("Randomize failed");
+            `else
+            else
+                stall_down_count <= $urandom_range(7,0);
+            rand_w_data <= $urandom;
+            `endif
         end
+        rand_w_valid <= !fifo_clear && ((auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready)); // Hold valid until data is accepted
+        rand_r_ready <=                 (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
     end
 
     //=========================================================================-
@@ -210,30 +219,46 @@ module caliptra_top_tb_axi_fifo #(
         end
         else if ($test$plusargs("CLP_DMA_TB_MODE_THRESH")) begin
             mode_thresh = 1;
-            thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
         end
         else if ($test$plusargs("CLP_DMA_TB_MODE_PULSE")) begin
             mode_pulse = 1;
         end
+        `ifndef VERILATOR
         else if (!std::randomize(mode_pulse,mode_thresh,mode_not_empty) with { $onehot({mode_pulse,mode_thresh,mode_not_empty}); }) begin
             $fatal("Failed to randomize recovery_data_avail behavior model!");
         end
+        `else
+        else begin
+            mode_not_empty = 1;
+        end
+        `endif
         $display("Randomized mode to %s", mode_pulse ? "mode_pulse" : mode_thresh ? "mode_thresh" : mode_not_empty ? "mode_not_empty" : "null");
+        `ifndef VERILATOR
         if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
             int block_size_idx = 0;
+            RECOVERY_BURST_TEST_SIZE = 4; // dummy init value
             wait(dma_gen_done);
+            @(posedge en_recovery_emulation);
             forever begin
                 if (dma_gen_block_size[block_size_idx] != 0) begin
                     RECOVERY_BURST_TEST_SIZE = dma_gen_block_size[block_size_idx];
+                    thresh = $urandom_range(RECOVERY_BURST_TEST_SIZE/BC,1);
+                    $display("TB is modelling a block_size of %d from array index %d for recovery_data_avail", RECOVERY_BURST_TEST_SIZE, block_size_idx);
                     // Hold the value until the next FALLING edge on en_recovery_emulation
                     // indicating that current testcase using the value is completed
                     // and we should grab the next value...
-                    @(!en_recovery_emulation && en_recovery_emulation_d);
+                    @(negedge en_recovery_emulation);
                 end
                 block_size_idx++;
+                if (block_size_idx >= 100) begin
+                    $display("TB Reached end of block_size array, exiting watch loop");
+                    break;
+                end
             end
         end
-        else begin
+        else
+        `endif
+        begin
             RECOVERY_BURST_TEST_SIZE = 256; // Used for smoke_test_dma, etc.
         end
     end

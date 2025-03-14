@@ -46,7 +46,6 @@ SECTIONS {
   _dccm_vma_start = _bss_vma_end; /* ----/         */
   .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) *(.*data) *(.rodata*) *(.srodata*) *(.sbss) *(.bss) . = ALIGN(4); } =0x0000,
   iccm_code0_start = .;
-    
 
   /* ICCM as VMA */
   /* All of these sections start at the base address of ICCM, and cannot coexist */

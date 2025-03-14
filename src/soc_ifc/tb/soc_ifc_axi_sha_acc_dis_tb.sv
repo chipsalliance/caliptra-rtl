@@ -666,7 +666,7 @@ initial begin
   axi_sha_access_test();
 
   repeat(100) @(posedge clk_tb);
-  $display("TESTCASE PASSED");
+  $display("* TESTCASE PASSED");
   $finish;
 end
 endmodule

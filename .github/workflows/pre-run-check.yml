@@ -106,6 +106,8 @@ jobs:
             # File type exclusions:
             # - *.md
             # - *.png
+            # - *.jpg
+            # - *.xlsx/*.xls
             # - any files inside
             #   - .git
             #   - .github/workflows
@@ -142,8 +144,9 @@ jobs:
             # Find the last commit that modified any design file (not documentation)
             # Start the search with the second parent of the PR merge commit
             # in order to only traverse the feature branch commits
+            # Use an explicit list of files instead of an exclusion list
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '\.md\|\.png\|.github\/workflows\|\.xls\|\.xlsx' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
@@ -294,11 +297,18 @@ jobs:
           echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
           echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
           mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
-          if [[ $(IFS='\n' grep -c -v '\.md\|\.png\|\.xlsx\|\.xls' <<< "$mods") -gt 0 ]]; then
-            echo "Found modified source files in ${SOURCE_BR}"
+          excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
+          extensions='\.sv\b|\.svh\b|\.rdl\b|\.json\b|\.v\b|\.vh\b|\.rsp\b|\.s\b|\.c\b|\.cpp\b|\.h\b|\.hex\b|\.ld\b|\.gdb\b|\.yml\b|\.sh\b|\.py\b'
+          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c -E "${extensions}" || true)
+          if [[ ${mod_count} -gt 0 ]]; then
+            echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
+            echo " ============== modified files ============="
+            IFS='\n' grep -v "${excludes}" <<< "$mods" | grep -E "${extensions}"
             echo "src_mods=true" >> "${GITHUB_OUTPUT}"
           else
             echo "Only modified files in ${SOURCE_BR} are for documentation"
+            echo " ============== modified files ============="
+            IFS='\n' grep -v "${excludes}" <<< "$mods"
             echo "src_mods=false" >> "${GITHUB_OUTPUT}"
           fi
 

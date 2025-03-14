@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 1.1</p>
+<p style="text-align: center;">Version 2.0</p>
 
 <div style="page-break-after: always"></div>
 
@@ -53,10 +53,10 @@ The following table describes integration parameters.
 | **Parameter name** | **Width** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- | :--------- |
 | CPTRA_SET_MBOX_AXI_USER_INTEG | 5               | soc_ifc_pkg.sv | Each bit hardcodes the valid AXI_USER for mailbox at integration time. |
-| CPTRA_MBOX_VALID_AXI_USER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid AXI_USER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_AXI_USER_INTEG parameter for this valid axi user override to be used. |
-| CPTRA_DEF_MBOX_VALID_AXI_USER | 32              | soc_ifc_pkg.sv | Sets the default valid AXI_USER for mailbox accesses. This AXI_USER is valid at all times. |
+| CPTRA_MBOX_VALID_AXI_USER     | \[4:0\]\[31:0\] | soc_ifc_pkg.sv | Each parameter corresponds to a hardcoded valid AXI_USER value for mailbox, set at integration time. Must set corresponding bit in the CPTRA_SET_MBOX_AXI_USER_INTEG parameter for this valid axi user override to be used. CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage. |
+| CPTRA_DEF_MBOX_VALID_AXI_USER | 32              | soc_ifc_pkg.sv | Sets the default valid AXI_USER for mailbox accesses. This AXI_USER is valid at all times. CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage. |
 | CPTRA_SET_FUSE_AXI_USER_INTEG | 1               | soc_ifc_pkg.sv | Sets the valid AXI_USER for fuse accesses at integration time. |
-| CPTRA_FUSE_VALID_AXI_USER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid AXI_USER for fuse accesses when CPTRA_SET_FUSE_AXI_USER_INTEG is set to 1. |
+| CPTRA_FUSE_VALID_AXI_USER     | 32              | soc_ifc_pkg.sv | Overrides the programmable valid AXI_USER for fuse accesses when CPTRA_SET_FUSE_AXI_USER_INTEG is set to 1. CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage. |
 
 *Table 3: Integration Defines*
 
@@ -214,8 +214,8 @@ The table below details the interface required for each SRAM. Driver direction i
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |
 |  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | |
-| recovery_data_avail                                       | 1   | Input       | Synchronous to clk | | 
-| recovery_image_activated                                  | 1   | Input       | Synchronous to clk | | 
+| recovery_data_avail                                       | 1   | Input       | Synchronous to clk | |
+| recovery_image_activated                                  | 1   | Input       | Synchronous to clk | |
 
 *Table 12: Security and miscellaneous*
 
@@ -469,6 +469,8 @@ Further, there is no arbitration between various AXI_USER attributes. AXI_USER a
 ## MAILBOX AXI USER attribute register
 
 It is strongly recommended that these AXI_USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable firmware or ROM patches are applied.
+
+SoC SHALL not use value 0xFFFFFFFF as a valid AXI user value for any of the below settings. This is reserved for Caliptra-internal usage.
 
 ### Programmable registers
 
@@ -764,7 +766,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                                                               | Statement of conformance | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                                                             | Statement of conformance | Required for Caliptra threat model                |
-| AXI USER                           | SoC shall drive AXI USER input in accordance with the IP integration spec.                                                                                                                                                                                                       | Statement of conformance | Required for Caliptra threat model                |
+| AXI USER                         | SoC shall drive AXI USER input in accordance with the IP integration spec. CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage.                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
 | Error reporting                  | SoC shall report Caliptra error outputs.                                                                                                                                                                                                                                       | Statement of conformance | Telemetry and monitoring                          |
 | Error reporting                  | SoC shall only recover Caliptra fatal errors via SoC power-good reset.                                                                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
 | TRNG AXI USER Programming rules    | If SoC doesn’t program the CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\], then Caliptra HW will not accept TRNG data from any SoC entity.                                                                                                                                                  | Security                 | Required for Caliptra threat model                |

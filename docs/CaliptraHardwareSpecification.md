@@ -3,7 +3,6 @@
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
 <p style="text-align: center;">Revision 2.0</p>
-<p style="text-align: center;">Version 0.8</p>
 
 <div style="page-break-after: always"></div>
 
@@ -70,8 +69,8 @@ The RISC-V core is highly configurable and has the following settings.
 | Parameter               | Configuration |
 | :---------------------- | :------------ |
 | Interface               | AHB-Lite      |
-| DCCM                    | 128 KiB       |
-| ICCM                    | 128 KiB       |
+| DCCM                    | 256 KiB       |
+| ICCM                    | 256 KiB       |
 | I-Cache                 | Disabled      |
 | Reset Vector            | 0x00000000    |
 | Fast Interrupt Redirect | Enabled       |
@@ -88,12 +87,12 @@ The 32-bit address region is subdivided into 16 fixed-sized, contiguous 256 MB r
 
 | Subsystem           | Address size | Start address | End address |
 | :------------------ | :----------- | :------------ | :---------- |
-| ROM                 | 48 KiB       | 0x0000_0000   | 0x0000_BFFF |
+| ROM                 | 96 KiB       | 0x0000_0000   | 0x0000_BFFF |
 | Cryptographic       | 512 KiB      | 0x1000_0000   | 0x1007_FFFF |
 | Peripherals         | 32 KiB       | 0x2000_0000   | 0x2000_7FFF |
-| SoC IFC             | 256 KiB      | 0x3000_0000   | 0x3003_FFFF |
-| RISC-V Core ICCM    | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| RISC-V Core DCCM    | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| SoC IFC             | 512 KiB      | 0x3000_0000   | 0x3007_FFFF |
+| RISC-V Core ICCM    | 256 KiB      | 0x4000_0000   | 0x4003_FFFF |
+| RISC-V Core DCCM    | 256 KiB      | 0x5000_0000   | 0x5003_FFFF |
 | RISC-V MM CSR (PIC) | 256 MiB      | 0x6000_0000   | 0x6FFF_FFFF |
 
 #### Cryptographic subsystem
@@ -128,9 +127,11 @@ The following table shows the memory map address ranges for each of the IP block
 
 | IP/Peripheral              | Target \# | Address size | Start address | End address |
 | :------------------------- | :-------- | :----------- | :------------ | :---------- |
-| Mailbox SRAM Direct Access | 7         | 128 KiB      | 0x3000_0000   | 0x3001_FFFF |
 | Mailbox CSR                | 7         | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
-| Mailbox                    | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| SHA512 Accelerator         | 7         | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
+| AXI DMA                    | 7         | 4 KiB        | 0x3002_2000   | 0x3002_2FFF |
+| SOC IFC CSR                | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
+| Mailbox SRAM Direct Access | 7         | 256 KiB      | 0x3004_0000   | 0x3007_FFFF |
 
 #### RISC-V core local memory blocks
 
@@ -138,8 +139,8 @@ The following table shows the memory map address ranges for each of the local me
 
 | IP/Peripheral   | Target \# | Address size | Start address | End address |
 | :-------------- | :-------- | :----------- | :------------ | :---------- |
-| ICCM0 (via DMA) | 9         | 128 KiB      | 0x4000_0000   | 0x4001_FFFF |
-| DCCM            | 8         | 128 KiB      | 0x5000_0000   | 0x5001_FFFF |
+| ICCM0 (via DMA) | 9         | 256 KiB      | 0x4000_0000   | 0x4003_FFFF |
+| DCCM            | 8         | 256 KiB      | 0x5000_0000   | 0x5003_FFFF |
 
 ### Interrupts
 
@@ -1323,7 +1324,7 @@ Additional registers have been added to support key vault integration. Keys from
 
 ### Operation
 
-For more information, see the [AES Programmer's Guide](https://opentitan.org/book/hw/ip/aes/doc/programmers_guide.html).
+For more information, see the [AES Programmer's Guide](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/programmers_guide.md).
 
 ### Signal descriptions
 
@@ -1341,13 +1342,14 @@ The AES architecture inputs and outputs are described in the following table.
 | CTRL_SHADOWED.KEY_LEN              | input           | Configures the AES key length. Supports 128, 192, and 256-bit keys.      |
 | CTRL_SHADOWED.MODE                 | input           | Configures the AES block cipher mode.      |
 | CTRL_SHADOWED.OPERATION            | input           | Configures the AES core to operate in encryption or decryption modes.      |
+| CTRL_GCM_SHADOWED.PHASE            | input           | Configures the GCM phase.      |
+| CTRL_GCM_SHADOWED.NUM_VALID_BYTES  | input           | Configures the number of valid bytes of the current input block in GCM.      |
 | TRIGGER.PRNG_RESEED                | input           | Forces a PRNG reseed.      |
 | TRIGGER.DATA_OUT_CLEAR             | input           | Clears the DATA_OUT registers with pseudo-random data.      |
 | TRIGGER.KEY_IV_DATA_IN_CLEAR       | input           | Clears the Key, IV, and DATA_INT registers with pseudo-random data.      |
 | TRIGGER.START                      | input           | Triggers the encryption/decryption of one data block if in manual operation mode.      |
 | STATUS.ALERT_FATAL_FAULT           | output          | A fatal fault has ocurred and the AES unit needs to be reset.      |
-| STATUS.ALERT_RECOV_CTRL_UPDATE_ERR | output          | An update error has occurred in the shadowed Control Register. <br>
-                                                         AES operation needs to be restarted by re-writing the Control Register. |
+| STATUS.ALERT_RECOV_CTRL_UPDATE_ERR | output          | An update error has occurred in the shadowed Control Register. AES operation needs to be restarted by re-writing the Control Register.      |
 | STATUS.INPUT_READY                 | output          | The AES unit is ready to receive new data input via the DATA_IN registers.      |
 | STATUS.OUTPUT_VALID                | output          | The AES unit has alid output data.      |
 | STATUS.OUTPUT_LOST                 | output          | All previous output data has been fully read by the processor (0) or at least one previous output data block has been lost (1). It has been overwritten by the AES unit before the processor could fully read it. Once set to 1, this flag remains set until AES operation is restarted by re-writing the Control Register. The primary use of this flag is for design verification. This flag is not meaningful if MANUAL_OPERATION=0.      |
@@ -1358,6 +1360,713 @@ The AES architecture inputs and outputs are described in the following table.
 ### Address map
 
 The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
+
+### SCA countermeasures
+
+The AES unit employs separate SCA countermeasures for the AES cipher core used for the encryption/decryption part and for the GHASH module used for computing the integrity tag in GCM.
+
+### AES cipher core
+
+A detailed specification of the SCA countermeasure employed in the AES cipher core is shown here: [AES cipher core SCA countermeasure](https://opentitan.org/book/hw/ip/aes/doc/theory_of_operation.html#1st-order-masking-of-the-cipher-core).
+The most critical building block of the SCA countermeasure, i.e., the masked AES S-Box, successfully passes formal masking verification at the netlist level using [Alma: Execution-aware Masking Verification](https://github.com/IAIK/coco-alma).
+The flow required for repeating the formal masking verification using Alma together with a Howto can be found [here](https://github.com/lowRISC/opentitan/blob/master/hw/ip/aes/pre_sca/alma/README.md).
+The entire AES cipher core including the masked S-Boxes and as well as the PRNG generating the randomness for remasking successfully passes masking evaluation at the netlist level using [PROLEAD - A Probing-Based Leakage Detection Tool for Hardware and Software](https://github.com/ChairImpSec/PROLEAD).
+The flow required for repeating the masking evaluation using PROLEAD together with a Howto can be found [here](https://github.com/lowRISC/opentitan/blob/aes-gcm-review/hw/ip/aes/pre_sca/prolead/README.md).
+
+### GHASH module
+
+A detailed specification of the SCA countermeasure employed in the GHASH module is shown here: [GHASH module SCA countermeasure](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/theory_of_operation.md#1st-order-masking-of-the-ghash-module).
+
+To optimize and verify this masking countermeasure, two different types of experiments have been performed for which the results are given below.
+1. Formal masking verification using [Alma: Execution-aware Masking Verification](https://github.com/IAIK/coco-alma).
+   These experiments led to a [series of small design optimizations](https://github.com/vogelpi/opentitan/pull/18) which have been integrated into Caliptra.
+   The resulting design successfully passes formal masking verification at the netlist level.
+1. [Test-vector leakage assessment (TVLA)](https://www.rambus.com/wp-content/uploads/2015/08/TVLA-DTR-with-AES.pdf) applied to power SCA traces captured on a ChipWhisperer-based FPGA setup.
+   These experiments confirm the formal masking verification results:
+   No 1st-order SCA can be observed during the GHASH operation.
+   The leakage observed at the boundary of and outside the GHASH operation can be attributed to the evaluation methodology and the handling of unmasked and uncritical data, as well as to FPGA-specific leakage effects known from literature.
+   We are confident that the optimized SCA hardening concept effectively deters SCA attacks.
+
+#### Formal masking verification using Alma
+
+[Alma](https://ieeexplore.ieee.org/document/9617707) is an open source, formal masking verification tool developed at TU Graz which enables formal verification of masking SCA countermeasures at the netlist level.
+The main advantages of this approach compared to analyzing FPGA power traces are as follows:
+
+* The turn-around time is much faster as it does not involve FPGA bitstream generation and capturing power traces (both can take several hours).
+* Netlist-based analysis tools typically enable pinpointing sources of SCA leakage and easily allow analyzing sub parts of the masked design individually.
+  As a result, individual issues can be fixed up faster.
+* The analyzed netlist is closer to the targeted ASIC implementation.
+  During FPGA synthesis, the netlist is mapped to the logic elements such as look-up tables (LUTs) available on the selected FPGA which are fundamentally different from more simple ASIC gates.
+
+However, formal netlist analysis tools may not be perfect and they also have limitations in terms of what can be analyzed.
+For example, the maximum supported netlist size depends on the complexity and number of the non-linear elements.
+Also, random number generators and in particular pseudo-random number generators typically need to be excluded from the analysis and random number inputs need to be assumed as ideal by tools. 
+Thus, they don’t replace FPGA-based analysis.
+We use them to increase our confidence in our SCA countermeasures and to close countermeasure verification faster by reducing the number of FPGA evaluation runs.
+
+##### Prerequisites
+
+The [Alma-based formal masking verification flow together with a Howto](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_sca/alma#readme) (including installation instructions) as well an [open source Yosys synthesis flow](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_syn) are available open soure.
+The tool can both run on generic Yosys netlists or on proprietary and technology-specific netlists.
+For the latter, a [slightly modified verification flow with an additional translation step](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_sca/alma_post_syn#readme) is required.
+To verify the GHASH SCA countermeasure, the generic flow was used with the following tool versions:
+
+* Alma ([specific commit](https://github.com/vogelpi/coco-alma/commit/68e436f67dee7d27fb782864dc5523ceb4bd27bf))
+* Yosys 0.36 (git sha1 8f07a0d84)
+* sv2v v0.0.11-28-g81d8225
+* Verilator 4.214 2021-10-17 rev v4.214
+
+##### Yosys Netlist Synthesis
+
+Setup the [open source Yosys synthesis flow](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_syn) by copying the [`syn_setup.example.sh`](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/pre_syn/syn_setup.example.sh) file and renaming it to `syn_setup.sh`.
+Change the `LR_SYNTH_TOP_MODULE` variable to `aes_ghash_wrap` and the `LR_SYNTH_CELL_LIBRARY_PATH` to the `NangateOpenCellLibrary_typical.lib` file in the folder where you installed the nangate45 library.
+
+Then, start the synthesis by executing
+
+```sh
+./syn_yosys.sh
+```
+This should produce output similar to what is shown below:
+
+```
+8. Printing statistics.
+
+=== aes_ghash_wrap ===
+
+   Number of wires:             24543
+   Number of wire bits:         29339
+   Number of public wires:      567
+   Number of public wire bits:  5363
+   Number of memories:          0
+   Number of memory bits:       0
+   Number of processes:         0
+   Number of cells:             26214
+    AND2_X1                     1585
+    AND3_X1                     4
+    AND4_X1                     32
+    AOI211_X1                   58
+    AOI21_X1                    293
+    AOI221_X1                   215
+    AOI22_X1                    364
+    DFFR_X1                     1468
+    DFFS_X1                     5
+    INV_X1                      584
+    MUX2_X1                     1252
+    NAND2_X1                    1870
+    NAND3_X1                    128
+    NAND4_X1                    37
+    NOR2_X1                     7551
+    NOR3_X1                     445
+    NOR4_X1                     28
+    OAI211_X1                   98
+    OAI21_X1                    827
+    OAI221_X1                   3
+    OAI22_X1                    183
+    OR2_X1                      28
+    OR3_X1                      67
+    OR4_X1                      2
+    XNOR2_X1                    7122
+    XOR2_X1                     1965
+
+   Chip area for module '\aes_ghash_wrap': 37534.728000
+
+====== End Yosys Stat Report ======
+
+Warnings: 20 unique messages, 102 total
+
+End of script. Logfile hash: 16c4d13569, CPU: user 25.11s system 0.12s, MEM: 176.29 MB peak
+Yosys 0.36 (git sha1 8f07a0d84, gcc 11.4.0-1ubuntu1~22.04 -fPIC -Os)
+Time spent: 66% 2x abc (47 sec), 9% 40x opt_expr (6 sec), ...
+Area in kGE =  47.04
+```
+
+Note that the reported area is quite a bit bigger compared to the number reported in the [GHASH SCA countermeasure specification](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/theory_of_operation.md#1st-order-masking-of-the-ghash-module)
+The reasons are twofold:
+
+1. The `aes_ghash_wrap` module synthesized is a wrapper module around the GHASH module in focus of this analysis.
+   The goal of the wrapper is to separately feed in secrets (the hash subkey H and the encrypted initial counter block S) as well as randomness in a tool aware manner.
+   As such, the wrapper includes some additional muxing resources and a counter to ease interpretation of results.
+2. To speed up the formal analysis, the pipelined Galois-field multipliers have been instantiated with a latency of 4 instead of 32 clock cycles as on FPGA.
+   While the latency or more precisely the processing parallelism does have an impact on the SNR, it does not have an impact on the formal netlist analysis which is performed in a so-to-say noise free environment.
+
+##### Formal Netlist Analysis
+
+After synthesizing the netlist, the following steps should be taken to perform the analysis:
+
+1. Make sure to source the `build_consts.sh` script
+   ```sh
+   source util/build_consts.sh
+   ```
+   in order to set up some shell variables.
+
+1. Enter the directory where you have downloaded Alma and load the virtual Python environment
+   ```sh
+   source dev/bin/activate
+   ```
+
+1. Launch the Alma tool to parse, trace (simulate) and formally verify the netlist.
+   For simplicity, a single script is provided to launch all the required steps with a single command.
+   Simply run
+   ```sh
+   ${REPO_TOP}/hw/ip/aes/pre_sca/alma/verify_aes_ghash.sh
+   ```
+   This should produce output similar to the one below:
+   ```
+   Verifying aes_ghash_wrap using Alma
+   Starting yosys synthesis...
+   | CircuitGraph | Total: 29882 | Linear: 9091 | Non-linear: 12741 | Registers: 1473 | Mux: 3538 |
+   parse.py successful (47.99s)
+   1: Running verilator on given netlist
+   2: Compiling verilated netlist library
+   3: Compiling provided verilator testbench
+   4: Simulating circuit and generating VCD
+   | CircuitGraph | Total: 29882 | Linear: 9091 | Non-linear: 12741 | Registers: 1473 | Mux: 3538 |
+   tmp/tmp.vcd:24765: [WARNING] Entry for name alert_fatal_i already exists in namemap (alert_fatal_i -> Ce")
+   tmp/tmp.vcd:24766: [WARNING] Entry for name alert_o already exists in namemap (alert_o -> De")
+   tmp/tmp.vcd:24767: [WARNING] Entry for name clear_i already exists in namemap (clear_i -> Ee")
+   tmp/tmp.vcd:24768: [WARNING] Entry for name clk_i already exists in namemap (clk_i -> Fe")
+   tmp/tmp.vcd:24770: [WARNING] Entry for name cyc_ctr_o already exists in namemap (cyc_ctr_o -> Ge")
+   tmp/tmp.vcd:24771: [WARNING] Entry for name data_in_prev_i already exists in namemap (data_in_prev_i -> He")
+   tmp/tmp.vcd:24772: [WARNING] Entry for name data_out_i already exists in namemap (data_out_i -> Le")
+   tmp/tmp.vcd:24773: [WARNING] Entry for name first_block_o already exists in namemap (first_block_o -> Pe")
+   tmp/tmp.vcd:24774: [WARNING] Entry for name gcm_phase_i already exists in namemap (gcm_phase_i -> Qe")
+   tmp/tmp.vcd:24775: [WARNING] Entry for name ghash_state_done_o already exists in namemap (ghash_state_done_o -> Re")
+   tmp/tmp.vcd:24776: [WARNING] Entry for name hash_subkey_i already exists in namemap (hash_subkey_i -> Ve")
+   tmp/tmp.vcd:24777: [WARNING] Entry for name in_ready_o already exists in namemap (in_ready_o -> ^e")
+   tmp/tmp.vcd:24778: [WARNING] Entry for name in_valid_i already exists in namemap (in_valid_i -> _e")
+   tmp/tmp.vcd:24779: [WARNING] Entry for name load_hash_subkey_i already exists in namemap (load_hash_subkey_i -> `e")
+   tmp/tmp.vcd:24780: [WARNING] Entry for name num_valid_bytes_i already exists in namemap (num_valid_bytes_i -> ae")
+   tmp/tmp.vcd:24781: [WARNING] Entry for name op_i already exists in namemap (op_i -> be")
+   tmp/tmp.vcd:24782: [WARNING] Entry for name out_ready_i already exists in namemap (out_ready_i -> ce")
+   tmp/tmp.vcd:24783: [WARNING] Entry for name out_valid_o already exists in namemap (out_valid_o -> de")
+   tmp/tmp.vcd:24784: [WARNING] Entry for name prd_i already exists in namemap (prd_i -> ee")
+   tmp/tmp.vcd:24785: [WARNING] Entry for name rst_ni already exists in namemap (rst_ni -> me")
+   tmp/tmp.vcd:24786: [WARNING] Entry for name s_i already exists in namemap (s_i -> ne")
+   0
+   0
+   Building formula for cycle 0: vars 0 clauses 0
+   Checking cycle 0:
+   Building formula for cycle 1: vars 1024 clauses 1536
+   Checking cycle 1:
+   Building formula for cycle 2: vars 3968 clauses 6528
+   Checking cycle 2:
+   Building formula for cycle 3: vars 6298 clauses 11026
+   Checking cycle 3:
+   Building formula for cycle 4: vars 14888 clauses 34886
+   Checking cycle 4:
+   Building formula for cycle 5: vars 20924 clauses 52734
+   Checking cycle 5:
+   Building formula for cycle 6: vars 53986 clauses 143674
+   Checking cycle 6:
+   Building formula for cycle 7: vars 57570 clauses 150970
+   Checking cycle 7:
+   Building formula for cycle 8: vars 80484 clauses 169282
+   Checking cycle 8:
+   Building formula for cycle 9: vars 213770 clauses 504198
+   Checking cycle 9:
+   Building formula for cycle 10: vars 594390 clauses 1617276
+   Checking cycle 10:
+   Building formula for cycle 11: vars 1024018 clauses 2881744
+   Checking cycle 11:
+   Building formula for cycle 12: vars 1704424 clauses 4910342
+   Checking cycle 12:
+   Building formula for cycle 13: vars 1713897 clauses 4915466
+   Checking cycle 13:
+   Building formula for cycle 14: vars 1834911 clauses 5233038
+   Checking cycle 14:
+   Building formula for cycle 15: vars 2258841 clauses 6492446
+   Checking cycle 15:
+   Building formula for cycle 16: vars 2734646 clauses 7907830
+   Checking cycle 16:
+   Building formula for cycle 17: vars 5868600 clauses 18374416
+   Checking cycle 17:
+   Building formula for cycle 18: vars 5922747 clauses 18524578
+   Checking cycle 18:
+   Building formula for cycle 19: vars 6100898 clauses 19061808
+   Checking cycle 19:
+   Building formula for cycle 20: vars 6427297 clauses 20074334
+   Checking cycle 20:
+   Building formula for cycle 21: vars 6949506 clauses 21693947
+   Checking cycle 21:
+   Building formula for cycle 22: vars 6949506 clauses 21693947
+   Checking cycle 22:
+   Building formula for cycle 23: vars 6949506 clauses 21693947
+   Checking cycle 23:
+   Building formula for cycle 24: vars 7057992 clauses 21994175
+   Checking cycle 24:
+   Building formula for cycle 25: vars 7407412 clauses 23047989
+   Checking cycle 25:
+   Building formula for cycle 26: vars 7797810 clauses 24221073
+   Checking cycle 26:
+   Building formula for cycle 27: vars 10939700 clauses 34732235
+   Checking cycle 27:
+   Building formula for cycle 28: vars 11268148 clauses 35780811
+   Checking cycle 28:
+   Building formula for cycle 29: vars 11268148 clauses 35780811
+   Checking cycle 29:
+   Building formula for cycle 30: vars 11268148 clauses 35780811
+   Checking cycle 30:
+   Building formula for cycle 31: vars 11376634 clauses 36081039
+   Checking cycle 31:
+   Building formula for cycle 32: vars 11726054 clauses 37134853
+   Checking cycle 32:
+   Building formula for cycle 33: vars 12116452 clauses 38307937
+   Checking cycle 33:
+   Building formula for cycle 34: vars 15258342 clauses 48819099
+   Checking cycle 34:
+   Building formula for cycle 35: vars 15586534 clauses 49867675
+   Checking cycle 35:
+   Building formula for cycle 36: vars 15619430 clauses 49965979
+   Checking cycle 36:
+   Finished in 3948.52
+   The execution is secure
+   ```
+
+Notes:
+
+* This analysis exercises the full data path of the GHASH block and comprises the following operations (controlled by a small [Verilator testbench](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/pre_sca/alma/cpp/verilator_tb_aes_ghash_wrap.cpp)):
+  + Initial clearing of all internal registers.
+  + Loading the hash subkey H.
+  + Loading the encrypted initial counter block S including the subsequent generation of repeatedly used correction terms.
+  + Processing a first AAD/ciphertext block including the generation of a correction term that is used for the first block only.
+  + Processing a second AAD/ciphertext block.
+  + Producing the final authentication tag.
+
+* The [following main changes have been implemented as a result of the formal netlist analysis using Alma](https://github.com/vogelpi/opentitan/commit/ac9333116cbe65fa6b868fe02cb17344d1e2717f) (refer to the [countermeasure spec](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/theory_of_operation.md#mapping-the-masked-algorithm-to-the-hardware) for details):
+  + The result of the final addition of Share 1 of S and the unmasked GHASH state is no longer stored into the GHASH state register but directly forwarded to the output, and the state input to this addition is blanked.
+    The input multiplexer (`ghash_in_mux`) loses one input.
+  + The two 3-input multiplexers selecting the operands for the addition with the GHASH state (`add_in_mux`) are replaced by one-hot multiplexers with registered control signals.
+  + The Operand B inputs of both GF multipliers are now blanked.
+    The 3-input multiplexer selecting Operand B of the second GF multiplier is replaced by a one-hot multiplexer with registered control signal.
+    In addition, the last input slice of Operand B for this multiplier is registered.
+    This allows the switching the multiplexer during the last clock cycle of the multiplication to avoid some undesirable transient leakage occurring upon saving the result of the multiplication into the GHASH state register (and this new value propagating through the multiplexer into the multiplier again).
+  + The GF multipliers are configured to output zero instead of Operand A (the hash subkey) while busy.
+  + The state input for the addition required for the generation of the correction term for Share 0 is blanked.
+  + Between adding the correction terms to the GHASH state for the last time and between unmasking the GHASH state, a bubble cycle is added to allow signals to fully settle thereby avoiding undesirable transient effects unmasking the uncorrected state shares.
+* The overall area impact of these changes is low (+0.16 kGE in Yosys + nangate45).
+* The final design successfully passes the formal masking verification.
+  For details regarding tool parameters, check the [analysis script](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/pre_sca/alma/verify_aes_ghash.sh).
+
+#### ChipWhisperer-based FPGA evaluation and TVLA
+
+To underpin the results of the formal verification flow, the hardening of the GHASH module has been analyzed on the ChipWhisperer [CW310](https://rtfm.newae.com/Targets/CW310%20Bergen%20Board/) FPGA board.
+For this analysis, power traces with the ChipWhisperer [Husky](https://rtfm.newae.com/Capture/ChipWhisperer-Husky/) scope were captured during GCM operations.
+Afterwards a Test Vector Leakage Assessment (TVLA) with the [ot-sca toolset](https://github.com/lowRISC/ot-sca) has been performed.
+The setup is illustrated in Figure 1.
+
+![](./images/cw310_cwhusky.jpeg)
+:--:
+**Figure 1**: Target CW310 FPGA board (left) and the CW Husky scope (right).
+
+##### Setup
+
+![](./images/GHASH_TVLA_Figure2.png)
+:--:
+**Figure 2**: Measurement setup. The main components are the target board, the scope, and the SCA framework.
+
+Figure 2 gives a detailed overview of the measurement setup that has been utilized to capture the power traces.
+The SCA evaluation framework ot-sca is the central component of the measurement setup.
+It is responsible for communicating with the penetration testing framework that runs on the target FPGA board and with the scope.
+Initially, ot-sca configures the scope (sample rate, number of samples) and the pentest framework (which input, how many encryptions, where to trigger).
+
+Based on the configuration, the pentest framework generates the cipher input, starts the encryption, and sends back the computed tag to ot-sca.
+The trigger is automatically set and unset by the AES hardware block to achieve an accurate & constant trigger window.
+In parallel, the scope waits for the trigger, captures the power consumption, and transfers the traces to the SCA evaluation framework.
+The ot-sca framework stores the trace as well as the cipher configuration in a database.
+
+![](./images/GHASH_TVLA_Figure3.png)
+:--:
+**Figure 3**: Power trace with AES encryption rounds visible (*left*). Aligned traces when zooming in (*right*).
+
+Figure 3 depicts power traces captured during AES-GCM encryptions with the setup above.
+As shown in the figure, the traces are nicely aligned, allowing to perform a sound evaluation.
+
+##### Methodology
+
+To detect whether the hardened GHASH implementation effectively mitigates SCA attacks, the Test Vector Leakage Assessment (TVLA) approach discussed by Rambus in a [whitepaper](https://www.rambus.com/wp-content/uploads/2015/08/TVLA-DTR-with-AES.pdf) is adapted for the GCM mode of AES.
+In TVLA, Welch’s *t*-test is used to determine whether it is possible to statistically distinguish two power trace sets from each other.
+This test returns a value *t* for each sample, where a value of |*t*| > 4.5 means that, with a high probability, a data dependent leakage was detected.
+However, note that this test cannot provide any information whether the leakage is actually exploitable.
+
+![](./images/GHASH_TVLA_Figure4.png)
+:--
+**Figure 4:** TVLA plot showing leakage at around sample 1000. When increasing the number of traces (from 1000 to 10000), the leakage becomes more present. Note that the traces shown in this plot are taken from an arbitrary cryptographic hardware block and not AES.
+
+Figure 4 shows a TVLA plot that will be used throughout this document. The red lines mark the ± *t*-test border.
+
+###### Dataset Generation for FvsR IV & Key
+
+In TVLA, two different trace data sets need to be recorded.
+As described in the [whitepaper](https://www.rambus.com/wp-content/uploads/2015/08/TVLA-DTR-with-AES.pdf), we generate these two trace data sets by using a fixed and a random AES-GCM cipher input set, *i.e.,* the fixed and the random set.
+
+| **Input** | **Fixed Set** | **Random Set** |
+| --- | --- | --- |
+| **Key** | STATIC | RANDOM |
+| **IV** | STATIC | RANDOM |
+| **PTX** | STATIC | STATIC |
+| **AAD** | STATIC | STATIC |
+
+As shown in the table above, for our experiment we use a static cipher input for the fixed set.
+For the random set, we use a PRNG to randomly generate the secrets, *i.e.,* key and IV, for each encryption.
+The dataset is generated directly on the device in the pentest framework.
+For each trace, ot-sca stores information to which dataset the trace belongs to.
+
+With TVLA, the idea is to check whether we are able to distinguish power traces from the fixed and the random set.
+
+###### Dataset Generation for FvsR PTX & AAD
+
+For the second experiment, we use a static IV and key and calculate a FvsR PTX and AAD set:
+
+| **Input** | **Fixed Set** | **Random Set** |
+| --- | --- | --- |
+| **Key** | STATIC | STATIC |
+| **IV** | STATIC | STATIC |
+| **PTX** | STATIC | RANDOM |
+| **AAD** | STATIC | RANDOM |
+
+##### Results – FvsR IV & Key
+
+In the following, we discuss the analysis results for each GCM phase.
+We start with the results for the FvsR IV & Key datasets.
+
+![](./images/GHASH_TVLA_Figure5.png)
+:--:
+**Figure 5:** AES-GCM block diagram. Red lines mark the trigger windows for each analysis step.
+
+As shown in Figure 5, we focus on analyzing (*i*) the generation of the hash subkey H, (*ii*) the encryption of the initial counter block S, (*iii*) the processing of the AAD blocks, (*iv*) the plaintext blocks, and (*v*) the tag generation. Each measurement is conducted with (*a*) masks off and (*b*) masks on to analyze the effectiveness of the masking countermeasure.
+
+###### i) SCA Evaluation of Generating the Hash Subkey H
+
+![](./images/GHASH_TVLA_Figure6ab.png)
+:--:
+| **Figure 6a:** Masking Off - 100k traces - **Figure 6b:** Masking On - 1M traces |
+
+###### Interpretation
+
+The AES encryption is clearly visible in the form of 12 distinct peaks in the power traces shown Figures 6a and 6b.
+The 12 peaks correspond to first the loading of the key and the all-zero block into the AES cipher core, followed by the initial round and the 10 full AES rounds (AES-128).
+They spread over approximately 470 samples which corresponds to the 56 target clock cycles a full AES-128 encryption takes.
+
+If the masking is turned off (Figure 6a), first and second-order leakage is clearly visible throughout the operation.
+If the masking is on (Figure 6b), there is first-order leakage 1) at the beginning as well as 2) at the end of the operation.
+
+1. The leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
+   This produces first-order leakage as the inc32 function implementation isn’t masked.
+   It doesn’t need to be masked as the IV is not secret, just the encrypted initial counter block S (i.e., the encrypted IV) is secret in the context of GCM.
+2. The leakage at the end of the operation happens when the masked output of the AES cipher core, i.e., the masked hash subkey H, gets loaded in shares into the GHASH block.
+   When studying the RTL, one can see that there is nothing in the path between the AES cipher core and the hash subkey registers inside the GHASH block that could combine the shares and cause this leakage.
+   The leakage is most likely due to how the FPGA implementation tool maps the flip flops of the hash subkey register shares to the available FPGA logic slices: if flip flops of the different shares get mapped to the same logic slice, the carry-chain and other muxing logic present in the logic slice can combine the various inputs thereby causing SCA leakage despite these logic outputs not being used.
+   We’ve observed similar effects in the past and there is [research giving more insight into this and other FPGA-specific issues](https://ieeexplore.ieee.org/document/10545383).
+
+To summarize, the observed first-order leakage if masking is on (Figure 6b) is not of concern for ASIC implementations.
+
+###### ii) SCA Evaluation of Encrypting the Initial Counter Block
+
+![](./images/GHASH_TVLA_Figure7ab.png)
+:--:
+| **Figure 7a:** Masking Off - 100k traces - **Figure 7b:** Masking On - 1M traces |
+
+###### Interpretation
+
+Again, the AES encryption is clearly visible in the form of 12 peaks in the power traces shown Figures 7a and 7b.
+This AES encryption corresponds to the generation of the encrypted initial counter block S.
+The AES encryption is followed by another operation visible in the power trace: the computation of repeatedly used correction terms using the Galois-field multipliers inside GHASH.
+This operation takes 33 target clock cycles (approximately 275 samples).
+
+If the masking is turned off (Figure 7a), first and second-order leakage is clearly visible throughout both operations while being more pronounced during the GHASH operation.
+This is because the GHASH block is smaller and thus produces less noise.
+If the masking is on (Figure 7b), there is first-order leakage 1) at the beginning as well as 2) between the two operations.
+
+1. As before, the leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
+   This produces first-order leakage as the inc32 function implementation isn’t masked.
+   It doesn’t need to be masked as the IV is not secret, just the encrypted initial counter block S (i.e., the encrypted IV) is secret in the context of GCM.
+2. As before, the leakage at the end of the operation happens when the masked output of the AES cipher core, i.e., the encrypted initial counter block gets loaded in shares into the GHASH block.
+   When studying the RTL, one can see that there is nothing in the path between the AES cipher core and the GHASH state registers inside the GHASH block that could combine the shares and cause this leakage.
+   As before, the leakage is most likely due to how the FPGA implementation tool maps the multiplexers in front of the GHASH state registers to the available FPGA logic slices: Since the multiplexers for both shares use the same control signals, the multiplexing logic can be combined even into the same look-up tables (LUTs) thereby causing SCA leakage.
+   We’ve observed similar effects in the past and there is [research giving more insight into this and other FPGA-specific issues](https://ieeexplore.ieee.org/document/10545383).
+
+To summarize, the observed first-order leakage if masking is on (FIgure 7b) is not of concern for ASIC implementations.
+
+###### iii) SCA Evaluation of Processing the AAD Blocks
+
+###### Processing AAD Block 0
+
+![](./images/GHASH_TVLA_Figure8ab.png)
+:--:
+| **Figure 8a:** Masking Off - 50k traces - **Figure 8b:** Masking On - 10M traces |
+
+###### Interpretation
+
+For AAD blocks, the AES cipher core is not involved.
+However, during the computation of the first AAD block, the GHASH block needs to compute an additional correction term which is used for the very first block only.
+If the masking is turned off (Figure 8a), first- and second-order leakage is clearly visible but only for the first activity block.
+The second activity block involves computing the additional correction terms which requires Share 1 of the encrypted initial counter block to be multiplied by Share 1 of the hash subkey.
+But since the masking is off, both these values are zero for both the fixed and the random set and hence there is no SCA leakage.
+If the masking is turned on (Figure 8b), no SCA leakage is observable which is desirable.
+
+###### Processing AAD Block 1
+
+![](./images/GHASH_TVLA_Figure9ab.png)
+:--:
+| **Figure 9a:** Masking Off - 50k traces - **Figure 9b:** Masking On - 10M traces |
+
+###### Interpretation
+
+For the second AAD block (and any subsequent AAD blocks) there is only one activity block corresponding to the Galois-field multiplication.
+If masking is turned off (Figure 9a), there is both first- and second-order leakage observable.
+If the masking is turned on (Figure 9b), no SCA leakage is observable which is desirable.
+
+###### iv) SCA Evaluation of Processing the PTX Blocks
+
+###### Processing PTX Block 0
+
+![](./images/GHASH_TVLA_Figure10ab.png)
+:--:
+| **Figure 10a:** Masking Off - 50k traces - **Figure 10b:** Masking On - 1M traces |
+
+###### Interpretation
+
+Like in [ii) SCA Evaluation of Encrypting the Initial Counter Block](#ii-sca-evaluation-of-encrypting-the-initial-counter-block) there is first-order leakage 1) at the beginning and 2) between the two operations if the masking is turned on (Figure 10b).
+
+1. As before, the leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
+   This produces first-order leakage as the inc32 function implementation isn’t masked.
+   It doesn’t need to be masked as the IV is not secret, just the encrypted initial counter block S (i.e., the encrypted IV) is secret in the context of GCM.
+2. The leakage between the two operations is due to the unmasking of the AES cipher core output, the addition of input data to produce the ciphertext, and writing this value to the GHASH block and the output data registers.
+   It’s not related to the hash subkey H or the initial counter block S (i.e. the two secrets involved in the GHASH part of GCM).
+   But since the AAD and the plaintext have been chosen to be the same for all traces in the fixed and the random sets, the traces of the fixed set only produce all the same ciphertext and thus are expected to exhibit a static power signature for this step, whereas the ciphertext of the random set is randomized through the random key and IV.
+   However, since the ciphertext is not secret in the context of GCM, this leakage is of no concern.
+
+To summarize, the observed first-order leakage if masking is on (FIgure 10b) is not of concern.
+
+###### Processing PTX Block 1
+
+![](./images/GHASH_TVLA_Figure11ab.png)
+:--:
+| **Figure 11a:** Masking Off - 50k traces - **Figure 11b:** Masking On - 1M traces |
+
+###### Interpretation
+
+As before (PTX Block 0), there is some first-order leakage observable when the masking is turned on.
+For the same reasons as before, this leakage is not of concern.
+
+###### v) SCA Evaluation of the Tag Generation
+
+![](./images/GHASH_TVLA_Figure12ab.png)
+:--:
+| **Figure 12a:** Masking Off - 50k traces - **Figure 12b:** Masking On - 1M traces |
+
+###### Interpretation
+
+The generation of the final authentication tag consists of two operations.
+1) The 128-bit block containing the AAD and ciphertext lengths is hashed and the correction terms are added.
+   The GHASH state is unmasked (still masked with the encrypted initial counter block S) and Share 1 of S is added to write the final authentication tag to the data output registers readable by software.
+2) In parallel to writing the final authentication tag to the data output registers, the internal state is all cleared to random values and an additional multiplication is triggered to clear the internal state of the Galois-field multipliers and the correction term registers.
+
+If masking is turned off (Figure 12a), there is both first- and second-order leakage observable during the first activity block (tag generation) but not during the clearing operation.
+If the masking is turned on (Figure 12b), some SCA leakage is observable between the two operations, i.e., when the final authentication tag is written to the output data registers.
+This leakage is expected as both the fixed and the random data sets use a static AAD and plaintext.
+This means, the tag for the fixed data set is fixed whereas the tags for the random set get randomized through the ciphertext (random due to the random key and IV).
+
+To summarize, the observed first-order leakage if masking is on (FIgure 12b) is not of concern.
+
+##### Results – FvsR PTX & AAD
+
+In the following, we discuss the analysis results for each FvsR PTX & AAD datasets.
+These experiments were specifically done to investigate leakage peaks identified for the FvsR Key & IV datasets that are attributed to how the FPGA implementation tool maps flip flops and multiplexer shares to the available FPGA logic slices.
+
+###### i) SCA Evaluation of Generating the Hash Subkey H
+
+![](./images/GHASH_TVLA_Figure13ab.png)
+:--:
+| **Figure 13a:** Masking Off - 50k traces - **Figure 13b:** Masking On - 1M traces |
+
+###### Interpretation
+
+There is no SCA leakage visible in both cases without masking (Figure 13a) and with masking turned on (Figure 13b).
+This is expected as the hash subkey generation doesn’t involve the plaintext and the AAD but only the key and IV.
+Both the fixed and random set use the same static key and IV.
+
+This experiment was specifically done to check whether the leakage identified in Figure 6b and attributed to how the FPGA implementation tool maps the flip flops of the hash subkey register shares to the available FPGA logic slices.
+As expected, the leakage peak is now gone.
+
+###### ii) SCA Evaluation of Encrypting the Initial Counter Block
+
+![](./images/GHASH_TVLA_Figure14ab.png)
+:--:
+| **Figure 14a:** Masking Off - 50k traces - **Figure 14b:** Masking On - 1M traces |
+
+###### Interpretation
+
+There is no SCA leakage visible in both cases without masking (Figure 14a) and with masking turned on (Figure 14b).
+This is expected as the encryption of the initial counter block and the subsequent computation of repeatedly used correction terms doesn’t involve the plaintext and the AAD but only the key and IV.
+Both the fixed and random set use the same static key and IV.
+
+This experiment was specifically done to check whether the leakage identified in Figure 7b and attributed to how the FPGA implementation tool maps the multiplexers in front of the GHASH state registers to the available FPGA logic slices.
+As expected, the leakage peak is now gone.
+
+###### iv) SCA Evaluation of Processing the PTX Block 0
+
+![](./images/GHASH_TVLA_Figure15ab.png)
+:--:
+| **Figure 15a:** Masking Off - 100k traces - **Figure 15b:** Masking On - 1M traces |
+
+###### Interpretation
+
+With the masking turned off (Figure 15a), there is first-order leakage 1) at the beginning of the operation and 2) throughout the entire GHASH operation.
+
+1. The leakage at the beginning of the operation is due to the input data (the plaintext) being written to an internal buffer register.
+   The AES cipher is operated in counter mode, meaning it doesn’t encrypt the input data but the counter value (incremented IV).
+   Because the IV is fixed for both the fixed and the random data set, no leakage is observed during the AES encryption even if the masking is off.
+   At the end of the AES encryption, the output of the AES cipher core is added to the content of the buffer register to produce the ciphertext which is then forwarded to the GHASH block and to the data output registers.
+2. The GHASH operation then processes this ciphertext.
+   The observed leakage when the masking is off is expected.
+
+With the masking turned on (Figure 15b), the first-order leakage at the beginning of the operation remains visible. The reason for this is that the internal register buffering the previous input data is not masked.
+This is of no concern as the leakage is not related to key or IV.
+
+Another first-order leakage peak is visible between the AES encryption and the GHASH operation.
+This leakage is due to the unmasked AES cipher core output being added to the input data (coming from the internal buffer register) and the result being stored to the output data register.
+As key and IV are static and identical for both the fixed and the random data set, the cipher core output is the same for both sets.
+Any difference in the power signature between the two sets is due to the different plaintext / ciphertext.
+Again, this is to be expected and of no concern as the ciphertext is not secret in the context of GCM.
+
+#### Reproducing the FPGA Experiments
+
+##### Prerequisites
+
+###### (i) Setting up the CW310 and CW Husky
+
+Please follow the guide [here](https://github.com/lowRISC/ot-sca/blob/master/doc/getting_started.md#cw310) to prepare the CW310 and CW Husky for the SCA measurements.
+
+###### (ii) Generating the FPGA Bitstream
+
+Follow the guide [here](https://opentitan.org/book/doc/getting_started/install_vivado/index.html) to install Xilinx Vivado. Please note that a valid license is needed to generate bitstreams for the CW310 FPGA board.
+
+Then, build the bitstream from the [aes-gcm-sca-bitstream](https://github.com/vogelpi/opentitan/tree/aes-gcm-sca-bitstream) branch.
+This branch includes the AES-GCM and applies several optimizations (disabling certain features to reduce the area utilization) to improve the SCA measurements.
+```sh
+git clone https://github.com/vogelpi/opentitan.git
+cd opentitan
+git checkout aes-gcm-sca-bitstream
+./bazelisk.sh build //hw/bitstream/vivado:fpga_cw310_test_rom
+cp bazel-bin/hw/bitstream/vivado/build.fpga_cw310/synth-vivado/lowrisc_systems_chip_earlgrey_cw310_0.1.bit .
+```
+
+The resulting bitstream is `lowrisc_systems_chip_earlgrey_cw310_0.1.bit`.
+
+###### (iii) Compiling the Penetration Testing Binary
+
+The penetration testing binary that is running on the target is the framework that receives commands from the side-channel evaluation framework and triggers the AES-GCM operations.
+```sh
+git clone <https://github.com/vogelpi/opentitan.git>
+cd opentitan
+git checkout aes-gcm-review
+./bazelisk.sh build //sw/device/tests/penetrationtests/firmware:firmware_fpga_cw310_test_rom
+cp bazel-bin/sw/device/tests/penetrationtests/firmware/firmware_fpga_cw310_test_rom_fpga_cw310_test_rom.bin sca_ujson_fpga_cw310.bin
+```
+
+The resulting penetration testing binary is `sca_ujson_fpga_cw310.bin`.
+
+###### (iv) Setting up the Side-Channel Evaluation Framework
+
+Clone the ot-sca repository and switch to the dedicated AES-GCM branch:
+```sh
+git clone <https://github.com/lowRISC/ot-sca.git>
+cd ot-sca
+git checkout ot-sca-aes-gcm
+```
+
+Then, follow [this](https://github.com/lowRISC/ot-sca/blob/master/doc/getting_started.md#installing-on-a-machine) guideline to prepare your machine for the measurements.
+
+Afterwards, copy the bitstream to `ot-sca/objs/lowrisc_systems_chip_earlgrey_cw310_0.1.bit` and the binary to `ot-sca/objs/sca_ujson_fpga_cw310.bin`.
+
+Finally, determine the port the CW310 opened on your machine (e.g., `/dev/ttyACM2`) and set it accordingly in the `port` field of the `ot-sca/capture/configs/aes_gcm_sca_cw310.yaml` configuration file.
+
+##### Capturing Traces
+
+After fulfilling the prerequisites, traces can be captured using ot-sca.
+To configure the measurement, adapt the script located in `ot-sca/capture/configs/aes_gcm_sca_cw310.yaml`.
+The following parameters can be changed:
+```yml
+husky:
+  # Number of encryptions performed in one batch.
+  num_segments: 35
+  # Number of cycles that are captured by the CW Husky.
+  num_cycles: 320
+capture:
+  # Number of traces to capture.
+  num_traces: 100000
+  # Number of traces to keep in memory before flushing to the disk.
+  trace_threshold: 50000
+test:
+  # Values used for the fixed set.
+  iv_fixed: [0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xAD, 0xF0, 0xCA,
+             0xCC, 0x1A, 0x00, 0x00, 0x00, 0x00]
+  key_fixed: [0x81, 0x1E, 0x37, 0x31, 0xB0, 0x12, 0x0A, 0x78, 0x42, 0x78,
+              0x1E, 0x22, 0xB2, 0x5C, 0xDD, 0xF9]
+  # Static values that are used by the fixed and the random set.
+  ptx_blocks: 2
+  ptx_static: [[0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+                0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA], [0xBB, 0xBB, 0xBB,
+                0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB,
+                0xBB, 0xBB, 0xBB]]
+  ptx_last_block_len_bytes: 16
+  aad_blocks: 2
+  aad_static: [[0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC,
+                 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC], [0xDD, 0xDD, 0xDD,
+                 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+                 0xDD, 0xDD, 0xDD, 0xDD]]
+  aad_last_block_len_bytes: 16
+  # Trigger configuration (select only one).
+  # [Hash sub key, Init. block, AAD block, PTX block, TAG block]
+  triggers: [False, False, False, False, True]
+  # Which AAD or PTX block.  0 = first block.
+  trigger_block: 0
+  # 32-bit seed for masking on device. To switch off the masking, use 0
+  # as an LFSR seed.
+  lfsr_seed: 0x00000000
+  #lfsr_seed: 0xdeadbeef
+```
+
+After tweaking the configuration, the traces can be captured by executing:
+
+```sh
+cd capture
+./capture_aes_gcm.py -c configs/aes_gcm_sca_cw310.yaml -p aes_gcm_sca
+```
+
+Where the `-c` parameter is the config and `-p` the database where the traces are stored.
+
+##### Performing the TVLA
+
+After capturing the traces, the TVLA can be performed by switching into the `ot-sca/analysis` folder, copying the `ot-sca/analysis/configs/tvla_cfg_kmac.yaml` file to `ot-sca/analysis/configs/tvla_cfg_aes_gcm.yaml`, and modifying the configuration file:
+```yml
+project_file: ../capture/projects/aes_gcm_sca
+trace_file: null
+trace_start: null
+trace_end: null
+leakage_file: null
+save_to_disk: null
+save_to_disk_ttest: null
+round_select: null
+byte_select: null
+input_histogram_file: null
+output_histogram_file: null
+number_of_steps: 1
+ttest_step_file: null
+plot_figures: true
+test_type: "GENERAL_KEY"
+mode: aes
+filter_traces: true
+trace_threshold: 50000
+trace_db: ot_trace_library
+```
+
+By calling
+```sh
+./tvla.py --cfg-file tvla_cfg_aes_gcm.yaml run-tvla
+```
+the TVLA plot is generated.
 
 ## PCR vault
 

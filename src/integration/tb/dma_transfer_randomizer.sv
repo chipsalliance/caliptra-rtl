@@ -35,12 +35,13 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   rand bit                  test_block_size; // Requires accessing the axi_fifo with recovery_data_avail emulation
   rand bit [11:0]           block_size;
 
+  `ifndef VERILATOR
   // =============================================
   // Constraints
   // =============================================
   // Transfer type constrained to enum values
   constraint valid_transfer_type {
-    dma_xfer_type inside {[0:4]}; 
+    dma_xfer_type inside {[0:4]};
 
     // Weight distribution to ensure each type is chosen at least once
     dma_xfer_type dist {
@@ -146,6 +147,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       this.verbosity = verbosity;
   endfunction
 
+  `ifndef VERILATOR
   // =============================================
   // Pre-randomize function
   // =============================================
@@ -214,6 +216,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
         $display("  inject_rand_delays: 0x%x", inject_rand_delays);
         $display("  inject_rst        : 0x%x", inject_rst        );
         $display("  test_block_size   : 0x%x", test_block_size   );
+        $display("  block_size        : 0x%x", block_size        );
     end
   endfunction
 

@@ -17,10 +17,15 @@ module dma_testcase_generator (
   input logic preload_dccm_done,
   output logic dma_gen_done,
   output logic [99:0] [11:0] dma_gen_block_size
-);//dma_if dma_xfer_if);
+);
   import caliptra_top_tb_pkg::*; // provides dma_transfer_randomizer, etc...
 
   localparam MAX_SIZE_TO_CHECK = 16384; // dwords
+
+  `ifdef VERILATOR
+      assign dma_gen_done = 1'b0;
+      assign dma_gen_block_size = '0;
+  `else
 
   // Dynamic array to store test cases
   dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_xfers[];
@@ -66,6 +71,8 @@ module dma_testcase_generator (
       if (num_iterations > 100) begin
           $fatal("num_iterations cannot exceed 100 due to width of dma_gen_block_size output signal...");
       end
+
+      dma_gen_block_size = '0;
       
       // Wait for caliptra_top_tb to complete preload_dccm before running slam_dccm_ram
       wait(preload_dccm_done);
@@ -193,4 +200,6 @@ module dma_testcase_generator (
   function void get_dma_xfers(dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) t[]);
     t = dma_xfers;
   endfunction
+
+  `endif // VERILATOR
 endmodule

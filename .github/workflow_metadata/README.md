@@ -22,7 +22,7 @@ pr\_\* objects are used to validate a Pull Request run. This is in support of an
 The Pull Request run ignores updates to documentation files. That is, commits containing only the following files are not required to pass the timestamp/hash check.
 
 * Markdown (.md)
-* Images (.png)
+* Images (.png, .jpg)
 * Github Workflows (.github/workflows/**)
 * Spreadsheets (.xlsx, .xls)
 
