@@ -22,7 +22,7 @@ import re
 import subprocess
 import logging
 import datetime
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock, Array
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -129,9 +129,15 @@ def getTestNames():
 
     return integrationTestSuiteList
 
+def init_pool(lock, arr):
+    global printlock
+    printlock = lock
+    global pending_test_arr
+    pending_test_arr = arr
+
 def runTest(args):
 
-    (test, scratch, verilated) = args;
+    (test, scratch, verilated, idx) = args;
 
     testdir = os.path.join(scratch, test)
     # Reuse pristine verilator-build output for each test
@@ -159,6 +165,9 @@ def runTest(args):
     exitcode, resultout, resulterr = runBashScript(cmd)
 
     # Parse and log the results
+    if not printlock.acquire(timeout=60):
+        raise RuntimeError(f"Failed to get lock in RunTest {test}")
+    logger.info(f"Test {test} acquired print lock")
     infoMsg = f"############################################## {test} ##############################################"
     logger.info(infoMsg)
     if (exitcode is None):
@@ -189,6 +198,8 @@ def runTest(args):
         testlogger.info(resultout.decode())
         testlogger.error(resulterr.decode())
         teststatus = 1
+    pending_test_arr[idx] = 0
+    printlock.release()
     return teststatus
 
 def main():
@@ -209,12 +220,32 @@ def main():
     verilated = verilateTB(scratch)
     # Parse yaml file for test list
     testnames=getTestNames()
-    # Run all tests in parallel and accumulate error status codes to the global failcount
+    # Set up args for the multiprocessing Pool
     failcount=0
-    run_args = [(testname, scratch, verilated) for testname in testnames]
-    test_status_list = Pool(len(testnames)).map(runTest, run_args)
+    printlock=Lock()
+    ones = []
+    for i in testnames: ones.append(1)
+    pending_tests=Array('B', ones, lock=True)
+    run_args = [(testname, scratch, verilated, testnames.index(testname)) for testname in testnames]
+    # Run all tests in parallel and accumulate error status codes to the global failcount
+    async_res = Pool(len(testnames), init_pool, (printlock, pending_tests)).map_async(runTest, run_args)
+    while True:
+        async_res.wait(60)
+        if async_res.ready():
+            logger.info("All tests completed, exiting wait loop")
+            break
+        if not printlock.acquire(timeout=60):
+            raise RuntimeError("Failed to get lock in main")
+        logger.info(f" >>> Tests still in progress:")
+        for idx,sts in enumerate(pending_tests):
+            if sts == 1:
+                logger.info(f"     * {testnames[idx]}")
+        printlock.release()
+    logger.info(f"Ending status of multiprocessing pool: {async_res.successful()}")
+    test_status_list = async_res.get(None)
     for sts in test_status_list:
         failcount += sts
+
     # Ending summary
     infoMsg = f"############################################## SUMMARY ##############################################"
     logger.info(infoMsg)
