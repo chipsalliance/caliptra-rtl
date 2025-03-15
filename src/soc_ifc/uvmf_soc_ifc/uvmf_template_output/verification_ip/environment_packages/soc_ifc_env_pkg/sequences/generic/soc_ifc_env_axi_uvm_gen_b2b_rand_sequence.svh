@@ -18,7 +18,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-// DESCRIPTION: Base sequence to perform a mailbox command within the
+// DESCRIPTION: Base sequence to perform an AXI rd/wr command within the
 //              soc_ifc environment.
 //              Extended to provide additional functionality.
 //
@@ -29,6 +29,7 @@ class soc_ifc_env_axi_uvm_gen_b2b_rand_sequence extends soc_ifc_env_axi_uvm_b2b_
     `uvm_object_utils( soc_ifc_env_axi_uvm_gen_b2b_rand_sequence )
 
     aaxi_cfg_info aaxi_ci;
+    soc_ifc_reg_model_top reg_model;
 
     extern virtual task read_reg();
     extern virtual task write_reg(int id);
@@ -47,22 +48,21 @@ endclass
 
 task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_reg();
     
-    aaxi_master_tr trans;
-    reg [31:0] base;
-    automatic int k;
+    aaxi_master_tr trans, rsp;
+    uvm_reg regs[$];
 
-    base = 'h30000;
+    reg_model.soc_ifc_reg_rm.soc_ifc_reg_AXI_map.get_registers(regs, UVM_HIER);
 
-    for (int i = 0; i < 10; i++) begin
-        k = i;
+    foreach(regs[idx]) begin
         trans = aaxi_master_tr::type_id::create("trans");
         start_item(trans);
         trans.randomize();
 
         trans.kind = AAXI_READ;
         trans.vers = AAXI4;
-        trans.addr = base + (k*4);
-        trans.id = 0;
+        trans.addr = regs[idx].get_address(reg_model.soc_ifc_AXI_map);
+        trans.id = $urandom();
+        trans.aruser = $urandom();
         trans.len = 0;
         trans.size = $urandom_range(0,2);
         trans.burst = $urandom_range(0,1);
@@ -71,7 +71,7 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_reg();
         
         finish_item(trans);
     end
-    for (int i = 0; i < 10; i++) begin
+    foreach(regs[idx]) begin
         get_response(rsp);
     end
 
@@ -79,25 +79,44 @@ endtask
 
 task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::write_reg(int id);
     aaxi_master_tr trans;
-    reg [31:0] base;
-    automatic int k;
+    uvm_reg regs[$];
+    uvm_reg blocklist[], reg_list[];
+    int del_idx[$];
 
-    base = 'h30000;
-
-    for (int i = 0; i < 10; i++) begin
-        k = i;
+    reg_list = '{
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[2],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[3],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[4],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[5],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[6],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[7],
+        reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG,
+        reg_model.soc_ifc_reg_rm.CPTRA_DBG_MANUF_SERVICE_REG,
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[1]
+    };
+    
+    foreach(reg_list[idx]) begin
 
         `uvm_create(trans);
 
         trans.kind = AAXI_WRITE;
         trans.vers = AAXI4;
-        trans.addr = base + (k*4);
-        trans.id = id+k;
+        trans.addr = reg_list[idx].get_address(reg_model.soc_ifc_AXI_map);
+        trans.id = $urandom();
+        trans.awuser = $urandom();
         trans.len = 0;
         trans.size = 2;
         trans.burst = AAXI_BURST_FIXED;
-        for (int j = 0; j < 4; j++)
+        for (int j = 0; j < 4; j++) begin
             trans.data.push_back($urandom());
+        end
         
         trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
         trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
@@ -108,7 +127,7 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::write_reg(int id);
         `uvm_send(trans);
     end
     
-    for (int i = 0; i < 10; i++) begin
+    foreach(reg_list[idx]) begin
         get_response(rsp);
     end
 endtask
@@ -116,28 +135,40 @@ endtask
 
 task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_write_reg(int id);
     aaxi_master_tr trans;
-    reg [31:0] base, prev_addr;
-    automatic int k;
-    bit is_write;
+    uvm_reg regs[$];
+    uvm_reg blocklist[], reg_list[];
+    int del_idx[$];
+    automatic bit is_write;
 
-    base = 'h30010;
+    reg_list = '{
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[2],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[3],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[4],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[5],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[6],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[7],
+        reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG,
+        reg_model.soc_ifc_reg_rm.CPTRA_DBG_MANUF_SERVICE_REG,
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[1]
+    };
 
-    prev_addr = base;
-    for (int i = 0; i < 20; i++) begin
-        k = i;
-
-        if (k%2 == 0) begin
-            is_write = 1;
-            prev_addr = prev_addr + 4; //update addr only for writes
-        end
-        else is_write = 0;
+    is_write = 1;
+    
+    foreach(reg_list[idx]) begin
 
         `uvm_create(trans);
 
         trans.kind = is_write ? AAXI_WRITE : AAXI_READ;
         trans.vers = AAXI4;
-        trans.addr = prev_addr;
-        trans.id = id+k;
+        trans.addr = reg_list[idx].get_address(reg_model.soc_ifc_AXI_map);
+        trans.id = $urandom();
         trans.len = 0;
         trans.size = 2;
         trans.burst = AAXI_BURST_FIXED;
@@ -145,9 +176,12 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_write_reg(int id);
         if (is_write) begin
             for (int j = 0; j < 4; j++) begin
                 trans.data.push_back($urandom());
-                trans.strobes[j] = 1; //$urandom_range(0,1);
+                trans.strobes[j] = 1;
             end
+            trans.awuser = $urandom();
         end
+        else trans.aruser = $urandom(); 
+
         trans.ar_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
         trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
         trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
@@ -156,9 +190,11 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_write_reg(int id);
         trans.resp_valid_ready_delay = $urandom_range(aaxi_ci.minwaits, aaxi_ci.maxwaits);
         
         `uvm_send(trans);
+
+        is_write = ~is_write;
     end
 
-    for (int i = 0; i < 20; i++) begin
+    foreach(reg_list[idx]) begin
         get_response(rsp);
     end
 endtask

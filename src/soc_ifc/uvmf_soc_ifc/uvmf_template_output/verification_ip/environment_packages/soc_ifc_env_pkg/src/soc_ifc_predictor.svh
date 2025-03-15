@@ -621,7 +621,6 @@ class soc_ifc_predictor #(
         p_soc_ifc_rm.soc_ifc_reg_rm.intr_block_rf_ext.error_internal_intr_r.error_iccm_blocked_sts.predict(1'b1, -1, UVM_PREDICT_READ, UVM_PREDICT, p_soc_ifc_AHB_map); /* AHB-access only, use AHB map*/
     end
     if (t.assert_clear_secrets) begin
-        $display("inside assert clear secrets");
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b1;
         foreach (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii]) begin
             send_cptra_sts_txn |= (p_soc_ifc_rm.soc_ifc_reg_rm.internal_obf_key[ii].key.get_mirrored_value() != 32'h0);
@@ -638,7 +637,6 @@ class soc_ifc_predictor #(
         `uvm_info("PRED_CPTRA_CTRL", "Received transaction with clear secrets set! Resetting Caliptra model secrets", UVM_MEDIUM)
     end
     else begin
-        $display("done with assert clear secrets");
         p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets = 1'b0;
     end
     if (t.pulse_rv_ecc_error) begin
@@ -2186,9 +2184,7 @@ class soc_ifc_predictor #(
 //    soc_ifc_sb_axi_ap_output_transaction.copy(axi_txn);
     if (axi_txn.is_write()) begin
         send_axi_wr_txn = 1;
-        $display("^^^^^^^^^^^^^ axi txn beatQ = %h, t beatQ = %h", axi_txn.beatQ[0], t.beatQ[0]);
         soc_ifc_sb_axi_wr_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
-        $display("txn is write, copying axi_txn to wr ap txn, sb beatQ = %h", soc_ifc_sb_axi_wr_ap_output_transaction.beatQ[0]);
         soc_ifc_sb_axi_wr_ap_output_transaction.artagop = axi_txn.artagop;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_aw_c = axi_txn.aaxi_aw_c;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ar_c = axi_txn.aaxi_ar_c;
@@ -2198,7 +2194,6 @@ class soc_ifc_predictor #(
     if (!axi_txn.is_write()) begin
         send_axi_rd_txn = 1;
         soc_ifc_sb_axi_rd_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
-        $display("txn is read, copying axi_txn to rd ap txn");
     end
     axs_reg = p_soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
@@ -2385,7 +2380,7 @@ class soc_ifc_predictor #(
             end
             "EXECUTE": begin
                 if (axi_txn.is_write()) begin
-                    do_reg_prediction = sha_valid_user(axi_txn)/* && (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
+                    do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_wr_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
@@ -2393,7 +2388,7 @@ class soc_ifc_predictor #(
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
-                    soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0}
+                    soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                     // "Expected" resp is SLVERR
                     soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
@@ -2408,7 +2403,7 @@ class soc_ifc_predictor #(
                 if (axi_txn.is_write()) begin
                     do_reg_prediction = sha_valid_user(axi_txn) /*&& (aaxi_resp_type'(axi_txn.resp) == AAXI_RESP_OKAY)*/;
                     // "Expected" resp is SLVERR for blocked writes
-                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
                 else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
@@ -2747,6 +2742,13 @@ class soc_ifc_predictor #(
                     cptra_error_non_fatal = 1'b0;
                 end
             end
+            "CPTRA_HW_ERROR_ENC",
+            "CPTRA_FW_ERROR_ENC",
+            ["CPTRA_FW_EXTENDED_ERROR_INFO[0]":"CPTRA_FW_EXTENDED_ERROR_INFO[7]"]: begin
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register on AXI interface. Nothing to do."}, UVM_DEBUG)
+                end
+            end
             "CPTRA_BOOT_STATUS",
             "CPTRA_FLOW_STATUS",
             "CPTRA_RESET_REASON",
@@ -2862,6 +2864,89 @@ class soc_ifc_predictor #(
             "CPTRA_DBG_MANUF_SERVICE_REG": begin
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
+            "CPTRA_GENERIC_INPUT_WIRES[0]",
+            "CPTRA_GENERIC_INPUT_WIRES[1]": begin
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s register has no effect", axs_reg.get_name()), UVM_LOW)
+                end
+            end
+            "CPTRA_GENERIC_OUTPUT_WIRES[0]",
+            "CPTRA_GENERIC_OUTPUT_WIRES[1]": begin
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s register has no effect", axs_reg.get_name()), UVM_LOW)
+                end
+            end
+            "CPTRA_HW_REV_ID": begin
+                if (axi_txn.is_write()) begin
+                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                end
+            end
+            "CPTRA_FW_REV_ID[0]",
+            "CPTRA_FW_REV_ID[1]": begin
+                `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+            end
+            "CPTRA_HW_CONFIG": begin
+                if (axi_txn.is_write()) begin
+                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                end
+            end
+            // "CPTRA_WDT_TIMER1_EN": begin
+            //     if (axi_txn.is_write()) begin
+            //         `uvm_info("PRED_AXI", {"Detected write to ", axs_reg.get_name()," register, starting WDT timer1"}, UVM_MEDIUM);
+            //     end
+            // end
+            // "CPTRA_WDT_TIMER1_CTRL": begin
+            //     if (axi_txn.is_write() && axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_CTRL.timer1_restart.get_lsb_pos()]) begin
+            //         `uvm_info("PRED_AXI", $sformatf("Handling access to %s. This will restart WDT timer1 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
+            //         fork
+            //             begin
+            //             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            //             //Capture restart bit so the counters can be updated
+            //             wdt_t1_restart = 1;
+            //             `uvm_info("PRED_AXI", $sformatf("After delay from access to %s - restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
+            //             end
+            //         join_none
+            //     end
+            // end
+            // "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
+            // "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]": begin
+            //     if (axi_txn.is_write()) begin
+            //         `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register has no side-effect"}, UVM_HIGH) // TODO
+            //     end
+            // end
+            // "CPTRA_WDT_TIMER2_EN": begin
+            //     if (axi_txn.is_write()) begin
+            //         `uvm_info("PRED_AXI", {"Detected write to ", axs_reg.get_name(), " register, starting WDT timer2"}, UVM_MEDIUM);
+            //     end
+            // end
+            // "CPTRA_WDT_TIMER2_CTRL": begin
+            //     if (axi_txn.is_write() && axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL.timer2_restart.get_lsb_pos()]) begin
+            //         `uvm_info("PRED_AXI", $sformatf("Handling access to %s. This will restart WDT timer2 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
+            //         fork
+            //             begin
+            //             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            //             //Capture restart bit so the counters can be updated
+            //             wdt_t2_restart = 1;
+            //             `uvm_info("PRED_AXI", $sformatf("After delay from access to %s - restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
+            //             end
+            //         join_none
+            //     end
+            // end
+            // "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
+            // "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]": begin
+            //     if (axi_txn.is_write()) begin
+            //         `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register has no side-effect"}, UVM_HIGH) // TODO
+            //     end
+            // end
+            "CPTRA_WDT_STATUS": begin
+                `uvm_info("PRED_AXI", "AXI access of WDT status", UVM_MEDIUM);
+            end
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
             "CPTRA_iTRNG_ENTROPY_CONFIG_1",
@@ -2889,7 +2974,6 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
-                $display("fuse_update_en = %h, clear_obf_secrets = %h, axi txn is write = %h, beatQ[0] = %h", fuse_update_enabled, !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets, axi_txn.is_write(), axi_txn.beatQ[0]);
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;

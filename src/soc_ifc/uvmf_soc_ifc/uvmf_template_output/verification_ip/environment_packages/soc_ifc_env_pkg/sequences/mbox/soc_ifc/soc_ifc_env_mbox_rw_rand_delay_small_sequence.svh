@@ -43,7 +43,9 @@ class soc_ifc_env_mbox_rw_rand_delay_small_sequence extends soc_ifc_env_mbox_seq
 
   function new(string name = "");
     super.new(name);
-    super.axi_user_obj.set_addr_user(32'hFFFF_FFFF);
+    // super.axi_user_obj.set_addr_user(32'hFFFF_FFFF);
+    override_mbox_user = 1; //TODO: if this is removed, mbox valid users are changed and there's a hang - revisit
+    mbox_user_override_val = 32'hFFFF_FFFF;
   endfunction
 endclass
 
@@ -58,12 +60,12 @@ task soc_ifc_env_mbox_rw_rand_delay_small_sequence::mbox_push_datain();
       data = uvm_reg_data_t'(mbox_resp_expected_dlen);
     end
     else begin
-      if (!std::randomize(data)) `uvm_error("RW", "Failed to randomize data")
+      if (!std::randomize(data)) `uvm_error("MBOX_AXI_RW_SEQ", "Failed to randomize data")
     end
-    `uvm_info("KNU_CLASS", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_MEDIUM)
+    `uvm_info("MBOX_AXI_RW_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_MEDIUM)
 
-    super.axi_user_obj.set_aw_valid_delay($urandom_range(1,20));
-    super.axi_user_obj.set_b_valid_ready_delay($urandom_range(1,20));
+    super.axi_user_obj.set_aw_valid_delay($urandom_range(configuration.aaxi_ci.minwaits,configuration.aaxi_ci.maxwaits));
+    super.axi_user_obj.set_b_valid_ready_delay($urandom_range(configuration.aaxi_ci.minwaits,configuration.aaxi_ci.maxwaits));
     // super.axi_user_obj.set_wstrb();
 
     reg_model.mbox_csr_rm.mbox_datain_sem.get();
@@ -77,20 +79,13 @@ task soc_ifc_env_mbox_rw_rand_delay_small_sequence::mbox_read_resp_data();
   uvm_reg_data_t data;
     uvm_reg_data_t dlen;
     int ii;
-  
-
-  // axi_user_obj.set_ar_valid_delay($urandom_range(1,20));
-  `uvm_info("KNU_CLASS", "Overriding mbox read resp", UVM_MEDIUM)
 
   reg_model.mbox_csr_rm.mbox_dlen.read(reg_sts, dlen, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(super.axi_user_obj));
 
-  // super.axi_user_obj.set_len(2);
-
   for (ii = 0; ii < dlen; ii+=4) begin
-    super.axi_user_obj.set_ar_valid_delay($urandom_range(1,20));
-    super.axi_user_obj.set_resp_valid_ready_delay($urandom_range(1,20));
-    // super.axi_user_obj.set_burst('h2);
-    `uvm_info("KNU_READ_AXI", "[RW] Reading dataout through AXI", UVM_MEDIUM)
+    super.axi_user_obj.set_ar_valid_delay($urandom_range(configuration.aaxi_ci.minwaits,configuration.aaxi_ci.maxwaits));
+    super.axi_user_obj.set_resp_valid_ready_delay($urandom_range(configuration.aaxi_ci.minwaits,configuration.aaxi_ci.maxwaits));
+
     reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(super.axi_user_obj));
   end
 

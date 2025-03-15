@@ -23,7 +23,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence extends soc_ifc_env_mbox_sequence_base;
+class soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence extends soc_ifc_env_MBOX_AXI_SEQuence_base;
 
   `uvm_object_utils( soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence )
 
@@ -84,16 +84,14 @@ task soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence::mbox_push_datain();
   for (datain_ii=0; datain_ii < this.mbox_op_rand.dlen; datain_ii+=4) begin
       if (datain_ii == 0) begin
           data = uvm_reg_data_t'(mbox_op_rand.dlen - 8);
-          `uvm_info("KNU_MBOX", $sformatf("datain_ii = 0, data = %h", data), UVM_MEDIUM)
       end
       else if (datain_ii == 4) begin
           data = uvm_reg_data_t'(mbox_resp_expected_dlen);
-          `uvm_info("KNU_MBOX", $sformatf("datain_ii = 4, data = %h", data), UVM_MEDIUM)
       end
       else begin
-          if (!std::randomize(data)) `uvm_error("MBOX_SEQ", "Failed to randomize data")
+          if (!std::randomize(data)) `uvm_error("MBOX_AXI_SEQ", "Failed to randomize data")
       end
-      `uvm_info("MBOX_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
+      `uvm_info("MBOX_AXI_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", datain_ii/4, data), UVM_DEBUG)
       // reg_model.mbox_csr_rm.mbox_datain_sem.get();
       // reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAIN)));
       // reg_model.mbox_csr_rm.mbox_datain_sem.put();
@@ -104,7 +102,7 @@ task soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence::mbox_push_datain();
       trans.kind = AAXI_WRITE;
       trans.vers = AAXI4;
       trans.addr = reg_model.mbox_csr_rm.mbox_datain.get_address(reg_model.soc_ifc_AXI_map);
-      trans.id = 0;
+      trans.id = $urandom();
       trans.len = 0;
       trans.size = 2;
       trans.burst = 0;
@@ -133,7 +131,7 @@ task soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence::mbox_push_datain();
 
       if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
           if (rand_delay_en) do_rand_delay(1, data_delay);
-          `uvm_info("MBOX_SEQ", "Re-do datain write with valid AxUSER", UVM_HIGH)
+          `uvm_info("MBOX_AXI_SEQ", "Re-do datain write with valid AxUSER", UVM_HIGH)
           reg_model.mbox_csr_rm.mbox_datain_sem.get();
           reg_model.mbox_csr_rm.mbox_datain.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
           reg_model.mbox_csr_rm.mbox_datain_sem.put();
@@ -166,23 +164,21 @@ task soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence::mbox_read_resp_data();
                                        "soc_ifc_env_mbox_reg_axs_invalid_small_sequence",
                                        "soc_ifc_env_mbox_reg_axs_invalid_medium_sequence",
                                        "soc_ifc_env_mbox_reg_axs_invalid_large_sequence"})
-          `uvm_info("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since this is an invalid reg-access sequence [%s]", dlen, mbox_resp_expected_dlen, this.get_type_name()), UVM_LOW)
+          `uvm_info("MBOX_AXI_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since this is an invalid reg-access sequence [%s]", dlen, mbox_resp_expected_dlen, this.get_type_name()), UVM_LOW)
       else if (saw_mbox_unlock)
-          `uvm_info("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since mbox_unlock was observed", dlen, mbox_resp_expected_dlen), UVM_LOW)
+          `uvm_info("MBOX_AXI_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]! Not flagging err since mbox_unlock was observed", dlen, mbox_resp_expected_dlen), UVM_LOW)
       else
-          `uvm_error("MBOX_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
+          `uvm_error("MBOX_AXI_SEQ", $sformatf("SOC received response data with mbox_dlen [%0d] that does not match the expected data amount [%0d]!", dlen, mbox_resp_expected_dlen))
   end
   if (rand_delay_en) do_rand_delay(1, step_delay);
   for (ii=0; ii < dlen; ii+=4) begin
-      // reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_DATAOUT)));
-      // report_reg_sts(reg_sts, "mbox_dataout");
 
       `uvm_create(trans);
 
       trans.kind = AAXI_READ;
       trans.vers = AAXI4;
       trans.addr = reg_model.mbox_csr_rm.mbox_dataout.get_address(reg_model.soc_ifc_AXI_map);
-      trans.id = 0;
+      trans.id = $urandom();
       trans.len = 0;
       trans.size = 2;
       trans.burst = 0;
@@ -195,7 +191,7 @@ task soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence::mbox_read_resp_data();
 
       if (!axi_user_used_is_valid() && retry_failed_reg_axs) begin
           if (rand_delay_en) do_rand_delay(1, data_delay);
-          `uvm_info("MBOX_SEQ", "Re-do dataout read with valid AxUSER", UVM_HIGH)
+          `uvm_info("MBOX_AXI_SEQ", "Re-do dataout read with valid AxUSER", UVM_HIGH)
           reg_model.mbox_csr_rm.mbox_dataout.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(FORCE_VALID_AXI_USER)));
           report_reg_sts(reg_sts, "mbox_dataout");
       end

@@ -111,12 +111,12 @@ class soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) expected_axi_wr_analysis_export;
+) expected_axi_wr_analysis_export;
   uvm_analysis_imp_expected_axi_rd_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) expected_axi_rd_analysis_export;
+) expected_axi_rd_analysis_export;
   uvm_analysis_imp_actual_ahb_analysis_export #(mvc_sequence_item_base, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -126,12 +126,12 @@ class soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) actual_axi_wr_analysis_export;
+) actual_axi_wr_analysis_export;
   uvm_analysis_imp_actual_axi_rd_analysis_export #(aaxi_master_tr, soc_ifc_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) actual_axi_rd_analysis_export;
+) actual_axi_rd_analysis_export;
 
 
   // pragma uvmf custom class_item_additional begin

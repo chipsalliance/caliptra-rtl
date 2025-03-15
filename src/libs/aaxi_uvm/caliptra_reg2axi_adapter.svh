@@ -55,7 +55,6 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
         //add adw_valid_delay = 1;
         bit unsigned [7:0] len = 0;
         bit unsigned [1:0] burst = 0;
-        bit unsigned [3:0] wstrb [255:0];
 
         caliptra_axi_user user_obj;
         uvm_sequence_item super_item = super.reg2bus(rw);
@@ -75,25 +74,9 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
             b_valid_ready_delay = user_obj.get_b_valid_ready_delay();
             // len = user_obj.get_len();
             // burst = user_obj.get_burst();
-            // for (int i = 0; i < 256; i++)
-            //     wstrb[i] = user_obj.get_wstrb(i);
         end
         trans.aruser = addr_user;
         trans.awuser = addr_user;
-        
-        // trans.ar_valid_delay = ar_valid_delay;
-        // trans.resp_valid_ready_delay = resp_valid_ready_delay;
-        // trans.len = len;
-        // trans.burst = burst;
-        // trans.aw_valid_delay = aw_valid_delay;
-        // trans.b_valid_ready_delay = b_valid_ready_delay;
-
-        // for (int i = 0; i < 256; i++)
-            // `uvm_info("KNU_ADAPTER", $sformatf("wstrb inside adapter = %h", wstrb[i]), UVM_MEDIUM)
-        // trans.wstrb = wstrb;
-        // trans.wstrbQ = wstrb;
-        // trans.bit_wstrb = wstrb;
-        // trans.wstrb_exp = wstrb;
 
         `uvm_info(get_name(),
                   $psprintf("\n\treg2bus rw.addr = 'h%0h, rw.is_write = %0x, rw.n_bits = %0d, rw.data = 'h%h, rw.axuser = 'h%x", 

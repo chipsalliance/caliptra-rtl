@@ -43,11 +43,12 @@ class soc_ifc_env_axi_uvm_top_b2b_sequence extends soc_ifc_env_sequence_base #(.
     virtual task body();
         reg_model = configuration.soc_ifc_rm;
 
-        configuration.aaxi_ci.maxwaits = 100;
-        configuration.aaxi_ci.total_outstanding_depth = 10;
-        configuration.aaxi_ci.id_outstanding_depth = 10;
+        // configuration.aaxi_ci.maxwaits = 200;
+        // configuration.aaxi_ci.total_outstanding_depth = 10;
+        // configuration.aaxi_ci.id_outstanding_depth = 10;
         
         soc_ifc_env_axi_uvm_gen_b2b_rand_seq.aaxi_ci = configuration.aaxi_ci;
+        soc_ifc_env_axi_uvm_gen_b2b_rand_seq.reg_model = reg_model;
         soc_ifc_env_axi_uvm_gen_b2b_rand_seq.start(reg_model.soc_ifc_AXI_map.get_sequencer());
 
     endtask
