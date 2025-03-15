@@ -106,6 +106,8 @@ package soc_ifc_env_pkg;
 
   // Parameters defined as HVL parameters
 
+  `include "caliptra_aaxi_ports.svh"
+  `include "caliptra_aaxi_uvm_env.svh"
   `include "src/soc_ifc_env_typedefs.svh"
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"

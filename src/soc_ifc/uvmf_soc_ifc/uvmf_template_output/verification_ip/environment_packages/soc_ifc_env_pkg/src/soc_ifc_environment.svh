@@ -30,20 +30,26 @@
 class soc_ifc_environment  extends uvmf_environment_base #(
     .CONFIG_T( soc_ifc_env_configuration 
   ));
-  `uvm_component_utils( soc_ifc_environment )
-
 
   qvip_ahb_lite_slave_environment #()  qvip_ahb_lite_slave_subenv;
 
   // Avery AXI environment
-  aaxi_log              aaxi_test_log;
-  aaxi_uvm_container    aaxi_uc;             //VAR: UVM container 
-  aaxi_uvm_testbench    aaxi_tb;
-  uvm_table_printer     aaxi_printer;
-  aaxi_protocol_version aaxi_vers;
+  aaxi_log                      aaxi_test_log;
+  caliptra_aaxi_ports           aaxi_ports;
+  caliptra_aaxi_uvm_env         aaxi_env;
+  aaxi_scoreboard               aaxi_sb;  // Scoreboard to check the memory operation of the slave
+  uvm_table_printer             aaxi_printer;
+  aaxi_protocol_version         aaxi_vers;
+  // For comparing the uvm analysis port tr info between active/passive master/slave
+  `ifdef AVERY_CHECK_UVM_PORT
+      aaxi_scoreboard_passive_active aaxi_sb1; // for avery internal check of uvm port
+  `endif
 //  aaxi_cfg_info mcfg;
 //  aaxi_cfg_info scfg;
 
+  `uvm_component_utils_begin( soc_ifc_environment )
+      `uvm_field_enum(aaxi_protocol_version, aaxi_vers, UVM_ALL_ON)
+  `uvm_component_utils_end
 
 
   uvm_analysis_port #( mvc_sequence_item_base ) qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap [string];
@@ -167,30 +173,34 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         uvm_config_db #(aaxi_protocol_version)::set(uvm_root::get(), "*", "vers", aaxi_vers);
 
         // ask the sequencer not to generate random sequence at the beginning
-        aaxi_tb = aaxi_uvm_testbench::type_id::create("aaxi_tb", this);
-        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.master[0].sequencer.build_phase", "count", 0);
-//        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.slave[0].sequencer.build_phase", "count", 0);
+        aaxi_env = caliptra_aaxi_uvm_env::type_id::create("aaxi_env", this);
+        aaxi_sb = aaxi_scoreboard::type_id::create( "aaxi_sb", this );
+        `ifdef AVERY_CHECK_UVM_PORT
+            aaxi_sb1= aaxi_scoreboard_passive_active::type_id::create("aaxi_sb1", this);	
+        `endif
+        uvm_config_db #(int)::set(this/*null*/, "aaxi_env.master[0].sequencer.build_phase", "count", 0);
+//        uvm_config_db #(int)::set(this/*null*/, "aaxi_env.slave[0].sequencer.build_phase", "count", 0);
 //        `ifdef AVERY_PASSIVE_SLAVE
-//        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.psv_slave[0].sequencer.build_phase", "count", 0);
+//        uvm_config_db #(int)::set(this/*null*/, "aaxi_env.psv_slave[0].sequencer.build_phase", "count", 0);
 //        `endif
         `ifdef AVERY_PASSIVE_MASTER
-        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.psv_master[0].sequencer.build_phase", "count", 0);
+        uvm_config_db #(int)::set(this/*null*/, "aaxi_env.psv_master[0].sequencer.build_phase", "count", 0);
         `endif
 
         // COMMENTED OUT in AVERY reference file, aaxi_uvm_test_base....?
-        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_tb.env0.master[0].driver", "cfg_info", mcfg);
-        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_tb.env0.slave[0].driver", "cfg_info", scfg);
+        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_env.master[0].driver", "cfg_info", mcfg);
+        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_env.slave[0].driver", "cfg_info", scfg);
 
-        //get uc
-        void'(uvm_config_db #(aaxi_uvm_container)::get(uvm_root::get(), "*", "intf_uc", aaxi_uc));
+        //get aaxi_ports
+        void'(uvm_config_db #(caliptra_aaxi_ports)::get(uvm_root::get(), "*", "intf_aaxi_ports", aaxi_ports));
 
-        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_tb.env0.master[0].driver", "ports", aaxi_uc.ports);
-//        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_tb.env0.slave[0].driver", "ports", aaxi_uc.ports);
+        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_env.master[0].driver", "ports", aaxi_ports.m_ports_arr[0]);
+//        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_env.slave[0].driver", "ports", aaxi_ports.ports);
 //        `ifdef AVERY_PASSIVE_SLAVE // connect with aaxi_interconnect_intf or aaxi_intf
-//            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_tb.env0.psv_slave[0].driver", "ports", aaxi_uc.ports);
+//            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_env.psv_slave[0].driver", "ports", aaxi_ports.ports);
 //        `endif
         `ifdef AVERY_PASSIVE_MASTER // connect with aaxi_interconnect_intf or aaxi_intf
-            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_tb.env0.psv_master[0].driver", "ports", aaxi_uc.ports);
+            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_env.psv_master[0].driver", "ports", aaxi_ports.m_ports_arr[0]);
         `endif 
 
         // Create a specific depth printer for printing the created topology
@@ -251,36 +261,100 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // pragma uvmf custom connect_phase_pre_super end
     super.connect_phase(phase);
     begin: AVERY_AXI_CFG
-        aaxi_tb.env0.master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
-        aaxi_tb.env0.master[0].driver.cfg_info.uvm_resp = 1;    
-        aaxi_tb.env0.master[0].driver.cfg_info.total_outstanding_depth= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.id_outstanding_depth   = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_awuser_enable= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_wuser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_buser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_aruser_enable= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_ruser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_enable_b2b_txn = 0;
-        aaxi_tb.env0.master[0].driver.cfg_info.maxwaits = 100;
-        aaxi_tb.env0.master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-        aaxi_tb.env0.master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
-        `ifdef AVERY_PASSIVE_MASTER
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.uvm_resp = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.passive_mode   = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
-	    `ifdef AVERY_AXI_USER
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_awuser_enable= 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_wuser_enable = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_buser_enable = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_aruser_enable= 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_ruser_enable = 1;
-	    `endif
+        aaxi_env.master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
+        aaxi_env.master[0].driver.cfg_info.uvm_resp = 1;    
+        aaxi_env.master[0].driver.cfg_info.total_outstanding_depth= 1;
+        aaxi_env.master[0].driver.cfg_info.id_outstanding_depth   = 1;
+        aaxi_env.master[0].driver.cfg_info.maxwaits = 100;
+        `ifdef AVERY_AXI_USER
+            aaxi_env.master[0].driver.cfg_info.opt_awuser_enable= 1;
+            aaxi_env.master[0].driver.cfg_info.opt_wuser_enable = 1;
+            aaxi_env.master[0].driver.cfg_info.opt_buser_enable = 1;
+            aaxi_env.master[0].driver.cfg_info.opt_aruser_enable= 1;
+            aaxi_env.master[0].driver.cfg_info.opt_ruser_enable = 1;
         `endif
-        aaxi_tb.env0.slave[0].driver.cfg_info.passive_mode     = 1'b1;
-        aaxi_tb.env0.slave[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-        aaxi_tb.env0.slave[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
+        aaxi_env.master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
+        aaxi_env.master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
+        `ifdef AVERY_PASSIVE_MASTER
+            aaxi_env.psv_master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
+            aaxi_env.psv_master[0].driver.cfg_info.uvm_resp = 1;
+            aaxi_env.psv_master[0].driver.cfg_info.total_outstanding_depth= 1;
+            aaxi_env.psv_master[0].driver.cfg_info.id_outstanding_depth   = 1;
+            aaxi_env.psv_master[0].driver.cfg_info.passive_mode   = 1;
+            aaxi_env.psv_master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
+            aaxi_env.psv_master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
+        `ifdef AVERY_AXI_USER
+            aaxi_env.psv_master[0].driver.cfg_info.opt_awuser_enable= 1;
+            aaxi_env.psv_master[0].driver.cfg_info.opt_wuser_enable = 1;
+            aaxi_env.psv_master[0].driver.cfg_info.opt_buser_enable = 1;
+            aaxi_env.psv_master[0].driver.cfg_info.opt_aruser_enable= 1;
+            aaxi_env.psv_master[0].driver.cfg_info.opt_ruser_enable = 1;
+        `endif
+        `endif
+        //aaxi_env.slave[0].driver.cfg_info.passive_mode     = 1'b1;
+        //aaxi_env.slave[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
+        //aaxi_env.slave[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
+//        // Connect aaxi_env.slave[0].driver monitor to scoreboard
+//        for (int i = 0; i < AAXI_INTC_MASTER_CNT; i++ ) begin
+//            aaxi_env.master[i].driver.ptl_tx_port.connect( aaxi_sb.bfm_tx_export );
+//            aaxi_env.master[i].driver.ptl_rx_port.connect( aaxi_sb.bfm_rx_export );
+//        end
+//        for (int i = 0; i < AAXI_INTC_SLAVE_CNT; i++ ) begin
+//            aaxi_env.slave[i].driver.ptl_tx_port.connect( aaxi_sb.dut_tx_export );
+//            aaxi_env.slave[i].driver.ptl_rx_port.connect( aaxi_sb.dut_rx_export );
+//        end
+        `ifdef AVERY_CHECK_UVM_PORT
+            // This part is for avery internal check for uvm port, related to doc/AXI_uvm_port.xlsx 
+            if (AAXI_INTC_MASTER_CNT == 1 && AAXI_INTC_SLAVE_CNT == 1) begin // master slave b2b 
+                // AW
+                aaxi_env.master[0].ms_tx_AW_export.connect(aaxi_sb1.ms_tx_AW_export);
+                aaxi_env.psv_master[0].ms_tx_AW_export.connect(aaxi_sb1.ms_tx_AW_export);
+                aaxi_env.slave[0].slv_rx_AW_export.connect(aaxi_sb1.slv_rx_AW_export);
+                aaxi_env.psv_slave[0].slv_rx_AW_export.connect(aaxi_sb1.slv_rx_AW_export);
+
+                // W
+                aaxi_env.master[0].ms_tx_W_export.connect(aaxi_sb1.ms_tx_W_export);
+                aaxi_env.psv_master[0].ms_tx_W_export.connect(aaxi_sb1.ms_tx_W_export);
+                aaxi_env.slave[0].slv_rx_W_export.connect(aaxi_sb1.slv_rx_W_export);
+                aaxi_env.psv_slave[0].slv_rx_W_export.connect(aaxi_sb1.slv_rx_W_export);
+
+                // W beat
+                aaxi_env.master[0].ms_tx_W_beat_export.connect(aaxi_sb1.ms_tx_W_beat_export);
+                aaxi_env.psv_master[0].ms_tx_W_beat_export.connect(aaxi_sb1.ms_tx_W_beat_export);
+                aaxi_env.slave[0].slv_rx_W_beat_export.connect(aaxi_sb1.slv_rx_W_beat_export);
+                aaxi_env.psv_slave[0].slv_rx_W_beat_export.connect(aaxi_sb1.slv_rx_W_beat_export);
+
+                // AW W
+                aaxi_env.master[0].ms_tx_AW_W_export.connect(aaxi_sb1.ms_tx_AW_W_export);
+                aaxi_env.psv_master[0].ms_tx_AW_W_export.connect(aaxi_sb1.ms_tx_AW_W_export);
+                aaxi_env.slave[0].slv_rx_AW_W_export.connect(aaxi_sb1.slv_rx_AW_W_export);
+                aaxi_env.psv_slave[0].slv_rx_AW_W_export.connect(aaxi_sb1.slv_rx_AW_W_export);
+
+                // B
+                aaxi_env.master[0].write_done_export.connect(aaxi_sb1.write_done_export);
+                aaxi_env.psv_master[0].write_done_export.connect(aaxi_sb1.write_done_export);
+                aaxi_env.slave[0].slv_tx_B_export.connect(aaxi_sb1.slv_tx_B_export);
+                aaxi_env.psv_slave[0].slv_tx_B_export.connect(aaxi_sb1.slv_tx_B_export);
+
+                // AR
+                aaxi_env.master[0].ms_tx_AR_export.connect(aaxi_sb1.ms_tx_AR_export);
+                aaxi_env.psv_master[0].ms_tx_AR_export.connect(aaxi_sb1.ms_tx_AR_export);
+                aaxi_env.slave[0].slv_rx_AR_export.connect(aaxi_sb1.slv_rx_AR_export);
+                aaxi_env.psv_slave[0].slv_rx_AR_export.connect(aaxi_sb1.slv_rx_AR_export);
+
+                // R
+                aaxi_env.master[0].read_done_export.connect(aaxi_sb1.read_done_export);
+                aaxi_env.psv_master[0].read_done_export.connect(aaxi_sb1.read_done_export);
+                aaxi_env.slave[0].slv_tx_R_export.connect(aaxi_sb1.slv_tx_R_export);
+                aaxi_env.psv_slave[0].slv_tx_R_export.connect(aaxi_sb1.slv_tx_R_export);
+
+                // R beat
+                aaxi_env.master[0].ms_rx_R_beat_export.connect(aaxi_sb1.ms_rx_R_beat_export);
+                aaxi_env.psv_master[0].ms_rx_R_beat_export.connect(aaxi_sb1.ms_rx_R_beat_export);
+                aaxi_env.slave[0].slv_tx_R_beat_export.connect(aaxi_sb1.slv_tx_R_beat_export);
+                aaxi_env.psv_slave[0].slv_tx_R_beat_export.connect(aaxi_sb1.slv_tx_R_beat_export);
+            end
+        `endif
     end: AVERY_AXI_CFG
     configuration.aaxi_ci = aaxi_tb.env0.master[0].driver.cfg_info;
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
@@ -299,14 +373,14 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
-    aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_wr_analysis_export);
-    aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_rd_analysis_export);
+    aaxi_env.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
+    aaxi_env.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
+    aaxi_env.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    aaxi_env.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.axi_slave_subenv_interface_activity[0] == ACTIVE )
-       uvm_config_db #(aaxi_uvm_sequencer)::set(null,UVMF_SEQUENCERS,configuration.axi_slave_subenv_interface_names[0],aaxi_tb.env0.master[0].sequencer  );
+       uvm_config_db #(aaxi_uvm_sequencer)::set(null,UVMF_SEQUENCERS,configuration.axi_slave_subenv_interface_names[0],aaxi_env.master[0].sequencer  );
     // pragma uvmf custom reg_model_connect_phase begin
     /*if (TODO) */begin:connect_coverage
         soc_ifc_pred.soc_ifc_cov_ap      .connect                                   (soc_ifc_env_cov_sub.soc_ifc_ctrl_ae  );
@@ -317,8 +391,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         ss_mode_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.ss_mode_status_ae);
         mbox_sram_agent     .monitored_ap.connect                                   (soc_ifc_env_cov_sub.mbox_sram_ae     );
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
-        aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
-        aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
+        aaxi_env.master[0].  ms_tx_AW_W_export.connect                              (soc_ifc_env_cov_sub.axi_ae           );
+        aaxi_env.master[0].ms_rx_rvalid_export.connect                              (soc_ifc_env_cov_sub.axi_ae           );
     end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
@@ -331,8 +405,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))
       configuration.soc_ifc_rm.soc_ifc_AHB_map.set_sequencer(qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer, ahb_reg_adapter);
-    if ((configuration.enable_reg_adaptation) && (aaxi_tb.env0.master[0].sequencer != null ))
-      configuration.soc_ifc_rm.soc_ifc_AXI_map.set_sequencer(aaxi_tb.env0.master[0].sequencer, axi_reg_adapter);
+    if ((configuration.enable_reg_adaptation) && (aaxi_env.master[0].sequencer != null ))
+      configuration.soc_ifc_rm.soc_ifc_AXI_map.set_sequencer(aaxi_env.master[0].sequencer, axi_reg_adapter);
     // Set map and adapter handles within uvm predictor
     if (configuration.enable_reg_prediction) begin
       ahb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_AHB_map;
@@ -411,7 +485,7 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     this.mbox_sram_agent.handle_reset(kind);
 
 //    // Reset AXI agent TODO investigating correct way to do this as of 2/4/2025
-//    this.aaxi_tb.env0.master[0].master_reset();
+//    this.aaxi_env.master[0].master_reset();
 
     // Reset scoreboard according to kind
     this.soc_ifc_sb.handle_reset(kind);
