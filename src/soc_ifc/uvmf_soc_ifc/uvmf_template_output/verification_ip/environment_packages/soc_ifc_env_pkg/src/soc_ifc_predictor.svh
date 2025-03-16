@@ -2189,7 +2189,7 @@ class soc_ifc_predictor #(
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_aw_c = axi_txn.aaxi_aw_c;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ar_c = axi_txn.aaxi_ar_c;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ac_c = axi_txn.aaxi_ac_c;
-        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY; //TODO: temp, move to each reg and calc based on axi user and reg type
+        //TODO: temp, move to each reg and calc based on axi user and reg type
     end
     if (!axi_txn.is_write()) begin
         send_axi_rd_txn = 1;
@@ -2747,6 +2747,7 @@ class soc_ifc_predictor #(
             ["CPTRA_FW_EXTENDED_ERROR_INFO[0]":"CPTRA_FW_EXTENDED_ERROR_INFO[7]"]: begin
                 if (axi_txn.is_write()) begin
                     `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register on AXI interface. Nothing to do."}, UVM_DEBUG)
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
                 end
             end
             "CPTRA_BOOT_STATUS",
@@ -2835,6 +2836,8 @@ class soc_ifc_predictor #(
             end
             "CPTRA_TIMER_CONFIG": begin
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                if (axi_txn.is_write())
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
             end
             "CPTRA_BOOTFSM_GO": begin
                 // FIXME -- use reg predictor somehow?
@@ -2863,6 +2866,8 @@ class soc_ifc_predictor #(
             end
             "CPTRA_DBG_MANUF_SERVICE_REG": begin
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                if (axi_txn.is_write())
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
             end
             "CPTRA_GENERIC_INPUT_WIRES[0]",
             "CPTRA_GENERIC_INPUT_WIRES[1]": begin
@@ -2947,11 +2952,19 @@ class soc_ifc_predictor #(
             "CPTRA_WDT_STATUS": begin
                 `uvm_info("PRED_AXI", "AXI access of WDT status", UVM_MEDIUM);
             end
-            ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
+            ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"]: begin
+                `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                if (axi_txn.is_write())
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
+            end
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
-            "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_1": begin
+                `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+            end
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
+                if (axi_txn.is_write())
+                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
             end
             "CPTRA_HW_CAPABILITIES": begin
                 // Handled in callbacks via reg predictor

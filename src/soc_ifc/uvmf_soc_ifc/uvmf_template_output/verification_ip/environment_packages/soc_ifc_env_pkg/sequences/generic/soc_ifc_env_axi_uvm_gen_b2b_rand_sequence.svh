@@ -49,18 +49,37 @@ endclass
 task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_reg();
     
     aaxi_master_tr trans, rsp;
-    uvm_reg regs[$];
+    uvm_reg regs[$], reg_list[];
 
-    reg_model.soc_ifc_reg_rm.soc_ifc_reg_AXI_map.get_registers(regs, UVM_HIER);
+    // reg_model.soc_ifc_reg_rm.soc_ifc_reg_AXI_map.get_registers(regs, UVM_HIER);
 
-    foreach(regs[idx]) begin
+    reg_list = '{
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_ERROR_ENC,
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[2],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[3],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[4],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[5],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[6],
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_EXTENDED_ERROR_INFO[7],
+        reg_model.soc_ifc_reg_rm.CPTRA_TIMER_CONFIG,
+        reg_model.soc_ifc_reg_rm.CPTRA_DBG_MANUF_SERVICE_REG,
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_WDT_CFG[1],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[0],
+        reg_model.soc_ifc_reg_rm.CPTRA_RSVD_REG[1]
+    };
+
+    foreach(reg_list[idx]) begin
         trans = aaxi_master_tr::type_id::create("trans");
         start_item(trans);
         trans.randomize();
 
         trans.kind = AAXI_READ;
         trans.vers = AAXI4;
-        trans.addr = regs[idx].get_address(reg_model.soc_ifc_AXI_map);
+        trans.addr = reg_list[idx].get_address(reg_model.soc_ifc_AXI_map);
         trans.id = $urandom();
         trans.aruser = $urandom();
         trans.len = 0;
@@ -71,7 +90,7 @@ task soc_ifc_env_axi_uvm_gen_b2b_rand_sequence::read_reg();
         
         finish_item(trans);
     end
-    foreach(regs[idx]) begin
+    foreach(reg_list[idx]) begin
         get_response(rsp);
     end
 

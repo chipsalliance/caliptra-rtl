@@ -44,8 +44,8 @@ class soc_ifc_env_mbox_rw_rand_delay_small_sequence extends soc_ifc_env_mbox_seq
   function new(string name = "");
     super.new(name);
     // super.axi_user_obj.set_addr_user(32'hFFFF_FFFF);
-    override_mbox_user = 1; //TODO: if this is removed, mbox valid users are changed and there's a hang - revisit
-    mbox_user_override_val = 32'hFFFF_FFFF;
+    // override_mbox_user = 1; //TODO: if this is removed, mbox valid users are changed and there's a hang - revisit
+    // mbox_user_override_val = 32'hFFFF_FFFF;
   endfunction
 endclass
 

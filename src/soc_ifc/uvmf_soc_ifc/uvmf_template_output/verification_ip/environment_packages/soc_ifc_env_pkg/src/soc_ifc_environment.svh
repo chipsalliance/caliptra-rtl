@@ -356,7 +356,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
             end
         `endif
     end: AVERY_AXI_CFG
-    configuration.aaxi_ci = aaxi_tb.env0.master[0].driver.cfg_info;
+    configuration.aaxi_ci = aaxi_env.master[0].driver.cfg_info;
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
     ss_mode_ctrl_agent.monitored_ap.connect(soc_ifc_pred.ss_mode_ctrl_agent_ae);
@@ -375,8 +375,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
     aaxi_env.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
     aaxi_env.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_env.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
-    aaxi_env.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    aaxi_env.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_wr_analysis_export);
+    aaxi_env.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_rd_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.axi_slave_subenv_interface_activity[0] == ACTIVE )
