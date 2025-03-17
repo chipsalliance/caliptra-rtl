@@ -1781,7 +1781,9 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
         
         $display("Initializing AXI SRAM with random data");
-        initialize_caliptra_axi_sram();
+        if (!UVM_TB) begin
+            initialize_caliptra_axi_sram();
+        end
         
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
@@ -2322,26 +2324,29 @@ task initialize_caliptra_axi_sram;
     reg [7:0] random_byte;
     
     begin
+
+        if (!UVM_TB) begin
         
-        $display("Starting Caliptra SRAM initialization with random data (64K addresses, 4 bytes per address)...");
-        
-        // Loop through all addresses (64K) and all bytes per address (4 for 32-bit data)
-        for (addr = 0; addr < 65536; addr = addr + 1) begin
-            // For each address, initialize all bytes
-            for (byte_idx = 0; byte_idx < 4; byte_idx = byte_idx + 1) begin
-                random_byte = $random & 8'hFF;  // Generate random byte (8 bits)
+            $display("Starting Caliptra SRAM initialization with random data (64K addresses, 4 bytes per address)...");
+            
+            // Loop through all addresses (64K) and all bytes per address (4 for 32-bit data)
+            for (addr = 0; addr < 65536; addr = addr + 1) begin
+                // For each address, initialize all bytes
+                for (byte_idx = 0; byte_idx < 4; byte_idx = byte_idx + 1) begin
+                    random_byte = $random & 8'hFF;  // Generate random byte (8 bits)
+                    
+                    // Direct assignment
+                    caliptra_top_tb.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
+                end
                 
-                // Direct assignment
-                caliptra_top_tb.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
+                // Progress reporting every 12.5% (8192 addresses)
+                if ((addr % 8192) == 0) begin
+                    $display("  SRAM initialization progress: %0d%%", (addr * 100) / 65536);
+                end
             end
             
-            // Progress reporting every 12.5% (8192 addresses)
-            if ((addr % 8192) == 0) begin
-                $display("  SRAM initialization progress: %0d%%", (addr * 100) / 65536);
-            end
+            $display("Caliptra SRAM initialization complete!");
         end
-        
-        $display("Caliptra SRAM initialization complete!");
     end
 endtask
 
