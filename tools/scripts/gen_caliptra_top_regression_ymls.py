@@ -176,7 +176,7 @@ if __name__ == "__main__":
     csv_file_path = os.path.join(caliptra_root, 'src/integration/stimulus/testsuites/caliptra_top_master_test_list.csv')
 
     combinations = [
-        {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "uvmf_caliptra_top", "PromotePipeline": None, "generations": 1},
+        {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "caliptra_top_tb", "PromotePipeline": None, "generations": 1},
         {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "uvmf_caliptra_top", "PromotePipeline": None, "generations": 500, "timeout": 720},
         {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "caliptra_top_tb", "PromotePipeline": None, "generations": 2000},
         {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0|L1": "L1", "DUT": "uvmf_caliptra_top_itrng", "PromotePipeline": None, "generations": 1, "timeout": 1440},

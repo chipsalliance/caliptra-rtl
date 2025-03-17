@@ -3,7 +3,7 @@ document:
 
 contents:
   - generator:
-      tags: ["L1", "uvmf_caliptra_top", "Directed", "Nightly"]
+      tags: ["L1", "caliptra_top_tb", "Directed", "Nightly"]
       path: ""
       weight: 100
       generations: 1
