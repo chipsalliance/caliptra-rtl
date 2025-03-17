@@ -138,6 +138,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       inject_rand_delays dist { 0 := 5, 1 := 1 };
       inject_rst dist { 0 := 1, 1 := 2 };
   };
+  `endif
 
   // =============================================
   // Constructor
@@ -190,6 +191,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
 //      $display("  Setting payload_data[%0d] = 0x%0x", i, payload_data[i]);
 //    end
   endfunction
+  `endif
 
   // =============================================
   // Display method
