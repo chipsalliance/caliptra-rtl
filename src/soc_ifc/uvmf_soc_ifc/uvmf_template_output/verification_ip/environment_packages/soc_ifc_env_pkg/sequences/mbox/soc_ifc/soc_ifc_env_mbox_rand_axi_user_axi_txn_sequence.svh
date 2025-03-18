@@ -23,7 +23,7 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence extends soc_ifc_env_MBOX_AXI_SEQuence_base;
+class soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence extends soc_ifc_env_mbox_axi_sequence_base;
 
   `uvm_object_utils( soc_ifc_env_mbox_rand_axi_user_axi_txn_sequence )
 

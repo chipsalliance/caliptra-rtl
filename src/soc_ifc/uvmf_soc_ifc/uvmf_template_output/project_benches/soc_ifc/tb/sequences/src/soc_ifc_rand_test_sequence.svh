@@ -111,10 +111,10 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_RST_COLD                             := 1,
           IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 10,
           IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 10,
-          IDX_SOC_IFC_ENV_AXI_UVM_TOP_B2B                      := 100,
-          IDX_SOC_IFC_ENV_TOP_INVALID_READ                     := 100,
-          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL_AXI_TXN := 100,
-          IDX_SOC_IFC_ENV_MBOX_TOP_RW_RAND_DELAY_SMALL         := 100
+          IDX_SOC_IFC_ENV_AXI_UVM_TOP_B2B                      := 20,
+          IDX_SOC_IFC_ENV_TOP_INVALID_READ                     := 20,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL_AXI_TXN := 20,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RW_RAND_DELAY_SMALL         := 20
       };
   }
   constraint disable_long_env_seqs_c {
