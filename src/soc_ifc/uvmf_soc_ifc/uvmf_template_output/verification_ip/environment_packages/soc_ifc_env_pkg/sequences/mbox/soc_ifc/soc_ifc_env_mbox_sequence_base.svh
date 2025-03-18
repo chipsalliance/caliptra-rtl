@@ -165,6 +165,7 @@ class soc_ifc_env_mbox_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG
   //==========================================
   function new(string name = "" );
     super.new(name);
+    axi_user_obj = new();
     // Create an array of all defined mbox cmd values.
     // This can be used in constraints as appropriate
     defined_cmds = new[mbox_op_rand.cmd.cmd_e.num()];
@@ -270,10 +271,11 @@ endclass
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
     byte ii;
+    uvm_reg_data_t mbox_valid_axi_user_from_reg;
     // Read the valid AxUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
+       for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
             if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value())
                 mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value();
             else
@@ -719,7 +721,7 @@ endfunction
 //              This function uses the more restrictive definition to evaluate constraints.
 //==========================================
 function caliptra_axi_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_AXI_USER);
-    axi_user_obj = new();
+    //axi_user_obj = new();
     if (!this.axi_user_obj.randomize() with {if (axi_user_locked.locked)
                                                  (addr_user == axi_user_locked.axi_user) dist
                                                  {1 :/ 1000,
@@ -755,10 +757,13 @@ function bit soc_ifc_env_mbox_sequence_base::axi_user_used_is_valid(caliptra_axi
     caliptra_axi_user user;
     if (user_handle == null) user = this.axi_user_obj;
     else                     user = user_handle;
-    if (this.axi_user_locked.locked)
+
+    if (this.axi_user_locked.locked) begin
         return user.get_addr_user() == this.axi_user_locked.axi_user;
-    else 
+    end
+    else begin
         return user.get_addr_user() inside {mbox_valid_users};
+    end
 endfunction
 
 //==========================================

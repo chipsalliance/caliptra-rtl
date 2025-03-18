@@ -36,5 +36,7 @@ uvmf:
 #                                           ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
 #                                           ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
 #                                           ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'
-      - name: soc_ifc_sb_axi_ap
+      - name: soc_ifc_sb_axi_wr_ap
+        type: 'aaxi_master_tr'
+      - name: soc_ifc_sb_axi_rd_ap
         type: 'aaxi_master_tr'

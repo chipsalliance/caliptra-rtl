@@ -26,6 +26,13 @@
 class caliptra_axi_user extends uvm_object;
 
   rand bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1;
+  bit unsigned [15:0] ar_valid_delay = 0;
+  bit unsigned [15:0] resp_valid_ready_delay = 0;
+  bit unsigned [15:0] aw_valid_delay = 0;
+  bit unsigned [15:0] b_valid_ready_delay = 0;
+  bit unsigned [15:0] adw_valid_delay = 0;
+  bit unsigned [7:0] len = 0;
+  bit unsigned [1:0] burst = 0;
 
   function new (string name="");
       super.new(name);
@@ -42,5 +49,62 @@ class caliptra_axi_user extends uvm_object;
   function bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] get_addr_user();
     return this.addr_user;
   endfunction
+
+  function void set_ar_valid_delay(bit unsigned [15:0] value);
+    this.ar_valid_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_ar_valid_delay();
+    return this.ar_valid_delay;
+endfunction
+
+function void set_resp_valid_ready_delay(bit unsigned [15:0] value);
+    this.resp_valid_ready_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_resp_valid_ready_delay();
+  return this.resp_valid_ready_delay;
+endfunction
+
+function void set_aw_valid_delay(bit unsigned [15:0] value);
+    this.aw_valid_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_aw_valid_delay();
+  return this.aw_valid_delay;
+endfunction
+
+function void set_b_valid_ready_delay(bit unsigned [15:0] value);
+    this.b_valid_ready_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_b_valid_ready_delay();
+  return this.b_valid_ready_delay;
+endfunction
+
+function void set_adw_valid_delay(bit unsigned [15:0] value);
+  this.adw_valid_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_adw_valid_delay();
+return this.adw_valid_delay;
+endfunction
+
+function void set_len(bit unsigned [7:0] value);
+  this.len = value;
+endfunction
+
+function bit unsigned [7:0] get_len();
+  return this.len;
+endfunction
+
+function void set_burst(bit unsigned [1:0] value);
+  this.burst = value;
+endfunction
+
+function bit unsigned [1:0] get_burst();
+  return this.burst;
+endfunction
+
 
 endclass

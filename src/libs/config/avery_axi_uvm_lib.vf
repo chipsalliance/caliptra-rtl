@@ -1,6 +1,7 @@
 +incdir+${UVM_HOME}/src
 +incdir+${UVM_HOME}/src/dpi
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
++incdir+${MSFT_AVERY_UVM_TB}/src.uvm/src.uvm
 +incdir+${AVERY_AXI}/src.uvm
 +incdir+${AVERY_AXI}/testsuite/examples.uvm
 +incdir+${AVERY_AXI}/src.axi.VCS
@@ -21,5 +22,5 @@ ${AVERY_AXI}/src.VCS/aaxi_busmonitor.v
 ${AVERY_AXI}/src.axi/aaxi_coverage_metrics.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg_test.sv
 ${AVERY_AXI}/src.axi/aaxi_intf.sv
-${AVERY_AXI}/src.uvm/aaxi_uvm_pkg.sv
+${MSFT_AVERY_UVM_TB}/src.uvm/src.uvm/caliptra_aaxi_uvm_pkg.sv
 ${AVERY_AXI}/src.uvm/aaxi_uvm_test_top.sv
