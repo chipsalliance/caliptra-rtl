@@ -36,9 +36,9 @@ def generate_output_filename(csv_file_path, criteria):
             if criteria.get(key):
                 parts.append(criteria[key])
     
-    parent_directory = os.path.dirname(os.path.dirname(csv_file_path))
+    directory = os.path.dirname(csv_file_path)
     filename = "_".join(parts) + "_regression.yml"
-    return os.path.join(parent_directory, filename)
+    return os.path.join(directory, filename)
 
 def csv_to_yaml(csv_file_path, yml_file_path, criteria, generations):
     # Required headers
@@ -320,7 +320,7 @@ if __name__ == "__main__":
         logger.error("CALIPTRA_ROOT environment variable is not set. Please set it before running this script.")
         exit(1)
     
-    csv_file_path = os.path.join(caliptra_root, 'src/integration/stimulus/testsuites/caliptra_top_master_test_list.csv')
+    csv_file_path = os.path.join(caliptra_root, 'src/integration/stimulus/caliptra_top_master_test_list.csv')
 
     # Display a few lines of CSV for debugging
     logger.info("First few lines of CSV file:")
@@ -335,13 +335,14 @@ if __name__ == "__main__":
         logger.error(f"Error reading CSV file: {e}")
 
     combinations = [
-        {"Directed|Random": "Either", "Nightly|Weekly": "Either", "L0": "L0", "L1": None, "DUT": "caliptra_top_tb", "PromotePipeline": "Promote"},
-        {"Directed|Random": "Either", "Nightly|Weekly": "Either", "L0": "L0", "L1": None, "DUT": "caliptra_top_trng_tb", "PromotePipeline": "Promote"},
-        {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0": None, "L1": "L1", "DUT": "caliptra_top_tb", "PromotePipeline": None},
-        {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0": None, "L1": "L1", "DUT": "uvmf_caliptra_top", "PromotePipeline": None, "timeout": 720},
-        {"Directed|Random": "Random", "Nightly|Weekly": "Nightly", "L0": None, "L1": "L1", "DUT": "caliptra_top_tb", "PromotePipeline": None},
-        {"Directed|Random": "Directed", "Nightly|Weekly": "Nightly", "L0": None, "L1": "L1", "DUT": "uvmf_caliptra_top_itrng", "PromotePipeline": None, "timeout": 1440},
-        {"Directed|Random": "Directed", "Nightly|Weekly": None, "L0": "L0", "L1": None, "DUT": "uvmf_caliptra_top", "PromotePipeline": "Promote"}
+        {"Directed|Random": "Either",       "Nightly|Weekly": "Either",     "L0": "L0",     "L1": None,     "DUT": "caliptra_top_tb",          "PromotePipeline": "Promote"            },
+        {"Directed|Random": "Either",       "Nightly|Weekly": "Either",     "L0": "L0",     "L1": None,     "DUT": "caliptra_top_trng_tb",     "PromotePipeline": "Promote"            },
+        {"Directed|Random": "Directed",     "Nightly|Weekly": None,         "L0": "L0",     "L1": None,     "DUT": "uvmf_caliptra_top",        "PromotePipeline": "Promote"            },
+        {"Directed|Random": "Directed",     "Nightly|Weekly": "Nightly",    "L0": None,     "L1": "L1",     "DUT": "caliptra_top_tb",          "PromotePipeline": None                 },
+        {"Directed|Random": "Directed",     "Nightly|Weekly": "Nightly",    "L0": None,     "L1": "L1",     "DUT": "uvmf_caliptra_top_itrng",  "PromotePipeline": None, "timeout": 1440},
+        {"Directed|Random": "Directed",     "Nightly|Weekly": "Nightly",    "L0": None,     "L1": "L1",     "DUT": "uvmf_caliptra_top",        "PromotePipeline": None, "timeout": 1440},
+        {"Directed|Random": "Random",       "Nightly|Weekly": "Nightly",    "L0": None,     "L1": "L1",     "DUT": "uvmf_caliptra_top",        "PromotePipeline": None, "timeout": 720 },
+        {"Directed|Random": "Random",       "Nightly|Weekly": "Nightly",    "L0": None,     "L1": "L1",     "DUT": "caliptra_top_tb",          "PromotePipeline": None                 },
     ]
 
     # Process each combination
