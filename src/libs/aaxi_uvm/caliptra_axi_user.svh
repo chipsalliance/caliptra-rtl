@@ -26,10 +26,11 @@
 class caliptra_axi_user extends uvm_object;
 
   rand bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1;
-  bit unsigned [15:0] ar_valid_delay = 1;
-  bit unsigned [15:0] resp_valid_ready_delay = 1;
-  bit unsigned [15:0] aw_valid_delay = 1;
-  bit unsigned [15:0] b_valid_ready_delay = 1;
+  bit unsigned [15:0] ar_valid_delay = 0;
+  bit unsigned [15:0] resp_valid_ready_delay = 0;
+  bit unsigned [15:0] aw_valid_delay = 0;
+  bit unsigned [15:0] b_valid_ready_delay = 0;
+  bit unsigned [15:0] adw_valid_delay = 0;
   bit unsigned [7:0] len = 0;
   bit unsigned [1:0] burst = 0;
 
@@ -79,6 +80,14 @@ endfunction
 
 function bit unsigned [15:0] get_b_valid_ready_delay();
   return this.b_valid_ready_delay;
+endfunction
+
+function void set_adw_valid_delay(bit unsigned [15:0] value);
+  this.adw_valid_delay = value;
+endfunction
+
+function bit unsigned [15:0] get_adw_valid_delay();
+return this.adw_valid_delay;
 endfunction
 
 function void set_len(bit unsigned [7:0] value);

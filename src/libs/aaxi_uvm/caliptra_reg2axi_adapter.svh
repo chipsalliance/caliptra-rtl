@@ -52,7 +52,7 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
         bit unsigned [15:0] resp_valid_ready_delay = 1;
         bit unsigned [15:0] aw_valid_delay = 1;
         bit unsigned [15:0] b_valid_ready_delay = 1;
-        //add adw_valid_delay = 1;
+        bit unsigned [15:0] adw_valid_delay = 1;
         bit unsigned [7:0] len = 0;
         bit unsigned [1:0] burst = 0;
 
@@ -67,16 +67,21 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
         else if (!$cast(user_obj, item.extension))
             `uvm_error("reg2bus", "uvm_reg_item provided to caliptra_reg2axi_adapter contains invalid extension object, which is needed to derive the AxUSER field")
         else begin
-            addr_user = user_obj.get_addr_user();
-            ar_valid_delay = user_obj.get_ar_valid_delay();
-            resp_valid_ready_delay = user_obj.get_resp_valid_ready_delay();
-            aw_valid_delay = user_obj.get_aw_valid_delay();
-            b_valid_ready_delay = user_obj.get_b_valid_ready_delay();
-            // len = user_obj.get_len();
-            // burst = user_obj.get_burst();
+            addr_user               = user_obj.get_addr_user();
+            ar_valid_delay          = user_obj.get_ar_valid_delay();
+            resp_valid_ready_delay  = user_obj.get_resp_valid_ready_delay();
+            aw_valid_delay          = user_obj.get_aw_valid_delay();
+            b_valid_ready_delay     = user_obj.get_b_valid_ready_delay();
+            adw_valid_delay         = user_obj.get_adw_valid_delay();
         end
         trans.aruser = addr_user;
         trans.awuser = addr_user;
+
+        trans.ar_valid_delay            = ar_valid_delay;
+        trans.resp_valid_ready_delay    = resp_valid_ready_delay;
+        trans.aw_valid_delay            = aw_valid_delay;
+        trans.b_valid_ready_delay       = b_valid_ready_delay;
+        trans.adw_valid_delay           = adw_valid_delay;
 
         `uvm_info(get_name(),
                   $psprintf("\n\treg2bus rw.addr = 'h%0h, rw.is_write = %0x, rw.n_bits = %0d, rw.data = 'h%h, rw.axuser = 'h%x", 
