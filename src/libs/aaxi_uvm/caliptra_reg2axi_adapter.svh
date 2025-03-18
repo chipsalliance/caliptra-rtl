@@ -48,11 +48,11 @@ class caliptra_reg2axi_adapter extends aaxi_uvm_mem_adapter;
     //
     function uvm_sequence_item reg2bus(const ref uvm_reg_bus_op rw);
         bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1; // FIXME default val
-        bit unsigned [15:0] ar_valid_delay = 1;
-        bit unsigned [15:0] resp_valid_ready_delay = 1;
-        bit unsigned [15:0] aw_valid_delay = 1;
-        bit unsigned [15:0] b_valid_ready_delay = 1;
-        bit unsigned [15:0] adw_valid_delay = 1;
+        bit unsigned [15:0] ar_valid_delay = 0;
+        bit unsigned [15:0] resp_valid_ready_delay = 0;
+        bit unsigned [15:0] aw_valid_delay = 0;
+        bit unsigned [15:0] b_valid_ready_delay = 0;
+        bit unsigned [15:0] adw_valid_delay = 0;
         bit unsigned [7:0] len = 0;
         bit unsigned [1:0] burst = 0;
 
