@@ -2,16 +2,8 @@ document:
   schema: 1.0
 
 contents:
-  - generator:
+  - tests:
       tags: ["L0", "SOC_IFC",  "directed", "smoke_test"]
-      path: ""
-      weight: 100
-      generations: 6
-      formats: 
-#        generate: "reseed {template}.yml -seed {seed}"
-#        path: "{template_basename}__{seed}.yml"
-        generate: "reseed {template}.yml -seed 1"
-        path: "{template_basename}__1.yml"
-      templates:
-        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_cmdline_test   : { weight 100 }
-        $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test      : { weight 500 }
+      paths:
+        - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_cmdline_test.yml
+        - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test.yml
