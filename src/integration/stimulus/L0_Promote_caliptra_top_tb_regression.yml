@@ -3,15 +3,14 @@ document:
 
 contents:
   - generator:
-      tags: ["L1", "caliptra_top_tb", "Directed", "Nightly"]
+      tags: ["L0", "caliptra_top_tb"]
       path: ""
       weight: 100
-      generations: 1
+      generations: 60
       formats:
-        generate: "reseed {template}.yml -seed {seed}"
-        path: "{template_basename}__{seed}.yml"
+        generate: "reseed {template}.yml -seed 1"
+        path: "{template_basename}__1.yml"
       templates:
-        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_mini/smoke_test_datavault_mini: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read: { weight: 100}
@@ -31,7 +30,6 @@ contents:
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras: { weight: 100}
@@ -42,7 +40,6 @@ contents:
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_hmac_multiblock_flow/smoke_test_kv_hmac_multiblock_flow: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_cg/smoke_test_kv_cg: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign: { weight: 100}
@@ -64,37 +61,13 @@ contents:
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating: { weight: 100}
         ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h10/fw_test_lms_n24_w1_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h15/fw_test_lms_n24_w1_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h20/fw_test_lms_n24_w1_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h5/fw_test_lms_n24_w2_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h10/fw_test_lms_n24_w2_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h15/fw_test_lms_n24_w2_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w2_h20/fw_test_lms_n24_w2_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h5/fw_test_lms_n24_w4_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h10/fw_test_lms_n24_w4_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h15/fw_test_lms_n24_w4_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w4_h20/fw_test_lms_n24_w4_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h5/fw_test_lms_n24_w8_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h10/fw_test_lms_n24_w8_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h15/fw_test_lms_n24_w8_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w8_h20/fw_test_lms_n24_w8_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h5/fw_test_lms_n32_w1_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h10/fw_test_lms_n32_w1_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h15/fw_test_lms_n32_w1_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w1_h20/fw_test_lms_n32_w1_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h5/fw_test_lms_n32_w2_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h10/fw_test_lms_n32_w2_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h15/fw_test_lms_n32_w2_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w2_h20/fw_test_lms_n32_w2_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h5/fw_test_lms_n32_w4_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h10/fw_test_lms_n32_w4_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h15/fw_test_lms_n32_w4_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w4_h20/fw_test_lms_n32_w4_h20: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h5/fw_test_lms_n32_w8_h5: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h10/fw_test_lms_n32_w8_h10: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h15/fw_test_lms_n32_w8_h15: { weight: 100}
-        ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h20/fw_test_lms_n32_w8_h20: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_locked_api/smoke_test_mldsa_locked_api: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_aes_kv_rand/smoke_test_aes_kv_rand: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow: { weight: 20}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa/smoke_test_mldsa: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_strap/smoke_test_strap: { weight: 100}
