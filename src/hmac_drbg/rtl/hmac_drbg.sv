@@ -276,7 +276,7 @@ module hmac_drbg
           V2_ST:        K_reg   <= HMAC_tag;
           T_ST:         V_reg   <= HMAC_tag;
           V3_ST:        K_reg   <= HMAC_tag;
-          DONE_ST:      V_reg   <= HMAC_tag;
+          CHCK_ST:      V_reg   <= HMAC_tag;
           default: begin 
             K_reg <= K_reg; 
             V_reg <= V_reg; 
