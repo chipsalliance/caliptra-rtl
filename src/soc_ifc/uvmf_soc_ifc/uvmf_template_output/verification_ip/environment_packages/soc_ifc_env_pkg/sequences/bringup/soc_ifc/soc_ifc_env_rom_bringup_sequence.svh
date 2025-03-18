@@ -97,7 +97,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
                                idevid_cert_attr_rand[14] == 32'h0505_0606; /* Manuf Serial Num */
                                idevid_cert_attr_rand[15] == 32'h7070_8080; /* Manuf Serial Num */}
   constraint pqc_key_type_value_c { pqc_key_type_rand <= 3; }
-  constraint tmp_force_pqc_key_type_value_c { pqc_key_type_rand == 1; } // MLDSA-only, unless explicitly running LMS image TODO extract this from image manifest
+  constraint tmp_force_pqc_key_type_value_c { pqc_key_type_rand == 1; } // MLDSA-only (3 == LMS), unless explicitly running LMS image TODO extract this from image manifest
 
   //==========================================
   // Function:    new
