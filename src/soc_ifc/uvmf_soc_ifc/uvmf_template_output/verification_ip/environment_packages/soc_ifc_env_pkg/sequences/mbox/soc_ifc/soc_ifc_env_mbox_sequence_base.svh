@@ -272,26 +272,20 @@ endclass
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
     byte ii;
     uvm_reg_data_t mbox_valid_axi_user_from_reg;
-    `uvm_info("KNU_HANG", "Inside mbox setup", UVM_MEDIUM)
     // Read the valid AxUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
-        `uvm_info("KNU_HANG", "mbox valid users not initialized", UVM_MEDIUM)
-        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
+       for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
             if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value())
                 mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value();
             else
                 mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_reset("HARD");
-
-            `uvm_info("KNU_HANG", $sformatf("mbox valid user[%0d] = %h", ii, reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value()), UVM_MEDIUM)
-            
         end
         // FIXME hardcoded default value of 32'hFFFF_FFFF
         mbox_valid_users[5] = '1;
         mbox_valid_users_initialized = 1'b1;
     end
     else begin
-        `uvm_info("KNU_HANG", "mbox valid users initialized", UVM_MEDIUM)
         for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_CHECK_LOOP
             if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value() &&
                 mbox_valid_users[ii] != reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value())
@@ -315,7 +309,6 @@ task soc_ifc_env_mbox_sequence_base::mbox_acquire_lock(output op_sts_e op_sts);
     bit soc_has_lock;
 
     op_sts = CPTRA_TIMEOUT;
-    `uvm_info("KNU_HANG", "Inside mbox acquire lock, reading lock reg", UVM_MEDIUM)
     reg_model.mbox_csr_rm.mbox_lock.read(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(get_rand_user(AXI_USER_PROB_LOCK)));
     report_reg_sts(reg_sts, "mbox_lock");
     // Wait for read data to return with '0', indicating no other agent has lock
@@ -729,7 +722,6 @@ endfunction
 //==========================================
 function caliptra_axi_user soc_ifc_env_mbox_sequence_base::get_rand_user(int unsigned invalid_prob = FORCE_VALID_AXI_USER);
     //axi_user_obj = new();
-    `uvm_info("KNU_HANG", "Inside get_rand_user", UVM_MEDIUM)
     if (!this.axi_user_obj.randomize() with {if (axi_user_locked.locked)
                                                  (addr_user == axi_user_locked.axi_user) dist
                                                  {1 :/ 1000,
@@ -763,16 +755,13 @@ endfunction
 //==========================================
 function bit soc_ifc_env_mbox_sequence_base::axi_user_used_is_valid(caliptra_axi_user user_handle = null);
     caliptra_axi_user user;
-    `uvm_info("KNU_HANG", "Inside axi_user_used_is_valid", UVM_MEDIUM)
     if (user_handle == null) user = this.axi_user_obj;
     else                     user = user_handle;
 
     if (this.axi_user_locked.locked) begin
-        `uvm_info("KNU_HANG", $sformatf("locked axi user = %h", (user.get_addr_user() == this.axi_user_locked.axi_user)), UVM_MEDIUM)
         return user.get_addr_user() == this.axi_user_locked.axi_user;
     end
     else begin
-        `uvm_info("KNU_HANG", $sformatf("axi user = %h %p, addr user = %h", (user.get_addr_user() inside {mbox_valid_users}), mbox_valid_users, user.get_addr_user()), UVM_MEDIUM) 
         return user.get_addr_user() inside {mbox_valid_users};
     end
 endfunction

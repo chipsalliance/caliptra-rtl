@@ -607,57 +607,21 @@ class soc_ifc_scoreboard #(
 
     if (axi_wr_expected_q.size() > 0) begin
         t_exp = axi_wr_expected_q.pop_front();
-        `uvm_info("KNU_SCBD_AXI", $sformatf("exp strobes is %b, act strobes is %b", {t_exp.strobes[3],t_exp.strobes[2],t_exp.strobes[1],t_exp.strobes[0]}, {t.strobes[3],t.strobes[2],t.strobes[1],t.strobes[0]}), UVM_MEDIUM)
-        `uvm_info("KNU_SCBD_AXI", "--------Expected txn---------", UVM_MEDIUM)
-        // t_exp.packet_sprint(4,);
-        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
-        `uvm_info("KNU_SCBD_AXI", "--------Actual txn---------", UVM_MEDIUM)
-        // t.packet_sprint(4,);
-        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+        `uvm_info("SCBD_AXI", {"Expected txn:            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_DEBUG)
+        `uvm_info("SCBD_AXI", {"Actual   txn:            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_DEBUG)
 
         // txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
         txn_eq = t.do_compare(t_exp, uvm_default_comparer);
 
-        `uvm_info("KNU_DO_COMPARE", $sformatf("data = %h %h, beatQ[0] = %h %h vers = %p %p, kind = %p %p, addr = %h %h, id = %h %h, len = %h %h, size = %h %h, burst = %p %p, lock = %p %p, cache = %p %p, prot = %p %p, awuser = %h %h, wuser_A = %p %p, buser = %h %h, aruser = %h %h ruser_A = %p %p, inner = %p %p, share = %p %p, master = %p %p, sparse = %p %p, resp = %p %p, domain = %p %p, bar = %p %p, snoop = %p %p, acaddr = %h %h, acsnoop = %p %p, crresp = %p %p, awtagop = %p %p, artagop = %p %p, wtag = %p %p, aaxi_aw_c = %p %p, aaxi_w_c = %p %p, aaxi_b_c = %p %p, aaxi_ar_c = %p %p, aaxi_r_c = %p %p, aaxi_ac_c = %p %p, aaxi_cr_c = %p %p, aaxi_cd_c = %p %p", 
-          {t.data[3],t.data[2],t.data[1],t.data[0]}, {t_exp.data[3],t_exp.data[2],t_exp.data[1],t_exp.data[0]},
-          t.beatQ[0], t_exp.beatQ[0], t.vers, t_exp.vers,
-          t.kind, t_exp.kind,
-          t.addr, t_exp.addr,
-          t.id, t_exp.id,
-          t.len, t_exp.len,
-          t.size, t_exp.size,
-          t.burst, t_exp.burst,
-          t.lock, t_exp.lock,
-          t.cache, t_exp.cache,
-          t.prot, t_exp.prot,
-          t.awuser, t_exp.awuser,
-          t.wuser_A, t_exp.wuser_A,
-          t.buser, t_exp.buser,
-          t.aruser, t_exp.aruser,
-          t.ruser_A, t_exp.ruser_A,
-          t.inner, t_exp.inner,
-          t.share, t_exp.share,
-          t.master, t_exp.master,
-          t.sparse, t_exp.sparse,
-          t.resp, t_exp.resp,
-          t.domain, t_exp.domain,
-          t.bar, t_exp.bar, t.snoop, t_exp.snoop, t.acaddr, t_exp.acaddr, t.acsnoop, t_exp.acsnoop, t.crresp, t_exp.crresp,
-          t.awtagop, t_exp.awtagop, t.artagop, t_exp.artagop, t.wtag, t_exp.wtag, t.aaxi_aw_c, t_exp.aaxi_aw_c, t.aaxi_w_c, t_exp.aaxi_w_c,
-          t.aaxi_b_c, t_exp.aaxi_b_c, t.aaxi_ar_c, t_exp.aaxi_ar_c, t.aaxi_r_c, t_exp.aaxi_r_c, t.aaxi_ac_c, t_exp.aaxi_ac_c,
-          t.aaxi_cr_c, t_exp.aaxi_cr_c, t.aaxi_cd_c, t_exp.aaxi_cd_c
-        ), UVM_MEDIUM)
-
-        $display("^^^^^^^^^^^^^scbd t beatQ = %h, t_exp beatQ = %h", t.beatQ[0], t_exp.beatQ[0]);
-        `uvm_info("KNU_SCBD_AXI", $sformatf("diff is %s", diff), UVM_MEDIUM)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)
         end
         else begin
             mismatch_count++;
-            `uvm_error("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p} {Data: 0x%x}",
+            `uvm_error("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {kind: %p} {Error: %p}",
                                              t.addr,    t.beatQ[0],    t.kind,    axi_resp_e'(t.resp    [$bits(axi_resp_e)-1:0]),
-                                             t_exp.addr,t_exp.beatQ[0],t_exp.kind,axi_resp_e'(t_exp.resp[$bits(axi_resp_e)-1:0]), {t_exp.data[3],t_exp.data[2],t_exp.data[1],t_exp.data[0]}))
+                                             t_exp.addr,t_exp.beatQ[0],t_exp.kind,axi_resp_e'(t_exp.resp[$bits(axi_resp_e)-1:0])))
         end
     end
     else begin
@@ -688,17 +652,11 @@ class soc_ifc_scoreboard #(
 
     if (axi_rd_expected_q.size() > 0) begin
         t_exp = axi_rd_expected_q.pop_front();
-        `uvm_info("KNU_SCBD_AXI", $sformatf("exp strobes is %b, act strobes is %b", {t_exp.strobes[3],t_exp.strobes[2],t_exp.strobes[1],t_exp.strobes[0]}, {t.strobes[3],t.strobes[2],t.strobes[1],t.strobes[0]}), UVM_MEDIUM)
-        `uvm_info("KNU_SCBD_AXI", "--------Expected txn---------", UVM_MEDIUM)
-        // t_exp.packet_sprint(4,);
-        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
-        `uvm_info("KNU_SCBD_AXI", "--------Actual txn---------", UVM_MEDIUM)
-        // t.packet_sprint(4,);
-        `uvm_info("KNU_SCBD_AXI", {"            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_MEDIUM)
+        `uvm_info("SCBD_AXI", {"Expected txn:            Data: ",t_exp.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_DEBUG)
+        `uvm_info("SCBD_AXI", {"Actual   txn:            Data: ",t.packet_sprint(4, "AXI_SUB_0_AE")}, UVM_DEBUG)
 
         // txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
         txn_eq = t.do_compare(t_exp, uvm_default_comparer);
-        `uvm_info("KNU_SCBD_AXI", $sformatf("diff is %s", diff), UVM_MEDIUM)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)

@@ -2228,8 +2228,10 @@ class soc_ifc_predictor #(
                     soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                     // "Expected" resp is SLVERR
-                    soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    if (axi_txn.is_write())
+                        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    else
+                        soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     // Complete any scheduled predictions to 0 (due to other delay jobs)
                     if (p_soc_ifc_rm.mbox_csr_rm.mbox_lock_clr_miss.is_on()) begin
                         p_soc_ifc_rm.mbox_csr_rm.mbox_lock.lock.predict(0);
@@ -2247,8 +2249,10 @@ class soc_ifc_predictor #(
                     soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
                     soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                     // "Expected" resp is SLVERR
-                    soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-                    soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    if (axi_txn.is_write())
+                        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                    else
+                        soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                 end
             end
             "mbox_cmd",
@@ -2286,7 +2290,6 @@ class soc_ifc_predictor #(
                         if (!(axi_txn.awuser inside {mbox_valid_users})) begin
                             // "Expected" resp is SLVERR
                             soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
-                            soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                         end
                     end
                 end
@@ -2297,7 +2300,6 @@ class soc_ifc_predictor #(
                         soc_ifc_sb_axi_rd_ap_output_transaction.data = {0,0,0,0};
                         soc_ifc_sb_axi_rd_ap_output_transaction.beatQ = {0};
                         // "Expected" resp is SLVERR
-                        soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                         soc_ifc_sb_axi_rd_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end
                 end
@@ -2867,89 +2869,6 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 if (axi_txn.is_write())
                     soc_ifc_sb_axi_wr_ap_output_transaction.resp = AAXI_RESP_OKAY;
-            end
-            "CPTRA_GENERIC_INPUT_WIRES[0]",
-            "CPTRA_GENERIC_INPUT_WIRES[1]": begin
-                if (axi_txn.is_write()) begin
-                    `uvm_info("PRED_AXI", $sformatf("Write to %s register has no effect", axs_reg.get_name()), UVM_LOW)
-                end
-            end
-            "CPTRA_GENERIC_OUTPUT_WIRES[0]",
-            "CPTRA_GENERIC_OUTPUT_WIRES[1]": begin
-                if (axi_txn.is_write()) begin
-                    `uvm_info("PRED_AXI", $sformatf("Write to %s register has no effect", axs_reg.get_name()), UVM_LOW)
-                end
-            end
-            "CPTRA_HW_REV_ID": begin
-                if (axi_txn.is_write()) begin
-                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
-                end
-                else begin
-                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
-                end
-            end
-            "CPTRA_FW_REV_ID[0]",
-            "CPTRA_FW_REV_ID[1]": begin
-                `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
-            end
-            "CPTRA_HW_CONFIG": begin
-                if (axi_txn.is_write()) begin
-                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
-                end
-                else begin
-                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
-                end
-            end
-            // "CPTRA_WDT_TIMER1_EN": begin
-            //     if (axi_txn.is_write()) begin
-            //         `uvm_info("PRED_AXI", {"Detected write to ", axs_reg.get_name()," register, starting WDT timer1"}, UVM_MEDIUM);
-            //     end
-            // end
-            // "CPTRA_WDT_TIMER1_CTRL": begin
-            //     if (axi_txn.is_write() && axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER1_CTRL.timer1_restart.get_lsb_pos()]) begin
-            //         `uvm_info("PRED_AXI", $sformatf("Handling access to %s. This will restart WDT timer1 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
-            //         fork
-            //             begin
-            //             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-            //             //Capture restart bit so the counters can be updated
-            //             wdt_t1_restart = 1;
-            //             `uvm_info("PRED_AXI", $sformatf("After delay from access to %s - restart WDT timer1", axs_reg.get_name()), UVM_MEDIUM);
-            //             end
-            //         join_none
-            //     end
-            // end
-            // "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[0]",
-            // "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD[1]": begin
-            //     if (axi_txn.is_write()) begin
-            //         `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register has no side-effect"}, UVM_HIGH) // TODO
-            //     end
-            // end
-            // "CPTRA_WDT_TIMER2_EN": begin
-            //     if (axi_txn.is_write()) begin
-            //         `uvm_info("PRED_AXI", {"Detected write to ", axs_reg.get_name(), " register, starting WDT timer2"}, UVM_MEDIUM);
-            //     end
-            // end
-            // "CPTRA_WDT_TIMER2_CTRL": begin
-            //     if (axi_txn.is_write() && axi_txn.beatQ[0][p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL.timer2_restart.get_lsb_pos()]) begin
-            //         `uvm_info("PRED_AXI", $sformatf("Handling access to %s. This will restart WDT timer2 after 1 clock cycle", axs_reg.get_name()), UVM_MEDIUM);
-            //         fork
-            //             begin
-            //             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
-            //             //Capture restart bit so the counters can be updated
-            //             wdt_t2_restart = 1;
-            //             `uvm_info("PRED_AXI", $sformatf("After delay from access to %s - restart WDT timer2", axs_reg.get_name()), UVM_MEDIUM);
-            //             end
-            //         join_none
-            //     end
-            // end
-            // "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[0]",
-            // "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD[1]": begin
-            //     if (axi_txn.is_write()) begin
-            //         `uvm_info("PRED_AXI", {"Write to ",axs_reg.get_name()," register has no side-effect"}, UVM_HIGH) // TODO
-            //     end
-            // end
-            "CPTRA_WDT_STATUS": begin
-                `uvm_info("PRED_AXI", "AXI access of WDT status", UVM_MEDIUM);
             end
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
