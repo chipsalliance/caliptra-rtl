@@ -47,8 +47,8 @@ class soc_ifc_ctrl_rom_poweron_sequence
       // Initialize first transaction with pwrgood = 0, cptra_rst_b = 0 (asserted)
       req=soc_ifc_ctrl_transaction::type_id::create("pwr_req");
       start_item(req);
-      // Randomize the transaction (must be DEVICE_UNPROVISIONED for ROM bringup)
-      if(!req.randomize() with {security_state.device_lifecycle != DEVICE_UNPROVISIONED;})
+      // Randomize the transaction (must be DEVICE_PRODUCTION for ROM bringup, to trigger image verification)
+      if(!req.randomize() with {security_state.device_lifecycle != DEVICE_PRODUCTION;})
         `uvm_fatal("SOC_IFC_CTRL_RST", "soc_ifc_ctrl_reset_sequence_base::body()-soc_ifc_ctrl_transaction randomization failed")
       req.set_pwrgood = 1'b0;
       req.assert_rst = 1'b1; // active-low assertion
