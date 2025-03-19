@@ -81,7 +81,7 @@ owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
 
 # Extract compiled FW from latest retrieved release
 $(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0-2.x.zip
-	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log-mldsa.bin
+	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
 	 7z x -o"$(TEST_DIR)" $< image-bundle-mldsa.bin
 	 rm $<
 	 mv $(TEST_DIR)/caliptra-rom-with-log-mldsa.bin $(TEST_DIR)/$(TESTNAME)
