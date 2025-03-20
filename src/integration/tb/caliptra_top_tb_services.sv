@@ -103,6 +103,7 @@ module caliptra_top_tb_services
     localparam SIGNATURE_H_NUM_DWORDS = 21;
     localparam VERIFY_RES_NUM_DWORDS = 16;
 
+
     `ifndef VERILATOR
     int MAX_CYCLES;
     initial begin
@@ -2330,18 +2331,18 @@ task initialize_caliptra_axi_sram;
             $display("Starting Caliptra SRAM initialization with random data (64K addresses, 4 bytes per address)...");
             
             // Loop through all addresses (64K) and all bytes per address (4 for 32-bit data)
-            for (addr = 0; addr < 65536; addr = addr + 1) begin
+            for (addr = 0; addr < AXI_SRAM_DEPTH; addr = addr + 1) begin
                 // For each address, initialize all bytes
                 for (byte_idx = 0; byte_idx < 4; byte_idx = byte_idx + 1) begin
                     random_byte = $random & 8'hFF;  // Generate random byte (8 bits)
                     
                     // Direct assignment
-                    caliptra_top_tb.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
+                    `CALIPTRA_TOP.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
                 end
                 
                 // Progress reporting every 12.5% (8192 addresses)
-                if ((addr % 8192) == 0) begin
-                    $display("  SRAM initialization progress: %0d%%", (addr * 100) / 65536);
+                if ((addr % AXI_SRAM_DEPTH/8) == 0) begin
+                    $display("  SRAM initialization progress: %0d%%", (addr * 100) / AXI_SRAM_DEPTH);
                 end
             end
             
