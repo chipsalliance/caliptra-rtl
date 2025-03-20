@@ -1780,11 +1780,13 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
-        
+       
+        `ifdef CALIPTRA_TOP_TB
         $display("Initializing AXI SRAM with random data");
-        if (!UVM_TB) begin
+        if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
             initialize_caliptra_axi_sram();
         end
+        `endif
         
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
@@ -2318,6 +2320,7 @@ task static dump_memory_contents;
     end
 endtask
 
+`ifdef CALIPTRA_TOP_TB
 // Initialize AXI SRAM with random data 
 task initialize_caliptra_axi_sram;
     
@@ -2350,6 +2353,7 @@ task initialize_caliptra_axi_sram;
         end
     end
 endtask
+`endif
 
 
 function[6:0] riscv_ecc32(input[31:0] data);
