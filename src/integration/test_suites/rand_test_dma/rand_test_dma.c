@@ -97,8 +97,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DST_IS_FIFO_POS          8
 #define SRC_IS_FIFO_POS          9
 
-#define WRM_RST_BIT_POS          1
-
 // Block Size is in bits 10-21
 #define DMA_BLOCK_SIZE_POS        10
 #define DMA_BLOCK_SIZE_WIDTH      12
@@ -114,7 +112,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DST_IS_FIFO_MASK         (1 << DST_IS_FIFO_POS)
 #define SRC_IS_FIFO_MASK         (1 << SRC_IS_FIFO_POS)
 #define DMA_BLOCK_SIZE_MASK      (((1 << DMA_BLOCK_SIZE_WIDTH) - 1) << DMA_BLOCK_SIZE_POS)
-#define WARM_RESET_MASK          (1 << WRM_RST_BIT_POS)
 
 // Global declaration of arrays
 static uint32_t read_payload[MAX_PAYLOAD_SIZE_TO_CHECK_DW];
@@ -181,7 +178,7 @@ void main(void) {
 
             VPRINTF(LOW, "Observed reset! Reading status registers for sign of life\n");
             //TODO: Read RESET_REASON register
-            uint32_t reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) & WARM_RESET_MASK;
+            uint32_t reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK;
             if (reset_reason == 0x2) {
                 VPRINTF(LOW, "Reset Reason: Warm reset\n");
             }
@@ -299,9 +296,17 @@ void main(void) {
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         if (!dst_is_fifo) {
+                            // arm_send_ahb
+                            soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, transfer_size*4, 0);
+                            
+                            // for loop -- write data to write register
                             for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                                soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, 4, 0);
+                                soc_ifc_axi_dma_get_send_ahb_payload(&ahb_wdata, 4);
                             }
+                            
+                            // poll for dma idle
+                            soc_ifc_axi_dma_wait_idle(0);
+                            
                         } else {
                             // Set auto-read
                             VPRINTF(LOW, "Set FIFO to auto-read\n");
@@ -717,10 +722,16 @@ void main(void) {
                             VPRINTF(LOW, "Request random reset");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
-
+                        // Arm AXI2HB transfer
+                        soc_ifc_axi_dma_arm_read_ahb_payload(src_addr, use_rd_fixed, &ahb_rdata, transfer_size*4, block_size);
+                        
+                        //Read the data
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                            soc_ifc_axi_dma_read_ahb_payload(src_addr, use_rd_fixed, &ahb_rdata, 4, block_size);
+                            soc_ifc_axi_dma_get_read_ahb_payload(&ahb_rdata, 4);
                         }
+                        
+                        //Wait for AXI DMA idle
+                        soc_ifc_axi_dma_wait_idle(0);
                     }
 
                     if (inject_rand_delays) {
