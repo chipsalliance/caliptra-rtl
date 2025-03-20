@@ -36,8 +36,6 @@ typedef enum {
     AXI2AHB
 } transfer_type_t;
 
-#define MAX_TRANSFER_SIZE = 100
-
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
 volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
