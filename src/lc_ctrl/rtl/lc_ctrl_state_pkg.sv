@@ -427,7 +427,7 @@ package lc_ctrl_state_pkg;
     128'h3852305BAECF5FF1D5C1D25F6DB9058D
   };
   parameter lc_token_t RndCnstRawUnlockTokenHashed = {
-    128'hd714_17dc_4be9_28f6_33dd_1e38_b9be_ec48
+    128'h4748d3f5_358f685c_1e213794_3c8ff2b6
   };
 
 endpackage : lc_ctrl_state_pkg
