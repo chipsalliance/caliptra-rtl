@@ -135,6 +135,8 @@ module hmac_drbg
   logic [REG_SIZE-1:0]  HMAC_tag;
   logic [511:0]         HMAC512_tag;
 
+  logic                 failure_check;
+
   //----------------------------------------------------------------
   // HMAC module instantiation.
   //----------------------------------------------------------------
@@ -276,7 +278,7 @@ module hmac_drbg
           V2_ST:        K_reg   <= HMAC_tag;
           T_ST:         V_reg   <= HMAC_tag;
           V3_ST:        K_reg   <= HMAC_tag;
-          DONE_ST:      V_reg   <= HMAC_tag;
+          CHCK_ST:      V_reg   <= HMAC_tag;
           default: begin 
             K_reg <= K_reg; 
             V_reg <= V_reg; 
@@ -359,7 +361,7 @@ module hmac_drbg
 
       CHCK_ST:
       begin
-        if ((HMAC_tag==0) || (HMAC_tag >= HMAC_DRBG_PRIME))
+        if (failure_check)
           drbg_next_st    = K3_ST;
         else
           drbg_next_st    = DONE_ST;
@@ -372,6 +374,8 @@ module hmac_drbg
 
     endcase
   end //state_logic
+
+  always_comb failure_check = (HMAC_tag==0) || (HMAC_tag >= HMAC_DRBG_PRIME);
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
