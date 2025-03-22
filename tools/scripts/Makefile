@@ -71,6 +71,7 @@ COMP_LIB_NAMES := aes \
 		  clk_gate \
 		  wdt
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
+AUX_HEADER_FILES ?=
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
 		$(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg.h  \
@@ -80,6 +81,7 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(ISR_DIR)/riscv-csr.h \
 		$(ISR_DIR)/riscv-interrupts.h \
 		$(ISR_DIR)/veer-csr.h \
+		$(AUX_HEADER_FILES) \
 		$(foreach comp_lib, $(COMP_LIBS), $(wildcard $(comp_lib)/*.h))
 
 TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
@@ -93,6 +95,8 @@ TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 ifeq (0,$(shell test -e $(TEST_DIR)/$(TESTNAME).c && echo $$?))
 	OFILE_CRT := crt0.o
 endif
+AUX_OFILES ?=
+OFILES += $(AUX_OFILES)
 OFILES += $(TESTNAME).o
 ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
 	OFILES += caliptra_isr.o
@@ -128,7 +132,11 @@ else
 	LINK = $(TEST_DIR)/$(TESTNAME).ld
 endif
 
-VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR) $(COMP_LIBS)
+# AUX_LIB_DIR can be used to specify additional source build directories to supplement the default search
+# areas for C source code
+# It should be used in conjunction with overrides for the AUX_OFILES variable on the command line invocation
+AUX_LIB_DIR ?=
+VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR) $(COMP_LIBS) $(AUX_LIB_DIR)
 
 # Use eval to expand env variables in the .vf file
 $(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+incdir+'))

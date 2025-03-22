@@ -235,6 +235,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           mkdir run
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -244,6 +245,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./dump_and_compare.sh'
@@ -252,6 +254,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./mem_access.sh'
@@ -260,6 +263,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/gdb_test.sh \
             /bin/bash -c 'cd ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop && ./peripheral_access.sh'
@@ -315,6 +319,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           mkdir run
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 FORCE_CPU_RESET=1 \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -324,6 +329,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator-rst.cfg \
@@ -333,6 +339,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           rm -rf run/*
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -342,6 +349,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
@@ -351,6 +359,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
@@ -360,6 +369,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           rm -rf run/*
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop \
             OBJCACHE="" CC=gcc CXX=g++ LINK=g++
@@ -369,6 +379,7 @@ jobs:
         run: |
           export CALIPTRA_ROOT=$(pwd)
           export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           cd run
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \

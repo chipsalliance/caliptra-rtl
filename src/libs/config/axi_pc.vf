@@ -1,2 +1,2 @@
-+incdir+${CALIPTRA_ROOT}/src/integration/tb
-${CALIPTRA_ROOT}/src/integration/tb/Axi4PC.sv
++incdir+${CALIPTRA_AXI4PC_DIR}
+${CALIPTRA_AXI4PC_DIR}/Axi4PC.sv
