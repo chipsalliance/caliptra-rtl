@@ -146,6 +146,8 @@ void soc_ifc_w1clr_sha_lock_field();
 
 // AXI DMA Functions
 uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
+uint8_t soc_ifc_axi_dma_get_send_ahb_payload(uint32_t * payload, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_arm_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_get_read_ahb_payload(uint32_t * payload, uint32_t byte_count);

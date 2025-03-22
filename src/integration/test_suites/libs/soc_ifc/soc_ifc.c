@@ -328,8 +328,13 @@ void soc_ifc_sha_accel_clr_lock() {
 
 // AXI DMA Functions
 uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+    soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, fixed, payload, byte_count, block_size);
+    soc_ifc_axi_dma_get_send_ahb_payload(payload, byte_count);
+    soc_ifc_axi_dma_wait_idle(0);
+}
+
+uint8_t soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
-    uint16_t mdepth;
 
     // Arm the command
     while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
@@ -342,6 +347,10 @@ uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint3
           (axi_dma_wr_route_AHB_FIFO << AXI_DMA_REG_CTRL_WR_ROUTE_LOW) |
           (fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+}
+
+uint8_t soc_ifc_axi_dma_get_send_ahb_payload(uint32_t * payload, uint32_t byte_count) {
+    uint16_t mdepth;
 
     // Send data
     mdepth = (lsu_read_32(CLP_AXI_DMA_REG_CAP) & AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_MASK) >> AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_LOW;
@@ -349,18 +358,6 @@ uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint3
         // Wait for there to be available space in the FIFO
         while(((lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_FIFO_DEPTH_MASK) >> AXI_DMA_REG_STATUS0_FIFO_DEPTH_LOW) == mdepth);
         lsu_write_32(CLP_AXI_DMA_REG_WRITE_DATA, payload[dw_sent]);
-    }
-
-    // Check completion
-    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
-        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    }
-
-    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for FIFO-to-AXI xfer\n");
-        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
-        SEND_STDOUT_CTRL(0x1);
     }
 }
 

@@ -16,8 +16,8 @@
 module dma_testcase_generator (
   input logic preload_dccm_done,
   output logic dma_gen_done,
-  output bit   [99:0] [11:0] dma_gen_block_size
-);//dma_if dma_xfer_if);
+  output logic [99:0] [11:0] dma_gen_block_size
+);
   import caliptra_top_tb_pkg::*; // provides dma_transfer_randomizer, etc...
 
   localparam MAX_SIZE_TO_CHECK = 16384; // dwords
