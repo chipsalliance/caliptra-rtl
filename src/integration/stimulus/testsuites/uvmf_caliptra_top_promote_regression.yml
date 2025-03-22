@@ -1,9 +1,0 @@
-document:
-  schema: 1.0
-
-contents:
-  - tests:
-      tags: ["L0", "CALIPTRA_TOP",  "directed", "smoke_test"]
-      paths:
-        - $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_cmdline_test.yml
-        - $CALIPTRA_ROOT/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/tests/src/caliptra_top_rand_test.yml

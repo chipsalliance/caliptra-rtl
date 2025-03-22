@@ -1,0 +1,73 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L0", "caliptra_top_tb"]
+      path: ""
+      weight: 100
+      generations: 60
+      formats:
+        generate: "reseed {template}.yml -seed 1"
+        path: "{template_basename}__1.yml"
+      templates:
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_byte_read/smoke_test_mbox_byte_read: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_cg/smoke_test_mbox_cg: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha512/smoke_test_sha512: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha512_restore/smoke_test_sha512_restore: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256/smoke_test_sha256: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock: {weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen_sign/smoke_test_ecc_keygen_sign: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_trng/smoke_test_trng: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hw_config/smoke_test_hw_config: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_hmac_multiblock_flow/smoke_test_kv_hmac_multiblock_flow: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_cg/smoke_test_kv_cg: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_scan/smoke_test_doe_scan: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_cg/smoke_test_doe_cg: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_lock/smoke_test_datavault_lock: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt/smoke_test_wdt: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt_rst/smoke_test_wdt_rst: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_locked_api/smoke_test_mldsa_locked_api: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_aes_kv_rand/smoke_test_aes_kv_rand: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow: { weight: 20}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma: { weight: 50}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa/smoke_test_mldsa: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_strap/smoke_test_strap: { weight: 100}

@@ -1,0 +1,27 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L0", "caliptra_top_trng_tb"]
+      path: ""
+      weight: 100
+      generations: 14
+      formats:
+        generate: "reseed {template}.yml -seed 1"
+        path: "{template_basename}__1.yml"
+      templates:
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_veer/smoke_test_veer: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox/smoke_test_mbox: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock: {weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_trng/smoke_test_trng: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hw_config/smoke_test_hw_config: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt/smoke_test_wdt: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt: { weight: 100}
+        ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating: { weight: 100}
