@@ -1,6 +1,6 @@
 +incdir+${UVM_HOME}/src
 +incdir+${UVM_HOME}/src/dpi
-+incdir+${CALIPTRA_ROOT}/src/integration/tb
++incdir+${CALIPTRA_AXI4PC_DIR}
 +incdir+${AVERY_AXI}/src.uvm
 +incdir+${AVERY_AXI}/testsuite/examples.uvm
 +incdir+${AVERY_AXI}/src.axi.VCS
@@ -10,7 +10,7 @@
 +incdir+${AVERY_SIM}/src.IEEE
 +incdir+${CALIPTRA_ROOT}/src/libs/aaxi_uvm
 ${UVM_HOME}/src/uvm_pkg.sv
-${CALIPTRA_ROOT}/src/integration/tb/Axi4PC.sv
+${CALIPTRA_AXI4PC_DIR}/Axi4PC.sv
 ${AVERY_SIM}/src/avery_pkg.sv
 ${AVERY_SIM}/src/avery_pkg_test.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg.sv

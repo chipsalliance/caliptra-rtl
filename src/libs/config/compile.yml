@@ -96,10 +96,10 @@ targets:
     directories:
 #      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva 
 #      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/verilog 
-      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva
+      - $AXI4PC_DIR
     files:
 #      - $AVERY_AXI/checker/BP062-BU-01000-r0p1-00rel0/sva/AxiPC.sv 
-      - $MSFT_REPO_ROOT/src/libs/arm_licensed/BP063-BU-01000-r0p1-00rel0/sva/Axi4PC.sv
+      - $AXI4PC_DIR/Axi4PC.sv
 ---
 provides: [avery_axi_uvm_lib]
 schema_version: 2.4.0
