@@ -66,6 +66,8 @@ module hmac_drbg_tb();
   reg   [REG_SIZE-1 : 0]            nonce_tb;
   wire  [REG_SIZE-1 : 0]            drbg_tb;
 
+  logic                     failure_injected;
+
   initial begin
     if ($value$plusargs("HMAC_DRBG_TEST=%s", hmac_drbg_test_to_run)) begin
       $display("%m: Running hmac_drbg test = %s", hmac_drbg_test_to_run);
@@ -246,6 +248,8 @@ module hmac_drbg_tb();
       lfsr_seed_tb      = 384'h0;
       entropy_tb        = 384'h0;
       nonce_tb          = 384'h0;
+
+      failure_injected  = 0;
     end
   endtask // init_sim
 
@@ -423,6 +427,15 @@ module hmac_drbg_tb();
 
         hmac384_drbg(nist_entropy, nist_nonce, seed, nist_expected); 
 
+
+        nist_entropy  = 384'h1e8dcd3d3b23f17606d7cd0d00f3e30189375212b2c2846546df998d06b97b0db1f056638484d609c0895e8112153524;
+        nist_nonce    = 384'he77696ce793069f247ecdb8f8932d612bbd2727772aff7e5d513d2aae2f784c5e33724c67cfde9f9462df78c76d457ed;
+        //4dacc66cc713c711b64ef7f7fd86e14bb29580ec9123f1a9db947c86338073ea81f472c7ddf78ee7e213b0f7722f1fe6 assumed failed
+        nist_expected = 384'hc84a3e2340ca28a68823e02635931d4e088c28f26c1442583327bd2aa3de12460211cb7519b222d0b948769ad6b16075;
+        seed = random_gen();
+
+        hmac384_drbg_failure_injection(nist_entropy, nist_nonce, seed, nist_expected); 
+
     end
   endtask // hmac_drbg_test
 
@@ -525,6 +538,65 @@ module hmac_drbg_tb();
       $display("Read test vector with %0d rounds from %s", test_vector_cnt, fname);
     end
   endtask
+
+  //----------------------------------------------------------------
+  // hmac384_drbg_failure_injection()
+  //
+  //----------------------------------------------------------------
+  task hmac384_drbg_failure_injection(input [383 : 0] entropy, input [383 : 0] nonce,
+                  input [383 : 0] lfsr_seed, input  [383 : 0] expected_drbg);
+    begin
+        if (!ready_tb)
+            wait(ready_tb);
+            
+        $display("HMAC-DRBG failure injection");
+        
+        entropy_tb = entropy;
+        nonce_tb = nonce;
+        lfsr_seed_tb = lfsr_seed;
+
+        $display("*** entropy   : %096x", entropy_tb);
+        $display("*** nonce     : %096x", nonce_tb);
+        $display("*** lfsr_seed : %096x", lfsr_seed);
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b1;  
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        
+        wait(dut.drbg_st_reg == dut.CHCK_ST);
+        failure_injected = 1;
+        force dut.failure_check = 1'b1;
+        #(1 * CLK_PERIOD);
+        failure_injected = 0;
+        release dut.failure_check;
+        #(1 * CLK_PERIOD);
+
+        wait(valid_tb);
+        $display("The HMAC DRBG core completed the execution");
+
+        if (drbg_tb == expected_drbg)
+          begin
+            $display("*** TC %0d successful.", tc_number);
+            $display("");
+          end
+        else
+          begin
+            $display("*** ERROR: TC %0d NOT successful.", tc_number);
+            $display("Expected: 0x%096x", expected_drbg);
+            $display("Got:      0x%096x", drbg_tb);
+            $display("");
+            error_ctr = error_ctr + 1;
+          end
+
+        tc_number = tc_number+1;
+
+    end
+  endtask // hmac384_drbg_failure_injection
+
   //----------------------------------------------------------------
   // always_debug()
   //
