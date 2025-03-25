@@ -20,8 +20,10 @@ contents:
         - ../test_suites/hello_world_iccm/hello_world_iccm.yml
         - ../test_suites/iccm_lock/iccm_lock.yml
         - ../test_suites/c_intr_handler/c_intr_handler.yml
-        - ../test_suites/smoke_test_ecc_keygen_sign/smoke_test_ecc_keygen_sign.yml
-        - ../test_suites/smoke_test_ecc_verify_dh/smoke_test_ecc_verify_dh.yml
+        - ../test_suites/smoke_test_ecc_keygen/smoke_test_ecc_keygen.yml
+        - ../test_suites/smoke_test_ecc_sign/smoke_test_ecc_sign.yml
+        - ../test_suites/smoke_test_ecc_verify/smoke_test_ecc_verify.yml
+        - ../test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
@@ -38,7 +40,8 @@ contents:
         - ../test_suites/smoke_test_strap/smoke_test_strap.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
-        - ../test_suites/smoke_test_kv_ecc_flow/smoke_test_kv_ecc_flow.yml
+        - ../test_suites/smoke_test_kv_ecc_flow1/smoke_test_kv_ecc_flow1.yml
+        - ../test_suites/smoke_test_kv_ecc_flow2/smoke_test_kv_ecc_flow2.yml
         - ../test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
         - ../test_suites/smoke_test_kv_hmac_multiblock_flow/smoke_test_kv_hmac_multiblock_flow.yml
         #- ../test_suites/smoke_test_kv_sha512_flow/smoke_test_kv_sha512_flow.yml Removed SHA KV functionality
@@ -51,6 +54,7 @@ contents:
         - ../test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
         - ../test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
         - ../test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
+        - ../test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow.yml
         - ../test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
