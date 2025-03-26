@@ -40,7 +40,7 @@ Simulation:
  - Mentor Graphics QVIP
    - `Version 2021.2.1` of AHB models
  - Avery AXI VIP
-   - `Version 2024.3` of axixactor
+   - `Version 2025.1` of axixactor
  - UVM installation
    - `Version 1.1d`
  - Mentor Graphics UVM-Frameworks
@@ -252,7 +252,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 
 **Prerequisites**:<BR>
 - QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
-- AXI VIP 2024.3 for Avery
+- AXI VIP 2025.1 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
@@ -298,7 +298,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 
 **Prerequisites**:<BR>
 - QVIP 2021.2.1 for Mentor Graphics (provides the AHB VIP)
-- AXI VIP 2024.3 for Avery
+- AXI VIP 2025.1 for Avery
 - UVM 1.1d installation
 - Mentor Graphics UVM-Framework installation
 
