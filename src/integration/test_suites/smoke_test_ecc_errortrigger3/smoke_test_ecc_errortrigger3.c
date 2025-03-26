@@ -22,6 +22,7 @@
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
@@ -43,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running ECC Smoke Test !!\n");
-    printf("----------------------------------\n");
+    printf("----------------------------------------\n");
+    printf(" Running ECC Smoke Test error_trigger !!\n");
+    printf("----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -165,99 +166,163 @@ void main() {
                                     0x003B2633,
                                     0xB9D0F1BF};
 
-    uint32_t ecc_privkey_dh[] =    {0x52D1791F,
-                                    0xDB4B70F8,
-                                    0x9C0F00D4,
-                                    0x56C2F702,
-                                    0x3B612526,
-                                    0x2C36A7DF,
-                                    0x1F802311,
-                                    0x21CCE3D3,
-                                    0x9BE52E00,
-                                    0xC194A413,
-                                    0x2C4A6C76,
-                                    0x8BCD94D2};
+    uint32_t value_greater_q[]=    {0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xc7634d81,
+                                    0xf4372ddf,
+                                    0x5b1a0db2,  //0x581a0db2,
+                                    0x48b0a77a,
+                                    0xecec196a,
+                                    0xccc52973};
 
-    uint32_t ecc_pubkey_x_dh[] =   {0x793148F1,0X787634D5,0XDA4C6D90,0X74417D05,0XE057AB62,0XF82054D1,0X0EE6B040,0X3D627954,0X7E6A8EA9,0XD1FD7742,0X7D016FE2,0X7A8B8C66};
-    uint32_t ecc_pubkey_y_dh[] =   {0xC6C41294,0X331D23E6,0XF480F4FB,0X4CD40504,0XC947392E,0X94F4C3F0,0X6B8F398B,0XB29E4236,0X8F7A6859,0X23DE3B67,0XBACED214,0XA1A1D128};
-    uint32_t ecc_sharedkey_dh[] =  {0x5EA1FC4A,0XF7256D20,0X55981B11,0X0575E0A8,0XCAE53160,0X137D904C,0X59D926EB,0X1B8456E4,0X27AA8A45,0X40884C37,0XDE159A58,0X028ABC0E}; 
-
+    uint32_t value_greater_p[]=    {0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xffffffff,
+                                    0xfffffffe,
+                                    0xffffffff,
+                                    0x0000c000,  //0x00000000
+                                    0x00000000,
+                                    0xffffffff};
     //Call interrupt init
     init_interrupts();
 
-    ecc_io seed;
-    ecc_io nonce;
-    ecc_io iv;
-    ecc_io privkey;
-    ecc_io pubkey_x;
-    ecc_io pubkey_y;
-    ecc_io msg;
-    ecc_io sign_r;
-    ecc_io sign_s;
-    ecc_io privkey_dh;
-    ecc_io pubkey_x_dh;
-    ecc_io pubkey_y_dh;
-    ecc_io sharedkey_dh;
+    uint8_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t privkey_inject_cmd;
+   
+    if(rst_count == 0) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    seed.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        seed.data[i] = ecc_seed[i];
+        printf("\n TEST INVALID OUTPUT SIGN_S\n");
+        // Program ECC PRIVKEY
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+            *reg_ptr++ = ecc_privkey[offset++];
+        }
 
-    nonce.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        nonce.data[i] = ecc_nonce[i];
+        // Program ECC MSG
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
+            *reg_ptr++ = ecc_msg[offset++];
+        }
+
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //Inject invalid zero sign_s
+        printf("%c",0x9a);
+
+        // Enable ECC SIGNING core
+        printf("\nECC SIGNING\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
+        
+        // wait for ECC SIGNING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC s_output_outofrange error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    }
+    else if(rst_count == 1) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST PCR WITH INVALID OUTPUT SIGN_S\n");
+        
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //Inject invalid zero sign_s
+        printf("%c",0x9a);
+
+        //inject seed to kv key reg (in RTL)
+        printf("Inject PRIVKEY into KV slot 7\n");
+        privkey_inject_cmd = 0x88 + 0x7;
+        printf("%c", privkey_inject_cmd);
+
+        printf("Inject MSG into SHA512 digest\n");
+        printf("%c", 0x90);
+
+        // Enable ECC PCR SIGNING core
+        printf("\nECC PCR SIGNING\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
-    iv.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        iv.data[i] = ecc_iv[i];
+        
+        // wait for ECC PCR SIGNING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC PCR s_output_outofrange error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    }  
+    else if(rst_count == 2) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        
+        // Program ECC IV
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
+            *reg_ptr++ = ecc_iv[offset++];
+        }
+
+        //inject seed to kv key reg (in RTL)
+        printf("Inject PRIVKEY into KV slot 7\n");
+        privkey_inject_cmd = 0x88 + 0x7;
+        printf("%c", privkey_inject_cmd);
+
+        printf("Inject MSG into SHA512 digest\n");
+        printf("%c", 0x90);
+
+        printf("\nECC PCR SHARED_KEY\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY| 
+                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
-    msg.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        msg.data[i] = ecc_msg[i];
-    
-    privkey.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        privkey.data[i] = ecc_privkey[i];
+        
+        // wait for ECC VERIFYING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECC PCR invalid command error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
 
-    pubkey_x.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_x.data[i] = ecc_pubkey_x[i];
-    
-    pubkey_y.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_y.data[i] = ecc_pubkey_y[i];
-    
-    sign_r.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sign_r.data[i] = ecc_sign_r[i];
-    
-    sign_s.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sign_s.data[i] = ecc_sign_s[i];
-
-    privkey_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        privkey_dh.data[i] = ecc_privkey_dh[i];
-
-    pubkey_x_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
-
-    pubkey_y_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
-
-    sharedkey_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
-
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
-    cptra_intr_rcv.ecc_notif = 0;
-
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
-    cptra_intr_rcv.ecc_notif = 0;
-
-    ecc_zeroize();
+        ecc_zeroize();
+    }
 
     printf("%c",0xff); //End the test
     
