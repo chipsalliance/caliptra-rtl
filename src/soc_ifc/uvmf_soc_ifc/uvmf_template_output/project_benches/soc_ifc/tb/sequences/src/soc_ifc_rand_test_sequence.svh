@@ -70,7 +70,11 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
       IDX_SOC_IFC_ENV_RST_WARM,
       IDX_SOC_IFC_ENV_RST_COLD,
       IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
-      IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM
+      IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM,
+      IDX_SOC_IFC_ENV_AXI_UVM_TOP_B2B,
+      IDX_SOC_IFC_ENV_TOP_INVALID_READ,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL_AXI_TXN,
+      IDX_SOC_IFC_ENV_MBOX_TOP_RW_RAND_DELAY_SMALL
   } rand_seq_idx;
 
   rand int iteration_count;
@@ -106,7 +110,11 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
           IDX_SOC_IFC_ENV_RST_WARM                             := 1,
           IDX_SOC_IFC_ENV_RST_COLD                             := 1,
           IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM            := 10,
-          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 10
+          IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM            := 10,
+          IDX_SOC_IFC_ENV_AXI_UVM_TOP_B2B                      := 20,
+          IDX_SOC_IFC_ENV_TOP_INVALID_READ                     := 20,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL_AXI_TXN := 20,
+          IDX_SOC_IFC_ENV_MBOX_TOP_RW_RAND_DELAY_SMALL         := 20
       };
   }
   constraint disable_long_env_seqs_c {
@@ -316,6 +324,14 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                 obj = soc_ifc_env_top_mbox_rst_warm_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM:
                 obj = soc_ifc_env_top_mbox_rst_cold_rand_medium_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_AXI_UVM_TOP_B2B:
+                obj = soc_ifc_env_axi_uvm_top_b2b_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_TOP_INVALID_READ:
+                obj = soc_ifc_env_top_invalid_read_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RAND_AXI_USER_SMALL_AXI_TXN:
+                obj = soc_ifc_env_top_mbox_rand_axi_user_small_axi_txn_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
+            IDX_SOC_IFC_ENV_MBOX_TOP_RW_RAND_DELAY_SMALL:
+                obj = soc_ifc_env_top_mbox_rw_rand_delay_small_sequence_t::get_type().create_object($sformatf("soc_ifc_env_seq_ii[%0d]",ii));
             default:
                 `uvm_error("SOC_IFC_RAND_TEST", $sformatf("rand_seq_idx randomized to illegal value: %p", rand_seq_idx))
         endcase
