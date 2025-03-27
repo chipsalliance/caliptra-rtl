@@ -142,6 +142,7 @@ global:
       default:
         - '-assert svaext'
 #        - '+define+CALIPTRA_INTERNAL_TRNG'
+        - +define+CALIPTRA_TOP_TB
         - +define+CLP_ASSERT_ON
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
