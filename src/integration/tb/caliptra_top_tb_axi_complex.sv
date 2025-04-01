@@ -190,7 +190,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     logic       sram_ar_hshake;
     logic       sram_rlast_hshake;
 
-    logic [1:0] sram_w_active;
+    logic [2:0] sram_w_active;
     logic       sram_aw_hshake;
     logic       sram_b_hshake;
 
@@ -198,7 +198,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     logic       fifo_ar_hshake;
     logic       fifo_rlast_hshake;
 
-    logic [1:0] fifo_w_active;
+    logic [2:0] fifo_w_active;
     logic       fifo_aw_hshake;
     logic       fifo_b_hshake;
 
@@ -290,7 +290,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     end
     always_ff@(posedge core_clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
-            sram_w_active <= 2'b0;;
+            sram_w_active <= 3'b0;
         end
         else begin
             case ({sram_aw_hshake,sram_b_hshake}) inside
@@ -298,21 +298,22 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                     sram_w_active <= sram_w_active;
                 2'b01:
                     if (sram_w_active)
-                        sram_w_active <= sram_w_active - 2'b1;
+                        sram_w_active <= sram_w_active - 3'b1;
                     else
                         $fatal("Write response, but no writes outstanding!");
                 2'b10:
-                    sram_w_active <= sram_w_active + 2'b1;
+                    sram_w_active <= sram_w_active + 3'b1;
                 2'b11:
                     sram_w_active <= sram_w_active;
             endcase
         end
     end
     // In rare cases, small write requests while generating backpressure on Write response channel can cause
+    // 1 write response pending on output reg
     // 1 write response pending in response buffer
     // 1 write request active
     // 1 write request accepted and pending
-    `CALIPTRA_ASSERT_NEVER(SRAM_GT3_WR_PENDING, (sram_w_active == 3) && sram_aw_hshake && !sram_b_hshake, core_clk, !cptra_rst_b)
+    `CALIPTRA_ASSERT_NEVER(SRAM_GT4_WR_PENDING, (sram_w_active == 4) && sram_aw_hshake && !sram_b_hshake, core_clk, !cptra_rst_b)
 
     // AXI AR
     assign axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
@@ -400,7 +401,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     end
     always_ff@(posedge core_clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
-            fifo_w_active <= 2'b0;;
+            fifo_w_active <= 3'b0;
         end
         else begin
             case ({fifo_aw_hshake,fifo_b_hshake}) inside
@@ -408,17 +409,22 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                     fifo_w_active <= fifo_w_active;
                 2'b01:
                     if (fifo_w_active)
-                        fifo_w_active <= fifo_w_active - 2'b1;
+                        fifo_w_active <= fifo_w_active - 3'b1;
                     else
                         $fatal("Write response, but no writes outstanding!");
                 2'b10:
-                    fifo_w_active <= fifo_w_active + 2'b1;
+                    fifo_w_active <= fifo_w_active + 3'b1;
                 2'b11:
                     fifo_w_active <= fifo_w_active;
             endcase
         end
     end
-    `CALIPTRA_ASSERT_NEVER(FIFO_GT2_WR_PENDING, fifo_w_active > 2, core_clk, !cptra_rst_b)
+    // In rare cases, small write requests while generating backpressure on Write response channel can cause
+    // 1 write response pending on output reg
+    // 1 write response pending in response buffer
+    // 1 write request active
+    // 1 write request accepted and pending
+    `CALIPTRA_ASSERT_NEVER(FIFO_GT4_WR_PENDING, (fifo_w_active == 4) && fifo_aw_hshake && !fifo_b_hshake, core_clk, !cptra_rst_b)
 
     // AXI AR
     assign axi_fifo_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
