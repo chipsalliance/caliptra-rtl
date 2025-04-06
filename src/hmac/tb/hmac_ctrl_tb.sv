@@ -111,8 +111,8 @@ module hmac_ctrl_tb();
 
              .kv_read(),
              .kv_write(),
-             .kv_rd_resp('x),
-             .kv_wr_resp('x),
+             .kv_rd_resp('0),
+             .kv_wr_resp('0),
              .busy_o(),
              .error_intr(),
              .notif_intr(),
