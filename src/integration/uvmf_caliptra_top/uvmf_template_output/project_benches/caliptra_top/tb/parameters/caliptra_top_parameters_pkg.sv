@@ -41,7 +41,7 @@ package caliptra_top_parameters_pkg;
   // from the command line for selected interfaces using the UVM command line processing.
   parameter string uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0  = "uvm_test_top.environment.soc_ifc_subenv.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"; /* [0] */
 //  parameter string uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0  = "uvm_test_top.environment.soc_ifc_subenv.qvip_apb5_slave_subenv.apb5_master_0"; /* [1] */
-  parameter string uvm_test_top_environment_soc_ifc_subenv_aaxi_tb_env0_master_0  = "uvm_test_top.environment.soc_ifc_subenv.aaxi_tb.env0.master[0]"; /* [1] */
+  parameter string uvm_test_top_environment_soc_ifc_subenv_aaxi_env_master_0  = "uvm_test_top.environment.soc_ifc_subenv.aaxi_env.master[0]"; /* [1] */
   parameter string soc_ifc_subenv_soc_ifc_ctrl_agent_BFM  = "soc_ifc_subenv_soc_ifc_ctrl_agent_BFM"; /* [2] */
   parameter string soc_ifc_subenv_cptra_ctrl_agent_BFM  = "soc_ifc_subenv_cptra_ctrl_agent_BFM"; /* [3] */
   parameter string soc_ifc_subenv_ss_mode_ctrl_agent_BFM  = "soc_ifc_subenv_ss_mode_ctrl_agent_BFM"; /* [4] */
