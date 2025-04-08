@@ -69,13 +69,14 @@ targets:
       [
         $QUESTA_MVC_HOME/questa_mvc_src/sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb,
+        $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/shared,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/modules,
         #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3,
         #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/modules,
       ]
     files:
       [
-        $QUESTA_MVC_HOME/include/questa_mvc_svapi.svh,
+        $QUESTA_MVC_HOME/include/questa_mvc_svapi.sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/mvc_pkg.sv,
         #$QUESTA_MVC_HOME/questa_mvc_src/sv/apb3/mgc_apb3_v1_0_pkg.sv,
         $QUESTA_MVC_HOME/questa_mvc_src/sv/ahb/mgc_ahb_v2_0_pkg.sv,
