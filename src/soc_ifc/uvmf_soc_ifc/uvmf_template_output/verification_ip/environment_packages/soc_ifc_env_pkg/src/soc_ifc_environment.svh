@@ -100,12 +100,12 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // Be sure to modify the envioronment package to import the QVIP protocol package 
 // that contains the selected adapter.
    // Instantiate register model adapter and predictor
-   typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                                       ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                                       ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                                       ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                                       ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                                       ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_reg_transfer_t;
+   typedef ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                  ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                  ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                  ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                  ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                  ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_reg_transfer_t;
 
    typedef reg2ahb_adapter #(ahb_reg_transfer_t,
                              ahb_lite_slave_0_params::AHB_NUM_MASTERS,

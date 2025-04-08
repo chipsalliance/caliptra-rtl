@@ -106,12 +106,12 @@ class pv_predictor #(
   // Code for sending output transaction out through pv_sha512_block_read_sb_ap
   // pv_sha512_block_read_sb_ap.write(pv_sha512_block_read_sb_ap_output_transaction);
 
-  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH) pv_sb_ahb_ap_output_transaction_t;
+  typedef ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                 ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_RDATA_WIDTH) pv_sb_ahb_ap_output_transaction_t;
   pv_sb_ahb_ap_output_transaction_t pv_sb_ahb_ap_output_transaction;
 
   // Define transaction handles for debug visibility 
@@ -243,7 +243,7 @@ class pv_predictor #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_ahb_slave_0_ae(mvc_sequence_item_base t);
     // pragma uvmf custom ahb_slave_0_ae_predictor begin
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
+    pv_sb_ahb_ap_output_transaction_t ahb_txn;
     uvm_reg pv_reg;
     uvm_reg_data_t pv_reg_data;
     uvm_reg val_reg;

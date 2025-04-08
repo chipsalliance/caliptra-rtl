@@ -158,12 +158,12 @@ class soc_ifc_predictor #(
   // Transaction variable for predicted values to be sent out soc_ifc_sb_ahb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
   // be constructed for the next predicted transaction. 
-  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH) soc_ifc_sb_ahb_ap_output_transaction_t;
+  typedef ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                 ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_RDATA_WIDTH) soc_ifc_sb_ahb_ap_output_transaction_t;
   soc_ifc_sb_ahb_ap_output_transaction_t soc_ifc_sb_ahb_ap_output_transaction;
   // Code for sending output transaction out through soc_ifc_sb_ahb_ap
   // soc_ifc_sb_ahb_ap.write(soc_ifc_sb_ahb_ap_output_transaction);
@@ -889,7 +889,7 @@ class soc_ifc_predictor #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_ahb_slave_0_ae(mvc_sequence_item_base t);
     // pragma uvmf custom ahb_slave_0_ae_predictor begin
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
+    soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
     uvm_reg axs_reg;
     uvm_mem axs_mem;
     uvm_reg_data_t previous_mirror;

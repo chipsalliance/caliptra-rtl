@@ -132,12 +132,12 @@ class soc_ifc_scoreboard #(
   cptra_status_transaction                                                  cptra_expected_hash    [int unsigned]; // FIXME
   ss_mode_status_transaction                                                ss_mode_expected_hash  [int unsigned]; // FIXME
   // Use Queues for AHB/AXI txns since there is no get_key() method
-  ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                              ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                              ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                              ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                              ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                              ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
+  ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                         ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                         ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                         ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                         ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                         ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
   aaxi_master_tr axi_expected_q [$];
 
   // Use an soc_ifc_status_monitor_struct to track the expected state of the
@@ -482,9 +482,9 @@ class soc_ifc_scoreboard #(
   // of DUT output values based on DUT input, configuration and state
   virtual function void write_expected_ahb_analysis_export(mvc_sequence_item_base _t);
     // pragma uvmf custom expected_ahb_analysis_export_scoreboard begin
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t;
+    ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t;
     if (!$cast(t,_t)) begin
-      `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_expected_ahb_analysis_export failed!")
+      `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_expected_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through expected_ahb_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)
@@ -524,11 +524,11 @@ class soc_ifc_scoreboard #(
   // of DUT output values based on DUT input, configuration and state
   virtual function void write_actual_ahb_analysis_export(mvc_sequence_item_base _t);
     // pragma uvmf custom actual_ahb_analysis_export_scoreboard begin
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t;
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t_exp;
+    ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t;
+    ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t_exp;
     bit txn_eq;
     if (!$cast(t,_t)) begin
-      `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_actual_ahb_analysis_export failed!")
+      `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_actual_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through actual_ahb_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_HIGH)

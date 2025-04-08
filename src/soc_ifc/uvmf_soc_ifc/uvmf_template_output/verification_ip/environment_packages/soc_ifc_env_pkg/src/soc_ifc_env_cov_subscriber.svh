@@ -411,12 +411,12 @@ class soc_ifc_env_cov_subscriber #(
   //------------------------------------------------------------------------------------------
   //                                   Member Variables
   //------------------------------------------------------------------------------------------
-  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_transaction_t;
+  typedef ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                 ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_transaction_t;
 
   // Instantiate the analysis exports
   uvm_analysis_imp_cov_soc_ifc_ctrl_ae   #(soc_ifc_ctrl_transaction,   this_type) soc_ifc_ctrl_ae;

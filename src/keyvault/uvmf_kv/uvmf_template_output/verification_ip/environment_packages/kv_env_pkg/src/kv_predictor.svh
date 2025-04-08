@@ -160,12 +160,12 @@ class kv_predictor #(
   // typedef mvc_sequence_item_base kv_sb_ahb_ap_output_transaction_t;
   // kv_sb_ahb_ap_output_transaction_t kv_sb_ahb_ap_output_transaction;
 
-  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH) kv_sb_ahb_ap_output_transaction_t;
+  typedef ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                                 ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                                 ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                                 ahb_lite_slave_0_params::AHB_RDATA_WIDTH) kv_sb_ahb_ap_output_transaction_t;
   kv_sb_ahb_ap_output_transaction_t kv_sb_ahb_ap_output_transaction;
 
   // Code for sending output transaction out through kv_sb_ap
@@ -650,7 +650,7 @@ class kv_predictor #(
   // This function performs prediction of DUT output values based on DUT input, configuration and state
   virtual function void write_ahb_slave_0_ae(mvc_sequence_item_base t);
     // pragma uvmf custom ahb_slave_0_ae_predictor begin
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
+    ahb_master_burst_transfer_constraint #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
     uvm_reg kv_reg;
     uvm_reg_data_t kv_reg_data;
     int entry, offset;
