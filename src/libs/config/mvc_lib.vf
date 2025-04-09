@@ -3,9 +3,10 @@
 +incdir+${UVM_HOME}/src/dpi
 +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv
 +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb
++incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/shared
 +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/modules
 ${UVM_HOME}/src/uvm_pkg.sv
-${QUESTA_MVC_HOME}/include/questa_mvc_svapi.svh
+${QUESTA_MVC_HOME}/include/questa_mvc_svapi.sv
 ${QUESTA_MVC_HOME}/questa_mvc_src/sv/mvc_pkg.sv
 ${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/mgc_ahb_v2_0_pkg.sv
 ${QUESTA_MVC_HOME}/questa_mvc_src/sv/ahb/modules/ahb_lite_slave.sv
