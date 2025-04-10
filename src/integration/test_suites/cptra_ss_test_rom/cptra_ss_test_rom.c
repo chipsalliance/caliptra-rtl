@@ -19,9 +19,11 @@
 #include "riscv_hw_if.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "printf.h"
 #include "soc_ifc.h"
 #include "caliptra_reg.h"
+
 
 volatile char* stdout = (char *)STDOUT;
 volatile uint32_t intr_count       = 0;
@@ -83,7 +85,6 @@ void main(void) {
         init_interrupts();
         fail = 0;
 
-        lsu_write_32(CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER, 0xffffffff);
         // Send data through AHB interface to AXI_DMA, target the AXI SRAM
         VPRINTF(LOW, "Sending payload via AHB i/f\n");
         soc_ifc_axi_dma_send_ahb_payload(0x21200000, 0, send_payload, 16*4, 0);
@@ -92,7 +93,7 @@ void main(void) {
         // Use the block-size feature
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
         soc_ifc_axi_dma_read_ahb_payload(0x21200000, 0, read_payload, 16*4, 0);
-        
+                
         for (uint8_t ii = 0; ii < 16; ii++) {
             if (read_payload[ii] != send_payload[ii]) {
                 VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
@@ -101,8 +102,126 @@ void main(void) {
         }
 
         if (fail) {
-            VPRINTF(FATAL, "smoke_test_dma failed!\n");
+            VPRINTF(FATAL, "cptra_ss_test_rom failed in accessing MCI SRAM, failed!\n");
+            SEND_STDOUT_CTRL(0x1);
+        }
+
+        // Random length transactions less than 48 bytes
+        for (int i = 0; i < 10; i++) {
+            uint32_t rand_length = (rand() % 12) + 1; // Random length between 1 and 12 (1 to 48 bytes)
+            uint32_t rand_bytes = rand_length * 4; // Convert to bytes
+
+            VPRINTF(LOW, "Random transaction length: %d bytes\n", rand_bytes);
+
+            soc_ifc_axi_dma_send_ahb_payload(0x21200000, 0, send_payload, rand_bytes, 0);
+            soc_ifc_axi_dma_read_ahb_payload(0x21200000, 0, read_payload, rand_bytes, 0);
+
+            for (uint32_t j = 0; j < rand_length; j++) {
+                if (read_payload[j] != send_payload[j]) {
+                    VPRINTF(ERROR, "Random read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", j, read_payload[j], j, send_payload[j]);
+                    fail = 1;
+                }
+            }
+
+            if (fail) {
+                VPRINTF(FATAL, "cptra_ss_test_rom failed during random accesses to MCI SRAM, failed!\n");
+                SEND_STDOUT_CTRL(0x1);
+            }
+        }
+
+        // Send data through Mailbox to AXI_DMA, target the AXI SRAM
+        VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
+        // Acquire the mailbox lock
+        if (soc_ifc_mbox_acquire_lock(1)) {
+            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+            fail = 1;
+        }
+        // Write data into mailbox using direct-mode
+        for (uint32_t dw = 0; dw < 16; dw++) {
+            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
+        }
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        VPRINTF(LOW, "Sending payload from Mailbox\n");
+        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, 0x21200000, 0, 4, 0)) {
+            fail = 1;
+        }
+
+        // Read data back through mailbox using direct-mode
+        VPRINTF(LOW, "Reading payload to Mailbox\n");
+        if (soc_ifc_axi_dma_read_mbox_payload(0x21200000, 0x8800, 0, 4, 0)) {
+            fail = 1;
+        }
+        VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
+        // Acquire the mailbox lock
+        if (soc_ifc_mbox_acquire_lock(1)) {
+            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+            fail = 1;
+        }
+        for (uint32_t dw = 0; dw < 16; dw++) {
+            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+            if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
+                VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
+                fail = 1;
+            }
+        }
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+        if (fail) {
+            VPRINTF(FATAL, " cptra_ss_test_rom failed in accessing MCI MAILBOX, failed!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
+
+    for (int i = 0; i < 10; i++) {
+        // Generate a random number of bytes to write
+        uint32_t random_bytes = (rand() % 12) + 1; // Random number between 1 and 64 bytes
+        uint32_t random_words = (random_bytes + 3) / 4; // Convert bytes to words (4 bytes per word)
+
+        // Send data through Mailbox to AXI_DMA, target the AXI SRAM
+        VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
+        // Acquire the mailbox lock
+        if (soc_ifc_mbox_acquire_lock(1)) {
+            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+            fail = 1;
+        }
+        // Write data into mailbox using direct-mode
+        for (uint32_t dw = 0; dw < random_words; dw++) {
+            uint32_t random_data = rand();
+            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), random_data);
+            mbox_send_payload[dw] = random_data;
+        }
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+        VPRINTF(LOW, "Sending payload from Mailbox\n");
+        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, 0x21200000, 0, random_words, 0)) {
+            fail = 1;
+        }
+
+        // Read data back through mailbox using direct-mode
+        VPRINTF(LOW, "Reading payload to Mailbox\n");
+        if (soc_ifc_axi_dma_read_mbox_payload(0x21200000, 0x8800, 0, random_words, 0)) {
+            fail = 1;
+        }
+        VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
+        // Acquire the mailbox lock
+        if (soc_ifc_mbox_acquire_lock(1)) {
+            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+            fail = 1;
+        }
+        for (uint32_t dw = 0; dw < random_words; dw++) {
+            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+            if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
+                VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
+                fail = 1;
+            }
+        }
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+        if (fail) {
+            VPRINTF(FATAL, " cptra_ss_test_rom failed in random accessing MCI MAILBOX, failed!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+    }
+
+
 }
