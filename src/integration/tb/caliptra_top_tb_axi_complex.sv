@@ -34,12 +34,14 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         .IW(CPTRA_AXI_DMA_ID_WIDTH),
         .UW(CPTRA_AXI_DMA_USER_WIDTH)
     ) axi_sram_if (.clk(core_clk), .rst_n(cptra_rst_b));
+    logic axi_sram_if_bvalid_force; // Intermediary signal that can be 'forced' without impacting axi_sub logic
     axi_if #(
         .AW(AXI_FIFO_ADDR_WIDTH),
         .DW(CPTRA_AXI_DMA_DATA_WIDTH),
         .IW(CPTRA_AXI_DMA_ID_WIDTH),
         .UW(CPTRA_AXI_DMA_USER_WIDTH)
     ) axi_fifo_if (.clk(core_clk), .rst_n(cptra_rst_b));
+    logic axi_fifo_if_bvalid_force; // Intermediary signal that can be 'forced' without impacting axi_sub logic
 
 
     //=========================================================================-
@@ -173,13 +175,13 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_R_DLY , i_axi_sram_r_dly_cnt,  axi_sram_if.rready                                , axi_sram_if.rvalid                                )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_AW_DLY, i_axi_sram_aw_dly_cnt, i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_sram.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_W_DLY , i_axi_sram_w_dly_cnt,  i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_sram.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_B_DLY , i_axi_sram_b_dly_cnt,  axi_sram_if.bready                                , axi_sram_if.bvalid                                )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_SRAM_B_DLY , i_axi_sram_b_dly_cnt,  axi_sram_if.bready                                , axi_sram_if_bvalid_force                          )
     // --------------------- FIFO ---------------------
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AR_DLY, i_axi_fifo_ar_dly_cnt, axi_fifo_if.arready                               , axi_fifo_if.arvalid                               )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_R_DLY , i_axi_fifo_r_dly_cnt,  axi_fifo_if.rready                                , axi_fifo_if.rvalid                                )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_AW_DLY, i_axi_fifo_aw_dly_cnt, i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awready_q   , i_axi_fifo.i_axi_sub.i_axi_sub_wr.axi_awvalid_q   )
     `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_W_DLY , i_axi_fifo_w_dly_cnt,  i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wready      , i_axi_fifo.i_axi_sub.i_axi_sub_wr.txn_wvalid      )
-    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_B_DLY , i_axi_fifo_b_dly_cnt,  axi_fifo_if.bready                                , axi_fifo_if.bvalid                                )
+    `GENERIC_2SIG_DLY_TEMPLATE (AXI_FIFO_B_DLY , i_axi_fifo_b_dly_cnt,  axi_fifo_if.bready                                , axi_fifo_if_bvalid_force                          )
 
 
     //=========================================================================-
@@ -251,8 +253,8 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         m_axi_if.buser            = sram_w_active ? axi_sram_if.buser :
                                     fifo_w_active ? axi_fifo_if.buser :
                                                     '0;
-        m_axi_if.bvalid           = sram_w_active ? axi_sram_if.bvalid :
-                                    fifo_w_active ? axi_fifo_if.bvalid :
+        m_axi_if.bvalid           = sram_w_active ? axi_sram_if_bvalid_force :
+                                    fifo_w_active ? axi_fifo_if_bvalid_force :
                                                     '0;
     end
     `CALIPTRA_ASSERT(AXI_COMPLEX_RD_DECODE, m_axi_if.arvalid |-> (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
@@ -285,8 +287,8 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     end
     `CALIPTRA_ASSERT_NEVER(SRAM_GT2_RD_PENDING, sram_r_active > 2, core_clk, !cptra_rst_b)
     always_comb begin
-        sram_aw_hshake    = axi_sram_if.awvalid && axi_sram_if.awready;
-        sram_b_hshake     = axi_sram_if.bvalid  && axi_sram_if.bready;
+        sram_aw_hshake    = axi_sram_if.awvalid      && axi_sram_if.awready;
+        sram_b_hshake     = axi_sram_if_bvalid_force && axi_sram_if.bready;
     end
     always_ff@(posedge core_clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
@@ -347,6 +349,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
     // AXI B
     assign axi_sram_if.bready        = sram_w_active ? m_axi_if.bready : '0;
+    assign axi_sram_if_bvalid_force  = axi_sram_if.bvalid;
 
     // Fake "MCU" SRAM block
     caliptra_axi_sram #(
@@ -396,8 +399,8 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     end
     `CALIPTRA_ASSERT_NEVER(FIFO_GT2_RD_PENDING, fifo_r_active > 2, core_clk, !cptra_rst_b)
     always_comb begin
-        fifo_aw_hshake    = axi_fifo_if.awvalid && axi_fifo_if.awready;
-        fifo_b_hshake     = axi_fifo_if.bvalid  && axi_fifo_if.bready;
+        fifo_aw_hshake    = axi_fifo_if.awvalid      && axi_fifo_if.awready;
+        fifo_b_hshake     = axi_fifo_if_bvalid_force && axi_fifo_if.bready;
     end
     always_ff@(posedge core_clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
@@ -425,6 +428,56 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     // 1 write request active
     // 1 write request accepted and pending
     `CALIPTRA_ASSERT_NEVER(FIFO_GT4_WR_PENDING, (fifo_w_active == 4) && fifo_aw_hshake && !fifo_b_hshake, core_clk, !cptra_rst_b)
+
+    logic [31:0] fifo_aw_hshake_count, fifo_b_hshake_count;
+    logic [31:0] fifo_b_hshake_count_expected;
+    logic [11:0] awlen_active;
+    logic awlen_busy;
+    int awlen_active_q [$];
+
+    initial begin
+        forever begin
+            @(posedge core_clk);
+            if (!cptra_rst_b) begin
+                awlen_active = '0;
+                awlen_busy = '0;
+                awlen_active_q.delete();
+                fifo_b_hshake_count_expected = 0;
+            end
+            if (fifo_aw_hshake && awlen_busy) begin
+                awlen_active_q.push_front(axi_fifo_if.awlen);
+            end
+            else if (fifo_aw_hshake) begin
+                awlen_active = axi_fifo_if.awlen;
+                awlen_busy = 1;
+            end
+            if (axi_fifo_if.wvalid && axi_fifo_if.wready && (awlen_busy == 0)) begin
+                $fatal("TB: Write data to AXI Complex FIFO while awlen_busy == 0; check TB for logic error.");
+            end
+            else if (axi_fifo_if.wvalid && axi_fifo_if.wready && (awlen_active == 0)) begin
+                awlen_busy = 0;
+                fifo_b_hshake_count_expected += 1;
+            end
+            else if (axi_fifo_if.wvalid && axi_fifo_if.wready) begin
+                awlen_active -= 1;
+            end
+            if (!awlen_busy && (awlen_active_q.size() != 0)) begin
+                awlen_busy = 1;
+                awlen_active = awlen_active_q.pop_back();
+            end
+        end
+    end
+
+    always@(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            fifo_aw_hshake_count <= '0;
+            fifo_b_hshake_count  <= '0;
+        end
+        else begin
+            fifo_aw_hshake_count <= fifo_aw_hshake_count + (fifo_aw_hshake ? 32'h1 : 32'h0);
+            fifo_b_hshake_count  <= fifo_b_hshake_count  + (fifo_b_hshake  ? 32'h1 : 32'h0);
+        end
+    end
 
     // AXI AR
     assign axi_fifo_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
@@ -458,6 +511,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
                                                     
     // AXI B                                    
     assign axi_fifo_if.bready        = fifo_w_active ? m_axi_if.bready : '0;
+    assign axi_fifo_if_bvalid_force  = axi_fifo_if.bvalid;
 
     `CALIPTRA_ASSERT_NEVER(FIFO_RD_NOT_FIXED, fifo_ar_hshake && (axi_fifo_if.arburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_NEVER(FIFO_WR_NOT_FIXED, fifo_aw_hshake && (axi_fifo_if.awburst != AXI_BURST_FIXED), core_clk, !cptra_rst_b)
