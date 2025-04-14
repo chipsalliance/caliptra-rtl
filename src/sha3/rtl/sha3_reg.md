@@ -20,7 +20,7 @@ Don't override. Generated from: sha3_reg
 | 0x008|SHA3_VERSION[0]|   SHA3/SHAKE component version register type definition   |
 | 0x00C|SHA3_VERSION[1]|   SHA3/SHAKE component version register type definition   |
 | 0x01C|   ALERT_TEST  |          SHA3/SHAKE component Alert Test Register         |
-| 0x020|   CFG_REGWEN  |SHA3/SHAKE component Write enable of CFG_SHADOWED register |
+| 0x020|   CFG_REGWEN  |SHA3/SHAKE component Write enable for CFG_SHADOWED register|
 | 0x024|  CFG_SHADOWED |        SHA3/SHAKE component Configuration register        |
 | 0x028|      CMD      |           SHA3/SHAKE component command register           |
 | 0x02C|     STATUS    |            SHA3/SHAKE component status register           |
@@ -38,7 +38,7 @@ Don't override. Generated from: sha3_reg
 - Array Stride: 0x4
 - Total Size: 0x8
 
-<p>Two 32-bit read-only registers representing of the name
+<p>Two 32-bit read-only registers representing the name
 of SHA3/SHAKE component.</p>
 
 |Bits|Identifier|Access|Reset|Name|
@@ -58,7 +58,7 @@ of SHA3/SHAKE component.</p>
 - Array Stride: 0x4
 - Total Size: 0x8
 
-<p>Two 32-bit read-only registers representing of the name
+<p>Two 32-bit read-only registers representing the name
 of SHA3/SHAKE component.</p>
 
 |Bits|Identifier|Access|Reset|Name|
@@ -163,9 +163,9 @@ If the two write operations try to set a different value, a recoverable alert is
 
 #### kstrength field
 
-<p>Hashing Strength, Protected by CFG_REGWEN.en
+<p>Hashing Strength, Protected by CFG_REGWEN.en 
 bit field to select the security strength of SHA3 hashing engine. 
-If mode field is set to SHAKE or cSHAKE, only 128 and 256 strength can be selected. 
+If mode field is set to SHAKE, only 128 and 256 strength can be selected. 
 Other value will result error when hashing starts.</p>
 
 | Value | Name | Description |
@@ -219,13 +219,13 @@ From a hardware perspective byte swaps are performed on a TL-UL word granularity
 
 #### cmd field
 
-<p>Issue a command to the SHA3 IP. The command is sparse encoded. 
+<p>Issues a command to the SHA3 IP. The command is sparse encoded. 
 To prevent sw from writing multiple commands at once, the field is defined as enum.
-Alway return 0 for SW read.
+Always return 0 for SW reads.
 START: Writing 6'b011101 or dec 29 into this field when SHA3/SHAKE is in idle, SHA3/SHAKE begins its operation and start absorbing.
 PROCESS: Writing 6'b101110 or dec 46 into this field when SHA3/SHAKE began its operation and received the entire message, it computes the digest or signing.
 RUN: The run field is used in the sponge squeezing stage. 
-It triggers the keccak round logic to run full 24 rounds. 
+It triggers the Keccak round logic to run full 24 rounds. 
 This is optional and used when software needs more digest bits than the keccak rate. 
 It only affects when the SHA3/SHAKE operation is completed.
 DONE: Writing 6'b010110 or dec 22 into this field when SHA3 squeezing is completed, 
@@ -242,7 +242,7 @@ SHA3/SHAKE hashing engine clears internal variables and goes back to Idle state 
 
 <p>When error occurs and one of the state machine stays at Error handling state, 
 SW may process the error based on ERR_CODE, then let FSM back to the reset state.
-Alway return 0 for SW read.</p>
+Always return 0 for SW reads.</p>
 
 ### STATUS register
 
@@ -344,7 +344,7 @@ this memory space.
 0x200 - 0x2C7: State share
 for Keccak State access:
 1. Output length &lt;= rate length, sha3_done will be raised or software can poll STATUS.squeeze become 1.
-2. Output length &gt; rate length, after software read 1st keccak state, software should issue run cmd to trigger keccak round logic to run full 24 rounds.
+2. Output length &gt; rate length, after software read 1st keccak state, software should issue run cmd to trigger Keccak round logic to run full 24 rounds.
 And then software should check STATUS.squeeze register field for the readiness of STATE value(SHA3 FSM become MANUAL_RUN before keccak state complete).</p>
 
 No supported members.
