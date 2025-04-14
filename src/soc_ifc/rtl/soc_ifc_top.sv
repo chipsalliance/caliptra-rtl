@@ -564,7 +564,8 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     end
 end
 
-assign BootFSM_BrkPoint_valid = BootFSM_BrkPoint_Latched & cptra_in_dbg_or_manuf_mode;
+// Bootfsm break point is valid if Caliptra is in debug mode or manuf mode OR the debug intent is set
+assign BootFSM_BrkPoint_valid = BootFSM_BrkPoint_Latched & (cptra_in_dbg_or_manuf_mode | cptra_ss_debug_intent);
 
 // pwrgood_hint informs if the powergood toggled
 always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
@@ -859,9 +860,9 @@ always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     .swwe = !soc_ifc_reg_req_data.soc_req; //FIXME
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
+always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE       .swwe = !soc_ifc_reg_req_data.soc_req;
 always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next = '0;
 
