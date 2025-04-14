@@ -43,7 +43,7 @@ If the desired digest length is greater than the Keccak rate, after software rea
 1. Issue an Run command for the Keccak round logic to run another full round.
 2. Read next rate of digest from [`STATE`](sha3_reg.md#state-memory). Please notice that SHA3 engine will not raise any interrupts when the Keccak round completes software initiated manual run. Software can only check [`STATUS.squeeze`](sha3_reg.md#status-register) register field for the readiness of [`STATE`](sha3_reg.md#state-memory) value.
 
-By repeating these two steps above, software can abtain complete digest.
+By repeating these two steps above, software can obtain complete digest.
 
 ## Software release SHA3
 
