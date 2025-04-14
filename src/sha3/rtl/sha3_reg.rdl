@@ -18,7 +18,7 @@ addrmap sha3_reg {
     /* ---- SHA3 Component Name ---- */
     reg {
         name = "SHA3/SHAKE component name register type definition";
-        desc = "Two 32-bit read-only registers representing of the name
+        desc = "Two 32-bit read-only registers representing the name
                 of SHA3/SHAKE component.";
 
         default sw = r;
@@ -32,7 +32,7 @@ addrmap sha3_reg {
     /* ---- SHA3 Component Version ---- */
     reg {
         name = "SHA3/SHAKE component version register type definition";
-        desc = "Two 32-bit read-only registers representing of the version
+        desc = "Two 32-bit read-only registers representing the version
                 of SHA3/SHAKE component.";
 
         default sw = r;
@@ -57,7 +57,7 @@ addrmap sha3_reg {
     } ALERT_TEST @ 0x1C;
 
     reg {
-        name = "SHA3/SHAKE component Write enable of CFG_SHADOWED register";
+        name = "SHA3/SHAKE component Write enable for CFG_SHADOWED register";
         field {
             sw = r;
             hw = rw;
@@ -83,7 +83,7 @@ addrmap sha3_reg {
             reset = 0x0;
             desc = "Hashing Strength, Protected by CFG_REGWEN.en
             bit field to select the security strength of SHA3 hashing engine. 
-            If mode field is set to SHAKE or cSHAKE, only 128 and 256 strength can be selected. 
+            If mode field is set to SHAKE, only 128 and 256 strength can be selected. 
             Other value will result error when hashing starts.";
             enum kstrength_type{
                 // | Value | Name | Description |
@@ -158,9 +158,9 @@ addrmap sha3_reg {
             onwrite = woclr;
             //onread = r0;
             //hw force return 0 for sw read
-            desc = "Issue a command to the SHA3 IP. The command is sparse encoded. 
+            desc = "Issues a command to the SHA3 IP. The command is sparse encoded. 
             To prevent sw from writing multiple commands at once, the field is defined as enum.
-            Alway return 0 for SW read.
+            Always return 0 for SW reads.
             START: Writing 6'b011101 or dec 29 into this field when SHA3/SHAKE is in idle, SHA3/SHAKE begins its operation and start absorbing.
             PROCESS: Writing 6'b101110 or dec 46 into this field when SHA3/SHAKE began its operation and received the entire message, it computes the digest or signing.
             RUN: The run field is used in the sponge squeezing stage. 
@@ -191,7 +191,7 @@ addrmap sha3_reg {
             //hw force return 0 for sw read
             desc = "When error occurs and one of the state machine stays at Error handling state, 
             SW may process the error based on ERR_CODE, then let FSM back to the reset state.
-            Alway return 0 for SW read.";
+            Always return 0 for SW reads.";
         } err_processed[10:10];
     } CMD @ 0x28;
 
