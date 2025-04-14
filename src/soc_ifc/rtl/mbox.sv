@@ -323,8 +323,8 @@ always_comb begin : mbox_fsm_combo
         MBOX_IDLE: begin
             if (arc_MBOX_IDLE_MBOX_RDY_FOR_CMD) begin
                 mbox_fsm_ns = MBOX_RDY_FOR_CMD;
-                soc_has_lock_nxt = req_data_soc_req; //soc requested the lock
-                uc_has_lock_nxt = ~req_data_soc_req; //uc requested the lock
+                soc_has_lock_nxt = req_data_soc_req & hwif_out.mbox_lock.lock.swmod; //soc requested the lock
+                uc_has_lock_nxt = ~req_data_soc_req & hwif_out.mbox_lock.lock.swmod; //uc requested the lock
                 tap_has_lock_nxt = hwif_in.mbox_lock.lock.hwset; //tap set the lock
             end
             // Flag a non-fatal error, but don't change states, if mbox is already IDLE
@@ -760,5 +760,5 @@ mbox_csr1(
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, !rst_b)
 //`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, !rst_b)
 `CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data_soc_req), clk, !rst_b)
-
+`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_LOCK_MUTEX, {soc_has_lock, uc_has_lock, tap_has_lock}, clk, !rst_b)
 endmodule
