@@ -1,3 +1,3 @@
 [submodule "submodules/adams-bridge"]
 	path = submodules/adams-bridge
-	url = https://gitlab-master.nvidia.com/caliptra_nv/adams-bridge
+	url = https://github.com/chipsalliance/adams-bridge
