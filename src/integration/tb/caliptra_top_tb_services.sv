@@ -150,7 +150,7 @@ module caliptra_top_tb_services
     logic [4:0]                 wb_dest;
     logic [31:0]                wb_data;
 
-    bit                         hex_file_is_empty;
+    int                         hex_file_is_empty;
     bit                         flip_bit;
 
     string                      abi_reg[32]; // ABI register names
