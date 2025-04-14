@@ -2189,6 +2189,7 @@ class soc_ifc_predictor #(
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_aw_c = axi_txn.aaxi_aw_c;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ar_c = axi_txn.aaxi_ar_c;
 	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ac_c = axi_txn.aaxi_ac_c;
+        soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_w_c = axi_txn.aaxi_w_c;
     end
     if (!axi_txn.is_write()) begin
         send_axi_rd_txn = 1;
