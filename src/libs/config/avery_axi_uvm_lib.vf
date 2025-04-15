@@ -21,5 +21,5 @@ ${AVERY_AXI}/src.VCS/aaxi_busmonitor.v
 ${AVERY_AXI}/src.axi/aaxi_coverage_metrics.sv
 ${AVERY_AXI}/src.axi/aaxi_pkg_test.sv
 ${AVERY_AXI}/src.axi/aaxi_intf.sv
-${MSFT_AVERY_UVM_TB}/src.uvm/src.uvm/caliptra_aaxi_uvm_pkg.sv
+${AVERY_AXI}/src.uvm/aaxi_uvm_pkg.sv
 ${AVERY_AXI}/src.uvm/aaxi_uvm_test_top.sv

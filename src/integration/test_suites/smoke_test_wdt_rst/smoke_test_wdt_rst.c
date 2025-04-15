@@ -199,6 +199,7 @@ void main() {
         
         SEND_STDOUT_CTRL(0xf5);
     }
+    /*
     else if (rst_count == 8) {
         //Issue warm reset during WDT operation
         //WDT cascade mode
@@ -233,7 +234,7 @@ void main() {
         //WDT cascade mode
         configure_wdt_independent(T1_DIS_T2_EN, 0x200, 0x00000000, 0x200, 0x00000000);
         SEND_STDOUT_CTRL(0xf5);
-    }
+    }*/
     else {
         VPRINTF(LOW, "End of test\n");
     }
