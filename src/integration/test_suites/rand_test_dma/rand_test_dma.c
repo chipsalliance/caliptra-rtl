@@ -283,14 +283,14 @@ void main(void) {
                         VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
 
                         if (inject_rst && (rst_done == 0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
                         soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
                     } else {
                         if (inject_rst && (rst_done == 0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         if (!dst_is_fifo) {
@@ -398,7 +398,7 @@ void main(void) {
                         VPRINTF(HIGH, "Sending payload from Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -407,7 +407,7 @@ void main(void) {
                         VPRINTF(HIGH, "Sending large payload from Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         if (!dst_is_fifo) {
@@ -501,7 +501,7 @@ void main(void) {
                         VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
                         
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -514,7 +514,7 @@ void main(void) {
                         VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -607,7 +607,7 @@ void main(void) {
                         VPRINTF(HIGH, "Reading payload to Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_offset, use_rd_fixed, transfer_size*4, block_size);
@@ -619,7 +619,7 @@ void main(void) {
                         VPRINTF(HIGH, "Reading rand payload to Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -703,7 +703,7 @@ void main(void) {
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -717,7 +717,7 @@ void main(void) {
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset");
+                            VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         // Arm AXI2HB transfer
