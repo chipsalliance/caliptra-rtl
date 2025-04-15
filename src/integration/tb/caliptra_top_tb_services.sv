@@ -1437,7 +1437,8 @@ endgenerate //IV_NO
             timed_warm_rst <= 'b1;
         end
         else if((WriteData[7:0] == 8'hee) && mailbox_write) begin
-            wait_time_to_rst = $urandom_range(5,100);
+            std::randomize(wait_time_to_rst) with {wait_time_to_rst dist {[5:24] :/ 3, [25:99] :/ 5, [100:255] :/ 8, [256:511] :/ 5, [512:1023] :/ 1};};
+            //wait_time_to_rst = $urandom_range(5,100);
             prandom_warm_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
