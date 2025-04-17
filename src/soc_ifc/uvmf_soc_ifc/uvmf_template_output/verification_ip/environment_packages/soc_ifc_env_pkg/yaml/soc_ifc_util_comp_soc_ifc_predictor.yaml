@@ -23,7 +23,9 @@ uvmf:
         type: ss_mode_status_transaction
       - name: soc_ifc_sb_ahb_ap
         type: mvc_sequence_item_base
-      - name: soc_ifc_sb_axi_ap
+      - name: soc_ifc_sb_axi_wr_ap
+        type: aaxi_master_tr
+      - name: soc_ifc_sb_axi_rd_ap
         type: aaxi_master_tr
       existing_library_component: 'True'
       type: predictor
