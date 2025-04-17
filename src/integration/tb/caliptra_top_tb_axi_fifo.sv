@@ -249,10 +249,15 @@ module caliptra_top_tb_axi_fifo #(
                     // and we should grab the next value...
                     @(negedge en_recovery_emulation);
                 end
-                block_size_idx++;
-                if (block_size_idx >= 100) begin
-                    $display("TB Reached end of block_size array, exiting watch loop");
-                    break;
+                // If a reset caused en_recovery_emulation to deassert, test will continue with the same
+                // test scenario and block_size value after the reset.
+                // Otherwise, advance to the next testcase and emulate the next block_size value
+                if (rst_n) begin
+                    block_size_idx++;
+                    if (block_size_idx >= 100) begin
+                        $display("TB Reached end of block_size array, exiting watch loop");
+                        break;
+                    end
                 end
             end
         end
