@@ -72,11 +72,6 @@ module sha512_w_mem(
   reg [63 : 0] w_mem15_new;
   reg          w_mem_we;
 
-  reg [6 : 0] w_ctr_reg;
-  reg [6 : 0] w_ctr_new;
-  reg         w_ctr_we;
-
-
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -103,15 +98,11 @@ module sha512_w_mem(
       if (!reset_n) begin
         for (ii = 0; ii < 16; ii = ii + 1)
           w_mem[ii] <= 64'h0;
-
-        w_ctr_reg <= 7'h0;
       end
       else begin
         if (zeroize) begin
           for (ii = 0; ii < 16; ii = ii + 1)
             w_mem[ii] <= 64'h0;
-
-          w_ctr_reg <= 7'h0;
         end
         else begin
           if (w_mem_we)
@@ -133,9 +124,6 @@ module sha512_w_mem(
               w_mem[14] <= w_mem14_new;
               w_mem[15] <= w_mem15_new;
             end
-
-          if (w_ctr_we)
-              w_ctr_reg <= w_ctr_new;
         end
       end
     end // reg_update
@@ -149,10 +137,7 @@ module sha512_w_mem(
   //----------------------------------------------------------------
   always @*
     begin : select_w
-      if (w_ctr_reg < 16)
-        w_tmp = w_mem[w_ctr_reg[3 : 0]];
-      else
-        w_tmp = w_new;
+      w_tmp = w_mem[0];
     end // select_w
 
 
@@ -225,7 +210,7 @@ module sha512_w_mem(
           w_mem_we    = 1;
         end
 
-      if (next_cmd && (w_ctr_reg > 15))
+      if (next_cmd)
         begin
           w_mem00_new = w_mem[01];
           w_mem01_new = w_mem[02];
@@ -246,31 +231,6 @@ module sha512_w_mem(
           w_mem_we    = 1;
         end
     end // w_mem_update_logic
-
-
-  //----------------------------------------------------------------
-  // w_ctr
-  // W schedule adress counter. Counts from 0x10 to 0x3f and
-  // is used to expand the block into words.
-  //----------------------------------------------------------------
-  always @*
-    begin : w_ctr
-      w_ctr_new = 7'h0;
-      w_ctr_we  = 1'h0;
-
-      if (init_cmd)
-        begin
-          w_ctr_new = 7'h00;
-          w_ctr_we  = 1'h1;
-        end
-
-      if (next_cmd)
-        begin
-          w_ctr_new = w_ctr_reg + 7'h01;
-          w_ctr_we  = 1'h1;
-        end
-    end // w_ctr
-
 endmodule // sha512_w_mem
 
 //======================================================================
