@@ -63,7 +63,7 @@ CDC:
   
 RDC:
  - Real Intent Meridian
-   - `2019.A.P16`
+   - `2022.A.P18.3`
 
 RDL Compiler:
  - systemrdl-compiler==1.27.3
