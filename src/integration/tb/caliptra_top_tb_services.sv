@@ -2348,8 +2348,8 @@ task initialize_caliptra_axi_sram;
                 end
                 
                 // Progress reporting every 12.5% (8192 addresses)
-                if ((addr % AXI_SRAM_DEPTH/8) == 0) begin
-                    $display("  SRAM initialization progress: %0d%%", (addr * 100) / AXI_SRAM_DEPTH);
+                if (addr % (AXI_SRAM_DEPTH/8) == 0) begin
+                    $display("  SRAM initialization progress: %0d%% (addr: 0x%x)", (addr * 100) / AXI_SRAM_DEPTH, addr);
                 end
             end
             
