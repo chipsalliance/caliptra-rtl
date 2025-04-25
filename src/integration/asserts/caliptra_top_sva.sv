@@ -405,17 +405,17 @@ module caliptra_top_sva
       for (genvar dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
         PCR_MLDSA_signature_0_15_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-            (`SERVICES_PATH.check_pcr_mldsa_signing |->  (`MLDSA_PATH.signature_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
+            (`SERVICES_PATH.check_pcr_mldsa_signing |->  (`MLDSA_PATH.signature_reg.enc.c[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
         )
-        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
+        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.enc.c[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
       end
 
       for (genvar dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
         PCR_MLDSA_signature_16_36_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-            (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword] == {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}))
+            (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`MLDSA_PATH.signature_reg.enc.h[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][31:24]}))
         )
-        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword], {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}, SIGNATURE_C_NUM_DWORDS+dword);
+        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`MLDSA_PATH.signature_reg.enc.h[dword], {`SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][31:24]}, SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword);
       end
 
      //MLDSA_sig_z_data_check
