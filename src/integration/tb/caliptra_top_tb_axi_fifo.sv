@@ -190,8 +190,8 @@ module caliptra_top_tb_axi_fifo #(
             rand_w_data <= $urandom;
             `endif
         end
-        rand_w_valid <= !fifo_clear && ((auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready)); // Hold valid until data is accepted
-        rand_r_ready <=                 (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
+        rand_w_valid <= !fifo_clear && rst_n && ((auto_push && (stall_down_count == 0)) || (rand_w_valid && !fifo_w_ready)); // Hold valid until data is accepted
+        rand_r_ready <=                rst_n &&  (auto_pop  && (stall_down_count == 0)) && fifo_r_valid;
     end
 
     //=========================================================================-
