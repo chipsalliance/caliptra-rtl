@@ -33,7 +33,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
     * Streaming Boot Support
 * RISC-V core PMP support
 * CSR HMAC key for manufacturing flow
-  
+
 ## Boot FSM
 
 The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is awake and ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by de-asserting the internal reset.
@@ -371,7 +371,7 @@ The following figure shows the entropy source block.
 
 ### Operation
 
-Requests for entropy bits start with [command requests](https://opentitan.org/book/hw/ip/csrng/doc/theory_of_operation.html#general-command-format) over the AHB-lite interface to the csrng [CMD\_REQ](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.csrng_reg.CMD_REQ) register. 
+Requests for entropy bits start with [command requests](https://opentitan.org/book/hw/ip/csrng/doc/theory_of_operation.html#general-command-format) over the AHB-lite interface to the csrng [CMD\_REQ](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.csrng_reg.CMD_REQ) register.
 
 The following describes the fields of the command request header:
 
@@ -383,7 +383,7 @@ The following describes the fields of the command request header:
 
 * Generate Length: Only defined for the generate command, this field is the total number of cryptographic entropy blocks requested. Each unit represents 128 bits of entropy returned.  A value of 8 would return a total of 1024 bits. The maximum size supported is 4096.
 
-First an instantiate command is requested over the SW application interface to initialize an instance in the CSRNG module. Depending on the flag0 and clen fields in the command header, a request to the entropy\_src module over the entropy interface is sent to seed the csrng. This can take a few milliseconds if the seed entropy is not immediately available. 
+First an instantiate command is requested over the SW application interface to initialize an instance in the CSRNG module. Depending on the flag0 and clen fields in the command header, a request to the entropy\_src module over the entropy interface is sent to seed the csrng. This can take a few milliseconds if the seed entropy is not immediately available.
 
 Example instantiation:
 
@@ -400,7 +400,7 @@ glen = Not used
 | T     | 0    | Seed of zero is used (no entropy source seed used).          |
 | T     | 1-12 | Only provided additional data is used as seed.               |
 
-Next a generate command is used to request generation of cryptographic entropy bits. The glen field defines how many 128 bit words are to be returned to the application interface. After the generated bits are ready, they can be read out via the GENBITS register. This register must be read out glen \* 4 times for each request made. 
+Next a generate command is used to request generation of cryptographic entropy bits. The glen field defines how many 128 bit words are to be returned to the application interface. After the generated bits are ready, they can be read out via the GENBITS register. This register must be read out glen \* 4 times for each request made.
 
 Example generate command:
 
@@ -470,6 +470,111 @@ The following table provides descriptions for the CSRNG signals.
 | cs_aes_halt_o              | output          | Response to entropy_src that all requests to AES block are halted.                                    |
 
 The CSRNG may only be enabled if entropy\_src is enabled. After it is disabled, CSRNG may only be re-enabled after entropy\_src has been disabled and re-enabled.
+
+### FIPS considerations
+
+The following sections illustrate the self-test parameter configuration. The
+`entropy_src` block provides additional tests, but Caliptra focuses primarily
+on the adaptive and repetition count tests, which are the ones strictly
+required for FIPS compliance. Additional details can be found in NIST
+publication SP 800-90B.
+
+The TRNG must be re-initialized whenever self-test parameter changes are
+needed. As described in the previous section, the initialization steps
+are as follows:
+
+1. Disable `csrng` and `entropy_src` in that order.
+2. Apply new self-test configuration.
+3. Enable `entropy_src` and `csrng` in that order.
+
+### Adaptive self-test window and thresholds
+
+This section details the configuration of the `entropy_src`, focusing on how
+the test window size for the adaptive self-test is determined and how it
+relates to threshold calculations.
+
+#### Understanding Test Window Sizes
+
+The adaptive self-test within the `entropy_src` block utilizes a
+configurable test window. To clarify its interpretation, two terms are
+defined:
+
+* `ENTROPY_TEST_WINDOW`: This refers to the test window size directly
+  configured in the hardware registers of the `entropy_src` block.
+* `ACTUAL_TEST_WINDOW`: This refers to the effective window size used for
+  the adaptive self-test threshold calculations. Its value depends on how
+  the test scores are aggregated.
+
+The aggregation method is determined by the CONF.THRESHOLD_SCOPE setting in
+the entropy_src block.
+
+#### Aggregate per symbol
+
+When CONF.THRESHOLD_SCOPE is enabled:
+
+* The adaptive test combines the inputs from all physical entropy lines
+  into a single, cumulative score.
+* The test essentially treats the combined input as a single binary stream,
+  counting the occurrences of '1's.
+* In this configuration:
+  * If `ENTROPY_TEST_WINDOW` is set to 1024, then
+  * `ACTUAL_TEST_WINDOW` = `ENTROPY_TEST_WINDOW` = 1024
+
+#### Handle each physical noise source separately
+
+When `CONF.THRESHOLD_SCOPE` is disabled:
+
+* The adaptive test scores each individual physical noise input line
+  independently.
+* This allows for monitoring the health of each noise source.
+* In this configuration (assuming, for example, 4 noise sources):
+  * If `ENTROPY_TEST_WINDOW` is set to 4096 bits, then
+  * `ACTUAL_TEST_WINDOW` = (`ENTROPY_TEST_WINDOW` / 4) = 1024
+
+#### Configuring adaptive self-test thresholds
+
+Once the `ACTUAL_TEST_WINDOW` is determined, the adaptive self-test
+thresholds can be configured as follows:
+
+* `ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `adaptp_cutoff`
+* `ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `ACTUAL_TEST_WINDOW` - `adaptp_cutoff`
+
+Here, `adaptp_cutoff` represents the pre-determined cutoff value for the
+adaptive proportion test, as defined by NIST SP 800-90B. See the threshold
+calculations below as an example.
+
+$α = 2^{-40}$ (recommended)\
+$H = 0.5$ (example, estimated entropy measured from hardware)\
+$W$ = `ACTUAL_TEST_WINDOW`\
+`adaptp_cutoff` =  $1 + critbinom(W, 2^{-H}, 1 - α)$
+
+> Note: The `critbinom` function (critical binomial distribution function) is
+> implemented by most spreadsheet applications.
+
+### Recommended configuration
+
+The following configuration is recommended for the adaptive and repetition
+count tests:
+
+#### Adaptive test
+
+1. Set `CONF.THRESHOLD_SCOPE` to disabled. This allows the test to monitor
+   and score each physical noise source individually, providing more granular
+   health information.
+2. Set `HEALTH_TEST_WINDOWS.FIPS_WINDOW` to 4096 bits. This value serves
+   as the `ENTROPY_TEST_WINDOW`. With the current 4 noise source configuration,
+   this is equivalent to 1024 bits per noise source, where each source produces
+   1 bit of entropy as defined in NIST SP 800-90B.
+3. Calculate thresholds. Use an `ACTUAL_TEST_WINDOW` of 1024 bits (derived
+   from step 2) in the adaptive test threshold formulas provided earlier in
+   this subsection.
+
+#### Repetition count test
+
+The methodology used for calculating the repetition count threshold in the
+ROM boot phase can be directly applied for this test as well. The threshold is
+applied on a per-noise-source basis.
+
 
 ## External-TRNG REQ HW API
 
@@ -893,9 +998,9 @@ In this architecture, the HMAC interface and controller are implemented in hardw
 | 1 KiB message         | 1,731               | 4.327                 | 231,107             |
 | 128 KiB message       | 207,979             | 519.947               | 1,923               |
 
-#### Hardware/software architecture 
+#### Hardware/software architecture
 
-In this architecture, the HMAC interface and controller are implemented in RISC-V core. The performance specification of the HMAC architecture is reported as shown in the following table. 
+In this architecture, the HMAC interface and controller are implemented in RISC-V core. The performance specification of the HMAC architecture is reported as shown in the following table.
 
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
@@ -928,7 +1033,7 @@ HMAC_DRBG uses a loop of HMAC(K, V) to generate the random bits. In this algorit
 
             1. 	Set V_init = 0x01 0x01 0x01 ... 0x01  (V has 384-bit)
             2. 	Set K_init = 0x00 0x00 0x00 ... 0x00  (K has 384-bit)
-            3. 	K_tmp = HMAC(K_init, V_init || 0x00 || entropy || nonce) 
+            3. 	K_tmp = HMAC(K_init, V_init || 0x00 || entropy || nonce)
             4. 	V_tmp = HMAC(K_tmp,  V_init)
             5. 	K_new = HMAC(K_tmp,  V_tmp  || 0x01 || entropy || nonce)
             6. 	V_new = HMAC(K_new,  V_tmp)
@@ -1099,11 +1204,11 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 ### SCA countermeasure
 
-The described ECC has four main routines: KeyGen, Signing, Verifying, and ECDH sharedkey. Since the Verifying routine requires operation with public values rather than a secret value, our side-channel analysis does not cover this routine. Our evaluation covers the KeyGen, Signing, and ECDH sharedkey routines where the secret values are processed. 
+The described ECC has four main routines: KeyGen, Signing, Verifying, and ECDH sharedkey. Since the Verifying routine requires operation with public values rather than a secret value, our side-channel analysis does not cover this routine. Our evaluation covers the KeyGen, Signing, and ECDH sharedkey routines where the secret values are processed.
 
-KeyGen consists of HMAC DRBG and scalar multiplication, while Signing first requires a message hashing and then follows the same operations as KeyGen (HMAC DRBG and scalar multiplication). The last step of Signing is generating “S” as the proof of signature. Since HMAC DRBG and hash operations are evaluated separately in our document, this evaluation covers scalar multiplication and modular arithmetic operations. 
+KeyGen consists of HMAC DRBG and scalar multiplication, while Signing first requires a message hashing and then follows the same operations as KeyGen (HMAC DRBG and scalar multiplication). The last step of Signing is generating “S” as the proof of signature. Since HMAC DRBG and hash operations are evaluated separately in our document, this evaluation covers scalar multiplication and modular arithmetic operations.
 
-#### Scalar multiplication 
+#### Scalar multiplication
 
 To perform the scalar multiplication, the Montgomery ladder is implemented, which is inherently resistant to timing and single power analysis (SPA) attacks.
 
@@ -1111,7 +1216,7 @@ Implementation of complete unified addition formula for the scalar multiplicatio
 
 To protect the architecture against horizontal power/electromagnetic (EM) and differential power analysis (DPA) attacks, several countermeasures are embedded in the design [9]. Since these countermeasures require random inputs, HMAC-DRBG is fed by IV to generate these random values.
 
-Since HMAC-DRBG generates random value in a deterministic way, firmware MUST feed different IV to ECC engine for EACH keygen, signing, and ECDH sharedkey operation. 
+Since HMAC-DRBG generates random value in a deterministic way, firmware MUST feed different IV to ECC engine for EACH keygen, signing, and ECDH sharedkey operation.
 
 #### Base point randomization
 
@@ -1139,7 +1244,7 @@ Each round of SHA512 execution needs 6,432 random bits, and one HMAC operation n
 
 Generating “S” as the proof of signature at the steps of the signing operation leaks where the hashed message is signed with private key and ephemeral key as follows:
 
-Since the given message is known or the signature part r is known, the attacker can perform a known-plaintext attack. The attacker can sign multiple messages with the same key, or the attacker can observe part of the signature that is generated with multiple messages but the same key. 
+Since the given message is known or the signature part r is known, the attacker can perform a known-plaintext attack. The attacker can sign multiple messages with the same key, or the attacker can observe part of the signature that is generated with multiple messages but the same key.
 
 The evaluation shows that the CPA attack can be performed with a small number of traces, respectively. Thus, an arithmetic masked design for these operations is implemented.
 
@@ -1147,7 +1252,7 @@ The evaluation shows that the CPA attack can be performed with a small number of
 
 This countermeasure is achieved by randomizing the privkey as follows:
 
-Although computation of “S” seems the most vulnerable point in our scheme, the operation does not have a big contribution to overall latency. Hence, masking these operations has low overhead on the cost of the design. 
+Although computation of “S” seems the most vulnerable point in our scheme, the operation does not have a big contribution to overall latency. Hence, masking these operations has low overhead on the cost of the design.
 
 #### Random number generator for SCA countermeasure
 
@@ -1244,7 +1349,7 @@ In this architecture, the ECC interface and controller are implemented in hardwa
 
 ## LMS Accelerator
 
-LMS cryptography is a type of hash-based digital signature scheme that was standardized by NIST in 2020. It is based on the Leighton-Micali Signature (LMS) system, which uses a Merkle tree structure to combine many one-time signature (OTS) keys into a single public key. LMS cryptography is resistant to quantum attacks and can achieve a high level of security without relying on large integer mathematics. 
+LMS cryptography is a type of hash-based digital signature scheme that was standardized by NIST in 2020. It is based on the Leighton-Micali Signature (LMS) system, which uses a Merkle tree structure to combine many one-time signature (OTS) keys into a single public key. LMS cryptography is resistant to quantum attacks and can achieve a high level of security without relying on large integer mathematics.
 
 Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
 
@@ -1309,7 +1414,7 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 
 ## Adams Bridge - Dilithium (ML-DSA)
 
-Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md) 
+Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
@@ -1400,7 +1505,7 @@ The main advantages of this approach compared to analyzing FPGA power traces are
 
 However, formal netlist analysis tools may not be perfect and they also have limitations in terms of what can be analyzed.
 For example, the maximum supported netlist size depends on the complexity and number of the non-linear elements.
-Also, random number generators and in particular pseudo-random number generators typically need to be excluded from the analysis and random number inputs need to be assumed as ideal by tools. 
+Also, random number generators and in particular pseudo-random number generators typically need to be excluded from the analysis and random number inputs need to be assumed as ideal by tools.
 Thus, they don’t replace FPGA-based analysis.
 We use them to increase our confidence in our SCA countermeasures and to close countermeasure verification faster by reducing the number of FPGA evaluation runs.
 
@@ -2101,7 +2206,7 @@ FW must set a last cycle flag before running the last iteration of the SHA engin
 
 ## Key vault
 
-Key Vault (KV) is a register file that stores the keys to be used by the microcontroller, but this register file is not observed by the microcontroller. Each cryptographic function has a control register and functional block designed to read from and write to the KV.  
+Key Vault (KV) is a register file that stores the keys to be used by the microcontroller, but this register file is not observed by the microcontroller. Each cryptographic function has a control register and functional block designed to read from and write to the KV. 
 
 | KV register                       | Description                                               |
 | :-------------------------------- | :-------------------------------------------------------- |
@@ -2110,13 +2215,13 @@ Key Vault (KV) is a register file that stores the keys to be used by the microco
 
 ### Key vault functional block
 
-Keys and measurements are stored in 512b register files. These have no read or write path from the microcontroller. The entries are read through a passive read mux driven by each cryptographic block. Locked entries return zeroes.  
+Keys and measurements are stored in 512b register files. These have no read or write path from the microcontroller. The entries are read through a passive read mux driven by each cryptographic block. Locked entries return zeroes. 
 
-Entries in the KV must be cleared via control register, or by de-assertion of pwrgood.   
+Entries in the KV must be cleared via control register, or by de-assertion of pwrgood.  
 
-Each entry has a control register that is writable by the microcontroller.  
+Each entry has a control register that is writable by the microcontroller. 
 
-The destination valid field is programmed by FW in the cryptographic block generating the key, and it is passed here at generation time. This field cannot be modified after the key is generated and stored in the KV.  
+The destination valid field is programmed by FW in the cryptographic block generating the key, and it is passed here at generation time. This field cannot be modified after the key is generated and stored in the KV. 
 
 | KV Entry Ctrl Fields      | Reset             | Description            |
 |---------------------------|-------------------|------------------------|
@@ -2128,7 +2233,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set. <br>\[0\] - HMAC KEY <br>\[1\] - HMAC BLOCK <br>\[2\] - SHA BLOCK <br>\[2\] - ECC PRIVKEY <br>\[3\] - ECC SEED <br>\[7:5\] - RSVD |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
-### Key vault cryptographic functional block  
+### Key vault cryptographic functional block 
 
 A generic block is instantiated in each cryptographic block to enable access to KV. 
 
@@ -2189,12 +2294,12 @@ The AES algorithm is described as follows:
 
 ### Key vault de-obfuscation block operation
 
-A de-obfuscation engine (DOE) is used in conjunction with AES cryptography to de-obfuscate the UDS and field entropy.   
+A de-obfuscation engine (DOE) is used in conjunction with AES cryptography to de-obfuscate the UDS and field entropy.  
 
-1. The obfuscation key is driven to the AES key. The data to be decrypted (either obfuscated UDS or obfuscated field entropy) is fed into the AES data.  
-2. An FSM manually drives the AES engine and writes the decrypted data back to the key vault.  
-3. FW programs the DOE with the requested function (UDS or field entropy de-obfuscation), and the destination for the result.  
-4. After de-obfuscation is complete, FW can clear out the UDS and field entropy values from any flops until cptra\_pwrgood de-assertion.   
+1. The obfuscation key is driven to the AES key. The data to be decrypted (either obfuscated UDS or obfuscated field entropy) is fed into the AES data. 
+2. An FSM manually drives the AES engine and writes the decrypted data back to the key vault. 
+3. FW programs the DOE with the requested function (UDS or field entropy de-obfuscation), and the destination for the result. 
+4. After de-obfuscation is complete, FW can clear out the UDS and field entropy values from any flops until cptra\_pwrgood de-assertion.  
 
 The following tables describe DOE register and control fields.
 
@@ -2209,13 +2314,13 @@ The following tables describe DOE register and control fields.
 | COMMAND\[1:0\]   | Cptra_rst_b  | 2’b00 Idle <br>2’b01 Run UDS flow  <br>2’b10 Run FE flow  <br>2’b11 Clear Obf Secrets                                                                   |
 | DEST\[4:2\]      | Cptra_rst_b  | Destination register for the result of the de-obfuscation flow. Field entropy writes into DEST and DEST+1  <br>Key entry only, can’t go to PCR . |
 
-### Key vault de-obfuscation flow  
+### Key vault de-obfuscation flow 
 
-1. ROM loads IV into DOE. ROM writes to the DOE control register the destination for the de-obfuscated result and sets the appropriate bit to run UDS and/or the field entropy flow.  
-2. DOE state machine takes over and loads the Caliptra obfuscation key into the key register.  
-3. Next, either the obfuscated UDS or field entropy are loaded into the block register 4 DWORDS at a time.  
-4. Results are written to the KV entry specified in the DEST field of the DOE control register.  
-5. State machine resets the appropriate RUN bit when the de-obfuscated key is written to KV. FW can poll this register to know when the flow is complete. 
+1. ROM loads IV into DOE. ROM writes to the DOE control register the destination for the de-obfuscated result and sets the appropriate bit to run UDS and/or the field entropy flow. 
+2. DOE state machine takes over and loads the Caliptra obfuscation key into the key register. 
+3. Next, either the obfuscated UDS or field entropy are loaded into the block register 4 DWORDS at a time. 
+4. Results are written to the KV entry specified in the DEST field of the DOE control register. 
+5. State machine resets the appropriate RUN bit when the de-obfuscated key is written to KV. FW can poll this register to know when the flow is complete.
 6. The clear obf secrets command flushes the obfuscation key, the obfuscated UDS, and the field entropy from the internal flops. This should be done by ROM after both de-obfuscation flows are complete.
 
 ## Data vault
@@ -2230,7 +2335,7 @@ Data vault is a set of generic scratch pad registers with specific lock function
 
 ## Cryptographic blocks fatal and non-fatal errors
 
-The following table describes cryptographic errors. 
+The following table describes cryptographic errors.
 
 | Errors       | Error type         | Description                                                                                                                                               |
 | :----------- | :----------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -2296,21 +2401,21 @@ The following terminology is used in this document.
 
 # References
 
-1. J. Strömbergson, "Secworks," \[Online\]. Available at https://github.com/secworks. 
-2. NIST, Federal Information Processing Standards Publication (FIPS PUB) 180-4 Secure Hash Standard (SHS). 
-3. OpenSSL \[Online\]. Available at https://www.openssl.org/docs/man3.0/man3/SHA512.html. 
-4. N. W. Group, RFC 3394, Advanced Encryption Standard (AES) Key Wrap Algorithm, 2002. 
-5. NIST, Federal Information Processing Standards Publication (FIPS) 198-1, The Keyed-Hash Message Authentication Code, 2008. 
-6. N. W. Group, RFC 4868, Using HMAC-SHA256, HMAC-SHA384, and HMAC-SHA512 with IPsec, 2007. 
-7. RFC 6979, Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA), 2013. 
-8. TCG, Hardware Requirements for a Device Identifier Composition Engine, 2018. 
-9. Coron, J.-S.: Resistance against differential power analysis for elliptic curve cryptosystems. In: Ko¸c, C¸ .K., Paar, C. (eds.) CHES 1999. LNCS, vol. 1717, pp. 292–302. 
-10. Schindler, W., Wiemers, A.: Efficient side-channel attacks on scalar blinding on elliptic curves with special structure. In: NISTWorkshop on ECC Standards (2015). 
-11. National Institute of Standards and Technology, "Digital Signature Standard (DSS)", Federal Information Processing Standards Publication (FIPS PUB) 186-4, July 2013. 
+1. J. Strömbergson, "Secworks," \[Online\]. Available at https://github.com/secworks.
+2. NIST, Federal Information Processing Standards Publication (FIPS PUB) 180-4 Secure Hash Standard (SHS).
+3. OpenSSL \[Online\]. Available at https://www.openssl.org/docs/man3.0/man3/SHA512.html.
+4. N. W. Group, RFC 3394, Advanced Encryption Standard (AES) Key Wrap Algorithm, 2002.
+5. NIST, Federal Information Processing Standards Publication (FIPS) 198-1, The Keyed-Hash Message Authentication Code, 2008.
+6. N. W. Group, RFC 4868, Using HMAC-SHA256, HMAC-SHA384, and HMAC-SHA512 with IPsec, 2007.
+7. RFC 6979, Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA), 2013.
+8. TCG, Hardware Requirements for a Device Identifier Composition Engine, 2018.
+9. Coron, J.-S.: Resistance against differential power analysis for elliptic curve cryptosystems. In: Ko¸c, C¸ .K., Paar, C. (eds.) CHES 1999. LNCS, vol. 1717, pp. 292–302.
+10. Schindler, W., Wiemers, A.: Efficient side-channel attacks on scalar blinding on elliptic curves with special structure. In: NISTWorkshop on ECC Standards (2015).
+11. National Institute of Standards and Technology, "Digital Signature Standard (DSS)", Federal Information Processing Standards Publication (FIPS PUB) 186-4, July 2013.
 12. NIST SP 800-90A, Rev 1: "Recommendation for Random Number Generation Using Deterministic Random Bit Generators", 2012. |
-13. CHIPS Alliance, “RISC-V VeeR EL2 Programmer’s Reference Manual” \[Online\] Available at https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf. 
-14. “The RISC-V Instruction Set Manual, Volume I: User-Level ISA, Document Version 20191213”, Editors Andrew Waterman and Krste Asanovi ́c, RISC-V Foundation, December 2019. Available at https://riscv.org/technical/specifications/. 
-15. “The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Document Version 20211203”, Editors Andrew Waterman, Krste Asanovi ́c, and John Hauser, RISC-V International, December 2021. Available at https://riscv.org/technical/specifications/. 
+13. CHIPS Alliance, “RISC-V VeeR EL2 Programmer’s Reference Manual” \[Online\] Available at https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf.
+14. “The RISC-V Instruction Set Manual, Volume I: User-Level ISA, Document Version 20191213”, Editors Andrew Waterman and Krste Asanovi ́c, RISC-V Foundation, December 2019. Available at https://riscv.org/technical/specifications/.
+15. “The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Document Version 20211203”, Editors Andrew Waterman, Krste Asanovi ́c, and John Hauser, RISC-V International, December 2021. Available at https://riscv.org/technical/specifications/.
 16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018, |
 
 <sup>[1]</sup> _Caliptra.**  **Spanish for “root cap” and describes the deepest part of the root_

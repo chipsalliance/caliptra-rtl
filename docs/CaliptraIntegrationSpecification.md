@@ -236,7 +236,7 @@ The table below details the interface required for each SRAM. Driver direction i
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
 | etrng_req | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into itrng_data/itrng_valid. |
 | itrng_data | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when itrng_valid is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
-| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is about 50KHz. |
+| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is dependent on the process node technology. For 40nm, it is expected to be at least 50kHz. For latest industry standard, moderately advanced technology, it is expected to be greater than 400kHz. |
 
 ## Architectural registers and fuses
 
@@ -581,7 +581,7 @@ See the Hardware specification for additional details.
 
 # TRNG REQ HW API
 
-For SoCs that choose to not instantiate Caliptra’s embedded TRNG, we provide a TRNQ REQ HW API.
+For SoCs that choose to not instantiate Caliptra’s internal TRNG, we provide a TRNQ REQ HW API.
 
 **While the use of this API is convenient for early enablement, the current
 Caliptra hardware is unable to provide the same security guarantees with an
@@ -601,16 +601,96 @@ The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
 referenced in 3 in the preceding list.
 
-## Recommended TRNG self-test thresholds
+# Internal TRNG
 
-The default TRNG thresholds should be tuned to match the entropy estimate of the
-noise source (H). For example:
+## TRNG self-test ROM configuration
+
+The internal TRNG is configured by the ROM to extract entropy used to
+initialize Control Flow Integrity (CFI) countermeasures. Since the ROM does not
+use entropy for any cryptographic operations, the TRNG self-tests are not
+configured for FIPS compliance, but rather to ensure that the quality of the
+entropy output is sufficient for ROM operation.
+
+The default self-test parameters are provided to the ROM via the
+`CPTRA_iTRNG_ENTROPY_CONFIG0` and `CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
+
+The ROM configures self tests with the following parameters.
+
+### Adaptive test
+
+The adaptive self-test thresholds are configured as follows if the high and low
+thresholds provided in the `CPTRA_iTRNG_ENTROPY_CONFIG0` are non-zero.
+
+`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`\
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`
+
+Otherwise, the ROM will use 75% and 25% of the FIPS window size for the default
+high and low thresholds.
+
+`W` = 2048 (bits)\
+`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = $3 * (W / 4)$ = 1536 \
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = $W / 4$ = 512
+
+It is strongly recommended to avoid using the default values.
+
+### Repetition count test
+
+Caliptra supports two implementations of the repetition count test, one that
+counts repetitions per physical noise source (REPCNT); and, another
+that counts repetitions at the symbol level (REPCNTS). The ROM configures
+the REPCNT version.
+
+The self-test is configured as follows if the `CPTRA_iTRNG_ENTROPY_CONFIG1`
+register is not zero.
+
+`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG1.REPETITION_COUNT`
+
+Otherwise, the ROM will use a default value configuration:
+
+`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = 41
+
+It is strongly recommended to avoid using the default values.
+
+### Recommended TRNG self-test thresholds
+
+The thresholds should be tuned to match the entropy estimate of the
+noise source (H), which is calculated by applying a NIST-approved entropy
+estimate calculation against raw entropy extracted from the target silicon.
+
+> Important: It is important to note that the TRNG will discard samples that do
+> not pass any of the health tests. Since there is a compression function
+> requiring 2048 bits of good entropy to produce a 384 bit seed, the ROM may
+> stall if the self-test thresholds are too aggressive or if the values are
+> misconfigured. To avoid boot stall issues, it is strongly recommended to
+> characterize the noise source on target silicon and select reliable test
+> parameters. The ROM only needs to provide sufficient entropy for
+> countermeasures, so FIPS-level checks can be performed later, in a less
+> boot-timing-sensitive stage.
+
+The following sections illustrate the self-test parameter configuration. The
+`entropy_src` block provides additional tests, but Caliptra's ROM focuses
+primarily on the adaptive and repetition count (REPCNT) tests. All other tests
+are left with their reset value configuration, which is equivalent to running
+the test with the most permissive settings.
+
+### Test parameters
+
+The variable names are as defined in NIST SP 800-90B.
 
 $α = 2^{-40}$ (recommended)\
-$H = 0.5$ (example)\
+$H = 0.5$ (example, implementation specific)\
 $W = 2048$ (constant in ROM/hw)
 
-`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$ [^1]\
+### Adaptive proportion test
+
+The test is configured with to sum all the bits per symbol, due to
+`entropy_src.CONF.THRESHOLD_SCOPE` being enabled. The test essentially treats
+the combined input as a single binary stream, counting the occurrences of '1's.
+
+> Note: The `critbinom` function (critical binomial distribution function) is
+> implemented by most spreadsheet applications.
+
+`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(2048, 2^{-H}, 1 - 2^{-40})$\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  1591
 
@@ -618,15 +698,29 @@ $W = 2048$ (constant in ROM/hw)
 `CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  2048 - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  457
 
-$$RcThresh = \frac{-log_2(α)}{H} + 1$$
+### Repetition count threshold
 
-$$RcThresh = \frac{40}{H} + 1$$
+The repetition count test as configured in the ROM makes no FIPS compliance
+claims due to the fact that counts are aggregated for each individual bit.
+This results in a less restrictive threshold as the test will wait for 4x more
+repetitions before failing. From an entropy quality perspective, this is
+deemed acceptable for the current Caliptra release.
 
-$$RcThresh = 81$$
+$$
+\begin{aligned}
+& RcThresh = \frac{-log_2(α)}{H} + 1 \\
+& RcThresh = \frac{40}{H} + 1 \\
+& RcThresh = 81
+\end{aligned}
+$$
 
-`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = $RcThresh$ = 81
+`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = `RcThresh` = 81
 
-[^1]: The critbinom function is implemented by most spreadsheet applications.
+### FIPS Compliance
+
+Caliptra 1.x and 2.0 do not make any FIPS conformance claims on the self-tests
+configured by the ROM and executed by the internal TRNG. This is due to the
+test configuration. See previous sections for more details.
 
 # SRAM implementation
 
