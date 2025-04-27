@@ -5,4 +5,3 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/asserts/caliptra_top_sva.sv
-${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv

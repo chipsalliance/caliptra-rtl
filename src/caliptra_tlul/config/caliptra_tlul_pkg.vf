@@ -13,7 +13,6 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
@@ -23,6 +22,7 @@ ${CALIPTRA_ROOT}/src/libs/rtl/ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_icg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_2ff_sync.sv
+${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/skidbuffer.v
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_alert_pkg.sv
@@ -38,7 +38,6 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_ram_1p_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_esc_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_count_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/keymgr_pkg.sv
-${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_28_22_dec.sv
@@ -85,3 +84,5 @@ ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_chk.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err.sv
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/keymgr_pkg.sv
