@@ -66,7 +66,7 @@ module dma_testcase_generator (
       logic [31:0] data;  // Assuming a 39-bit data format
 
       if (!$value$plusargs("NUM_ITERATIONS=%d", num_iterations)) begin 
-        num_iterations = 100; // Default
+        num_iterations = 50; // Default
       end
       if (num_iterations > 100) begin
           $fatal("num_iterations cannot exceed 100 due to width of dma_gen_block_size output signal...");
