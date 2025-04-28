@@ -58,8 +58,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_privkey  [MLDSA87_PRIVKEY_SIZE];
-    uint32_t mldsa_pubkey   [MLDSA87_PUBKEY_SIZE];
+    uint32_t actual_data;
     
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in keygen\n");
@@ -101,10 +100,10 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
         reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_PRIVKEY_SIZE) {
-            mldsa_privkey[offset] = *reg_ptr;
-            if (mldsa_privkey[offset] != privkey[offset]) {
+            actual_data = *reg_ptr;
+            if (actual_data != privkey[offset]) {
                 printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", mldsa_privkey[offset]);
+                printf("Actual   data: 0x%x\n", actual_data);
                 printf("Expected data: 0x%x\n", privkey[offset]);
                 printf("%c", fail_cmd);
                 while(1);
@@ -119,10 +118,10 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PUBKEY_SIZE) {
-        mldsa_pubkey[offset] = *reg_ptr;
-        if (mldsa_pubkey[offset] != pubkey[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != pubkey[offset]) {
             printf("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_pubkey[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", pubkey[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -139,7 +138,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_sign     [MLDSA87_SIGN_SIZE];
+    uint32_t actual_data;
     
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in keygen\n");
@@ -185,10 +184,10 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
-        mldsa_sign[offset] = *reg_ptr;
-        if (mldsa_sign[offset] != sign[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", sign[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -206,7 +205,7 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_sign [MLDSA87_SIGN_SIZE];
+    uint32_t actual_data;
 
     printf("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
@@ -237,10 +236,10 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
-        mldsa_sign[offset] = *reg_ptr;
-        if (mldsa_sign[offset] != sign[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", sign[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -257,7 +256,7 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_verify_res [MLDSA_VERIFY_RES_SIZE];
+    uint32_t actual_data;
 
     // wait for MLDSA to be ready
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
@@ -283,10 +282,10 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     printf("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
-        mldsa_verify_res[offset] = *reg_ptr;
-        if (mldsa_verify_res[offset] != verify_res[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != verify_res[offset]) {
             printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_verify_res[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", verify_res[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -303,7 +302,7 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_sign     [MLDSA87_SIGN_SIZE];
+    uint32_t actual_data;
     
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in keygen\n");
@@ -351,10 +350,10 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
-        mldsa_sign[offset] = *reg_ptr;
-        if (mldsa_sign[offset] != sign[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", sign[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -372,7 +371,7 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_sign [MLDSA87_SIGN_SIZE];
+    uint32_t actual_data;
 
     //  wait for MLDSA to be ready
     printf("Waiting for mldsa status ready\n");
@@ -404,10 +403,10 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
-        mldsa_sign[offset] = *reg_ptr;
-        if (mldsa_sign[offset] != sign[offset]) {
+        actual_data = *reg_ptr;
+        if (actual_data != sign[offset]) {
             printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_sign[offset]);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", sign[offset]);
             printf("%c", fail_cmd);
             while(1);
@@ -424,7 +423,7 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
 
-    uint32_t mldsa_verify_res [MLDSA_VERIFY_RES_SIZE];
+    uint32_t actual_data; ;
 
     // wait for MLDSA to be ready
     while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
@@ -452,10 +451,10 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     printf("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
-        mldsa_verify_res[offset] = *reg_ptr;
-        if (mldsa_verify_res[offset] != verify_res[offset]) {
-            printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", mldsa_verify_res[offset]);
+        actual_data = *reg_ptr;
+        if (actual_data != verify_res[offset]) {
+            printf("At offset [%d], actual_data data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", actual_data);
             printf("Expected data: 0x%x\n", verify_res[offset]);
             printf("%c", fail_cmd);
             while(1);
