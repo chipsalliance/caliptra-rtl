@@ -86,7 +86,7 @@ void main() {
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < 8; i++)
-        seed.data[7-i] = ((mldsa_seed[i]<<24) & 0xff000000) |
+        seed.data[i] = ((mldsa_seed[i]<<24) & 0xff000000) |
                     ((mldsa_seed[i]<< 8) & 0x00ff0000) |
                     ((mldsa_seed[i]>> 8) & 0x0000ff00) |
                     ((mldsa_seed[i]>>24) & 0x000000ff); //mldsa_seed[i];
@@ -95,48 +95,48 @@ void main() {
     //     sign_rnd[7-i] = mldsa_sign_rnd[i]; //TODO: add byte swap - not doing now to save sim time
 
     for (int i = 0; i < 16; i++) {
-        entropy[15-i] = ((mldsa_entropy[i]<<24) & 0xff000000) |
+        entropy[i] = ((mldsa_entropy[i]<<24) & 0xff000000) |
                         ((mldsa_entropy[i]<< 8) & 0x00ff0000) |
                         ((mldsa_entropy[i]>> 8) & 0x0000ff00) |
                         ((mldsa_entropy[i]>>24) & 0x000000ff);
     }
     
     // for (int i = 0; i < 16; i++) {
-    //     msg[15-i] = ((mldsa_msg[i]<<24) & 0xff000000) |
+    //     msg[i] = ((mldsa_msg[i]<<24) & 0xff000000) |
     //                 ((mldsa_msg[i]<< 8) & 0x00ff0000) |
     //                 ((mldsa_msg[i]>> 8) & 0x0000ff00) |
     //                 ((mldsa_msg[i]>>24) & 0x000000ff);
     // }
     
     for (int i = 0; i < 1224; i++){
-        privkey[1223-i] = ((mldsa_privkey[i]<<24) & 0xff000000) |
+        privkey[i] = ((mldsa_privkey[i]<<24) & 0xff000000) |
                           ((mldsa_privkey[i]<< 8) & 0x00ff0000) |
                           ((mldsa_privkey[i]>> 8) & 0x0000ff00) |
                           ((mldsa_privkey[i]>>24) & 0x000000ff);
     }
 
     for (int i = 0; i < 648; i++) {
-        pubkey[647-i] = ((mldsa_pubkey[i]<<24) & 0xff000000) |
+        pubkey[i] = ((mldsa_pubkey[i]<<24) & 0xff000000) |
                         ((mldsa_pubkey[i]<< 8) & 0x00ff0000) |
                         ((mldsa_pubkey[i]>> 8) & 0x0000ff00) |
                         ((mldsa_pubkey[i]>>24) & 0x000000ff);
     }
     
     // for (int i = 0; i < 1157; i++) {
-    //     sign[1156-i] = ((mldsa_sign[i]<<24) & 0xff000000) |
+    //     sign[i] = ((mldsa_sign[i]<<24) & 0xff000000) |
     //                    ((mldsa_sign[i]<< 8) & 0x00ff0000) |
     //                    ((mldsa_sign[i]>> 8) & 0x0000ff00) |
     //                    ((mldsa_sign[i]>>24) & 0x000000ff);
     // }
 
     // for (int i = 0; i < 16; i++) {
-    //     verifyres[15-i] = ((mldsa_verifyres[i]<<24) & 0xff000000) |
+    //     verifyres[i] = ((mldsa_verifyres[i]<<24) & 0xff000000) |
     //                       ((mldsa_verifyres[i]<< 8) & 0x00ff0000) |
     //                       ((mldsa_verifyres[i]>> 8) & 0x0000ff00) |
     //                       ((mldsa_verifyres[i]>>24) & 0x000000ff);
     // }
 
-    mldsa_keygen_flow(seed, sign_rnd, entropy, privkey, pubkey);
+    mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;
 

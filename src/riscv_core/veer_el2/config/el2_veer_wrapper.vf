@@ -50,3 +50,4 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pic_ctrl.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pmp.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
