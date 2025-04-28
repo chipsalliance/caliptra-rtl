@@ -2184,12 +2184,7 @@ class soc_ifc_predictor #(
 //    soc_ifc_sb_axi_ap_output_transaction.copy(axi_txn);
     if (axi_txn.is_write()) begin
         send_axi_wr_txn = 1;
-        soc_ifc_sb_axi_wr_ap_output_transaction = axi_txn.copy(); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
-        soc_ifc_sb_axi_wr_ap_output_transaction.artagop = axi_txn.artagop;
-	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_aw_c = axi_txn.aaxi_aw_c;
-	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ar_c = axi_txn.aaxi_ar_c;
-	    soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_ac_c = axi_txn.aaxi_ac_c;
-        soc_ifc_sb_axi_wr_ap_output_transaction.aaxi_w_c = axi_txn.aaxi_w_c;
+        soc_ifc_sb_axi_wr_ap_output_transaction.do_copy(axi_txn); // This method call is not compliant to UVM - uvm_object specifies that do_copy should be overridden instead of copy
     end
     if (!axi_txn.is_write()) begin
         send_axi_rd_txn = 1;

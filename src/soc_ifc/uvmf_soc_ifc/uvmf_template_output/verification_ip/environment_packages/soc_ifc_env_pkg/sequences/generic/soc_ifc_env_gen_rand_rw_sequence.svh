@@ -97,29 +97,29 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
         finish_item(trans);
         get_response(rsp);
 
+        exp_write_data = reg_list[idx].get_mirrored_value();
         case(trans.size)
             0: begin
                 act_read_data = {24'h0,rsp.data[0]};
-                exp_write_data = {24'h0,reg_write_data[idx][7:0]};
+                exp_write_data = {24'h0, exp_write_data[7:0]};
             end
             1: begin
                 act_read_data = {16'h0,rsp.data[1],rsp.data[0]};
-                exp_write_data = {16'h0,reg_write_data[idx][15:0]};
+                exp_write_data = {16'h0, exp_write_data[15:0]};
             end
             2: begin
                 act_read_data = {rsp.data[3],rsp.data[2],rsp.data[1],rsp.data[0]};
-                exp_write_data = reg_write_data[idx];
+                exp_write_data = exp_write_data;
             end
             default: begin
                 act_read_data = {rsp.data[3],rsp.data[2],rsp.data[1],rsp.data[0]};
-                exp_write_data = reg_write_data[idx];
+                exp_write_data = exp_write_data;
             end
         endcase
         if (act_read_data == exp_write_data)
             `uvm_info("SOC_IFC_GEN_RW_MATCH", "Read data matches write data", UVM_MEDIUM)
         else
             `uvm_error("SOC_IFC_GEN_RW_MISMATCH", $sformatf("Read data %h does not match write data %h for addr %h", act_read_data, exp_write_data, reg_list[idx].get_address(reg_model.soc_ifc_AXI_map)))
-        `uvm_info("WRDATA_DBG", $sformatf("reg_write_data = %h, exp write data = %h", reg_write_data[idx], exp_write_data), UVM_MEDIUM)
 
     end
 endtask
@@ -160,7 +160,6 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
 };
 
     foreach(reg_list[idx]) begin
-        zero_strb = 1;
         mirror_data_mask = 32'h0000_00FF;
         mirror_data = reg_list[idx].get_mirrored_value();
 
@@ -210,18 +209,6 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
                 mirror_data_mask = mirror_data_mask << ((i)*8);
                 random_dword[i] = ((mirror_data & mirror_data_mask) >> ((i)*8));
             end
-        end
-
-        //Save write data for comparison during read
-        reg_write_data[idx] = random_dword;
-
-        for (int i =0; i<4; i++) begin
-            if (trans.strobes[i])
-                zero_strb = 0;
-        end
-        
-        if (zero_strb) begin
-            reg_write_data[idx] = reg_list[idx].get_mirrored_value();
         end
     
         finish_item(trans);
