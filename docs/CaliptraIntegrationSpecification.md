@@ -851,18 +851,24 @@ Clock Domain Crossing (CDC) analysis is performed on the Caliptra core IP. The f
 In an unconstrained environment, several CDC violations are anticipated. CDC analysis requires the addition of constraints to identify valid synchronization mechanisms and/or static/pseudo-static signals.
 
 ## Analysis of missing synchronizers
-* All of the signals, whether single-bit or multi-bit, originate from the rvjtag\_tap module internal register on TCK clock, and the Sink/Endpoint is the rvdff register, which is in CalitpraClockDomain clock.
-* JTAG does a series of “jtag writes” for each single “register write”.
+* All of the signals, whether single-bit or multi-bit, originate from the CalitpraClockDomain clock and their endpoint is the JTAG clock domain.
+* The violations occur on the read path to the JTAG.
 * We only need to synchronize the controlling signal for this interface.
-* Inside the dmi\_wrapper, the dmi\_reg\_en and dmi\_reg\_wr\_en comes from dmi\_jtag\_to\_core\_sync, which is a 2FF synchronizer.
+* Inside the dmi\_wrapper, the dmi\_reg\_en and dmi\_reg\_rd\_en comes from dmi\_jtag\_to\_core\_sync, which is a 2FF synchronizer.
 
-The following code snippet and schematic diagram illustrate JTAG originating CDC violations.
+The following code snippets and schematic diagrams illustrate the CDC violations that end at the JTAG interface.
 
 *Figure 8: Schematic diagram and code snippet showing JTAG-originating CDC violations*
 
-![](./images/Caliptra_CDC_JTAG_code_snippet.png)
+![](./images/caliptra2.0_riscv_code_snippet.png)
 
-![](./images/Caliptra_schematic_jtag.png)
+![](./images/caliptra2.0_socifc_code_snippet.png)
+
+![](./images/caliptra2.0_dmimux_code_snippet.png)
+
+![](./images/caliptra_cdc_violation_path1.png)
+
+![](./images/caliptra_cdc_violation_path2.png)
 
 ## CDC analysis conclusions
 * Missing synchronizers appear to be the result of “inferred” and/or only 2-FF instantiated synchronizers.
