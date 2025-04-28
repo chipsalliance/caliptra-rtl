@@ -226,6 +226,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_2ff_sync.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_piso_4.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_piso.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_sample_buffer.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_msg_buffer.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_masked_AND.sv

@@ -478,28 +478,28 @@ void main() {
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < MLDSA87_SEED_SIZE; i++)
-        seed.data[i] = mldsa_seed[i];
+        seed.data[i] = mldsa_seed[MLDSA87_SEED_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
-        sign_rnd[i] = mldsa_sign_rnd[i];
+        sign_rnd[i] = mldsa_sign_rnd[MLDSA87_SIGN_RND_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
-        entropy[i] = mldsa_entropy[i];
+        entropy[i] = mldsa_entropy[MLDSA87_ENTROPY_SIZE-1-i];
     
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
-        msg[i] = mldsa_msg[i];
+        msg[i] = mldsa_msg[MLDSA87_MSG_SIZE-1-i];
     
     for (int i = 0; i < MLDSA87_PRIVKEY_SIZE; i++)
-        privkey[i] = mldsa_privkey[i];
+        privkey[i] = mldsa_privkey[MLDSA87_PRIVKEY_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
-        pubkey[i] = mldsa_pubkey[i];
+        pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_SIGN_SIZE; i++)
-        sign[i] = mldsa_sign[i];
+        sign[i] = mldsa_sign[MLDSA87_SIGN_SIZE-1-i];
 
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
-        verify_res[i] = mldsa_verify_res[i];
+        verify_res[i] = mldsa_verify_res[MLDSA_VERIFY_RES_SIZE-1-i];
 
 
     volatile uint32_t * reg_ptr;
