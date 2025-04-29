@@ -270,11 +270,10 @@ endclass
 //==========================================
 task soc_ifc_env_mbox_sequence_base::mbox_setup();
     byte ii;
-    uvm_reg_data_t mbox_valid_axi_user_from_reg;
     // Read the valid AxUSER fields from register mirrored value if the local array
     // has not already been overridden from default values
     if (!mbox_valid_users_initialized) begin
-       for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
+        for (ii=0; ii < $size(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK); ii++) begin: VALID_USER_LOOP
             if (reg_model.soc_ifc_reg_rm.CPTRA_MBOX_AXI_USER_LOCK[ii].LOCK.get_mirrored_value())
                 mbox_valid_users[ii] = reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[ii].get_mirrored_value();
             else
@@ -756,13 +755,10 @@ function bit soc_ifc_env_mbox_sequence_base::axi_user_used_is_valid(caliptra_axi
     caliptra_axi_user user;
     if (user_handle == null) user = this.axi_user_obj;
     else                     user = user_handle;
-
-    if (this.axi_user_locked.locked) begin
+    if (this.axi_user_locked.locked)
         return user.get_addr_user() == this.axi_user_locked.axi_user;
-    end
-    else begin
+    else 
         return user.get_addr_user() inside {mbox_valid_users};
-    end
 endfunction
 
 //==========================================
