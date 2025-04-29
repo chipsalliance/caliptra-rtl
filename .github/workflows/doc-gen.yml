@@ -100,6 +100,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: "patch_v2.0"
+          submodules: 'true'
 
       - name: Install peakrdl
         run: |
@@ -115,13 +116,13 @@ jobs:
 
       - name: Generate docs for v2.0
         run: |
+          export ADAMSBRIDGE_ROOT=./submodules/adams-bridge
           echo Running script
           tools/scripts/reg_doc_gen.sh
 
       - name: Stage documents for v2.0
         run: |
           mkdir -p /tmp/pages-docs/v2_0
-          tools/scripts/reg_doc_gen.sh
           cp -R src/integration/docs/caliptra_reg_html /tmp/pages-docs/v2_0/internal-regs
           cp -R src/soc_ifc/docs/caliptra_top_reg_html /tmp/pages-docs/v2_0/external-regs
           find /tmp/pages-docs
