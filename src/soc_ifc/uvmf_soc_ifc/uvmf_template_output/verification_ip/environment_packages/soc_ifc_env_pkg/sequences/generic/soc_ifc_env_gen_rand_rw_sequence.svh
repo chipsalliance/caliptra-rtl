@@ -53,7 +53,6 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
     aaxi_master_tr trans, rsp;
     uvm_reg blocklist[], reg_list[];
     int del_idx[$];
-    automatic bit found;
 
     automatic int i;
 
@@ -77,8 +76,6 @@ task soc_ifc_env_gen_rand_rw_sequence::read_reg();
     };
 
     foreach(reg_list[idx]) begin
-        
-        found = 0;
 
         trans = aaxi_master_tr::type_id::create("trans");
         start_item(trans);
@@ -128,12 +125,9 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
     aaxi_master_tr trans, rsp;
     uvm_reg regs[$];
     uvm_reg blocklist[], reg_list[];
-    uvm_reg_data_t mirror_data;
-    reg [31:0] mirror_data_mask;
     int del_idx[$];
 
     reg [7:0] random_byte;
-    reg[3:0][7:0] random_dword, mirror_data_reg;
 
     automatic int i;
     automatic bit strb;
@@ -160,8 +154,6 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
 };
 
     foreach(reg_list[idx]) begin
-        mirror_data_mask = 32'h0000_00FF;
-        mirror_data = reg_list[idx].get_mirrored_value();
 
         trans = aaxi_master_tr::type_id::create("trans");
         start_item(trans);
@@ -182,34 +174,11 @@ task soc_ifc_env_gen_rand_rw_sequence::write_reg();
             trans.data[i] = random_byte;
             strb = $urandom_range(0,1);
             trans.strobes[i] = strb;
-            random_dword[i] = random_byte;
         end
 
         trans.adw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
         trans.aw_valid_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
         trans.b_valid_ready_delay = $urandom_range(aaxi_ci.minwaits,aaxi_ci.maxwaits-1);
-
-        //Calculate wstrb based on strobes and size
-        for (int i=0; i<(1 << trans.size); i++) begin
-            if (trans.strobes[i])
-                wstrb[i] = 1;
-            else
-                wstrb[i] = 0;
-        end
-        case(trans.size)
-            0: wstrb = {3'b000, wstrb[0]};
-            1: wstrb = {2'b00, wstrb[1:0]};
-            default: wstrb = wstrb[3:0];
-        endcase
-
-        //adjust data based on wstrb
-        for (int i=0; i<4; i++) begin
-            mirror_data_mask = 32'h0000_00FF;
-            if (!wstrb[i]) begin
-                mirror_data_mask = mirror_data_mask << ((i)*8);
-                random_dword[i] = ((mirror_data & mirror_data_mask) >> ((i)*8));
-            end
-        end
     
         finish_item(trans);
         get_response(rsp);
