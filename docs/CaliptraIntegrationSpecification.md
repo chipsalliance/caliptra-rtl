@@ -127,7 +127,7 @@ The following tables describe the interface signals.
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | ready_for_fuses | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for fuse programming. |
-| ready_for_fw_push | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for firmware. |
+| ready_for_mb_processing | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for processing mailbox commands. |
 | ready_for_runtime | 1 | Output | Synchronous to clk | Indicates that Caliptra firmware is ready for RT flow. |
 | mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has data for SoC to read (reflects the value of the register). |
 | mailbox_flow_done | 1 | Output | Synchronous to clk | Indicates that the mailbox flow is complete (reflects the value of the register). |
@@ -147,13 +147,17 @@ The following tables describe the interface signals.
 | iccm_clken | ICCM_NUM_BANKS | Input | Synchronous to clk | Per-bank clock enable |
 | iccm_wren_bank | ICCM_NUM_BANKS | Input | Synchronous to clk | Per-bank write enable |
 | iccm_addr_bank | ICCM_NUM_BANKS x (ICCM_BITS-4) | Input | Synchronous to clk | Per-bank address |
-| iccm_bank_wr_data | ICCM_NUM_BANKS x 39 | Input | Synchronous to clk | Per-bank input data |
-| iccm_bank_dout | ICCM_NUM_BANKS x 39 | Output | Synchronous to clk | Per-bank output data |
+| iccm_bank_wr_data | ICCM_NUM_BANKS x 32 | Input | Synchronous to clk | Per-bank input data |
+| iccm_bank_wr_ecc  | ICCM_NUM_BANKS x 7  | Input | Synchronous to clk | Per-bank input ecc  |
+| iccm_bank_dout | ICCM_NUM_BANKS x 32 | Output | Synchronous to clk | Per-bank output data |
+| iccm_bank_ecc  | ICCM_NUM_BANKS x 7  | Output | Synchronous to clk | Per-bank output ecc  |
 | dccm_clken | DCCM_NUM_BANKS | Input | Synchronous to clk | Per-bank clock enable |
 | dccm_wren_bank | DCCM_NUM_BANKS | Input | Synchronous to clk | Per-bank write enable |
 | dccm_addr_bank | DCCM_NUM_BANKS x (DCCM_BITS-4) | Input | Synchronous to clk | Per-bank address |
-| dccm_wr_data_bank | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Input | Synchronous to clk | Per-bank input data |
-| dccm_bank_dout | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Output | Synchronous to clk | Per-bank output data |
+| dccm_wr_data_bank | DCCM_NUM_BANKS x DCCM_DATA_WIDTH | Input | Synchronous to clk | Per-bank input data |
+| dccm_wr_ecc_bank | DCCM_NUM_BANKS x DCCM_ECC_WIDTH | Input | Synchronous to clk | Per-bank input ecc |
+| dccm_bank_dout | DCCM_NUM_BANKS x DCCM_DATA_WIDTH | Output | Synchronous to clk | Per-bank output data |
+| dccm_bank_ecc  | DCCM_NUM_BANKS x DCCM_ECC_WIDTH | Output | Synchronous to clk | Per-bank output ecc |
 
 *Table 8: Adams-Bridge SRAM Interface*
 
@@ -186,13 +190,13 @@ The table below details the interface required for each SRAM. Driver direction i
 *Table 10: RISC-V Trace interface*
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| trace_rv_i_insn_ip      | 32 | Output | Synchronous to clk | |
-| trace_rv_i_address_ip   | 32 | Output | Synchronous to clk | |
-| trace_rv_i_valid_ip     |  1 | Output | Synchronous to clk | |
-| trace_rv_i_exception_ip |  1 | Output | Synchronous to clk | |
-| trace_rv_i_ecause_ip    |  5 | Output | Synchronous to clk | |
-| trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | |
-| trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | |
+| trace_rv_i_insn_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_address_ip   | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_valid_ip     |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_exception_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_ecause_ip    |  5 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
 *Table 11: Subsystem Straps and Control*
 
@@ -211,11 +215,11 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
-|  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
-|  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |
-|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | |
-| recovery_data_avail                                       | 1   | Input       | Synchronous to clk | |
-| recovery_image_activated                                  | 1   | Input       | Synchronous to clk | |
+|  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
+|  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
+|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
+|  recovery_data_avail                                      | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that a payload is available in the data buffer. |
+|  recovery_image_activated                                 | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that firmware image is activated. |
 
 *Table 12: Security and miscellaneous*
 
@@ -271,24 +275,32 @@ Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from 
 
 #### Arbitration
 
-Caliptra is a subordinate on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+Caliptra has two interfaces attached to the AXI bus: a subordinate, incapable of initiating transfers, and a manager interface. The AXI manager is only enabled in Caliptra Subsystem mode, and must be tied to 0 in all other use-cases. The AXI subordinate is used by SoC agents to interact with the Caliptra external registers. If SoCs have multiple AXI agents or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
 
 #### Unsupported features
 
 The Caliptra AXI subordinate has the following usage restrictions:
+* Single outstanding transaction is serviced at a time (read or write). Operation is half-duplex due to the underlying register access interface.
+  * AXI read and write requests may be accepted simultaneously by the AXI subordinate, but internal arbitration will service them one at a time.
+* Responses are in order
+* Burst data interleaving is not supported
 * SoC agents shall not initiate AXI burst transfers to the SoC interface, except as write bursts to the mbox_datain register or read bursts from the mbox_dataout register. Such bursts shall be of the AXI "FIXED" burst type.
 * Accesses to these registers shall not be "narrow". This means that AxSIZE must be set to 0x2 and WSTRB must be set to 0xF.
   * mbox_datain
   * mbox_dataout
   * CPTRA_TRNG_DATA
-* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
 * Violations of the AXI specification by AXI managers will result in undefined behavior. Examples include:
   * AxSIZE values larger than interface width (greater than 0x2).
   * AxLEN larger than legal value (256 maximum burst size, 16 for FIXED bursts, and total burst length must be 4096 Bytes or less).
   * Number of data beats on W channel does not match burst length indicated on AWLEN.
   * RRESP or BRESP has an undefined value.
   * WLAST is driven incorrectly, driven on multiple beats, or never driven.
-* Burst data interleaving is not supported
+* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
+* The following signals are unused/unconnected:
+  * AxCACHE
+  * AxPROT
+  * AxREGION
+  * AxQOS
 
 #### Undefined address accesses
 
@@ -553,7 +565,7 @@ The following table describes AXI transactions that cause the Mailbox FSM to ent
 
 The SHA acceleration block is in the SoC interface. The SoC can access the accelerator’s hardware API and stream data to be hashed over the AXI interface.
 
-SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers.
+SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers. The SHA acceleration block is only available for use in the Caliptra Subsystem, and may only be used by Caliptra via the AXI DMA block. The SHA accelerator checks the AXI AxUSER signal to block any access that originates from an agent other than Caliptra.
 
 SHA\_LOCK register is set on read. A read of 0 indicates the SHA was unlocked and will now be locked for the requesting user.
 
