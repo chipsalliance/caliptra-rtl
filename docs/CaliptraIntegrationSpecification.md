@@ -217,9 +217,9 @@ The table below details the interface required for each SRAM. Driver direction i
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
-|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra |
-|  recovery_data_avail                                      | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a recovery interface) indicating that a payload is available in the data buffer. |
-|  recovery_image_activated                                 | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a recovery interface) indicating that firmware image is activated. |
+|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
+|  recovery_data_avail                                      | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that a payload is available in the data buffer. |
+|  recovery_image_activated                                 | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that firmware image is activated. |
 
 *Table 12: Security and miscellaneous*
 
