@@ -59,11 +59,11 @@ GCC:
 
 CDC:
  - Questa CDC
-   - `2023.3 5624840 linux_x86_64 19-Jul-2023`
+   - `2023.4_3 5762808 linux_x86_64 29-Feb-2024`
   
 RDC:
  - Real Intent Meridian
-   - `2019.A.P16`
+   - `2022.A.P18.3`
 
 RDL Compiler:
  - systemrdl-compiler==1.27.3
