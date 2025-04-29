@@ -20,7 +20,7 @@ _*Last Update: 2025/04/29*_
 
 #### Rev 2p0 release date: 2025/04/29 ###
 - Enhanced several testcases to improve coverage
-- Adams Bridge enhancement: updated data endianness and dword swizzling
+- Adams Bridge enhancement: variable message signing and data swizzling
 - Bug fixes:
   - [BUG FIX] fix missing V update in DRBG corner case
   - [BUG FIX] Subsystem Mode only: TAP mailbox lock priority
