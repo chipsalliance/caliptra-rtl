@@ -271,24 +271,32 @@ Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from 
 
 #### Arbitration
 
-Caliptra is a subordinate on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+Caliptra has two interfaces attached to the AXI bus: a subordinate, incapable of initiating transfers, and a manager interface. The AXI manager is only enabled in Caliptra Subsystem mode, and must be tied to 0 in all other use-cases. The AXI subordinate is used by SoC agents to interact with the Caliptra external registers. If SoCs have multiple AXI agents or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
 
 #### Unsupported features
 
 The Caliptra AXI subordinate has the following usage restrictions:
+* Single outstanding transaction is serviced at a time (read or write). Operation is half-duplex due to the underlying register access interface.
+  * AXI read and write requests may be accepted simultaneously by the AXI subordinate, but internal arbitration will service them one at a time.
+* Responses are in order
+* Burst data interleaving is not supported
 * SoC agents shall not initiate AXI burst transfers to the SoC interface, except as write bursts to the mbox_datain register or read bursts from the mbox_dataout register. Such bursts shall be of the AXI "FIXED" burst type.
 * Accesses to these registers shall not be "narrow". This means that AxSIZE must be set to 0x2 and WSTRB must be set to 0xF.
   * mbox_datain
   * mbox_dataout
   * CPTRA_TRNG_DATA
-* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
 * Violations of the AXI specification by AXI managers will result in undefined behavior. Examples include:
   * AxSIZE values larger than interface width (greater than 0x2).
   * AxLEN larger than legal value (256 maximum burst size, 16 for FIXED bursts, and total burst length must be 4096 Bytes or less).
   * Number of data beats on W channel does not match burst length indicated on AWLEN.
   * RRESP or BRESP has an undefined value.
   * WLAST is driven incorrectly, driven on multiple beats, or never driven.
-* Burst data interleaving is not supported
+* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
+* The following signals are unused/unconnected:
+  * AxCACHE
+  * AxPROT
+  * AxREGION
+  * AxQOS
 
 #### Undefined address accesses
 
