@@ -34,6 +34,7 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+
 const uint32_t msg[] = {0x00000000,
                       0x00000000,
                       0x00000000,
@@ -60,7 +61,7 @@ const uint32_t exp1[] = {0xf57bb7ed,
                        0x39ddd00c,
                        0xd07d8317};
 
-const uint32_t exp2[] = {0x11143121,
+const uint32_t expected2[] = {0x11143121,
                        0xbeb365e6,
                        0x3826e7de,
                        0x89f9c76a,
@@ -73,7 +74,7 @@ const uint32_t exp2[] = {0x11143121,
                        0xa0b43fbf,
                        0x49897978};
 
-    // exp3 = SHA512(31*384'h0 | exp2 | nonce)
+    // exp3 = SHA512(31*384'h0 | expected2 | nonce)
 const uint32_t exp3[] = {0x4f373650,
                        0x83ef4325,
                        0x29e9bcdb,
@@ -276,6 +277,8 @@ const uint32_t exp_mldsa_signature[] = {  //additional 00
 0x83f77540, 0xd7e53766, 0x784cb5fc, 0x41be7973, 0xf8a8b10b
 };
 
+
+
 void main() {
     VPRINTF(LOW,"---------------------------\n");
     VPRINTF(LOW," KV PCR Hash Extend Test !!\n");
@@ -377,8 +380,8 @@ void main() {
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_PV_REG_PCR_ENTRY_31_11) {
         read_data = *reg_ptr++;
-        if (exp2[offset] != read_data) {
-            VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp2[offset], read_data);
+        if (expected2[offset] != read_data) {
+            VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", expected2[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
         }
         offset++;
@@ -476,14 +479,13 @@ void main() {
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         read_data = *reg_ptr;
-        if (exp_mldsa_signature[offset] != read_data) {
+        if (exp_mldsa_signature[MLDSA87_SIGN_SIZE-1-offset] != read_data) {
             VPRINTF(FATAL,"MLDSA SIGNATURE Result Mismatch at offset [%d]- EXP: 0x%x RECVD: 0x%x\n", offset, exp_mldsa_signature[offset], read_data);
             SEND_STDOUT_CTRL( 0x01);
         }
         reg_ptr++;
         offset++;
     }
-
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
     // wait for ECC SIGNING process to be done
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
@@ -511,7 +513,6 @@ void main() {
         }
         offset++;
     }
-
     VPRINTF(LOW,"----------------------------------\n");
     VPRINTF(LOW," KV PCR Hash Extend Test Complete!\n");
     VPRINTF(LOW,"----------------------------------\n");

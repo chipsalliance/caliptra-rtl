@@ -509,7 +509,7 @@ void kv_mldsa(uint8_t seed_id){
         entropy[i] = rand() % 0xffffffff;
 
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
-        pubkey[i] = mldsa_pubkey[i];
+        pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
 
     uint32_t privkey; //no returnable when seed came from KV
 
@@ -522,13 +522,13 @@ void kv_mldsa(uint8_t seed_id){
         sign_rnd[i] = 0;
     
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
-        msg[i] = msg_tbs[i];
+        msg[i] = msg_tbs[MLDSA87_MSG_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
         entropy[i] = rand() % 0xffffffff;
 
     for (int i = 0; i < MLDSA87_SIGN_SIZE; i++)
-        sign[i] = mldsa_sign[i];
+        sign[i] = mldsa_sign[MLDSA87_SIGN_SIZE-1-i];
 
     mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
