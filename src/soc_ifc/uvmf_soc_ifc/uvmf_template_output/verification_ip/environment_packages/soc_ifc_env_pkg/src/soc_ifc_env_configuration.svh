@@ -37,6 +37,7 @@ extends uvmf_environment_configuration_base;
 
 // Instantiate the register model
   soc_ifc_reg_model_top  soc_ifc_rm;
+  aaxi_cfg_info aaxi_ci;
 
   covergroup soc_ifc_configuration_cg;
     // pragma uvmf custom covergroup begin
@@ -219,6 +220,8 @@ extends uvmf_environment_configuration_base;
       $cast(soc_ifc_rm,register_model);
       enable_reg_prediction = 1;
     end
+
+    aaxi_ci = aaxi_cfg_info::type_id::create("aaxi_ci");
     // pragma uvmf custom reg_model_config_initialize end
 
 
