@@ -982,6 +982,9 @@ The following set of constraints and assumptions must be provided before running
         - csrng.u_reg.u_ahb_slv_sif.dv
         - entropy_src.u_reg.u_ahb_slv_sif.dv
         - aes_inst.ahb_slv_sif_inst.dv
+        - aes_inst.aes_clp_reg_inst.s_cpuif_req
+    - The AES Core State Machine is assumed to be in the IDLE state
+        - aes_inst.aes_inst.u_aes_core.u_aes_control.gen_fsm[0].gen_fsm_p.u_aes_control_fsm_i.u_aes_control_fsm.aes_ctrl_cs[5:0] = 6'b1001
 6. Constrain the RDC false paths as per *Table 23*.
 
 
@@ -997,6 +1000,7 @@ Considering the given constraints, three sets of crossings were identified as RD
 | 2 | cptra_uc_rst_b | rvtop.veer.dec.tlu.exthaltff.genblock.dff.dout[7] | cptra_noncore_rst_b | cg.user_icg.clk_slcg_0_generated_icg.p_clkgate.vudpi0.q                   |
 | 3 | cptra_uc_rst_b | rvtop.veer.Gen_AXI_To_AHB.lsu_axi4_to_ahb*        | cptra_noncore_rst_b | entropy_src.u_entropy_src_core.u_caliptra_prim_packer_fifo_bypass.data_q* |
 | 4 | cptra_uc_rst_b | rvtop.veer.Gen_AXI_To_AHB.lsu_axi4_to_ahb*        | cptra_noncore_rst_b | entropy_src.u_entropy_src_core.u_caliptra_prim_packer_fifo_precon.data_q* |
+| 5 | cptra_rst_b | s_axi_active        | cptra_pwrgood | cg.user_soc_ifc_icg.clk_slcg_0_generated_icg.p_clkgate.vudpi0.q |
 
 <br>
 
@@ -1041,11 +1045,15 @@ The following scenarios can occur.
 
 Referring to the preceding table, if it can be ensured that *fw_ov_fifo_wr_pulse* is 0 when *cptra_uc_rst_b* is asserted, RDC crossings (Case #3) can be avoided. This condition is described in the preceding Constraints section.
 
+For violation in Sl No 5, SOC should ensure that there are no active transactions on the AXI interface while asserting *cptra_rst_b*.
+
 # Synthesis findings
 
-Synthesis experiments have so far found the following:
-* Design converges at 400MHz 0.72V using an industry standard, moderately advanced technology node as of 2023 September.
-* Design converges at 100MHz using TSMC 40nm process.
+Synthesis has been performed at CALIPTRA_WRAPPER level which encompasses the following :-
+* *caliptra_top*
+* Memories instantiated outside using tech specific macros
+
+Design converges at 400MHz 0.72V using an industry standard, advanced technology node as of 2025 April.
 
 Note: Any synthesis warnings of logic optimization must be reviewed and accounted for.
 
@@ -1057,21 +1065,17 @@ These metrics are inclusive of VeeR core, Caliptra logic, imem/dmem RAM, ROM.
 
 The area is expressed in units of square microns.
 
-The target foundry technology node is an industry standard, moderately advanced technology node as of 2024 June.
+The target foundry technology node is an industry standard, advanced technology node as of 2025 April.
 
 *Table 27: Netlist synthesis data*
 
-| **IP Name**      | **Date**  | **Path Group**       | **Target Freq** | **QoR WNS** | **QoR Achieveable Freq** |
-| :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 6/11/2024 | CALIPTRACLK          | 500MHz            | -0.09       | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/11/2024 | JTAG_TCK             | 100MHz            | 4606.5      | 100MHz                   |
-| CALIPTRA_WRAPPER | 6/11/2024 | clock_gating_default | 500MHz            | 3.36        | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/11/2024 | io_to_flop           | 500MHz            | 429.8       | 500MHz                   |
-| CALIPTRA_WRAPPER | 6/11/2024 | flop_to_io           | 500MHz            | 0.10        | 500MHz                   |
+| **IP Name** | **Combinational Area** | **Sequential Area** | **Memory Area** | **Total Area** | **Instance Count** |
+| :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- | 
+| CALIPTRA_WRAPPER | 59934 | 430763 | 319147 | 491159 | 1559238 |
 
-| **IP Name**      | **Date**  | **Stdcell Area** | **Macro Area** | **Memory Area** | **Total Area** | **Flop Count** | **No Clock Regs/Pins Count** | **FM Status** | **FM Eqv Pts** | **FM Non-Eqv Pts** | **FM Abort Pts** | **FM FM**<br> **Non-Comp** **Pts** |
-| :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- | :--------- |
-| CALIPTRA_WRAPPER | 6/11/2024 | 93916            | 0           | 239937          | 341725         | 164505          | 0                           | SUCCEEDED     | 166241         | 0                  | 0                | 0                              |
+*ROM area is not accounted for in the above table.*
+
+NOTE: RTL2Syn formality is not run as of now, we will update the results once we have run the flow.
 
 # Recommended LINT rules
 
