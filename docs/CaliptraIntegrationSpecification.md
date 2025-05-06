@@ -127,7 +127,7 @@ The following tables describe the interface signals.
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | ready_for_fuses | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for fuse programming. |
-| ready_for_fw_push | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for firmware. |
+| ready_for_mb_processing | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for processing mailbox commands. |
 | ready_for_runtime | 1 | Output | Synchronous to clk | Indicates that Caliptra firmware is ready for RT flow. |
 | mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has data for SoC to read (reflects the value of the register). |
 | mailbox_flow_done | 1 | Output | Synchronous to clk | Indicates that the mailbox flow is complete (reflects the value of the register). |
@@ -147,13 +147,17 @@ The following tables describe the interface signals.
 | iccm_clken | ICCM_NUM_BANKS | Input | Synchronous to clk | Per-bank clock enable |
 | iccm_wren_bank | ICCM_NUM_BANKS | Input | Synchronous to clk | Per-bank write enable |
 | iccm_addr_bank | ICCM_NUM_BANKS x (ICCM_BITS-4) | Input | Synchronous to clk | Per-bank address |
-| iccm_bank_wr_data | ICCM_NUM_BANKS x 39 | Input | Synchronous to clk | Per-bank input data |
-| iccm_bank_dout | ICCM_NUM_BANKS x 39 | Output | Synchronous to clk | Per-bank output data |
+| iccm_bank_wr_data | ICCM_NUM_BANKS x 32 | Input | Synchronous to clk | Per-bank input data |
+| iccm_bank_wr_ecc  | ICCM_NUM_BANKS x 7  | Input | Synchronous to clk | Per-bank input ecc  |
+| iccm_bank_dout | ICCM_NUM_BANKS x 32 | Output | Synchronous to clk | Per-bank output data |
+| iccm_bank_ecc  | ICCM_NUM_BANKS x 7  | Output | Synchronous to clk | Per-bank output ecc  |
 | dccm_clken | DCCM_NUM_BANKS | Input | Synchronous to clk | Per-bank clock enable |
 | dccm_wren_bank | DCCM_NUM_BANKS | Input | Synchronous to clk | Per-bank write enable |
 | dccm_addr_bank | DCCM_NUM_BANKS x (DCCM_BITS-4) | Input | Synchronous to clk | Per-bank address |
-| dccm_wr_data_bank | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Input | Synchronous to clk | Per-bank input data |
-| dccm_bank_dout | DCCM_NUM_BANKS x DCCM_FDATA_WIDTH | Output | Synchronous to clk | Per-bank output data |
+| dccm_wr_data_bank | DCCM_NUM_BANKS x DCCM_DATA_WIDTH | Input | Synchronous to clk | Per-bank input data |
+| dccm_wr_ecc_bank | DCCM_NUM_BANKS x DCCM_ECC_WIDTH | Input | Synchronous to clk | Per-bank input ecc |
+| dccm_bank_dout | DCCM_NUM_BANKS x DCCM_DATA_WIDTH | Output | Synchronous to clk | Per-bank output data |
+| dccm_bank_ecc  | DCCM_NUM_BANKS x DCCM_ECC_WIDTH | Output | Synchronous to clk | Per-bank output ecc |
 
 *Table 8: Adams-Bridge SRAM Interface*
 
@@ -186,13 +190,13 @@ The table below details the interface required for each SRAM. Driver direction i
 *Table 10: RISC-V Trace interface*
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| trace_rv_i_insn_ip      | 32 | Output | Synchronous to clk | |
-| trace_rv_i_address_ip   | 32 | Output | Synchronous to clk | |
-| trace_rv_i_valid_ip     |  1 | Output | Synchronous to clk | |
-| trace_rv_i_exception_ip |  1 | Output | Synchronous to clk | |
-| trace_rv_i_ecause_ip    |  5 | Output | Synchronous to clk | |
-| trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | |
-| trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | |
+| trace_rv_i_insn_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_address_ip   | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_valid_ip     |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_exception_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_ecause_ip    |  5 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
+| trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
 *Table 11: Subsystem Straps and Control*
 
@@ -211,11 +215,11 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
-|  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | |
-|  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | |
-|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | |
-| recovery_data_avail                                       | 1   | Input       | Synchronous to clk | |
-| recovery_image_activated                                  | 1   | Input       | Synchronous to clk | |
+|  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
+|  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
+|  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
+|  recovery_data_avail                                      | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that a payload is available in the data buffer. |
+|  recovery_image_activated                                 | 1   | Input       | Synchronous to clk | Input from streaming boot interface (a.k.a. recovery interface) indicating that firmware image is activated. |
 
 *Table 12: Security and miscellaneous*
 
@@ -236,7 +240,7 @@ The table below details the interface required for each SRAM. Driver direction i
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
 | etrng_req | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into itrng_data/itrng_valid. |
 | itrng_data | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when itrng_valid is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
-| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is about 50KHz. |
+| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is dependent on the process node technology. For 40nm, it is expected to be at least 50kHz. For latest industry standard, moderately advanced technology, it is expected to be greater than 400kHz. |
 
 ## Architectural registers and fuses
 
@@ -271,24 +275,32 @@ Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from 
 
 #### Arbitration
 
-Caliptra is a subordinate on the AXI bus, incapable of initiating transfers. If SoCs have multiple AXIs or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+Caliptra has two interfaces attached to the AXI bus: a subordinate, incapable of initiating transfers, and a manager interface. The AXI manager is only enabled in Caliptra Subsystem mode, and must be tied to 0 in all other use-cases. The AXI subordinate is used by SoC agents to interact with the Caliptra external registers. If SoCs have multiple AXI agents or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
 
 #### Unsupported features
 
 The Caliptra AXI subordinate has the following usage restrictions:
+* Single outstanding transaction is serviced at a time (read or write). Operation is half-duplex due to the underlying register access interface.
+  * AXI read and write requests may be accepted simultaneously by the AXI subordinate, but internal arbitration will service them one at a time.
+* Responses are in order
+* Burst data interleaving is not supported
 * SoC agents shall not initiate AXI burst transfers to the SoC interface, except as write bursts to the mbox_datain register or read bursts from the mbox_dataout register. Such bursts shall be of the AXI "FIXED" burst type.
 * Accesses to these registers shall not be "narrow". This means that AxSIZE must be set to 0x2 and WSTRB must be set to 0xF.
   * mbox_datain
   * mbox_dataout
   * CPTRA_TRNG_DATA
-* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
 * Violations of the AXI specification by AXI managers will result in undefined behavior. Examples include:
   * AxSIZE values larger than interface width (greater than 0x2).
   * AxLEN larger than legal value (256 maximum burst size, 16 for FIXED bursts, and total burst length must be 4096 Bytes or less).
   * Number of data beats on W channel does not match burst length indicated on AWLEN.
   * RRESP or BRESP has an undefined value.
   * WLAST is driven incorrectly, driven on multiple beats, or never driven.
-* Burst data interleaving is not supported
+* Exclusive accesses are not supported. I.e. AxLOCK must be tied to 0.
+* The following signals are unused/unconnected:
+  * AxCACHE
+  * AxPROT
+  * AxREGION
+  * AxQOS
 
 #### Undefined address accesses
 
@@ -553,7 +565,7 @@ The following table describes AXI transactions that cause the Mailbox FSM to ent
 
 The SHA acceleration block is in the SoC interface. The SoC can access the accelerator’s hardware API and stream data to be hashed over the AXI interface.
 
-SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers.
+SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers. The SHA acceleration block is only available for use in the Caliptra Subsystem, and may only be used by Caliptra via the AXI DMA block. The SHA accelerator checks the AXI AxUSER signal to block any access that originates from an agent other than Caliptra.
 
 SHA\_LOCK register is set on read. A read of 0 indicates the SHA was unlocked and will now be locked for the requesting user.
 
@@ -581,7 +593,7 @@ See the Hardware specification for additional details.
 
 # TRNG REQ HW API
 
-For SoCs that choose to not instantiate Caliptra’s embedded TRNG, we provide a TRNQ REQ HW API.
+For SoCs that choose to not instantiate Caliptra’s internal TRNG, we provide a TRNQ REQ HW API.
 
 **While the use of this API is convenient for early enablement, the current
 Caliptra hardware is unable to provide the same security guarantees with an
@@ -601,16 +613,96 @@ The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
 referenced in 3 in the preceding list.
 
-## Recommended TRNG self-test thresholds
+# Internal TRNG
 
-The default TRNG thresholds should be tuned to match the entropy estimate of the
-noise source (H). For example:
+## TRNG self-test ROM configuration
+
+The internal TRNG is configured by the ROM to extract entropy used to
+initialize Control Flow Integrity (CFI) countermeasures. Since the ROM does not
+use entropy for any cryptographic operations, the TRNG self-tests are not
+configured for FIPS compliance, but rather to ensure that the quality of the
+entropy output is sufficient for ROM operation.
+
+The default self-test parameters are provided to the ROM via the
+`CPTRA_iTRNG_ENTROPY_CONFIG0` and `CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
+
+The ROM configures self tests with the following parameters.
+
+### Adaptive test
+
+The adaptive self-test thresholds are configured as follows if the high and low
+thresholds provided in the `CPTRA_iTRNG_ENTROPY_CONFIG0` are non-zero.
+
+`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`\
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`
+
+Otherwise, the ROM will use 75% and 25% of the FIPS window size for the default
+high and low thresholds.
+
+`W` = 2048 (bits)\
+`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = $3 * (W / 4)$ = 1536 \
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = $W / 4$ = 512
+
+It is strongly recommended to avoid using the default values.
+
+### Repetition count test
+
+Caliptra supports two implementations of the repetition count test, one that
+counts repetitions per physical noise source (REPCNT); and, another
+that counts repetitions at the symbol level (REPCNTS). The ROM configures
+the REPCNT version.
+
+The self-test is configured as follows if the `CPTRA_iTRNG_ENTROPY_CONFIG1`
+register is not zero.
+
+`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG1.REPETITION_COUNT`
+
+Otherwise, the ROM will use a default value configuration:
+
+`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = 41
+
+It is strongly recommended to avoid using the default values.
+
+### Recommended TRNG self-test thresholds
+
+The thresholds should be tuned to match the entropy estimate of the
+noise source (H), which is calculated by applying a NIST-approved entropy
+estimate calculation against raw entropy extracted from the target silicon.
+
+> Important: It is important to note that the TRNG will discard samples that do
+> not pass any of the health tests. Since there is a compression function
+> requiring 2048 bits of good entropy to produce a 384 bit seed, the ROM may
+> stall if the self-test thresholds are too aggressive or if the values are
+> misconfigured. To avoid boot stall issues, it is strongly recommended to
+> characterize the noise source on target silicon and select reliable test
+> parameters. The ROM only needs to provide sufficient entropy for
+> countermeasures, so FIPS-level checks can be performed later, in a less
+> boot-timing-sensitive stage.
+
+The following sections illustrate the self-test parameter configuration. The
+`entropy_src` block provides additional tests, but Caliptra's ROM focuses
+primarily on the adaptive and repetition count (REPCNT) tests. All other tests
+are left with their reset value configuration, which is equivalent to running
+the test with the most permissive settings.
+
+### Test parameters
+
+The variable names are as defined in NIST SP 800-90B.
 
 $α = 2^{-40}$ (recommended)\
-$H = 0.5$ (example)\
+$H = 0.5$ (example, implementation specific)\
 $W = 2048$ (constant in ROM/hw)
 
-`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$ [^1]\
+### Adaptive proportion test
+
+The test is configured with to sum all the bits per symbol, due to
+`entropy_src.CONF.THRESHOLD_SCOPE` being enabled. The test essentially treats
+the combined input as a single binary stream, counting the occurrences of '1's.
+
+> Note: The `critbinom` function (critical binomial distribution function) is
+> implemented by most spreadsheet applications.
+
+`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(2048, 2^{-H}, 1 - 2^{-40})$\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  1591
 
@@ -618,15 +710,29 @@ $W = 2048$ (constant in ROM/hw)
 `CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  2048 - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
 `CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  457
 
-$$RcThresh = \frac{-log_2(α)}{H} + 1$$
+### Repetition count threshold
 
-$$RcThresh = \frac{40}{H} + 1$$
+The repetition count test as configured in the ROM makes no FIPS compliance
+claims due to the fact that counts are aggregated for each individual bit.
+This results in a less restrictive threshold as the test will wait for 4x more
+repetitions before failing. From an entropy quality perspective, this is
+deemed acceptable for the current Caliptra release.
 
-$$RcThresh = 81$$
+$$
+\begin{aligned}
+& RcThresh = \frac{-log_2(α)}{H} + 1 \\
+& RcThresh = \frac{40}{H} + 1 \\
+& RcThresh = 81
+\end{aligned}
+$$
 
-`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = $RcThresh$ = 81
+`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = `RcThresh` = 81
 
-[^1]: The critbinom function is implemented by most spreadsheet applications.
+### FIPS Compliance
+
+Caliptra 1.x and 2.0 do not make any FIPS conformance claims on the self-tests
+configured by the ROM and executed by the internal TRNG. This is due to the
+test configuration. See previous sections for more details.
 
 # SRAM implementation
 

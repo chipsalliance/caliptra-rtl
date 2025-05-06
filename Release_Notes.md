@@ -14,7 +14,18 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/03/07*_
+_*Last Update: 2025/04/29*_
+
+### Rev 2p0 ###
+
+#### Rev 2p0 release date: 2025/04/29 ###
+- Enhanced several testcases to improve coverage
+- Adams Bridge enhancement: variable message signing and data swizzling
+- Bug fixes:
+  - [BUG FIX] fix missing V update in DRBG corner case
+  - [BUG FIX] Subsystem Mode only: TAP mailbox lock priority
+
+## Previous Releases ##
 
 ### Rev 2p0-rc1 ###
 
@@ -35,8 +46,6 @@ _*Last Update: 2025/03/07*_
 - Caliptra subsystem mode hardware support
 - Caliptra Core 2.0 Validation Enhancements
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
-
-## Previous Releases ##
 
 ### Rev 1p1 ###
 
