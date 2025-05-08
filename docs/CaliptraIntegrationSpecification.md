@@ -130,7 +130,7 @@ The following tables describe the interface signals.
 | ready_for_mb_processing | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for processing mailbox commands. |
 | ready_for_runtime | 1 | Output | Synchronous to clk | Indicates that Caliptra firmware is ready for RT flow. |
 | mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has a response for SoC to read. Signal is set when the mailbox transitions to the EXECUTE_SOC state, which is also reported in the `mbox_status` register. |
-| mailbox_flow_done | 1 | Output | Synchronous to clk | Deprecated output signal. Reflects the value from the CPTRA_FLOW_STATUS register field `mailbox_flow_done`, which is not used by firmware. For an indicator that the mailbox flow is complete, an SoC may use the `mailbox_data_avail` signal. |
+| mailbox_flow_done | 1 | Output | Synchronous to clk | Deprecated output signal. Reflects the value from the CPTRA_FLOW_STATUS register field `mailbox_flow_done`, which is not used by firmware. For an indicator that Caliptra has completed its processing of the mailbox flow, an SoC may use the `mailbox_data_avail` signal. |
 
 *Table 7: Caliptra SRAM interface*
 
@@ -769,7 +769,7 @@ The following figure shows the SRAM interface timing.
 
 ## SRAM parameterization
 
-Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. Complete configuration options from the RISC-V Core may be found in [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv). The following table shows some parameters that are used to derive interface signal widths for exported RISC-V SRAM signals.
+Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. Complete configuration parameters of the RISC-V Core may be found in [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv). The following table explains some parameters that are used to derive interface signal widths for exported RISC-V SRAM signals.
 
 *Table 18: SRAM parameterization*
 
