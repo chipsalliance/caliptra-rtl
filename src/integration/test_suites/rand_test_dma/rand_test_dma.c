@@ -311,9 +311,16 @@ void main(void) {
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
                             VPRINTF(LOW, "Sending payload from AHB\n");
+                            // arm_send_ahb
+                            soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, transfer_size*4, 0);
+                            
+                            // for loop -- write data to write register
                             for (uint32_t dw = 0; dw < transfer_size; dw++) {
-                                soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, 4, 0);
+                                soc_ifc_axi_dma_get_send_ahb_payload(&ahb_wdata, 4);
                             }
+                            
+                            // poll for dma idle
+                            soc_ifc_axi_dma_wait_idle(0);
 
                             // Clear auto-read
                             VPRINTF(LOW, "Disable FIFO to auto-read\n");
@@ -379,7 +386,7 @@ void main(void) {
                         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
                         VPRINTF(LOW, "Reading rand payload to Mailbox\n");
-                        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, AXI_FIFO_SIZE_BYTES*2, 0)) {
+                        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, src_offset, 1, transfer_size*4, 0)) {
                             fail = 1;
                         }
 
@@ -406,11 +413,11 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Sending large payload from Mailbox\n");
 
-                        if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
-                            SEND_STDOUT_CTRL(RAND_RST);
-                        }
                         if (!dst_is_fifo) {
+                            if (inject_rst && (rst_done==0)) {
+                                VPRINTF(LOW, "Request random reset\n");
+                                SEND_STDOUT_CTRL(RAND_RST);
+                            }
                             soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
                         }
                         else {
@@ -419,6 +426,11 @@ void main(void) {
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
                             VPRINTF(LOW, "Sending payload from Mailbox\n");
+
+                            if (inject_rst && (rst_done==0)) {
+                                VPRINTF(LOW, "Request random reset\n");
+                                SEND_STDOUT_CTRL(RAND_RST);
+                            }
                             soc_ifc_axi_dma_send_mbox_payload(src_offset, AXI_FIFO_BASE_ADDR, use_wr_fixed, transfer_size*4, 0);
 
                             // Clear auto-read
@@ -473,22 +485,9 @@ void main(void) {
                         }
                     } else {
                         VPRINTF(MEDIUM, "Large transfer\n");
-                        
 
-                        if (src_is_fifo) { 
-                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
-                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-                            // Transfer FIFO --> AXI  SRAM
-                            VPRINTF(HIGH, "Moving large payload from FIFO to SRAM\n");
-                            soc_ifc_axi_dma_send_axi_to_axi(AXI_FIFO_BASE_ADDR, use_rd_fixed, src_addr, use_wr_fixed, transfer_size*4, 0);
-
-                            // Clear auto-write
-                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
-                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-                            SEND_STDOUT_CTRL(FIFO_CLEAR);
-                        } else {
-                            VPRINTF(LOW, "Data pre-loaded into SRAM will be transferred to destination") ;
+                        if (!src_is_fifo) {
+                            VPRINTF(HIGH, "Data pre-loaded into SRAM will be transferred to destination") ;
                         }
                     }
 
@@ -513,32 +512,37 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
 
+                        if (src_is_fifo) { 
+                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+                            VPRINTF(HIGH, "Moving large payload from FIFO to SRAM\n");
+                        } else if (dst_is_fifo) {
+                            VPRINTF(MEDIUM, "Set FIFO to auto-read\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
+                            VPRINTF(HIGH, "Moving large payload from SRAM to FIFO\n");
+                        } else {
+                            VPRINTF(HIGH, "Moving large payload from SRAM to SRAM\n");
+                        }
+
                         if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
-                        if (!dst_is_fifo) {
-                            soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
-                            soc_ifc_axi_dma_wait_idle(0);
-                            if (test_block_size) {
-                                SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
-                            }
+                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
+                        soc_ifc_axi_dma_wait_idle(0);
+                        if (test_block_size) {
+                            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
-                        else {
-                            VPRINTF(MEDIUM, "Set FIFO to auto-read\n");
-                            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-                            // Transfer SRAM --> FIFO
-                            VPRINTF(HIGH, "Moving large payload from SRAM to FIFO\n");
-                            soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, transfer_size*4, block_size);
-                            soc_ifc_axi_dma_wait_idle(0);
-                            if (test_block_size) {
-                                SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
-                            }
-
-                            // Clear auto-read
+                        if (src_is_fifo) {
+                            // Clear auto-write
                             VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
+                        } else if (dst_is_fifo) {
+                            // Clear auto-read
+                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
@@ -586,15 +590,6 @@ void main(void) {
                             uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
                             soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
                         }
-                    } else {
-                        VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
-                        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-                        if (!src_is_fifo) { 
-                            // TRasnfer FIFO --> AXI  SRAM
-                            VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
-                            soc_ifc_axi_dma_send_axi_to_axi(AXI_FIFO_BASE_ADDR, use_rd_fixed, src_addr, use_wr_fixed, transfer_size*4, block_size);
-                        }
                     }
 
                     // Inject random delay
@@ -618,6 +613,12 @@ void main(void) {
                     } else {
                         VPRINTF(HIGH, "Reading rand payload to Mailbox\n");
 
+                        if (src_is_fifo) {
+                            VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
+                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+                        }
+
                         if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
@@ -629,10 +630,12 @@ void main(void) {
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
 
-                        // Clear auto-write
-                        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-                        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-                        SEND_STDOUT_CTRL(FIFO_CLEAR);
+                        if (src_is_fifo) {
+                            // Clear auto-write
+                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+                            SEND_STDOUT_CTRL(FIFO_CLEAR);
+                        }
                     }
                     if (inject_rand_delays) {
                         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
@@ -682,15 +685,6 @@ void main(void) {
                             uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
                             soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
                         }
-                    } else {
-                        VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
-                        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-                        if (!src_is_fifo) {
-                            // TRasnfer FIFO --> AXI  SRAM
-                            VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
-                            soc_ifc_axi_dma_send_axi_to_axi(AXI_FIFO_BASE_ADDR, use_rd_fixed, src_addr, use_wr_fixed, AXI_FIFO_SIZE_BYTES*2, 0);
-                        }
                     }
 
                     // inject random delay
@@ -716,6 +710,11 @@ void main(void) {
                         // AXI2AHB: Read data from AXI FIFO 
                         VPRINTF(HIGH, "Reading payload via AHB i/f\n");
 
+                        if (src_is_fifo) {
+                            VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+                        }
+
                         if (inject_rst && (rst_done==0)) {
                             VPRINTF(LOW, "Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
@@ -730,6 +729,13 @@ void main(void) {
                         
                         //Wait for AXI DMA idle
                         soc_ifc_axi_dma_wait_idle(0);
+
+                        if (src_is_fifo) {
+                            // Clear auto-write
+                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+                        }
+
                     }
 
                     if (inject_rand_delays) {
