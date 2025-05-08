@@ -81,7 +81,7 @@ The following tables describe the interface signals.
 | cptra_rst_b | 1 | Input | Asynchronous Assertion<br> Synchronous deassertion to clk | Active low asynchronous reset. |
 | clk | 1 | Input | | Convergence and validation done at 400MHz. All other frequencies are up to the user. |
 
-*Table 5: AXI Interface*
+*Table 5: AXI Subordinate Interface*
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -227,10 +227,10 @@ The table below details the interface required for each SRAM. Driver direction i
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | cptra_obf_key | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood deassertion. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
 | cptra_csr_hmac_key | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
-| cptra_obf_field_entropy_vld | 1 | Input | Synchronous to clk | Valid signal used to sample cptra_obf_field_entropy if it is driven by wires from the fuse controller. |
-| cptra_obf_field_entropy | 256 | Input | Synchronous to clk | Fuse controller can optionally drive the field entropy value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_field_entropy_vld is asserted. |
-| cptra_obf_uds_seed_vld | 1 | Input | Synchronous to clk | Valid signal used to sample cptra_obf_uds_seed if it is driven by wires from the fuse controller. |
-| cptra_obf_uds_seed | 512 | Input | Synchronous to clk | Fuse controller can optionally drive the uds seed value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_uds_seed_vld is asserted. |
+| cptra_obf_field_entropy_vld | 1 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Valid signal used to sample cptra_obf_field_entropy if it is driven by wires from the fuse controller. |
+| cptra_obf_field_entropy | 256 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Fuse controller can optionally drive the field entropy value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_field_entropy_vld is asserted. |
+| cptra_obf_uds_seed_vld | 1 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Valid signal used to sample cptra_obf_uds_seed if it is driven by wires from the fuse controller. |
+| cptra_obf_uds_seed | 512 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Fuse controller can optionally drive the uds seed value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_uds_seed_vld is asserted. |
 | security_state | 3 | Input Strap | Synchronous to clk | Security state that Caliptra should take (for example, manufacturing, secure, unsecure, etc.). The key is latched by Caliptra on cptra_noncore_rst_b deassertion. Any time the state changes to debug mode, all keys, assets, and secrets stored in fuses or key vault are cleared. Cryptography core states are also flushed if they were being used. |
 | scan_mode | 1 | Input Strap | Synchronous to clk | Must be set before entering scan mode. This is a separate signal than the scan chain enable signal that goes into scan cells. This allows Caliptra to flush any assets or secrets present in key vault and flops if the transition is happening from a secure state. |
 | generic_input_wires | 64 | Input | Synchronous to clk | Placeholder of input wires for late binding features. These values are reflected into registers that are exposed to firmware. |
@@ -314,6 +314,10 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * SLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
+
+#### DMA Assist Engine
+
+Caliptra contains a DMA assist engine and AXI manager interface that is used in Subsystem mode to initiate AXI transactions to the SoC AXI interconnect. When Caliptra is integrated in passive mode the DMA assist block is not available for use; all AXI manager interfaces must be tied to 0 and must not be connected to the SoC interconnect. For details on the DMA block in Subsystem mode operation, refer to the [Caliptra Subsystem Hardware Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist).
 
 ### Undefined mailbox usages
 
