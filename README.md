@@ -257,12 +257,12 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 - Mentor Graphics UVM-Framework installation
 
 **Environment Variables**:<BR>
-`UVM_HOME`: Filesystem path to the parent directory containing SystemVerilog source code for the UVM library of the desired version.
-`UVMF_HOME`: Filesystem path to the parent directory containing source code (uvmf_base_pkg) for the UVM Frameworks library, a tool available from Mentor Graphics for generating baseline UVM projects.
-`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB UVM agents are pulled in the Caliptra UVM environment.
-`AVERY_SIM`: Filesystem path to the parent directory containing source code for Avery UVM VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
-`AVERY_PLI`: Filesystem path to the parent directory containing source code for Avery UVM PLI, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
-`AVERY_AXI`: Filesystem path to the parent directory containing source code for Avery AXI VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment.
+`UVM_HOME`: Filesystem path to the parent directory containing SystemVerilog source code for the UVM library of the desired version. <BR>
+`UVMF_HOME`: Filesystem path to the parent directory containing source code (uvmf_base_pkg) for the UVM Frameworks library, a tool available from Mentor Graphics for generating baseline UVM projects. <BR>
+`QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB UVM agents are pulled in the Caliptra UVM environment. <BR>
+`AVERY_SIM`: Filesystem path to the parent directory containing source code for Avery UVM VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment. <BR>
+`AVERY_PLI`: Filesystem path to the parent directory containing source code for Avery UVM PLI, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment. <BR>
+`AVERY_AXI`: Filesystem path to the parent directory containing source code for Avery AXI VIP, the verification library from which AXI UVM agents are pulled in the Caliptra UVM environment. <BR>
 
 **Steps:**<BR>
 1. Compile UVM 1.1d library
