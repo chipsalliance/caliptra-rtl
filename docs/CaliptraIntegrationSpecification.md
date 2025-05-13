@@ -62,8 +62,8 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
-| CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. |
-| CALIPTRA_MODE_SUBSYSTEM | config_defines.svh | Defining this enables Caliptra to operate in subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), subsystem level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
+| CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
+| CALIPTRA_MODE_SUBSYSTEM | config_defines.svh | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
 | USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
 | TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
 | USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
@@ -81,7 +81,7 @@ The following tables describe the interface signals.
 | cptra_rst_b | 1 | Input | Asynchronous Assertion<br> Synchronous deassertion to clk | Active low asynchronous reset. |
 | clk | 1 | Input | | Convergence and validation done at 400MHz. All other frequencies are up to the user. |
 
-*Table 5: AXI Interface*
+*Table 5: AXI Subordinate Interface*
 
 | Signal name | Width | Driver | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -129,8 +129,8 @@ The following tables describe the interface signals.
 | ready_for_fuses | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for fuse programming. |
 | ready_for_mb_processing | 1 | Output | Synchronous to clk | Indicates that Caliptra is ready for processing mailbox commands. |
 | ready_for_runtime | 1 | Output | Synchronous to clk | Indicates that Caliptra firmware is ready for RT flow. |
-| mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has data for SoC to read (reflects the value of the register). |
-| mailbox_flow_done | 1 | Output | Synchronous to clk | Indicates that the mailbox flow is complete (reflects the value of the register). |
+| mailbox_data_avail | 1 | Output | Synchronous to clk | Indicates that the mailbox has a response for SoC to read. Signal is set when the mailbox transitions to the EXECUTE_SOC state, which is also reported in the `mbox_status` register. |
+| mailbox_flow_done | 1 | Output | Synchronous to clk | Deprecated output signal. Reflects the value from the CPTRA_FLOW_STATUS register field `mailbox_flow_done`, which is not used by firmware. For an indicator that Caliptra has completed its processing of the mailbox flow, an SoC may use the `mailbox_data_avail` signal. |
 
 *Table 7: Caliptra SRAM interface*
 
@@ -226,11 +226,11 @@ The table below details the interface required for each SRAM. Driver direction i
 | Signal name | Width | Driver  | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | cptra_obf_key | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood deassertion. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
-| cptra_csr_hmac_key | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
-| cptra_obf_field_entropy_vld | 1 | Input | Synchronous to clk | Valid signal used to sample cptra_obf_field_entropy if it is driven by wires from the fuse controller. |
-| cptra_obf_field_entropy | 256 | Input | Synchronous to clk | Fuse controller can optionally drive the field entropy value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_field_entropy_vld is asserted. |
-| cptra_obf_uds_seed_vld | 1 | Input | Synchronous to clk | Valid signal used to sample cptra_obf_uds_seed if it is driven by wires from the fuse controller. |
-| cptra_obf_uds_seed | 512 | Input | Synchronous to clk | Fuse controller can optionally drive the uds seed value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_uds_seed_vld is asserted. |
+| cptra_csr_hmac_key | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
+| cptra_obf_field_entropy_vld | 1 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Valid signal used to sample cptra_obf_field_entropy if it is driven by wires from the fuse controller. |
+| cptra_obf_field_entropy | 256 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Fuse controller can optionally drive the field entropy value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_field_entropy_vld is asserted. |
+| cptra_obf_uds_seed_vld | 1 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Valid signal used to sample cptra_obf_uds_seed if it is driven by wires from the fuse controller. |
+| cptra_obf_uds_seed | 512 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Fuse controller can optionally drive the uds seed value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_uds_seed_vld is asserted. |
 | security_state | 3 | Input Strap | Synchronous to clk | Security state that Caliptra should take (for example, manufacturing, secure, unsecure, etc.). The key is latched by Caliptra on cptra_noncore_rst_b deassertion. Any time the state changes to debug mode, all keys, assets, and secrets stored in fuses or key vault are cleared. Cryptography core states are also flushed if they were being used. |
 | scan_mode | 1 | Input Strap | Synchronous to clk | Must be set before entering scan mode. This is a separate signal than the scan chain enable signal that goes into scan cells. This allows Caliptra to flush any assets or secrets present in key vault and flops if the transition is happening from a secure state. |
 | generic_input_wires | 64 | Input | Synchronous to clk | Placeholder of input wires for late binding features. These values are reflected into registers that are exposed to firmware. |
@@ -315,6 +315,10 @@ All accesses that are outside of the defined address space of Caliptra are respo
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
 
+#### DMA Assist Engine
+
+Caliptra contains a DMA assist engine and AXI manager interface that is used in Subsystem mode to initiate AXI transactions to the SoC AXI interconnect. When Caliptra is integrated in passive mode the DMA assist block is not available for use; all AXI manager interfaces must be tied to 0 and must not be connected to the SoC interconnect. For details on the DMA block in Subsystem mode operation, refer to the [Caliptra Subsystem Hardware Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist).
+
 ### Undefined mailbox usages
 
 A trusted/valid requester that locks the mailbox and never releases the lock will cause the mailbox to be locked indefinitely.
@@ -336,7 +340,7 @@ SoC must ensure that there are no SCAN cells on the flops that latch this key in
 
 ### CSR HMAC key
 
-SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge. For a given SoC construction, this can be driven using a PUF too.
+SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge.
 
 The key must follow the security rules defined in the[ Caliptra architectural specification](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
 
@@ -465,7 +469,7 @@ The following figure shows the receiver protocol flow.
 When Caliptra sets the tap_mode register, the mailbox will transition from RDY_FOR_DATA to EXECUTE_TAP instead of EXECUTE_SOC.
 This will pass control of the mailbox to the TAP. TAP will follow the **Receiving data from the mailbox** protocol detailed above.
 
-When TAP acquires the mailbox lock, the mailbox will transition from RDY_FOR_DATA_to EXECUTE_UC asserting mailbox_data_avail.
+When TAP acquires the mailbox lock, the mailbox will transition from RDY_FOR_DATA_to EXECUTE_UC. This transition results in the assertion of the internal interrupt signal `uc_mailbox_data_avail` to UC.
 This will pass control of the mailbox to the UC. UC will follow the **Receiving data from the mailbox** protocol detailed above.
 
 ## Mailbox arbitration
@@ -769,20 +773,20 @@ The following figure shows the SRAM interface timing.
 
 ## SRAM parameterization
 
-Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. The following configuration options from the RISC-V Core dictate this behavior:
+Parameterization for ICCM/DCCM memories is derived from the configuration of the VeeR RISC-V core that has been selected for Caliptra integration. Parameters defined in the VeeR core determine signal dimensions at the Caliptra top-level interface and drive requirements for SRAM layout. For details about interface parameterization, see the [Interface](#interface) section. Complete configuration parameters of the RISC-V Core may be found in [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv). The following table explains some parameters that are used to derive interface signal widths for exported RISC-V SRAM signals.
 
 *Table 18: SRAM parameterization*
 
-| Parameter       | Value | Description |
-| :--------- | :--------- | :--------- |
-| ICCM_ENABLE     | 1     | Configures ICCM to be present in VeeR core.                                                                               |
-| ICCM_NUM_BANKS  | 4     | Determines the number of physical 39-bit (32-bit data + 7-bit ECC) SRAM blocks that are instantiated in the ICCM.         |
-| ICCM_INDEX_BITS | 13    | Address bit width for each ICCM Bank that is instantiated.                                                                |
-| ICCM_SIZE       | 128   | Capacity of the ICCM in KiB. Total ICCM capacity in bytes is given by 4 \* ICCM_NUM_BANKS \* 2<sup>ICCM_INDEX_BITS</sup>. |
-| DCCM_ENABLE     | 1     | Configures DCCM to be present in VeeR core.                                                                               |
-| DCCM_NUM_BANKS  | 4     | Determines the number of physical 39-bit (32-bit data + 7-bit ECC) SRAM blocks that are instantiated in the DCCM.         |
-| DCCM_INDEX_BITS | 13    | Address bit width for each DCCM Bank that is instantiated.                                                                |
-| DCCM_SIZE       | 128   | Capacity of the DCCM in KiB. Total DCCM capacity in bytes is given by 4 \* DCCM_NUM_BANKS \* 2<sup>DCCM_INDEX_BITS</sup>. |
+| Parameter       | Description |
+| :--------- | :--------- |
+| ICCM_ENABLE     | Configures ICCM to be present in VeeR core.                                                                               |
+| ICCM_NUM_BANKS  | Determines the number of physical 39-bit (32-bit data + 7-bit ECC) SRAM blocks that are instantiated in the ICCM.         |
+| ICCM_INDEX_BITS | Address bit width for each ICCM Bank that is instantiated.                                                                |
+| ICCM_SIZE       | Capacity of the ICCM in KiB. Total ICCM capacity in bytes is given by 4 \* ICCM_NUM_BANKS \* 2<sup>ICCM_INDEX_BITS</sup>. |
+| DCCM_ENABLE     | Configures DCCM to be present in VeeR core.                                                                               |
+| DCCM_NUM_BANKS  | Determines the number of physical 39-bit (32-bit data + 7-bit ECC) SRAM blocks that are instantiated in the DCCM.         |
+| DCCM_INDEX_BITS | Address bit width for each DCCM Bank that is instantiated.                                                                |
+| DCCM_SIZE       | Capacity of the DCCM in KiB. Total DCCM capacity in bytes is given by 4 \* DCCM_NUM_BANKS \* 2<sup>DCCM_INDEX_BITS</sup>. |
 
 ## Example SRAM machine check reliability integration
 
@@ -1207,3 +1211,4 @@ The following terminology is used in this document.
 | SHA          | Secure Hashing Algorithm                                                                         |
 | SPI          | Serial Peripheral Interface                                                                      |
 | UART         | Universal Asynchronous Receiver Transmitter                                                      |
+| UC           | Microcontroller, referring to Caliptra's internal RISC-V processor core                          |
