@@ -257,6 +257,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 - Mentor Graphics UVM-Framework installation
 
 **Environment Variables**:<BR>
+Required for UVM simulation:<BR>
 `UVM_HOME`: Filesystem path to the parent directory containing SystemVerilog source code for the UVM library of the desired version. <BR>
 `UVMF_HOME`: Filesystem path to the parent directory containing source code (uvmf_base_pkg) for the UVM Frameworks library, a tool available from Mentor Graphics for generating baseline UVM projects. <BR>
 `QUESTA_MVC_HOME`: Filesystem path to the parent directory containing source code for Mentor Graphics QVIP, the verification library from which AHB UVM agents are pulled in the Caliptra UVM environment. <BR>
