@@ -20,7 +20,8 @@ For information on the Caliptra Core, see the [High level architecture](https://
 
 ## Key Caliptra Core 2.0 Changes
 * AXI subordinate replaces APB interface of Caliptra 1.x hardware
-* SHA Accelerator functionality now available exclusively to the Caliptra AXI DMA assist engine in streaming mode
+* SHA Accelerator functionality now available exclusively to Caliptra
+    * Caliptra uC may use internally in mailbox mode or via the Caliptra AXI DMA assist engine in streaming mode
     * SHA Accelerator adds new SHA save/restore functionality
 * Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md))
 * Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
@@ -589,7 +590,7 @@ The reason to have a separate interface from the SoC mailbox is to ensure that t
 
 ## SoC-SHA accelerator HW API
 
-Caliptra provides a SHA accelerator HW API for Caliptra internal FW to use via DMA operations through the AXI subordinate interface. The SHA accelerator HW API is restricted to use by Caliptra via the AXI DMA assist block; this access restriction is enforced by checking logic on the AXI AxUSER signal associated with the request.
+Caliptra provides a SHA accelerator HW API for Caliptra internal FW to use via mailbox or via DMA operations through the AXI subordinate interface. The SHA accelerator HW API is restricted on AXI for use by Caliptra via the AXI DMA assist block; this access restriction is enforced by checking logic on the AXI AxUSER signal associated with the request.
 
 Using the HW API:
 

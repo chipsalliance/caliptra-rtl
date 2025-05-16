@@ -569,7 +569,7 @@ The following table describes AXI transactions that cause the Mailbox FSM to ent
 
 The SHA acceleration block is in the SoC interface. The SoC can access the accelerator’s hardware API and stream data to be hashed over the AXI interface.
 
-SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers. The SHA acceleration block is only available for use in the Caliptra Subsystem, and may only be used by Caliptra via the AXI DMA block. The SHA accelerator checks the AXI AxUSER signal to block any access that originates from an agent other than Caliptra.
+SHA acceleration block uses a similar protocol to the mailbox, but has its own dedicated registers. Caliptra is the only permitted user of SHA acceleration, either in streaming mode (via AXI) or in mailbox mode. The SHA acceleration block is only available for use over AXI in the Caliptra Subsystem, and may only be used by Caliptra via the AXI DMA block. The SHA accelerator checks the AXI AxUSER signal to block any access that originates from an agent other than Caliptra.
 
 SHA\_LOCK register is set on read. A read of 0 indicates the SHA was unlocked and will now be locked for the requesting user.
 
