@@ -5,6 +5,8 @@
 // Description: entropy_src core module
 //
 
+`include "caliptra_prim_assert.sv"
+
 module entropy_src_core
   import entropy_src_pkg::*;
   import lc_ctrl_state_pkg::*;
@@ -3098,8 +3100,7 @@ module entropy_src_core
   //--------------------------------------------
   // Assertions
   //--------------------------------------------
-`ifdef INC_ASSERT
-`include "caliptra_prim_macros.svh"
+`ifndef CALIPTRA_SVA
 
   // Count number of disables since last reset.
   logic [63:0] disable_cnt_d, disable_cnt_q;
