@@ -1,15 +1,11 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
-+incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include
++incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
-${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/ifu/el2_ifu_tb_memread.sv
-${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb/el2_veer_wrapper_tb.sv
-${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb/ahb_sif.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/beh_lib.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/dbg/el2_dbg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/dec/el2_dec_decode_ctl.sv
@@ -57,3 +53,7 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pic_ctrl.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pmp.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/ifu/el2_ifu_tb_memread.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb/el2_veer_wrapper_tb.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/tb/ahb_sif.sv
