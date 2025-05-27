@@ -2231,7 +2231,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Clear\[2\]                | cptra_rst_b       | If unlocked, setting the clear bit causes KV to clear the associated entry. The clear bit is reset after entry is cleared.                                                                              |
 | Copy\[3\]                 | cptra_rst_b       | ENHANCEMENT: Setting the copy bit causes KV to copy the key to the entry written to Copy Dest field.                                                                                                    |
 | Copy Dest\[8:4\]          | cptra_rst_b       | ENHANCEMENT: Destination entry for the copy function.                                                                                                                                                   |
-| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set. <br>\[0\] - HMAC KEY <br>\[1\] - HMAC BLOCK <br>\[2\] - SHA BLOCK <br>\[2\] - ECC PRIVKEY <br>\[3\] - ECC SEED <br>\[7:5\] - RSVD |
+| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[7:6\] - RSVD |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
 ### Key vault cryptographic functional block 
@@ -2262,15 +2262,16 @@ The following tables describe read, write, and status values for key vault block
 | KV Write Ctrl Reg          | Description                                                                                                                            |
 | :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
 | write_en\[0\]              | Indicates that the result is to be stored in the key vault. Setting this bit to 1 copies the result to the key vault when it is ready. |
-| write_entry\[5:1\]         | Key vault entry to store the result.                                                                                                   |
-| hmac_key_dest_valid\[6\]   | HMAC KEY is a valid destination.                                                                                                       |
-| hmac_block_dest_valid\[7\] | HMAC BLOCK is a valid destination.                                                                                                     |
-| mldsa_seed_dest_valid\[8\] | MLDSA SEED is a valid destination.                                                                                                    |
-| ecc_pkey_dest_valid\[9\]   | ECC PKEY is a valid destination.                                                                                                       |
-| ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination.                                                                                                       |
-| rsvd\[31:11\]              | Reserved field                                                                                                                         |
+| write_entry\[5:1\]         | Key vault entry to store the result. |
+| hmac_key_dest_valid\[6\]   | HMAC KEY is a valid destination. |
+| hmac_block_dest_valid\[7\] | HMAC BLOCK is a valid destination. |
+| mldsa_seed_dest_valid\[8\] | MLDSA SEED is a valid destination. |
+| ecc_pkey_dest_valid\[9\]   | ECC PKEY is a valid destination. |
+| ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination. |
+| aes_key_dest_valid\[11\]   | AES KEY is a valid destination. |
+| rsvd\[31:12\]              | Reserved field |
 
-| KV Status Reg | Description                                                                                                                                     |
+| KV Status Reg | Description |
 | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- |
 | ready\[0\]    | Key vault control is idle and ready for a command.                                                                                              |
 | valid\[1\]    | Requested flow is done.                                                                                                                         |
