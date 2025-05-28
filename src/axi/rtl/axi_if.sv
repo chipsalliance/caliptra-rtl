@@ -175,7 +175,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         `define TIME_ALGN
     `endif
 
-    `ifndef XCELIUM
+    `ifndef SYNTHESIS
         task rst_mgr();
             araddr  `EQ__ '0;
             arburst `EQ__ AXI_BURST_FIXED;
