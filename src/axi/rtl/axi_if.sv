@@ -164,6 +164,7 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         input  bready
     );
 
+`ifndef SYNTHESIS
     // synopsys translate_off
 
     // Tasks
@@ -397,5 +398,6 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     `undef TIME_ALGN
 
     // synopsys translate_on
+ `endif
 
 endinterface
