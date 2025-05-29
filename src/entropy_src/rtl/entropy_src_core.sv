@@ -3100,7 +3100,7 @@ module entropy_src_core
   //--------------------------------------------
   // Assertions
   //--------------------------------------------
-`ifndef CALIPTRA_SVA
+`ifdef CALIPTRA_INC_ASSERT
 
   // Count number of disables since last reset.
   logic [63:0] disable_cnt_d, disable_cnt_q;
