@@ -1746,7 +1746,7 @@ module csrng_core
   //--------------------------------------------
   // Assertions
   //--------------------------------------------
-`ifdef INC_ASSERT
+`ifdef CALIPTRA_INC_ASSERT
   // Track activity of AES.
   logic aes_active_d, aes_active_q;
   assign aes_active_d =

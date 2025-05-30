@@ -7,6 +7,7 @@
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
++incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
@@ -110,6 +111,8 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_gf_mult.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_28_22_dec.sv
@@ -205,4 +208,4 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_state_db.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_cmd_stage.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
-${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh

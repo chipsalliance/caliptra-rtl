@@ -70,10 +70,15 @@
       `CALIPTRA_ASSERT_ERROR(__name)                                                   \
     end
 
-`ifndef CALIPTRA_SVA
+`define CALIPTRA_WITHIN_MARGIN(__actual, __expected, __allowed_less, __allowed_more) \
+  (((__actual) + (__allowed_less) >= (__expected)) &&                       \
+   ((__actual) <= (__expected) + (__allowed_more)))
+
 `define CALIPTRA_ASSERT_AT_RESET_AND_FINAL(__name, __prop, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
-    `CALIPTRA_ASSERT_AT_RESET(AtReset_``__name``, __prop, __rst)                        \
-    `CALIPTRA_ASSERT_FINAL(Final_``__name``, __prop)
+  `CALIPTRA_ASSERT_AT_RESET(AtReset_``__name``, __prop, __rst)                        \
+  `CALIPTRA_ASSERT_FINAL(Final_``__name``, __prop)
+
+`ifndef CALIPTRA_SVA
 
 `define CALIPTRA_ASSERT(__name, __prop, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
   __name: assert property (@(posedge __clk) disable iff ((__rst) !== '0) (__prop))       \
