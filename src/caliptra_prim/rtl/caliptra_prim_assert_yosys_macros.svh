@@ -31,6 +31,10 @@
   `CALIPTRA_ASSERT_AT_RESET(AtReset_``__name``, __prop, __rst)                          \
   `CALIPTRA_ASSERT_FINAL(Final_``__name``, __prop)
 
+`define CALIPTRA_WITHIN_MARGIN(__actual, __expected, __allowed_less, __allowed_more) \
+  (((__actual) + (__allowed_less) >= (__expected)) &&                       \
+   ((__actual) <= (__expected) + (__allowed_more)))
+
 `ifndef CALIPTRA_SVA
 `define CALIPTRA_ASSERT(__name, __prop, __clk = `CALIPTRA_ASSERT_DEFAULT_CLK, __rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
   always_ff @(posedge __clk) begin                                                       \

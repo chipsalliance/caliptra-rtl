@@ -16,6 +16,7 @@ provides: [aes]
 schema_version: 2.4.0
 requires:
   - aes_pkg
+  - kv_defines_pkg
   - caliptra_tlul_pkg
 targets:
   rtl:
