@@ -25,6 +25,7 @@ module clk_gate (
     input logic [63:0] generic_input_wires,
     input logic cptra_error_fatal,
     input logic cptra_in_debug_scan_mode,
+    input logic scan_mode,
     output logic clk_cg,
     output logic soc_ifc_clk_cg,
     output logic rdc_clk_cg,
@@ -81,15 +82,15 @@ end
 
 
 `ifdef TECH_SPECIFIC_ICG
-    `USER_ICG user_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
-    `USER_ICG user_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
-    `USER_ICG user_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
-    `USER_ICG user_rdc_uc_icg (.clk(clk), .en(!disable_uc_clk), .clk_cg(uc_clk_cg));
+    `USER_ICG user_icg (.clk(clk), .te(scan_mode), .en(!disable_clk), .clk_cg(clk_cg));
+    `USER_ICG user_soc_ifc_icg (.clk(clk), .te(scan_mode), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+    `USER_ICG user_rdc_icg (.clk(clk), .te(scan_mode), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
+    `USER_ICG user_rdc_uc_icg (.clk(clk), .te(scan_mode), .en(!disable_uc_clk), .clk_cg(uc_clk_cg));
 `else
-    `CALIPTRA_ICG caliptra_icg (.clk(clk), .en(!disable_clk), .clk_cg(clk_cg));
-    `CALIPTRA_ICG caliptra_soc_ifc_icg (.clk(clk), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
-    `CALIPTRA_ICG caliptra_rdc_icg (.clk(clk), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
-    `CALIPTRA_ICG caliptra_rdc_uc_icg (.clk(clk), .en(!disable_uc_clk), .clk_cg(uc_clk_cg));
+    `CALIPTRA_ICG caliptra_icg (.clk(clk), .te(scan_mode), .en(!disable_clk), .clk_cg(clk_cg));
+    `CALIPTRA_ICG caliptra_soc_ifc_icg (.clk(clk), .te(scan_mode), .en(!disable_soc_ifc_clk), .clk_cg(soc_ifc_clk_cg));
+    `CALIPTRA_ICG caliptra_rdc_icg (.clk(clk), .te(scan_mode), .en(!rdc_clk_dis), .clk_cg(rdc_clk_cg));
+    `CALIPTRA_ICG caliptra_rdc_uc_icg (.clk(clk), .te(scan_mode), .en(!disable_uc_clk), .clk_cg(uc_clk_cg));
 `endif
 
 endmodule

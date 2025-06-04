@@ -741,6 +741,7 @@ clk_gate cg (
     .clk(clk),
     .cptra_rst_b(cptra_noncore_rst_b),
     .psel(|s_axi_active || s_axi_r_if.arvalid || s_axi_w_if.awvalid),
+    .scan_mdoe(scan_mode),
     .clk_gate_en(clk_gating_en),
     .cpu_halt_status(o_cpu_halt_status),
     .rdc_clk_dis(rdc_clk_dis),
