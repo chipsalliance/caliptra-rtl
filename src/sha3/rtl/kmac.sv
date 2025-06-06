@@ -14,7 +14,11 @@ module kmac
 #(
   // EnMasking: Enable masking security hardening inside keccak_round
   // If it is enabled, the result digest will be two set of 1600bit.
-  parameter bit EnMasking = 0,
+  parameter bit EnMasking = 1,
+
+  // EnFullKmac: Enable full KMAC. If disabled, this module is stripped
+  // down to only support SHA3, SHAKE and cSHAKE.
+  parameter bit EnFullKmac = 1,
 
   // In case EnMasking == 0, this defines whether SW can provide a masked key or whether Share 1 of
   // the SW key is simply ignored. In case EnMasking == 1, this parameter has no meaning, always
@@ -31,7 +35,7 @@ module kmac
 
   // Accept SW message when idle and before receiving a START command. Useful for SCA only.
   parameter bit SecIdleAcceptSwMsg          = 1'b0,
-  parameter int unsigned NumAppIntf         = 0,
+  parameter int unsigned NumAppIntf         = 3,
   parameter app_config_t AppCfg[NumAppIntf] = '{AppCfgKeyMgr, AppCfgLcCtrl, AppCfgRomCtrl},
 
   parameter lfsr_perm_t RndCnstLfsrPerm = RndCnstLfsrPermDefault,
@@ -484,80 +488,116 @@ module kmac
   // SEC_CM: CFG_SHADOWED.CONFIG.REGWEN
   assign hw2reg.cfg_regwen.d = engine_stable;
 
-  // Secret Key
-  // Secret key is defined as external register. So the logic latches when SW
-  // writes to KEY_SHARE0 , KEY_SHARE1 registers.
-  // SEC_CM: SW_KEY.KEY.MASKING
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
-      sw_key_data_reg[0] <= '0;
-    end else if (engine_stable) begin
-      for (int j = 0 ; j < MaxKeyLen/32 ; j++) begin
-        if (reg2hw.key_share0[j].qe) begin
-          sw_key_data_reg[0][32*j+:32] <= reg2hw.key_share0[j].q;
-        end
-      end // for j
-    end // else if engine_stable
-  end // always_ff
-
-  if (EnMasking || SwKeyMasked) begin : gen_key_share1_reg
+  if (EnFullKmac) begin : gen_key_data
+    // Secret Key
+    // Secret key is defined as external register. So the logic latches when SW
+    // writes to KEY_SHARE0 , KEY_SHARE1 registers.
+    // SEC_CM: SW_KEY.KEY.MASKING
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
-        sw_key_data_reg[1] <= '0;
+        sw_key_data_reg[0] <= '0;
       end else if (engine_stable) begin
         for (int j = 0 ; j < MaxKeyLen/32 ; j++) begin
-          if (reg2hw.key_share1[j].qe) begin
-            sw_key_data_reg[1][32*j+:32] <= reg2hw.key_share1[j].q;
+          if (reg2hw.key_share0[j].qe) begin
+            sw_key_data_reg[0][32*j+:32] <= reg2hw.key_share0[j].q;
           end
         end // for j
       end // else if engine_stable
     end // always_ff
-  end else begin : gen_no_key_share1_reg
-    logic unused_key_share1;
-    assign unused_key_share1 = ^reg2hw.key_share1;
-  end
 
-  if (EnMasking || !SwKeyMasked) begin : gen_key_forward
-    // Forward all available key shares as is.
-    assign sw_key_data = sw_key_data_reg;
-  end else begin : gen_key_unmask
-    // Masking is disabled but the SW still provides the key in two shares.
-    // Unmask the key for processing.
-    assign sw_key_data[0] = sw_key_data_reg[0] ^ sw_key_data_reg[1];
-  end
+    if (EnMasking || SwKeyMasked) begin : gen_key_share1_reg
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          sw_key_data_reg[1] <= '0;
+        end else if (engine_stable) begin
+          for (int j = 0 ; j < MaxKeyLen/32 ; j++) begin
+            if (reg2hw.key_share1[j].qe) begin
+              sw_key_data_reg[1][32*j+:32] <= reg2hw.key_share1[j].q;
+            end
+          end // for j
+        end // else if engine_stable
+      end // always_ff
+    end else begin : gen_no_key_share1_reg
+      logic unused_key_share1;
+      assign unused_key_share1 = ^reg2hw.key_share1;
+    end
 
-  assign sw_key_len = key_len_e'(reg2hw.key_len.q);
+    if (EnMasking || !SwKeyMasked) begin : gen_key_forward
+      // Forward all available key shares as is.
+      assign sw_key_data = sw_key_data_reg;
+    end else begin : gen_key_unmask
+      // Masking is disabled but the SW still provides the key in two shares.
+      // Unmask the key for processing.
+      assign sw_key_data[0] = sw_key_data_reg[0] ^ sw_key_data_reg[1];
+    end
+
+    assign sw_key_len = key_len_e'(reg2hw.key_len.q);
+  end else begin : gen_no_key_data
+    assign sw_key_data_reg[0] = '{default: '0};
+
+    logic unused_sw_key_data_reg;
+    if (EnMasking || SwKeyMasked) begin : gen_unused_sw_key_data_masked
+      assign unused_sw_key_data_reg = ^{sw_key_data_reg[0], sw_key_data_reg[1]};
+    end else begin : gen_unused_sw_key_data_unmasked
+      assign unused_sw_key_data_reg = ^sw_key_data_reg[0];
+    end
+
+    assign sw_key_data = '{default: '0};
+    assign sw_key_len = key_len_e'(0);
+  end
 
   // Entropy configurations
-  assign wait_timer_prescaler = reg2hw.entropy_period.prescaler.q;
-  assign wait_timer_limit     = reg2hw.entropy_period.wait_timer.q;
-  assign entropy_refresh_req = reg2hw.cmd.entropy_req.q
-                            && reg2hw.cmd.entropy_req.qe;
-  assign entropy_seed_update = reg2hw.entropy_seed.qe;
-  assign entropy_seed_data = reg2hw.entropy_seed.q;
+  if (EnFullKmac) begin : gen_entropy_mask
+    assign wait_timer_prescaler = reg2hw.entropy_period.prescaler.q;
+    assign wait_timer_limit     = reg2hw.entropy_period.wait_timer.q;
+    assign entropy_refresh_req = reg2hw.cmd.entropy_req.q
+                              && reg2hw.cmd.entropy_req.qe;
+    assign entropy_seed_update = reg2hw.entropy_seed.qe;
+    assign entropy_seed_data = reg2hw.entropy_seed.q;
 
-  assign entropy_hash_threshold = reg2hw.entropy_refresh_threshold_shadowed.q;
-  assign hw2reg.entropy_refresh_hash_cnt.de = 1'b 1;
-  assign hw2reg.entropy_refresh_hash_cnt.d  = entropy_hash_cnt;
+    assign entropy_hash_threshold = reg2hw.entropy_refresh_threshold_shadowed.q;
 
-  assign entropy_hash_clr = reg2hw.cmd.hash_cnt_clr.qe
-                         && reg2hw.cmd.hash_cnt_clr.q;
+    assign hw2reg.entropy_refresh_hash_cnt.de = 1'b 1;
+    assign hw2reg.entropy_refresh_hash_cnt.d  = entropy_hash_cnt;
 
-  // Entropy config
-  assign entropy_ready = reg2hw.cfg_shadowed.entropy_ready.q
-                       & reg2hw.cfg_shadowed.entropy_ready.qe;
-  assign entropy_mode  = entropy_mode_e'(reg2hw.cfg_shadowed.entropy_mode.q);
-  assign entropy_fast_process = reg2hw.cfg_shadowed.entropy_fast_process.q;
+    assign entropy_hash_clr = reg2hw.cmd.hash_cnt_clr.qe
+                           && reg2hw.cmd.hash_cnt_clr.q;
 
-  // msg_mask_en turns on the message LFSR when KMAC is enabled.
-  assign cfg_msg_mask = reg2hw.cfg_shadowed.msg_mask.q;
-  assign msg_mask_en = cfg_msg_mask & msg_valid & msg_ready;
+    assign entropy_ready = reg2hw.cfg_shadowed.entropy_ready.q
+                         & reg2hw.cfg_shadowed.entropy_ready.qe;
+    assign entropy_mode  = entropy_mode_e'(reg2hw.cfg_shadowed.entropy_mode.q);
+    assign entropy_fast_process = reg2hw.cfg_shadowed.entropy_fast_process.q;
 
-  // Enable unsupported mode & strength combination
-  assign cfg_en_unsupported_modestrength =
-    reg2hw.cfg_shadowed.en_unsupported_modestrength.q;
+    // msg_mask_en turns on the message LFSR when KMAC is enabled.
+    assign cfg_msg_mask = reg2hw.cfg_shadowed.msg_mask.q;
+    assign msg_mask_en = cfg_msg_mask & msg_valid & msg_ready;
 
-  `ASSERT(EntropyReadyLatched_A, $rose(entropy_ready) |=> !entropy_ready)
+    // Enable unsupported mode & strength combination
+    assign cfg_en_unsupported_modestrength = reg2hw.cfg_shadowed.en_unsupported_modestrength.q;
+
+    `ASSERT(EntropyReadyLatched_A, $rose(entropy_ready) |=> !entropy_ready)
+
+  end else begin : gen_no_entropy_mask
+    assign wait_timer_prescaler =   '0;
+    assign wait_timer_limit     =   '0;
+    assign entropy_refresh_req  = 1'b0;
+    assign entropy_seed_update  = 1'b0;
+    assign entropy_seed_data    =   '0;
+
+    assign entropy_hash_threshold = '0;
+
+    assign entropy_hash_clr     =            1'b0;
+    assign entropy_ready        =            1'b0;
+    assign entropy_mode         = EntropyModeNone;
+    assign entropy_fast_process =            1'b0;
+
+    // msg_mask_en turns on the message LFSR when KMAC is enabled.
+    assign cfg_msg_mask = 1'b0;
+    assign msg_mask_en  = 1'b0;
+
+    // Enable unsupported mode & strength combination
+    assign cfg_en_unsupported_modestrength = 1'b0;
+  end
 
   // Idle control (registered output)
   // The logic checks idle of SHA3 engine, MSG_FIFO, KMAC_CORE, KEYMGR interface
@@ -578,7 +618,12 @@ module kmac
   `ASSERT(ErrProcessedLatched_A, $rose(err_processed) |=> !err_processed)
 
   // App mode, strength, kmac_en
-  assign reg_kmac_en         = reg2hw.cfg_shadowed.kmac_en.q;
+  if (EnFullKmac) begin : gen_reg_kmac_en
+    assign reg_kmac_en = reg2hw.cfg_shadowed.kmac_en.q;
+  end else begin : gen_no_reg_kmac_en
+    assign reg_kmac_en = 1'b0;
+  end
+
   assign reg_sha3_mode       = sha3_pkg::sha3_mode_e'(reg2hw.cfg_shadowed.mode.q);
   assign reg_keccak_strength = sha3_pkg::keccak_strength_e'(reg2hw.cfg_shadowed.kstrength.q);
 
@@ -791,20 +836,35 @@ module kmac
       end
 
       KmacPrefix: begin
-        // Wait until SHA3 processes one block
-        if (sha3_block_processed) begin
-          kmac_st_d = (app_kmac_en) ? KmacKeyBlock : KmacMsgFeed ;
-        end else begin
-          kmac_st_d = KmacPrefix;
+        if (EnFullKmac) begin : gen_kmac_prefix_state
+          // Wait until SHA3 processes one block
+          if (sha3_block_processed) begin
+            kmac_st_d = app_kmac_en ? KmacKeyBlock : KmacMsgFeed;
+          end else begin
+            kmac_st_d = KmacPrefix;
+          end
+        end else begin : gen_no_kmac_prefix_state
+          // Wait until SHA3 processes one block
+          if (sha3_block_processed) begin
+            kmac_st_d = KmacMsgFeed;
+          end else begin
+            kmac_st_d = KmacPrefix;
+          end
         end
       end
 
       KmacKeyBlock: begin
-        entropy_in_keyblock = 1'b 1;
-        if (sha3_block_processed) begin
-          kmac_st_d = KmacMsgFeed;
-        end else begin
-          kmac_st_d = KmacKeyBlock;
+        if (EnFullKmac) begin : gen_kmac_key_block_state
+          entropy_in_keyblock = 1'b 1;
+          if (sha3_block_processed) begin
+            kmac_st_d = KmacMsgFeed;
+          end else begin
+            kmac_st_d = KmacKeyBlock;
+          end
+        end else begin : gen_no_kmac_key_block_state
+          // If KMAC is stripped down, this state should never be entered.
+          kmac_st_d = KmacTerminalError;
+          kmac_state_error = 1'b 1;
         end
       end
 
@@ -858,48 +918,73 @@ module kmac
   // Instances //
   ///////////////
 
-  // KMAC core
-  kmac_core #(
-    .EnMasking (EnMasking)
-  ) u_kmac_core (
-    .clk_i,
-    .rst_ni,
+  if (EnFullKmac == 1) begin : gen_kmac_core
+    // KMAC core
+    kmac_core #(
+      .EnMasking (EnMasking)
+    ) u_kmac_core (
+      .clk_i,
+      .rst_ni,
 
-    // from Msg FIFO
-    .fifo_valid_i (msgfifo_valid),
-    .fifo_data_i  (msgfifo_data ),
-    .fifo_strb_i  (msgfifo_strb ),
-    .fifo_ready_o (msgfifo_ready),
+      // from Msg FIFO
+      .fifo_valid_i (msgfifo_valid),
+      .fifo_data_i  (msgfifo_data ),
+      .fifo_strb_i  (msgfifo_strb ),
+      .fifo_ready_o (msgfifo_ready),
 
-    // to SHA3 core
-    .msg_valid_o  (msg_valid),
-    .msg_data_o   (msg_data ),
-    .msg_strb_o   (msg_strb ),
-    .msg_ready_i  (msg_ready),
+      // to SHA3 core
+      .msg_valid_o  (msg_valid),
+      .msg_data_o   (msg_data ),
+      .msg_strb_o   (msg_strb ),
+      .msg_ready_i  (msg_ready),
 
-    // Configurations
-    .kmac_en_i  (app_kmac_en),
-    .mode_i     (app_sha3_mode),
-    .strength_i (app_keccak_strength),
+      // Configurations
+      .kmac_en_i  (app_kmac_en),
+      .mode_i     (app_sha3_mode),
+      .strength_i (app_keccak_strength),
 
-    // Secret key interface
-    .key_data_i  (key_data),
-    .key_len_i   (key_len),
-    .key_valid_i (key_valid),
+      // Secret key interface
+      .key_data_i  (key_data),
+      .key_len_i   (key_len),
+      .key_valid_i (key_valid),
 
-    // Controls
-    .start_i   (sha3_start          ),
-    .process_i (msgfifo2kmac_process),
-    .done_i    (sha3_done           ),
-    .process_o (kmac2sha3_process   ),
+      // Controls
+      .start_i   (sha3_start          ),
+      .process_i (msgfifo2kmac_process),
+      .done_i    (sha3_done           ),
+      .process_o (kmac2sha3_process   ),
 
-    // LC escalation
-    .lc_escalate_en_i (lc_escalate_en[1]),
+      // LC escalation
+      .lc_escalate_en_i (lc_escalate_en[1]),
 
-    // Error detection
-    .sparse_fsm_error_o (kmac_core_state_error),
-    .key_index_error_o  (key_index_error)
-  );
+      // Error detection
+      .sparse_fsm_error_o (kmac_core_state_error),
+      .key_index_error_o  (key_index_error)
+    );
+
+  end else begin : gen_no_kmac_core
+    // When KMAC is disabled, the msgfifo and control signals are simply fed through.
+    assign msgfifo_ready         = msg_ready;
+    assign msg_valid             = msgfifo_valid;
+    assign msg_data              = msgfifo_data;
+    assign msg_strb              = msgfifo_strb;
+    assign kmac2sha3_process     = msgfifo2kmac_process;
+    // Since kmac_core is not used, it can't produce any errors.
+    assign kmac_core_state_error = 1'b0;
+    assign key_index_error       = 1'b0;
+
+    // Unused signals.
+    logic unused_key_data, unused_lc_escalate_en1, unused_app_kmac_en;
+
+    if (EnMasking) begin : gen_unused_key_data_masked
+      assign unused_key_data = ^{key_data[0], key_data[1], key_len, key_valid};
+    end else begin : gen_unused_key_data_unmasked
+      assign unused_key_data = ^{key_data[0], key_len, key_valid};
+    end
+
+    assign unused_lc_escalate_en1 = ^lc_escalate_en[1];
+    assign unused_app_kmac_en = app_kmac_en;
+  end
 
   // SHA3 hashing engine
 
@@ -922,10 +1007,12 @@ module kmac
     end : g_msg_data_mask
   end else begin : g_no_msg_mask
     assign msg_data_masked[0] = msg_data[0];
+    assign msg_mask = '0;
 
     logic unused_msgmask;
     assign unused_msgmask = ^{msg_mask, cfg_msg_mask, msg_mask_en};
   end
+
   sha3 #(
     .EnMasking (EnMasking)
   ) u_sha3 (
@@ -1044,12 +1131,21 @@ module kmac
   logic unused_tlram_addr;
   assign unused_tlram_addr = &{1'b0, tlram_addr};
 
+  // Keys from key manager are only used for the full KMAC.
+  logic keymgr_key_en;
+  if (EnFullKmac == 1) begin : gen_keymgr_key_en
+    assign keymgr_key_en = reg2hw.cfg_shadowed.sideload.q;
+  end else begin : gen_no_keymgr_key_en
+    assign keymgr_key_en = 1'b0;
+  end
+
   // Application interface Mux/Demux
   kmac_app #(
     .EnMasking(EnMasking),
     .SecIdleAcceptSwMsg(SecIdleAcceptSwMsg),
     .NumAppIntf(NumAppIntf),
-    .AppCfg(AppCfg)
+    .AppCfg(AppCfg),
+    .EnFullKmac(EnFullKmac)
   ) u_app_intf (
     .clk_i,
     .rst_ni,
@@ -1104,7 +1200,7 @@ module kmac
     .reg_state_o          (reg_state),
 
     // Configuration: Sideloaded Key
-    .keymgr_key_en_i      (reg2hw.cfg_shadowed.sideload.q),
+    .keymgr_key_en_i      (keymgr_key_en),
 
     .absorbed_i (sha3_absorbed), // from SHA3
     .absorbed_o (app_absorbed),  // to SW
@@ -1334,11 +1430,11 @@ module kmac
     assign unused_sha3_rand_update = sha3_rand_update;
     assign unused_sha3_rand_consumed = sha3_rand_consumed;
 
-    logic        unused_seed_update;
-    logic [31:0] unused_seed_data;
-    logic [31:0] unused_refresh_period;
+    logic unused_seed_update;
+    logic unused_seed_data;
+    logic unused_refresh_period;
     logic unused_entropy_refresh_req;
-    assign unused_seed_data = entropy_seed_data;
+    assign unused_seed_data = ^entropy_seed_data;
     assign unused_seed_update = entropy_seed_update;
     assign unused_refresh_period = ^{wait_timer_limit, wait_timer_prescaler};
     assign unused_entropy_refresh_req = entropy_refresh_req;
@@ -1352,11 +1448,17 @@ module kmac
     assign kmac_entropy_state_error = 1'b 0;
     assign kmac_entropy_hash_counter_error  = 1'b 0;
 
-    logic [1:0] unused_entropy_status;
+    logic unused_entropy_status;
     assign unused_entropy_status = entropy_in_keyblock;
 
     // If Masking is off, always entropy configured
     assign entropy_configured = MuBi4True;
+
+    logic unused_edn_clk_rst;
+    assign unused_edn_clk_rst = ^{clk_edn_i, rst_edn_ni};
+
+    logic unused_lc_escalate_en5;
+    assign unused_lc_escalate_en5 = ^lc_escalate_en[5];
   end
 
   // MUBI4 buf
@@ -1395,18 +1497,28 @@ module kmac
   );
 
   logic unused_cfg_shadowed_qe;
-  assign unused_cfg_shadowed_qe = ^{
-    reg2hw.cfg_shadowed.kmac_en.qe                     ,
-    reg2hw.cfg_shadowed.kstrength.qe                   ,
-    reg2hw.cfg_shadowed.mode.qe                        ,
-    reg2hw.cfg_shadowed.msg_endianness.qe              ,
-    reg2hw.cfg_shadowed.state_endianness.qe            ,
-    reg2hw.cfg_shadowed.sideload.qe                    ,
-    reg2hw.cfg_shadowed.entropy_mode.qe                ,
-    reg2hw.cfg_shadowed.entropy_fast_process.qe        ,
-    reg2hw.cfg_shadowed.msg_mask.qe                    ,
-    reg2hw.cfg_shadowed.en_unsupported_modestrength.qe
-    };
+  if (EnFullKmac) begin : gen_unused_full_kmac_reg
+    assign unused_cfg_shadowed_qe = ^{
+      reg2hw.cfg_shadowed.kmac_en.qe                     ,
+      reg2hw.cfg_shadowed.kstrength.qe                   ,
+      reg2hw.cfg_shadowed.mode.qe                        ,
+      reg2hw.cfg_shadowed.msg_endianness.qe              ,
+      reg2hw.cfg_shadowed.state_endianness.qe            ,
+      reg2hw.cfg_shadowed.sideload.qe                    ,
+      reg2hw.cfg_shadowed.entropy_mode.qe                ,
+      reg2hw.cfg_shadowed.entropy_fast_process.qe        ,
+      reg2hw.cfg_shadowed.msg_mask.qe                    ,
+      reg2hw.cfg_shadowed.en_unsupported_modestrength.qe
+      };
+  end else begin : gen_unused_partial_kmac_reg
+    // If KMAC is disabled there are less signals in the cfg_shadowed register.
+    assign unused_cfg_shadowed_qe = ^{
+      reg2hw.cfg_shadowed.kstrength.qe        ,
+      reg2hw.cfg_shadowed.mode.qe             ,
+      reg2hw.cfg_shadowed.msg_endianness.qe   ,
+      reg2hw.cfg_shadowed.state_endianness.qe
+      };
+  end
 
   // Alerts
   assign alert_test = {
@@ -1543,21 +1655,28 @@ module kmac
 
   // redundant counter error
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(SentMsgCountCheck_A, u_sha3.u_pad.u_sentmsg_count,
-                                         alert_tx_o[1])
+                                                  alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(RoundCountCheck_A, u_sha3.u_keccak.u_round_count,
-                                         alert_tx_o[1])
-  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(KeyIndexCountCheck_A, u_kmac_core.u_key_index_count,
-                                         alert_tx_o[1])
+                                                  alert_tx_o[1])
+
+  if (EnFullKmac == 1) begin : gen_assert_key_index_cnt
+    `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(KeyIndexCountCheck_A,
+                                                    gen_kmac_core.u_kmac_core.u_key_index_count,
+                                                    alert_tx_o[1])
+  end
 
   // Sparse FSM state error
-  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(KmacCoreFsmCheck_A, u_kmac_core.u_state_regs, alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(KmacAppFsmCheck_A, u_app_intf.u_state_regs, alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(SHA3FsmCheck_A, u_sha3.u_state_regs, alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(SHA3padFsmCheck_A, u_sha3.u_pad.u_state_regs, alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(KeccackFsmCheck_A, u_sha3.u_keccak.u_state_regs,
-                                       alert_tx_o[1])
+                                                alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(ErrorCheckFsmCheck_A, u_errchk.u_state_regs, alert_tx_o[1])
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(KmacFsmCheck_A, u_state_regs, alert_tx_o[1])
+  if (EnFullKmac == 1) begin : gen_assert_kmac_core_fsm
+    `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(KmacCoreFsmCheck_A, gen_kmac_core.u_kmac_core.u_state_regs,
+                                                  alert_tx_o[1])
+  end
 
   // prim is only instantiated if masking is enabled
   if (EnMasking == 1) begin : g_testassertion
@@ -1589,4 +1708,12 @@ module kmac
 
   // Alert assertions for reg_we onehot check
   `CALIPTRA_ASSERT_PRIM_REG_WE_ONEHOT_ERROR_TRIGGER_ALERT(RegWeOnehotCheck_A, u_reg, alert_tx_o[1])
+
+  // Assertions for the case where EnFullKmac is 0.
+  // In this case KMAC is stripped down to only support SHA3, SHAKE and cSHAKE.
+  `ABR_ASSERT(StrippedKmacMaskingDisabled_A, EnFullKmac == 0 |-> EnMasking == 0)
+  `ABR_ASSUME(StrippedKmacState_M, EnFullKmac == 0 |-> kmac_st inside
+      {KmacIdle, KmacPrefix, KmacMsgFeed, KmacDigest, KmacTerminalError})
+  `ASSUME(StrippedSha3Mode_M, EnFullKmac == 0 |-> app_sha3_mode inside
+      {sha3_pkg::Sha3, sha3_pkg::Shake, sha3_pkg::CShake})
 endmodule

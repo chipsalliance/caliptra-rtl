@@ -240,6 +240,14 @@ package kmac_pkg;
     Prefix: NSPrefixW'({EncodedStringEmpty, EncodedStringKMAC})
   };
 
+  parameter app_config_t AppCfgKeyMgrStripped = '{
+    Mode: AppCShake, // For the stripped KMAC KeyMgr uses cSHAKE operation
+    KeccakStrength: sha3_pkg::L256,
+    PrefixMode: 1'b1,   // Use prefix parameter
+    // {fname: encoded_string("KMAC"), custom_str: encoded_string("")}
+    Prefix: NSPrefixW'({EncodedStringEmpty, EncodedStringKMAC})
+  };
+
   parameter app_config_t AppCfgLcCtrl= '{
     Mode: AppCShake,
     KeccakStrength: sha3_pkg::L128,

@@ -12,6 +12,7 @@ module kmac_app
 #(
   // App specific configs are defined in kmac_pkg
   parameter  bit          EnMasking          = 1'b0,
+  parameter  bit          EnFullKmac         = 1'b1,
   localparam int          Share              = (EnMasking) ? 2 : 1, // derived parameter
   parameter  bit          SecIdleAcceptSwMsg = 1'b0,
   parameter  int unsigned NumAppIntf         = 3,
@@ -218,10 +219,18 @@ module kmac_app
   logic service_rejected_error_set, service_rejected_error_clr;
   logic err_during_sw_d, err_during_sw_q;
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni)                         service_rejected_error <= 1'b 0;
-    else if (service_rejected_error_set) service_rejected_error <= 1'b 1;
-    else if (service_rejected_error_clr) service_rejected_error <= 1'b 0;
+  // The service rejected error only occurs for the full KMAC configuration.
+  if (EnFullKmac) begin : gen_service_rejected_error
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni)                         service_rejected_error <= 1'b 0;
+      else if (service_rejected_error_set) service_rejected_error <= 1'b 1;
+      else if (service_rejected_error_clr) service_rejected_error <= 1'b 0;
+    end
+  end else begin : gen_no_service_rejected_error
+    assign service_rejected_error = 1'b0;
+    logic unused_service_rejected_error_signals;
+    assign unused_service_rejected_error_signals = ^{service_rejected_error_set, 
+                                                     service_rejected_error_clr};
   end
 
   ////////////////////////////
@@ -366,46 +375,68 @@ module kmac_app
       end
 
       StAppCfg: begin
-        if (AppCfg[app_id].Mode == AppKMAC &&
-          mubi4_test_false_strict(entropy_ready_i)) begin
-          // Check if the entropy is not configured but it is needed in
-          // `AppCfg[app_id]` (KMAC mode).
-          //
-          // SW is not properly configured, report and not request Hashing
-          // Return the app with errors
-          st_d = StError;
+        if (EnFullKmac) begin : gen_app_cfg_state_error
+          if (AppCfg[app_id].Mode == AppKMAC &&
+              mubi4_test_false_strict(entropy_ready_i)) begin
+            // Check if the entropy is not configured but it is needed in
+            // `AppCfg[app_id]` (KMAC mode).
+            //
+            // SW is not properly configured, report and not request Hashing
+            // Return the app with errors
+            st_d = StError;
 
-          service_rejected_error_set = 1'b 1;
+            service_rejected_error_set = 1'b 1;
 
-        end else begin
-          // As Cfg is stable now, it sends cmd
-          st_d = StAppMsg;
+          end else begin
+            // As Cfg is stable now, it sends cmd
+            st_d = StAppMsg;
 
-          // App initiates the data
-          cmd_o = CmdStart;
+            // App initiates the data
+            cmd_o = CmdStart;
+          end
+        end else begin : gen_no_app_cfg_state_error
+            // As Cfg is stable now, it sends cmd
+            st_d = StAppMsg;
+
+            // App initiates the data
+            cmd_o = CmdStart;
         end
       end
 
       StAppMsg: begin
         mux_sel = SelApp;
         if (app_i[app_id].valid && app_o[app_id].ready && app_i[app_id].last) begin
-          if (AppCfg[app_id].Mode == AppKMAC) begin
-            st_d = StAppOutLen;
-          end else begin
+
+          // The StAppOutLen transition only exists if the full KMAC is enabled.
+          if (EnFullKmac) begin : gen_app_msg_state_kmac
+            if (AppCfg[app_id].Mode == AppKMAC) begin
+              st_d = StAppOutLen;
+            end else begin
+              st_d = StAppProcess;
+            end
+          // With KMAC disabled the next state is StAppProcess.
+          end else begin : gen_app_msg_state_no_kmac
             st_d = StAppProcess;
           end
+
         end else begin
           st_d = StAppMsg;
         end
       end
 
       StAppOutLen: begin
-        mux_sel = SelOutLen;
+        if (EnFullKmac) begin : gen_app_out_len_state
+          mux_sel = SelOutLen;
 
-        if (kmac_valid_o && kmac_ready_i) begin
-          st_d = StAppProcess;
-        end else begin
-          st_d = StAppOutLen;
+          if (kmac_valid_o && kmac_ready_i) begin
+            st_d = StAppProcess;
+          end else begin
+            st_d = StAppOutLen;
+          end
+        end else begin : gen_no_app_out_len_state
+          // If KMAC is disabled, this state should never be reached.
+          st_d = StTerminalError;
+          sparse_fsm_error_o = 1'b 1;
         end
       end
 
@@ -572,13 +603,19 @@ module kmac_app
       st_d = StTerminalError;
     end
 
-    // Handle errors outside the terminal error state.
-    if (st_d != StTerminalError) begin
+    if (EnFullKmac == 1) begin : gen_invalid_key_used
+      // Handle errors outside the terminal error state.
       // Key from keymgr is used but not valid, so abort into the invalid key error state.
-      if (keymgr_key_used && !keymgr_key_i.valid) begin
+      if ((st_d != StTerminalError) && keymgr_key_used && !keymgr_key_i.valid) begin
         st_d = StKeyMgrErrKeyNotValid;
       end
     end
+
+  end
+
+  if (EnFullKmac != 1) begin : gen_unused_entropy_ready
+    logic unused_entropy_ready;
+    assign unused_entropy_ready = ^entropy_ready_i;
   end
 
   // Track errors occurring in SW mode.
@@ -631,10 +668,17 @@ module kmac_app
       end
 
       SelOutLen: begin
-        // Write encoded output length value
-        kmac_valid_o = 1'b 1; // always write
-        kmac_data_o  = MsgWidth'(encoded_outlen);
-        kmac_mask_o  = MsgWidth'(encoded_outlen_mask);
+        if (EnFullKmac) begin : gen_sel_out_len_state_kmac
+          // Write encoded output length value
+          kmac_valid_o = 1'b 1; // always write
+          kmac_data_o  = MsgWidth'(encoded_outlen);
+          kmac_mask_o  = MsgWidth'(encoded_outlen_mask);
+        end else begin : gen_sel_out_len_state_no_kmac
+          // If KMAC is disabled, this state should never be reached.
+          kmac_valid_o = 1'b 0;
+          kmac_data_o = '0;
+          kmac_mask_o = '0;
+        end
       end
 
       SelSw: begin
@@ -727,16 +771,18 @@ module kmac_app
       reg_state_o = keccak_state_i;
       // If key is sideloaded and KMAC is SW initiated
       // hide the capacity from SW by zeroing (see #17508)
-      if (keymgr_key_en_i) begin
-        for (int i = 0; i < Share; i++) begin
-          unique case (reg_keccak_strength_i)
-            L128: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L128]] = '0;
-            L224: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L224]] = '0;
-            L256: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L256]] = '0;
-            L384: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L384]] = '0;
-            L512: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L512]] = '0;
-            default: reg_state_o[i] = '0;
-          endcase
+      if (EnFullKmac) begin : gen_reg_state_oup_shares
+        if (keymgr_key_en_i) begin
+          for (int i = 0; i < Share; i++) begin
+            unique case (reg_keccak_strength_i)
+              L128: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L128]] = '0;
+              L224: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L224]] = '0;
+              L256: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L256]] = '0;
+              L384: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L384]] = '0;
+              L512: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L512]] = '0;
+              default: reg_state_o[i] = '0;
+            endcase
+          end
         end
       end
     end
@@ -766,11 +812,14 @@ module kmac_app
   // Combine share keys into unpacked array for logic below to assign easily.
   // SEC_CM: KEY.SIDELOAD
   logic [MaxKeyLen-1:0] keymgr_key [Share];
-  if (EnMasking == 1) begin : g_masked_key
+  // If KMAC is disabled, keymgr_key is not used.
+  if (!EnFullKmac) begin : g_key_unused
+    assign keymgr_key = '{default: '0};
+  end else if (EnMasking == 1) begin : g_key_masked
     for (genvar i = 0; i < Share; i++) begin : gen_key_pad
       assign keymgr_key[i] =  {(MaxKeyLen-KeyMgrKeyW)'(0), keymgr_key_i.key[i]};
     end
-  end else begin : g_unmasked_key
+  end else begin : g_key_unmasked
     always_comb begin
       keymgr_key[0] = '0;
       for (int i = 0; i < keymgr_pkg::Shares; i++) begin
@@ -779,54 +828,77 @@ module kmac_app
     end
   end
 
-  // Sideloaded key manage: Keep use sideloaded key for KMAC AppIntf until the
-  // hashing operation is finished.
-  always_comb begin
-    keymgr_key_used = 1'b0;
-    key_len_o  = reg_key_len_i;
-    for (int i = 0 ; i < Share; i++) begin
-      key_data_o[i] = reg_key_data_i[i];
-    end
-    // The key is considered invalid in all cases that are not listed below (which includes idle and
-    // error states).
-    key_valid_o = 1'b0;
-
-    unique case (st)
-      StAppCfg, StAppMsg, StAppOutLen, StAppProcess, StAppWait: begin
-        // Key from keymgr is actually used if the current HW app interface does *keyed* MAC.
-        keymgr_key_used = AppCfg[app_id].Mode == AppKMAC;
-        key_len_o = SideloadedKey;
-        for (int i = 0 ; i < Share; i++) begin
-          key_data_o[i] = keymgr_key[i];
-        end
-        // Key is valid if the current HW app interface does *keyed* MAC and the key provided by
-        // keymgr is valid.
-        key_valid_o = keymgr_key_used && keymgr_key_i.valid;
+  if (EnFullKmac) begin : gen_keymgr_side_load
+    // Sideloaded key manage: Keep use sideloaded key for KMAC AppIntf until the
+    // hashing operation is finished.
+    always_comb begin
+      keymgr_key_used = 1'b0;
+      key_len_o  = reg_key_len_i;
+      for (int i = 0 ; i < Share; i++) begin
+        key_data_o[i] = reg_key_data_i[i];
       end
+      // The key is considered invalid in all cases that are not listed below (which includes idle
+      // and error states).
+      key_valid_o = 1'b0;
 
-      StSw: begin
-        if (keymgr_key_en_i) begin
-          // Key from keymgr is actually used if *keyed* MAC is enabled.
-          keymgr_key_used = kmac_en_o;
+      unique case (st)
+        StAppCfg, StAppMsg, StAppOutLen, StAppProcess, StAppWait: begin
+          // Key from keymgr is actually used if the current HW app interface does *keyed* MAC.
+          keymgr_key_used = AppCfg[app_id].Mode == AppKMAC;
           key_len_o = SideloadedKey;
           for (int i = 0 ; i < Share; i++) begin
             key_data_o[i] = keymgr_key[i];
           end
+          // Key is valid if the current HW app interface does *keyed* MAC and the key provided by
+          // keymgr is valid.
+          key_valid_o = keymgr_key_used && keymgr_key_i.valid;
         end
-        // Key is valid if SW does *keyed* MAC and ...
-        if (kmac_en_o) begin
-          if (!keymgr_key_en_i) begin
-            // ... it uses the key from kmac's CSR, or ...
-            key_valid_o = 1'b1;
-          end else begin
-            // ... it uses the key provided by keymgr and that one is valid.
-            key_valid_o = keymgr_key_i.valid;
+
+        StSw: begin
+          if (keymgr_key_en_i) begin
+            // Key from keymgr is actually used if *keyed* MAC is enabled.
+            keymgr_key_used = kmac_en_o;
+            key_len_o = SideloadedKey;
+            for (int i = 0 ; i < Share; i++) begin
+              key_data_o[i] = keymgr_key[i];
+            end
+          end
+          // Key is valid if SW does *keyed* MAC and ...
+          if (kmac_en_o) begin
+            if (!keymgr_key_en_i) begin
+              // ... it uses the key from kmac's CSR, or ...
+              key_valid_o = 1'b1;
+            end else begin
+              // ... it uses the key provided by keymgr and that one is valid.
+              key_valid_o = keymgr_key_i.valid;
+            end
           end
         end
-      end
 
-      default: ;
-    endcase
+        default: ;
+      endcase
+    end
+  end else begin : gen_no_keymgr_side_load
+    // If KMAC is disabled, the key is not needed.
+    assign keymgr_key_used = 1'b0;
+    assign key_len_o  = reg_key_len_i;
+    always_comb begin
+      for (int i = 0 ; i < Share; i++) begin
+        key_data_o[i] = reg_key_data_i[i];
+      end
+    end
+    assign key_valid_o = 1'b0;
+
+    logic unused_keymgr_key;
+    if (EnMasking) begin : gen_unused_keymgr_key_masked
+      assign unused_keymgr_key = ^{keymgr_key_i.key[0], keymgr_key_i.key[1],
+                                   keymgr_key_i.valid, keymgr_key_en_i,
+                                   keymgr_key[0], keymgr_key[1]};
+    end else begin : gen_unused_keymgr_key_unmasked
+      assign unused_keymgr_key = ^{keymgr_key_i.key[0], keymgr_key_i.key[1],
+                                   keymgr_key_i.valid, keymgr_key_en_i,
+                                   keymgr_key[0]};
+    end
   end
 
   // Prefix Demux
@@ -863,24 +935,40 @@ module kmac_app
   //  by default, it uses reg cfg. When app intf reqs come, it uses AppCfg.
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      kmac_en_o         <= 1'b 0;
       sha3_mode_o       <= sha3_pkg::Sha3;
       keccak_strength_o <= sha3_pkg::L256;
     end else if (clr_appid) begin
       // As App completed, latch reg value
-      kmac_en_o         <= reg_kmac_en_i;
       sha3_mode_o       <= reg_sha3_mode_i;
       keccak_strength_o <= reg_keccak_strength_i;
     end else if (set_appid) begin
-      kmac_en_o         <= AppCfg[arb_idx].Mode == AppKMAC ? 1'b 1 : 1'b 0;
       sha3_mode_o       <= AppCfg[arb_idx].Mode == AppSHA3
                            ? sha3_pkg::Sha3 : sha3_pkg::CShake;
       keccak_strength_o <= AppCfg[arb_idx].KeccakStrength ;
     end else if (st == StIdle) begin
-      kmac_en_o         <= reg_kmac_en_i;
       sha3_mode_o       <= reg_sha3_mode_i;
       keccak_strength_o <= reg_keccak_strength_i;
     end
+  end
+
+  if (EnFullKmac) begin : gen_kmac_en_oup
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+      if (!rst_ni) begin
+        kmac_en_o <= 1'b 0;
+      end else if (clr_appid) begin
+        // As App completed, latch reg value
+        kmac_en_o <= reg_kmac_en_i;
+      end else if (set_appid) begin
+        kmac_en_o <= (AppCfg[arb_idx].Mode == AppKMAC) ? 1'b 1 : 1'b0;
+      end else if (st == StIdle) begin
+        kmac_en_o <= reg_kmac_en_i;
+      end
+    end
+  end else begin : gen_no_kmac_en_oup
+    assign kmac_en_o = 1'b0;
+
+    logic unused_reg_kmac_en;
+    assign unused_reg_kmac_en = reg_kmac_en_i;
   end
 
   // Status
@@ -907,6 +995,10 @@ module kmac_app
   // Issue(#13655): Having a coverage that sideload keylen and CSR keylen are
   // different.
   `COVER(AppIntfUseDifferentSizeKey_C,
-    (st == StAppCfg && kmac_en_o) |-> reg_key_len_i != SideloadedKey)
+      (st == StAppCfg && kmac_en_o) |-> reg_key_len_i != SideloadedKey)
+
+  // Assertions for the case where EnFullKmac is 0.
+  `ASSUME(StrippedKMACAppCfgModeAllowed_M, EnFullKmac == 0 |->
+      AppCfg[arb_idx].Mode inside {AppCShake, AppSHA3})
 
 endmodule
