@@ -1,0 +1,649 @@
+addrmap sha3_reg {
+    desc="address maps for SHAKE accelerator register space";
+    addressing = compact;
+    lsb0 = true; // lsb0 property is implicit/default. See docs for
+                 // SystemRDL 2.0 sections 9.1 and 13.4
+
+    default hw = na;
+    default regwidth = 32; // reg property
+    default accesswidth = 32; // reg property
+
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+
+    /* -----------------------
+    * Register definitive definitions
+    * ----------------------- */
+
+    /* ---- SHA3 Component Name ---- */
+    reg {
+        name = "SHA3/SHAKE component name register type definition";
+        desc = "Two 32-bit read-only registers representing the name
+                of SHA3/SHAKE component.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Name field";} NAME[32];
+
+    } SHA3_NAME[2] @0x00000000;
+
+
+
+    /* ---- SHA3 Component Version ---- */
+    reg {
+        name = "SHA3/SHAKE component version register type definition";
+        desc = "Two 32-bit read-only registers representing the version
+                of SHA3/SHAKE component.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Version field";} VERSION[32];
+        
+    } SHA3_VERSION[2] @0x00000008;
+
+
+    reg {
+        name = "SHA3/SHAKE component Alert Test Register";
+        field {
+            sw = w;
+            reset = 0x0;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } RECOV_OPERATION_ERR[0:0];
+        field {
+            sw = w;
+            reset = 0x0;
+            desc = "Write 1 to trigger one alert event of this kind.";
+        } FATAL_FAULT_ERR[1:1];
+    } ALERT_TEST @ 0x1C;
+
+    reg {
+        name = "SHA3/SHAKE component Write enable for CFG_SHADOWED register";
+        field {
+            sw = r;
+            hw = rw;
+            desc = "Configuration enable.";
+            reset = 0x1;
+        } en[0:0];
+    } CFG_REGWEN @0x20;
+    
+    reg {
+        name = "SHA3/SHAKE component Configuration register";
+        //Since this is a shadowed register which is not supported by systemrdl, we use external implementation
+        //TBD, do we need shadowed reg？ There is no safety and security requirement.
+        desc = "This register is shadowed and protected by CFG_REGWEN.en
+        1. Two subsequent write operation are required to change its content,
+        If the two write operations try to set a different value, a recoverable alert is triggered (See Status Register).
+        2. A read operation clears the internal phase tracking.
+        3. If storage error(~staged_reg!=committed_reg) happen, it will trigger fatal fault alert";
+        default hw = r; 
+
+
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "Hashing Strength, Protected by CFG_REGWEN.en
+            bit field to select the security strength of SHA3 hashing engine. 
+            If mode field is set to SHAKE, only 128 and 256 strength can be selected. 
+            Other value will result error when hashing starts.";
+            enum kstrength_type{
+                // | Value | Name | Description |
+                // |-------|------|-------------|
+                // | 0x0   | L128 | 128-bit strength |
+                // | 0x1   | L224 | 224-bit strength |
+                // | 0x2   | L256 | 256-bit strength |
+                // | 0x3   | L384 | 384-bit strength |
+                // | 0x4   | L512 | 512-bit strength |
+                L128 = 0x0;
+                L224 = 0x1;
+                L256 = 0x2;
+                L384 = 0x3;
+                L512 = 0x4;
+            };
+        } kstrength[3:1];
+
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "Keccak hashing mode, Protected by CFG_REGWEN.en
+            This module supports SHA3 main hashing algorithm and the part of its derived functions, 
+            SHAKE with limitations. This field is to select the mode.";
+            enum sha3_mode_type{
+                // | Value | Name | Description |
+                // |-------|------|-------------|
+                // | 0x0   | SHA3 | Standard SHA3 hashing |
+                // | 0x1   | SHAKE | SHAKE hashing mode |
+                SHA3 = 0x0;
+                SHAKE = 0x1;
+            };
+        } mode[5:4];
+
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "Protected by CFG_REGWEN.en
+            If 1 then each individual multi-byte value, regardless of its alignment, 
+            written to MSG_FIFO will be added to the message in big-endian byte order. 
+            If 0, each value will be added to the message in little-endian byte order. 
+            A message written to MSG_FIFO one byte at a time will not be affected by this setting. 
+            From a hardware perspective byte swaps are performed on a TL-UL word granularity.";
+            enum msg_endian_type{
+                LITTLE_ENDIAN = 0x0;
+                BIG_ENDIAN = 0x1;
+            };
+        } msg_endianness[8:8];
+
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "Protected by CFG_REGWEN.en
+            If 1 then each individual multi-byte value, regardless of its alignment, 
+            written to MSG_FIFO will be added to the message in big-endian byte order. 
+            If 0, each value will be added to the message in little-endian byte order. 
+            A message written to MSG_FIFO one byte at a time will not be affected by this setting. 
+            From a hardware perspective byte swaps are performed on a TL-UL word granularity.";
+            enum state_endian_type {
+                LITTLE_ENDIAN = 0x0;
+                BIG_ENDIAN = 0x1;
+            };
+        } state_endianness[9:9];
+
+    } external CFG_SHADOWED @ 0x24;
+
+    reg {
+        name = "SHA3/SHAKE component command register";
+        default hw = r; 
+        field {
+            sw = rw;
+            reset = 0x0;
+            onwrite = woclr;
+            //onread = r0;
+            //hw force return 0 for sw read
+            desc = "Issues a command to the SHA3 IP. The command is sparse encoded. 
+            To prevent sw from writing multiple commands at once, the field is defined as enum.
+            Always return 0 for SW reads.
+            START: Writing 6'b011101 or dec 29 into this field when SHA3/SHAKE is in idle, SHA3/SHAKE begins its operation and start absorbing.
+            PROCESS: Writing 6'b101110 or dec 46 into this field when SHA3/SHAKE began its operation and received the entire message, it computes the digest or signing.
+            RUN: The run field is used in the sponge squeezing stage. 
+            It triggers the keccak round logic to run full 24 rounds. 
+            This is optional and used when software needs more digest bits than the keccak rate. 
+            It only affects when the SHA3/SHAKE operation is completed.
+            DONE: Writing 6'b010110 or dec 22 into this field when SHA3 squeezing is completed, 
+            SHA3/SHAKE hashing engine clears internal variables and goes back to Idle state for next command.";
+            enum cmd_type{
+                //| Value (dec) | Value (hex) | Value (bin) | Name | Description |
+                //|------------|-------------|-------------|------|-------------|
+                //| 29 | 0x1D | 6'b011101 | START | Start SHA3/SHAKE operation and begin absorbing |
+                //| 46 | 0x2E | 6'b101110 | PROCESS | Process the entire message and compute digest |
+                //| 49 | 0x31 | 6'b110001 | RUN | Run Keccak round logic for squeezing stage |
+                //| 22 | 0x16 | 6'b010110 | DONE | Clear internal state and return to idle |
+                START = 0x1D;
+                PROCESS = 0x2E;
+                RUN = 0x31;
+                DONE = 0x16;
+            } ;
+        } cmd[5:0];
+
+        field {
+            sw = rw;
+            reset = 0x0;
+            onwrite = woclr;
+            //onread = r0;
+            //hw force return 0 for sw read
+            desc = "When error occurs and one of the state machine stays at Error handling state, 
+            SW may process the error based on ERR_CODE, then let FSM back to the reset state.
+            Always return 0 for SW reads.";
+        } err_processed[10:10];
+    } CMD @ 0x28;
+
+    reg {
+        default hw = w; 
+        name = "SHA3/SHAKE component status register";
+        field {
+            sw = r;
+            reset = 0x1;
+            desc = "If 1, SHA3 hashing engine is in idle state.";
+        } sha3_idle[0:0];
+        
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "If 1, SHA3 is receiving message stream and processing it";
+        } sha3_absorb[1:1];
+
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "If 1, SHA3 completes sponge absorbing stage. In this stage, SW can manually run the hashing engine.";
+        } sha3_squeeze[2:2];
+
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "Count of occupied entries in the message FIFO.";
+        } fifo_depth[12:8];
+
+        field {
+            sw = r;
+            reset = 0x1;
+            desc = "Message FIFO Empty indicator.
+            The FIFO's Pass parameter is set to 1'b 1. So, by default, if the SHA engine is ready, the write data to FIFO just passes through.
+            In this case, fifo_depth remains 0. fifo_empty, however, lowers the value to 0 for a cycle, then goes back to the empty state, 1.
+            See the Message FIFO section in the spec for the reason.";
+        } fifo_empty[14:14];
+
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "Message FIFO Full indicator.";
+        } fifo_full[15:15];
+        
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "No fatal fault has occurred inside the SHA3 unit (0). 
+            A fatal fault has occured and the SHA3 unit needs to be reset (1), 
+            Examples for such faults include i) TL-UL bus integrity fault 
+            ii) storage errors in the shadow registers 
+            iii) errors in the message, round, or key counter 
+            iv) any internal FSM entering an invalid state.";
+        } ALERT_FATAL_FAULT[16:16];
+        
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "An update error has not occurred (0) or has occured (1) in the shadowed Control Register. 
+            SHA3 operation needs to be restarted by re-writing the Control Register.";
+        } ALERT_RECOV_CTRL_UPDATE_ERR[17:17];
+
+    } STATUS @ 0x2C;
+
+    reg {
+        default hw = w; 
+        name = "SHA3/SHAKE component error code register";
+        desc = "SHA3 Error Code";
+        field {
+            desc = "If the error_internal_intr_r.error0_sts interrupt occurs, this register has information on the error cause.
+            Bits 31:24 contain the error code for the encoding, and bits 23:0 contain additional debug information.
+            This register does *not* get cleared when the error_internal_intr_r.error0_sts interrupt state gets cleared.";
+            sw = r;
+            reset = 0x0;
+            enum err_code_type{
+                // | Value | Name | Description |
+                // |-------|------|-------------|
+                // | 0x00  | ErrNone | No error |
+                // | 0x02  | ERR_SW_PUSHED_MSGFIFO | Software pushed message to FIFO incorrectly |
+                // | 0x06  | ErrUnexpectedModeStrength | Unexpected mode/strength combination |
+                // | 0x07  | ERR_INCORRECT_FUNCTION_NAME | Incorrect function name |
+                // | 0x08  | ERR_SW_CMD_SEQUENCE | Incorrect command sequence |
+                // | 0xC1  | ERR_FATAL_ERROR | Fatal error occurred |
+                ErrNone = 8'h00;
+   
+                // ErrSwPushMsgFifo: Sw writes data into Msg FIFO abruptly.
+                // This error occurs in below scenario:
+                //   - Sw does not send "Start" command to SHA3 then writes data into
+                //     Msg FIFO
+                //   - Sw writes data into Msg FIFO when KeyMgr is in operation
+                ERR_SW_PUSHED_MSGFIFO = 8'h02;
+
+                // Err_Unexpected_ModeStrength
+                ErrUnexpectedModeStrength = 8'h06;
+
+                // ErrIncorrectFunctionName "SHA3"
+                ERR_INCORRECT_FUNCTION_NAME = 8'h07;
+
+                // ErrSwCmdSequence
+                ERR_SW_CMD_SEQUENCE = 8'h08;
+
+                // Error due to lc_escalation_en_i or fatal fault
+                ERR_FATAL_ERROR = 8'hC1;
+
+            };
+        } ERR_CODE[31:0];
+    } ERR_CODE @ 0xD0;
+
+    
+    mem {
+        name = "SHA3/SHAKE component Keccak State memory";
+        sw = r;
+        mementries = 0x80;
+        memwidth = 0x20;
+        desc = "Keccak State (1600 bit) memory.
+        The software can get the processed digest by reading this memory
+        region. Unlike MSG_FIFO, STATE memory space sees the addr[9:0].
+        If Masking feature is enabled, the software reads two shares from
+        this memory space.
+        0x200 - 0x2C7: State share
+        for Keccak State access:
+        1. Output length <= rate length, sha3_done will be raised or software can poll STATUS.squeeze become 1.
+        2. Output length > rate length, after software read 1st keccak state, software should issue run cmd to trigger keccak round logic to run full 24 rounds.
+        And then software should check STATUS.squeeze register field for the readiness of STATE value(SHA3 FSM become MANUAL_RUN before keccak state complete).";
+    } external STATE @ 0x200;
+
+    mem {
+        name = "SHA3/SHAKE component Message FIFO";
+        sw = w;
+        mementries = 0x100;
+        memwidth = 0x20;
+        desc = "Message FIFO. window size is 1024 bytes.
+        Any write operation to this window will be appended to MSG_FIFO. SW can
+        simply write bytes/words to any address within this address range.
+        Ordering and packing of the incoming bytes/words are handled
+        internally. Therefore, the least significant 10 bits of the address
+        are ignored.";
+    } external MSG_FIFO @ 0xC00;
+
+
+
+    /* ---- Global Interrupt Enable ---- */
+    reg global_intr_en_t {
+        name = "Per-Type Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event type that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Global enablement (for interrupts of the event types defined for this module)
+        field {desc = "Global enable bit for all events of type 'Error'";       } error_en = 1'b0;
+        field {desc = "Global enable bit for all events of type 'Notification'";} notif_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Enable ---- */
+    reg error_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Specific enables for the events defined in this
+        // event type in the instantiating peripheral.
+        // TODO add error events
+        field {desc = "Enable bit for Event 0. 
+                        If enabled, interrupt will be asserted 
+                        if there is a SHAKE configuration error.";} error0_en = 1'b0;
+        field {desc = "Enable bit for Event 1";} error1_en = 1'b0;
+        field {desc = "Enable bit for Event 2";} error2_en = 1'b0;
+        field {desc = "Enable bit for Event 3";} error3_en = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Enable ---- */
+    reg notif_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        // Specific enables for the events defined in this
+        // event type in the instantiating peripheral.
+        field {desc = "Enable bit for Command Done Interrupt.
+                        Interrupt is asserted when there is valid digest to be read.";} notif_cmd_done_en = 1'b0;
+        field {desc = "Enable bit for MSG FIFO Empty Interrupt.
+                        Interrupt is asserted when MSG FIFO Is Empty.";} notif_msg_fifo_empty_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Status ---- */
+    reg error_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.
+                SHA3 error occurred. ERR_CODE register shows the details";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default sw = rw;
+        default woclr = true;
+        default level intr;
+
+        field {desc = "Interrupt Event 0 status bit; Used to indicate SHA3 error.";} error0_sts = 1'b0;
+        field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
+        field {desc = "Interrupt Event 2 status bit";} error2_sts = 1'b0;
+        field {desc = "Interrupt Event 3 status bit";} error3_sts = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Status ---- */
+    reg notif_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default level intr;
+
+        field {desc = "SHA3 cmd_done indicate 
+            1. SHA3 absorbing has been completed, 1st rate of digest is ready.";
+                sw = rw;
+                onwrite = woclr;
+        } notif_cmd_done_sts = 1'b0;
+        field {desc = "MSG_FIFO Empty Interrupt status bit.
+            This interrupt is raised only if the message FIFO is actually writable by software, i.e., if all of the following conditions are met:
+            i) The SHA3 block is in the Absorb state.
+            ii) Software has not yet written the Process command to finish the absorption process.
+            For the interrupt to be raised, the message FIFO must also have been full previously.
+            Otherwise, the hardware empties the FIFO faster than software can fill it 
+            and there is no point in interrupting the software to inform it about the message FIFO being empty.";
+               sw = r;
+        } notif_msg_fifo_empty_sts = 1'b0;
+    };
+
+    /* ---- Aggregated Interrupt Status ---- */
+    reg global_intr_t {
+        name = "Interrupt Status Aggregation Register type definition";
+        desc = "Single bit indicating occurrence of any interrupt event
+                of a given type. E.g. Notifications and Errors may drive
+                to two separate interrupt registers. There may be
+                multiple sources of Notifications or Errors that are
+                aggregated into a single interrupt pin for that
+                respective type. That pin feeds through this register
+                in order to apply a global enablement of that interrupt
+                event type.
+                Nonsticky assertion.";
+
+        default hw = w;
+        default sw = r;
+        default nonsticky intr;
+
+        field {desc = "Interrupt Event Aggregation status bit";} agg_sts = 1'b0;
+    };
+
+    /* ---- Error Interrupt Trigger ---- */
+    reg error_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        // Instantiate triggers bit-by-bit.
+        field {desc = "Interrupt Trigger 0 bit";} error0_trig = 1'b0;
+        field {desc = "Interrupt Trigger 1 bit";} error1_trig = 1'b0;
+        field {desc = "Interrupt Trigger 2 bit";} error2_trig = 1'b0;
+        field {desc = "Interrupt Trigger 3 bit";} error3_trig = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Trigger ---- */
+    reg notif_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0. The pulse on the
+                trigger register bit results in the corresponding interrupt
+                status bit being set to 1.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        // Instantiate triggers bit-by-bit.
+        field {desc = "Interrupt Trigger 0 bit";} notif_cmd_done_trig = 1'b0;
+        field {desc = "MSG_FIFO Empty Interrupt Trigger 0 bit";} notif_msg_fifo_empty_trig = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter Incrementor ---- */
+    reg intr_count_incr_t {
+        name = "Interrupt Event Count Incrementor";
+        desc = "Trigger the event counter to increment based on observing
+                the rising edge of an interrupt event input from the
+                Hardware. The same input signal that causes an interrupt
+                event to be set (sticky) also causes this signal to pulse
+                for 1 clock cycle, resulting in the event counter
+                incrementing by 1 for every interrupt event.
+                This is implemented as a down-counter (1-bit) that will
+                decrement immediately on being set - resulting in a pulse";
+
+        default hw = w;
+        default sw = r; // Has to have some access.... ideally SW wouldn't even see this
+        default hwset = true;
+        default decrvalue = 1;
+        default counter;
+
+        field {desc = "Pulse mirrors interrupt event occurrence";} pulse = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter ---- */
+    reg intr_count_t {
+        name = "Interrupt Event Counter";
+        desc = "Provides statistics about the number of events that have
+                occurred.
+                Will not overflow ('incrsaturate').";
+
+        default sw = rw;
+        default hw = na;
+        default incrvalue = 1;
+        default incrsaturate = true;
+        default counter;
+
+        field {desc = "Count field";} cnt[32] = 32'h0;
+    };
+
+
+    /* -----------------------
+     * Register File definitive definition
+     * ----------------------- */
+
+    // Notifications are non-error events that occur during normal operation of the module.
+    // E.g. a completion of a job may produce a notification.
+    // Error and notification events are separated into separate status/trigger registers
+    // to allow effective priority allocation by software
+    regfile intr_block_t {
+        name = "Interrupt Register Block";
+        desc = "Set of registers to implement interrupt functionality";
+
+        /* ------------------------------------------------- Registers ------------------------------------------------- */
+        // First 9 registers are static and always defined                                                               //
+        global_intr_en_t  global_intr_en_r;      /* 1-bit per event type */                                              //
+        error_intr_en_t   error_intr_en_r;       /* 1-bit per error */                                                   //
+        notif_intr_en_t   notif_intr_en_r;       /* 1-bit per notification */                                            //
+        global_intr_t     error_global_intr_r;   /* 1-bit aggregating all error interrupts with global enable */         //
+        global_intr_t     notif_global_intr_r;   /* 1-bit aggregating all notification interrupts with global enable */  //
+        error_intr_t      error_internal_intr_r; /* Error pending, SW write 1 to clear */                                //
+        notif_intr_t      notif_internal_intr_r; /* Notification pending, SW write 1 to clear */                         //
+        error_intr_trig_t error_intr_trig_r;     /* SW sets error bit for interrupt testing */                           //
+        notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
+                                                                                                                         //
+        // Align this set of registers; number of counters is based on peripheral event requirements                     //
+        intr_count_t      error0_intr_count_r @0x100;  /* Per error */                                                   //
+        intr_count_t      error1_intr_count_r;         /* Per error */                                                   //
+        intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
+        intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
+        intr_count_t      notif_cmd_done_intr_count_r @0x180;   /* Per notification */                                   //
+                                                                                                                         //
+        // These registers should be treated by SW as reserved, and ignored.                                             //
+        // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
+        // to be implemented (requiring 2*32 32-bit registers starting at                                                //
+        // offset 0x100), and still allowing the entire regfile to fit                                                   //
+        // inside a 1024-byte space.                                                                                     //
+        intr_count_incr_t error0_intr_count_incr_r @0x200;             /* Per error count incrementor pulse */           //
+        intr_count_incr_t error1_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
+        intr_count_incr_t error2_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
+        intr_count_incr_t error3_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
+        intr_count_incr_t notif_cmd_done_intr_count_incr_r;            /* Per notification count incrementor pulse */    //
+        /* ------------------------------------------------------------------------------------------------------------- */
+
+        /* ---- Reset assignment for Error Events ---- */
+        error_internal_intr_r.error0_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.error1_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.error2_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.error3_sts -> resetsignal = error_reset_b;
+        error0_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        error1_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        error2_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        error3_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        // TODO: Use this same reset for the error incrementor pulse too?
+
+        /* ---- Interrupt Event Dynamic Assignments ---- */
+        error_internal_intr_r.error0_sts -> enable = error_intr_en_r.error0_en;
+        error_internal_intr_r.error1_sts -> enable = error_intr_en_r.error1_en;
+        error_internal_intr_r.error2_sts -> enable = error_intr_en_r.error2_en;
+        error_internal_intr_r.error3_sts -> enable = error_intr_en_r.error3_en;
+        notif_internal_intr_r.notif_cmd_done_sts -> enable = notif_intr_en_r.notif_cmd_done_en;
+        notif_internal_intr_r.notif_msg_fifo_empty_sts -> enable = notif_intr_en_r.notif_msg_fifo_empty_en;
+
+        error_internal_intr_r.error0_sts -> next   = error_intr_trig_r.error0_trig;
+        error_internal_intr_r.error1_sts -> next   = error_intr_trig_r.error1_trig;
+        error_internal_intr_r.error2_sts -> next   = error_intr_trig_r.error2_trig;
+        error_internal_intr_r.error3_sts -> next   = error_intr_trig_r.error3_trig;
+        notif_internal_intr_r.notif_cmd_done_sts -> next   = notif_intr_trig_r.notif_cmd_done_trig;
+        notif_internal_intr_r.notif_msg_fifo_empty_sts -> next = notif_intr_trig_r.notif_msg_fifo_empty_trig;
+
+        // NOTE: hwset for events is implicitly defined as module input
+
+        /* ---- Global Interrupt Dynamic Assignments ---- */
+        error_global_intr_r.agg_sts -> enable = global_intr_en_r.error_en;
+        notif_global_intr_r.agg_sts -> enable = global_intr_en_r.notif_en;
+
+        error_global_intr_r.agg_sts -> next = error_internal_intr_r -> intr;
+        notif_global_intr_r.agg_sts -> next = notif_internal_intr_r -> intr;
+
+        /* ---- Event Statistics Tracker Assignments ---- */
+        // NOTE: This method relies upon a counter that is set using the same events that trigger an interrupt,
+        // then immediately self-clearing, which results in a pulse. Must be configured to be sensitive to
+        // the interrupt trigger events for each event. The output pulse is then used to increment the ACTUAL counter
+        error0_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error0_sts -> hwset; // Capture both firmware and hardware triggered events
+        error0_intr_count_incr_r.pulse -> next = error_internal_intr_r.error0_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        error0_intr_count_incr_r.pulse -> we = error_internal_intr_r.error0_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error0_intr_count_incr_r.pulse -> decr = error0_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error0_intr_count_r.cnt        -> incr = error0_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error1_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error1_sts -> hwset; // Capture both firmware and hardware triggered events
+        error1_intr_count_incr_r.pulse -> next = error_internal_intr_r.error1_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        error1_intr_count_incr_r.pulse -> we = error_internal_intr_r.error1_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error1_intr_count_incr_r.pulse -> decr = error1_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error1_intr_count_r.cnt        -> incr = error1_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error2_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error2_sts -> hwset; // Capture both firmware and hardware triggered events
+        error2_intr_count_incr_r.pulse -> next = error_internal_intr_r.error2_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        error2_intr_count_incr_r.pulse -> we = error_internal_intr_r.error2_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error2_intr_count_incr_r.pulse -> decr = error2_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error2_intr_count_r.cnt        -> incr = error2_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        error3_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error3_sts -> hwset; // Capture both firmware and hardware triggered events
+        error3_intr_count_incr_r.pulse -> next = error_internal_intr_r.error3_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        error3_intr_count_incr_r.pulse -> we = error_internal_intr_r.error3_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        error3_intr_count_incr_r.pulse -> decr = error3_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        error3_intr_count_r.cnt        -> incr = error3_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+        notif_cmd_done_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_cmd_done_sts -> hwset; // Capture both firmware and hardware triggered events
+        notif_cmd_done_intr_count_incr_r.pulse -> next = notif_internal_intr_r.notif_cmd_done_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        notif_cmd_done_intr_count_incr_r.pulse -> we = notif_internal_intr_r.notif_cmd_done_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        notif_cmd_done_intr_count_incr_r.pulse -> decr = notif_cmd_done_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        notif_cmd_done_intr_count_r.cnt        -> incr = notif_cmd_done_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+
+    };
+
+    /* -----------------------
+     * Register File instance
+     * ----------------------- */
+    intr_block_t intr_block_rf @0x400;
+    
+};
