@@ -96,6 +96,7 @@ module axi_dma_reg (
             logic error_sha_lock_intr_count_r;
             logic error_fifo_oflow_intr_count_r;
             logic error_fifo_uflow_intr_count_r;
+            logic error_aes_cif_intr_count_r;
             logic notif_txn_done_intr_count_r;
             logic notif_fifo_empty_intr_count_r;
             logic notif_fifo_not_empty_intr_count_r;
@@ -108,6 +109,7 @@ module axi_dma_reg (
             logic error_sha_lock_intr_count_incr_r;
             logic error_fifo_oflow_intr_count_incr_r;
             logic error_fifo_uflow_intr_count_incr_r;
+            logic error_aes_cif_intr_count_incr_r;
             logic notif_txn_done_intr_count_incr_r;
             logic notif_fifo_empty_intr_count_incr_r;
             logic notif_fifo_not_empty_intr_count_incr_r;
@@ -151,6 +153,7 @@ module axi_dma_reg (
         decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h910);
         decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h914);
         decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h918);
+        decoded_reg_strb.intr_block_rf.error_aes_cif_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h91c);
         decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h980);
         decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h984);
         decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h988);
@@ -163,11 +166,12 @@ module axi_dma_reg (
         decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10);
         decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha14);
         decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha18);
-        decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha1c);
-        decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha20);
-        decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha24);
-        decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha28);
-        decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha2c);
+        decoded_reg_strb.intr_block_rf.error_aes_cif_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha1c);
+        decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha20);
+        decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha24);
+        decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha28);
+        decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha2c);
+        decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha30);
     end
 
     // Pass down signals to next stage
@@ -190,6 +194,14 @@ module axi_dma_reg (
                 logic load_next;
             } flush;
             struct packed{
+                logic next;
+                logic load_next;
+            } aes_mode_en;
+            struct packed{
+                logic next;
+                logic load_next;
+            } aes_gcm_mode;
+            struct packed{
                 logic [1:0] next;
                 logic load_next;
             } rd_route;
@@ -211,6 +223,10 @@ module axi_dma_reg (
                 logic [1:0] next;
                 logic load_next;
             } axi_dma_fsm_ps;
+            struct packed{
+                logic [3:0] next;
+                logic load_next;
+            } axi_dma_aes_fsm_ps;
         } status0;
         struct packed{
             struct packed{
@@ -288,6 +304,10 @@ module axi_dma_reg (
                     logic next;
                     logic load_next;
                 } error_fifo_uflow_en;
+                struct packed{
+                    logic next;
+                    logic load_next;
+                } error_aes_cif_en;
             } error_intr_en_r;
             struct packed{
                 struct packed{
@@ -352,6 +372,10 @@ module axi_dma_reg (
                     logic next;
                     logic load_next;
                 } error_fifo_uflow_sts;
+                struct packed{
+                    logic next;
+                    logic load_next;
+                } error_aes_cif_sts;
             } error_internal_intr_r;
             struct packed{
                 struct packed{
@@ -404,6 +428,10 @@ module axi_dma_reg (
                     logic next;
                     logic load_next;
                 } error_fifo_uflow_trig;
+                struct packed{
+                    logic next;
+                    logic load_next;
+                } error_aes_cif_trig;
             } error_intr_trig_r;
             struct packed{
                 struct packed{
@@ -483,6 +511,14 @@ module axi_dma_reg (
                     logic incrsaturate;
                 } cnt;
             } error_fifo_uflow_intr_count_r;
+            struct packed{
+                struct packed{
+                    logic [31:0] next;
+                    logic load_next;
+                    logic incrthreshold;
+                    logic incrsaturate;
+                } cnt;
+            } error_aes_cif_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] next;
@@ -586,6 +622,14 @@ module axi_dma_reg (
                     logic decrthreshold;
                     logic underflow;
                 } pulse;
+            } error_aes_cif_intr_count_incr_r;
+            struct packed{
+                struct packed{
+                    logic next;
+                    logic load_next;
+                    logic decrthreshold;
+                    logic underflow;
+                } pulse;
             } notif_txn_done_intr_count_incr_r;
             struct packed{
                 struct packed{
@@ -632,6 +676,12 @@ module axi_dma_reg (
                 logic value;
             } flush;
             struct packed{
+                logic value;
+            } aes_mode_en;
+            struct packed{
+                logic value;
+            } aes_gcm_mode;
+            struct packed{
                 logic [1:0] value;
             } rd_route;
             struct packed{
@@ -648,6 +698,9 @@ module axi_dma_reg (
             struct packed{
                 logic [1:0] value;
             } axi_dma_fsm_ps;
+            struct packed{
+                logic [3:0] value;
+            } axi_dma_aes_fsm_ps;
         } status0;
         struct packed{
             struct packed{
@@ -710,6 +763,9 @@ module axi_dma_reg (
                 struct packed{
                     logic value;
                 } error_fifo_uflow_en;
+                struct packed{
+                    logic value;
+                } error_aes_cif_en;
             } error_intr_en_r;
             struct packed{
                 struct packed{
@@ -760,6 +816,9 @@ module axi_dma_reg (
                 struct packed{
                     logic value;
                 } error_fifo_uflow_sts;
+                struct packed{
+                    logic value;
+                } error_aes_cif_sts;
             } error_internal_intr_r;
             struct packed{
                 struct packed{
@@ -800,6 +859,9 @@ module axi_dma_reg (
                 struct packed{
                     logic value;
                 } error_fifo_uflow_trig;
+                struct packed{
+                    logic value;
+                } error_aes_cif_trig;
             } error_intr_trig_r;
             struct packed{
                 struct packed{
@@ -853,6 +915,11 @@ module axi_dma_reg (
                     logic [31:0] value;
                 } cnt;
             } error_fifo_uflow_intr_count_r;
+            struct packed{
+                struct packed{
+                    logic [31:0] value;
+                } cnt;
+            } error_aes_cif_intr_count_r;
             struct packed{
                 struct packed{
                     logic [31:0] value;
@@ -917,6 +984,11 @@ module axi_dma_reg (
                 struct packed{
                     logic value;
                 } pulse;
+            } error_aes_cif_intr_count_incr_r;
+            struct packed{
+                struct packed{
+                    logic value;
+                } pulse;
             } notif_txn_done_intr_count_incr_r;
             struct packed{
                 struct packed{
@@ -944,10 +1016,8 @@ module axi_dma_reg (
 
     // Field: axi_dma_reg.ctrl.go
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.go.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.ctrl.go.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write 1 set
             next_c = field_storage.ctrl.go.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -969,10 +1039,8 @@ module axi_dma_reg (
     assign hwif_out.ctrl.go.swmod = decoded_reg_strb.ctrl && decoded_req_is_wr;
     // Field: axi_dma_reg.ctrl.flush
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.flush.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.ctrl.flush.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.ctrl.flush.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -991,12 +1059,48 @@ module axi_dma_reg (
         end
     end
     assign hwif_out.ctrl.flush.value = field_storage.ctrl.flush.value;
+    // Field: axi_dma_reg.ctrl.aes_mode_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ctrl.aes_mode_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
+            next_c = (field_storage.ctrl.aes_mode_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
+            load_next_c = '1;
+        end
+        field_combo.ctrl.aes_mode_en.next = next_c;
+        field_combo.ctrl.aes_mode_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.ctrl.aes_mode_en.value <= 1'h0;
+        end else if(field_combo.ctrl.aes_mode_en.load_next) begin
+            field_storage.ctrl.aes_mode_en.value <= field_combo.ctrl.aes_mode_en.next;
+        end
+    end
+    assign hwif_out.ctrl.aes_mode_en.value = field_storage.ctrl.aes_mode_en.value;
+    // Field: axi_dma_reg.ctrl.aes_gcm_mode
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.ctrl.aes_gcm_mode.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
+            next_c = (field_storage.ctrl.aes_gcm_mode.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
+            load_next_c = '1;
+        end
+        field_combo.ctrl.aes_gcm_mode.next = next_c;
+        field_combo.ctrl.aes_gcm_mode.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.ctrl.aes_gcm_mode.value <= 1'h0;
+        end else if(field_combo.ctrl.aes_gcm_mode.load_next) begin
+            field_storage.ctrl.aes_gcm_mode.value <= field_combo.ctrl.aes_gcm_mode.next;
+        end
+    end
+    assign hwif_out.ctrl.aes_gcm_mode.value = field_storage.ctrl.aes_gcm_mode.value;
     // Field: axi_dma_reg.ctrl.rd_route
     always_comb begin
-        automatic logic [1:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.rd_route.value;
-        load_next_c = '0;
+        automatic logic [1:0] next_c = field_storage.ctrl.rd_route.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.ctrl.rd_route.value & ~decoded_wr_biten[17:16]) | (decoded_wr_data[17:16] & decoded_wr_biten[17:16]);
             load_next_c = '1;
@@ -1014,10 +1118,8 @@ module axi_dma_reg (
     assign hwif_out.ctrl.rd_route.value = field_storage.ctrl.rd_route.value;
     // Field: axi_dma_reg.ctrl.rd_fixed
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.rd_fixed.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.ctrl.rd_fixed.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.ctrl.rd_fixed.value & ~decoded_wr_biten[20:20]) | (decoded_wr_data[20:20] & decoded_wr_biten[20:20]);
             load_next_c = '1;
@@ -1035,10 +1137,8 @@ module axi_dma_reg (
     assign hwif_out.ctrl.rd_fixed.value = field_storage.ctrl.rd_fixed.value;
     // Field: axi_dma_reg.ctrl.wr_route
     always_comb begin
-        automatic logic [1:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.wr_route.value;
-        load_next_c = '0;
+        automatic logic [1:0] next_c = field_storage.ctrl.wr_route.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.ctrl.wr_route.value & ~decoded_wr_biten[25:24]) | (decoded_wr_data[25:24] & decoded_wr_biten[25:24]);
             load_next_c = '1;
@@ -1056,10 +1156,8 @@ module axi_dma_reg (
     assign hwif_out.ctrl.wr_route.value = field_storage.ctrl.wr_route.value;
     // Field: axi_dma_reg.ctrl.wr_fixed
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.ctrl.wr_fixed.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.ctrl.wr_fixed.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.ctrl && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.ctrl.wr_fixed.value & ~decoded_wr_biten[28:28]) | (decoded_wr_data[28:28] & decoded_wr_biten[28:28]);
             load_next_c = '1;
@@ -1077,10 +1175,8 @@ module axi_dma_reg (
     assign hwif_out.ctrl.wr_fixed.value = field_storage.ctrl.wr_fixed.value;
     // Field: axi_dma_reg.status0.axi_dma_fsm_ps
     always_comb begin
-        automatic logic [1:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.status0.axi_dma_fsm_ps.value;
-        load_next_c = '0;
+        automatic logic [1:0] next_c = field_storage.status0.axi_dma_fsm_ps.value;
+        automatic logic load_next_c = '0;
         
         // HW Write
         next_c = hwif_in.status0.axi_dma_fsm_ps.next;
@@ -1096,12 +1192,29 @@ module axi_dma_reg (
         end
     end
     assign hwif_out.status0.axi_dma_fsm_ps.value = field_storage.status0.axi_dma_fsm_ps.value;
+    // Field: axi_dma_reg.status0.axi_dma_aes_fsm_ps
+    always_comb begin
+        automatic logic [3:0] next_c = field_storage.status0.axi_dma_aes_fsm_ps.value;
+        automatic logic load_next_c = '0;
+        
+        // HW Write
+        next_c = hwif_in.status0.axi_dma_aes_fsm_ps.next;
+        load_next_c = '1;
+        field_combo.status0.axi_dma_aes_fsm_ps.next = next_c;
+        field_combo.status0.axi_dma_aes_fsm_ps.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.status0.axi_dma_aes_fsm_ps.value <= 4'h0;
+        end else if(field_combo.status0.axi_dma_aes_fsm_ps.load_next) begin
+            field_storage.status0.axi_dma_aes_fsm_ps.value <= field_combo.status0.axi_dma_aes_fsm_ps.next;
+        end
+    end
+    assign hwif_out.status0.axi_dma_aes_fsm_ps.value = field_storage.status0.axi_dma_aes_fsm_ps.value;
     // Field: axi_dma_reg.src_addr_l.addr_l
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.src_addr_l.addr_l.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.src_addr_l.addr_l.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.src_addr_l && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.src_addr_l.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1119,10 +1232,8 @@ module axi_dma_reg (
     assign hwif_out.src_addr_l.addr_l.value = field_storage.src_addr_l.addr_l.value;
     // Field: axi_dma_reg.src_addr_h.addr_h
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.src_addr_h.addr_h.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.src_addr_h.addr_h.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.src_addr_h && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.src_addr_h.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1140,10 +1251,8 @@ module axi_dma_reg (
     assign hwif_out.src_addr_h.addr_h.value = field_storage.src_addr_h.addr_h.value;
     // Field: axi_dma_reg.dst_addr_l.addr_l
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.dst_addr_l.addr_l.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.dst_addr_l.addr_l.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.dst_addr_l && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.dst_addr_l.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1161,10 +1270,8 @@ module axi_dma_reg (
     assign hwif_out.dst_addr_l.addr_l.value = field_storage.dst_addr_l.addr_l.value;
     // Field: axi_dma_reg.dst_addr_h.addr_h
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.dst_addr_h.addr_h.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.dst_addr_h.addr_h.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.dst_addr_h && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.dst_addr_h.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1182,10 +1289,8 @@ module axi_dma_reg (
     assign hwif_out.dst_addr_h.addr_h.value = field_storage.dst_addr_h.addr_h.value;
     // Field: axi_dma_reg.byte_count.count
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.byte_count.count.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.byte_count.count.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.byte_count && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.byte_count.count.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1203,10 +1308,8 @@ module axi_dma_reg (
     assign hwif_out.byte_count.count.value = field_storage.byte_count.count.value;
     // Field: axi_dma_reg.block_size.size
     always_comb begin
-        automatic logic [11:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.block_size.size.value;
-        load_next_c = '0;
+        automatic logic [11:0] next_c = field_storage.block_size.size.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.block_size && decoded_req_is_wr && !(hwif_in.dma_swwel)) begin // SW write
             next_c = (field_storage.block_size.size.value & ~decoded_wr_biten[11:0]) | (decoded_wr_data[11:0] & decoded_wr_biten[11:0]);
             load_next_c = '1;
@@ -1226,10 +1329,8 @@ module axi_dma_reg (
     assign hwif_out.read_data.rdata.swacc = decoded_reg_strb.read_data;
     // Field: axi_dma_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1246,10 +1347,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1266,10 +1365,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_cmd_dec_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_cmd_dec_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_cmd_dec_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_cmd_dec_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1286,10 +1383,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_axi_rd_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_axi_rd_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_axi_rd_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_axi_rd_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1306,10 +1401,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_axi_wr_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_axi_wr_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_axi_wr_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_axi_wr_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1326,10 +1419,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_mbox_lock_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_mbox_lock_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_mbox_lock_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_mbox_lock_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1346,10 +1437,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_sha_lock_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_sha_lock_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_sha_lock_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_sha_lock_en.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -1366,10 +1455,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_fifo_oflow_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_fifo_oflow_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_fifo_oflow_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_fifo_oflow_en.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -1386,10 +1473,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_fifo_uflow_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -1404,12 +1489,28 @@ module axi_dma_reg (
             field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.next;
         end
     end
+    // Field: axi_dma_reg.intr_block_rf.error_intr_en_r.error_aes_cif_en
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = (field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_intr_en_r.error_aes_cif_en.next = next_c;
+        field_combo.intr_block_rf.error_intr_en_r.error_aes_cif_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_en_r.error_aes_cif_en.load_next) begin
+            field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_aes_cif_en.next;
+        end
+    end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_en_r.notif_txn_done_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_txn_done_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_txn_done_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_txn_done_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1426,10 +1527,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_en_r.notif_fifo_empty_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_empty_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_empty_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_empty_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1446,10 +1545,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_en_r.notif_fifo_not_empty_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_empty_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_empty_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_empty_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1466,10 +1563,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_en_r.notif_fifo_full_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_full_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_full_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_full_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1486,10 +1581,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_en_r.notif_fifo_not_full_en
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_full_en.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_full_en.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_full_en.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -1506,10 +1599,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        automatic logic load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
@@ -1528,10 +1619,8 @@ module axi_dma_reg (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: axi_dma_reg.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        automatic logic load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
@@ -1550,10 +1639,8 @@ module axi_dma_reg (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value;
             load_next_c = '1;
@@ -1576,10 +1663,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_axi_rd_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_rd_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_rd_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_rd_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value;
             load_next_c = '1;
@@ -1602,10 +1687,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_axi_wr_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_wr_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_wr_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_axi_wr_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value;
             load_next_c = '1;
@@ -1628,10 +1711,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value;
             load_next_c = '1;
@@ -1654,10 +1735,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_sha_lock_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_sha_lock_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_sha_lock_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_sha_lock_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value;
             load_next_c = '1;
@@ -1680,10 +1759,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value;
             load_next_c = '1;
@@ -1706,10 +1783,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value;
             load_next_c = '1;
@@ -1730,6 +1805,30 @@ module axi_dma_reg (
             field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.next;
         end
     end
+    // Field: axi_dma_reg.intr_block_rf.error_internal_intr_r.error_aes_cif_sts
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value != '0) begin // stickybit
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.intr_block_rf.error_internal_intr_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 clear
+            next_c = field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value & ~(decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.next = next_c;
+        field_combo.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.load_next) begin
+            field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.next;
+        end
+    end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
         |(field_storage.intr_block_rf.error_internal_intr_r.error_cmd_dec_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_cmd_dec_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_axi_rd_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_axi_rd_en.value)
@@ -1737,13 +1836,12 @@ module axi_dma_reg (
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_mbox_lock_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_sha_lock_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_sha_lock_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_fifo_oflow_en.value)
-        || |(field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value);
+        || |(field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value)
+        || |(field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value);
     // Field: axi_dma_reg.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value;
             load_next_c = '1;
@@ -1766,10 +1864,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value;
             load_next_c = '1;
@@ -1792,10 +1888,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value;
             load_next_c = '1;
@@ -1818,10 +1912,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_internal_intr_r.notif_fifo_full_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_full_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_full_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_full_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value;
             load_next_c = '1;
@@ -1844,10 +1936,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value;
             load_next_c = '1;
@@ -1876,10 +1966,8 @@ module axi_dma_reg (
         || |(field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_full_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_full_en.value);
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1899,10 +1987,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_axi_rd_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1922,10 +2008,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_axi_wr_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1945,10 +2029,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1968,10 +2050,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_sha_lock_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -1991,10 +2071,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
@@ -2014,10 +2092,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
@@ -2035,12 +2111,31 @@ module axi_dma_reg (
             field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.next;
         end
     end
+    // Field: axi_dma_reg.intr_block_rf.error_intr_trig_r.error_aes_cif_trig
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.next = next_c;
+        field_combo.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.load_next) begin
+            field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.next;
+        end
+    end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -2060,10 +2155,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -2083,10 +2176,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -2106,10 +2197,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -2129,10 +2218,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -2152,10 +2239,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_cmd_dec_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_cmd_dec_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_cmd_dec_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_cmd_dec_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_cmd_dec_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2186,10 +2271,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_axi_rd_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_axi_rd_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_axi_rd_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_axi_rd_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_axi_rd_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2220,10 +2303,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_axi_wr_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_axi_wr_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_axi_wr_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_axi_wr_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_axi_wr_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2254,10 +2335,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_mbox_lock_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_mbox_lock_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_mbox_lock_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_mbox_lock_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_mbox_lock_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2288,10 +2367,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_sha_lock_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_sha_lock_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_sha_lock_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_sha_lock_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2322,10 +2399,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_fifo_oflow_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_fifo_oflow_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_fifo_oflow_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_fifo_oflow_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2356,10 +2431,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_fifo_uflow_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2388,12 +2461,42 @@ module axi_dma_reg (
             field_storage.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.next;
         end
     end
+    // Field: axi_dma_reg.intr_block_rf.error_aes_cif_intr_count_r.cnt
+    always_comb begin
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
+        if(decoded_reg_strb.intr_block_rf.error_aes_cif_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
+            next_c = (field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value) begin // increment
+            if(((33)'(next_c) + 32'h1) > 32'hffffffff) begin // up-counter saturated
+                next_c = 32'hffffffff;
+            end else begin
+                next_c = next_c + 32'h1;
+            end
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value >= 32'hffffffff);
+        field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value >= 32'hffffffff);
+        if(next_c > 32'hffffffff) begin
+            next_c = 32'hffffffff;
+            load_next_c = '1;
+        end
+        field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.next = next_c;
+        field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value <= 32'h0;
+        end else if(field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.load_next) begin
+            field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_aes_cif_intr_count_r.cnt.next;
+        end
+    end
     // Field: axi_dma_reg.intr_block_rf.notif_txn_done_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_txn_done_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_txn_done_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_txn_done_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2424,10 +2527,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_empty_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_empty_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_fifo_empty_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_fifo_empty_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2458,10 +2559,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2492,10 +2591,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_full_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_full_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_fifo_full_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_fifo_full_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2526,10 +2623,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt.value;
-        load_next_c = '0;
+        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt.value;
+        automatic logic load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_r && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -2560,10 +2655,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_cmd_dec_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_cmd_dec_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_cmd_dec_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_cmd_dec_trig.value;
             load_next_c = '1;
@@ -2591,10 +2684,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_axi_rd_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_axi_rd_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_axi_rd_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_rd_trig.value;
             load_next_c = '1;
@@ -2622,10 +2713,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_axi_wr_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_axi_wr_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_axi_wr_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_axi_wr_trig.value;
             load_next_c = '1;
@@ -2653,10 +2742,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_mbox_lock_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_mbox_lock_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_mbox_lock_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_mbox_lock_trig.value;
             load_next_c = '1;
@@ -2684,10 +2771,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_sha_lock_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_sha_lock_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_sha_lock_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value;
             load_next_c = '1;
@@ -2715,10 +2800,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_fifo_oflow_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_fifo_oflow_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_fifo_oflow_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value;
             load_next_c = '1;
@@ -2746,10 +2829,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value;
             load_next_c = '1;
@@ -2775,12 +2856,39 @@ module axi_dma_reg (
             field_storage.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.next;
         end
     end
+    // Field: axi_dma_reg.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse
+    always_comb begin
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value) begin // HW Write - we
+            next_c = field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value;
+            load_next_c = '1;
+        end else if(hwif_in.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end
+        if(field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value) begin // decrement
+            field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.underflow = (next_c < (1'h1));
+            next_c = next_c - 1'h1;
+            load_next_c = '1;
+        end else begin
+            field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.underflow = '0;
+        end
+        field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.decrthreshold = (field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value <= 1'd0);
+        field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.next = next_c;
+        field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value <= 1'h0;
+        end else if(field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.load_next) begin
+            field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.next;
+        end
+    end
     // Field: axi_dma_reg.intr_block_rf.notif_txn_done_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_txn_done_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_txn_done_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value;
             load_next_c = '1;
@@ -2808,10 +2916,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_empty_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_empty_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_fifo_empty_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value;
             load_next_c = '1;
@@ -2839,10 +2945,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value;
             load_next_c = '1;
@@ -2870,10 +2974,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_full_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_full_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_fifo_full_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_full_trig.value;
             load_next_c = '1;
@@ -2901,10 +3003,8 @@ module axi_dma_reg (
     end
     // Field: axi_dma_reg.intr_block_rf.notif_fifo_not_full_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.intr_block_rf.notif_fifo_not_full_intr_count_incr_r.pulse.value;
-        load_next_c = '0;
+        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_fifo_not_full_intr_count_incr_r.pulse.value;
+        automatic logic load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_full_trig.value;
             load_next_c = '1;
@@ -2945,31 +3045,34 @@ module axi_dma_reg (
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
+    
     // Assign readback values to a flattened array
-    logic [45-1:0][31:0] readback_array;
-    assign readback_array[0][31:0] = (decoded_reg_strb.id && !decoded_req_is_wr) ? 32'h67768068 : '0;
+    logic [47-1:0][31:0] readback_array;
+    assign readback_array[0][31:0] = (decoded_reg_strb.id && !decoded_req_is_wr) ? 'h67768068 : '0;
     assign readback_array[1][11:0] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? hwif_in.cap.fifo_max_depth.next : '0;
-    assign readback_array[1][31:12] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? 20'h0 : '0;
+    assign readback_array[1][31:12] = (decoded_reg_strb.cap && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[2][0:0] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.go.value : '0;
     assign readback_array[2][1:1] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.flush.value : '0;
-    assign readback_array[2][15:2] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 14'h0 : '0;
+    assign readback_array[2][2:2] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.aes_mode_en.value : '0;
+    assign readback_array[2][3:3] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.aes_gcm_mode.value : '0;
+    assign readback_array[2][15:4] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[2][17:16] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.rd_route.value : '0;
-    assign readback_array[2][19:18] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 2'h0 : '0;
+    assign readback_array[2][19:18] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[2][20:20] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.rd_fixed.value : '0;
-    assign readback_array[2][23:21] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 3'h0 : '0;
+    assign readback_array[2][23:21] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[2][25:24] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.wr_route.value : '0;
-    assign readback_array[2][27:26] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 2'h0 : '0;
+    assign readback_array[2][27:26] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[2][28:28] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? field_storage.ctrl.wr_fixed.value : '0;
-    assign readback_array[2][31:29] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 3'h0 : '0;
+    assign readback_array[2][31:29] = (decoded_reg_strb.ctrl && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[3][0:0] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.busy.next : '0;
     assign readback_array[3][1:1] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.error.next : '0;
-    assign readback_array[3][3:2] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 2'h0 : '0;
+    assign readback_array[3][3:2] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[3][15:4] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.fifo_depth.next : '0;
     assign readback_array[3][17:16] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? field_storage.status0.axi_dma_fsm_ps.value : '0;
     assign readback_array[3][18:18] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.payload_available.next : '0;
     assign readback_array[3][19:19] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? hwif_in.status0.image_activated.next : '0;
-    assign readback_array[3][31:20] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 12'h0 : '0;
+    assign readback_array[3][23:20] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? field_storage.status0.axi_dma_aes_fsm_ps.value : '0;
+    assign readback_array[3][31:24] = (decoded_reg_strb.status0 && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.status1 && !decoded_req_is_wr) ? hwif_in.status1.bytes_remaining.next : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.src_addr_l && !decoded_req_is_wr) ? field_storage.src_addr_l.addr_l.value : '0;
     assign readback_array[6][31:0] = (decoded_reg_strb.src_addr_h && !decoded_req_is_wr) ? field_storage.src_addr_h.addr_h.value : '0;
@@ -2977,7 +3080,7 @@ module axi_dma_reg (
     assign readback_array[8][31:0] = (decoded_reg_strb.dst_addr_h && !decoded_req_is_wr) ? field_storage.dst_addr_h.addr_h.value : '0;
     assign readback_array[9][31:0] = (decoded_reg_strb.byte_count && !decoded_req_is_wr) ? field_storage.byte_count.count.value : '0;
     assign readback_array[10][11:0] = (decoded_reg_strb.block_size && !decoded_req_is_wr) ? field_storage.block_size.size.value : '0;
-    assign readback_array[10][31:12] = (decoded_reg_strb.block_size && !decoded_req_is_wr) ? 20'h0 : '0;
+    assign readback_array[10][31:12] = (decoded_reg_strb.block_size && !decoded_req_is_wr) ? 'h0 : '0;
     assign readback_array[11][31:0] = (decoded_reg_strb.read_data && !decoded_req_is_wr) ? hwif_in.read_data.rdata.next : '0;
     assign readback_array[12][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
     assign readback_array[12][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
@@ -2989,7 +3092,8 @@ module axi_dma_reg (
     assign readback_array[13][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_sha_lock_en.value : '0;
     assign readback_array[13][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_fifo_oflow_en.value : '0;
     assign readback_array[13][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_fifo_uflow_en.value : '0;
-    assign readback_array[13][31:7] = '0;
+    assign readback_array[13][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_aes_cif_en.value : '0;
+    assign readback_array[13][31:8] = '0;
     assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_txn_done_en.value : '0;
     assign readback_array[14][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_empty_en.value : '0;
     assign readback_array[14][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_fifo_not_empty_en.value : '0;
@@ -3007,7 +3111,8 @@ module axi_dma_reg (
     assign readback_array[17][4:4] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_sha_lock_sts.value : '0;
     assign readback_array[17][5:5] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts.value : '0;
     assign readback_array[17][6:6] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts.value : '0;
-    assign readback_array[17][31:7] = '0;
+    assign readback_array[17][7:7] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_aes_cif_sts.value : '0;
+    assign readback_array[17][31:8] = '0;
     assign readback_array[18][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts.value : '0;
     assign readback_array[18][1:1] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts.value : '0;
     assign readback_array[18][2:2] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_fifo_not_empty_sts.value : '0;
@@ -3021,7 +3126,8 @@ module axi_dma_reg (
     assign readback_array[19][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_sha_lock_trig.value : '0;
     assign readback_array[19][5:5] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_fifo_oflow_trig.value : '0;
     assign readback_array[19][6:6] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_fifo_uflow_trig.value : '0;
-    assign readback_array[19][31:7] = '0;
+    assign readback_array[19][7:7] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_aes_cif_trig.value : '0;
+    assign readback_array[19][31:8] = '0;
     assign readback_array[20][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_txn_done_trig.value : '0;
     assign readback_array[20][1:1] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_empty_trig.value : '0;
     assign readback_array[20][2:2] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_fifo_not_empty_trig.value : '0;
@@ -3035,35 +3141,38 @@ module axi_dma_reg (
     assign readback_array[25][31:0] = (decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_sha_lock_intr_count_r.cnt.value : '0;
     assign readback_array[26][31:0] = (decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_oflow_intr_count_r.cnt.value : '0;
     assign readback_array[27][31:0] = (decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_uflow_intr_count_r.cnt.value : '0;
-    assign readback_array[28][31:0] = (decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_txn_done_intr_count_r.cnt.value : '0;
-    assign readback_array[29][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_empty_intr_count_r.cnt.value : '0;
-    assign readback_array[30][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt.value : '0;
-    assign readback_array[31][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_full_intr_count_r.cnt.value : '0;
-    assign readback_array[32][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt.value : '0;
-    assign readback_array[33][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_dec_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_dec_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[33][31:1] = '0;
-    assign readback_array[34][0:0] = (decoded_reg_strb.intr_block_rf.error_axi_rd_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_axi_rd_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[28][31:0] = (decoded_reg_strb.intr_block_rf.error_aes_cif_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_aes_cif_intr_count_r.cnt.value : '0;
+    assign readback_array[29][31:0] = (decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_txn_done_intr_count_r.cnt.value : '0;
+    assign readback_array[30][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_empty_intr_count_r.cnt.value : '0;
+    assign readback_array[31][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_r.cnt.value : '0;
+    assign readback_array[32][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_full_intr_count_r.cnt.value : '0;
+    assign readback_array[33][31:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_full_intr_count_r.cnt.value : '0;
+    assign readback_array[34][0:0] = (decoded_reg_strb.intr_block_rf.error_cmd_dec_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_cmd_dec_intr_count_incr_r.pulse.value : '0;
     assign readback_array[34][31:1] = '0;
-    assign readback_array[35][0:0] = (decoded_reg_strb.intr_block_rf.error_axi_wr_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_axi_wr_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[35][0:0] = (decoded_reg_strb.intr_block_rf.error_axi_rd_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_axi_rd_intr_count_incr_r.pulse.value : '0;
     assign readback_array[35][31:1] = '0;
-    assign readback_array[36][0:0] = (decoded_reg_strb.intr_block_rf.error_mbox_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_lock_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[36][0:0] = (decoded_reg_strb.intr_block_rf.error_axi_wr_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_axi_wr_intr_count_incr_r.pulse.value : '0;
     assign readback_array[36][31:1] = '0;
-    assign readback_array[37][0:0] = (decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_sha_lock_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[37][0:0] = (decoded_reg_strb.intr_block_rf.error_mbox_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_mbox_lock_intr_count_incr_r.pulse.value : '0;
     assign readback_array[37][31:1] = '0;
-    assign readback_array[38][0:0] = (decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_oflow_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[38][0:0] = (decoded_reg_strb.intr_block_rf.error_sha_lock_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_sha_lock_intr_count_incr_r.pulse.value : '0;
     assign readback_array[38][31:1] = '0;
-    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.error_fifo_oflow_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_oflow_intr_count_incr_r.pulse.value : '0;
     assign readback_array[39][31:1] = '0;
-    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_txn_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.error_fifo_uflow_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_fifo_uflow_intr_count_incr_r.pulse.value : '0;
     assign readback_array[40][31:1] = '0;
-    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_empty_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.error_aes_cif_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_aes_cif_intr_count_incr_r.pulse.value : '0;
     assign readback_array[41][31:1] = '0;
-    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[42][0:0] = (decoded_reg_strb.intr_block_rf.notif_txn_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_txn_done_intr_count_incr_r.pulse.value : '0;
     assign readback_array[42][31:1] = '0;
-    assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_full_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[43][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_empty_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_empty_intr_count_incr_r.pulse.value : '0;
     assign readback_array[43][31:1] = '0;
-    assign readback_array[44][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_full_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[44][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_empty_intr_count_incr_r.pulse.value : '0;
     assign readback_array[44][31:1] = '0;
+    assign readback_array[45][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_full_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_full_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[45][31:1] = '0;
+    assign readback_array[46][0:0] = (decoded_reg_strb.intr_block_rf.notif_fifo_not_full_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_fifo_not_full_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[46][31:1] = '0;
 
     // Reduce the array
     always_comb begin
@@ -3071,7 +3180,7 @@ module axi_dma_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<45; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<47; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

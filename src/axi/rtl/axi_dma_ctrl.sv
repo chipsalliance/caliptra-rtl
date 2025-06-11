@@ -46,6 +46,16 @@ import soc_ifc_pkg::*;
     output var soc_ifc_req_t mb_data,
     input  logic [DW-1:0]    mb_rdata,
 
+    // AES Interface
+    input  logic             aes_input_ready,
+    input  logic             aes_output_valid,
+    input  logic             aes_status_idle,
+    output logic             aes_req_dv,
+    input  logic             aes_req_hold,
+    output soc_ifc_req_t     aes_req_data,
+    input  logic [DW-1:0]    aes_rdata,
+    input  logic             aes_err,
+
     // AXI Manager Read INF
     axi_dma_req_if.src    r_req_if,
     output logic          r_ready_o,
@@ -88,6 +98,9 @@ import soc_ifc_pkg::*;
     localparam FIFO_BC = 512; // depth in bytes
     localparam FIFO_BW = caliptra_prim_util_pkg::vbits((FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
 
+    localparam AES_FIFO_BC = 16; // depth in bytes
+    localparam AES_FIFO_BW = caliptra_prim_util_pkg::vbits((AES_FIFO_BC/BC)+1); // width of a signal that reports FIFO slot consumption
+
     // Smaller of
     //   a) 4096 (AXI max burst size)
     //   b) Configured data width X max supported AXI burst length value
@@ -117,6 +130,51 @@ import soc_ifc_pkg::*;
         DMA_DONE,
         DMA_ERROR
     } ctrl_fsm_ns,ctrl_fsm_ps;
+    
+    
+    enum logic [3:0] {
+        AES_IDLE,
+        AES_WAIT_INPUT_READY,
+        AES_WAIT_IDLE,
+        AES_UPDATE_BYTE_COUNT,
+        AES_WRITE_BLOCK,
+        AES_WAIT_OUTPUT_VALID,
+        AES_READ_OUTPUT,
+        AES_DONE,
+        AES_ERROR
+    } aes_fsm_ns, aes_fsm_ps;
+
+    logic start_aes_fsm;
+    logic aes_init_done;
+    logic aes_init_done_next;
+    logic [1:0] aes_cif_write_cnt, aes_cif_write_cnt_next;
+    logic aes_cif_write_cnt_reset;
+    logic aes_cif_write_block_done;
+    logic aes_cif_read_block_done;
+    logic aes_cif_update_byte_count_done; 
+    logic aes_cif_write_cnt_incr;
+    logic aes_req_wait;
+    logic aes_req_wait_next;
+    logic aes_error;
+    logic aes_req_dv_q;
+    logic aes_to_axi_last_transfer;
+    logic aes_to_axi_last_transfer_next;
+    
+    logic [1:0] aes_cif_read_cnt;
+    logic [1:0] aes_cif_read_cnt_next;
+    logic aes_cif_read_cnt_incr;
+      
+    // AES Fifo Controls
+    logic aes_fifo_w_valid;
+    logic aes_fifo_w_ready;
+    logic [DW-1:0] aes_fifo_w_data ;
+    logic aes_fifo_r_valid;
+    logic aes_fifo_r_ready;
+    logic [DW-1:0] aes_fifo_r_data; 
+    logic aes_fifo_full ;
+    logic [AES_FIFO_BW-1:0] aes_fifo_depth;
+    logic aes_fifo_empty;
+
 
     logic [SOC_IFC_DATA_W-1:0] reg_biten;
     logic reg_rd_err, reg_wr_err;
@@ -134,6 +192,14 @@ import soc_ifc_pkg::*;
     logic               fifo_full, fifo_full_r;
     logic               fifo_empty, fifo_empty_r;
 
+    // Read Route Signals
+    logic [DW-1:0] rd_route_data;
+    logic          rd_route_valid;
+    logic          rd_route_ready;
+    logic [DW-1:0] aes_fsm_rd_route_data;
+    logic          aes_fsm_rd_route_valid;
+    logic          aes_fsm_rd_route_ready;
+
     // Internal signals
     axi_dma_reg__ctrl__rd_route__rd_route_e_e rd_route;
     axi_dma_reg__ctrl__wr_route__wr_route_e_e wr_route;
@@ -150,6 +216,9 @@ import soc_ifc_pkg::*;
     logic cmd_inv_mbox_lock;
     logic cmd_inv_sha_lock;
     logic cmd_parse_error;
+    logic cmd_inv_aes_route_combo;
+    logic cmd_inv_aes_block_size;
+    logic cmd_inv_aes_fixed;      
 
     logic rd_req_hshake, rd_req_hshake_bypass;
     logic wr_req_hshake, wr_req_hshake_bypass;
@@ -183,6 +252,8 @@ import soc_ifc_pkg::*;
     logic [AW-1:0] src_addr, dst_addr;
     logic [FIFO_BW-1:0] rd_credits;
     logic [FIFO_BW-1:0] wr_credits;
+    logic wr_credits_fifo_w_valid;
+    logic wr_credits_fifo_w_ready;
     logic [AXI_LEN_BC_WIDTH-1:0] block_size_mask;
     // 1's based counters
     logic [31:0] rd_bytes_requested;
@@ -193,10 +264,13 @@ import soc_ifc_pkg::*;
     logic [AXI_LEN_BC_WIDTH-1:0] rd_final_req_byte_count; // byte-count in the final request, which may be smaller than a typical request
     logic [AXI_LEN_BC_WIDTH-1:0] rd_req_byte_count;       // byte-count calculated for the current read request
     logic [AXI_LEN_BC_WIDTH-1:0] wr_align_req_byte_count; // byte-count in a request until nearest AXI boundary
+    logic [AXI_LEN_BC_WIDTH-1:0] wr_sel_req_byte_count;         // byte-count select between AES and FIFO count
+    logic [AXI_LEN_BC_WIDTH-1:0] wr_aes_ceil_req_byte_count;    // byte-count select between AES FIFO max size or number of bytes left
     logic [AXI_LEN_BC_WIDTH-1:0] wr_final_req_byte_count; // byte-count in the final request, which may be smaller than a typical request
     logic [AXI_LEN_BC_WIDTH-1:0] wr_req_byte_count;       // byte-count calculated for the current read request
 
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
+    logic all_bytes_transferred;
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
 
@@ -265,10 +339,10 @@ import soc_ifc_pkg::*;
                 end
             end
             DMA_WAIT_DATA: begin
-                if ((bytes_remaining == 0) && (wr_resp_pending == 0) && (axi_error || mb_lock_error)) begin
+                if (all_bytes_transferred && (axi_error || mb_lock_error || aes_error)) begin
                     ctrl_fsm_ns = DMA_ERROR;
                 end
-                else if ((bytes_remaining == 0) && (wr_resp_pending == 0)) begin
+                else if (all_bytes_transferred) begin
                     ctrl_fsm_ns = DMA_DONE;
                 end
             end
@@ -294,9 +368,17 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.status0.error.next             = (ctrl_fsm_ps == DMA_ERROR);
     always_comb hwif_in.status0.fifo_depth.next        = 12'(fifo_depth);
     always_comb hwif_in.status0.axi_dma_fsm_ps.next    = ctrl_fsm_ps;
+    always_comb hwif_in.status0.axi_dma_aes_fsm_ps.next    = aes_fsm_ps;
     always_comb hwif_in.status0.payload_available.next = recovery_data_avail;
     always_comb hwif_in.status0.image_activated.next   = recovery_image_activated;
     always_comb hwif_in.status1.bytes_remaining.next   = bytes_remaining;
+    
+    assign all_bytes_transferred = ctrl_fsm_ps == DMA_WAIT_DATA &&
+                                   bytes_remaining == 0 &&
+                                   wr_resp_pending == 0 &&
+                                   wr_credits == 0 &&
+                                   wr_bytes_requested == hwif_out.byte_count.count;
+
 
 
     // --------------------------------------- //
@@ -337,7 +419,7 @@ import soc_ifc_pkg::*;
         cmd_inv_rd_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
         cmd_inv_wr_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
         // Some COMBINATIONS of routes are disallowed
-        case({hwif_out.ctrl.rd_route.value,hwif_out.ctrl.wr_route.value}) inside
+        case({hwif_out.ctrl.rd_route.value, hwif_out.ctrl.wr_route.value}) inside
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 1;
 
@@ -386,6 +468,11 @@ import soc_ifc_pkg::*;
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
         endcase
+        cmd_inv_aes_route_combo = hwif_out.ctrl.aes_mode_en.value && 
+                                    hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) &&  
+                                    hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD);
+        cmd_inv_aes_block_size = hwif_out.ctrl.aes_mode_en.value && hwif_out.block_size.size.value != '0;
+        cmd_inv_aes_fixed      = hwif_out.ctrl.aes_mode_en.value && (hwif_out.ctrl.rd_fixed.value || hwif_out.ctrl.wr_fixed.value);
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
                               ~|hwif_out.byte_count.count.value ||
                               (hwif_out.byte_count.count.value > DMA_MAX_XFER_SIZE) ||
@@ -402,6 +489,9 @@ import soc_ifc_pkg::*;
         cmd_parse_error     = cmd_inv_rd_route    ||
                               cmd_inv_wr_route    ||
                               cmd_inv_route_combo ||
+                              //cmd_inv_aes_route_combo|| FIXME
+                              cmd_inv_aes_block_size ||
+                              cmd_inv_aes_fixed   ||
                               cmd_inv_src_addr    ||
                               cmd_inv_dst_addr    ||
                               cmd_inv_byte_count  ||
@@ -445,6 +535,7 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_rd_sts        .hwset = r_req_if.resp_valid && r_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_axi_wr_sts        .hwset = w_req_if.resp_valid && w_req_if.resp inside {AXI_RESP_SLVERR,AXI_RESP_DECERR};
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_mbox_lock_sts     .hwset = mb_lock_dropped && !mb_lock_error; // pulse to set
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_aes_cif_sts       .hwset = aes_err && aes_req_dv; // Pulse to set
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = 1'b0; // SHA accelerator direct-mode not enabled; sha locking should be checked by API user (i.e. FW) instead of in HW
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts    .hwset = (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) &&  fifo_w_valid && !fifo_w_ready;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts    .hwset = (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !fifo_r_valid &&  fifo_r_ready;
@@ -601,10 +692,13 @@ import soc_ifc_pkg::*;
                                   (hwif_out.ctrl.wr_fixed.value)                                                                                                  ? AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value) :
                                                                    (~|hwif_out.block_size.size.value || (MAX_BLOCK_SIZE       < hwif_out.block_size.size.value))  ? AXI_LEN_BC_WIDTH'(MAX_BLOCK_SIZE - w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) :
                                                                                                                                                                     AXI_LEN_BC_WIDTH'(hwif_out.block_size.size.value - (AXI_LEN_BC_WIDTH'(w_req_if.addr[$clog2(MAX_BLOCK_SIZE)-1:0]) & block_size_mask));
-        wr_final_req_byte_count = wr_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - wr_bytes_requested) :
+        wr_final_req_byte_count     = wr_bytes_rem_thresh ? AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - wr_bytes_requested) :
                                                         {AXI_LEN_BC_WIDTH{1'b1}};
-        wr_req_byte_count       = wr_final_req_byte_count < wr_align_req_byte_count ? wr_final_req_byte_count :
-                                                                                      wr_align_req_byte_count;
+        wr_aes_ceil_req_byte_count  = hwif_out.byte_count.count.value - wr_bytes_requested > AES_FIFO_BC ? AES_FIFO_BC :
+                                                                                      AXI_LEN_BC_WIDTH'(hwif_out.byte_count.count.value - wr_bytes_requested);
+        wr_sel_req_byte_count       =  hwif_out.ctrl.aes_mode_en.value ? wr_aes_ceil_req_byte_count : wr_final_req_byte_count; 
+        wr_req_byte_count           = wr_sel_req_byte_count < wr_align_req_byte_count ? wr_sel_req_byte_count :
+                                                                                    wr_align_req_byte_count;
     end
 
     always_comb begin
@@ -613,6 +707,7 @@ import soc_ifc_pkg::*;
         r_req_if.byte_len = rd_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
         r_req_if.lock     = 1'b0;
+
         w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(wr_credits) >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         w_req_if.addr     = dst_addr + (hwif_out.ctrl.wr_fixed.value ? 0 : wr_bytes_requested);
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
@@ -626,13 +721,13 @@ import soc_ifc_pkg::*;
         mb_dv           = ctrl_fsm_ps == DMA_WAIT_DATA &&
                           ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX &&
                             (wr_bytes_requested < hwif_out.byte_count.count) &&
-                            fifo_r_valid) ||
+                            rd_route_valid) ||
                            (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX &&
                             (rd_bytes_requested < hwif_out.byte_count.count) &&
                             fifo_w_ready));
         mb_data.addr    = hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX ? SOC_IFC_ADDR_W'(w_req_if.addr) :
                                                                                                           SOC_IFC_ADDR_W'(r_req_if.addr);
-        mb_data.wdata   = fifo_r_data;
+        mb_data.wdata   = rd_route_data;
         mb_data.wstrb   = '1;
         mb_data.id      = '1;
         mb_data.write   = hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX;
@@ -677,12 +772,17 @@ import soc_ifc_pkg::*;
             wr_bytes_requested  <= wr_bytes_requested + BC;
             wr_bytes_rem_thresh <= ~|((hwif_out.byte_count.count.value - (wr_bytes_requested + BC)) >> AXI_LEN_BC_WIDTH);
         end
+        else if (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO && hwif_out.read_data.rdata.swacc) begin
+            wr_bytes_requested  <= wr_bytes_requested + BC;
+            wr_bytes_rem_thresh <= ~|((hwif_out.byte_count.count.value - (wr_bytes_requested + BC)) >> AXI_LEN_BC_WIDTH);
+        end
         else if (ctrl_fsm_ps == DMA_IDLE) begin
             wr_bytes_requested  <= '0;
             wr_bytes_rem_thresh <= ~|hwif_out.byte_count.count.value[31:AXI_LEN_BC_WIDTH];
         end
     end
 
+    // Read credits logic
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             rd_credits <= FIFO_BC/BC;
@@ -702,6 +802,11 @@ import soc_ifc_pkg::*;
             rd_credits <= rd_credits + 1;
         end
     end
+    
+    // Write credits logic
+    assign wr_credits_fifo_w_valid = hwif_out.ctrl.aes_mode_en.value ? aes_fifo_w_valid: fifo_w_valid;
+    assign wr_credits_fifo_w_ready = hwif_out.ctrl.aes_mode_en.value ? aes_fifo_w_ready: fifo_w_ready;
+
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -712,13 +817,13 @@ import soc_ifc_pkg::*;
         end
         // Request byte count is restricted to not exceed the credit capacity
         // Assertions (below) enforce a legal byte_count for sims
-        else if (wr_req_hshake && (fifo_w_valid && fifo_w_ready)) begin
+        else if (wr_req_hshake && (wr_credits_fifo_w_valid && wr_credits_fifo_w_ready)) begin
             wr_credits <= wr_credits + 1 - FIFO_BW'(wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         end
         else if (wr_req_hshake) begin
             wr_credits <= wr_credits - FIFO_BW'(wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
         end
-        else if (fifo_w_valid && fifo_w_ready) begin
+        else if (wr_credits_fifo_w_valid && wr_credits_fifo_w_ready) begin
             wr_credits <= wr_credits + 1;
         end
     end
@@ -751,22 +856,41 @@ import soc_ifc_pkg::*;
         r_ready_o = fifo_w_ready;
     end
 
+    ////////////////////////////////////////////////////
+    // FIFO -> Read Route
+    ////////////////////////////////////////////////////
+    assign rd_route_data = hwif_out.ctrl.aes_mode_en.value ? aes_fsm_rd_route_data: fifo_r_data;
+    assign rd_route_valid = hwif_out.ctrl.aes_mode_en.value ? aes_fsm_rd_route_valid: fifo_r_valid;
+
+    ////////////////////////////////////////////////////
+    // Read Route -> FIFO
+    ////////////////////////////////////////////////////
+    assign  fifo_r_ready = hwif_out.ctrl.aes_mode_en.value ? aes_fsm_rd_route_ready: rd_route_ready;
+
     always_comb begin
+        
         if (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) begin
-            fifo_r_ready = !mb_hold;
+            rd_route_ready = !mb_hold;
         end
         else if (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) begin
-            fifo_r_ready = hwif_out.read_data.rdata.swacc;
+            rd_route_ready = hwif_out.read_data.rdata.swacc;
         end
         else begin
-            fifo_r_ready = w_ready_i;
+            rd_route_ready = w_ready_i;
         end
-        w_valid_o = fifo_r_valid;
-        w_data_o  = fifo_r_data;
     end
 
+    ////////////////////////////////////////////////////
+    // Read Route -> AXI
+    ////////////////////////////////////////////////////
+    assign w_valid_o = rd_route_valid;
+    assign w_data_o  = rd_route_data;
+
+    ////////////////////////////////////////////////////
+    // Read Route -> AHB
+    ////////////////////////////////////////////////////
     always_comb r_data_mask = {DW{hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO}};
-    always_comb hwif_in.read_data.rdata.next = fifo_r_data & r_data_mask;
+    always_comb hwif_in.read_data.rdata.next = rd_route_data & r_data_mask;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -798,7 +922,274 @@ import soc_ifc_pkg::*;
             mb_lock_error <= mb_lock_error | 1'b1;
         end
     end
+    
+    // --------------------------------------- //
+    // AES FSM                                 //
+    // --------------------------------------- //
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_fsm_ps <= AES_IDLE;
+            aes_init_done <= '0;
+        end else begin
+            aes_fsm_ps    <= aes_fsm_ns;
+            aes_init_done <= aes_init_done_next;
+            aes_to_axi_last_transfer <= aes_to_axi_last_transfer_next;
+        end
+    end
+    
+    // AES FSM next-state logic
+    always_comb begin
+        aes_fsm_ns = aes_fsm_ps;
+        aes_init_done_next = aes_init_done;
+        aes_to_axi_last_transfer_next = aes_to_axi_last_transfer;
+        case (aes_fsm_ps)
+            AES_IDLE: begin
+                // Start condition (add your own trigger)
+                if (start_aes_fsm) begin
+                    aes_fsm_ns = AES_WAIT_INPUT_READY;
+                end
+                aes_init_done_next = 1'b0;
+                aes_to_axi_last_transfer_next = 1'b0;
+            end
+            AES_WAIT_INPUT_READY: begin
+                if (aes_input_ready) begin
+                    if((!aes_init_done || bytes_remaining < 4) && hwif_out.ctrl.aes_gcm_mode.value) begin
+                        aes_fsm_ns = AES_WAIT_IDLE;
+                    end
+                    else begin
+                        aes_fsm_ns = AES_WRITE_BLOCK;
+                    end
+                end
+            end
+            AES_WAIT_IDLE: begin
+                if(aes_status_idle) begin
+                    aes_fsm_ns = AES_UPDATE_BYTE_COUNT;
+                end
+            end
+            AES_UPDATE_BYTE_COUNT: begin
+                // After writing CCM_SHAOWED register twice
+                if (aes_cif_update_byte_count_done) begin
+                    aes_fsm_ns = AES_WRITE_BLOCK;
+                end
+            end
+            AES_WRITE_BLOCK: begin
+                // After writing 4 words
+                if (aes_cif_write_block_done) begin
+                    aes_init_done_next = 1'b1;
+                    if (!aes_init_done) begin
+                        aes_fsm_ns = AES_WAIT_INPUT_READY;
+                    end else begin
+                        aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
+                    end
+                end
+            end
+            AES_WAIT_OUTPUT_VALID: begin
+                if (aes_output_valid) begin
+                    aes_fsm_ns = AES_READ_OUTPUT;
+                end
+            end
+            AES_READ_OUTPUT: begin
+                if (aes_cif_read_block_done) begin
+                    if (aes_to_axi_last_transfer) begin
+                        if(aes_error) begin
+                            aes_fsm_ns = AES_ERROR;
+                        end else begin
+                            aes_fsm_ns = AES_DONE;
+                        end
+                    end
+                    else if(bytes_remaining == '0) begin 
+                        aes_to_axi_last_transfer_next = 1'b1;
+                        aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
+                    end else if (aes_to_axi_last_transfer) begin
+                        if(aes_error) begin
+                            aes_fsm_ns = AES_ERROR;
+                        end else begin
+                            aes_fsm_ns = AES_DONE;
+                        end
+                    end
+                    else if(bytes_remaining > 0 && bytes_remaining < 16 && hwif_out.ctrl.aes_gcm_mode.value) begin
+                        aes_fsm_ns = AES_WAIT_IDLE;
+                    end
+                    else begin
+                        aes_fsm_ns = AES_WRITE_BLOCK;
+                    end
+                end
+            end
+            AES_DONE: begin
+                aes_fsm_ns = AES_IDLE;
+            end
+            AES_ERROR: begin
+                if (hwif_out.ctrl.flush.value) begin
+                    aes_fsm_ns = AES_IDLE;
+                end
+            end
+            default: aes_fsm_ns = AES_IDLE;
+        endcase
+    end
 
+    // --------------------------------------- //
+    // AES Control Logic                       //
+    // --------------------------------------- //
+    
+    // AES CIF read counter and done logic
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_cif_read_cnt <= '0;
+        end else begin
+            aes_cif_read_cnt  <= aes_cif_read_cnt_next;
+        end
+    end
+    
+    // Count when detecting a CIF read
+    assign aes_cif_read_cnt_incr = !aes_req_hold && aes_req_dv & !aes_req_data.write; 
+
+    always_comb begin
+        aes_cif_read_cnt_next = aes_cif_read_cnt;
+        if (aes_cif_read_cnt_incr) begin
+            aes_cif_read_cnt_next = aes_cif_read_cnt + 1;
+        end
+        else if (aes_fsm_ps != AES_READ_OUTPUT) begin
+            aes_cif_read_cnt_next = '0;
+        end
+    end
+
+    // Once we have read all 4 output rgisters indicate reading is done 
+    // If not all 4 DWORDs contain data the data is blocked from going 
+    // into the FIFO, but we always read 4 DWORDS from the AES
+    assign aes_cif_read_block_done = (aes_cif_read_cnt == 2'd3) && aes_cif_read_cnt_incr;
+    
+
+
+    // AES write block counter
+    assign aes_cif_write_cnt_incr = aes_req_dv & !aes_req_hold & aes_req_data.write;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_cif_write_cnt        <= '0;
+        end else begin
+            aes_cif_write_cnt        <= aes_cif_write_cnt_next;
+        end
+    end
+
+
+    // When switching states reset or when we are not in a known writing state
+    // reset the write counter 
+    assign aes_cif_write_cnt_reset = (aes_fsm_ps != aes_fsm_ns) || 
+                                        ((aes_fsm_ps != AES_WRITE_BLOCK) && (aes_fsm_ps != AES_UPDATE_BYTE_COUNT));
+
+    always_comb begin
+        aes_cif_write_cnt_next        = aes_cif_write_cnt;
+        if (aes_cif_write_cnt_reset) begin
+            aes_cif_write_cnt_next = '0;
+        end else if (aes_cif_write_cnt_incr) begin
+            aes_cif_write_cnt_next = aes_cif_write_cnt + 1'b1;
+        end
+    end
+    
+    // AES Byte update is just a single write. Once write is done we are done in this phase
+    assign aes_cif_update_byte_count_done = (aes_cif_write_cnt == 2'd1) && aes_cif_write_cnt_incr;
+
+    // AES CIF write block done logic
+    assign aes_cif_write_block_done = (aes_cif_write_cnt == 2'd3) && aes_cif_write_cnt_incr;
+
+
+    // Latch AES request signals if aes_req_hold is asserted
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_req_dv_q             <= 1'b0;
+        end else begin
+            aes_req_dv_q             <= aes_req_dv;
+        end
+    end
+    // AES CIF DV Control
+    always_comb begin
+        aes_req_dv = aes_req_dv_q;
+        if (aes_fsm_ps == AES_WRITE_BLOCK) begin
+            if (bytes_remaining > 0) begin
+                if(fifo_r_valid) begin
+                    aes_req_dv = 1'b1;
+                end
+                else if (!fifo_r_valid && !aes_req_wait) begin
+                    aes_req_dv = 1'b0; // No data available, do not assert request
+                end
+            end
+            else begin
+                aes_req_dv = 1'b1;
+            end
+        end else if(aes_fsm_ps == AES_UPDATE_BYTE_COUNT) begin
+            aes_req_dv = 1'b1;
+        end else if(aes_fsm_ps == AES_READ_OUTPUT && !aes_fifo_full) begin
+            aes_req_dv = 1'b1;
+        end
+        else begin
+            aes_req_dv = 1'b0; // Not in write block state, do not assert request
+        end
+    end
+    
+    // AES CIF Data Control
+    always_comb begin
+        aes_req_data = '0; // Default to zero
+
+        // AES CIF same on read/write non-zero values
+        aes_req_data.id      = '1;
+        
+        if (aes_fsm_ps == AES_WRITE_BLOCK) begin
+            // AES CIF Write Assignments
+            aes_req_data.addr    = 19'((`AES_REG_DATA_IN_0 + (aes_cif_write_cnt * BC))) ;
+            aes_req_data.wstrb   = '1;
+            aes_req_data.write   = 1'b1;
+            aes_req_data.wdata   = (bytes_remaining > 32'h0) ? fifo_r_data : '0; // Default to 0s
+        end else if(aes_fsm_ps == AES_UPDATE_BYTE_COUNT) begin
+            // AES CIF Update Byte Count Assignments
+            aes_req_data.addr    = `AES_REG_CTRL_GCM_SHADOWED;
+            aes_req_data.wstrb   = '1;
+            aes_req_data.write   = 1'b1;
+            aes_req_data.wdata = (((bytes_remaining > 32'd16 ? 32'd16 : bytes_remaining ) << `AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW) & `AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_MASK) |
+                     ((6'h8 << `AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) & `AES_REG_CTRL_GCM_SHADOWED_PHASE_MASK);
+        end else if(aes_fsm_ps == AES_READ_OUTPUT) begin
+            // AES CIF Read Assignments
+            aes_req_data.addr    = 19'((`AES_REG_DATA_OUT_0 + (aes_cif_read_cnt * BC)));
+            aes_req_data.write   = 1'b0;
+            aes_req_data.wdata   = '0; // Default to 0s
+        end
+    end
+
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_req_wait <= 1'b0;
+        end else begin
+            aes_req_wait <= aes_req_wait_next;
+        end
+    end
+    always_comb begin
+        // Track if we are waiting for hold to clear
+        aes_req_wait_next = (aes_req_dv && aes_req_hold);
+    end
+    
+    // Pulling data off main fifo when we initiate the CIF transaction.
+    // Assumption is that AES has their aes_req_hold asserted when DMA asserts
+    // aes_req_dv first clock cycle of a transaction to AES
+    assign aes_fsm_rd_route_ready = (fifo_r_valid && aes_req_dv && !aes_req_wait && aes_fsm_ps == AES_WRITE_BLOCK);
+
+
+    assign start_aes_fsm = (ctrl_fsm_ps == DMA_IDLE) && (hwif_out.ctrl.go.value) && !cmd_parse_error && hwif_out.ctrl.aes_mode_en.value;
+
+
+    
+    
+    // AES error detect logic
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_error <= 1'b0;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value) begin
+            aes_error <= 1'b0;
+        end
+        else if (aes_err && aes_req_dv) begin
+            aes_error <= 1'b1;
+        end
+    end
 
     // --------------------------------------- //
     // Data FIFO                               //
@@ -837,6 +1228,54 @@ import soc_ifc_pkg::*;
         else begin
             fifo_full_r  <= fifo_full;
             fifo_empty_r <= fifo_empty;
+        end
+    end
+    
+    // --------------------------------------- //
+    // AES FIFO                                //
+    // --------------------------------------- //
+    caliptra_prim_fifo_sync #(
+      .Width            (DW  ),
+      .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
+      .Depth             (AES_FIFO_BC/BC),
+      .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
+      .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
+    ) i_aes_fifo (
+      .clk_i   (clk     ),
+      .rst_ni  (rst_n   ),
+      // synchronous clear / flush port
+      .clr_i   (aes_fsm_ps == AES_IDLE),
+      // write port
+      .wvalid_i(aes_fifo_w_valid  ),
+      .wready_o(aes_fifo_w_ready  ),
+      .wdata_i (aes_fifo_w_data   ),
+      // read port
+      .rvalid_o(aes_fifo_r_valid),
+      .rready_i(aes_fifo_r_ready),
+      .rdata_o (aes_fifo_r_data ),
+      // occupancy
+      .full_o  (aes_fifo_full ),
+      .depth_o (aes_fifo_depth),
+      .err_o   (          )
+    );
+    logic [31:0] aes_fifo_bytes_written;
+
+    assign aes_fifo_empty = aes_fifo_depth == 0;
+    assign aes_fifo_w_valid = aes_cif_read_cnt_incr && aes_fifo_bytes_written < hwif_out.byte_count.count;
+    assign aes_fifo_w_data  = aes_rdata; 
+
+    assign aes_fifo_r_ready = hwif_out.ctrl.aes_mode_en.value && w_ready_i;
+    assign aes_fsm_rd_route_data = aes_fifo_r_data;
+    assign aes_fsm_rd_route_valid = aes_fifo_r_valid;
+
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            aes_fifo_bytes_written <= '0;
+        end else if (aes_cif_read_cnt_incr) begin
+            aes_fifo_bytes_written <= aes_fifo_bytes_written + BC;
+        end else if (aes_fsm_ps == AES_IDLE) begin
+            aes_fifo_bytes_written <= '0;
         end
     end
 

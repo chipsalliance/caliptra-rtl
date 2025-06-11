@@ -16,6 +16,9 @@ module aes_reg_top (
   output aes_reg_pkg::aes_reg2hw_t reg2hw, // Write
   input  aes_reg_pkg::aes_hw2reg_t hw2reg, // Read
 
+  output logic input_ready_o,
+  output logic output_valid_o,
+
   output logic shadowed_storage_err_o,
   output logic shadowed_update_err_o,
 
@@ -1346,7 +1349,7 @@ module aes_reg_top (
 
     // to internal hardware
     .qe     (),
-    .q      (),
+    .q      (output_valid_o),
     .ds     (),
 
     // to register interface (read)
@@ -1373,7 +1376,7 @@ module aes_reg_top (
 
     // to internal hardware
     .qe     (),
-    .q      (),
+    .q      (input_ready_o),
     .ds     (),
 
     // to register interface (read)

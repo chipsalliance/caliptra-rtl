@@ -27,7 +27,8 @@ module aes_clp_wrapper
   import aes_clp_reg_pkg::*;
   #(
   parameter AHB_DATA_WIDTH = 32,
-  parameter AHB_ADDR_WIDTH = 32
+  parameter AHB_ADDR_WIDTH = 32,
+  parameter CIF_DATA_WIDTH = 32
 )
 (
   // Clock and reset.
@@ -46,6 +47,20 @@ module aes_clp_wrapper
   output logic hresp_o,
   output logic hreadyout_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+  
+  // status signals
+  output logic input_ready_o,
+  output logic output_valid_o,
+  output logic status_idle_o,
+    
+  // DMA CIF
+  input  logic dma_req_dv,
+  input  logic dma_req_write,
+  input  logic   [AHB_ADDR_WIDTH-1 : 0] dma_req_addr,
+  input  logic   [CIF_DATA_WIDTH-1 : 0] dma_req_wdata,
+  output logic dma_req_hold,
+  output logic dma_req_error,
+  output logic   [CIF_DATA_WIDTH-1 : 0] dma_req_rdata,
   
   // kv interface
   output kv_read_t kv_read,
@@ -69,6 +84,16 @@ logic ahb_err;
 logic  [AHB_ADDR_WIDTH-1 : 0] ahb_addr;
 logic  [31 : 0] ahb_wdata;
 logic  [31 : 0] ahb_rdata;
+  
+logic req_collision;
+  
+logic aes_cif_req_dv;
+logic aes_cif_req_write;
+logic   [AHB_ADDR_WIDTH-1 : 0] aes_cif_req_addr;
+logic   [31 : 0] aes_cif_req_wdata;
+logic aes_cif_req_hold;
+logic aes_cif_req_error;
+logic   [31 : 0] aes_cif_req_rdata;
 
 logic clp_reg_dv;
 logic clp_reg_write;
@@ -129,6 +154,24 @@ ahb_slv_sif #(
     .rdata(ahb_rdata)
 );
 
+// AHB CIF Mux
+// No real muxing, just respond with error if we detect a request collision.
+// It is FW responsiblity to ensure only AHB or DMA accesses AES at a time
+assign req_collision = dma_req_dv & ahb_dv;
+
+assign aes_cif_req_dv = dma_req_dv | ahb_dv;
+assign aes_cif_req_write = dma_req_dv ? dma_req_write : ahb_write ;
+assign aes_cif_req_addr = dma_req_dv ? dma_req_addr : ahb_addr ;
+assign aes_cif_req_wdata = dma_req_dv ? dma_req_wdata : ahb_wdata ;
+assign dma_req_hold = dma_req_dv & aes_cif_req_hold;
+assign ahb_hold = ahb_dv & aes_cif_req_hold;
+assign dma_req_error = (dma_req_dv & aes_cif_req_error) | req_collision;
+assign ahb_err = (ahb_dv & aes_cif_req_error) | req_collision;
+assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata : '0;
+assign ahb_rdata = ahb_dv ? aes_cif_req_rdata : '0;
+   
+
+
 //TLUL Adapter
 caliptra_tlul_adapter_vh
 #(
@@ -143,15 +186,15 @@ caliptra_tlul_adapter_vh_inst
   .tl_i(aes_to_adapter_tl),
 
   // Valid-Hold device interface (VH to TLUL).
-  .dv_i(ahb_dv),
-  .hld_o(ahb_hold),
-  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, ahb_addr }),
-  .write_i(ahb_write),
-  .wdata_i(ahb_wdata),
+  .dv_i(aes_cif_req_dv),
+  .hld_o(aes_cif_req_hold),
+  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, aes_cif_req_addr}),
+  .write_i(aes_cif_req_write),
+  .wdata_i(aes_cif_req_wdata),
   .wstrb_i('1),
   .size_i(3'b010),
-  .rdata_o(ahb_rdata),
-  .error_o(ahb_err),
+  .rdata_o(aes_cif_req_rdata),
+  .error_o(aes_cif_req_error),
   .last_i('0),
   .user_i('0),
   .id_i('0),
@@ -209,6 +252,11 @@ aes_inst (
 
   // Life cycle
   .lc_escalate_en_i(lc_ctrl_pkg::Off),
+  
+  // status signals
+  .input_ready_o,
+  .output_valid_o,
+  .status_idle_o,
 
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
