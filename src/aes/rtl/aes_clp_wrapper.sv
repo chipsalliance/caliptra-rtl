@@ -119,7 +119,7 @@ edn_pkg::edn_req_t edn_req;
 keymgr_pkg::hw_key_req_t keymgr_key;
 
 assign error_intr = '0; // Unused
-assign notif_intr = '0  // Unused 
+assign notif_intr = '0;  // Unused 
 
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle);
 assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
