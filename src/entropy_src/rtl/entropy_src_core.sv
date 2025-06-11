@@ -5,6 +5,8 @@
 // Description: entropy_src core module
 //
 
+`include "caliptra_prim_assert.sv"
+
 module entropy_src_core
   import entropy_src_pkg::*;
   import lc_ctrl_state_pkg::*;
@@ -3098,8 +3100,7 @@ module entropy_src_core
   //--------------------------------------------
   // Assertions
   //--------------------------------------------
-`ifdef INC_ASSERT
-`include "caliptra_prim_macros.svh"
+`ifdef CALIPTRA_INC_ASSERT
 
   // Count number of disables since last reset.
   logic [63:0] disable_cnt_d, disable_cnt_q;
@@ -3140,7 +3141,7 @@ module entropy_src_core
   // input bits (source).  RngBusWidth bits may get lost after every re-enable; add a margin to
   // account for that.
   `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(ValidRngBitsPushedIntoEsrngFifo_A,
-                             `WITHIN_MARGIN(esrng_push_bit_cnt_q,        // actual
+                             `CALIPTRA_WITHIN_MARGIN(esrng_push_bit_cnt_q,        // actual
                                             rng_valid_bit_cnt_q,         // expected
                                             disable_cnt_q * RngBusWidth, // allowed less
                                             0))                          // allowed more
@@ -3171,7 +3172,7 @@ module entropy_src_core
   // - RngBusWidth bits may get lost after every re-enable
   // - one entry may just have been pushed into esrng FIFO when the assertion gets evaluated.
   `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsrngFifoPushedIntoEsbitOrPosthtFifos_A,
-                             `WITHIN_MARGIN((esbit_push_bit_cnt_q * RngBusWidth +
+                             `CALIPTRA_WITHIN_MARGIN((esbit_push_bit_cnt_q * RngBusWidth +
                                              postht_from_esrng_push_bit_cnt_q), // actual
                                             esrng_push_bit_cnt_q,               // expected
                                             (disable_cnt_q + 1) * RngBusWidth,  // allowed less
@@ -3189,7 +3190,7 @@ module entropy_src_core
   // - RngBusWidth bits may get lost after every re-enable
   // - esbit FIFO may be partially full when the assertion gets evaluated.
   `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(EsbitFifoPushedIntoPosthtFifo_A,
-                             `WITHIN_MARGIN(postht_from_esbit_push_bit_cnt_q,      // actual
+                             `CALIPTRA_WITHIN_MARGIN(postht_from_esbit_push_bit_cnt_q,      // actual
                                             esbit_push_bit_cnt_q,                  // expected
                                             (disable_cnt_q + 1) * RngBusWidth - 1, // allowed less
                                             0))                                    // allowed more
@@ -3411,7 +3412,7 @@ module entropy_src_core
   logic [63:0] ppspb_allowed_more;
   assign ppspb_allowed_more = bsc_state_q != BscStIncomplete ? 4 * health_test_window : '0;
   `CALIPTRA_ASSERT_AT_RESET_AND_FINAL(PreconFifoPushedPostStartup_A,
-                             `WITHIN_MARGIN(precon_post_startup_push_bit_cnt_q,     // actual
+                             `CALIPTRA_WITHIN_MARGIN(precon_post_startup_push_bit_cnt_q,     // actual
                                             precon_post_startup_exp_push_bit_cnt_q, // expected
                                             0,                                      // allowed less
                                             ppspb_allowed_more))                    // allowed more
