@@ -326,7 +326,7 @@ module kmac_app
   `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, st_d, st, st_e, StIdle)
 
   // Create a lint error to reduce the risk of accidentally enabling this feature.
-  `ASSERT_STATIC_LINT_ERROR(KmacSecIdleAcceptSwMsgNonDefault, SecIdleAcceptSwMsg == 0)
+  `CALIPTRA_ASSERT_STATIC_LINT_ERROR(KmacSecIdleAcceptSwMsgNonDefault, SecIdleAcceptSwMsg == 0)
 
   // Next State & output logic
   // SEC_CM: FSM.SPARSE
@@ -989,16 +989,16 @@ module kmac_app
   ////////////////
 
   // KeyMgr sideload key and the digest should be in the Key Length value
-  `ASSERT_INIT(SideloadKeySameToDigest_A, KeyMgrKeyW <= AppDigestW)
-  `ASSERT_INIT(AppIntfInRange_A, AppDigestW inside {128, 192, 256, 384, 512})
+  `CALIPTRA_ASSERT_INIT(SideloadKeySameToDigest_A, KeyMgrKeyW <= AppDigestW)
+  `CALIPTRA_ASSERT_INIT(AppIntfInRange_A, AppDigestW inside {128, 192, 256, 384, 512})
 
   // Issue(#13655): Having a coverage that sideload keylen and CSR keylen are
   // different.
-  `COVER(AppIntfUseDifferentSizeKey_C,
+  `CALIPTRA_COVER(AppIntfUseDifferentSizeKey_C,
       (st == StAppCfg && kmac_en_o) |-> reg_key_len_i != SideloadedKey)
 
   // Assertions for the case where EnFullKmac is 0.
-  `ASSUME(StrippedKMACAppCfgModeAllowed_M, EnFullKmac == 0 |->
+  `CALIPTRA_ASSUME(StrippedKMACAppCfgModeAllowed_M, EnFullKmac == 0 |->
       AppCfg[arb_idx].Mode inside {AppCShake, AppSHA3})
 
 endmodule

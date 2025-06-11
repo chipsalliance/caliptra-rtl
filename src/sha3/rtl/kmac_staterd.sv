@@ -22,8 +22,8 @@ module kmac_staterd
   input clk_i,
   input rst_ni,
 
-  input  tlul_pkg::tl_h2d_t tl_i,
-  output tlul_pkg::tl_d2h_t tl_o,
+  input  caliptra_tlul_pkg::tl_h2d_t tl_i,
+  output caliptra_tlul_pkg::tl_d2h_t tl_o,
 
   // State in
   input [sha3_pkg::StateW-1:0] state_i [Share],
@@ -52,7 +52,7 @@ module kmac_staterd
   logic [31:0]      tlram_rdata_endian;
 
   // TL Adapter
-  tlul_adapter_sram #(
+  caliptra_tlul_adapter_sram #(
     .SramAw (AddrW-2),
     .SramDw (32),
     .Outstanding (1),
@@ -74,7 +74,6 @@ module kmac_staterd
     .wdata_o                    (unused_tlram_wdata),
     .wmask_o                    (unused_tlram_wmask),
     .intg_error_o               (),
-    .user_rsvd_o                (),
     .rdata_i                    (tlram_rdata),
     .rvalid_i                   (tlram_rvalid),
     .rerror_i                   (tlram_rerror),
