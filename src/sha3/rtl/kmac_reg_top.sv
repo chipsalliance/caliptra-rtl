@@ -1550,12 +1550,12 @@ module kmac_reg_top (
   assign unused_be = ^reg_be;
 
   // Assertions for Register Interface
-  `ABR_ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
-  `ABR_ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(wePulse, reg_we, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT_PULSE(rePulse, reg_re, clk_i, !rst_ni)
 
-  `ABR_ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> tl_o_pre.d_valid, clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(reAfterRv, $rose(reg_re || reg_we) |=> tl_o_pre.d_valid, clk_i, !rst_ni)
 
-  `ABR_ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
+  `CALIPTRA_ASSERT(en2addrHit, (reg_we || reg_re) |-> $onehot0(addr_hit), clk_i, !rst_ni)
 
   // this is formulated as an assumption such that the FPV testbenches do disprove this
   // property by mistake

@@ -365,7 +365,7 @@ module kmac_core
   end : gen_encoded_key
 
   // Above logic assumes MaxKeyLen as 512 bits. Revise if it is not.
-  `ASSERT_INIT(MaxKeyLenMatchToKey512_A, kmac_pkg::MaxKeyLen == 512)
+  `CALIPTRA_ASSERT_INIT(MaxKeyLenMatchToKey512_A, kmac_pkg::MaxKeyLen == 512)
 
   // Combine the bytepad `left_encode(w)` and the `encode_string(secret_key)`
   logic [MaxEncodedKeyW + 16 -1 :0] encoded_key_block [Share];
@@ -451,21 +451,21 @@ module kmac_core
 
   // If process_latched is set, then at Message state, it should be cleared
 
-  `ASSERT(ProcessLatchedCleared_A,
+  `CALIPTRA_ASSERT(ProcessLatchedCleared_A,
           st == StKmacMsg && process_latched |=> !process_latched)
 
   // Assume configuration is stable during the operation
-  `ASSUME(KmacEnStable_M, $changed(kmac_en_i) |-> st inside {StKmacIdle, StTerminalError})
-  `ASSUME(ModeStable_M, $changed(mode_i) |-> st inside {StKmacIdle, StTerminalError})
-  `ASSUME(StrengthStable_M,
+  `CALIPTRA_ASSUME(KmacEnStable_M, $changed(kmac_en_i) |-> st inside {StKmacIdle, StTerminalError})
+  `CALIPTRA_ASSUME(ModeStable_M, $changed(mode_i) |-> st inside {StKmacIdle, StTerminalError})
+  `CALIPTRA_ASSUME(StrengthStable_M,
           $changed(strength_i) |->
           (st inside {StKmacIdle, StTerminalError}) ||
           ($past(st) == StKmacIdle))
-  `ASSUME(KeyLengthStableWhenValid_M, key_valid_i && !$rose(key_valid_i) |-> $stable(key_len_i))
-  `ASSUME(KeyDataStableWhenValid_M, key_valid_i && !$rose(key_valid_i) |-> $stable(key_data_i))
+  `CALIPTRA_ASSUME(KeyLengthStableWhenValid_M, key_valid_i && !$rose(key_valid_i) |-> $stable(key_len_i))
+  `CALIPTRA_ASSUME(KeyDataStableWhenValid_M, key_valid_i && !$rose(key_valid_i) |-> $stable(key_data_i))
 
   // no acked to MsgFIFO in StKmacMsg
-  `ASSERT(AckOnlyInMessageState_A,
+  `CALIPTRA_ASSERT(AckOnlyInMessageState_A,
           fifo_valid_i && fifo_ready_o && kmac_en_i |-> st == StKmacMsg)
 
 endmodule : kmac_core
