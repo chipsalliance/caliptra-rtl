@@ -16,6 +16,7 @@
 // See also: caliptra_prim_alert_sender, caliptra_prim_alert_receiver, alert_handler
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 
 module caliptra_prim_diff_decode #(
   // enables additional synchronization logic
@@ -185,7 +186,7 @@ module caliptra_prim_diff_decode #(
     // Raise a signal integrity error when the differential signals have equal values.  This is
     // implemented with a `prim_xnor2` instead of behavioral code to prevent the synthesis tool from
     // optimizing away combinational logic on the complementary differential signals.
-    caliptra_prim_generic_xnor2 #(
+    `CALIPTRA_PRIM_MODULE_NAME(xnor2) #(
       .Width (1)
     ) u_xnor2_sigint (
       .in0_i (diff_pi),
