@@ -116,6 +116,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 | ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
+| AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 
 #### Peripherals subsystem
 
@@ -135,7 +136,6 @@ The following table shows the memory map address ranges for each of the IP block
 | Mailbox CSR                | 7         | 4 KiB        | 0x3002_0000   | 0x3002_0FFF |
 | SHA512 Accelerator         | 7         | 4 KiB        | 0x3002_1000   | 0x3002_1FFF |
 | AXI DMA                    | 7         | 4 KiB        | 0x3002_2000   | 0x3002_2FFF |
-| AES                        | 7         | 4 KiB        | 0x3002_3000   | 0x3002_3FFF |
 | SOC IFC CSR                | 7         | 64 KiB       | 0x3003_0000   | 0x3003_FFFF |
 | Mailbox SRAM Direct Access | 7         | 256 KiB      | 0x3004_0000   | 0x3007_FFFF |
 
