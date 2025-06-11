@@ -489,7 +489,7 @@ import soc_ifc_pkg::*;
         cmd_parse_error     = cmd_inv_rd_route    ||
                               cmd_inv_wr_route    ||
                               cmd_inv_route_combo ||
-                              //cmd_inv_aes_route_combo|| FIXME
+                              cmd_inv_aes_route_combo||
                               cmd_inv_aes_block_size ||
                               cmd_inv_aes_fixed   ||
                               cmd_inv_src_addr    ||
@@ -930,6 +930,7 @@ import soc_ifc_pkg::*;
         if (!rst_n) begin
             aes_fsm_ps <= AES_IDLE;
             aes_init_done <= '0;
+            aes_to_axi_last_transfer <= '0;
         end else begin
             aes_fsm_ps    <= aes_fsm_ns;
             aes_init_done <= aes_init_done_next;
