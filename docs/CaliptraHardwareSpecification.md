@@ -36,9 +36,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * CSR HMAC key for manufacturing flow
 
 ## Key Caliptra 2.1 Changes
-* Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
-    * AXI Manager DMA AES support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
-    * Move AES under SOC IFC to enable DMA AES support
+* AXI Manager DMA AES support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
 
 ## Boot FSM
 
