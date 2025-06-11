@@ -9,6 +9,7 @@
 `include "caliptra_prim_assert.sv"
 
 module kmac_msgfifo
+  import caliptra_prim_mubi_pkg::*;
   import kmac_pkg::*;
 #(
   // OutWidth is MsgFIFO data width. prim_packer converts InW to OutW prior to
@@ -270,15 +271,15 @@ module kmac_msgfifo
   ////////////////
 
   // Flush state known checker
-  `ASSERT(FlushStInValid_A, flush_st inside {FlushIdle, FlushPacker, FlushFifo, FlushClear})
+  `CALIPTRA_ASSERT(FlushStInValid_A, flush_st inside {FlushIdle, FlushPacker, FlushFifo, FlushClear})
 
   // Packer done signal is asserted at least one cycle later
-  `ASSERT(PackerDoneDelay_A, $onehot0({process_i, packer_flush_done}))
+  `CALIPTRA_ASSERT(PackerDoneDelay_A, $onehot0({process_i, packer_flush_done}))
 
   // process_i not asserted during the flush operation
-  `ASSUME(PackerDoneValid_a, process_i |-> flush_st == FlushIdle)
+  `CALIPTRA_ASSUME(PackerDoneValid_a, process_i |-> flush_st == FlushIdle)
 
   // No messages in between `process_i` and `clear_i`
-  `ASSUME(MessageValid_a, fifo_valid_i |-> flush_st == FlushIdle)
+  `CALIPTRA_ASSUME(MessageValid_a, fifo_valid_i |-> flush_st == FlushIdle)
 
 endmodule
