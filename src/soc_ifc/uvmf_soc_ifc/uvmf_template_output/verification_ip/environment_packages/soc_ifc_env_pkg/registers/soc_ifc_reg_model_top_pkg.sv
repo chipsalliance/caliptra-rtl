@@ -735,6 +735,7 @@ package soc_ifc_reg_model_top_pkg;
             `REG_NO_CP_NONCORE_RST(this.error_sha_lock_intr_count_r                )
             `REG_NO_CP_NONCORE_RST(this.error_fifo_oflow_intr_count_r              )
             `REG_NO_CP_NONCORE_RST(this.error_fifo_uflow_intr_count_r              )
+            `REG_NO_CP_NONCORE_RST(this.error_aes_cif_intr_count_r                 )
             `REG____CP_NONCORE_RST(this.notif_txn_done_intr_count_r                )
             `REG____CP_NONCORE_RST(this.notif_fifo_empty_intr_count_r              )
             `REG____CP_NONCORE_RST(this.notif_fifo_not_empty_intr_count_r          )
@@ -747,6 +748,7 @@ package soc_ifc_reg_model_top_pkg;
             `REG____CP_NONCORE_RST(this.error_sha_lock_intr_count_incr_r           )
             `REG____CP_NONCORE_RST(this.error_fifo_oflow_intr_count_incr_r         )
             `REG____CP_NONCORE_RST(this.error_fifo_uflow_intr_count_incr_r         )
+            `REG____CP_NONCORE_RST(this.error_aes_cif_intr_count_incr_r            )
             `REG____CP_NONCORE_RST(this.notif_txn_done_intr_count_incr_r           )
             `REG____CP_NONCORE_RST(this.notif_fifo_empty_intr_count_incr_r         )
             `REG____CP_NONCORE_RST(this.notif_fifo_not_empty_intr_count_incr_r     )
@@ -1359,6 +1361,7 @@ package soc_ifc_reg_model_top_pkg;
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_sha_lock_intr_count_r                 .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_oflow_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_uflow_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
+                                      uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_aes_fifo_intr_count_r                 .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_txn_done_intr_count_r                 .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_empty_intr_count_r               .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_empty_intr_count_r           .cnt, axi_dma_reg_intr_block_rf_ext_internal_cb);
@@ -1371,6 +1374,7 @@ package soc_ifc_reg_model_top_pkg;
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_sha_lock_intr_count_incr_r          .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_oflow_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_fifo_uflow_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
+                                      uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.error_aes_fifo_intr_count_incr_r          .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_txn_done_intr_count_incr_r          .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_empty_intr_count_incr_r        .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
                                       uvm_reg_field_cb::add(this.axi_dma_reg_rm.intr_block_rf_ext.notif_fifo_not_empty_intr_count_incr_r    .pulse, axi_dma_reg_intr_block_rf_ext_internal_cb);
