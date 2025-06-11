@@ -36,7 +36,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * CSR HMAC key for manufacturing flow
 
 ## Key Caliptra 2.1 Changes
-* AXI Manager DMA AES support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
+* AXI Manager DMA AES feature for OCP L.O.C.K. support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
 
 ## Boot FSM
 
