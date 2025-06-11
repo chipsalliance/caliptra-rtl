@@ -383,10 +383,10 @@ module kmac_errchk
   assign error_o = err;
 
   // If below failed, revise err_swsequence error response info field.
-  `ASSERT_INIT(ExpectedStSwCmdBits_A, $bits(st) == StateWidth && $bits(sw_cmd_i) == 6)
+  `ABR_ASSERT_INIT(ExpectedStSwCmdBits_A, $bits(st) == StateWidth && $bits(sw_cmd_i) == 6)
 
   // If failed, revise err_modestrength error info field.
-  `ASSERT_INIT(ExpectedModeStrengthBits_A,
+  `ABR_ASSERT_INIT(ExpectedModeStrengthBits_A,
                $bits(cfg_mode_i) == 2 && $bits(cfg_strength_i) == 3)
 
 
@@ -466,6 +466,6 @@ module kmac_errchk
       st_d = StIdle;
     end
   end : next_state
-  `ASSERT_KNOWN(StKnown_A, st)
+  `ABR_ASSERT_KNOWN(StKnown_A, st)
 
 endmodule : kmac_errchk
