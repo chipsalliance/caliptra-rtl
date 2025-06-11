@@ -118,7 +118,12 @@ edn_pkg::edn_req_t edn_req;
 
 keymgr_pkg::hw_key_req_t keymgr_key;
 
+assign error_intr = '0; // Unused
+assign notif_intr = '0  // Unused 
+
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle);
+assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+
 
 //AHB interface
 ahb_slv_sif #(
@@ -246,7 +251,7 @@ aes
 aes_inst (
   .clk_i(clk),
   .rst_ni(reset_n),
-  .rst_shadowed_ni(reset_n), //FIXME
+  .rst_shadowed_ni(reset_n),
 
   .idle_o(aes_idle),
 
@@ -256,7 +261,6 @@ aes_inst (
   // status signals
   .input_ready_o,
   .output_valid_o,
-  .status_idle_o,
 
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
@@ -265,7 +269,7 @@ aes_inst (
   .edn_i(edn_i),
 
   // Key manager (keymgr) key sideload interface
-  .keymgr_key_i(keymgr_key), //FIXME
+  .keymgr_key_i(keymgr_key),
 
   // Bus interface
   .tl_i(adapter_to_aes_tl),
@@ -315,7 +319,7 @@ aes_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
-    .zeroize('0), //FIXME needed?
+    .zeroize(debugUnlock_or_scan_mode_switch), 
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -346,6 +350,8 @@ generate
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
           kv_key_reg[g_dword][g_byte] <= '0;
+        end else if(debugUnlock_or_scan_mode_switch) begin
+          kv_key_reg[g_dword][g_byte] <= '0;
         end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
@@ -360,7 +366,7 @@ always_ff @(posedge clk or negedge reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin //new request, invalidate old key
+  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL) || debugUnlock_or_scan_mode_switch) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
     keymgr_key.key[0] <= '0;
     keymgr_key.key[1] <= '0;

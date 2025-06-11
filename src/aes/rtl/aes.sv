@@ -56,7 +56,6 @@ module aes
   // status signals
   output logic input_ready_o,
   output logic output_valid_o,
-  output logic status_idle_o,
 
 
   // Key manager (keymgr) key sideload interface
@@ -222,7 +221,6 @@ module aes
 
   assign idle_o = caliptra_prim_mubi_pkg::mubi4_bool_to_mubi(reg2hw.status.idle.q);
 
-  assign status_idle_o = reg2hw.status.idle.q;
 
   ////////////
   // Alerts //
