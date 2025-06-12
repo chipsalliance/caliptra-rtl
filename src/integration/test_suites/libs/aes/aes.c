@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "caliptra_defines.h"
+#include "soc_ifc.h"
 #include "printf.h"
 #include "aes.h"
 #include <stdint.h>
@@ -71,6 +72,8 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   uint32_t length;
   uint32_t num_bytes;
   uint32_t masked = 0;
+  uint32_t read_payload[100];
+  uint8_t  gcm_mode = mode == AES_GCM;
 
   // wait for AES to be idle
   aes_wait_idle();
@@ -165,70 +168,106 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   //aes_wait_idle();
 
   if (aes_input.text_len > 0) { 
-    // For Data Block I=0,...,N-1
-    for (int i = 0; i < num_blocks_text; i++) {
-      
-      //Check if first block or a partial last block
-      if ((mode == AES_GCM) && ((i == 0) || ((i == num_blocks_text-1) && (partial_text_len > 0)))) {
-        //Set num bytes for the last block (could be first also)
-        num_bytes = ((i == num_blocks_text-1) && (partial_text_len > 0)) ?  partial_text_len : 16;
+    if (aes_input.data_src_mode == AES_DATA_DMA){
+        VPRINTF(LOW, "Streaming in text data via DMA: Source: 0x%x Destination: 0x%x\n", aes_input.dma_transfer_data.src_addr, aes_input.dma_transfer_data.dst_addr);
 
-        // Wait for IDLE
-        aes_wait_idle();
+        soc_ifc_axi_dma_send_axi_to_axi(aes_input.dma_transfer_data.src_addr, 0, aes_input.dma_transfer_data.dst_addr, 0,  aes_input.text_len, 0, 1, gcm_mode);
 
-        //set CTRL_GCM to GCM_TEXT
-        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-        lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
-                                                    (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
-      }
+        soc_ifc_axi_dma_read_ahb_payload(aes_input.dma_transfer_data.dst_addr, 0, read_payload, aes_input.text_len, 0);
 
-      // Wait for INPUT_READY
-      while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
+        // Compare to cypher text
+        for (int j = 0; j < aes_input.text_len/4; j++) {
+          VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", read_payload[j]);
 
-      // Write Input Data Block.
-      VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
-      for (int j = 0; j < 4; j++) {
-        if (op == AES_ENC) {
-          VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
-          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
-        } else if (op == AES_DEC) {
-          VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
-          lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4]);
-        }
-      }                      
-
-      // Wait for OUTPUT_VALID bit
-      while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
-
-      // Read Output Data Block I
-      for (int j = 0; j < 4; j++) {
-        ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-        VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
-
-        //byte mask
-        uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
-        //this is the last block, and the partial is inside this dword
-        if ((i == num_blocks_text-1) && (partial_text_len > 0) && (partial_text_len >= j*4) && (partial_text_len < (j+1)*4)) {
-          mask = (1 << (partial_text_len%4)*8) - 1;
-          masked = 0x1;
-        }
-        
-        if (op == AES_ENC) {
-          if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
-            VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-            VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-            VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
-            VPRINTF(FATAL,"%c", fail_cmd);
-            while(1);
+          // No masking in AXI mode
+          uint32_t mask =  0xffffffff ;
+          
+          if (op == AES_ENC) {
+            if ((read_payload[j] & mask) != (aes_input.ciphertext[j] & mask)) {
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
+              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j] & mask);
+              VPRINTF(FATAL,"%c", fail_cmd);
+              while(1);
+            }
+          } else if (op == AES_DEC) {
+            if ((read_payload[j] & mask) != (aes_input.plaintext[j] & mask)) {
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
+              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j] & mask);
+              VPRINTF(FATAL,"%c", fail_cmd);
+              while(1);
+            }
           }
-        } else if (op == AES_DEC) {
-          if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
-            VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-            VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-            VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
-            VPRINTF(FATAL,"%c", fail_cmd);
-            while(1);
+        }
+      
+    }
+    else {
+      // For Data Block I=0,...,N-1
+      for (int i = 0; i < num_blocks_text; i++) {
+        
+        //Check if first block or a partial last block
+        if ((mode == AES_GCM) && ((i == 0) || ((i == num_blocks_text-1) && (partial_text_len > 0)))) {
+          //Set num bytes for the last block (could be first also)
+          num_bytes = ((i == num_blocks_text-1) && (partial_text_len > 0)) ?  partial_text_len : 16;
+
+          // Wait for IDLE
+          aes_wait_idle();
+
+          //set CTRL_GCM to GCM_TEXT
+          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+          lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TEXT << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
+                                                      (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
+        }
+
+        // Wait for INPUT_READY
+        while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
+
+        // Write Input Data Block.
+        VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
+        for (int j = 0; j < 4; j++) {
+          if (op == AES_ENC) {
+            VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
+            lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
+          } else if (op == AES_DEC) {
+            VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
+            lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4]);
+          }
+        }                      
+
+        // Wait for OUTPUT_VALID bit
+        while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
+
+        // Read Output Data Block I
+        for (int j = 0; j < 4; j++) {
+          ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
+          VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+
+          //byte mask
+          uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
+          //this is the last block, and the partial is inside this dword
+          if ((i == num_blocks_text-1) && (partial_text_len > 0) && (partial_text_len >= j*4) && (partial_text_len < (j+1)*4)) {
+            mask = (1 << (partial_text_len%4)*8) - 1;
+            masked = 0x1;
+          }
+          
+          if (op == AES_ENC) {
+            if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
+              VPRINTF(FATAL,"%c", fail_cmd);
+              while(1);
+            }
+          } else if (op == AES_DEC) {
+            if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
+              VPRINTF(FATAL,"%c", fail_cmd);
+              while(1);
+            }
           }
         }
       }
