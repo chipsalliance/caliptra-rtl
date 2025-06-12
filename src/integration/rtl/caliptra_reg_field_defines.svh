@@ -6208,6 +6208,8 @@
 `define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK                                                          (32'h10)
 `define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_LOW                                                        (5)
 `define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK                                                       (32'h20)
+`define MLDSA_REG_MLDSA_CTRL_STREAM_MSG_LOW                                                         (6)
+`define MLDSA_REG_MLDSA_CTRL_STREAM_MSG_MASK                                                        (32'h40)
 `endif
 `ifndef MLDSA_REG_MLDSA_STATUS
 `define MLDSA_REG_MLDSA_STATUS                                                                      (32'h14)
@@ -6215,6 +6217,8 @@
 `define MLDSA_REG_MLDSA_STATUS_READY_MASK                                                           (32'h1)
 `define MLDSA_REG_MLDSA_STATUS_VALID_LOW                                                            (1)
 `define MLDSA_REG_MLDSA_STATUS_VALID_MASK                                                           (32'h2)
+`define MLDSA_REG_MLDSA_STATUS_MSG_STREAM_READY_LOW                                                 (2)
+`define MLDSA_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK                                                (32'h4)
 `endif
 `ifndef MLDSA_REG_MLDSA_ENTROPY_0
 `define MLDSA_REG_MLDSA_ENTROPY_0                                                                   (32'h18)
@@ -6455,6 +6459,208 @@
 `endif
 `ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_15
 `define MLDSA_REG_MLDSA_EXTERNAL_MU_15                                                              (32'h154)
+`endif
+`ifndef MLDSA_REG_MLDSA_MSG_STROBE
+`define MLDSA_REG_MLDSA_MSG_STROBE                                                                  (32'h158)
+`define MLDSA_REG_MLDSA_MSG_STROBE_STROBE_LOW                                                       (0)
+`define MLDSA_REG_MLDSA_MSG_STROBE_STROBE_MASK                                                      (32'hf)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_CONFIG
+`define MLDSA_REG_MLDSA_CTX_CONFIG                                                                  (32'h15c)
+`define MLDSA_REG_MLDSA_CTX_CONFIG_CTX_SIZE_LOW                                                     (0)
+`define MLDSA_REG_MLDSA_CTX_CONFIG_CTX_SIZE_MASK                                                    (32'hff)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_0
+`define MLDSA_REG_MLDSA_CTX_0                                                                       (32'h160)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_1
+`define MLDSA_REG_MLDSA_CTX_1                                                                       (32'h164)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_2
+`define MLDSA_REG_MLDSA_CTX_2                                                                       (32'h168)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_3
+`define MLDSA_REG_MLDSA_CTX_3                                                                       (32'h16c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_4
+`define MLDSA_REG_MLDSA_CTX_4                                                                       (32'h170)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_5
+`define MLDSA_REG_MLDSA_CTX_5                                                                       (32'h174)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_6
+`define MLDSA_REG_MLDSA_CTX_6                                                                       (32'h178)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_7
+`define MLDSA_REG_MLDSA_CTX_7                                                                       (32'h17c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_8
+`define MLDSA_REG_MLDSA_CTX_8                                                                       (32'h180)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_9
+`define MLDSA_REG_MLDSA_CTX_9                                                                       (32'h184)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_10
+`define MLDSA_REG_MLDSA_CTX_10                                                                      (32'h188)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_11
+`define MLDSA_REG_MLDSA_CTX_11                                                                      (32'h18c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_12
+`define MLDSA_REG_MLDSA_CTX_12                                                                      (32'h190)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_13
+`define MLDSA_REG_MLDSA_CTX_13                                                                      (32'h194)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_14
+`define MLDSA_REG_MLDSA_CTX_14                                                                      (32'h198)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_15
+`define MLDSA_REG_MLDSA_CTX_15                                                                      (32'h19c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_16
+`define MLDSA_REG_MLDSA_CTX_16                                                                      (32'h1a0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_17
+`define MLDSA_REG_MLDSA_CTX_17                                                                      (32'h1a4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_18
+`define MLDSA_REG_MLDSA_CTX_18                                                                      (32'h1a8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_19
+`define MLDSA_REG_MLDSA_CTX_19                                                                      (32'h1ac)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_20
+`define MLDSA_REG_MLDSA_CTX_20                                                                      (32'h1b0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_21
+`define MLDSA_REG_MLDSA_CTX_21                                                                      (32'h1b4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_22
+`define MLDSA_REG_MLDSA_CTX_22                                                                      (32'h1b8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_23
+`define MLDSA_REG_MLDSA_CTX_23                                                                      (32'h1bc)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_24
+`define MLDSA_REG_MLDSA_CTX_24                                                                      (32'h1c0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_25
+`define MLDSA_REG_MLDSA_CTX_25                                                                      (32'h1c4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_26
+`define MLDSA_REG_MLDSA_CTX_26                                                                      (32'h1c8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_27
+`define MLDSA_REG_MLDSA_CTX_27                                                                      (32'h1cc)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_28
+`define MLDSA_REG_MLDSA_CTX_28                                                                      (32'h1d0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_29
+`define MLDSA_REG_MLDSA_CTX_29                                                                      (32'h1d4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_30
+`define MLDSA_REG_MLDSA_CTX_30                                                                      (32'h1d8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_31
+`define MLDSA_REG_MLDSA_CTX_31                                                                      (32'h1dc)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_32
+`define MLDSA_REG_MLDSA_CTX_32                                                                      (32'h1e0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_33
+`define MLDSA_REG_MLDSA_CTX_33                                                                      (32'h1e4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_34
+`define MLDSA_REG_MLDSA_CTX_34                                                                      (32'h1e8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_35
+`define MLDSA_REG_MLDSA_CTX_35                                                                      (32'h1ec)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_36
+`define MLDSA_REG_MLDSA_CTX_36                                                                      (32'h1f0)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_37
+`define MLDSA_REG_MLDSA_CTX_37                                                                      (32'h1f4)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_38
+`define MLDSA_REG_MLDSA_CTX_38                                                                      (32'h1f8)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_39
+`define MLDSA_REG_MLDSA_CTX_39                                                                      (32'h1fc)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_40
+`define MLDSA_REG_MLDSA_CTX_40                                                                      (32'h200)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_41
+`define MLDSA_REG_MLDSA_CTX_41                                                                      (32'h204)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_42
+`define MLDSA_REG_MLDSA_CTX_42                                                                      (32'h208)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_43
+`define MLDSA_REG_MLDSA_CTX_43                                                                      (32'h20c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_44
+`define MLDSA_REG_MLDSA_CTX_44                                                                      (32'h210)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_45
+`define MLDSA_REG_MLDSA_CTX_45                                                                      (32'h214)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_46
+`define MLDSA_REG_MLDSA_CTX_46                                                                      (32'h218)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_47
+`define MLDSA_REG_MLDSA_CTX_47                                                                      (32'h21c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_48
+`define MLDSA_REG_MLDSA_CTX_48                                                                      (32'h220)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_49
+`define MLDSA_REG_MLDSA_CTX_49                                                                      (32'h224)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_50
+`define MLDSA_REG_MLDSA_CTX_50                                                                      (32'h228)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_51
+`define MLDSA_REG_MLDSA_CTX_51                                                                      (32'h22c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_52
+`define MLDSA_REG_MLDSA_CTX_52                                                                      (32'h230)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_53
+`define MLDSA_REG_MLDSA_CTX_53                                                                      (32'h234)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_54
+`define MLDSA_REG_MLDSA_CTX_54                                                                      (32'h238)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_55
+`define MLDSA_REG_MLDSA_CTX_55                                                                      (32'h23c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_56
+`define MLDSA_REG_MLDSA_CTX_56                                                                      (32'h240)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_57
+`define MLDSA_REG_MLDSA_CTX_57                                                                      (32'h244)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_58
+`define MLDSA_REG_MLDSA_CTX_58                                                                      (32'h248)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_59
+`define MLDSA_REG_MLDSA_CTX_59                                                                      (32'h24c)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_60
+`define MLDSA_REG_MLDSA_CTX_60                                                                      (32'h250)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_61
+`define MLDSA_REG_MLDSA_CTX_61                                                                      (32'h254)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_62
+`define MLDSA_REG_MLDSA_CTX_62                                                                      (32'h258)
+`endif
+`ifndef MLDSA_REG_MLDSA_CTX_63
+`define MLDSA_REG_MLDSA_CTX_63                                                                      (32'h25c)
 `endif
 `ifndef MLDSA_REG_MLDSA_KV_RD_SEED_CTRL
 `define MLDSA_REG_MLDSA_KV_RD_SEED_CTRL                                                             (32'h8000)
@@ -7438,8 +7644,12 @@
 `define AXI_DMA_REG_CTRL_GO_MASK                                                                    (32'h1)
 `define AXI_DMA_REG_CTRL_FLUSH_LOW                                                                  (1)
 `define AXI_DMA_REG_CTRL_FLUSH_MASK                                                                 (32'h2)
-`define AXI_DMA_REG_CTRL_RSVD0_LOW                                                                  (2)
-`define AXI_DMA_REG_CTRL_RSVD0_MASK                                                                 (32'hfffc)
+`define AXI_DMA_REG_CTRL_AES_MODE_EN_LOW                                                            (2)
+`define AXI_DMA_REG_CTRL_AES_MODE_EN_MASK                                                           (32'h4)
+`define AXI_DMA_REG_CTRL_AES_GCM_MODE_LOW                                                           (3)
+`define AXI_DMA_REG_CTRL_AES_GCM_MODE_MASK                                                          (32'h8)
+`define AXI_DMA_REG_CTRL_RSVD0_LOW                                                                  (4)
+`define AXI_DMA_REG_CTRL_RSVD0_MASK                                                                 (32'hfff0)
 `define AXI_DMA_REG_CTRL_RD_ROUTE_LOW                                                               (16)
 `define AXI_DMA_REG_CTRL_RD_ROUTE_MASK                                                              (32'h30000)
 `define AXI_DMA_REG_CTRL_RSVD1_LOW                                                                  (18)
@@ -7473,8 +7683,10 @@
 `define AXI_DMA_REG_STATUS0_PAYLOAD_AVAILABLE_MASK                                                  (32'h40000)
 `define AXI_DMA_REG_STATUS0_IMAGE_ACTIVATED_LOW                                                     (19)
 `define AXI_DMA_REG_STATUS0_IMAGE_ACTIVATED_MASK                                                    (32'h80000)
-`define AXI_DMA_REG_STATUS0_RSVD1_LOW                                                               (20)
-`define AXI_DMA_REG_STATUS0_RSVD1_MASK                                                              (32'hfff00000)
+`define AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_LOW                                                  (20)
+`define AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_MASK                                                 (32'hf00000)
+`define AXI_DMA_REG_STATUS0_RSVD1_LOW                                                               (24)
+`define AXI_DMA_REG_STATUS0_RSVD1_MASK                                                              (32'hff000000)
 `endif
 `ifndef AXI_DMA_REG_STATUS1
 `define AXI_DMA_REG_STATUS1                                                                         (32'h10)
@@ -7530,6 +7742,8 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_OFLOW_EN_MASK                          (32'h20)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_LOW                           (6)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_MASK                          (32'h40)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_LOW                              (7)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK                             (32'h80)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (32'h808)
@@ -7570,6 +7784,8 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_OFLOW_STS_MASK                   (32'h20)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_LOW                    (6)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK                   (32'h40)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_LOW                       (7)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK                      (32'h80)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (32'h818)
@@ -7600,6 +7816,8 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_OFLOW_TRIG_MASK                      (32'h20)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_LOW                       (6)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_MASK                      (32'h40)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_LOW                          (7)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_MASK                         (32'h80)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (32'h820)
@@ -7634,6 +7852,9 @@
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_R                                     (32'h918)
+`endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                        (32'h91c)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R                                       (32'h980)
@@ -7685,28 +7906,33 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_INCR_R_PULSE_MASK                     (32'h1)
 `endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R                                   (32'ha1c)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_LOW                         (0)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_MASK                        (32'h1)
+`endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (32'ha1c)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (32'ha20)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (32'ha20)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (32'ha24)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                     (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (32'ha24)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (32'ha28)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                 (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (32'ha28)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (32'ha2c)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_LOW                       (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_MASK                      (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (32'ha2c)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (32'ha30)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_MASK                  (32'h1)
 `endif

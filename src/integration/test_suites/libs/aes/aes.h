@@ -60,6 +60,16 @@ typedef struct {
     uint32_t  key_share1[8];
 } aes_key_t;
 
+typedef enum {
+    AES_DATA_DIRECT, // Use pointers in aes_flow_t
+    AES_DATA_DMA     // Use DMA parameters in aes_flow_t
+} aes_data_src_e;
+
+typedef struct packed {
+  uint64_t src_addr;
+  uint64_t dst_addr;
+} dma_transfer_data_t;
+
 typedef struct {
   aes_key_t key;
   uint32_t *iv;
@@ -69,6 +79,8 @@ typedef struct {
   uint32_t aad_len;
   uint32_t *aad;
   uint32_t *tag;
+  aes_data_src_e data_src_mode;
+  dma_transfer_data_t dma_transfer_data;
 } aes_flow_t;
 
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size);

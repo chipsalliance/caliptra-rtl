@@ -262,7 +262,7 @@ void main(void) {
             // Move data from one address to another in AXI SRAM
             // ===========================================================================
             VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (16)*4, 0);
+            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (16)*4, 0, 0, 0);
 
             // ===========================================================================
             // Read data back from AXI SRAM and confirm it matches
@@ -325,7 +325,7 @@ void main(void) {
         // Move data from one address to another in AXI SRAM
         // ===========================================================================
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 0);
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 0, 0, 0);
 
 
         // ===========================================================================
@@ -510,7 +510,7 @@ void main(void) {
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
         VPRINTF(LOW, "Moving payload within SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR, 0, (2*16+1)*4, 0);
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR, 0, (2*16+1)*4, 0, 0, 0);
 
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
@@ -521,7 +521,7 @@ void main(void) {
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer; R/W non-determinism is expected!\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + 256, 0, (137)*4, 0); // arbitrary number > 512, i.e. more than 2 AXI transactions
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + 256, 0, (137)*4, 0, 0, 0); // arbitrary number > 512, i.e. more than 2 AXI transactions
 
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
