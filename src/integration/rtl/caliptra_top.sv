@@ -1345,7 +1345,7 @@ soc_ifc_top1
     .strap_ss_strap_generic_3                               (strap_ss_strap_generic_3                               ),
     .ss_debug_intent                                        (ss_debug_intent                                        ),
     .cptra_ss_debug_intent                                  (cptra_ss_debug_intent                                  ),
-    .fues_done                                              (fuse_done                                              ),
+    .fuse_done                                              (fuse_done                                              ),
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (ss_dbg_manuf_enable    ),
     .ss_soc_dbg_unlock_level(ss_soc_dbg_unlock_level),
