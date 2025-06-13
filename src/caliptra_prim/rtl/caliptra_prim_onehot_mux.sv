@@ -6,6 +6,7 @@
 // A AND/OR mux with a one-hot select input.
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 
 module caliptra_prim_onehot_mux #(
   parameter int Width  = 32,
@@ -28,7 +29,7 @@ module caliptra_prim_onehot_mux #(
       assign in_mux[b][i] = in_i[i][b];
     end
 
-    caliptra_prim_generic_and2 #(.Width(Inputs)) u_mux_bit_and(
+    `CALIPTRA_PRIM_MODULE_NAME(and2) #(.Width(Inputs)) u_mux_bit_and(
       .in0_i(in_mux[b]),
       .in1_i(sel_i),
       .out_o(out_mux_bits)
