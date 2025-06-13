@@ -217,6 +217,8 @@ module caliptra_top
     logic                       fw_update_rst_window;
 
     logic cptra_ss_debug_intent; //qualified debug intent
+    logic debug_intent_switch;
+    logic fuse_done; 
 
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
@@ -682,11 +684,17 @@ el2_veer_wrapper rvtop (
     always_comb scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
     // Detect transition of debug mode
     always_comb debug_lock_switch = cptra_security_state_Latched_d.debug_locked ^ cptra_security_state_Latched_f.debug_locked;
+    // Detect debug intent request. If debug_intent register set we hold this
+    // signal high until fuse_done is set. This ensures any secrets
+    // written between reset and fuse_done are cleared. Once fuse done is
+    // set we deassert this signal allowing for normal operation in a debug
+    // state.
+    always_comb debug_intent_switch = cptra_ss_debug_intent & ~fuse_done; 
     // Detect transition from valid lifecycle state to invalid
     always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
                                          ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
 
-    assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | device_lifecycle_switch | cptra_error_fatal;
+    assign debug_lock_or_scan_mode_switch = debug_intent_switch | debug_lock_switch | scan_mode_switch | device_lifecycle_switch | cptra_error_fatal;
 
     assign clear_obf_secrets_debugScanQ = clear_obf_secrets | cptra_in_debug_scan_mode | cptra_error_fatal;
 
@@ -1337,6 +1345,7 @@ soc_ifc_top1
     .strap_ss_strap_generic_3                               (strap_ss_strap_generic_3                               ),
     .ss_debug_intent                                        (ss_debug_intent                                        ),
     .cptra_ss_debug_intent                                  (cptra_ss_debug_intent                                  ),
+    .fues_done                                              (fuse_done                                              ),
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (ss_dbg_manuf_enable    ),
     .ss_soc_dbg_unlock_level(ss_soc_dbg_unlock_level),
