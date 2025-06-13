@@ -71,6 +71,7 @@ COMP_LIB_NAMES := aes \
 		  datavault \
 		  sha256 \
 		  sha512 \
+		  sha3 \
 		  soc_ifc \
 		  clk_gate \
 		  wdt
