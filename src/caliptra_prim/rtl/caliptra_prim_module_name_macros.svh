@@ -35,7 +35,9 @@
 // Usage: `CALIPTRA_PRIM_MODULE_NAME(module_name)
 // This will result in caliptra_prim_generic_module_name
 // if CALIPTRA_PRIM_MODULE_PREFIX is not defined.
-`define CALIPTRA_PRIM_MODULE_NAME(__name) \
-    `CALIPTRA_PRIM_MODULE_PREFIX``_``__name
+`define CALIPTRA_PRIM_MODULE_NAME_EXPAND(prefix, name) prefix``_``name
 
+`define CALIPTRA_PRIM_MODULE_NAME(__name) \
+    `CALIPTRA_PRIM_MODULE_NAME_EXPAND(`CALIPTRA_PRIM_MODULE_PREFIX, __name)
+ 
 `endif // caliptra_prim_module_name_macros_SVH
