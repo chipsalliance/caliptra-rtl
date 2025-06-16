@@ -128,7 +128,6 @@ module soc_ifc_top
     input logic [31:0] strap_ss_caliptra_dma_axi_user,
     input logic        ss_debug_intent,
     output logic       cptra_ss_debug_intent,
-    output logic       fuse_done,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -240,6 +239,7 @@ logic uc_mbox_lock;
 logic iccm_unlock;
 logic fw_upd_rst_executed;
 logic fuse_wr_done_reg_write_observed;
+logic fuse_done;
 
 logic unmasked_hw_error_fatal_write;
 logic unmasked_hw_error_non_fatal_write;
