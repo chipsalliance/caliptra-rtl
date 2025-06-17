@@ -30,6 +30,7 @@ GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
 # CALIPTRA_PRIM_ROOT  defaults to src/caliptra_prim_generic
 CALIPTRA_PRIM_ROOT = $(CALIPTRA_ROOT)/src/caliptra_prim_generic
+CALIPTRA_PRIM_MODULE_PREFIX = caliptra_prim_generic
 
 # Ensure that RISC-V toolchain is installed
 ifeq ($(shell which $(GCC_PREFIX)-gcc 2> /dev/null),)
