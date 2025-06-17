@@ -8,7 +8,7 @@
 
 # Scope
 
-This document defines technical specifications for a Caliptra RoT for Measurement (RTM)<sup>[1]</sup> cryptographic subsystem used in the Open Compute Project (OCP). This document, along with [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html), shall comprise the Caliptra technical specification.
+This document defines technical specifi/cations for a Caliptra RoT for Measurement (RTM)<sup>[1]</sup> cryptographic subsystem used in the Open Compute Project (OCP). This document, along with [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html), shall comprise the Caliptra technical specification.
 
 # Overview
 
@@ -37,6 +37,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 
 ## Key Caliptra 2.1 Changes
 * AXI Manager DMA AES feature for OCP L.O.C.K. support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
+* [AES Big Endian mode](#aes-endian)
 
 ## Boot FSM
 
@@ -1434,6 +1435,12 @@ Additional registers have been added to support key vault integration. Keys from
 ### Operation
 
 For more information, see the [AES Programmer's Guide](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/programmers_guide.md).
+
+## AES Endian
+
+The AES Core uses little endian for the DATA_IN and DATA_OUT registers. Caliptra allows a user to stream the data into and out of AES in big endian when AES_CLP.CTRL0.ENDIAN_SWAP is set to 1. This is done by swizzling the write and read data when a write targets DATA_IN or a read targets DATA_OUT. 
+
+By default little endian is selected.
 
 ### Signal descriptions
 
