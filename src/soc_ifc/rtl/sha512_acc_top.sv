@@ -220,16 +220,17 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   always_comb block_we = mbox_mode_block_we | stream_mode_block_we;
   
-  always_comb begin
-    for (int b=0; b<DATA_NUM_BYTES; b++) begin
-      mbox_rdata[b]      = sha_sram_resp.rdata.data[b*8 +: 8];
-      streaming_wdata[b] = req_data.wdata          [b*8 +: 8];
-      input_data[b] = ({8{mailbox_mode}}   & mbox_rdata[b]     ) |
-                      ({8{streaming_mode}} & streaming_wdata[b]);
-      swizzled_data[b] = hwif_out.MODE.ENDIAN_TOGGLE.value ? input_data[b] : //assign data as-is from input
-                                                             input_data[(DATA_NUM_BYTES-1-b)]; //convert data to big endian 
+  genvar b;
+  generate
+    for (b=0; b<DATA_NUM_BYTES; b++) begin: DATAIN_SELECT_AND_SWIZZLE
+      always_comb mbox_rdata[b]      = sha_sram_resp.rdata.data[b*8 +: 8];
+      always_comb streaming_wdata[b] = req_data.wdata          [b*8 +: 8];
+      always_comb input_data[b] = ({8{mailbox_mode}}   & mbox_rdata[b]     ) |
+                                  ({8{streaming_mode}} & streaming_wdata[b]);
+      always_comb swizzled_data[b] = hwif_out.MODE.ENDIAN_TOGGLE.value ? input_data[b] : //assign data as-is from input
+                                                                         input_data[(DATA_NUM_BYTES-1-b)]; //convert data to big endian
     end
-  end
+  endgenerate
 
   always_comb block_wdata = swizzled_data;
 
