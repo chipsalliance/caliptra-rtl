@@ -28,7 +28,8 @@ module aes_clp_wrapper
   #(
   parameter AHB_DATA_WIDTH = 32,
   parameter AHB_ADDR_WIDTH = 32,
-  parameter CIF_DATA_WIDTH = 32
+  parameter CIF_DATA_WIDTH = 32,
+  localparam CIF_DATA_NUM_BYTES = CIF_DATA_WIDTH / 8
 )
 (
   // Clock and reset.
@@ -82,18 +83,21 @@ logic ahb_hold;
 logic ahb_write;
 logic ahb_err;
 logic  [AHB_ADDR_WIDTH-1 : 0] ahb_addr;
-logic  [31 : 0] ahb_wdata;
-logic  [31 : 0] ahb_rdata;
+logic  [CIF_DATA_WIDTH-1 : 0] ahb_wdata;
+logic  [CIF_DATA_WIDTH-1 : 0] ahb_rdata;
   
 logic req_collision;
+logic aes_cif_endian_swap;
   
 logic aes_cif_req_dv;
 logic aes_cif_req_write;
 logic   [AHB_ADDR_WIDTH-1 : 0] aes_cif_req_addr;
-logic   [31 : 0] aes_cif_req_wdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_wdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_wdata_post_endian;
 logic aes_cif_req_hold;
 logic aes_cif_req_error;
-logic   [31 : 0] aes_cif_req_rdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_rdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_rdata_post_endian;
 
 logic clp_reg_dv;
 logic clp_reg_write;
@@ -129,7 +133,7 @@ assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-    .CLIENT_DATA_WIDTH(32)
+    .CLIENT_DATA_WIDTH(CIF_DATA_WIDTH)
 ) ahb_slv_sif_inst
 (
     //AMBA AHB Lite INF
@@ -164,17 +168,45 @@ ahb_slv_sif #(
 // It is FW responsiblity to ensure only AHB or DMA accesses AES at a time
 assign req_collision = dma_req_dv & ahb_dv;
 
+assign aes_cif_endian_swap = aes_cif_req_dv && hwif_out.CTRL0.ENDIAN_SWAP.value  && (
+        aes_cif_req_addr == `AES_REG_DATA_IN_0 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_1 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_2 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_3 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_0 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_1 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_2 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_3 
+    );
+
 assign aes_cif_req_dv = dma_req_dv | ahb_dv;
 assign aes_cif_req_write = dma_req_dv ? dma_req_write : ahb_write ;
 assign aes_cif_req_addr = dma_req_dv ? dma_req_addr : ahb_addr ;
 assign aes_cif_req_wdata = dma_req_dv ? dma_req_wdata : ahb_wdata ;
+
+always_comb begin
+  for (int b=0; b<CIF_DATA_NUM_BYTES; b++) begin
+      aes_cif_req_wdata_post_endian[b*8 +: 8] = aes_cif_endian_swap ?
+                                                  aes_cif_req_wdata[(CIF_DATA_NUM_BYTES-1-b)*8 +: 8] : // convert data from big endian to little endian
+                                                  aes_cif_req_wdata[b*8 +: 8];                         // assign data as-is to AES (little endian)
+  end
+end
+
 assign dma_req_hold = dma_req_dv & aes_cif_req_hold;
 assign ahb_hold = ahb_dv & aes_cif_req_hold;
 assign dma_req_error = (dma_req_dv & aes_cif_req_error) | req_collision;
 assign ahb_err = (ahb_dv & aes_cif_req_error) | req_collision;
-assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata : '0;
-assign ahb_rdata = ahb_dv ? aes_cif_req_rdata : '0;
-   
+
+always_comb begin
+  for (int b=0; b<CIF_DATA_NUM_BYTES; b++) begin
+      aes_cif_req_rdata_post_endian[b*8 +: 8] = aes_cif_endian_swap ? 
+                                                  aes_cif_req_rdata[(CIF_DATA_NUM_BYTES-1-b)*8 +: 8] : // convert data from little endian to big endian
+                                                  aes_cif_req_rdata[b*8 +: 8];                         // assign data as-is from AES (little endian)
+  end 
+end
+
+assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0;
+assign ahb_rdata = ahb_dv ? aes_cif_req_rdata_post_endian: '0;
 
 
 //TLUL Adapter
@@ -195,7 +227,7 @@ caliptra_tlul_adapter_vh_inst
   .hld_o(aes_cif_req_hold),
   .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, aes_cif_req_addr}),
   .write_i(aes_cif_req_write),
-  .wdata_i(aes_cif_req_wdata),
+  .wdata_i(aes_cif_req_wdata_post_endian),
   .wstrb_i('1),
   .size_i(3'b010),
   .rdata_o(aes_cif_req_rdata),

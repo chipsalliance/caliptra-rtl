@@ -373,6 +373,7 @@
 `define CLP_AES_CLP_REG_ENTROPY_IF_SEED_6                                                           (32'h10011928)
 `define CLP_AES_CLP_REG_ENTROPY_IF_SEED_7                                                           (32'h1001192c)
 `define CLP_AES_CLP_REG_ENTROPY_IF_SEED_8                                                           (32'h10011930)
+`define CLP_AES_CLP_REG_CTRL0                                                                       (32'h10011934)
 `define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (32'h10011a00)
 `define CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS                                                        (32'h10011a04)
 `define CLP_AES_CLP_REG_INTR_BLOCK_RF_START                                                         (32'h10011c00)

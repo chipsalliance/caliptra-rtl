@@ -1300,12 +1300,9 @@ import soc_ifc_pkg::*;
     `CALIPTRA_ASSERT(AXI_DMA_MIN_WR_CRED, !((wr_credits < 1) && wr_req_hshake), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_RST_WR_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (wr_credits == 0), clk, !rst_n)
     // AES FSM sync with DMA FSM
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_DONE0_SYNC,    (ctrl_fsm_ps == DMA_DONE && hwif_out.ctrl.aes_mode_en.value) |-> (aes_fsm_ps == AES_DONE), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_ERR0_SYNC,     (ctrl_fsm_ps == DMA_ERROR && hwif_out.ctrl.aes_mode_en.value && !cmd_parse_error) |-> (aes_fsm_ps == AES_ERROR), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_DONE1_SYNC,    (aes_fsm_ps == AES_DONE) |-> (ctrl_fsm_ps == DMA_DONE), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_ERR1_SYNC,     (aes_fsm_ps == AES_ERROR) |-> (ctrl_fsm_ps == DMA_ERROR), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_IDLE0_SYNC,    (ctrl_fsm_ps != AES_IDLE && hwif_out.ctrl.aes_mode_en.value) |-> (aes_fsm_ps != DMA_IDLE), clk, !rst_n)
-    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_IDLE1_SYNC,    (aes_fsm_ps != AES_IDLE) |-> (ctrl_fsm_ps != DMA_IDLE), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_DONE_SYNC,    (ctrl_fsm_ps == DMA_DONE && hwif_out.ctrl.aes_mode_en.value) |-> (aes_fsm_ps == AES_DONE || aes_fsm_ps == AES_IDLE), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_ERR_SYNC,     (ctrl_fsm_ps == DMA_ERROR && hwif_out.ctrl.aes_mode_en.value && !cmd_parse_error) |-> (aes_fsm_ps == AES_ERROR), clk, !rst_n)
+    `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_IDLE_SYNC,    (aes_fsm_ps != AES_IDLE) |-> (ctrl_fsm_ps != DMA_IDLE), clk, !rst_n)
     // AES FIFO ensure no underflow/overflow
     `CALIPTRA_ASSERT(AXI_DMA_AES_FIFO_WRITE_VALID, (aes_fifo_w_valid) |-> (aes_fifo_w_ready), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_AES_FIFO_WRITE_NOT_FULL, (aes_fifo_w_valid) |-> (!aes_fifo_full), clk, !rst_n)

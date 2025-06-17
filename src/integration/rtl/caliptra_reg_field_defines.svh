@@ -1370,6 +1370,11 @@
 `ifndef AES_CLP_REG_ENTROPY_IF_SEED_8
 `define AES_CLP_REG_ENTROPY_IF_SEED_8                                                               (32'h130)
 `endif
+`ifndef AES_CLP_REG_CTRL0
+`define AES_CLP_REG_CTRL0                                                                           (32'h134)
+`define AES_CLP_REG_CTRL0_ENDIAN_SWAP_LOW                                                           (0)
+`define AES_CLP_REG_CTRL0_ENDIAN_SWAP_MASK                                                          (32'h1)
+`endif
 `ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
 `define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (32'h200)
 `define AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_LOW                                                  (0)
