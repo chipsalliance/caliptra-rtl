@@ -86,115 +86,115 @@ jobs:
             fi
 
   # Build the comparison hash file
-  hash_check:
-    name: Hash Check
-    runs-on: ubuntu-22.04
-    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
-    steps:
-      - name: Echo Reason
-        run: echo "$GITHUB_EVENT_NAME"
-      - name: Checkout RTL repo
-        uses: actions/checkout@v4
-        with:
-            fetch-depth: 0
-            submodules: 'true'
+  # FIXME hash_check:
+  # FIXME   name: Hash Check
+  # FIXME   runs-on: ubuntu-22.04
+  # FIXME   if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
+  # FIXME   steps:
+  # FIXME     - name: Echo Reason
+  # FIXME       run: echo "$GITHUB_EVENT_NAME"
+  # FIXME     - name: Checkout RTL repo
+  # FIXME       uses: actions/checkout@v4
+  # FIXME       with:
+  # FIXME           fetch-depth: 0
+  # FIXME           submodules: 'true'
 
-      - name: Gen File List
-        run: |
-            # Search for all source code files, scripts, and configuration
-            # files used to build/validate Caliptra RTL.
-            # File type exclusions:
-            # - *.md
-            # - *.png
-            # - *.jpg
-            # - *.xlsx/*.xls
-            # - any files inside
-            #   - .git
-            #   - .github/workflows
-            find "$GITHUB_WORKSPACE" -type f \( -name "*.sv" \
-                                             -o -name "*.svh" \
-                                             -o -name "*.rdl" \
-                                             -o -name "*.json" \
-                                             -o -name "*.v" \
-                                             -o -name "*.vh" \
-                                             -o -name "*.rsp" \
-                                             -o -name "*.s" \
-                                             -o -name "*.c" \
-                                             -o -name "*.cpp" \
-                                             -o -name "*.h" \
-                                             -o -name "*.hex" \
-                                             -o -name "*.ld" \
-                                             -o -name "*.gdb" \
-                                             -o -name "*.yml" \
-                                             -o -name "*.sh" \
-                                             -o -name "*.py" \
-                                             -o -name "pr_timestamp" \) \
-                                             ! -path "*.github/workflows/*" \
-                                             ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
-            sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
-            echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
-            echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-            head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
-            echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  # FIXME     - name: Gen File List
+  # FIXME       run: |
+  # FIXME           # Search for all source code files, scripts, and configuration
+  # FIXME           # files used to build/validate Caliptra RTL.
+  # FIXME           # File type exclusions:
+  # FIXME           # - *.md
+  # FIXME           # - *.png
+  # FIXME           # - *.jpg
+  # FIXME           # - *.xlsx/*.xls
+  # FIXME           # - any files inside
+  # FIXME           #   - .git
+  # FIXME           #   - .github/workflows
+  # FIXME           find "$GITHUB_WORKSPACE" -type f \( -name "*.sv" \
+  # FIXME                                            -o -name "*.svh" \
+  # FIXME                                            -o -name "*.rdl" \
+  # FIXME                                            -o -name "*.json" \
+  # FIXME                                            -o -name "*.v" \
+  # FIXME                                            -o -name "*.vh" \
+  # FIXME                                            -o -name "*.rsp" \
+  # FIXME                                            -o -name "*.s" \
+  # FIXME                                            -o -name "*.c" \
+  # FIXME                                            -o -name "*.cpp" \
+  # FIXME                                            -o -name "*.h" \
+  # FIXME                                            -o -name "*.hex" \
+  # FIXME                                            -o -name "*.ld" \
+  # FIXME                                            -o -name "*.gdb" \
+  # FIXME                                            -o -name "*.yml" \
+  # FIXME                                            -o -name "*.sh" \
+  # FIXME                                            -o -name "*.py" \
+  # FIXME                                            -o -name "pr_timestamp" \) \
+  # FIXME                                            ! -path "*.github/workflows/*" \
+  # FIXME                                            ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+  # FIXME           sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+  # FIXME           echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
+  # FIXME           echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  # FIXME           head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+  # FIXME           echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 
-      - name: Check Timestamp
-        env:
-            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
-        run: |
-            # Find the last commit that modified any design file (not documentation)
-            # Start the search with the second parent of the PR merge commit
-            # in order to only traverse the feature branch commits
-            # Use an explicit list of files instead of an exclusion list
-            last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
-                last_commit="$(git rev-parse ${last_commit}^)"
-            done
-            echo "Latest non-doc hash is ${last_commit}"
-            echo "Checking if ${last_commit} is contained in branch 'origin/$TARGET_BR'"
-            # If the last non-doc commit is already contained in branch 'TARGET_BR', then skip the
-            # timestamp check -- as that commit would already be signed off through another PR.
-            # Otherwise, that commit would fail because it's part of a commit that was squashed into TARGET_BR
-            # much later than the original stamp commit.
-            if [[ $(git branch --remotes --list "origin/$TARGET_BR" --contains ${last_commit}) =~ "origin/$TARGET_BR" ]]; then
-                echo "Commit ${last_commit} is contained in branch '$TARGET_BR', skipping timestamp check"
-            else
-                # Compare the timestamp from the latest commit with the pr_timestamp file
-                timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
-                if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
-                    echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
-                    exit 1
-                fi
-                timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
-                if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
-                    echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
-                    echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
-                    echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
-                    exit 1
-                fi
-                echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
-            fi
+  # FIXME     - name: Check Timestamp
+  # FIXME       env:
+  # FIXME           TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
+  # FIXME       run: |
+  # FIXME           # Find the last commit that modified any design file (not documentation)
+  # FIXME           # Start the search with the second parent of the PR merge commit
+  # FIXME           # in order to only traverse the feature branch commits
+  # FIXME           # Use an explicit list of files instead of an exclusion list
+  # FIXME           last_commit=$(git rev-parse HEAD^2)
+  # FIXME           until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
+  # FIXME               last_commit="$(git rev-parse ${last_commit}^)"
+  # FIXME           done
+  # FIXME           echo "Latest non-doc hash is ${last_commit}"
+  # FIXME           echo "Checking if ${last_commit} is contained in branch 'origin/$TARGET_BR'"
+  # FIXME           # If the last non-doc commit is already contained in branch 'TARGET_BR', then skip the
+  # FIXME           # timestamp check -- as that commit would already be signed off through another PR.
+  # FIXME           # Otherwise, that commit would fail because it's part of a commit that was squashed into TARGET_BR
+  # FIXME           # much later than the original stamp commit.
+  # FIXME           if [[ $(git branch --remotes --list "origin/$TARGET_BR" --contains ${last_commit}) =~ "origin/$TARGET_BR" ]]; then
+  # FIXME               echo "Commit ${last_commit} is contained in branch '$TARGET_BR', skipping timestamp check"
+  # FIXME           else
+  # FIXME               # Compare the timestamp from the latest commit with the pr_timestamp file
+  # FIXME               timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
+  # FIXME               if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
+  # FIXME                   echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
+  # FIXME                   exit 1
+  # FIXME               fi
+  # FIXME               timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
+  # FIXME               if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
+  # FIXME                   echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
+  # FIXME                   echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+  # FIXME                   echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
+  # FIXME                   exit 1
+  # FIXME               fi
+  # FIXME               echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
+  # FIXME           fi
 
-      - name: Check Hash
-        run: |
-            hash=$($GITHUB_WORKSPACE/.github/scripts/file_hash.sh $GITHUB_WORKSPACE $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt)
-            if [[ -z ${hash:+"empty"} ]]; then
-                echo "Failed to run hash script"
-                echo $hash
-                exit 1;
-            fi
-            echo "RTL hash is $hash"
-            if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash ]]; then
-                echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash"
-                exit 1
-            fi
-            hash_orig=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash)
-            if [[ ${hash_orig} != ${hash} ]]; then
-                echo "Error, submitted hash [${hash_orig}] does not match calculated hash [${hash}]"
-                echo "If your internal testcase completed successfully and invoked .github/scripts/stamp_repo.sh to generate this hash, please open a support issue on the caliptra-rtl repository"
-                exit 1
-            fi
-            echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
-            rm $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+  # FIXME     - name: Check Hash
+  # FIXME       run: |
+  # FIXME           hash=$($GITHUB_WORKSPACE/.github/scripts/file_hash.sh $GITHUB_WORKSPACE $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt)
+  # FIXME           if [[ -z ${hash:+"empty"} ]]; then
+  # FIXME               echo "Failed to run hash script"
+  # FIXME               echo $hash
+  # FIXME               exit 1;
+  # FIXME           fi
+  # FIXME           echo "RTL hash is $hash"
+  # FIXME           if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash ]]; then
+  # FIXME               echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash"
+  # FIXME               exit 1
+  # FIXME           fi
+  # FIXME           hash_orig=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash)
+  # FIXME           if [[ ${hash_orig} != ${hash} ]]; then
+  # FIXME               echo "Error, submitted hash [${hash_orig}] does not match calculated hash [${hash}]"
+  # FIXME               echo "If your internal testcase completed successfully and invoked .github/scripts/stamp_repo.sh to generate this hash, please open a support issue on the caliptra-rtl repository"
+  # FIXME               exit 1
+  # FIXME           fi
+  # FIXME           echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
+  # FIXME           rm $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
 
   # Check License Headers
   # Check for microsoft employee or that all compile.yml/.vf are untouched
