@@ -185,7 +185,7 @@ jobs:
           path: /opt/riscv
           key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
       
-          - name: Delay before retry
+      - name: Delay before retry
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         run: |
           delay=$((RANDOM % 10 + 1))
