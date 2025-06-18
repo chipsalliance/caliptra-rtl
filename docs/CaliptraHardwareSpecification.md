@@ -8,7 +8,7 @@
 
 # Scope
 
-This document defines technical specifi/cations for a Caliptra RoT for Measurement (RTM)<sup>[1]</sup> cryptographic subsystem used in the Open Compute Project (OCP). This document, along with [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html), shall comprise the Caliptra technical specification.
+This document defines technical specifications for a Caliptra RoT for Measurement (RTM)<sup>[1]</sup> cryptographic subsystem used in the Open Compute Project (OCP). This document, along with [Caliptra: A Datacenter System on a Chip (SoC) Root of Trust (RoT)](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html), shall comprise the Caliptra technical specification.
 
 # Overview
 
