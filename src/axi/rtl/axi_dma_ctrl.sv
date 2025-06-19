@@ -467,9 +467,9 @@ import soc_ifc_pkg::*;
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
              2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
         endcase
-        cmd_inv_aes_route_combo = hwif_out.ctrl.aes_mode_en.value && 
-                                    hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) &&  
-                                    hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD);
+        cmd_inv_aes_route_combo = hwif_out.ctrl.aes_mode_en.value && (
+                                    hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) ||  
+                                    hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD));
         cmd_inv_aes_block_size = hwif_out.ctrl.aes_mode_en.value && hwif_out.block_size.size.value != '0;
         cmd_inv_aes_fixed      = hwif_out.ctrl.aes_mode_en.value && (hwif_out.ctrl.rd_fixed.value || hwif_out.ctrl.wr_fixed.value);
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
