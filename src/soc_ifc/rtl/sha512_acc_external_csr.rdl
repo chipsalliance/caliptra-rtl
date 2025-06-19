@@ -56,9 +56,9 @@ reg {
         sw=rw; hw=r; swwe=valid_user; swmod=true; encode = sha_cmd_e;} MODE[2]=0;
     field {
         name="Endianness Toggle for SHA in mailbox mode";
-        desc="Default behavior assumes that data in mailbox is little endian,
-              When set to 0, data from mailbox will be swizzled from little to big endian at the byte level.
-              When set to 1, data from the mailbox will be loaded into SHA as-is.
+        desc="Default behavior assumes that data in mailbox or from streaming input is little endian,
+              When set to 0, data input (from mailbox or streaming data) will be swizzled from little to big endian at the byte level.
+              When set to 1, data input will be loaded into SHA as-is.
               [br]Caliptra Access: RW
               [br]SOC Access:      RW";
         sw=rw; hw=r; swwe=valid_user;} ENDIAN_TOGGLE=0;
