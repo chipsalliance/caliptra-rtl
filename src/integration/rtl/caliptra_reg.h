@@ -7881,6 +7881,8 @@
 #define MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK                                                          (0x10)
 #define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_LOW                                                        (5)
 #define MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK                                                       (0x20)
+#define MLDSA_REG_MLDSA_CTRL_STREAM_MSG_LOW                                                         (6)
+#define MLDSA_REG_MLDSA_CTRL_STREAM_MSG_MASK                                                        (0x40)
 #endif
 #define CLP_MLDSA_REG_MLDSA_STATUS                                                                  (0x10030014)
 #ifndef MLDSA_REG_MLDSA_STATUS
@@ -7889,6 +7891,8 @@
 #define MLDSA_REG_MLDSA_STATUS_READY_MASK                                                           (0x1)
 #define MLDSA_REG_MLDSA_STATUS_VALID_LOW                                                            (1)
 #define MLDSA_REG_MLDSA_STATUS_VALID_MASK                                                           (0x2)
+#define MLDSA_REG_MLDSA_STATUS_MSG_STREAM_READY_LOW                                                 (2)
+#define MLDSA_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK                                                (0x4)
 #endif
 #define CLP_MLDSA_REG_MLDSA_ENTROPY_0                                                               (0x10030018)
 #ifndef MLDSA_REG_MLDSA_ENTROPY_0
@@ -8209,6 +8213,274 @@
 #define CLP_MLDSA_REG_MLDSA_EXTERNAL_MU_15                                                          (0x10030154)
 #ifndef MLDSA_REG_MLDSA_EXTERNAL_MU_15
 #define MLDSA_REG_MLDSA_EXTERNAL_MU_15                                                              (0x154)
+#endif
+#define CLP_MLDSA_REG_MLDSA_MSG_STROBE                                                              (0x10030158)
+#ifndef MLDSA_REG_MLDSA_MSG_STROBE
+#define MLDSA_REG_MLDSA_MSG_STROBE                                                                  (0x158)
+#define MLDSA_REG_MLDSA_MSG_STROBE_STROBE_LOW                                                       (0)
+#define MLDSA_REG_MLDSA_MSG_STROBE_STROBE_MASK                                                      (0xf)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_CONFIG                                                              (0x1003015c)
+#ifndef MLDSA_REG_MLDSA_CTX_CONFIG
+#define MLDSA_REG_MLDSA_CTX_CONFIG                                                                  (0x15c)
+#define MLDSA_REG_MLDSA_CTX_CONFIG_CTX_SIZE_LOW                                                     (0)
+#define MLDSA_REG_MLDSA_CTX_CONFIG_CTX_SIZE_MASK                                                    (0xff)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_0                                                                   (0x10030160)
+#ifndef MLDSA_REG_MLDSA_CTX_0
+#define MLDSA_REG_MLDSA_CTX_0                                                                       (0x160)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_1                                                                   (0x10030164)
+#ifndef MLDSA_REG_MLDSA_CTX_1
+#define MLDSA_REG_MLDSA_CTX_1                                                                       (0x164)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_2                                                                   (0x10030168)
+#ifndef MLDSA_REG_MLDSA_CTX_2
+#define MLDSA_REG_MLDSA_CTX_2                                                                       (0x168)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_3                                                                   (0x1003016c)
+#ifndef MLDSA_REG_MLDSA_CTX_3
+#define MLDSA_REG_MLDSA_CTX_3                                                                       (0x16c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_4                                                                   (0x10030170)
+#ifndef MLDSA_REG_MLDSA_CTX_4
+#define MLDSA_REG_MLDSA_CTX_4                                                                       (0x170)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_5                                                                   (0x10030174)
+#ifndef MLDSA_REG_MLDSA_CTX_5
+#define MLDSA_REG_MLDSA_CTX_5                                                                       (0x174)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_6                                                                   (0x10030178)
+#ifndef MLDSA_REG_MLDSA_CTX_6
+#define MLDSA_REG_MLDSA_CTX_6                                                                       (0x178)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_7                                                                   (0x1003017c)
+#ifndef MLDSA_REG_MLDSA_CTX_7
+#define MLDSA_REG_MLDSA_CTX_7                                                                       (0x17c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_8                                                                   (0x10030180)
+#ifndef MLDSA_REG_MLDSA_CTX_8
+#define MLDSA_REG_MLDSA_CTX_8                                                                       (0x180)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_9                                                                   (0x10030184)
+#ifndef MLDSA_REG_MLDSA_CTX_9
+#define MLDSA_REG_MLDSA_CTX_9                                                                       (0x184)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_10                                                                  (0x10030188)
+#ifndef MLDSA_REG_MLDSA_CTX_10
+#define MLDSA_REG_MLDSA_CTX_10                                                                      (0x188)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_11                                                                  (0x1003018c)
+#ifndef MLDSA_REG_MLDSA_CTX_11
+#define MLDSA_REG_MLDSA_CTX_11                                                                      (0x18c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_12                                                                  (0x10030190)
+#ifndef MLDSA_REG_MLDSA_CTX_12
+#define MLDSA_REG_MLDSA_CTX_12                                                                      (0x190)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_13                                                                  (0x10030194)
+#ifndef MLDSA_REG_MLDSA_CTX_13
+#define MLDSA_REG_MLDSA_CTX_13                                                                      (0x194)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_14                                                                  (0x10030198)
+#ifndef MLDSA_REG_MLDSA_CTX_14
+#define MLDSA_REG_MLDSA_CTX_14                                                                      (0x198)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_15                                                                  (0x1003019c)
+#ifndef MLDSA_REG_MLDSA_CTX_15
+#define MLDSA_REG_MLDSA_CTX_15                                                                      (0x19c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_16                                                                  (0x100301a0)
+#ifndef MLDSA_REG_MLDSA_CTX_16
+#define MLDSA_REG_MLDSA_CTX_16                                                                      (0x1a0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_17                                                                  (0x100301a4)
+#ifndef MLDSA_REG_MLDSA_CTX_17
+#define MLDSA_REG_MLDSA_CTX_17                                                                      (0x1a4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_18                                                                  (0x100301a8)
+#ifndef MLDSA_REG_MLDSA_CTX_18
+#define MLDSA_REG_MLDSA_CTX_18                                                                      (0x1a8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_19                                                                  (0x100301ac)
+#ifndef MLDSA_REG_MLDSA_CTX_19
+#define MLDSA_REG_MLDSA_CTX_19                                                                      (0x1ac)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_20                                                                  (0x100301b0)
+#ifndef MLDSA_REG_MLDSA_CTX_20
+#define MLDSA_REG_MLDSA_CTX_20                                                                      (0x1b0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_21                                                                  (0x100301b4)
+#ifndef MLDSA_REG_MLDSA_CTX_21
+#define MLDSA_REG_MLDSA_CTX_21                                                                      (0x1b4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_22                                                                  (0x100301b8)
+#ifndef MLDSA_REG_MLDSA_CTX_22
+#define MLDSA_REG_MLDSA_CTX_22                                                                      (0x1b8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_23                                                                  (0x100301bc)
+#ifndef MLDSA_REG_MLDSA_CTX_23
+#define MLDSA_REG_MLDSA_CTX_23                                                                      (0x1bc)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_24                                                                  (0x100301c0)
+#ifndef MLDSA_REG_MLDSA_CTX_24
+#define MLDSA_REG_MLDSA_CTX_24                                                                      (0x1c0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_25                                                                  (0x100301c4)
+#ifndef MLDSA_REG_MLDSA_CTX_25
+#define MLDSA_REG_MLDSA_CTX_25                                                                      (0x1c4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_26                                                                  (0x100301c8)
+#ifndef MLDSA_REG_MLDSA_CTX_26
+#define MLDSA_REG_MLDSA_CTX_26                                                                      (0x1c8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_27                                                                  (0x100301cc)
+#ifndef MLDSA_REG_MLDSA_CTX_27
+#define MLDSA_REG_MLDSA_CTX_27                                                                      (0x1cc)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_28                                                                  (0x100301d0)
+#ifndef MLDSA_REG_MLDSA_CTX_28
+#define MLDSA_REG_MLDSA_CTX_28                                                                      (0x1d0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_29                                                                  (0x100301d4)
+#ifndef MLDSA_REG_MLDSA_CTX_29
+#define MLDSA_REG_MLDSA_CTX_29                                                                      (0x1d4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_30                                                                  (0x100301d8)
+#ifndef MLDSA_REG_MLDSA_CTX_30
+#define MLDSA_REG_MLDSA_CTX_30                                                                      (0x1d8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_31                                                                  (0x100301dc)
+#ifndef MLDSA_REG_MLDSA_CTX_31
+#define MLDSA_REG_MLDSA_CTX_31                                                                      (0x1dc)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_32                                                                  (0x100301e0)
+#ifndef MLDSA_REG_MLDSA_CTX_32
+#define MLDSA_REG_MLDSA_CTX_32                                                                      (0x1e0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_33                                                                  (0x100301e4)
+#ifndef MLDSA_REG_MLDSA_CTX_33
+#define MLDSA_REG_MLDSA_CTX_33                                                                      (0x1e4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_34                                                                  (0x100301e8)
+#ifndef MLDSA_REG_MLDSA_CTX_34
+#define MLDSA_REG_MLDSA_CTX_34                                                                      (0x1e8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_35                                                                  (0x100301ec)
+#ifndef MLDSA_REG_MLDSA_CTX_35
+#define MLDSA_REG_MLDSA_CTX_35                                                                      (0x1ec)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_36                                                                  (0x100301f0)
+#ifndef MLDSA_REG_MLDSA_CTX_36
+#define MLDSA_REG_MLDSA_CTX_36                                                                      (0x1f0)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_37                                                                  (0x100301f4)
+#ifndef MLDSA_REG_MLDSA_CTX_37
+#define MLDSA_REG_MLDSA_CTX_37                                                                      (0x1f4)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_38                                                                  (0x100301f8)
+#ifndef MLDSA_REG_MLDSA_CTX_38
+#define MLDSA_REG_MLDSA_CTX_38                                                                      (0x1f8)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_39                                                                  (0x100301fc)
+#ifndef MLDSA_REG_MLDSA_CTX_39
+#define MLDSA_REG_MLDSA_CTX_39                                                                      (0x1fc)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_40                                                                  (0x10030200)
+#ifndef MLDSA_REG_MLDSA_CTX_40
+#define MLDSA_REG_MLDSA_CTX_40                                                                      (0x200)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_41                                                                  (0x10030204)
+#ifndef MLDSA_REG_MLDSA_CTX_41
+#define MLDSA_REG_MLDSA_CTX_41                                                                      (0x204)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_42                                                                  (0x10030208)
+#ifndef MLDSA_REG_MLDSA_CTX_42
+#define MLDSA_REG_MLDSA_CTX_42                                                                      (0x208)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_43                                                                  (0x1003020c)
+#ifndef MLDSA_REG_MLDSA_CTX_43
+#define MLDSA_REG_MLDSA_CTX_43                                                                      (0x20c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_44                                                                  (0x10030210)
+#ifndef MLDSA_REG_MLDSA_CTX_44
+#define MLDSA_REG_MLDSA_CTX_44                                                                      (0x210)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_45                                                                  (0x10030214)
+#ifndef MLDSA_REG_MLDSA_CTX_45
+#define MLDSA_REG_MLDSA_CTX_45                                                                      (0x214)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_46                                                                  (0x10030218)
+#ifndef MLDSA_REG_MLDSA_CTX_46
+#define MLDSA_REG_MLDSA_CTX_46                                                                      (0x218)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_47                                                                  (0x1003021c)
+#ifndef MLDSA_REG_MLDSA_CTX_47
+#define MLDSA_REG_MLDSA_CTX_47                                                                      (0x21c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_48                                                                  (0x10030220)
+#ifndef MLDSA_REG_MLDSA_CTX_48
+#define MLDSA_REG_MLDSA_CTX_48                                                                      (0x220)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_49                                                                  (0x10030224)
+#ifndef MLDSA_REG_MLDSA_CTX_49
+#define MLDSA_REG_MLDSA_CTX_49                                                                      (0x224)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_50                                                                  (0x10030228)
+#ifndef MLDSA_REG_MLDSA_CTX_50
+#define MLDSA_REG_MLDSA_CTX_50                                                                      (0x228)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_51                                                                  (0x1003022c)
+#ifndef MLDSA_REG_MLDSA_CTX_51
+#define MLDSA_REG_MLDSA_CTX_51                                                                      (0x22c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_52                                                                  (0x10030230)
+#ifndef MLDSA_REG_MLDSA_CTX_52
+#define MLDSA_REG_MLDSA_CTX_52                                                                      (0x230)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_53                                                                  (0x10030234)
+#ifndef MLDSA_REG_MLDSA_CTX_53
+#define MLDSA_REG_MLDSA_CTX_53                                                                      (0x234)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_54                                                                  (0x10030238)
+#ifndef MLDSA_REG_MLDSA_CTX_54
+#define MLDSA_REG_MLDSA_CTX_54                                                                      (0x238)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_55                                                                  (0x1003023c)
+#ifndef MLDSA_REG_MLDSA_CTX_55
+#define MLDSA_REG_MLDSA_CTX_55                                                                      (0x23c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_56                                                                  (0x10030240)
+#ifndef MLDSA_REG_MLDSA_CTX_56
+#define MLDSA_REG_MLDSA_CTX_56                                                                      (0x240)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_57                                                                  (0x10030244)
+#ifndef MLDSA_REG_MLDSA_CTX_57
+#define MLDSA_REG_MLDSA_CTX_57                                                                      (0x244)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_58                                                                  (0x10030248)
+#ifndef MLDSA_REG_MLDSA_CTX_58
+#define MLDSA_REG_MLDSA_CTX_58                                                                      (0x248)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_59                                                                  (0x1003024c)
+#ifndef MLDSA_REG_MLDSA_CTX_59
+#define MLDSA_REG_MLDSA_CTX_59                                                                      (0x24c)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_60                                                                  (0x10030250)
+#ifndef MLDSA_REG_MLDSA_CTX_60
+#define MLDSA_REG_MLDSA_CTX_60                                                                      (0x250)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_61                                                                  (0x10030254)
+#ifndef MLDSA_REG_MLDSA_CTX_61
+#define MLDSA_REG_MLDSA_CTX_61                                                                      (0x254)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_62                                                                  (0x10030258)
+#ifndef MLDSA_REG_MLDSA_CTX_62
+#define MLDSA_REG_MLDSA_CTX_62                                                                      (0x258)
+#endif
+#define CLP_MLDSA_REG_MLDSA_CTX_63                                                                  (0x1003025c)
+#ifndef MLDSA_REG_MLDSA_CTX_63
+#define MLDSA_REG_MLDSA_CTX_63                                                                      (0x25c)
 #endif
 #define CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR                                                        (0x10031000)
 #define CLP_MLDSA_REG_MLDSA_PUBKEY_END_ADDR                                                         (0x10031a1f)
