@@ -10,6 +10,7 @@
 // Double-synchronizer flop for multibit signals with additional output buffers.
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 
 module caliptra_prim_mubi4_sync
   import caliptra_prim_mubi_pkg::*;
@@ -66,7 +67,7 @@ module caliptra_prim_mubi4_sync
       );
 
       logic [MuBi4Width-1:0] sig_unstable;
-      caliptra_prim_generic_xor2 #(
+      `CALIPTRA_PRIM_MODULE_NAME(xor2) #(
         .Width(MuBi4Width)
       ) u_mubi_xor (
         .in0_i(mubi_sync),

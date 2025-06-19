@@ -14,6 +14,7 @@
 // mask cannot be used and has to be tied to {Width{1'b1}}.
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 
 module caliptra_prim_ram_1p_adv import caliptra_prim_ram_1p_pkg::*; #(
   parameter  int Depth                = 512,
@@ -102,7 +103,7 @@ module caliptra_prim_ram_1p_adv import caliptra_prim_ram_1p_pkg::*; #(
   assign req_q_b = mubi4_test_true_loose(req_q);
   assign write_q_b = mubi4_test_true_loose(write_q);
 
-  caliptra_prim_generic_ram_1p #(
+  `CALIPTRA_PRIM_MODULE_NAME(ram_1p) #(
     .MemInitFile     (MemInitFile),
 
     .Width           (TotalWidth),
