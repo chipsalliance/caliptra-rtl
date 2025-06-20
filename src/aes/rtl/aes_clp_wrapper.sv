@@ -27,7 +27,9 @@ module aes_clp_wrapper
   import aes_clp_reg_pkg::*;
   #(
   parameter AHB_DATA_WIDTH = 32,
-  parameter AHB_ADDR_WIDTH = 32
+  parameter AHB_ADDR_WIDTH = 32,
+  parameter CIF_DATA_WIDTH = 32,
+  localparam CIF_DATA_NUM_BYTES = CIF_DATA_WIDTH / 8
 )
 (
   // Clock and reset.
@@ -46,6 +48,20 @@ module aes_clp_wrapper
   output logic hresp_o,
   output logic hreadyout_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
+  
+  // status signals
+  output logic input_ready_o,
+  output logic output_valid_o,
+  output logic status_idle_o,
+    
+  // DMA CIF
+  input  logic dma_req_dv,
+  input  logic dma_req_write,
+  input  logic   [AHB_ADDR_WIDTH-1 : 0] dma_req_addr,
+  input  logic   [CIF_DATA_WIDTH-1 : 0] dma_req_wdata,
+  output logic dma_req_hold,
+  output logic dma_req_error,
+  output logic   [CIF_DATA_WIDTH-1 : 0] dma_req_rdata,
   
   // kv interface
   output kv_read_t kv_read,
@@ -67,8 +83,21 @@ logic ahb_hold;
 logic ahb_write;
 logic ahb_err;
 logic  [AHB_ADDR_WIDTH-1 : 0] ahb_addr;
-logic  [31 : 0] ahb_wdata;
-logic  [31 : 0] ahb_rdata;
+logic  [CIF_DATA_WIDTH-1 : 0] ahb_wdata;
+logic  [CIF_DATA_WIDTH-1 : 0] ahb_rdata;
+  
+logic req_collision;
+logic aes_cif_endian_swap;
+  
+logic aes_cif_req_dv;
+logic aes_cif_req_write;
+logic   [AHB_ADDR_WIDTH-1 : 0] aes_cif_req_addr;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_wdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_wdata_post_endian;
+logic aes_cif_req_hold;
+logic aes_cif_req_error;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_rdata;
+logic   [CIF_DATA_WIDTH-1 : 0] aes_cif_req_rdata_post_endian;
 
 logic clp_reg_dv;
 logic clp_reg_write;
@@ -93,13 +122,18 @@ edn_pkg::edn_req_t edn_req;
 
 keymgr_pkg::hw_key_req_t keymgr_key;
 
+assign error_intr = '0; // Unused
+assign notif_intr = '0;  // Unused 
+
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle);
+assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+
 
 //AHB interface
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-    .CLIENT_DATA_WIDTH(32)
+    .CLIENT_DATA_WIDTH(CIF_DATA_WIDTH)
 ) ahb_slv_sif_inst
 (
     //AMBA AHB Lite INF
@@ -129,6 +163,52 @@ ahb_slv_sif #(
     .rdata(ahb_rdata)
 );
 
+// AHB CIF Mux
+// No real muxing, just respond with error if we detect a request collision.
+// It is FW responsiblity to ensure only AHB or DMA accesses AES at a time
+assign req_collision = dma_req_dv & ahb_dv;
+
+assign aes_cif_endian_swap = aes_cif_req_dv && hwif_out.CTRL0.ENDIAN_SWAP.value  && (
+        aes_cif_req_addr == `AES_REG_DATA_IN_0 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_1 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_2 ||
+        aes_cif_req_addr == `AES_REG_DATA_IN_3 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_0 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_1 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_2 ||
+        aes_cif_req_addr == `AES_REG_DATA_OUT_3 
+    );
+
+assign aes_cif_req_dv = dma_req_dv | ahb_dv;
+assign aes_cif_req_write = dma_req_dv ? dma_req_write : ahb_write ;
+assign aes_cif_req_addr = dma_req_dv ? dma_req_addr : ahb_addr ;
+assign aes_cif_req_wdata = dma_req_dv ? dma_req_wdata : ahb_wdata ;
+
+always_comb begin
+  for (int b=0; b<CIF_DATA_NUM_BYTES; b++) begin
+      aes_cif_req_wdata_post_endian[b*8 +: 8] = aes_cif_endian_swap ?
+                                                  aes_cif_req_wdata[(CIF_DATA_NUM_BYTES-1-b)*8 +: 8] : // convert data from big endian to little endian
+                                                  aes_cif_req_wdata[b*8 +: 8];                         // assign data as-is to AES (little endian)
+  end
+end
+
+assign dma_req_hold = dma_req_dv & aes_cif_req_hold;
+assign ahb_hold = ahb_dv & aes_cif_req_hold;
+assign dma_req_error = (dma_req_dv & aes_cif_req_error) | req_collision;
+assign ahb_err = (ahb_dv & aes_cif_req_error) | req_collision;
+
+always_comb begin
+  for (int b=0; b<CIF_DATA_NUM_BYTES; b++) begin
+      aes_cif_req_rdata_post_endian[b*8 +: 8] = aes_cif_endian_swap ? 
+                                                  aes_cif_req_rdata[(CIF_DATA_NUM_BYTES-1-b)*8 +: 8] : // convert data from little endian to big endian
+                                                  aes_cif_req_rdata[b*8 +: 8];                         // assign data as-is from AES (little endian)
+  end 
+end
+
+assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0;
+assign ahb_rdata = ahb_dv ? aes_cif_req_rdata_post_endian: '0;
+
+
 //TLUL Adapter
 caliptra_tlul_adapter_vh
 #(
@@ -143,15 +223,15 @@ caliptra_tlul_adapter_vh_inst
   .tl_i(aes_to_adapter_tl),
 
   // Valid-Hold device interface (VH to TLUL).
-  .dv_i(ahb_dv),
-  .hld_o(ahb_hold),
-  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, ahb_addr }),
-  .write_i(ahb_write),
-  .wdata_i(ahb_wdata),
+  .dv_i(aes_cif_req_dv),
+  .hld_o(aes_cif_req_hold),
+  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, aes_cif_req_addr}),
+  .write_i(aes_cif_req_write),
+  .wdata_i(aes_cif_req_wdata_post_endian),
   .wstrb_i('1),
   .size_i(3'b010),
-  .rdata_o(ahb_rdata),
-  .error_o(ahb_err),
+  .rdata_o(aes_cif_req_rdata),
+  .error_o(aes_cif_req_error),
   .last_i('0),
   .user_i('0),
   .id_i('0),
@@ -203,12 +283,16 @@ aes
 aes_inst (
   .clk_i(clk),
   .rst_ni(reset_n),
-  .rst_shadowed_ni(reset_n), //FIXME
+  .rst_shadowed_ni(reset_n),
 
   .idle_o(aes_idle),
 
   // Life cycle
   .lc_escalate_en_i(lc_ctrl_pkg::Off),
+  
+  // status signals
+  .input_ready_o,
+  .output_valid_o,
 
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
@@ -217,7 +301,7 @@ aes_inst (
   .edn_i(edn_i),
 
   // Key manager (keymgr) key sideload interface
-  .keymgr_key_i(keymgr_key), //FIXME
+  .keymgr_key_i(keymgr_key),
 
   // Bus interface
   .tl_i(adapter_to_aes_tl),
@@ -267,7 +351,7 @@ aes_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
-    .zeroize('0), //FIXME needed?
+    .zeroize(debugUnlock_or_scan_mode_switch), 
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -298,6 +382,8 @@ generate
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
           kv_key_reg[g_dword][g_byte] <= '0;
+        end else if(debugUnlock_or_scan_mode_switch) begin
+          kv_key_reg[g_dword][g_byte] <= '0;
         end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
@@ -312,7 +398,7 @@ always_ff @(posedge clk or negedge reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin //new request, invalidate old key
+  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL) || debugUnlock_or_scan_mode_switch) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
     keymgr_key.key[0] <= '0;
     keymgr_key.key[1] <= '0;

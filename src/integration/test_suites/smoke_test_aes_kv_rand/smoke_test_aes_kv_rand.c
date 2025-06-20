@@ -222,6 +222,9 @@ void main() {
     printf("----------------------------------\n");
 
     aes_flow_t aes_input;
+    aes_input.data_src_mode = AES_DATA_DIRECT;
+    aes_input.dma_transfer_data = (dma_transfer_data_t){0};
+    
     aes_key_len_e key_len;
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;

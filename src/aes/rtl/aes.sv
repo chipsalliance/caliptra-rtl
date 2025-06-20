@@ -52,6 +52,11 @@ module aes
   input  logic                                      rst_edn_ni,
   output edn_pkg::edn_req_t                         edn_o,
   input  edn_pkg::edn_rsp_t                         edn_i,
+  
+  // status signals
+  output logic input_ready_o,
+  output logic output_valid_o,
+
 
   // Key manager (keymgr) key sideload interface
   input  keymgr_pkg::hw_key_req_t                   keymgr_key_i,
@@ -101,6 +106,8 @@ module aes
     .rst_shadowed_ni,
     .tl_i,
     .tl_o,
+    .input_ready_o,
+    .output_valid_o,
     .reg2hw,
     .hw2reg,
     .shadowed_storage_err_o(shadowed_storage_err),
@@ -213,6 +220,7 @@ module aes
   );
 
   assign idle_o = caliptra_prim_mubi_pkg::mubi4_bool_to_mubi(reg2hw.status.idle.q);
+
 
   ////////////
   // Alerts //

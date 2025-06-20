@@ -504,7 +504,7 @@ void main(void) {
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
-                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size); // block_size to be updated with random value based on parameters
+                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size, 0, 0); // block_size to be updated with random value based on parameters
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
@@ -529,7 +529,7 @@ void main(void) {
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
-                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size);
+                        soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size, 0, 0);
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);

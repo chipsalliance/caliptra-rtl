@@ -94,6 +94,36 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__ENTROPY_IF_SEED
 
+    // Reg - aes_clp_reg::CTRL0
+    class aes_clp_reg__CTRL0 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        aes_clp_reg__CTRL0_bit_cg ENDIAN_SWAP_bit_cg[1];
+        aes_clp_reg__CTRL0_fld_cg fld_cg;
+        rand uvm_reg_field ENDIAN_SWAP;
+
+        function new(string name = "aes_clp_reg__CTRL0");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.ENDIAN_SWAP = new("ENDIAN_SWAP");
+            this.ENDIAN_SWAP.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(ENDIAN_SWAP_bit_cg[bt]) ENDIAN_SWAP_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : aes_clp_reg__CTRL0
+
     // Reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -930,6 +960,7 @@ package aes_clp_reg_uvm;
         rand aes_clp_reg__AES_NAME AES_NAME[2];
         rand aes_clp_reg__AES_VERSION AES_VERSION[2];
         rand aes_clp_reg__ENTROPY_IF_SEED ENTROPY_IF_SEED[9];
+        rand aes_clp_reg__CTRL0 CTRL0;
         rand kv_read_ctrl_reg AES_KV_RD_KEY_CTRL;
         rand kv_status_reg AES_KV_RD_KEY_STATUS;
         rand aes_clp_reg__intr_block_t intr_block_rf;
@@ -961,6 +992,11 @@ package aes_clp_reg_uvm;
                 this.ENTROPY_IF_SEED[i0].build();
                 this.default_map.add_reg(this.ENTROPY_IF_SEED[i0], 'h110 + i0*'h4);
             end
+            this.CTRL0 = new("CTRL0");
+            this.CTRL0.configure(this);
+
+            this.CTRL0.build();
+            this.default_map.add_reg(this.CTRL0, 'h134);
             this.AES_KV_RD_KEY_CTRL = new("AES_KV_RD_KEY_CTRL");
             this.AES_KV_RD_KEY_CTRL.configure(this);
 

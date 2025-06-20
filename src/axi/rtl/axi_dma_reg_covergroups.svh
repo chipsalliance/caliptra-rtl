@@ -72,7 +72,9 @@
     covergroup axi_dma_reg__ctrl_fld_cg with function sample(
     input bit [1-1:0] go,
     input bit [1-1:0] flush,
-    input bit [14-1:0] rsvd0,
+    input bit [1-1:0] aes_mode_en,
+    input bit [1-1:0] aes_gcm_mode,
+    input bit [12-1:0] rsvd0,
     input bit [2-1:0] rd_route,
     input bit [2-1:0] rsvd1,
     input bit [1-1:0] rd_fixed,
@@ -85,6 +87,8 @@
         option.per_instance = 1;
         go_cp : coverpoint go;
         flush_cp : coverpoint flush;
+        aes_mode_en_cp : coverpoint aes_mode_en;
+        aes_gcm_mode_cp : coverpoint aes_gcm_mode;
         rsvd0_cp : coverpoint rsvd0;
         rd_route_cp : coverpoint rd_route;
         rsvd1_cp : coverpoint rsvd1;
@@ -117,7 +121,8 @@
     input bit [2-1:0] axi_dma_fsm_ps,
     input bit [1-1:0] payload_available,
     input bit [1-1:0] image_activated,
-    input bit [12-1:0] rsvd1
+    input bit [4-1:0] axi_dma_aes_fsm_ps,
+    input bit [8-1:0] rsvd1
     );
         option.per_instance = 1;
         busy_cp : coverpoint busy;
@@ -127,6 +132,7 @@
         axi_dma_fsm_ps_cp : coverpoint axi_dma_fsm_ps;
         payload_available_cp : coverpoint payload_available;
         image_activated_cp : coverpoint image_activated;
+        axi_dma_aes_fsm_ps_cp : coverpoint axi_dma_aes_fsm_ps;
         rsvd1_cp : coverpoint rsvd1;
 
     endgroup
@@ -354,7 +360,8 @@
     input bit [1-1:0] error_mbox_lock_en,
     input bit [1-1:0] error_sha_lock_en,
     input bit [1-1:0] error_fifo_oflow_en,
-    input bit [1-1:0] error_fifo_uflow_en
+    input bit [1-1:0] error_fifo_uflow_en,
+    input bit [1-1:0] error_aes_cif_en
     );
         option.per_instance = 1;
         error_cmd_dec_en_cp : coverpoint error_cmd_dec_en;
@@ -364,6 +371,7 @@
         error_sha_lock_en_cp : coverpoint error_sha_lock_en;
         error_fifo_oflow_en_cp : coverpoint error_fifo_oflow_en;
         error_fifo_uflow_en_cp : coverpoint error_fifo_uflow_en;
+        error_aes_cif_en_cp : coverpoint error_aes_cif_en;
 
     endgroup
 
@@ -435,8 +443,8 @@
 
     endgroup
 
-    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__ERROR_INTR_T_ERROR_AXI_RD_STS_927E49CD_ERROR_AXI_WR_STS_F84E5C07_ERROR_CMD_DEC_STS_46039D92_ERROR_FIFO_OFLOW_STS_71B29A77_ERROR_FIFO_UFLOW_STS_119D122A_ERROR_MBOX_LOCK_STS_9E18C395_ERROR_SHA_LOCK_STS_4C7993A0 COVERGROUPS -----------------------*/
-    covergroup axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__ERROR_INTR_T_ERROR_AES_CIF_STS_63385A16_ERROR_AXI_RD_STS_927E49CD_ERROR_AXI_WR_STS_F84E5C07_ERROR_CMD_DEC_STS_46039D92_ERROR_FIFO_OFLOW_STS_71B29A77_ERROR_FIFO_UFLOW_STS_119D122A_ERROR_MBOX_LOCK_STS_9E18C395_ERROR_SHA_LOCK_STS_4C7993A0 COVERGROUPS -----------------------*/
+    covergroup axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -447,14 +455,15 @@
         }
 
     endgroup
-    covergroup axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_fld_cg with function sample(
+    covergroup axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_fld_cg with function sample(
     input bit [1-1:0] error_cmd_dec_sts,
     input bit [1-1:0] error_axi_rd_sts,
     input bit [1-1:0] error_axi_wr_sts,
     input bit [1-1:0] error_mbox_lock_sts,
     input bit [1-1:0] error_sha_lock_sts,
     input bit [1-1:0] error_fifo_oflow_sts,
-    input bit [1-1:0] error_fifo_uflow_sts
+    input bit [1-1:0] error_fifo_uflow_sts,
+    input bit [1-1:0] error_aes_cif_sts
     );
         option.per_instance = 1;
         error_cmd_dec_sts_cp : coverpoint error_cmd_dec_sts;
@@ -464,6 +473,7 @@
         error_sha_lock_sts_cp : coverpoint error_sha_lock_sts;
         error_fifo_oflow_sts_cp : coverpoint error_fifo_oflow_sts;
         error_fifo_uflow_sts_cp : coverpoint error_fifo_uflow_sts;
+        error_aes_cif_sts_cp : coverpoint error_aes_cif_sts;
 
     endgroup
 
@@ -514,7 +524,8 @@
     input bit [1-1:0] error_mbox_lock_trig,
     input bit [1-1:0] error_sha_lock_trig,
     input bit [1-1:0] error_fifo_oflow_trig,
-    input bit [1-1:0] error_fifo_uflow_trig
+    input bit [1-1:0] error_fifo_uflow_trig,
+    input bit [1-1:0] error_aes_cif_trig
     );
         option.per_instance = 1;
         error_cmd_dec_trig_cp : coverpoint error_cmd_dec_trig;
@@ -524,6 +535,7 @@
         error_sha_lock_trig_cp : coverpoint error_sha_lock_trig;
         error_fifo_oflow_trig_cp : coverpoint error_fifo_oflow_trig;
         error_fifo_uflow_trig_cp : coverpoint error_fifo_uflow_trig;
+        error_aes_cif_trig_cp : coverpoint error_aes_cif_trig;
 
     endgroup
 
@@ -688,6 +700,26 @@
 
     endgroup
     covergroup axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d_fld_cg with function sample(
+    input bit [32-1:0] cnt
+    );
+        option.per_instance = 1;
+        cnt_cp : coverpoint cnt;
+
+    endgroup
+
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_893E2FCF COVERGROUPS -----------------------*/
+    covergroup axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf_fld_cg with function sample(
     input bit [32-1:0] cnt
     );
         option.per_instance = 1;
@@ -928,6 +960,26 @@
 
     endgroup
     covergroup axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43_fld_cg with function sample(
+    input bit [1-1:0] pulse
+    );
+        option.per_instance = 1;
+        pulse_cp : coverpoint pulse;
+
+    endgroup
+
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_E2DA7281 COVERGROUPS -----------------------*/
+    covergroup axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281_fld_cg with function sample(
     input bit [1-1:0] pulse
     );
         option.per_instance = 1;

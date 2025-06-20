@@ -42,6 +42,16 @@ import soc_ifc_pkg::*;
     input logic mbox_lock,
     input logic sha_lock,
 
+    // AES Interface
+    input  logic             aes_input_ready,
+    input  logic             aes_output_valid,
+    input  logic             aes_status_idle,
+    output logic             aes_req_dv,
+    input  logic             aes_req_hold,
+    output soc_ifc_req_t     aes_req_data,
+    input  logic [DW-1:0]    aes_rdata,
+    input  logic             aes_err,
+
     // Configuration for requests
     input logic [UW-1:0] axuser,
 
@@ -113,6 +123,16 @@ import soc_ifc_pkg::*;
         // Internal Signaling
         .mbox_lock(mbox_lock),
         .sha_lock (sha_lock ),
+
+        // AES Interface
+        .aes_input_ready,
+        .aes_output_valid,
+        .aes_status_idle,
+        .aes_req_dv,
+        .aes_req_hold,
+        .aes_req_data,
+        .aes_rdata,
+        .aes_err,
 
         // Mailbox SRAM INF
         .mb_dv   (mb_dv   ),

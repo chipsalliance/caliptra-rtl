@@ -78,7 +78,9 @@
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(go_bit_cg[bt]) this.go_bit_cg[bt].sample(data[0 + bt]);
             foreach(flush_bit_cg[bt]) this.flush_bit_cg[bt].sample(data[1 + bt]);
-            foreach(rsvd0_bit_cg[bt]) this.rsvd0_bit_cg[bt].sample(data[2 + bt]);
+            foreach(aes_mode_en_bit_cg[bt]) this.aes_mode_en_bit_cg[bt].sample(data[2 + bt]);
+            foreach(aes_gcm_mode_bit_cg[bt]) this.aes_gcm_mode_bit_cg[bt].sample(data[3 + bt]);
+            foreach(rsvd0_bit_cg[bt]) this.rsvd0_bit_cg[bt].sample(data[4 + bt]);
             foreach(rd_route_bit_cg[bt]) this.rd_route_bit_cg[bt].sample(data[16 + bt]);
             foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(data[18 + bt]);
             foreach(rd_fixed_bit_cg[bt]) this.rd_fixed_bit_cg[bt].sample(data[20 + bt]);
@@ -89,7 +91,7 @@
             foreach(rsvd4_bit_cg[bt]) this.rsvd4_bit_cg[bt].sample(data[29 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*go*/  ,  data[1:1]/*flush*/  ,  data[15:2]/*rsvd0*/  ,  data[17:16]/*rd_route*/  ,  data[19:18]/*rsvd1*/  ,  data[20:20]/*rd_fixed*/  ,  data[23:21]/*rsvd2*/  ,  data[25:24]/*wr_route*/  ,  data[27:26]/*rsvd3*/  ,  data[28:28]/*wr_fixed*/  ,  data[31:29]/*rsvd4*/   );
+            this.fld_cg.sample( data[0:0]/*go*/  ,  data[1:1]/*flush*/  ,  data[2:2]/*aes_mode_en*/  ,  data[3:3]/*aes_gcm_mode*/  ,  data[15:4]/*rsvd0*/  ,  data[17:16]/*rd_route*/  ,  data[19:18]/*rsvd1*/  ,  data[20:20]/*rd_fixed*/  ,  data[23:21]/*rsvd2*/  ,  data[25:24]/*wr_route*/  ,  data[27:26]/*rsvd3*/  ,  data[28:28]/*wr_fixed*/  ,  data[31:29]/*rsvd4*/   );
         end
     endfunction
 
@@ -97,6 +99,8 @@
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(go_bit_cg[bt]) this.go_bit_cg[bt].sample(go.get_mirrored_value() >> bt);
             foreach(flush_bit_cg[bt]) this.flush_bit_cg[bt].sample(flush.get_mirrored_value() >> bt);
+            foreach(aes_mode_en_bit_cg[bt]) this.aes_mode_en_bit_cg[bt].sample(aes_mode_en.get_mirrored_value() >> bt);
+            foreach(aes_gcm_mode_bit_cg[bt]) this.aes_gcm_mode_bit_cg[bt].sample(aes_gcm_mode.get_mirrored_value() >> bt);
             foreach(rsvd0_bit_cg[bt]) this.rsvd0_bit_cg[bt].sample(rsvd0.get_mirrored_value() >> bt);
             foreach(rd_route_bit_cg[bt]) this.rd_route_bit_cg[bt].sample(rd_route.get_mirrored_value() >> bt);
             foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(rsvd1.get_mirrored_value() >> bt);
@@ -108,7 +112,7 @@
             foreach(rsvd4_bit_cg[bt]) this.rsvd4_bit_cg[bt].sample(rsvd4.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( go.get_mirrored_value()  ,  flush.get_mirrored_value()  ,  rsvd0.get_mirrored_value()  ,  rd_route.get_mirrored_value()  ,  rsvd1.get_mirrored_value()  ,  rd_fixed.get_mirrored_value()  ,  rsvd2.get_mirrored_value()  ,  wr_route.get_mirrored_value()  ,  rsvd3.get_mirrored_value()  ,  wr_fixed.get_mirrored_value()  ,  rsvd4.get_mirrored_value()   );
+            this.fld_cg.sample( go.get_mirrored_value()  ,  flush.get_mirrored_value()  ,  aes_mode_en.get_mirrored_value()  ,  aes_gcm_mode.get_mirrored_value()  ,  rsvd0.get_mirrored_value()  ,  rd_route.get_mirrored_value()  ,  rsvd1.get_mirrored_value()  ,  rd_fixed.get_mirrored_value()  ,  rsvd2.get_mirrored_value()  ,  wr_route.get_mirrored_value()  ,  rsvd3.get_mirrored_value()  ,  wr_fixed.get_mirrored_value()  ,  rsvd4.get_mirrored_value()   );
         end
     endfunction
 
@@ -128,10 +132,11 @@
             foreach(axi_dma_fsm_ps_bit_cg[bt]) this.axi_dma_fsm_ps_bit_cg[bt].sample(data[16 + bt]);
             foreach(payload_available_bit_cg[bt]) this.payload_available_bit_cg[bt].sample(data[18 + bt]);
             foreach(image_activated_bit_cg[bt]) this.image_activated_bit_cg[bt].sample(data[19 + bt]);
-            foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(data[20 + bt]);
+            foreach(axi_dma_aes_fsm_ps_bit_cg[bt]) this.axi_dma_aes_fsm_ps_bit_cg[bt].sample(data[20 + bt]);
+            foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(data[24 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*busy*/  ,  data[1:1]/*error*/  ,  data[3:2]/*rsvd0*/  ,  data[15:4]/*fifo_depth*/  ,  data[17:16]/*axi_dma_fsm_ps*/  ,  data[18:18]/*payload_available*/  ,  data[19:19]/*image_activated*/  ,  data[31:20]/*rsvd1*/   );
+            this.fld_cg.sample( data[0:0]/*busy*/  ,  data[1:1]/*error*/  ,  data[3:2]/*rsvd0*/  ,  data[15:4]/*fifo_depth*/  ,  data[17:16]/*axi_dma_fsm_ps*/  ,  data[18:18]/*payload_available*/  ,  data[19:19]/*image_activated*/  ,  data[23:20]/*axi_dma_aes_fsm_ps*/  ,  data[31:24]/*rsvd1*/   );
         end
     endfunction
 
@@ -144,10 +149,11 @@
             foreach(axi_dma_fsm_ps_bit_cg[bt]) this.axi_dma_fsm_ps_bit_cg[bt].sample(axi_dma_fsm_ps.get_mirrored_value() >> bt);
             foreach(payload_available_bit_cg[bt]) this.payload_available_bit_cg[bt].sample(payload_available.get_mirrored_value() >> bt);
             foreach(image_activated_bit_cg[bt]) this.image_activated_bit_cg[bt].sample(image_activated.get_mirrored_value() >> bt);
+            foreach(axi_dma_aes_fsm_ps_bit_cg[bt]) this.axi_dma_aes_fsm_ps_bit_cg[bt].sample(axi_dma_aes_fsm_ps.get_mirrored_value() >> bt);
             foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(rsvd1.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( busy.get_mirrored_value()  ,  error.get_mirrored_value()  ,  rsvd0.get_mirrored_value()  ,  fifo_depth.get_mirrored_value()  ,  axi_dma_fsm_ps.get_mirrored_value()  ,  payload_available.get_mirrored_value()  ,  image_activated.get_mirrored_value()  ,  rsvd1.get_mirrored_value()   );
+            this.fld_cg.sample( busy.get_mirrored_value()  ,  error.get_mirrored_value()  ,  rsvd0.get_mirrored_value()  ,  fifo_depth.get_mirrored_value()  ,  axi_dma_fsm_ps.get_mirrored_value()  ,  payload_available.get_mirrored_value()  ,  image_activated.get_mirrored_value()  ,  axi_dma_aes_fsm_ps.get_mirrored_value()  ,  rsvd1.get_mirrored_value()   );
         end
     endfunction
 
@@ -421,9 +427,10 @@
             foreach(error_sha_lock_en_bit_cg[bt]) this.error_sha_lock_en_bit_cg[bt].sample(data[4 + bt]);
             foreach(error_fifo_oflow_en_bit_cg[bt]) this.error_fifo_oflow_en_bit_cg[bt].sample(data[5 + bt]);
             foreach(error_fifo_uflow_en_bit_cg[bt]) this.error_fifo_uflow_en_bit_cg[bt].sample(data[6 + bt]);
+            foreach(error_aes_cif_en_bit_cg[bt]) this.error_aes_cif_en_bit_cg[bt].sample(data[7 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*error_cmd_dec_en*/  ,  data[1:1]/*error_axi_rd_en*/  ,  data[2:2]/*error_axi_wr_en*/  ,  data[3:3]/*error_mbox_lock_en*/  ,  data[4:4]/*error_sha_lock_en*/  ,  data[5:5]/*error_fifo_oflow_en*/  ,  data[6:6]/*error_fifo_uflow_en*/   );
+            this.fld_cg.sample( data[0:0]/*error_cmd_dec_en*/  ,  data[1:1]/*error_axi_rd_en*/  ,  data[2:2]/*error_axi_wr_en*/  ,  data[3:3]/*error_mbox_lock_en*/  ,  data[4:4]/*error_sha_lock_en*/  ,  data[5:5]/*error_fifo_oflow_en*/  ,  data[6:6]/*error_fifo_uflow_en*/  ,  data[7:7]/*error_aes_cif_en*/   );
         end
     endfunction
 
@@ -436,9 +443,10 @@
             foreach(error_sha_lock_en_bit_cg[bt]) this.error_sha_lock_en_bit_cg[bt].sample(error_sha_lock_en.get_mirrored_value() >> bt);
             foreach(error_fifo_oflow_en_bit_cg[bt]) this.error_fifo_oflow_en_bit_cg[bt].sample(error_fifo_oflow_en.get_mirrored_value() >> bt);
             foreach(error_fifo_uflow_en_bit_cg[bt]) this.error_fifo_uflow_en_bit_cg[bt].sample(error_fifo_uflow_en.get_mirrored_value() >> bt);
+            foreach(error_aes_cif_en_bit_cg[bt]) this.error_aes_cif_en_bit_cg[bt].sample(error_aes_cif_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( error_cmd_dec_en.get_mirrored_value()  ,  error_axi_rd_en.get_mirrored_value()  ,  error_axi_wr_en.get_mirrored_value()  ,  error_mbox_lock_en.get_mirrored_value()  ,  error_sha_lock_en.get_mirrored_value()  ,  error_fifo_oflow_en.get_mirrored_value()  ,  error_fifo_uflow_en.get_mirrored_value()   );
+            this.fld_cg.sample( error_cmd_dec_en.get_mirrored_value()  ,  error_axi_rd_en.get_mirrored_value()  ,  error_axi_wr_en.get_mirrored_value()  ,  error_mbox_lock_en.get_mirrored_value()  ,  error_sha_lock_en.get_mirrored_value()  ,  error_fifo_oflow_en.get_mirrored_value()  ,  error_fifo_uflow_en.get_mirrored_value()  ,  error_aes_cif_en.get_mirrored_value()   );
         end
     endfunction
 
@@ -525,8 +533,8 @@
         end
     endfunction
 
-    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__ERROR_INTR_T_ERROR_AXI_RD_STS_927E49CD_ERROR_AXI_WR_STS_F84E5C07_ERROR_CMD_DEC_STS_46039D92_ERROR_FIFO_OFLOW_STS_71B29A77_ERROR_FIFO_UFLOW_STS_119D122A_ERROR_MBOX_LOCK_STS_9E18C395_ERROR_SHA_LOCK_STS_4C7993A0 SAMPLE FUNCTIONS -----------------------*/
-    function void axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0::sample(uvm_reg_data_t  data,
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__ERROR_INTR_T_ERROR_AES_CIF_STS_63385A16_ERROR_AXI_RD_STS_927E49CD_ERROR_AXI_WR_STS_F84E5C07_ERROR_CMD_DEC_STS_46039D92_ERROR_FIFO_OFLOW_STS_71B29A77_ERROR_FIFO_UFLOW_STS_119D122A_ERROR_MBOX_LOCK_STS_9E18C395_ERROR_SHA_LOCK_STS_4C7993A0 SAMPLE FUNCTIONS -----------------------*/
+    function void axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -541,13 +549,14 @@
             foreach(error_sha_lock_sts_bit_cg[bt]) this.error_sha_lock_sts_bit_cg[bt].sample(data[4 + bt]);
             foreach(error_fifo_oflow_sts_bit_cg[bt]) this.error_fifo_oflow_sts_bit_cg[bt].sample(data[5 + bt]);
             foreach(error_fifo_uflow_sts_bit_cg[bt]) this.error_fifo_uflow_sts_bit_cg[bt].sample(data[6 + bt]);
+            foreach(error_aes_cif_sts_bit_cg[bt]) this.error_aes_cif_sts_bit_cg[bt].sample(data[7 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*error_cmd_dec_sts*/  ,  data[1:1]/*error_axi_rd_sts*/  ,  data[2:2]/*error_axi_wr_sts*/  ,  data[3:3]/*error_mbox_lock_sts*/  ,  data[4:4]/*error_sha_lock_sts*/  ,  data[5:5]/*error_fifo_oflow_sts*/  ,  data[6:6]/*error_fifo_uflow_sts*/   );
+            this.fld_cg.sample( data[0:0]/*error_cmd_dec_sts*/  ,  data[1:1]/*error_axi_rd_sts*/  ,  data[2:2]/*error_axi_wr_sts*/  ,  data[3:3]/*error_mbox_lock_sts*/  ,  data[4:4]/*error_sha_lock_sts*/  ,  data[5:5]/*error_fifo_oflow_sts*/  ,  data[6:6]/*error_fifo_uflow_sts*/  ,  data[7:7]/*error_aes_cif_sts*/   );
         end
     endfunction
 
-    function void axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0::sample_values();
+    function void axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(error_cmd_dec_sts_bit_cg[bt]) this.error_cmd_dec_sts_bit_cg[bt].sample(error_cmd_dec_sts.get_mirrored_value() >> bt);
             foreach(error_axi_rd_sts_bit_cg[bt]) this.error_axi_rd_sts_bit_cg[bt].sample(error_axi_rd_sts.get_mirrored_value() >> bt);
@@ -556,9 +565,10 @@
             foreach(error_sha_lock_sts_bit_cg[bt]) this.error_sha_lock_sts_bit_cg[bt].sample(error_sha_lock_sts.get_mirrored_value() >> bt);
             foreach(error_fifo_oflow_sts_bit_cg[bt]) this.error_fifo_oflow_sts_bit_cg[bt].sample(error_fifo_oflow_sts.get_mirrored_value() >> bt);
             foreach(error_fifo_uflow_sts_bit_cg[bt]) this.error_fifo_uflow_sts_bit_cg[bt].sample(error_fifo_uflow_sts.get_mirrored_value() >> bt);
+            foreach(error_aes_cif_sts_bit_cg[bt]) this.error_aes_cif_sts_bit_cg[bt].sample(error_aes_cif_sts.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( error_cmd_dec_sts.get_mirrored_value()  ,  error_axi_rd_sts.get_mirrored_value()  ,  error_axi_wr_sts.get_mirrored_value()  ,  error_mbox_lock_sts.get_mirrored_value()  ,  error_sha_lock_sts.get_mirrored_value()  ,  error_fifo_oflow_sts.get_mirrored_value()  ,  error_fifo_uflow_sts.get_mirrored_value()   );
+            this.fld_cg.sample( error_cmd_dec_sts.get_mirrored_value()  ,  error_axi_rd_sts.get_mirrored_value()  ,  error_axi_wr_sts.get_mirrored_value()  ,  error_mbox_lock_sts.get_mirrored_value()  ,  error_sha_lock_sts.get_mirrored_value()  ,  error_fifo_oflow_sts.get_mirrored_value()  ,  error_fifo_uflow_sts.get_mirrored_value()  ,  error_aes_cif_sts.get_mirrored_value()   );
         end
     endfunction
 
@@ -611,9 +621,10 @@
             foreach(error_sha_lock_trig_bit_cg[bt]) this.error_sha_lock_trig_bit_cg[bt].sample(data[4 + bt]);
             foreach(error_fifo_oflow_trig_bit_cg[bt]) this.error_fifo_oflow_trig_bit_cg[bt].sample(data[5 + bt]);
             foreach(error_fifo_uflow_trig_bit_cg[bt]) this.error_fifo_uflow_trig_bit_cg[bt].sample(data[6 + bt]);
+            foreach(error_aes_cif_trig_bit_cg[bt]) this.error_aes_cif_trig_bit_cg[bt].sample(data[7 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*error_cmd_dec_trig*/  ,  data[1:1]/*error_axi_rd_trig*/  ,  data[2:2]/*error_axi_wr_trig*/  ,  data[3:3]/*error_mbox_lock_trig*/  ,  data[4:4]/*error_sha_lock_trig*/  ,  data[5:5]/*error_fifo_oflow_trig*/  ,  data[6:6]/*error_fifo_uflow_trig*/   );
+            this.fld_cg.sample( data[0:0]/*error_cmd_dec_trig*/  ,  data[1:1]/*error_axi_rd_trig*/  ,  data[2:2]/*error_axi_wr_trig*/  ,  data[3:3]/*error_mbox_lock_trig*/  ,  data[4:4]/*error_sha_lock_trig*/  ,  data[5:5]/*error_fifo_oflow_trig*/  ,  data[6:6]/*error_fifo_uflow_trig*/  ,  data[7:7]/*error_aes_cif_trig*/   );
         end
     endfunction
 
@@ -626,9 +637,10 @@
             foreach(error_sha_lock_trig_bit_cg[bt]) this.error_sha_lock_trig_bit_cg[bt].sample(error_sha_lock_trig.get_mirrored_value() >> bt);
             foreach(error_fifo_oflow_trig_bit_cg[bt]) this.error_fifo_oflow_trig_bit_cg[bt].sample(error_fifo_oflow_trig.get_mirrored_value() >> bt);
             foreach(error_fifo_uflow_trig_bit_cg[bt]) this.error_fifo_uflow_trig_bit_cg[bt].sample(error_fifo_uflow_trig.get_mirrored_value() >> bt);
+            foreach(error_aes_cif_trig_bit_cg[bt]) this.error_aes_cif_trig_bit_cg[bt].sample(error_aes_cif_trig.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( error_cmd_dec_trig.get_mirrored_value()  ,  error_axi_rd_trig.get_mirrored_value()  ,  error_axi_wr_trig.get_mirrored_value()  ,  error_mbox_lock_trig.get_mirrored_value()  ,  error_sha_lock_trig.get_mirrored_value()  ,  error_fifo_oflow_trig.get_mirrored_value()  ,  error_fifo_uflow_trig.get_mirrored_value()   );
+            this.fld_cg.sample( error_cmd_dec_trig.get_mirrored_value()  ,  error_axi_rd_trig.get_mirrored_value()  ,  error_axi_wr_trig.get_mirrored_value()  ,  error_mbox_lock_trig.get_mirrored_value()  ,  error_sha_lock_trig.get_mirrored_value()  ,  error_fifo_oflow_trig.get_mirrored_value()  ,  error_fifo_uflow_trig.get_mirrored_value()  ,  error_aes_cif_trig.get_mirrored_value()   );
         end
     endfunction
 
@@ -832,6 +844,31 @@
     endfunction
 
     function void axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( cnt.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__INTR_COUNT_T_CNT_893E2FCF SAMPLE FUNCTIONS -----------------------*/
+    function void axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*cnt*/   );
+        end
+    endfunction
+
+    function void axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(cnt_bit_cg[bt]) this.cnt_bit_cg[bt].sample(cnt.get_mirrored_value() >> bt);
         end
@@ -1132,6 +1169,31 @@
     endfunction
 
     function void axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( pulse.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- AXI_DMA_REG__INTR_BLOCK_T__INTR_COUNT_INCR_T_PULSE_E2DA7281 SAMPLE FUNCTIONS -----------------------*/
+    function void axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*pulse*/   );
+        end
+    endfunction
+
+    function void axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(pulse_bit_cg[bt]) this.pulse_bit_cg[bt].sample(pulse.get_mirrored_value() >> bt);
         end

@@ -106,6 +106,14 @@ package aes_clp_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } aes_clp_reg__CTRL0__ENDIAN_SWAP__out_t;
+
+    typedef struct packed{
+        aes_clp_reg__CTRL0__ENDIAN_SWAP__out_t ENDIAN_SWAP;
+    } aes_clp_reg__CTRL0__out_t;
+
+    typedef struct packed{
+        logic value;
     } kv_read_ctrl_reg__read_en__out_t;
 
     typedef struct packed{
@@ -152,6 +160,7 @@ package aes_clp_reg_pkg;
 
     typedef struct packed{
         aes_clp_reg__ENTROPY_IF_SEED__out_t [9-1:0]ENTROPY_IF_SEED;
+        aes_clp_reg__CTRL0__out_t CTRL0;
         kv_read_ctrl_reg__out_t AES_KV_RD_KEY_CTRL;
         aes_clp_reg__intr_block_t__out_t intr_block_rf;
     } aes_clp_reg__out_t;
