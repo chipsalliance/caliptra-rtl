@@ -964,7 +964,8 @@ package soc_ifc_tb_pkg;
         exp_data = fuses_locked ? curr_data : axi_indata;
 
       end  else if (str_startswith(addr_name, "SS_SOC_DBG_UNLOCK_LEVEL")) begin
-        exp_data = axi_rodata | ahb_indata;
+        ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
+        exp_data = ss_debug_intent ? (ahb_indata | axi_rodata) : curr_data;
 
       end else if (str_startswith(addr_name, "SS_DBG_MANUF_SERVICE_REG_RSP")) begin
         $display("pfx = %s", pfx);
