@@ -5,6 +5,8 @@
 // Clock inverter
 //   Varies on the process
 
+`include "caliptra_prim_module_name_macros.svh"
+
 module caliptra_prim_generic_clock_inv #(
   parameter bit HasScanMode = 1'b1,
   parameter bit NoFpgaBufG  = 1'b0 // only used in FPGA case
