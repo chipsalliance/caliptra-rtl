@@ -830,7 +830,7 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
 ### Caliptra error handling flow
 
 1. Any implementation of error and recovery flows must adhere to the error handling requirements specified in [Caliptra.md](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#error-reporting-and-handling)
-2. SoC integrators must decide how to respond to each possible event that may be reported as an error.
+2. SoC level reporting and handling of fatal & non-fatal errors is product-specific architecture, outside the scope of Caliptra core definition. For example, a CPU and a PCIe device may handle fatal and non-fatal errors differently.
 
 # SoC integration requirements
 
