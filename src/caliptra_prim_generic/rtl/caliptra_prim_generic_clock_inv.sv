@@ -5,7 +5,7 @@
 // Clock inverter
 //   Varies on the process
 
-module caliptra_prim_clock_inv #(
+module caliptra_prim_generic_clock_inv #(
   parameter bit HasScanMode = 1'b1,
   parameter bit NoFpgaBufG  = 1'b0 // only used in FPGA case
 ) (
@@ -15,7 +15,7 @@ module caliptra_prim_clock_inv #(
 );
 
   if (HasScanMode) begin : gen_scan
-    caliptra_prim_clock_mux2 #(
+    `CALIPTRA_PRIM_MODULE_NAME(mux2) #(
       .NoFpgaBufG(NoFpgaBufG)
     ) i_dft_tck_mux (
       .clk0_i ( ~clk_i     ),
@@ -29,4 +29,4 @@ module caliptra_prim_clock_inv #(
     assign clk_no = ~clk_i;
   end
 
-endmodule : caliptra_prim_clock_inv
+endmodule : caliptra_prim_generic_clock_inv

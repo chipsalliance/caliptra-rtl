@@ -49,7 +49,7 @@ ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_buf.sv
 ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_ram_1p.sv
 ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_and2.sv
 ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_clock_mux2.sv
-${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl/caliptra_prim_clock_inv.sv
+${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_clock_inv.sv
 ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_xor2.sv
 ${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_xnor2.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_flop_en.sv
