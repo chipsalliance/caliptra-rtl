@@ -1727,6 +1727,12 @@
 #ifndef AES_CLP_REG_ENTROPY_IF_SEED_8
 #define AES_CLP_REG_ENTROPY_IF_SEED_8                                                               (0x130)
 #endif
+#define CLP_AES_CLP_REG_CTRL0                                                                       (0x10011934)
+#ifndef AES_CLP_REG_CTRL0
+#define AES_CLP_REG_CTRL0                                                                           (0x134)
+#define AES_CLP_REG_CTRL0_ENDIAN_SWAP_LOW                                                           (0)
+#define AES_CLP_REG_CTRL0_ENDIAN_SWAP_MASK                                                          (0x1)
+#endif
 #define CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                          (0x10011a00)
 #ifndef AES_CLP_REG_AES_KV_RD_KEY_CTRL
 #define AES_CLP_REG_AES_KV_RD_KEY_CTRL                                                              (0x200)
@@ -9632,8 +9638,12 @@
 #define AXI_DMA_REG_CTRL_GO_MASK                                                                    (0x1)
 #define AXI_DMA_REG_CTRL_FLUSH_LOW                                                                  (1)
 #define AXI_DMA_REG_CTRL_FLUSH_MASK                                                                 (0x2)
-#define AXI_DMA_REG_CTRL_RSVD0_LOW                                                                  (2)
-#define AXI_DMA_REG_CTRL_RSVD0_MASK                                                                 (0xfffc)
+#define AXI_DMA_REG_CTRL_AES_MODE_EN_LOW                                                            (2)
+#define AXI_DMA_REG_CTRL_AES_MODE_EN_MASK                                                           (0x4)
+#define AXI_DMA_REG_CTRL_AES_GCM_MODE_LOW                                                           (3)
+#define AXI_DMA_REG_CTRL_AES_GCM_MODE_MASK                                                          (0x8)
+#define AXI_DMA_REG_CTRL_RSVD0_LOW                                                                  (4)
+#define AXI_DMA_REG_CTRL_RSVD0_MASK                                                                 (0xfff0)
 #define AXI_DMA_REG_CTRL_RD_ROUTE_LOW                                                               (16)
 #define AXI_DMA_REG_CTRL_RD_ROUTE_MASK                                                              (0x30000)
 #define AXI_DMA_REG_CTRL_RSVD1_LOW                                                                  (18)
@@ -9668,8 +9678,10 @@
 #define AXI_DMA_REG_STATUS0_PAYLOAD_AVAILABLE_MASK                                                  (0x40000)
 #define AXI_DMA_REG_STATUS0_IMAGE_ACTIVATED_LOW                                                     (19)
 #define AXI_DMA_REG_STATUS0_IMAGE_ACTIVATED_MASK                                                    (0x80000)
-#define AXI_DMA_REG_STATUS0_RSVD1_LOW                                                               (20)
-#define AXI_DMA_REG_STATUS0_RSVD1_MASK                                                              (0xfff00000)
+#define AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_LOW                                                  (20)
+#define AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_MASK                                                 (0xf00000)
+#define AXI_DMA_REG_STATUS0_RSVD1_LOW                                                               (24)
+#define AXI_DMA_REG_STATUS0_RSVD1_MASK                                                              (0xff000000)
 #endif
 #define CLP_AXI_DMA_REG_STATUS1                                                                     (0x30022010)
 #ifndef AXI_DMA_REG_STATUS1
@@ -9737,6 +9749,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_OFLOW_EN_MASK                          (0x20)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_LOW                           (6)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_MASK                          (0x40)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_LOW                              (7)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK                             (0x80)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                               (0x30022808)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
@@ -9781,6 +9795,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_OFLOW_STS_MASK                   (0x20)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_LOW                    (6)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK                   (0x40)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_LOW                       (7)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK                      (0x80)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                         (0x30022818)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
@@ -9813,6 +9829,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_OFLOW_TRIG_MASK                      (0x20)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_LOW                       (6)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_MASK                      (0x40)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_LOW                          (7)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_MASK                         (0x80)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                             (0x30022820)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
@@ -9855,6 +9873,10 @@
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_R                                 (0x30022918)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_R
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_R                                     (0x918)
+#endif
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                    (0x3002291c)
+#ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                        (0x91c)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R                                   (0x30022980)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R
@@ -9918,33 +9940,39 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_FIFO_UFLOW_INTR_COUNT_INCR_R_PULSE_MASK                     (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                              (0x30022a1c)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R                               (0x30022a1c)
+#ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R                                   (0xa1c)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_LOW                         (0)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_MASK                        (0x1)
+#endif
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                              (0x30022a20)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (0xa1c)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (0xa20)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                            (0x30022a20)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                            (0x30022a24)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (0xa20)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (0xa24)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                     (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                        (0x30022a24)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                        (0x30022a28)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (0xa24)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (0xa28)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                 (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                             (0x30022a28)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                             (0x30022a2c)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (0xa28)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (0xa2c)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_LOW                       (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_MASK                      (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                         (0x30022a2c)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                         (0x30022a30)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (0xa2c)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (0xa30)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_MASK                  (0x1)
 #endif
