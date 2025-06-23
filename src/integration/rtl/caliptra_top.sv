@@ -901,8 +901,8 @@ sha256_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
-//override device secrets with debug values in Debug or Scan Mode or any device lifecycle other than PROD and MANUF
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | 
+//override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent | 
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
