@@ -8292,6 +8292,17 @@
 `define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_LOW                                               (0)
 `define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK                                              (32'h1)
 `endif
+`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
+`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                                 (32'h174)
+`endif
+`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
+`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                                 (32'h178)
+`endif
+`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                              (32'h17c)
+`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                     (0)
+`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                    (32'h1)
+`endif
 `ifndef SOC_IFC_REG_FUSE_UDS_SEED_0
 `define SOC_IFC_REG_FUSE_UDS_SEED_0                                                                 (32'h200)
 `endif

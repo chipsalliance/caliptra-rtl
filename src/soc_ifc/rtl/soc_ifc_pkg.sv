@@ -51,7 +51,11 @@ package soc_ifc_pkg;
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;
 
     //Mailbox size configuration
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    parameter CPTRA_MBOX_SIZE_KB = 16;
+`else
     parameter CPTRA_MBOX_SIZE_KB = 256;
+`endif
     parameter CPTRA_MBOX_DATA_W = 32;
     parameter CPTRA_MBOX_ECC_DATA_W = 7;
     parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;

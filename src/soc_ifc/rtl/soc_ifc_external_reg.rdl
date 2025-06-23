@@ -494,3 +494,22 @@ reg {
              [br]SOC Access:      RW1-S";
     field {sw=rw; hw=r; swwe; resetsignal=cptra_pwrgood;} lock=0;
 } CPTRA_OWNER_PK_HASH_LOCK;
+
+reg {
+    name = "External Staging Area Registers";
+     desc = "External staging area address for Caliptra Core. 64-bit address split into 2x32bit registers with [0] being the lower address and [1] being the upper address. Shall be in Caliptra crypto boundary. Lockable by EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+             [br]Caliptra Access: RW
+             [br]SOC Access:      RW
+             Read-Only once locked by EXTERNAL_STAGING_ADREA_ADDRESS_LOCK.";
+     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} addr[32]=0x0;
+ } EXTERNAL_STAGING_AREA_ADDRESS[2];
+
+reg {
+    name = "External Staging Area Lock Register";
+     desc = "External Staging Area Lock.
+             [br]Caliptra Access: RW1-S
+             [br]SOC Access:      RW1-S
+             Read-Only once set.";
+     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} lock=0x0;
+ } EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
+

@@ -403,9 +403,26 @@ The SoC communicates with the mailbox through an AXI Interface. The SoC acts as 
 
 The AXI_USER bits are used by the SoC to identify which device is accessing the mailbox.
 
+## External Staging Area
+
+To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to **16 KiB**.  
+Instead of passing images directly to Caliptra through the mailbox, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
+
+Caliptra Core receives the base address of this staging area through the **SOC_IFC** register `EXTERNAL_STAGING_AREA_ADDRESS`.  
+This register **must be programmed before the Caliptra ROM starts executing**, enabling the ROM to use the staging area during streaming boot.  
+The register is lockable, preventing untrusted entities from modifying the address from which Caliptra reads or writes data.
+
+For hitless updates or other image-processing operations, the Caliptra mailbox should be used to:
+
+1. Notify Caliptra that an image is available for processing.  
+2. Specify the command to run on the image.  
+3. Indicate the size of the image in the staging area.  
+
+The external staging area must be within the Caliptra crypto boundary. Meaning there must be access restrictions similar to the MBOX preventing trusted entities from manipulating or accessing the data being processed by Caliptra.
+
 ## Mailbox
 
-The Caliptra mailbox is a 256 KiB buffer used for exchanging data between the SoC and the Caliptra microcontroller.
+The Caliptra mailbox is a 256 KiB when in passive mode and 16 KiB when in subsystem mode buffer used for exchanging data between the SoC and the Caliptra microcontroller. See [External Staging Area](#external-staging-area) why the MBOX SRAM size is smaller in subsystem mode. 
 
 When a mailbox is populated by the SoC, initiation of the operation by writing the execute bit triggers an interrupt to the microcontroller. This interrupt indicates that a command is available in the mailbox. The microcontroller is responsible for reading from and responding to the command.
 
