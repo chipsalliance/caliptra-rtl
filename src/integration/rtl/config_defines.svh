@@ -100,6 +100,7 @@
   `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
 
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
+  `define RV_LOCKSTEP_ENABLE 1
 
   `define CALIPTRA_ICG           cptra_clk_gate
   
