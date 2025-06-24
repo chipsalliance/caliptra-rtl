@@ -632,9 +632,9 @@ always_comb begin
 
     soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel = soc_ifc_reg_hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
 
-    for (int i=0; i<2; i++) begin
+    for (int i=0; i<$size(soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS); i++) begin
         //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS[i].addr.swwel = soc_ifc_reg_hwif_out.EXTERNAL_STAGING_AREA_ADDRESS.lock.value;
+        soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS[i].addr.swwel = soc_ifc_reg_hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
     end
 end
 
