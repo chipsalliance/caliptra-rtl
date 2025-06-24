@@ -1021,6 +1021,46 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_fld_cg with function sample(
+    input bit [32-1:0] addr
+    );
+        option.per_instance = 1;
+        addr_cp : coverpoint addr;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_fld_cg with function sample(
+    input bit [1-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__FUSE_UDS_SEED COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__fuse_uds_seed_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
