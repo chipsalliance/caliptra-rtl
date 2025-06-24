@@ -77,7 +77,9 @@ package axi_dma_reg_uvm;
 
         axi_dma_reg__ctrl_bit_cg go_bit_cg[1];
         axi_dma_reg__ctrl_bit_cg flush_bit_cg[1];
-        axi_dma_reg__ctrl_bit_cg rsvd0_bit_cg[14];
+        axi_dma_reg__ctrl_bit_cg aes_mode_en_bit_cg[1];
+        axi_dma_reg__ctrl_bit_cg aes_gcm_mode_bit_cg[1];
+        axi_dma_reg__ctrl_bit_cg rsvd0_bit_cg[12];
         axi_dma_reg__ctrl_bit_cg rd_route_bit_cg[2];
         axi_dma_reg__ctrl_bit_cg rsvd1_bit_cg[2];
         axi_dma_reg__ctrl_bit_cg rd_fixed_bit_cg[1];
@@ -89,6 +91,8 @@ package axi_dma_reg_uvm;
         axi_dma_reg__ctrl_fld_cg fld_cg;
         rand uvm_reg_field go;
         rand uvm_reg_field flush;
+        rand uvm_reg_field aes_mode_en;
+        rand uvm_reg_field aes_gcm_mode;
         rand uvm_reg_field rsvd0;
         rand uvm_reg_field rd_route;
         rand uvm_reg_field rsvd1;
@@ -113,8 +117,12 @@ package axi_dma_reg_uvm;
             this.go.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.flush = new("flush");
             this.flush.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
+            this.aes_mode_en = new("aes_mode_en");
+            this.aes_mode_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.aes_gcm_mode = new("aes_gcm_mode");
+            this.aes_gcm_mode.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd0 = new("rsvd0");
-            this.rsvd0.configure(this, 14, 2, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd0.configure(this, 12, 4, "RO", 0, 'h0, 1, 1, 0);
             this.rd_route = new("rd_route");
             this.rd_route.configure(this, 2, 16, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
@@ -134,6 +142,8 @@ package axi_dma_reg_uvm;
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(go_bit_cg[bt]) go_bit_cg[bt] = new();
                 foreach(flush_bit_cg[bt]) flush_bit_cg[bt] = new();
+                foreach(aes_mode_en_bit_cg[bt]) aes_mode_en_bit_cg[bt] = new();
+                foreach(aes_gcm_mode_bit_cg[bt]) aes_gcm_mode_bit_cg[bt] = new();
                 foreach(rsvd0_bit_cg[bt]) rsvd0_bit_cg[bt] = new();
                 foreach(rd_route_bit_cg[bt]) rd_route_bit_cg[bt] = new();
                 foreach(rsvd1_bit_cg[bt]) rsvd1_bit_cg[bt] = new();
@@ -162,7 +172,8 @@ package axi_dma_reg_uvm;
         axi_dma_reg__status0_bit_cg axi_dma_fsm_ps_bit_cg[2];
         axi_dma_reg__status0_bit_cg payload_available_bit_cg[1];
         axi_dma_reg__status0_bit_cg image_activated_bit_cg[1];
-        axi_dma_reg__status0_bit_cg rsvd1_bit_cg[12];
+        axi_dma_reg__status0_bit_cg axi_dma_aes_fsm_ps_bit_cg[4];
+        axi_dma_reg__status0_bit_cg rsvd1_bit_cg[8];
         axi_dma_reg__status0_fld_cg fld_cg;
         rand uvm_reg_field busy;
         rand uvm_reg_field error;
@@ -171,6 +182,7 @@ package axi_dma_reg_uvm;
         rand uvm_reg_field axi_dma_fsm_ps;
         rand uvm_reg_field payload_available;
         rand uvm_reg_field image_activated;
+        rand uvm_reg_field axi_dma_aes_fsm_ps;
         rand uvm_reg_field rsvd1;
 
         function new(string name = "axi_dma_reg__status0");
@@ -197,8 +209,10 @@ package axi_dma_reg_uvm;
             this.payload_available.configure(this, 1, 18, "RO", 1, 'h0, 0, 1, 0);
             this.image_activated = new("image_activated");
             this.image_activated.configure(this, 1, 19, "RO", 1, 'h0, 0, 1, 0);
+            this.axi_dma_aes_fsm_ps = new("axi_dma_aes_fsm_ps");
+            this.axi_dma_aes_fsm_ps.configure(this, 4, 20, "RO", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
-            this.rsvd1.configure(this, 12, 20, "RO", 0, 'h0, 1, 1, 0);
+            this.rsvd1.configure(this, 8, 24, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(busy_bit_cg[bt]) busy_bit_cg[bt] = new();
                 foreach(error_bit_cg[bt]) error_bit_cg[bt] = new();
@@ -207,6 +221,7 @@ package axi_dma_reg_uvm;
                 foreach(axi_dma_fsm_ps_bit_cg[bt]) axi_dma_fsm_ps_bit_cg[bt] = new();
                 foreach(payload_available_bit_cg[bt]) payload_available_bit_cg[bt] = new();
                 foreach(image_activated_bit_cg[bt]) image_activated_bit_cg[bt] = new();
+                foreach(axi_dma_aes_fsm_ps_bit_cg[bt]) axi_dma_aes_fsm_ps_bit_cg[bt] = new();
                 foreach(rsvd1_bit_cg[bt]) rsvd1_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
@@ -537,6 +552,7 @@ package axi_dma_reg_uvm;
         axi_dma_reg__intr_block_t__error_intr_en_t_bit_cg error_sha_lock_en_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_en_t_bit_cg error_fifo_oflow_en_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_en_t_bit_cg error_fifo_uflow_en_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_en_t_bit_cg error_aes_cif_en_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field error_cmd_dec_en;
         rand uvm_reg_field error_axi_rd_en;
@@ -545,6 +561,7 @@ package axi_dma_reg_uvm;
         rand uvm_reg_field error_sha_lock_en;
         rand uvm_reg_field error_fifo_oflow_en;
         rand uvm_reg_field error_fifo_uflow_en;
+        rand uvm_reg_field error_aes_cif_en;
 
         function new(string name = "axi_dma_reg__intr_block_t__error_intr_en_t");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -570,6 +587,8 @@ package axi_dma_reg_uvm;
             this.error_fifo_oflow_en.configure(this, 1, 5, "RW", 0, 'h0, 1, 1, 0);
             this.error_fifo_uflow_en = new("error_fifo_uflow_en");
             this.error_fifo_uflow_en.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.error_aes_cif_en = new("error_aes_cif_en");
+            this.error_aes_cif_en.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_cmd_dec_en_bit_cg[bt]) error_cmd_dec_en_bit_cg[bt] = new();
                 foreach(error_axi_rd_en_bit_cg[bt]) error_axi_rd_en_bit_cg[bt] = new();
@@ -578,6 +597,7 @@ package axi_dma_reg_uvm;
                 foreach(error_sha_lock_en_bit_cg[bt]) error_sha_lock_en_bit_cg[bt] = new();
                 foreach(error_fifo_oflow_en_bit_cg[bt]) error_fifo_oflow_en_bit_cg[bt] = new();
                 foreach(error_fifo_uflow_en_bit_cg[bt]) error_fifo_uflow_en_bit_cg[bt] = new();
+                foreach(error_aes_cif_en_bit_cg[bt]) error_aes_cif_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -694,20 +714,21 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - axi_dma_reg::intr_block_t::error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
-    class axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0 extends uvm_reg;
+    // Reg - axi_dma_reg::intr_block_t::error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
+    class axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_cmd_dec_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_axi_rd_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_axi_wr_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_mbox_lock_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_sha_lock_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_fifo_oflow_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_fifo_uflow_sts_bit_cg[1];
-        axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_fld_cg fld_cg;
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_cmd_dec_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_axi_rd_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_axi_wr_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_mbox_lock_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_sha_lock_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_fifo_oflow_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_fifo_uflow_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_bit_cg error_aes_cif_sts_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0_fld_cg fld_cg;
         rand uvm_reg_field error_cmd_dec_sts;
         rand uvm_reg_field error_axi_rd_sts;
         rand uvm_reg_field error_axi_wr_sts;
@@ -715,8 +736,9 @@ package axi_dma_reg_uvm;
         rand uvm_reg_field error_sha_lock_sts;
         rand uvm_reg_field error_fifo_oflow_sts;
         rand uvm_reg_field error_fifo_uflow_sts;
+        rand uvm_reg_field error_aes_cif_sts;
 
-        function new(string name = "axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0");
+        function new(string name = "axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -740,6 +762,8 @@ package axi_dma_reg_uvm;
             this.error_fifo_oflow_sts.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
             this.error_fifo_uflow_sts = new("error_fifo_uflow_sts");
             this.error_fifo_uflow_sts.configure(this, 1, 6, "W1C", 1, 'h0, 1, 1, 0);
+            this.error_aes_cif_sts = new("error_aes_cif_sts");
+            this.error_aes_cif_sts.configure(this, 1, 7, "W1C", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_cmd_dec_sts_bit_cg[bt]) error_cmd_dec_sts_bit_cg[bt] = new();
                 foreach(error_axi_rd_sts_bit_cg[bt]) error_axi_rd_sts_bit_cg[bt] = new();
@@ -748,11 +772,12 @@ package axi_dma_reg_uvm;
                 foreach(error_sha_lock_sts_bit_cg[bt]) error_sha_lock_sts_bit_cg[bt] = new();
                 foreach(error_fifo_oflow_sts_bit_cg[bt]) error_fifo_oflow_sts_bit_cg[bt] = new();
                 foreach(error_fifo_uflow_sts_bit_cg[bt]) error_fifo_uflow_sts_bit_cg[bt] = new();
+                foreach(error_aes_cif_sts_bit_cg[bt]) error_aes_cif_sts_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
+    endclass : axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
 
     // Reg - axi_dma_reg::intr_block_t::notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120
     class axi_dma_reg__intr_block_t__notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120 extends uvm_reg;
@@ -817,6 +842,7 @@ package axi_dma_reg_uvm;
         axi_dma_reg__intr_block_t__error_intr_trig_t_bit_cg error_sha_lock_trig_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_trig_t_bit_cg error_fifo_oflow_trig_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_trig_t_bit_cg error_fifo_uflow_trig_bit_cg[1];
+        axi_dma_reg__intr_block_t__error_intr_trig_t_bit_cg error_aes_cif_trig_bit_cg[1];
         axi_dma_reg__intr_block_t__error_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field error_cmd_dec_trig;
         rand uvm_reg_field error_axi_rd_trig;
@@ -825,6 +851,7 @@ package axi_dma_reg_uvm;
         rand uvm_reg_field error_sha_lock_trig;
         rand uvm_reg_field error_fifo_oflow_trig;
         rand uvm_reg_field error_fifo_uflow_trig;
+        rand uvm_reg_field error_aes_cif_trig;
 
         function new(string name = "axi_dma_reg__intr_block_t__error_intr_trig_t");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -850,6 +877,8 @@ package axi_dma_reg_uvm;
             this.error_fifo_oflow_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
             this.error_fifo_uflow_trig = new("error_fifo_uflow_trig");
             this.error_fifo_uflow_trig.configure(this, 1, 6, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_aes_cif_trig = new("error_aes_cif_trig");
+            this.error_aes_cif_trig.configure(this, 1, 7, "W1S", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_cmd_dec_trig_bit_cg[bt]) error_cmd_dec_trig_bit_cg[bt] = new();
                 foreach(error_axi_rd_trig_bit_cg[bt]) error_axi_rd_trig_bit_cg[bt] = new();
@@ -858,6 +887,7 @@ package axi_dma_reg_uvm;
                 foreach(error_sha_lock_trig_bit_cg[bt]) error_sha_lock_trig_bit_cg[bt] = new();
                 foreach(error_fifo_oflow_trig_bit_cg[bt]) error_fifo_oflow_trig_bit_cg[bt] = new();
                 foreach(error_fifo_uflow_trig_bit_cg[bt]) error_fifo_uflow_trig_bit_cg[bt] = new();
+                foreach(error_aes_cif_trig_bit_cg[bt]) error_aes_cif_trig_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1123,6 +1153,36 @@ package axi_dma_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d
+
+    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_893e2fcf
+    class axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf_bit_cg cnt_bit_cg[32];
+        axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf_fld_cg fld_cg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf
 
     // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_61104c6c
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_61104c6c extends uvm_reg;
@@ -1484,6 +1544,36 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43
 
+    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e2da7281
+    class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281_bit_cg pulse_bit_cg[1];
+        axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281_fld_cg fld_cg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281
+
     // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_f1bdde05
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f1bdde05 extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -1641,7 +1731,7 @@ package axi_dma_reg_uvm;
         rand axi_dma_reg__intr_block_t__notif_intr_en_t notif_intr_en_r;
         rand axi_dma_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand axi_dma_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand axi_dma_reg__intr_block_t__error_intr_t_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0 error_internal_intr_r;
+        rand axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0 error_internal_intr_r;
         rand axi_dma_reg__intr_block_t__notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120 notif_internal_intr_r;
         rand axi_dma_reg__intr_block_t__error_intr_trig_t error_intr_trig_r;
         rand axi_dma_reg__intr_block_t__notif_intr_trig_t notif_intr_trig_r;
@@ -1652,6 +1742,7 @@ package axi_dma_reg_uvm;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_5381f2ed error_sha_lock_intr_count_r;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_b056182d error_fifo_oflow_intr_count_r;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d error_fifo_uflow_intr_count_r;
+        rand axi_dma_reg__intr_block_t__intr_count_t_cnt_893e2fcf error_aes_cif_intr_count_r;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_61104c6c notif_txn_done_intr_count_r;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_9b030582 notif_fifo_empty_intr_count_r;
         rand axi_dma_reg__intr_block_t__intr_count_t_cnt_3709cb5b notif_fifo_not_empty_intr_count_r;
@@ -1664,6 +1755,7 @@ package axi_dma_reg_uvm;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f530dcc5 error_sha_lock_intr_count_incr_r;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_60d6f4e7 error_fifo_oflow_intr_count_incr_r;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43 error_fifo_uflow_intr_count_incr_r;
+        rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281 error_aes_cif_intr_count_incr_r;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f1bdde05 notif_txn_done_intr_count_incr_r;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_236c6006 notif_fifo_empty_intr_count_incr_r;
         rand axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e5e89525 notif_fifo_not_empty_intr_count_incr_r;
@@ -1756,6 +1848,11 @@ package axi_dma_reg_uvm;
 
             this.error_fifo_uflow_intr_count_r.build();
             this.default_map.add_reg(this.error_fifo_uflow_intr_count_r, 'h118);
+            this.error_aes_cif_intr_count_r = new("error_aes_cif_intr_count_r");
+            this.error_aes_cif_intr_count_r.configure(this);
+
+            this.error_aes_cif_intr_count_r.build();
+            this.default_map.add_reg(this.error_aes_cif_intr_count_r, 'h11c);
             this.notif_txn_done_intr_count_r = new("notif_txn_done_intr_count_r");
             this.notif_txn_done_intr_count_r.configure(this);
 
@@ -1816,31 +1913,36 @@ package axi_dma_reg_uvm;
 
             this.error_fifo_uflow_intr_count_incr_r.build();
             this.default_map.add_reg(this.error_fifo_uflow_intr_count_incr_r, 'h218);
+            this.error_aes_cif_intr_count_incr_r = new("error_aes_cif_intr_count_incr_r");
+            this.error_aes_cif_intr_count_incr_r.configure(this);
+
+            this.error_aes_cif_intr_count_incr_r.build();
+            this.default_map.add_reg(this.error_aes_cif_intr_count_incr_r, 'h21c);
             this.notif_txn_done_intr_count_incr_r = new("notif_txn_done_intr_count_incr_r");
             this.notif_txn_done_intr_count_incr_r.configure(this);
 
             this.notif_txn_done_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_txn_done_intr_count_incr_r, 'h21c);
+            this.default_map.add_reg(this.notif_txn_done_intr_count_incr_r, 'h220);
             this.notif_fifo_empty_intr_count_incr_r = new("notif_fifo_empty_intr_count_incr_r");
             this.notif_fifo_empty_intr_count_incr_r.configure(this);
 
             this.notif_fifo_empty_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_fifo_empty_intr_count_incr_r, 'h220);
+            this.default_map.add_reg(this.notif_fifo_empty_intr_count_incr_r, 'h224);
             this.notif_fifo_not_empty_intr_count_incr_r = new("notif_fifo_not_empty_intr_count_incr_r");
             this.notif_fifo_not_empty_intr_count_incr_r.configure(this);
 
             this.notif_fifo_not_empty_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_fifo_not_empty_intr_count_incr_r, 'h224);
+            this.default_map.add_reg(this.notif_fifo_not_empty_intr_count_incr_r, 'h228);
             this.notif_fifo_full_intr_count_incr_r = new("notif_fifo_full_intr_count_incr_r");
             this.notif_fifo_full_intr_count_incr_r.configure(this);
 
             this.notif_fifo_full_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_fifo_full_intr_count_incr_r, 'h228);
+            this.default_map.add_reg(this.notif_fifo_full_intr_count_incr_r, 'h22c);
             this.notif_fifo_not_full_intr_count_incr_r = new("notif_fifo_not_full_intr_count_incr_r");
             this.notif_fifo_not_full_intr_count_incr_r.configure(this);
 
             this.notif_fifo_not_full_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_fifo_not_full_intr_count_incr_r, 'h22c);
+            this.default_map.add_reg(this.notif_fifo_not_full_intr_count_incr_r, 'h230);
         endfunction : build
     endclass : axi_dma_reg__intr_block_t
 

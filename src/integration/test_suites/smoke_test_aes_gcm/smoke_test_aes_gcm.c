@@ -68,6 +68,8 @@ Tag = 5bc94fbc3221a5db94fae95ae7121a47
 void main() {
 
     aes_flow_t aes_input;
+    aes_input.data_src_mode = AES_DATA_DIRECT;
+    aes_input.dma_transfer_data = (dma_transfer_data_t){0};
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;
     aes_key_len_e key_len;
