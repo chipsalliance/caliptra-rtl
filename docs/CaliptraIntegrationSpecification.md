@@ -418,6 +418,13 @@ For hitless updates or other image-processing operations, the Caliptra mailbox s
 2. Specify the command to run on the image.  
 3. Indicate the size of the image in the staging area.  
 
+References:
+
+- [Caliptra ROM MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/rom/dev/README.md#handling-commands-from-mailbox)
+- [Caliptra Runtime FW MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/runtime/README.md#mailbox-commands)
+- [Caliptra HW API](#mailbox)
+
+
 The external staging area must be within the Caliptra crypto boundary. Meaning there must be access restrictions similar to the MBOX preventing trusted entities from manipulating or accessing the data being processed by Caliptra.
 
 ## Mailbox
