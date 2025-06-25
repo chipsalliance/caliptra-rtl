@@ -10443,20 +10443,6 @@
 #define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_LOW                                               (0)
 #define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK                                              (0x1)
 #endif
-#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                             (0x30030174)
-#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
-#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                                 (0x174)
-#endif
-#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                             (0x30030178)
-#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
-#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                                 (0x178)
-#endif
-#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                          (0x3003017c)
-#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                              (0x17c)
-#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                     (0)
-#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                    (0x1)
-#endif
 #define CLP_SOC_IFC_REG_FUSE_UDS_SEED_0                                                             (0x30030200)
 #ifndef SOC_IFC_REG_FUSE_UDS_SEED_0
 #define SOC_IFC_REG_FUSE_UDS_SEED_0                                                                 (0x200)
@@ -10988,6 +10974,20 @@
 #define CLP_SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3                                                   (0x300305dc)
 #ifndef SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3
 #define SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3                                                       (0x5dc)
+#endif
+#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                             (0x300305e0)
+#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
+#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                                 (0x5e0)
+#endif
+#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                             (0x300305e4)
+#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
+#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                                 (0x5e4)
+#endif
+#define CLP_SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                          (0x300305e8)
+#ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                              (0x5e8)
+#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                     (0)
+#define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                    (0x1)
 #endif
 #define CLP_SOC_IFC_REG_INTERNAL_OBF_KEY_0                                                          (0x30030600)
 #ifndef SOC_IFC_REG_INTERNAL_OBF_KEY_0

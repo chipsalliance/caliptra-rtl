@@ -444,17 +444,6 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_LOW                                      (0)
 `define GENERIC_AND_FUSE_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK                                     (32'h1)
 `endif
-`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
-`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                        (32'h174)
-`endif
-`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
-`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                        (32'h178)
-`endif
-`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                     (32'h17c)
-`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                            (0)
-`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                           (32'h1)
-`endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0
 `define GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0                                                        (32'h200)
 `endif
@@ -864,6 +853,17 @@
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_GENERIC_FW_EXEC_CTRL_3
 `define GENERIC_AND_FUSE_REG_SS_GENERIC_FW_EXEC_CTRL_3                                              (32'h5dc)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
+`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                        (32'h5e0)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
+`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                        (32'h5e4)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                     (32'h5e8)
+`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                            (0)
+`define GENERIC_AND_FUSE_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                           (32'h1)
 `endif
 
 

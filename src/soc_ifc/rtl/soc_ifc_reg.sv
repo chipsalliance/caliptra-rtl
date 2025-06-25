@@ -112,8 +112,6 @@ module soc_ifc_reg (
         logic CPTRA_CAP_LOCK;
         logic [12-1:0]CPTRA_OWNER_PK_HASH;
         logic CPTRA_OWNER_PK_HASH_LOCK;
-        logic [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
-        logic EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         logic [16-1:0]fuse_uds_seed;
         logic [8-1:0]fuse_field_entropy;
         logic [12-1:0]fuse_vendor_pk_hash;
@@ -149,6 +147,8 @@ module soc_ifc_reg (
         logic SS_DBG_MANUF_SERVICE_REG_RSP;
         logic [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
         logic [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
+        logic [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
+        logic EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         logic [8-1:0]internal_obf_key;
         logic internal_iccm_lock;
         logic internal_fw_update_reset;
@@ -279,10 +279,6 @@ module soc_ifc_reg (
             decoded_reg_strb.CPTRA_OWNER_PK_HASH[i0] = cpuif_req_masked & (cpuif_addr == 12'h140 + i0*12'h4);
         end
         decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK = cpuif_req_masked & (cpuif_addr == 12'h170);
-        for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] = cpuif_req_masked & (cpuif_addr == 12'h174 + i0*12'h4);
-        end
-        decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK = cpuif_req_masked & (cpuif_addr == 12'h17c);
         for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.fuse_uds_seed[i0] = cpuif_req_masked & (cpuif_addr == 12'h200 + i0*12'h4);
         end
@@ -340,6 +336,10 @@ module soc_ifc_reg (
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] = cpuif_req_masked & (cpuif_addr == 12'h5d0 + i0*12'h4);
         end
+        for(int i0=0; i0<2; i0++) begin
+            decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] = cpuif_req_masked & (cpuif_addr == 12'h5e0 + i0*12'h4);
+        end
+        decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK = cpuif_req_masked & (cpuif_addr == 12'h5e8);
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.internal_obf_key[i0] = cpuif_req_masked & (cpuif_addr == 12'h600 + i0*12'h4);
         end
@@ -722,18 +722,6 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } addr;
-        } [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
-        struct packed{
-            struct packed{
-                logic next;
-                logic load_next;
-            } lock;
-        } EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
-        struct packed{
-            struct packed{
-                logic [31:0] next;
-                logic load_next;
             } seed;
         } [16-1:0]fuse_uds_seed;
         struct packed{
@@ -984,6 +972,18 @@ module soc_ifc_reg (
                 logic load_next;
             } go;
         } [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr;
+        } [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } lock;
+        } EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1774,16 +1774,6 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } addr;
-        } [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
-        struct packed{
-            struct packed{
-                logic value;
-            } lock;
-        } EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
-        struct packed{
-            struct packed{
-                logic [31:0] value;
             } seed;
         } [16-1:0]fuse_uds_seed;
         struct packed{
@@ -1989,6 +1979,16 @@ module soc_ifc_reg (
                 logic [31:0] value;
             } go;
         } [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr;
+        } [2-1:0]EXTERNAL_STAGING_AREA_ADDRESS;
+        struct packed{
+            struct packed{
+                logic value;
+            } lock;
+        } EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -3634,50 +3634,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value = field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
-    for(genvar i0=0; i0<2; i0++) begin
-        // Field: soc_ifc_reg.EXTERNAL_STAGING_AREA_ADDRESS[].addr
-        always_comb begin
-            automatic logic [31:0] next_c;
-            automatic logic load_next_c;
-            next_c = field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value;
-            load_next_c = '0;
-            if(decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] && decoded_req_is_wr && !(hwif_in.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.swwel)) begin // SW write
-                next_c = (field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end
-            field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.next = next_c;
-            field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.load_next = load_next_c;
-        end
-        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-            if(~hwif_in.cptra_rst_b) begin
-                field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value <= 32'h0;
-            end else if(field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.load_next) begin
-                field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value <= field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.next;
-            end
-        end
-        assign hwif_out.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value = field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value;
-    end
-    // Field: soc_ifc_reg.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK && decoded_req_is_wr && !(hwif_in.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel)) begin // SW write
-            next_c = (field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
-            load_next_c = '1;
-        end
-        field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.next = next_c;
-        field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value <= 1'h0;
-        end else if(field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.load_next) begin
-            field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value <= field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.next;
-        end
-    end
-    assign hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value = field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: soc_ifc_reg.fuse_uds_seed[].seed
         always_comb begin
@@ -4732,6 +4688,50 @@ module soc_ifc_reg (
         end
         assign hwif_out.SS_GENERIC_FW_EXEC_CTRL[i0].go.value = field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value;
     end
+    for(genvar i0=0; i0<2; i0++) begin
+        // Field: soc_ifc_reg.EXTERNAL_STAGING_AREA_ADDRESS[].addr
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] && decoded_req_is_wr && !(hwif_in.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.swwel)) begin // SW write
+                next_c = (field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.next = next_c;
+            field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+            if(~hwif_in.cptra_rst_b) begin
+                field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value <= 32'h0;
+            end else if(field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.load_next) begin
+                field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value <= field_combo.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.next;
+            end
+        end
+        assign hwif_out.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value = field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value;
+    end
+    // Field: soc_ifc_reg.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK && decoded_req_is_wr && !(hwif_in.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel)) begin // SW write
+            next_c = (field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.next = next_c;
+        field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value <= 1'h0;
+        end else if(field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.load_next) begin
+            field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value <= field_combo.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.next;
+        end
+    end
+    assign hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value = field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
     for(genvar i0=0; i0<8; i0++) begin
         // Field: soc_ifc_reg.internal_obf_key[].key
         always_comb begin
@@ -7227,82 +7227,82 @@ module soc_ifc_reg (
     end
     assign readback_array[89][0:0] = (decoded_reg_strb.CPTRA_OWNER_PK_HASH_LOCK && !decoded_req_is_wr) ? field_storage.CPTRA_OWNER_PK_HASH_LOCK.lock.value : '0;
     assign readback_array[89][31:1] = '0;
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] && !decoded_req_is_wr) ? field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value : '0;
-    end
-    assign readback_array[92][0:0] = (decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK && !decoded_req_is_wr) ? field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value : '0;
-    assign readback_array[92][31:1] = '0;
     for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 93][31:0] = (decoded_reg_strb.fuse_vendor_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_vendor_pk_hash[i0].hash.value : '0;
+        assign readback_array[i0*1 + 90][31:0] = (decoded_reg_strb.fuse_vendor_pk_hash[i0] && !decoded_req_is_wr) ? field_storage.fuse_vendor_pk_hash[i0].hash.value : '0;
     end
-    assign readback_array[105][3:0] = (decoded_reg_strb.fuse_ecc_revocation && !decoded_req_is_wr) ? field_storage.fuse_ecc_revocation.ecc_revocation.value : '0;
-    assign readback_array[105][31:4] = '0;
-    assign readback_array[106][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
+    assign readback_array[102][3:0] = (decoded_reg_strb.fuse_ecc_revocation && !decoded_req_is_wr) ? field_storage.fuse_ecc_revocation.ecc_revocation.value : '0;
+    assign readback_array[102][31:4] = '0;
+    assign readback_array[103][31:0] = (decoded_reg_strb.fuse_fmc_key_manifest_svn && !decoded_req_is_wr) ? field_storage.fuse_fmc_key_manifest_svn.svn.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 107][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 104][31:0] = (decoded_reg_strb.fuse_runtime_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_runtime_svn[i0].svn.value : '0;
     end
-    assign readback_array[111][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
-    assign readback_array[111][31:1] = '0;
+    assign readback_array[108][0:0] = (decoded_reg_strb.fuse_anti_rollback_disable && !decoded_req_is_wr) ? field_storage.fuse_anti_rollback_disable.dis.value : '0;
+    assign readback_array[108][31:1] = '0;
     for(genvar i0=0; i0<24; i0++) begin
-        assign readback_array[i0*1 + 112][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
+        assign readback_array[i0*1 + 109][31:0] = (decoded_reg_strb.fuse_idevid_cert_attr[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_cert_attr[i0].cert.value : '0;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 136][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
+        assign readback_array[i0*1 + 133][31:0] = (decoded_reg_strb.fuse_idevid_manuf_hsm_id[i0] && !decoded_req_is_wr) ? field_storage.fuse_idevid_manuf_hsm_id[i0].hsm_id.value : '0;
     end
-    assign readback_array[140][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
-    assign readback_array[141][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
-    assign readback_array[141][31:4] = '0;
-    assign readback_array[142][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
-    assign readback_array[142][31:16] = '0;
+    assign readback_array[137][31:0] = (decoded_reg_strb.fuse_lms_revocation && !decoded_req_is_wr) ? field_storage.fuse_lms_revocation.lms_revocation.value : '0;
+    assign readback_array[138][3:0] = (decoded_reg_strb.fuse_mldsa_revocation && !decoded_req_is_wr) ? field_storage.fuse_mldsa_revocation.mldsa_revocation.value : '0;
+    assign readback_array[138][31:4] = '0;
+    assign readback_array[139][15:0] = (decoded_reg_strb.fuse_soc_stepping_id && !decoded_req_is_wr) ? field_storage.fuse_soc_stepping_id.soc_stepping_id.value : '0;
+    assign readback_array[139][31:16] = '0;
     for(genvar i0=0; i0<16; i0++) begin
-        assign readback_array[i0*1 + 143][31:0] = (decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && !decoded_req_is_wr) ? field_storage.fuse_manuf_dbg_unlock_token[i0].token.value : '0;
+        assign readback_array[i0*1 + 140][31:0] = (decoded_reg_strb.fuse_manuf_dbg_unlock_token[i0] && !decoded_req_is_wr) ? field_storage.fuse_manuf_dbg_unlock_token[i0].token.value : '0;
     end
-    assign readback_array[159][1:0] = (decoded_reg_strb.fuse_pqc_key_type && !decoded_req_is_wr) ? field_storage.fuse_pqc_key_type.key_type.value : '0;
-    assign readback_array[159][31:2] = '0;
+    assign readback_array[156][1:0] = (decoded_reg_strb.fuse_pqc_key_type && !decoded_req_is_wr) ? field_storage.fuse_pqc_key_type.key_type.value : '0;
+    assign readback_array[156][31:2] = '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 160][31:0] = (decoded_reg_strb.fuse_soc_manifest_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_svn[i0].svn.value : '0;
+        assign readback_array[i0*1 + 157][31:0] = (decoded_reg_strb.fuse_soc_manifest_svn[i0] && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_svn[i0].svn.value : '0;
     end
-    assign readback_array[164][7:0] = (decoded_reg_strb.fuse_soc_manifest_max_svn && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_max_svn.svn.value : '0;
-    assign readback_array[164][31:8] = '0;
-    assign readback_array[165][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[166][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[167][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[168][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[169][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[170][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[171][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[172][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[173][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[174][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[175][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
-    assign readback_array[176][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
-    assign readback_array[177][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
-    assign readback_array[177][31:1] = '0;
-    assign readback_array[178][31:0] = (decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value : '0;
+    assign readback_array[161][7:0] = (decoded_reg_strb.fuse_soc_manifest_max_svn && !decoded_req_is_wr) ? field_storage.fuse_soc_manifest_max_svn.svn.value : '0;
+    assign readback_array[161][31:8] = '0;
+    assign readback_array[162][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[163][31:0] = (decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[164][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[165][31:0] = (decoded_reg_strb.SS_MCI_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_MCI_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[166][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[167][31:0] = (decoded_reg_strb.SS_RECOVERY_IFC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[168][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[169][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[170][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[171][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
+    assign readback_array[172][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
+    assign readback_array[173][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
+    assign readback_array[174][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
+    assign readback_array[174][31:1] = '0;
+    assign readback_array[175][31:0] = (decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 179][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
+        assign readback_array[i0*1 + 176][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
     end
-    assign readback_array[183][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value : '0;
-    assign readback_array[183][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value : '0;
-    assign readback_array[183][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value : '0;
-    assign readback_array[183][31:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next : '0;
-    assign readback_array[184][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value : '0;
-    assign readback_array[184][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value : '0;
-    assign readback_array[184][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value : '0;
-    assign readback_array[184][3:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value : '0;
-    assign readback_array[184][4:4] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value : '0;
-    assign readback_array[184][5:5] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value : '0;
-    assign readback_array[184][6:6] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value : '0;
-    assign readback_array[184][7:7] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value : '0;
-    assign readback_array[184][8:8] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value : '0;
-    assign readback_array[184][9:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value : '0;
-    assign readback_array[184][31:10] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
+    assign readback_array[180][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value : '0;
+    assign readback_array[180][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value : '0;
+    assign readback_array[180][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value : '0;
+    assign readback_array[180][31:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_REQ && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD.next : '0;
+    assign readback_array[181][0:0] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value : '0;
+    assign readback_array[181][1:1] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value : '0;
+    assign readback_array[181][2:2] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value : '0;
+    assign readback_array[181][3:3] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value : '0;
+    assign readback_array[181][4:4] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value : '0;
+    assign readback_array[181][5:5] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value : '0;
+    assign readback_array[181][6:6] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value : '0;
+    assign readback_array[181][7:7] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value : '0;
+    assign readback_array[181][8:8] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value : '0;
+    assign readback_array[181][9:9] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? field_storage.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value : '0;
+    assign readback_array[181][31:10] = (decoded_reg_strb.SS_DBG_MANUF_SERVICE_REG_RSP && !decoded_req_is_wr) ? hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 185][31:0] = (decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && !decoded_req_is_wr) ? field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value : '0;
+        assign readback_array[i0*1 + 182][31:0] = (decoded_reg_strb.SS_SOC_DBG_UNLOCK_LEVEL[i0] && !decoded_req_is_wr) ? field_storage.SS_SOC_DBG_UNLOCK_LEVEL[i0].LEVEL.value : '0;
     end
     for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 187][31:0] = (decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] && !decoded_req_is_wr) ? field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value : '0;
+        assign readback_array[i0*1 + 184][31:0] = (decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] && !decoded_req_is_wr) ? field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value : '0;
     end
+    for(genvar i0=0; i0<2; i0++) begin
+        assign readback_array[i0*1 + 188][31:0] = (decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS[i0] && !decoded_req_is_wr) ? field_storage.EXTERNAL_STAGING_AREA_ADDRESS[i0].addr.value : '0;
+    end
+    assign readback_array[190][0:0] = (decoded_reg_strb.EXTERNAL_STAGING_AREA_ADDRESS_LOCK && !decoded_req_is_wr) ? field_storage.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value : '0;
+    assign readback_array[190][31:1] = '0;
     assign readback_array[191][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;
     assign readback_array[191][31:1] = '0;
     assign readback_array[192][0:0] = (decoded_reg_strb.internal_fw_update_reset && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset.core_rst.value : '0;
