@@ -1795,8 +1795,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_L COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1807,16 +1807,16 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_fld_cg with function sample(
-    input bit [32-1:0] addr
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L_fld_cg with function sample(
+    input bit [32-1:0] addr_l
     );
         option.per_instance = 1;
-        addr_cp : coverpoint addr;
+        addr_l_cp : coverpoint addr_l;
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS_LOCK COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_H COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1827,7 +1827,27 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H_fld_cg with function sample(
+    input bit [32-1:0] addr_h
+    );
+        option.per_instance = 1;
+        addr_h_cp : coverpoint addr_h;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_fld_cg with function sample(
     input bit [1-1:0] lock
     );
         option.per_instance = 1;

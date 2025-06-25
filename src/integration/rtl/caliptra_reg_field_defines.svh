@@ -8727,16 +8727,16 @@
 `ifndef SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3
 `define SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3                                                       (32'h5dc)
 `endif
-`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0
-`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_0                                                 (32'h5e0)
+`ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_L
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_L                                              (32'h5e0)
 `endif
-`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1
-`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_1                                                 (32'h5e4)
+`ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_H
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_H                                              (32'h5e4)
 `endif
-`ifndef SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                              (32'h5e8)
-`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                     (0)
-`define SOC_IFC_REG_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                    (32'h1)
+`ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                           (32'h5e8)
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                  (0)
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                 (32'h1)
 `endif
 `ifndef SOC_IFC_REG_INTERNAL_OBF_KEY_0
 `define SOC_IFC_REG_INTERNAL_OBF_KEY_0                                                              (32'h600)

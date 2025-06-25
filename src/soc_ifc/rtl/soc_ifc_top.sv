@@ -639,12 +639,10 @@ always_comb scan_mode_p = scan_mode & ~scan_mode_f;
 // External staging area logic
 always_comb begin
 
-    soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel = soc_ifc_reg_hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_L.addr_l.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_H.addr_h.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
 
-    for (int i=0; i<$size(soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS); i++) begin
-        //once locked, can't be cleared until reset
-        soc_ifc_reg_hwif_in.EXTERNAL_STAGING_AREA_ADDRESS[i].addr.swwel = soc_ifc_reg_hwif_out.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
-    end
 end
 
 //Filtering by AXI_USER

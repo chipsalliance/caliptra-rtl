@@ -2116,8 +2116,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_L SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -2125,24 +2125,49 @@
         m_data    = data;
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(addr_bit_cg[bt]) this.addr_bit_cg[bt].sample(data[0 + bt]);
+            foreach(addr_l_bit_cg[bt]) this.addr_l_bit_cg[bt].sample(data[0 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[31:0]/*addr*/   );
+            this.fld_cg.sample( data[31:0]/*addr_l*/   );
         end
     endfunction
 
-    function void soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS::sample_values();
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(addr_bit_cg[bt]) this.addr_bit_cg[bt].sample(addr.get_mirrored_value() >> bt);
+            foreach(addr_l_bit_cg[bt]) this.addr_l_bit_cg[bt].sample(addr_l.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( addr.get_mirrored_value()   );
+            this.fld_cg.sample( addr_l.get_mirrored_value()   );
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__EXTERNAL_STAGING_AREA_ADDRESS_LOCK SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_H SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(addr_h_bit_cg[bt]) this.addr_h_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*addr_h*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(addr_h_bit_cg[bt]) this.addr_h_bit_cg[bt].sample(addr_h.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( addr_h.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -2157,7 +2182,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK::sample_values();
+    function void soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(lock.get_mirrored_value() >> bt);
         end

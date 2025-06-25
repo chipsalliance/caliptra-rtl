@@ -14,9 +14,9 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
-class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_ADDR extends uvm_reg_cbs;
+class soc_ifc_reg_cbs_soc_ifc_reg_SS_EXTERNAL_STAGING_AREA_ADDRESS_ADDR extends uvm_reg_cbs;
 
-    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_ADDR)
+    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_SS_EXTERNAL_STAGING_AREA_ADDRESS_ADDR)
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
@@ -45,8 +45,8 @@ class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_ADDR extends uvm
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on register field %s, which is only modifiable by SoC (via AXI)", kind, map.get_name(), fld.get_full_name()), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
-                    if (rm.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.get_mirrored_value()) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                    if (rm.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.get_mirrored_value()) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin
@@ -64,8 +64,8 @@ class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_ADDR extends uvm
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
-                    if (rm.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.get_mirrored_value()) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                    if (rm.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.get_mirrored_value()) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin

@@ -408,9 +408,7 @@ The AXI_USER bits are used by the SoC to identify which device is accessing the 
 To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to **16 KiB**.  
 Instead of passing images directly to Caliptra through the mailbox, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
 
-Caliptra Core receives the base address of this staging area through the **SOC_IFC** register `EXTERNAL_STAGING_AREA_ADDRESS`.  
-This register **must be programmed before the Caliptra ROM starts executing**, enabling the ROM to use the staging area during streaming boot.  
-The register is lockable, preventing untrusted entities from modifying the address from which Caliptra reads or writes data.
+Caliptra Core receives the base address of this staging area through the **SOC_IFC** register `SS_EXTERNAL_STAGING_AREA_ADDRESS`. The address must be an AXI address accessable via the Caliptra DMA controller. This register **must be programmed before the Caliptra ROM starts executing**, enabling the ROM to use the staging area during streaming boot. The register is lockable, preventing untrusted entities from modifying the address from which Caliptra reads or writes data.
 
 For hitless updates or other image-processing operations, the Caliptra mailbox should be used to:
 

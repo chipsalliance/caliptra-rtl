@@ -2624,17 +2624,17 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL
 
-    // Reg - soc_ifc_reg::EXTERNAL_STAGING_AREA_ADDRESS
-    class soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_ADDRESS_L
+    class soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_bit_cg addr_bit_cg[32];
-        soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_fld_cg fld_cg;
-        rand uvm_reg_field addr;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L_bit_cg addr_l_bit_cg[32];
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L_fld_cg fld_cg;
+        rand uvm_reg_field addr_l;
 
-        function new(string name = "soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS");
+        function new(string name = "soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2644,27 +2644,57 @@ package soc_ifc_reg_uvm;
                                                       uvm_reg_map     map);
 
         virtual function void build();
-            this.addr = new("addr");
-            this.addr.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.addr_l = new("addr_l");
+            this.addr_l.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
-                foreach(addr_bit_cg[bt]) addr_bit_cg[bt] = new();
+                foreach(addr_l_bit_cg[bt]) addr_l_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS
+    endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L
 
-    // Reg - soc_ifc_reg::EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-    class soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_ADDRESS_H
+    class soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_bit_cg lock_bit_cg[1];
-        soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK_fld_cg fld_cg;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H_bit_cg addr_h_bit_cg[32];
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H_fld_cg fld_cg;
+        rand uvm_reg_field addr_h;
+
+        function new(string name = "soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.addr_h = new("addr_h");
+            this.addr_h.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(addr_h_bit_cg[bt]) addr_h_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H
+
+    // Reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+    class soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_bit_cg lock_bit_cg[1];
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_fld_cg fld_cg;
         rand uvm_reg_field lock;
 
-        function new(string name = "soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK");
+        function new(string name = "soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2682,7 +2712,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK
+    endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
 
     // Reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
@@ -4711,8 +4741,9 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP SS_DBG_MANUF_SERVICE_REG_RSP;
         rand soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL SS_SOC_DBG_UNLOCK_LEVEL[2];
         rand soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL SS_GENERIC_FW_EXEC_CTRL[4];
-        rand soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS EXTERNAL_STAGING_AREA_ADDRESS[2];
-        rand soc_ifc_reg__EXTERNAL_STAGING_AREA_ADDRESS_LOCK EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
+        rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L SS_EXTERNAL_STAGING_AREA_ADDRESS_L;
+        rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H SS_EXTERNAL_STAGING_AREA_ADDRESS_H;
+        rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
         rand soc_ifc_reg__internal_iccm_lock internal_iccm_lock;
         rand soc_ifc_reg__internal_fw_update_reset internal_fw_update_reset;
@@ -5185,18 +5216,21 @@ package soc_ifc_reg_uvm;
                 this.SS_GENERIC_FW_EXEC_CTRL[i0].build();
                 this.default_map.add_reg(this.SS_GENERIC_FW_EXEC_CTRL[i0], 'h5d0 + i0*'h4);
             end
-            foreach(this.EXTERNAL_STAGING_AREA_ADDRESS[i0]) begin
-                this.EXTERNAL_STAGING_AREA_ADDRESS[i0] = new($sformatf("EXTERNAL_STAGING_AREA_ADDRESS[%0d]", i0));
-                this.EXTERNAL_STAGING_AREA_ADDRESS[i0].configure(this);
-                
-                this.EXTERNAL_STAGING_AREA_ADDRESS[i0].build();
-                this.default_map.add_reg(this.EXTERNAL_STAGING_AREA_ADDRESS[i0], 'h5e0 + i0*'h4);
-            end
-            this.EXTERNAL_STAGING_AREA_ADDRESS_LOCK = new("EXTERNAL_STAGING_AREA_ADDRESS_LOCK");
-            this.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.configure(this);
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_L = new("SS_EXTERNAL_STAGING_AREA_ADDRESS_L");
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_L.configure(this);
 
-            this.EXTERNAL_STAGING_AREA_ADDRESS_LOCK.build();
-            this.default_map.add_reg(this.EXTERNAL_STAGING_AREA_ADDRESS_LOCK, 'h5e8);
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_L.build();
+            this.default_map.add_reg(this.SS_EXTERNAL_STAGING_AREA_ADDRESS_L, 'h5e0);
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_H = new("SS_EXTERNAL_STAGING_AREA_ADDRESS_H");
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_H.configure(this);
+
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_H.build();
+            this.default_map.add_reg(this.SS_EXTERNAL_STAGING_AREA_ADDRESS_H, 'h5e4);
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK = new("SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK");
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.configure(this);
+
+            this.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.build();
+            this.default_map.add_reg(this.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK, 'h5e8);
             foreach(this.internal_obf_key[i0]) begin
                 this.internal_obf_key[i0] = new($sformatf("internal_obf_key[%0d]", i0));
                 this.internal_obf_key[i0].configure(this);

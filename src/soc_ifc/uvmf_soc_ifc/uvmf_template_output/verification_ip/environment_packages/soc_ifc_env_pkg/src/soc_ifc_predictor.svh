@@ -1647,7 +1647,11 @@ class soc_ifc_predictor #(
                 "CPTRA_CAP_LOCK": begin
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
-                ["EXTERNAL_STAGING_AREA_ADDRESS[0]":"EXTERNAL_STAGING_AREA_ADDRESS[1]"] : begin
+                "EXTERNAL_STAGING_AREA_ADDRESS_L": begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "EXTERNAL_STAGING_AREA_ADDRESS_H": begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
@@ -2827,7 +2831,11 @@ class soc_ifc_predictor #(
             "CPTRA_CAP_LOCK": begin
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
-            ["EXTERNAL_STAGING_AREA_ADDRESS[0]": "EXTERNAL_STAGING_AREA_ADDRESS[1]"]: begin
+            "EXTERNAL_STAGING_AREA_ADDRESS_L": begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "EXTERNAL_STAGING_AREA_ADDRESS_H": begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end

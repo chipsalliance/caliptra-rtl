@@ -14,9 +14,9 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
-class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK extends uvm_reg_cbs;
+class soc_ifc_reg_cbs_soc_ifc_reg_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK extends uvm_reg_cbs;
 
-    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK)
+    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK)
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
@@ -46,7 +46,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK extend
                 end
                 UVM_PREDICT_WRITE: begin
                     if (previous) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin
@@ -65,7 +65,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK extend
                 end
                 UVM_PREDICT_WRITE: begin
                     if (previous) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
                     else begin
