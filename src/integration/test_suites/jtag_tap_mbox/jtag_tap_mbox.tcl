@@ -236,7 +236,7 @@ shutdown
 # Define register addresses
 set SS_UDS_SEED_PROGRAMMING_BASE_ADDR_L 0x56
 set SS_UDS_SEED_PROGRAMMING_BASE_ADDR_H 0x57
-set SS_DBG_MANUF_SERVICE_REG_REQ        0x70
+set SS_DBG_SERVICE_REG_REQ              0x70
 set SS_DBG_MANUF_SERVICE_REG_RSP        0x71
 
 # Define the values to write into the seed programming registers.
@@ -250,9 +250,9 @@ riscv dmi_write $SS_UDS_SEED_PROGRAMMING_BASE_ADDR_H $seed_addr_high
 
 # Write to the debug service register to trigger UDS programming.
 puts "Triggering UDS programming..."
-riscv dmi_write $SS_DBG_MANUF_SERVICE_REG_REQ 0x4
-set actual [riscv dmi_read $SS_DBG_MANUF_SERVICE_REG_REQ]
-puts "SS_DBG_MANUF_SERVICE_REG_REQ: $actual"
+riscv dmi_write $SS_DBG_SERVICE_REG_REQ 0x4
+set actual [riscv dmi_read $SS_DBG_SERVICE_REG_REQ]
+puts "SS_DBG_SERVICE_REG_REQ: $actual"
 
 # Polling UDS programming status
 puts "Polling UDS programming status: waiting for in-progress flag..."

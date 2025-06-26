@@ -800,16 +800,16 @@
 `ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_3
 `define GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_3                                                     (32'h5ac)
 `endif
-`ifndef GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ                                           (32'h5c0)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_LOW                  (0)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK                 (32'h1)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_LOW                   (1)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK                  (32'h2)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_LOW                       (2)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK                      (32'h4)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_LOW                                  (3)
-`define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_MASK                                 (32'hfffffff8)
+`ifndef GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ                                                 (32'h5c0)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_LOW                        (0)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK                       (32'h1)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_LOW                         (1)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK                        (32'h2)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_UDS_PROGRAM_REQ_LOW                             (2)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK                            (32'h4)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_RSVD_LOW                                        (3)
+`define GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ_RSVD_MASK                                       (32'hfffffff8)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP
 `define GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP                                           (32'h5c4)

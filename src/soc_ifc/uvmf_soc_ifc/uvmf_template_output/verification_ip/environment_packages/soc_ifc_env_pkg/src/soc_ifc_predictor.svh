@@ -1710,7 +1710,7 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 // TODO
-                "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                "SS_DBG_SERVICE_REG_REQ": begin
                     `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 // TODO
@@ -2883,7 +2883,7 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             // TODO
-            "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+            "SS_DBG_SERVICE_REG_REQ": begin
                 `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             // TODO

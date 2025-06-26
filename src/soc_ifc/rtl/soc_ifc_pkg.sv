@@ -101,7 +101,7 @@ package soc_ifc_pkg;
     parameter DMI_REG_SS_STRAP_GENERIC_1 = 7'h6D;
     parameter DMI_REG_SS_STRAP_GENERIC_2 = 7'h6E;
     parameter DMI_REG_SS_STRAP_GENERIC_3 = 7'h6F;
-    parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_REQ = 7'h70;
+    parameter DMI_REG_SS_DBG_SERVICE_REG_REQ = 7'h70;
     parameter DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP = 7'h71;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL0 = 7'h72;
     parameter DMI_REG_SS_DBG_UNLOCK_LEVEL1 = 7'h73;

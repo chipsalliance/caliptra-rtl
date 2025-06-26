@@ -159,7 +159,7 @@
       foreach (fuse_regnames[ix]) begin
         $display("CUrrent fuse: %s", fuse_regnames[ix]);
         $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-        if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
+        if ((fuse_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
             (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
             (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
           //$display("Found %s", fuse_regnames[ix]);

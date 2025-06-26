@@ -1990,8 +1990,8 @@
         end
     endfunction
 
-    /*----------------------- SOC_IFC_REG__SS_DBG_MANUF_SERVICE_REG_REQ SAMPLE FUNCTIONS -----------------------*/
-    function void soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ::sample(uvm_reg_data_t  data,
+    /*----------------------- SOC_IFC_REG__SS_DBG_SERVICE_REG_REQ SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__SS_DBG_SERVICE_REG_REQ::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,
                                                    bit             is_read,
                                                    uvm_reg_map     map);
@@ -2009,7 +2009,7 @@
         end
     endfunction
 
-    function void soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ::sample_values();
+    function void soc_ifc_reg__SS_DBG_SERVICE_REG_REQ::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(MANUF_DBG_UNLOCK_REQ_bit_cg[bt]) this.MANUF_DBG_UNLOCK_REQ_bit_cg[bt].sample(MANUF_DBG_UNLOCK_REQ.get_mirrored_value() >> bt);
             foreach(PROD_DBG_UNLOCK_REQ_bit_cg[bt]) this.PROD_DBG_UNLOCK_REQ_bit_cg[bt].sample(PROD_DBG_UNLOCK_REQ.get_mirrored_value() >> bt);

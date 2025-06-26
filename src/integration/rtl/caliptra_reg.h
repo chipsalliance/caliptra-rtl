@@ -10913,17 +10913,17 @@
 #ifndef SOC_IFC_REG_SS_STRAP_GENERIC_3
 #define SOC_IFC_REG_SS_STRAP_GENERIC_3                                                              (0x5ac)
 #endif
-#define CLP_SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ                                                (0x300305c0)
-#ifndef SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ                                                    (0x5c0)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_LOW                           (0)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK                          (0x1)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_LOW                            (1)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK                           (0x2)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_LOW                                (2)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK                               (0x4)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_LOW                                           (3)
-#define SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_RSVD_MASK                                          (0xfffffff8)
+#define CLP_SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ                                                      (0x300305c0)
+#ifndef SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ                                                          (0x5c0)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_LOW                                 (0)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK                                (0x1)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_LOW                                  (1)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK                                 (0x2)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_UDS_PROGRAM_REQ_LOW                                      (2)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK                                     (0x4)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_RSVD_LOW                                                 (3)
+#define SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_RSVD_MASK                                                (0xfffffff8)
 #endif
 #define CLP_SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP                                                (0x300305c4)
 #ifndef SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP
