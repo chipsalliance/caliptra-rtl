@@ -811,11 +811,11 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
 6. If no parity error is detected but syndrome == 0 or the syndrome is invalid, the error is deemed uncorrectable.
 7. On both single and double errors, the read data is modified before being returned to Caliptra.
 8. Since single-bit errors shall be corrected through INTEGRATOR instantiated logic, Caliptra never sees single-bit errors from SRAM.
-9. Double-bit or uncorrectable errors would cause unpredictable data to be returned to Caliptra. Since this condition shall be detected and reported to MCRIP, there is no concern or expectation that Caliptra will operate correctly after a double error.
+9. Double-bit or uncorrectable errors would cause unpredictable data to be returned to Caliptra. Since this condition shall be detected and reported to MCRIP, there is no expectation that Caliptra will operate correctly after a double error.
 10. On detection, single errors are reported as transparent to MCRIP, double errors are reported as fatal.
 11. Along with error severity, MCRIP logs physical location of the error.
 12. After MCRIP logs an error, it has a choice to send out in-band notification to an external agent.
-13.  MCRIP logs can be queried by SoC software.
+13. MCRIP logs can be queried by SoC software.
 
 ### Error injection
 
@@ -828,26 +828,10 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
     2. The non-intrusive error injection does not interfere with the operation of memories.
     3. The non-intrusive error injection is functional in Production fused parts.
 
-### Caliptra error and recovery flow
+### Caliptra error handling flow
 
-1. Caliptra Stuck:
-    1. SoC BC timeout mechanism with 300us timeout.
-2. Caliptra reports non-fatal error during boot flow:
-    1. cptra\_error\_non\_fatal is an output Caliptra signal, which shall be routed to SoC interrupt controller.
-    2. SoC can look at the Caliptra non-fatal error register for error source.
-    3. Assume Caliptra can report a non-fatal error at any time.
-    4. SoC should monitor the error interrupt or check it before sending any mailbox command.
-    5. In the event of a non-fatal error during boot (that is, prior to a ready for RT signal), SoC should enter recovery flow and attempt to boot again using alternate boot part/partition.
-    6. If SoC sees that a non-fatal error has occurred AFTER receiving the ready for RT signal, SoC may attempt to recover Caliptra by executing the “Run Self-Test” mailbox command (not yet defined).
-    7. If this command completes successfully, SoC may continue using Caliptra as before.
-    8. If this command is unsuccessful, Caliptra is in an error state for the remainder of the current boot.
-    9. Non-fatal ECC errors are never reported by Caliptra; SoC needs to monitor MCRIP for non-fatal Caliptra ECC errors.
-3. Caliptra reports fatal error during boot flow:
-    1. cptra\_error\_fatal is an output Caliptra signal, which shall be routed to SoC interrupt controller.
-    2. SoC can look at the Caliptra fatal error register for error source.
-    3. Assume Caliptra can report a fatal error at any time.
-    4. Fatal errors are generally hardware in nature. SoC may attempt to recover by full reset of the entire SoC, or can move on and know that Caliptra will be unavailable for the remainder of the current boot.
-    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SoC MCRIP.
+1. Any implementation of error and recovery flows must adhere to the error handling requirements specified in [Caliptra.md](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#error-reporting-and-handling)
+2. SoC level reporting and handling of fatal & non-fatal errors is product-specific architecture, outside the scope of Caliptra core definition. For example, a CPU and a PCIe device may handle fatal and non-fatal errors differently.
 
 # SoC integration requirements
 
