@@ -10879,23 +10879,31 @@
 #ifndef SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H
 #define SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H                                                         (0x524)
 #endif
-#define CLP_SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                           (0x30030528)
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                        (0x30030528)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                            (0x528)
+#endif
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                        (0x3003052c)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (0x52c)
+#endif
+#define CLP_SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                           (0x30030530)
 #ifndef SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
-#define SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                               (0x528)
+#define SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                               (0x530)
 #endif
-#define CLP_SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                  (0x3003052c)
+#define CLP_SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                  (0x30030534)
 #ifndef SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
-#define SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                      (0x52c)
+#define SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                      (0x534)
 #endif
-#define CLP_SOC_IFC_REG_SS_DEBUG_INTENT                                                             (0x30030530)
+#define CLP_SOC_IFC_REG_SS_DEBUG_INTENT                                                             (0x30030538)
 #ifndef SOC_IFC_REG_SS_DEBUG_INTENT
-#define SOC_IFC_REG_SS_DEBUG_INTENT                                                                 (0x530)
+#define SOC_IFC_REG_SS_DEBUG_INTENT                                                                 (0x538)
 #define SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_LOW                                                (0)
 #define SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK                                               (0x1)
 #endif
-#define CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                    (0x30030534)
+#define CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                    (0x3003053c)
 #ifndef SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER
-#define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (0x534)
+#define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (0x53c)
 #endif
 #define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_0                                                          (0x300305a0)
 #ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0
@@ -10974,20 +10982,6 @@
 #define CLP_SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3                                                   (0x300305dc)
 #ifndef SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3
 #define SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_3                                                       (0x5dc)
-#endif
-#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_L                                          (0x300305e0)
-#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_L
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_L                                              (0x5e0)
-#endif
-#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_H                                          (0x300305e4)
-#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_H
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_H                                              (0x5e4)
-#endif
-#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                       (0x300305e8)
-#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK                                           (0x5e8)
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_LOW                                  (0)
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK_LOCK_MASK                                 (0x1)
 #endif
 #define CLP_SOC_IFC_REG_INTERNAL_OBF_KEY_0                                                          (0x30030600)
 #ifndef SOC_IFC_REG_INTERNAL_OBF_KEY_0

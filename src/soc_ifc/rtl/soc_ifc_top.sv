@@ -126,6 +126,7 @@ module soc_ifc_top
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
     input logic [63:0] strap_ss_recovery_ifc_base_addr,
+    input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
@@ -636,15 +637,6 @@ end
 
 always_comb scan_mode_p = scan_mode & ~scan_mode_f;
 
-// External staging area logic
-always_comb begin
-
-    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
-    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_L.addr_l.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
-    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_ADDRESS_H.addr_h.swwel = soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK.lock.value;
-
-end
-
 //Filtering by AXI_USER
 always_comb begin
     for (int i=0; i<5; i++) begin
@@ -771,6 +763,10 @@ always_comb begin : ss_reg_hwwe
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L));
     soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.we = strap_we_pre_fuse_done | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H));
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.we = strap_we_pre_fuse_done | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L));
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.we = strap_we_pre_fuse_done | (cptra_uncore_dmi_unlocked_reg_wr_en & 
+                                                                           (cptra_uncore_dmi_reg_addr == DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H));
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.we       = strap_we_pre_fuse_done | (cptra_uncore_dmi_unlocked_reg_wr_en & 
                                                                            (cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L));
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.we       = strap_we_pre_fuse_done | (cptra_uncore_dmi_unlocked_reg_wr_en & 
@@ -815,6 +811,8 @@ always_comb begin : ss_reg_next_vals
     soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.next                                = strap_we_pre_fuse_done ? strap_ss_mci_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.next                       = strap_we_pre_fuse_done ? strap_ss_recovery_ifc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.next                       = strap_we_pre_fuse_done ? strap_ss_recovery_ifc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next              = strap_we_pre_fuse_done ? strap_ss_external_staging_area_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
+    soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next              = strap_we_pre_fuse_done ? strap_ss_external_staging_area_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.next                             = strap_we_pre_fuse_done ? strap_ss_otp_fc_base_addr[31:0] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.next                             = strap_we_pre_fuse_done ? strap_ss_otp_fc_base_addr[63:32] : cptra_uncore_dmi_reg_wdata;
     soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.next                            = strap_we_pre_fuse_done ? strap_ss_caliptra_dma_axi_user : cptra_uncore_dmi_reg_wdata;
@@ -854,6 +852,8 @@ always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_L.addr_l.swwel                 
 always_comb soc_ifc_reg_hwif_in.SS_MCI_BASE_ADDR_H.addr_h.swwel                                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.swwel                = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.swwel                = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_L.addr_l.swwel                               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_BASE_ADDR_H.addr_h.swwel                               = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.swwel                             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -1431,6 +1431,8 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_MCI_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_MCI_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_RECOVERY_IFC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value ) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_L)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_L.addr_l.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_OTP_FC_BASE_ADDR_H)}} & soc_ifc_reg_hwif_out.SS_OTP_FC_BASE_ADDR_H.addr_h.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_STRAP_CALIPTRA_DMA_AXI_USER)}} & soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value ) |

@@ -46,6 +46,8 @@ array set rw_regs {
     12 dmi_reg_ss_dbg_unlock_level0
     13 dmi_reg_ss_dbg_unlock_level1
     14 dmi_reg_ss_strap_caliptra_dma_axi_user
+    15 dmi_reg_ss_external_staging_area_base_addr_l
+    16 dmi_reg_ss_external_staging_area_base_addr_h
 }
 
 array set ro_regs {

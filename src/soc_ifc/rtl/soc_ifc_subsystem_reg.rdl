@@ -114,6 +114,23 @@ reg {
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
 } SS_UDS_SEED_BASE_ADDR_H;
+reg {
+    name = "Subsystem External Staging Area Base Address (Low)";
+     desc = "External staging area lower 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    strap addr_l[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem External Staging Area Base Address (High)";
+     desc = "External staging area upper 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+     strap addr_h[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
 
 reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Offset";
@@ -216,29 +233,3 @@ reg {
             [br]TAP Access [in debug/manuf mode]: RO";
     field {sw=rw; swwel=soc_req; hw=r; } go[32] = 32'h0;
 } SS_GENERIC_FW_EXEC_CTRL[4];
-reg {
-    name = "Subsystem External Staging Area Registers (Low)";
-     desc = "External staging area lower 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Lockable by EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-             [br]Caliptra Access: RW
-             [br]SOC Access:      RW
-             Read-Only once locked by EXTERNAL_STAGING_AREA_ADDRESS_LOCK.";
-     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} addr_l[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_ADDRESS_L;
-
-reg {
-    name = "Subsystem External Staging Area Registers (High)";
-     desc = "External staging area upper 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Lockable by EXTERNAL_STAGING_AREA_ADDRESS_LOCK
-             [br]Caliptra Access: RW
-             [br]SOC Access:      RW
-             Read-Only once locked by EXTERNAL_STAGING_AREA_ADDRESS_LOCK.";
-     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} addr_h[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_ADDRESS_H;
-
-reg {
-    name = "External Staging Area Lock Register";
-     desc = "External Staging Area Lock.
-             [br]Caliptra Access: RW1-S
-             [br]SOC Access:      RW1-S
-             Read-Only once set.";
-     field {sw=rw; hw=r; swwel;resetsignal = cptra_rst_b;} lock=0x0;
- } SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK;

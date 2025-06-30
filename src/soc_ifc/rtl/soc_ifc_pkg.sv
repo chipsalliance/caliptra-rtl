@@ -113,6 +113,8 @@ package soc_ifc_pkg;
     parameter DMI_REG_MBOX_LOCK = 7'h75;
     parameter DMI_REG_MBOX_CMD = 7'h76;
     parameter DMI_REG_MBOX_EXECUTE = 7'h77;
+    parameter DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = 7'h78;
+    parameter DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = 7'h79;
 
     
     // This parameter describes the hard-coded implementation in the BOOT FSM

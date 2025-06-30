@@ -373,6 +373,7 @@ module soc_ifc_tb
              .strap_ss_caliptra_base_addr(strap_ss_caliptra_base_addr_tb),
              .strap_ss_mci_base_addr(strap_ss_mci_base_addr_tb),
              .strap_ss_recovery_ifc_base_addr(strap_ss_recovery_ifc_base_addr_tb),
+             .strap_ss_external_staging_area_base_addr(strap_ss_external_staging_area_base_addr_tb),
              .strap_ss_otp_fc_base_addr(strap_ss_otp_fc_base_addr_tb),
              .strap_ss_uds_seed_base_addr(strap_ss_uds_seed_base_addr_tb),
              .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb),
@@ -770,6 +771,7 @@ module soc_ifc_tb
       strap_ss_caliptra_base_addr_tb = '0;
       strap_ss_mci_base_addr_tb = '0;
       strap_ss_recovery_ifc_base_addr_tb = '0;
+      strap_ss_external_staging_area_base_addr_tb = '0;
       strap_ss_otp_fc_base_addr_tb = '0;
       strap_ss_uds_seed_base_addr_tb = '0;
       strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = '0;
@@ -1309,6 +1311,7 @@ module soc_ifc_tb
           strap_ss_caliptra_base_addr_tb = {$urandom, $urandom};
           strap_ss_mci_base_addr_tb = {$urandom, $urandom};
           strap_ss_recovery_ifc_base_addr_tb = {$urandom, $urandom};
+          strap_ss_external_staging_area_base_addr_tb = {$urandom, $urandom};
           strap_ss_otp_fc_base_addr_tb = {$urandom, $urandom};
           strap_ss_uds_seed_base_addr_tb = {$urandom, $urandom};
           strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = $urandom;

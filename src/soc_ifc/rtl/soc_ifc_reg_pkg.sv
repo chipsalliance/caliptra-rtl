@@ -418,6 +418,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t;
 
     typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__strap_w32__in_t offset;
     } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t;
 
@@ -538,30 +546,6 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__LEVEL__in_t LEVEL;
     } soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__addr_l__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__addr_l__in_t addr_l;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__addr_h__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__addr_h__in_t addr_h;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__in_t;
-
-    typedef struct packed{
-        logic swwel;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__lock__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__lock__in_t lock;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -736,6 +720,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__in_t SS_OTP_FC_BASE_ADDR_H;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__in_t SS_UDS_SEED_BASE_ADDR_L;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t SS_UDS_SEED_BASE_ADDR_H;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__in_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
@@ -744,9 +730,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__in_t SS_EXTERNAL_STAGING_AREA_ADDRESS_L;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__in_t SS_EXTERNAL_STAGING_AREA_ADDRESS_H;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__in_t SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
@@ -1203,6 +1186,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t;
 
     typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__strap_w32__out_t offset;
     } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t;
 
@@ -1312,30 +1303,6 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__go__out_t go;
     } soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__addr_l__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__addr_l__out_t addr_l;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__out_t;
-
-    typedef struct packed{
-        logic [31:0] value;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__addr_h__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__addr_h__out_t addr_h;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__out_t;
-
-    typedef struct packed{
-        logic value;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__lock__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__lock__out_t lock;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__out_t;
 
     typedef struct packed{
         logic [31:0] value;
@@ -1526,6 +1493,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__out_t SS_OTP_FC_BASE_ADDR_H;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__out_t SS_UDS_SEED_BASE_ADDR_L;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t SS_UDS_SEED_BASE_ADDR_H;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__out_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
@@ -1535,9 +1504,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
         soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [4-1:0]SS_GENERIC_FW_EXEC_CTRL;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_L__out_t SS_EXTERNAL_STAGING_AREA_ADDRESS_L;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_H__out_t SS_EXTERNAL_STAGING_AREA_ADDRESS_H;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK__out_t SS_EXTERNAL_STAGING_AREA_ADDRESS_LOCK;
         soc_ifc_reg__internal_obf_key__out_t [8-1:0]internal_obf_key;
         soc_ifc_reg__internal_iccm_lock__out_t internal_iccm_lock;
         soc_ifc_reg__internal_fw_update_reset__out_t internal_fw_update_reset;
