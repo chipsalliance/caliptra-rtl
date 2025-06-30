@@ -62,6 +62,7 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
+|CALIPTRA_FUSE_GRANULARITY_32 | config_defines.svh | Defining this means fuse row granulairty is 32-bits. If not defined it means fuse row granularity is 64 bits. If defined the ``CPTRA_HW_CONFIG.Fuse_Granularity`` SOC_IFC register is set to 1. Otherwise it is set to 0. This is used by Caliptra ROM for UDS provisioning.|
 | CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
 | CALIPTRA_MODE_SUBSYSTEM | config_defines.svh | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
 | USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |

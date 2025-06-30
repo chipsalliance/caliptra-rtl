@@ -189,7 +189,11 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t;
 
     typedef struct packed{
-        logic [2:0] next;
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t;
+
+    typedef struct packed{
+        logic [1:0] next;
     } soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t;
 
     typedef struct packed{
@@ -202,6 +206,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t Fuse_Granularity;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;

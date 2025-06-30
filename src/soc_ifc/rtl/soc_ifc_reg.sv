@@ -7112,7 +7112,8 @@ module soc_ifc_reg (
         assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.CPTRA_FW_REV_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value : '0;
     end
     assign readback_array[56][0:0] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next : '0;
-    assign readback_array[56][3:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.RSVD_en.next : '0;
+    assign readback_array[56][1:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.Fuse_Granularity.next : '0;
+    assign readback_array[56][3:2] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.RSVD_en.next : '0;
     assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
     assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next : '0;
     assign readback_array[56][31:6] = '0;

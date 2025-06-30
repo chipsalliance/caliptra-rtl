@@ -637,12 +637,14 @@
     endgroup
     covergroup soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg with function sample(
     input bit [1-1:0] iTRNG_en,
-    input bit [3-1:0] RSVD_en,
+    input bit [1-1:0] Fuse_Granularity,
+    input bit [2-1:0] RSVD_en,
     input bit [1-1:0] LMS_acc_en,
     input bit [1-1:0] SUBSYSTEM_MODE_en
     );
         option.per_instance = 1;
         iTRNG_en_cp : coverpoint iTRNG_en;
+        Fuse_Granularity_cp : coverpoint Fuse_Granularity;
         RSVD_en_cp : coverpoint RSVD_en;
         LMS_acc_en_cp : coverpoint LMS_acc_en;
         SUBSYSTEM_MODE_en_cp : coverpoint SUBSYSTEM_MODE_en;

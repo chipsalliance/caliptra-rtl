@@ -484,6 +484,12 @@ always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
+`ifdef CALIPTRA_FUSE_GRANULARITY_32
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.Fuse_Granularity.next = 1'b1;
+`else
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.Fuse_Granularity.next = 1'b0;
+`endif
+
 `ifdef CALIPTRA_INTERNAL_TRNG
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.iTRNG_en.next = 1'b1;
 `else

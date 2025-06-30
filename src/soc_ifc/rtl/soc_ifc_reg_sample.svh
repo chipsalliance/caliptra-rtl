@@ -738,24 +738,26 @@
         m_is_read = is_read;
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(data[0 + bt]);
-            foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(data[1 + bt]);
+            foreach(Fuse_Granularity_bit_cg[bt]) this.Fuse_Granularity_bit_cg[bt].sample(data[1 + bt]);
+            foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(data[2 + bt]);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(data[4 + bt]);
             foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) this.SUBSYSTEM_MODE_en_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[3:1]/*RSVD_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*SUBSYSTEM_MODE_en*/   );
+            this.fld_cg.sample( data[0:0]/*iTRNG_en*/  ,  data[1:1]/*Fuse_Granularity*/  ,  data[3:2]/*RSVD_en*/  ,  data[4:4]/*LMS_acc_en*/  ,  data[5:5]/*SUBSYSTEM_MODE_en*/   );
         end
     endfunction
 
     function void soc_ifc_reg__CPTRA_HW_CONFIG::sample_values();
         if (get_coverage(UVM_CVR_REG_BITS)) begin
             foreach(iTRNG_en_bit_cg[bt]) this.iTRNG_en_bit_cg[bt].sample(iTRNG_en.get_mirrored_value() >> bt);
+            foreach(Fuse_Granularity_bit_cg[bt]) this.Fuse_Granularity_bit_cg[bt].sample(Fuse_Granularity.get_mirrored_value() >> bt);
             foreach(RSVD_en_bit_cg[bt]) this.RSVD_en_bit_cg[bt].sample(RSVD_en.get_mirrored_value() >> bt);
             foreach(LMS_acc_en_bit_cg[bt]) this.LMS_acc_en_bit_cg[bt].sample(LMS_acc_en.get_mirrored_value() >> bt);
             foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) this.SUBSYSTEM_MODE_en_bit_cg[bt].sample(SUBSYSTEM_MODE_en.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  RSVD_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  SUBSYSTEM_MODE_en.get_mirrored_value()   );
+            this.fld_cg.sample( iTRNG_en.get_mirrored_value()  ,  Fuse_Granularity.get_mirrored_value()  ,  RSVD_en.get_mirrored_value()  ,  LMS_acc_en.get_mirrored_value()  ,  SUBSYSTEM_MODE_en.get_mirrored_value()   );
         end
     endfunction
 
