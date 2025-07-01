@@ -1439,8 +1439,8 @@ package soc_ifc_reg_model_top_pkg;
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.addr_l                               , soc_ifc_reg_fuse_cb); //    \
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.addr_h                               , soc_ifc_reg_fuse_cb); //
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l                      , soc_ifc_reg_fuse_cb); //
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.addr_l                      , soc_ifc_reg_fuse_cb); //
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h             , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.addr_h                      , soc_ifc_reg_fuse_cb); //
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l             , soc_ifc_reg_fuse_cb); //
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h             , soc_ifc_reg_fuse_cb); //
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.addr_l                            , soc_ifc_reg_fuse_cb); //  These are not 'fuses' per-se, but they are locked
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.addr_h                            , soc_ifc_reg_fuse_cb); //  by CPTRA_FUSE_WR_DONE, so they act the same
