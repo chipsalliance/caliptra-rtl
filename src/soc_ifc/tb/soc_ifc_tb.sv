@@ -175,6 +175,23 @@ module soc_ifc_tb
   logic clear_obf_secrets;
   logic scan_mode; 
 
+ logic aes_input_ready;
+ logic aes_output_valid;
+ logic aes_status_idle;
+ logic aes_req_dv;
+ logic aes_req_hold;
+ soc_ifc_req_t aes_req_data;
+ logic [SOC_IFC_DATA_W-1:0] aes_rdata;
+ logic aes_error; 
+
+
+ assign aes_input_ready = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_output_valid = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_status_idle = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_req_hold = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_rdata = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_error = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected 
+
   // obfuscation, uds and field entropy for observation
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
   logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
@@ -314,6 +331,15 @@ module soc_ifc_tb
 
              .mailbox_data_avail(mailbox_data_avail_tb),
              .mailbox_flow_done(),
+
+             .aes_input_ready,
+             .aes_output_valid,
+             .aes_status_idle,
+             .aes_req_dv,
+             .aes_req_hold,
+             .aes_req_data,
+             .aes_rdata,
+             .aes_error, 
 
              .recovery_data_avail(1'b0),
              .recovery_image_activated(1'b0),

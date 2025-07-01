@@ -77,6 +77,24 @@ module soc_ifc_axi_sha_acc_dis_tb
     write = 1
   } rw_e;
 
+ logic aes_input_ready;
+ logic aes_output_valid;
+ logic aes_status_idle;
+ logic aes_req_dv;
+ logic aes_req_hold;
+ soc_ifc_req_t aes_req_data;
+ logic [SOC_IFC_DATA_W-1:0] aes_rdata;
+ logic aes_error;
+
+ assign aes_input_ready = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_output_valid = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_status_idle = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_req_hold = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_rdata = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
+ assign aes_error = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected 
+
+
+
   
   //----------------------------------------------------------------
   // Device Under Test.
@@ -103,6 +121,15 @@ module soc_ifc_axi_sha_acc_dis_tb
 
     .mailbox_data_avail(),
     .mailbox_flow_done(),
+
+    .aes_input_ready,
+    .aes_output_valid,
+    .aes_status_idle,
+    .aes_req_dv,
+    .aes_req_hold,
+    .aes_req_data,
+    .aes_rdata,
+    .aes_error, 
 
     .recovery_data_avail(1'b0),
     .recovery_image_activated(1'b0),
