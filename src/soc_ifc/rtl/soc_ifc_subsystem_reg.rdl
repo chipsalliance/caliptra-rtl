@@ -115,24 +115,6 @@ reg {
     strap addr_h[32]=32'h0;
 } SS_UDS_SEED_BASE_ADDR_H;
 reg {
-    name = "Subsystem External Staging Area Base Address (Low)";
-     desc = "External staging area lower 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
-             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-    strap addr_l[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-
-reg {
-    name = "Subsystem External Staging Area Base Address (High)";
-     desc = "External staging area upper 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
-             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
-             [br]Caliptra Access: RO
-             [br]SOC Access:      RWL-S";
-     strap addr_h[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
-
-reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Offset";
     desc = "Provides an offset in the destination register bank at which a set of Public Key Hashes may be found. The number of hashes available at this offset is indicated by
             SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.
@@ -169,6 +151,25 @@ reg {
             [br]SOC Access:      RWL-S";
     strap user[32]=32'h0;
 } SS_CALIPTRA_DMA_AXI_USER;
+
+reg {
+    name = "Subsystem External Staging Area Base Address (Low)";
+     desc = "External staging area lower 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    strap addr_l[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem External Staging Area Base Address (High)";
+     desc = "External staging area upper 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+     strap addr_h[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+
 
 reg {
     name = "GENERIC STRAP";

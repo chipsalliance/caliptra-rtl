@@ -418,14 +418,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__strap_w32__in_t addr_l;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t;
-
-    typedef struct packed{
-        soc_ifc_reg__strap_w32__in_t addr_h;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t;
-
-    typedef struct packed{
         soc_ifc_reg__strap_w32__in_t offset;
     } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t;
 
@@ -445,6 +437,14 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t user;
     } soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t data;
@@ -720,12 +720,12 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__in_t SS_OTP_FC_BASE_ADDR_H;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__in_t SS_UDS_SEED_BASE_ADDR_L;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__in_t SS_UDS_SEED_BASE_ADDR_H;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__in_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__in_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__in_t SS_CALIPTRA_DMA_AXI_USER;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_STRAP_GENERIC__in_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
@@ -1186,14 +1186,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__strap_w32__out_t addr_l;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__strap_w32__out_t addr_h;
-    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t;
-
-    typedef struct packed{
         soc_ifc_reg__strap_w32__out_t offset;
     } soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t;
 
@@ -1212,6 +1204,14 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t user;
     } soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t data;
@@ -1493,12 +1493,12 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H__out_t SS_OTP_FC_BASE_ADDR_H;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L__out_t SS_UDS_SEED_BASE_ADDR_L;
         soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H__out_t SS_UDS_SEED_BASE_ADDR_H;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET__out_t SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES__out_t SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__out_t SS_CALIPTRA_DMA_AXI_USER;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         soc_ifc_reg__SS_STRAP_GENERIC__out_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;

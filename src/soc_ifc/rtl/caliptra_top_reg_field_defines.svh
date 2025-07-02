@@ -774,25 +774,25 @@
 `ifndef GENERIC_AND_FUSE_REG_SS_UDS_SEED_BASE_ADDR_H
 `define GENERIC_AND_FUSE_REG_SS_UDS_SEED_BASE_ADDR_H                                                (32'h524)
 `endif
-`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
-`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                   (32'h528)
-`endif
-`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
-`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                   (32'h52c)
-`endif
 `ifndef GENERIC_AND_FUSE_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
-`define GENERIC_AND_FUSE_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                      (32'h530)
+`define GENERIC_AND_FUSE_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                      (32'h528)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
-`define GENERIC_AND_FUSE_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                             (32'h534)
+`define GENERIC_AND_FUSE_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                             (32'h52c)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT
-`define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT                                                        (32'h538)
+`define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT                                                        (32'h530)
 `define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT_DEBUG_INTENT_LOW                                       (0)
 `define GENERIC_AND_FUSE_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK                                      (32'h1)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER
-`define GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER                                               (32'h53c)
+`define GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER                                               (32'h534)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                   (32'h538)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                   (32'h53c)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0
 `define GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0                                                     (32'h5a0)

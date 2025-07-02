@@ -10879,31 +10879,31 @@
 #ifndef SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H
 #define SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H                                                         (0x524)
 #endif
-#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                        (0x30030528)
-#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                            (0x528)
-#endif
-#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                        (0x3003052c)
-#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
-#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (0x52c)
-#endif
-#define CLP_SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                           (0x30030530)
+#define CLP_SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                           (0x30030528)
 #ifndef SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
-#define SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                               (0x530)
+#define SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET                               (0x528)
 #endif
-#define CLP_SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                  (0x30030534)
+#define CLP_SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                  (0x3003052c)
 #ifndef SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
-#define SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                      (0x534)
+#define SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES                                      (0x52c)
 #endif
-#define CLP_SOC_IFC_REG_SS_DEBUG_INTENT                                                             (0x30030538)
+#define CLP_SOC_IFC_REG_SS_DEBUG_INTENT                                                             (0x30030530)
 #ifndef SOC_IFC_REG_SS_DEBUG_INTENT
-#define SOC_IFC_REG_SS_DEBUG_INTENT                                                                 (0x538)
+#define SOC_IFC_REG_SS_DEBUG_INTENT                                                                 (0x530)
 #define SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_LOW                                                (0)
 #define SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK                                               (0x1)
 #endif
-#define CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                    (0x3003053c)
+#define CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                    (0x30030534)
 #ifndef SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER
-#define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (0x53c)
+#define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (0x534)
+#endif
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                        (0x30030538)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                            (0x538)
+#endif
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                        (0x3003053c)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (0x53c)
 #endif
 #define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_0                                                          (0x300305a0)
 #ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0

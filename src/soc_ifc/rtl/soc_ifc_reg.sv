@@ -138,12 +138,12 @@ module soc_ifc_reg (
         logic SS_OTP_FC_BASE_ADDR_H;
         logic SS_UDS_SEED_BASE_ADDR_L;
         logic SS_UDS_SEED_BASE_ADDR_H;
-        logic SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-        logic SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         logic SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         logic SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES;
         logic SS_DEBUG_INTENT;
         logic SS_CALIPTRA_DMA_AXI_USER;
+        logic SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        logic SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         logic [4-1:0]SS_STRAP_GENERIC;
         logic SS_DBG_MANUF_SERVICE_REG_REQ;
         logic SS_DBG_MANUF_SERVICE_REG_RSP;
@@ -321,12 +321,12 @@ module soc_ifc_reg (
         decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h51c);
         decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h520);
         decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h524);
-        decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h528);
-        decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h52c);
-        decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET = cpuif_req_masked & (cpuif_addr == 12'h530);
-        decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES = cpuif_req_masked & (cpuif_addr == 12'h534);
-        decoded_reg_strb.SS_DEBUG_INTENT = cpuif_req_masked & (cpuif_addr == 12'h538);
-        decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h53c);
+        decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET = cpuif_req_masked & (cpuif_addr == 12'h528);
+        decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES = cpuif_req_masked & (cpuif_addr == 12'h52c);
+        decoded_reg_strb.SS_DEBUG_INTENT = cpuif_req_masked & (cpuif_addr == 12'h530);
+        decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER = cpuif_req_masked & (cpuif_addr == 12'h534);
+        decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h538);
+        decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h53c);
         for(int i0=0; i0<4; i0++) begin
             decoded_reg_strb.SS_STRAP_GENERIC[i0] = cpuif_req_masked & (cpuif_addr == 12'h5a0 + i0*12'h4);
         end
@@ -876,18 +876,6 @@ module soc_ifc_reg (
             struct packed{
                 logic [31:0] next;
                 logic load_next;
-            } addr_l;
-        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-        struct packed{
-            struct packed{
-                logic [31:0] next;
-                logic load_next;
-            } addr_h;
-        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
-        struct packed{
-            struct packed{
-                logic [31:0] next;
-                logic load_next;
             } offset;
         } SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         struct packed{
@@ -908,6 +896,18 @@ module soc_ifc_reg (
                 logic load_next;
             } user;
         } SS_CALIPTRA_DMA_AXI_USER;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_l;
+        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } addr_h;
+        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -1902,16 +1902,6 @@ module soc_ifc_reg (
         struct packed{
             struct packed{
                 logic [31:0] value;
-            } addr_l;
-        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
-        struct packed{
-            struct packed{
-                logic [31:0] value;
-            } addr_h;
-        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
-        struct packed{
-            struct packed{
-                logic [31:0] value;
             } offset;
         } SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET;
         struct packed{
@@ -1929,6 +1919,16 @@ module soc_ifc_reg (
                 logic [31:0] value;
             } user;
         } SS_CALIPTRA_DMA_AXI_USER;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_l;
+        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } addr_h;
+        } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -4236,54 +4236,6 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_UDS_SEED_BASE_ADDR_H.addr_h.value = field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value;
-    // Field: soc_ifc_reg.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l
-    always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.swwel)) begin // SW write
-            next_c = (field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.we) begin // HW Write - we
-            next_c = hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next;
-            load_next_c = '1;
-        end
-        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next = next_c;
-        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value <= 32'h0;
-        end else if(field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.load_next) begin
-            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value <= field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next;
-        end
-    end
-    assign hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value;
-    // Field: soc_ifc_reg.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h
-    always_comb begin
-        automatic logic [31:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.swwel)) begin // SW write
-            next_c = (field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-            load_next_c = '1;
-        end else if(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.we) begin // HW Write - we
-            next_c = hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next;
-            load_next_c = '1;
-        end
-        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next = next_c;
-        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
-        if(~hwif_in.cptra_pwrgood) begin
-            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value <= 32'h0;
-        end else if(field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.load_next) begin
-            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value <= field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next;
-        end
-    end
-    assign hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value;
     // Field: soc_ifc_reg.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset
     always_comb begin
         automatic logic [31:0] next_c;
@@ -4377,6 +4329,54 @@ module soc_ifc_reg (
         end
     end
     assign hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value = field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value;
+    // Field: soc_ifc_reg.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L && decoded_req_is_wr && !(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.swwel)) begin // SW write
+            next_c = (field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.we) begin // HW Write - we
+            next_c = hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next = next_c;
+        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value <= 32'h0;
+        end else if(field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.load_next) begin
+            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value <= field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.next;
+        end
+    end
+    assign hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value;
+    // Field: soc_ifc_reg.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H && decoded_req_is_wr && !(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.swwel)) begin // SW write
+            next_c = (field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end else if(hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.we) begin // HW Write - we
+            next_c = hwif_in.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next;
+            load_next_c = '1;
+        end
+        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next = next_c;
+        field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value <= 32'h0;
+        end else if(field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.load_next) begin
+            field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value <= field_combo.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.next;
+        end
+    end
+    assign hwif_out.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value = field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value;
     for(genvar i0=0; i0<4; i0++) begin
         // Field: soc_ifc_reg.SS_STRAP_GENERIC[].data
         always_comb begin
@@ -7271,13 +7271,13 @@ module soc_ifc_reg (
     assign readback_array[169][31:0] = (decoded_reg_strb.SS_OTP_FC_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_OTP_FC_BASE_ADDR_H.addr_h.value : '0;
     assign readback_array[170][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_L.addr_l.value : '0;
     assign readback_array[171][31:0] = (decoded_reg_strb.SS_UDS_SEED_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_UDS_SEED_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[172][31:0] = (decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value : '0;
-    assign readback_array[173][31:0] = (decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value : '0;
-    assign readback_array[174][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
-    assign readback_array[175][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
-    assign readback_array[176][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
-    assign readback_array[176][31:1] = '0;
-    assign readback_array[177][31:0] = (decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value : '0;
+    assign readback_array[172][31:0] = (decoded_reg_strb.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET && !decoded_req_is_wr) ? field_storage.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.value : '0;
+    assign readback_array[173][31:0] = (decoded_reg_strb.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES && !decoded_req_is_wr) ? field_storage.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.value : '0;
+    assign readback_array[174][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
+    assign readback_array[174][31:1] = '0;
+    assign readback_array[175][31:0] = (decoded_reg_strb.SS_CALIPTRA_DMA_AXI_USER && !decoded_req_is_wr) ? field_storage.SS_CALIPTRA_DMA_AXI_USER.user.value : '0;
+    assign readback_array[176][31:0] = (decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L && !decoded_req_is_wr) ? field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.addr_l.value : '0;
+    assign readback_array[177][31:0] = (decoded_reg_strb.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H && !decoded_req_is_wr) ? field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.addr_h.value : '0;
     for(genvar i0=0; i0<4; i0++) begin
         assign readback_array[i0*1 + 178][31:0] = (decoded_reg_strb.SS_STRAP_GENERIC[i0] && !decoded_req_is_wr) ? field_storage.SS_STRAP_GENERIC[i0].data.value : '0;
     end
