@@ -19,6 +19,7 @@
 #include "caliptra_isr.h"
 #include "printf.h"
 #include "sha3.h"
+#include <string.h>
 
 #ifdef CPT_VERBOSITY
   enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -97,6 +98,72 @@ const sha3_test_t sha3_tests[] = {
     },
 };
 
+#define DIGEST_LEN_SHAKE_MAX 102
+
+/**
+ * SHAKE test description.
+ */
+typedef struct shake_test {
+  dif_kmac_mode_shake_t mode;
+
+  const char *message;
+  size_t message_len;
+
+  const uint32_t digest[DIGEST_LEN_SHAKE_MAX];
+  size_t digest_len;
+} shake_test_t;
+
+/**
+ * SHAKE tests.
+ */
+// Examples generated using a custom Go program importing package
+// `golang.org/x/crypto/sha3`
+const shake_test_t shake_tests[] = {
+    {
+        .mode = kDifKmacModeShakeLen128,
+        .message = "OpenTitan",
+        .message_len = 9,
+        .digest = {0x235a6522, 0x3bd735ac, 0x77832247, 0xc6b12919, 0xfb80eff0,
+                   0xb8308a5a, 0xcb25db1f, 0xc5ce4cf2, 0x349730fc, 0xcedf024c,
+                   0xff0eefec, 0x6985fe35, 0x3c46a736, 0x0084044b, 0x6d9f9920,
+                   0x7c0ab055, 0x19d1d3ce, 0xb4353949, 0xfe8ffbcd, 0x5a7f2ec6,
+                   0xc3cf795f, 0xa56d0d7b, 0x520c3358, 0x11237ec9, 0x4ca5ed53,
+                   0x2999edc0, 0x6c59c68f, 0x54d9890c, 0x89a33092, 0xf406c674,
+                   0xe2b4ebf1, 0x14e68bb2, 0x898ceb72, 0x1878875f, 0x9d7bb8d2,
+                   0x268e4a5a, 0xe5da510f, 0x97e5d3bc, 0xaae1b7bc, 0xa337f70b,
+                   0xeae3cc65, 0xb8429058, 0xe4319c08, 0xd35e2786, 0xbc99af6e,
+                   0x19a04aa8, 0xccbf18bf, 0xf681ebd4, 0x3d6da575, 0x2f0b9406},
+        .digest_len = 1600 / 8 / 4,  // Rate (r) is 42 words.
+    },
+    {
+        .mode = kDifKmacModeShakeLen256,
+        .message = "OpenTitan",
+        .message_len = 9,
+        .digest = {0x6a0faccd, 0xbf29cb1a, 0xb631f604, 0xdbcab36,  0xa15d167b,
+                   0x18dc668b, 0x272e411b, 0x865e651a, 0x8abedb2a, 0x8db38e78,
+                   0xe503c9a2, 0xe64faca9, 0xcbd867d0, 0xdba6f20f, 0xbe129db9,
+                   0x842dc15c, 0x1406410b, 0x014ce621, 0x5d24eaf2, 0x63bdf816,
+                   0xfb236f50, 0xbdba910c, 0xf4ba0e9a, 0x74b5a51f, 0xd644dffd,
+                   0xcd650165, 0xe4ec5e7d, 0x64df5448, 0xdcf7b5e7, 0x68709c07,
+                   0x47eed1db, 0xc1e55b24, 0x3c02fad9, 0xd72db62e, 0xc5a48eaf,
+                   0xd14bb0c4, 0x0f7143ba, 0x4071b63e, 0x21f0ec4b, 0x41065039,
+                   0x1b3e41c0, 0xd0d3b1d0, 0xca16acb9, 0xa06f55aa, 0x7bc7ce75,
+                   0x08da25ce, 0x596a654b, 0x0b57ae54, 0x4b88c863, 0x199202d7,
+                   0x88c112b6, 0xf6dc4a95, 0xe1cfeffa, 0xa7809e6f, 0x3a796dcd,
+                   0xb5962e44, 0x179d6ff0, 0xc898c5a9, 0xd3f02195, 0x43623028,
+                   0x4c3a4fe7, 0x2fab7bda, 0x04e5b4d4, 0xe0420692, 0x32fcaa2a,
+                   0x05e92f07, 0xba0564ea, 0x7b169778, 0x61d4ca3e, 0x4a5d92ec,
+                   0x079cb3ba, 0x9a784e40, 0x6381498c, 0xed6d8b6a, 0x2be74d42,
+                   0xa234a3db, 0x60d10de8, 0xf0c77dda, 0xc8f94b72, 0x239a2bdf,
+                   0xbfeba4a6, 0xc91042e9, 0xa5a11310, 0x8b44d66a, 0xea9bff2f,
+                   0x441a445f, 0xe88ee35d, 0x89386c12, 0x1a8de11e, 0x46aff650,
+                   0x423323c9, 0xba7b8db4, 0x06c36eb0, 0x4fd75b36, 0xf0c70001,
+                   0x0aefb1df, 0x6ae399e6, 0xf71930a6, 0xdef2206,  0x5ce2a640,
+                   0x6a82fcf4, 0xa91b0815},
+        .digest_len = 3264 / 8 / 4,  // Rate (r) is 34 words.
+    },
+};
+
 /**
  * Run SHA-3 test cases using single blocking absorb/squeeze operations.
  */
@@ -114,7 +181,8 @@ void run_sha3_test(uintptr_t kmac) {
     uint32_t out[DIGEST_LEN_SHA3_MAX];
     if (DIGEST_LEN_SHA3_MAX < test.digest_len) {
       printf("test.digest_len (%d) is greater than DIGEST_LEN_SHA3_MAX.\n", test.digest_len);
-      while(1);
+      SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+      while (1);
     }
     dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
@@ -127,6 +195,116 @@ void run_sha3_test(uintptr_t kmac) {
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
         printf("test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
+        SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+        while (1);
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Run a SHA-3 test case with varying alignments.
+ */
+void run_sha3_alignment_test(uintptr_t kmac) {
+  // Examples taken from NIST FIPS-202 Algorithm Test Vectors:
+  // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha-3bytetestvectors.zip
+  const char kMsg[] = {0xa7, 0x48, 0x47, 0x93, 0x0a, 0x03, 0xab, 0xee, 0xa4, 0x73, 0xe1, 0xf3, 0xdc, 0x30, 0xb8, 0x88, 0x15};
+  const size_t kSize = sizeof(kMsg) / sizeof(char);
+  const uint32_t kExpect = 0x29f9a6db;
+  const dif_kmac_mode_sha3_t kMode = kDifKmacModeSha3Len384;
+  dif_kmac_operation_state_t operation_state;
+
+  for (size_t i = 0; i < sizeof(uint32_t); ++i) {
+    printf("run_sha3_alignment_test: processing test with alignment %d\n", i);
+    char buffer[kSize + sizeof(uint32_t)];
+    for (size_t j = 0; j < kSize + sizeof(uint32_t); ++j) {
+      buffer[j] = 0;
+    }
+    memcpy(&buffer[i], kMsg, kSize);
+
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_absorb(kmac, &operation_state, &buffer[i], kSize, NULL);
+
+    // Checking the first 32-bits of the digest is sufficient.
+    uint32_t out;
+    dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
+    dif_kmac_end(kmac, &operation_state);
+
+    // Wait for the hardware engine to actually finish. On FPGA, it may take
+    // a while until the DONE command gets actually executed (see SecCmdDelay
+    // SystemVerilog parameter).
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+
+    if (out != kExpect) {
+      printf("mismatch at alignment %u got 0x%u want 0x%x", i, out, kExpect);
+      SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+      while (1);
+      return;
+    }
+  }
+
+  // Run a SHA-3 test case using multiple absorb calls.
+  {
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_absorb(kmac, &operation_state, &kMsg[0], 1, NULL);
+    dif_kmac_absorb(kmac, &operation_state, &kMsg[1], 2, NULL);
+    dif_kmac_absorb(kmac, &operation_state, &kMsg[3], 5, NULL);
+    dif_kmac_absorb(kmac, &operation_state, &kMsg[8], 4, NULL);
+    dif_kmac_absorb(kmac, &operation_state, &kMsg[12], kSize - 12, NULL);
+
+    // Checking the first 32-bits of the digest is sufficient.
+    uint32_t out;
+    dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
+    dif_kmac_end(kmac, &operation_state);
+
+    // Wait for the hardware engine to actually finish. On FPGA, it may take
+    // a while until the DONE command gets actually executed (see SecCmdDelay
+    // SystemVerilog parameter).
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+
+    if (out != kExpect) {
+      printf("mismatch got 0x%u want 0x%x", out, kExpect);
+      SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+      while (1);
+      return;
+    }
+  }
+}
+
+/**
+ * Run SHAKE test cases using single blocking absorb/squeeze operations.
+ */
+void run_shake_test(uintptr_t kmac) {
+  dif_kmac_operation_state_t operation_state;
+
+  for (int i = 0; i < sizeof(shake_tests) / sizeof(shake_test_t); ++i) {
+    printf("run_shake_test: processing test with index %d\n", i);
+    shake_test_t test = shake_tests[i];
+
+    dif_kmac_mode_shake_start(kmac, &operation_state, test.mode);
+    if (test.message_len > 0) {
+      dif_kmac_absorb(kmac, &operation_state, test.message, test.message_len, NULL);
+    }
+    uint32_t out[DIGEST_LEN_SHAKE_MAX];
+    if (DIGEST_LEN_SHAKE_MAX < test.digest_len) {
+      printf("DIGEST_LEN_SHAKE_MAX less than digest length.\n");
+      SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+      while (1);
+      return;
+    }
+    dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
+    dif_kmac_end(kmac, &operation_state);
+
+    // Wait for the hardware engine to actually finish. On FPGA, it may take
+    // a while until the DONE command gets actually executed (see SecCmdDelay
+    // SystemVerilog parameter).
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+
+    for (int j = 0; j < test.digest_len; ++j) {
+      if (out[j] != test.digest[j]) {
+        printf("test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
+        SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
         while (1);
         return;
       }
@@ -144,11 +322,15 @@ void main() {
   // Call interrupt init
   init_interrupts();
 
-  VPRINTF(LOW, "Running SHA3 tests.\n");
-  run_sha3_test(0x10040000);
+  VPRINTF(LOW, "Running SHA3 test.\n");
+  run_sha3_test(CLP_SHA3_REG_BASE_ADDR);
+  VPRINTF(LOW, "Running SHA3 allignment test.\n");
+  run_sha3_alignment_test(CLP_SHA3_REG_BASE_ADDR);
+  VPRINTF(LOW, "Running SHAKE test.\n");
+  run_shake_test(CLP_SHA3_REG_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.
-  SEND_STDOUT_CTRL( 0xff);
+  SEND_STDOUT_CTRL(0xff);
   while (1);
 
 }
