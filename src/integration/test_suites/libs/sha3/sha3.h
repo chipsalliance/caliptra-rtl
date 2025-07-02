@@ -216,6 +216,22 @@ void dif_kmac_mode_sha3_start(
     dif_kmac_mode_sha3_t mode);
 
 /**
+ * Start a SHAKE operation.
+ *
+ * SHAKE operations have a variable (XOF) output length.
+ *
+ * See NIST FIPS 202 [1] for more information about SHAKE.
+ *
+ * @param kmac A KMAC handle.
+ * @param operation_state A KMAC operation state context.
+ * @param mode The mode of operation.
+ * @return The result of the operation.
+ */
+void dif_kmac_mode_shake_start(
+    const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
+    dif_kmac_mode_shake_t mode);
+
+/**
  * Absorb bytes from the message provided.
  *
  * If `processed` is non-NULL, then this function will write the remaining

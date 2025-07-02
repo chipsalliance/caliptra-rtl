@@ -8823,6 +8823,7 @@
 #define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
 #define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (0x1)
 #endif
+#define CLP_SHA3_REG_BASE_ADDR                                                                      (0x10040000)
 #define CLP_CSRNG_REG_BASE_ADDR                                                                     (0x20002000)
 #define CLP_CSRNG_REG_INTERRUPT_STATE                                                               (0x20002000)
 #ifndef CSRNG_REG_INTERRUPT_STATE

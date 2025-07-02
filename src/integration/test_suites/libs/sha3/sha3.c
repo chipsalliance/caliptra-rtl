@@ -100,7 +100,57 @@ void dif_kmac_mode_sha3_start(
                (KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX));
 
   // Poll until the status register is in the 'absorb' state.
-  return dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+}
+
+void dif_kmac_mode_shake_start(
+    const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
+    dif_kmac_mode_shake_t mode) {
+  if (kmac == NULL || operation_state == NULL) {
+    printf("dif_kmac_mode_shake_start: ERROR kmac and operation state cannot be NULL.\n");
+    while (1);
+    return;
+  }
+
+  // Set key strength and calculate rate (r).
+  uint32_t kstrength;
+  switch (mode) {
+    case kDifKmacModeShakeLen128:
+      kstrength = KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L128;
+      operation_state->r = calculate_rate_bits(128) / 32;
+      break;
+    case kDifKmacModeShakeLen256:
+      kstrength = KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L256;
+      operation_state->r = calculate_rate_bits(256) / 32;
+      break;
+    default:
+      printf("dif_kmac_mode_shake_start: ERROR mode not allowed.\n");
+      while (1);
+      return;
+  }
+
+  // Hardware must be idle to start an operation.
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_INDEX)) == 0) {
+    printf("dif_kmac_shake_start: ERROR hardware must be idle.\n");
+    while(1);
+    return;
+  }
+  operation_state->squeezing = false;
+  operation_state->append_d = false;
+  operation_state->d = 0;  // Zero indicates variable digest length.
+  operation_state->offset = 0;
+
+  // Configure SHAKE mode with the given strength.
+  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
+                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+
+  // Issue start command.
+  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX);
+
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
 }
 
 static void msg_fifo_write(
