@@ -112,6 +112,8 @@ end
   reg [63:0] strap_ss_mci_base_addr_o = 'bz;
   tri [63:0] strap_ss_recovery_ifc_base_addr_i;
   reg [63:0] strap_ss_recovery_ifc_base_addr_o = 'bz;
+  tri [63:0] strap_ss_external_staging_area_base_addr_i;
+  reg [63:0] strap_ss_external_staging_area_base_addr_o = 'bz;
   tri [63:0] strap_ss_otp_fc_base_addr_i;
   reg [63:0] strap_ss_otp_fc_base_addr_o = 'bz;
   tri [63:0] strap_ss_uds_seed_base_addr_i;
@@ -151,6 +153,8 @@ end
   assign strap_ss_mci_base_addr_i = bus.strap_ss_mci_base_addr;
   assign bus.strap_ss_recovery_ifc_base_addr = (initiator_responder == INITIATOR) ? strap_ss_recovery_ifc_base_addr_o : 'bz;
   assign strap_ss_recovery_ifc_base_addr_i = bus.strap_ss_recovery_ifc_base_addr;
+  assign bus.strap_ss_external_staging_area_base_addr = (initiator_responder == INITIATOR) ? strap_ss_external_staging_area_base_addr_o : 'bz;
+  assign strap_ss_external_staging_area_base_addr_i = bus.strap_ss_external_staging_area_base_addr;
   assign bus.strap_ss_otp_fc_base_addr = (initiator_responder == INITIATOR) ? strap_ss_otp_fc_base_addr_o : 'bz;
   assign strap_ss_otp_fc_base_addr_i = bus.strap_ss_otp_fc_base_addr;
   assign bus.strap_ss_uds_seed_base_addr = (initiator_responder == INITIATOR) ? strap_ss_uds_seed_base_addr_o : 'bz;
@@ -205,6 +209,7 @@ end
        strap_ss_caliptra_base_addr_o <= 'bz;
        strap_ss_mci_base_addr_o <= 'bz;
        strap_ss_recovery_ifc_base_addr_o <= 'bz;
+       strap_ss_external_staging_area_base_addr_o <= 'bz;
        strap_ss_otp_fc_base_addr_o <= 'bz;
        strap_ss_uds_seed_base_addr_o <= 'bz;
        strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o <= 'bz;
@@ -314,6 +319,7 @@ end
     strap_ss_caliptra_base_addr_o                             <= ss_mode_ctrl_initiator_struct.strap_ss_caliptra_base_addr                            ;
     strap_ss_mci_base_addr_o                                  <= ss_mode_ctrl_initiator_struct.strap_ss_mci_base_addr                                 ;
     strap_ss_recovery_ifc_base_addr_o                         <= ss_mode_ctrl_initiator_struct.strap_ss_recovery_ifc_base_addr                        ;
+    strap_ss_external_staging_area_base_addr_o                <= ss_mode_ctrl_initiator_struct.strap_ss_external_staging_area_base_addr                        ;
     strap_ss_otp_fc_base_addr_o                               <= ss_mode_ctrl_initiator_struct.strap_ss_otp_fc_base_addr                              ;
     strap_ss_uds_seed_base_addr_o                             <= ss_mode_ctrl_initiator_struct.strap_ss_uds_seed_base_addr                            ;
     strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o <= ss_mode_ctrl_initiator_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
@@ -330,6 +336,7 @@ end
     ss_mode_ctrl_responder_struct.strap_ss_caliptra_base_addr                             <= strap_ss_caliptra_base_addr_i                            ;
     ss_mode_ctrl_responder_struct.strap_ss_mci_base_addr                                  <= strap_ss_mci_base_addr_i                                 ;
     ss_mode_ctrl_responder_struct.strap_ss_recovery_ifc_base_addr                         <= strap_ss_recovery_ifc_base_addr_i                        ;
+    ss_mode_ctrl_responder_struct.strap_ss_external_staging_area_base_addr                <= strap_ss_external_staging_area_base_addr_i                        ;
     ss_mode_ctrl_responder_struct.strap_ss_otp_fc_base_addr                               <= strap_ss_otp_fc_base_addr_i                              ;
     ss_mode_ctrl_responder_struct.strap_ss_uds_seed_base_addr                             <= strap_ss_uds_seed_base_addr_i                            ;
     ss_mode_ctrl_responder_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset <= strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;

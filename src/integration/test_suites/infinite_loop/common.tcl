@@ -105,5 +105,7 @@ set dmi_reg_ss_dbg_manuf_service_reg_rsp 0x71;
 set dmi_reg_ss_dbg_unlock_level0 0x72;
 set dmi_reg_ss_dbg_unlock_level1 0x73;
 set dmi_reg_ss_strap_caliptra_dma_axi_user 0x74;
+set dmi_reg_ss_external_staging_area_base_addr_l 0x78;
+set dmi_reg_ss_external_staging_area_base_addr_h 0x79;
 
 

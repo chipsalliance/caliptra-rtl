@@ -788,6 +788,12 @@
 `ifndef GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER
 `define GENERIC_AND_FUSE_REG_SS_CALIPTRA_DMA_AXI_USER                                               (32'h534)
 `endif
+`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                   (32'h538)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+`define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                   (32'h53c)
+`endif
 `ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0
 `define GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0                                                     (32'h5a0)
 `endif

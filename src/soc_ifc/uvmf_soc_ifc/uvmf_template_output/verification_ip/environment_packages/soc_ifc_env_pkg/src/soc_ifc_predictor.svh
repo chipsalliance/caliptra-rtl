@@ -245,6 +245,7 @@ class soc_ifc_predictor #(
       bit [63:0] caliptra_base_addr;
       bit [63:0] mci_base_addr;
       bit [63:0] recovery_ifc_base_addr;
+      bit [63:0] external_staging_area_base_addr;
       bit [63:0] otp_fc_base_addr;
       bit [63:0] uds_seed_base_addr;
       bit [31:0] prod_debug_unlock_auth_pk_hash_reg_bank_offset;
@@ -812,6 +813,7 @@ class soc_ifc_predictor #(
         this.strap_ss_val.caliptra_base_addr                             = (t.strap_ss_caliptra_base_addr                            );
         this.strap_ss_val.mci_base_addr                                  = (t.strap_ss_mci_base_addr                                 );
         this.strap_ss_val.recovery_ifc_base_addr                         = (t.strap_ss_recovery_ifc_base_addr                        );
+        this.strap_ss_val.external_staging_area_base_addr                = (t.strap_ss_external_staging_area_base_addr               );
         this.strap_ss_val.otp_fc_base_addr                               = (t.strap_ss_otp_fc_base_addr                              );
         this.strap_ss_val.uds_seed_base_addr                             = (t.strap_ss_uds_seed_base_addr                            );
         this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset = (t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
@@ -1697,6 +1699,8 @@ class soc_ifc_predictor #(
                 "SS_MCI_BASE_ADDR_H",
                 "SS_RECOVERY_IFC_BASE_ADDR_L",
                 "SS_RECOVERY_IFC_BASE_ADDR_H",
+                "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L",
+                "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H",
                 "SS_OTP_FC_BASE_ADDR_L",
                 "SS_OTP_FC_BASE_ADDR_H",
                 "SS_UDS_SEED_BASE_ADDR_L",
@@ -2870,6 +2874,8 @@ class soc_ifc_predictor #(
             "SS_MCI_BASE_ADDR_H",
             "SS_RECOVERY_IFC_BASE_ADDR_L",
             "SS_RECOVERY_IFC_BASE_ADDR_H",
+            "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L",
+            "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H",
             "SS_OTP_FC_BASE_ADDR_L",
             "SS_OTP_FC_BASE_ADDR_H",
             "SS_UDS_SEED_BASE_ADDR_L",
@@ -4377,6 +4383,8 @@ function void soc_ifc_predictor::predict_strap_values();
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.predict             (this.strap_ss_val.external_staging_area_base_addr[31:00]        );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.predict             (this.strap_ss_val.external_staging_area_base_addr[63:32]        );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
@@ -4395,6 +4403,8 @@ function void soc_ifc_predictor::predict_strap_values();
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L             .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L             .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H             .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H             .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)

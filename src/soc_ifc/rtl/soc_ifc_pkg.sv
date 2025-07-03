@@ -34,6 +34,21 @@ package soc_ifc_pkg;
     parameter SOC_IFC_WDT_TIMEOUT_PERIOD_W = SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
     parameter SOC_IFC_REG_OFFSET = 32'h3000_0000;
+    
+    //Mailbox size configuration
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    parameter CPTRA_MBOX_SIZE_KB = 16;
+`else
+    parameter CPTRA_MBOX_SIZE_KB = 256;
+`endif
+    parameter CPTRA_MBOX_DATA_W = 32;
+    parameter CPTRA_MBOX_ECC_DATA_W = 7;
+    parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;
+    parameter CPTRA_MBOX_SIZE_DWORDS = CPTRA_MBOX_SIZE_BYTES/4;
+    parameter CPTRA_MBOX_DATA_AND_ECC_W = CPTRA_MBOX_DATA_W + CPTRA_MBOX_ECC_DATA_W;
+    parameter CPTRA_MBOX_DEPTH = (CPTRA_MBOX_SIZE_KB * 1024 * 8) / CPTRA_MBOX_DATA_W;
+    parameter CPTRA_MBOX_ADDR_W = $clog2(CPTRA_MBOX_DEPTH);
+    parameter CPTRA_MBOX_DEPTH_LOG2 = $clog2(CPTRA_MBOX_DEPTH);
 
     //memory map
     parameter MBOX_REG_START_ADDR     = `CLP_MBOX_CSR_BASE_ADDR - SOC_IFC_REG_OFFSET;
@@ -47,19 +62,9 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
-    parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR - SOC_IFC_REG_OFFSET;
+    parameter MBOX_DIR_END_ADDR       = MBOX_DIR_START_ADDR + CPTRA_MBOX_SIZE_BYTES - 1 - SOC_IFC_REG_OFFSET; // Can't use RDL since MBOX size is paramaterizable
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;
 
-    //Mailbox size configuration
-    parameter CPTRA_MBOX_SIZE_KB = 256;
-    parameter CPTRA_MBOX_DATA_W = 32;
-    parameter CPTRA_MBOX_ECC_DATA_W = 7;
-    parameter CPTRA_MBOX_SIZE_BYTES = CPTRA_MBOX_SIZE_KB * 1024;
-    parameter CPTRA_MBOX_SIZE_DWORDS = CPTRA_MBOX_SIZE_BYTES/4;
-    parameter CPTRA_MBOX_DATA_AND_ECC_W = CPTRA_MBOX_DATA_W + CPTRA_MBOX_ECC_DATA_W;
-    parameter CPTRA_MBOX_DEPTH = (CPTRA_MBOX_SIZE_KB * 1024 * 8) / CPTRA_MBOX_DATA_W;
-    parameter CPTRA_MBOX_ADDR_W = $clog2(CPTRA_MBOX_DEPTH);
-    parameter CPTRA_MBOX_DEPTH_LOG2 = $clog2(CPTRA_MBOX_DEPTH);
 
     //Valid AXI_USER
     //Lock the AXI_USER values from integration time
@@ -109,6 +114,8 @@ package soc_ifc_pkg;
     parameter DMI_REG_MBOX_LOCK = 7'h75;
     parameter DMI_REG_MBOX_CMD = 7'h76;
     parameter DMI_REG_MBOX_EXECUTE = 7'h77;
+    parameter DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = 7'h78;
+    parameter DMI_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = 7'h79;
 
     
     // This parameter describes the hard-coded implementation in the BOOT FSM
