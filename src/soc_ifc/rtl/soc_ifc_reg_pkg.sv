@@ -189,7 +189,11 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t;
 
     typedef struct packed{
-        logic [2:0] next;
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t;
+
+    typedef struct packed{
+        logic [1:0] next;
     } soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t;
 
     typedef struct packed{
@@ -202,6 +206,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t Fuse_Granularity;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;
@@ -446,30 +451,30 @@ package soc_ifc_reg_pkg;
         logic next;
         logic we;
         logic swwe;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t;
 
     typedef struct packed{
         logic next;
         logic we;
         logic swwe;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t;
 
     typedef struct packed{
         logic next;
         logic we;
         logic swwe;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t;
 
     typedef struct packed{
         logic [28:0] next;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__RSVD__in_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__RSVD__in_t;
 
     typedef struct packed{
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t MANUF_DBG_UNLOCK_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t PROD_DBG_UNLOCK_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t UDS_PROGRAM_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__RSVD__in_t RSVD;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__in_t MANUF_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__in_t PROD_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__UDS_PROGRAM_REQ__in_t UDS_PROGRAM_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__RSVD__in_t RSVD;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__in_t;
 
     typedef struct packed{
         logic swwe;
@@ -717,7 +722,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DEBUG_INTENT__in_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__in_t SS_CALIPTRA_DMA_AXI_USER;
         soc_ifc_reg__SS_STRAP_GENERIC__in_t [4-1:0]SS_STRAP_GENERIC;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__in_t SS_DBG_MANUF_SERVICE_REG_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__in_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__in_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__in_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
         soc_ifc_reg__internal_obf_key__in_t [8-1:0]internal_obf_key;
@@ -1201,21 +1206,21 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t;
 
     typedef struct packed{
         logic value;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t;
 
     typedef struct packed{
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t MANUF_DBG_UNLOCK_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t PROD_DBG_UNLOCK_REQ;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t UDS_PROGRAM_REQ;
-    } soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__MANUF_DBG_UNLOCK_REQ__out_t MANUF_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__PROD_DBG_UNLOCK_REQ__out_t PROD_DBG_UNLOCK_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__UDS_PROGRAM_REQ__out_t UDS_PROGRAM_REQ;
+    } soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__out_t;
 
     typedef struct packed{
         logic value;
@@ -1480,7 +1485,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_DEBUG_INTENT__out_t SS_DEBUG_INTENT;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__out_t SS_CALIPTRA_DMA_AXI_USER;
         soc_ifc_reg__SS_STRAP_GENERIC__out_t [4-1:0]SS_STRAP_GENERIC;
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ__out_t SS_DBG_MANUF_SERVICE_REG_REQ;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__out_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP__out_t SS_DBG_MANUF_SERVICE_REG_RSP;
         soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL__out_t [2-1:0]SS_SOC_DBG_UNLOCK_LEVEL;
         soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL__out_t [4-1:0]SS_GENERIC_FW_EXEC_CTRL;

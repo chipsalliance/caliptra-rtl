@@ -37,7 +37,7 @@ task ss_strap_reg_test;
       foreach (ss_strap_soc_rw_regnames[ix]) begin
         //$display("Current ss_strap: %s", ss_strap_soc_rw_regnames[ix]);
         //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
+        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
             (ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
             (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin ////||
           $display("Found %s", ss_strap_soc_rw_regnames[ix]);

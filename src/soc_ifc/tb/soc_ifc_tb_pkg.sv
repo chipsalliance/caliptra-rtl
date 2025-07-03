@@ -227,7 +227,7 @@ package soc_ifc_tb_pkg;
     // 0x538..0x59c
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
-    "SS_DBG_MANUF_SERVICE_REG_REQ"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ,                          // 0x5c0
+    "SS_DBG_SERVICE_REG_REQ"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ,                                 // 0x5c0
     "SS_DBG_MANUF_SERVICE_REG_RSP"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP,                           // 0x5c4
     "SS_SOC_DBG_UNLOCK_LEVEL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0,                              // 0x5c8 [2]
     "SS_GENERIC_FW_EXEC_CTRL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_0,                              // 0x5d0 [4]
@@ -449,9 +449,9 @@ package soc_ifc_tb_pkg;
     "FUSE_PQC_KEY_TYPE"                                : `SOC_IFC_REG_FUSE_PQC_KEY_TYPE_KEY_TYPE_MASK,
     "FUSE_SOC_MANIFEST_MAX_SVN"                        : `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK,
     "SS_DEBUG_INTENT"                                  : `SOC_IFC_REG_SS_DEBUG_INTENT_DEBUG_INTENT_MASK,   
-    "SS_DBG_MANUF_SERVICE_REG_REQ"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK | 
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK  |
-                                                          `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK),
+    "SS_DBG_SERVICE_REG_REQ"                           : (`SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_MANUF_DBG_UNLOCK_REQ_MASK | 
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_PROD_DBG_UNLOCK_REQ_MASK  |
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ_UDS_PROGRAM_REQ_MASK),
     "SS_DBG_MANUF_SERVICE_REG_RSP"                     : (`SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     |
                                                           `SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
@@ -1120,7 +1120,7 @@ package soc_ifc_tb_pkg;
           "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_CPTRA_DMA_AXI_USER"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           
-          "SS_DBG_MANUF_SERVICE_REG_REQ"                  : begin
+          "SS_DBG_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
             //$display("ss_debug_intent = 0x%08x", ss_debug_intent);
             //$display("axi_indata = 0x%08x", axi_indata);

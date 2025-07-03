@@ -355,10 +355,10 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.SS_DEBUG_INTENT                                          )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_CALIPTRA_DMA_AXI_USER                                 )
             foreach(this.SS_STRAP_GENERIC[ii])                `REG_NO_CP_NONCORE_RST(this.SS_STRAP_GENERIC[ii]                                     )
-                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ        )
-                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ         )
-                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ             )
-                                                              `FLD_NO_CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_REQ.RSVD                        )
+                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ        )
+                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ         )
+                                                              `FLD____CP_NONCORE_RST(this.SS_DBG_SERVICE_REG_REQ.UDS_PROGRAM_REQ             )
+                                                              `FLD_NO_CP_NONCORE_RST(this.SS_DBG_SERVICE_REG_REQ.RSVD                        )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       )
                                                               `FLD____CP_NONCORE_RST(this.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS)
@@ -1446,9 +1446,9 @@ package soc_ifc_reg_model_top_pkg;
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.user                           , soc_ifc_reg_fuse_cb); //   /
         foreach (soc_ifc_reg_rm.SS_STRAP_GENERIC[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_STRAP_GENERIC[ii].data                               , soc_ifc_reg_fuse_cb); //--/
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DEBUG_INTENT.debug_intent                            , soc_ifc_reg_fuse_cb); // TODO needs a more sophisticated callback accounting for security states
-//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ       , soc_ifc_reg_fuse_cb); // TODO these all need better CB for we/swwe behavior
-//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ        , soc_ifc_reg_fuse_cb);
-//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_REQ.UDS_PROGRAM_REQ            , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ       , soc_ifc_reg_fuse_cb); // TODO these all need better CB for we/swwe behavior
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ        , soc_ifc_reg_fuse_cb);
+//                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_REQ.UDS_PROGRAM_REQ            , soc_ifc_reg_fuse_cb);
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    , soc_ifc_reg_fuse_cb);
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       , soc_ifc_reg_fuse_cb);
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS, soc_ifc_reg_fuse_cb);

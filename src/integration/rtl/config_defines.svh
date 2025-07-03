@@ -20,6 +20,9 @@
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 
+// Uncomment if fuse granularity 32 bits.
+//`define CALIPTRA_FUSE_GRANULARITY_32
+
   `define CALIPTRA_AHB_SLAVES_NUM      5'd16 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr

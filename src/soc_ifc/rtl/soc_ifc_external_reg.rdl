@@ -331,7 +331,8 @@ reg {
             [br]SOC Access:      RO";
     // No storage, i.e. no resetsignal
     field {sw=r; hw=w;} iTRNG_en;
-    field {sw=r; hw=w;} RSVD_en[3];
+    field {desc = "Fuse row granularity. 0: 64-bits 1: 32-bits"; sw=r; hw=w;} Fuse_Granularity;
+    field {sw=r; hw=w;} RSVD_en[2];
     field {sw=r; hw=w;} LMS_acc_en;
     field {sw=r; hw=w;} SUBSYSTEM_MODE_en;
 } CPTRA_HW_CONFIG;
