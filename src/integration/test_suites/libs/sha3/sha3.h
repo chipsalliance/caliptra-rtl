@@ -47,6 +47,19 @@
 #define KMAC_STATUS_FIFO_DEPTH_INDEX   (8)
 #define KMAC_STATUS_FIFO_DEPTH_MASK    (0x1F00)
 
+// Prefix registers.
+#define KMAC_PREFIX_0_REG_OFFSET  (0x20)
+#define KMAC_PREFIX_1_REG_OFFSET  (0x24)
+#define KMAC_PREFIX_2_REG_OFFSET  (0x28)
+#define KMAC_PREFIX_3_REG_OFFSET  (0x2c)
+#define KMAC_PREFIX_4_REG_OFFSET  (0x30)
+#define KMAC_PREFIX_5_REG_OFFSET  (0x34)
+#define KMAC_PREFIX_6_REG_OFFSET  (0x38)
+#define KMAC_PREFIX_7_REG_OFFSET  (0x3c)
+#define KMAC_PREFIX_8_REG_OFFSET  (0x40)
+#define KMAC_PREFIX_9_REG_OFFSET  (0x44)
+#define KMAC_PREFIX_10_REG_OFFSET (0x48)
+
 // Keccak state memory register definitions.
 #define KMAC_STATE_REG_OFFSET (0x400)
 
@@ -154,6 +167,18 @@ typedef enum dif_kmac_mode_shake {
 #define DIGEST_LEN_SHAKE_MAX 102
 
 /**
+ * Supported cSHAKE modes of operation.
+ */
+typedef enum dif_kmac_mode_cshake {
+  /** cSHAKE with 128 bit strength. */
+  kDifKmacModeCshakeLen128,
+  /** cSHAKE with 256 bit strength. */
+  kDifKmacModeCshakeLen256,
+} dif_kmac_mode_cshake_t;
+
+#define DIGEST_LEN_CSHAKE_MAX 4
+
+/**
  * A KMAC operation state context.
  */
 typedef struct dif_kmac_operation_state {
@@ -191,6 +216,31 @@ typedef struct dif_kmac_operation_state {
 } dif_kmac_operation_state_t;
 
 /**
+ * An encoded bit string used for customization string (S).
+ *
+ * Use `dif_kmac_customization_string_init` to initialize.
+ */
+typedef struct dif_kmac_customization_string {
+  /** Encoded S: left_encode(len(S)) || S */
+  char buffer[kDifKmacMaxCustomizationStringLen +
+              kDifKmacMaxCustomizationStringOverhead];
+  /** Length of data in buffer in bytes. */
+  uint32_t length;
+} dif_kmac_customization_string_t;
+
+/**
+ * An encoded bit string used for function name (N).
+ *
+ * Use `dif_kmac_function_name_init` to initialize.
+ */
+typedef struct dif_kmac_function_name {
+  /** Encoded N: left_encode(len(N)) || N */
+  char buffer[kDifKmacMaxFunctionNameLen + kDifKmacMaxFunctionNameOverhead];
+  /** Length of data in buffer in bytes. */
+  uint32_t length;
+} dif_kmac_function_name_t;
+
+/**
  * Poll until a given flag in the status register is set.
  *
  * @param kmac A KMAC handle.
@@ -199,6 +249,43 @@ typedef struct dif_kmac_operation_state {
  */
 void dif_kmac_poll_status(const uintptr_t kmac, uint32_t flag);
 
+/**
+ * Encode a customization string (S).
+ *
+ * The length of the string must not exceed `kDifKmacMaxCustomizationStringLen`.
+ *
+ * Note that this function will encode `len` bytes from `data` regardless of
+ * whether `data` is null-terminated or not.
+ *
+ * See NIST Special Publication 800-185 [2] for more information about the
+ * customization string (S) parameter.
+ *
+ * @param data String to encode.
+ * @param len Length of string to encode.
+ * @param[out] out Encoded customization string.
+ * @return The result of the operation.
+ */
+void dif_kmac_customization_string_init(
+    const char *data, size_t len, dif_kmac_customization_string_t *out);
+
+/**
+ * Encode a function name (N).
+ *
+ * The length of the string must not exceed `kDifKmacMaxFunctionNameLen`.
+ *
+ * Note that this function will encode `len` bytes from `data` regardless of
+ * whether `data` is null-terminated or not.
+ *
+ * See NIST Special Publication 800-185 [2] for more information about the
+ * function name (N) parameter.
+ *
+ * @param data String to encode.
+ * @param len Length of string to encode.
+ * @param[out] out Encoded function name.
+ * @return The result of the operation.
+ */
+void dif_kmac_function_name_init(
+  const char *data, size_t len, dif_kmac_function_name_t *out);
 /**
  * Start a SHA-3 operation.
  *
@@ -230,6 +317,25 @@ void dif_kmac_mode_sha3_start(
 void dif_kmac_mode_shake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_shake_t mode);
+
+/**
+ * Start a cSHAKE operation.
+ *
+ * cSHAKE operations have a variable (XOF) output length.
+ *
+ * See NIST Special Publication 800-185 [2] for more information about cSHAKE.
+ *
+ * @param kmac A KMAC handle.
+ * @param operation_state A KMAC operation state context.
+ * @param mode The mode of operation.
+ * @param n Function name (optional).
+ * @param s Customization string (optional).
+ * @return The result of the operation.
+ */
+void dif_kmac_mode_cshake_start(
+    uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
+    dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
+    const dif_kmac_customization_string_t *s);
 
 /**
  * Absorb bytes from the message provided.
