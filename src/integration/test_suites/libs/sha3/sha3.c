@@ -7,6 +7,7 @@
 
 #include "sha3.h"
 #include "printf.h"
+#include "string.h"
 
 /**
  * Calculate the rate (r) in bits from the given security level.
@@ -31,6 +32,83 @@ void dif_kmac_poll_status(const uintptr_t kmac, uint32_t flag) {
     }
   }
   return;
+}
+
+void dif_kmac_customization_string_init(
+    const char *data, size_t len, dif_kmac_customization_string_t *out) {
+  if ((data == NULL && len != 0) || out == NULL) {
+    printf("dif_kmac_customization_string_init: ERROR data and out arguments must not be null.\n");
+    while (1);
+    return;
+  }
+
+  if (len > kDifKmacMaxCustomizationStringLen) {
+    printf("dif_kmac_customization_string_init: ERROR length greater than maximum.\n");
+    while (1);
+    return;
+  }
+
+  if (kDifKmacMaxCustomizationStringLen > UINT16_MAX / 8) {
+    printf("dif_kmac_customization_string_init: ERROR length requires more than 3 bytes to left encode.\n");
+    while (1);
+    return;
+  }
+  if ((sizeof(out->buffer) / sizeof(char)) < kDifKmacMaxCustomizationStringLen + 3) {
+    printf("dif_kmac_customization_string_init: ERROR buffer is not large enough\n");
+    while (1);
+    return;
+  }
+
+  // Left encode length in bits.
+  uint16_t bits = ((uint16_t)len) * 8;
+  char *buffer = out->buffer;
+  if (bits <= UINT8_MAX) {
+    out->length = len + 2;
+    *buffer++ = 1;
+    *buffer++ = (char)bits;
+  } else {
+    out->length = len + 3;
+    *buffer++ = 2;
+    // Most significant byte is first (i.e. big-endian).
+    *buffer++ = (char)(bits >> 8);
+    *buffer++ = (char)bits;
+  }
+
+  memcpy(buffer, data, len);
+}
+
+void dif_kmac_function_name_init(const char *data, size_t len, dif_kmac_function_name_t *out) {
+  if ((data == NULL && len != 0) || out == NULL) {
+    printf("dif_kmac_function_name_init: ERROR data and out must not be NULL.\n");
+    while (1);
+    return;
+  }
+
+  if (len > kDifKmacMaxFunctionNameLen) {
+    printf("dif_kmac_function_name_init: ERROR length larger than maximum.\n");
+    while (1);
+    return;
+  }
+
+  if (kDifKmacMaxFunctionNameLen > UINT8_MAX / 8) {
+    printf("dif_kmac_function_name_init: ERROR length requires more than 2 bytes to left encode\n");
+    while (1);
+    return;
+  }
+  if ((sizeof(out->buffer) / sizeof(char)) < kDifKmacMaxFunctionNameLen + 2) {
+    printf("dif_kmac_function_name_init: ERROR buffer is not large enough.\n");
+    while (1);
+    return;
+  }
+
+  // Length of the data to be stored into buffer.
+  out->length = len + 2;
+
+  // Left encode length in bits.
+  out->buffer[0] = 1;
+  out->buffer[1] = (char)(len * 8);
+
+  memcpy(&out->buffer[2], data, len);
 }
 
 void dif_kmac_mode_sha3_start(
@@ -106,7 +184,7 @@ void dif_kmac_mode_sha3_start(
 void dif_kmac_mode_shake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_shake_t mode) {
-  if (kmac == NULL || operation_state == NULL) {
+  if (kmac == 0 || operation_state == NULL) {
     printf("dif_kmac_mode_shake_start: ERROR kmac and operation state cannot be NULL.\n");
     while (1);
     return;
@@ -149,6 +227,108 @@ void dif_kmac_mode_shake_start(
 
   // Issue start command.
   lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX);
+
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+}
+
+void dif_kmac_mode_cshake_start(
+    const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
+    dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
+    const dif_kmac_customization_string_t *s) {
+  if (kmac == 0 || operation_state == NULL) {
+    printf("dif_kmac_mode_cshake_start: ERROR kmac or operation state is NULL.\n");
+    while (1);
+    return;
+  }
+
+  // Use SHAKE if both N and S are empty strings.
+  bool n_is_empty = n == NULL || (n->buffer[0] == 1 && n->buffer[1] == 0);
+  bool s_is_empty = s == NULL || (s->buffer[0] == 1 && s->buffer[1] == 0);
+  if (n_is_empty && s_is_empty) {
+    switch (mode) {
+      case kDifKmacModeCshakeLen128:
+        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen128);
+        return;
+      case kDifKmacModeCshakeLen256:
+        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen256);
+        return;
+      default:
+        printf("dif_kmac_mode_cshake_start: ERROR unsupported mode for empty N and S.\n");
+        while (1);
+        return;
+    }
+  }
+
+  // Set key strength and calculate rate (r).
+  uint32_t kstrength;
+  switch (mode) {
+    case kDifKmacModeCshakeLen128:
+      kstrength = KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L128;
+      operation_state->r = calculate_rate_bits(128) / 32;
+      break;
+    case kDifKmacModeCshakeLen256:
+      kstrength = KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L256;
+      operation_state->r = calculate_rate_bits(256) / 32;
+      break;
+    default:
+      printf("dif_kmac_mode_cshake_start: ERROR unsupported kstrenght.\n");
+      while (1);
+      return;
+  }
+
+  // Hardware must be idle to start an operation.
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_INDEX)) == 0) {
+    printf("dif_kmac_mode_cshake_start: ERROR hardware must be idle.\n");
+    while (1);
+    return;
+  }
+  operation_state->squeezing = false;
+  operation_state->append_d = false;
+  operation_state->d = 0;  // Zero indicates variable digest length.
+  operation_state->offset = 0;
+
+  // Configure cSHAKE mode with the given strength.
+  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) | (KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+
+  // Calculate PREFIX register values.
+  uint32_t prefix_regs[11] = {0};
+  uint8_t *prefix_data = (uint8_t *)prefix_regs;
+  if (n == NULL || n->length < 3) {
+    // Append left encoded empty string.
+    prefix_data[0] = 1;
+    prefix_data[1] = 0;
+    prefix_data += 2;
+  } else {
+    memcpy(prefix_data, n->buffer, n->length);
+    prefix_data += n->length;
+  }
+  if (s == NULL || s->length == 0) {
+    // Append left encoded empty string.
+    prefix_data[0] = 1;
+    prefix_data[1] = 0;
+  } else {
+    memcpy(prefix_data, s->buffer, s->length);
+  }
+
+  // Write PREFIX register values.
+  lsu_write_32(kmac + KMAC_PREFIX_0_REG_OFFSET, prefix_regs[0]);
+  lsu_write_32(kmac + KMAC_PREFIX_1_REG_OFFSET, prefix_regs[1]);
+  lsu_write_32(kmac + KMAC_PREFIX_2_REG_OFFSET, prefix_regs[2]);
+  lsu_write_32(kmac + KMAC_PREFIX_3_REG_OFFSET, prefix_regs[3]);
+  lsu_write_32(kmac + KMAC_PREFIX_4_REG_OFFSET, prefix_regs[4]);
+  lsu_write_32(kmac + KMAC_PREFIX_5_REG_OFFSET, prefix_regs[5]);
+  lsu_write_32(kmac + KMAC_PREFIX_6_REG_OFFSET, prefix_regs[6]);
+  lsu_write_32(kmac + KMAC_PREFIX_7_REG_OFFSET, prefix_regs[7]);
+  lsu_write_32(kmac + KMAC_PREFIX_8_REG_OFFSET, prefix_regs[8]);
+  lsu_write_32(kmac + KMAC_PREFIX_9_REG_OFFSET, prefix_regs[9]);
+  lsu_write_32(kmac + KMAC_PREFIX_10_REG_OFFSET, prefix_regs[10]);
+
+  // Issue start command.
+  uint32_t cmd_reg = KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX;
+  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, cmd_reg);
 
   dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
 }
