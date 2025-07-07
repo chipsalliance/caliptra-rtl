@@ -140,6 +140,312 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
     return 0;
 }
+
+uint8_t soc_ifc_mbox_lock_clear_during_dma_transfer(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+    uint32_t reg;
+    VPRINTF(LOW, "MBOX LOCK clear during DMA transfer test\n");
+
+    // Disable txn_done interrupt since we'll poll it
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    // Start DMA transfer, don't wait for it to complete
+    soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_addr, fixed, byte_count, block_size);
+    
+    // Wait until DMA is busy
+    //reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    // Wait until DMA is busy
+    //while (!(reg & AXI_DMA_REG_STATUS0_BUSY_MASK)) {
+    //    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    //
+    // Clear the mailbox lock while DMA is in progress
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    
+    // Check completion (error state expected)
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    VPRINTF(LOW, "FW: Poll DMA status\n");
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+    // Check status; DMA error expected
+    VPRINTF(LOW, "FW: Check DMA status\n");
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(LOW, "AXI DMA reports err status when MBOX LOCK cleared during transfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+    } else {
+        VPRINTF(ERROR, "ERROR: AXI DMA reports success status when MBOX LOCK is cleared during transfer!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Reenable txn_done interrupt
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    return 0;
+}
+
+/*
+uint8_t soc_ifc_axi_access_dma_ctrl_idle() {
+    VPRINTF(LOW, "AXI DMA Control Register Access when AXI DMA is idle and busy\n");
+    // Wait until DMA is idle
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    VPRINTF(LOW, "FW: Attempt to read and write AXI DMA control register while idle\n");
+    // Read and write a DMA control register from AXI
+    uint32_t orig_ctrl = lsu_read_32(CLP_AXI_DMA_REG_CTRL);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, orig_ctrl ^ 0x1); // Flip a bit
+    uint32_t new_ctrl = lsu_read_32(CLP_AXI_DMA_REG_CTRL);
+    // Check if the write was ignored or blocked (should not be allowed)
+    if (new_ctrl != orig_ctrl) {
+        VPRINTF(ERROR, "ERROR: AXI DMA control register was modified from AXI when idle!\n");
+        fail = 1;
+        return 1;
+    } else {
+        VPRINTF(LOW, "AXI DMA control register access from AXI when idle was blocked\n");
+    }
+    // Start a DMA transfer 
+    uint64_t src_addr = AXI_SRAM_BASE_ADDR;
+    uint64_t dst_addr = AXI_SRAM_BASE_ADDR + 0x4000;
+    uint32_t byte_count = 0x40;
+    uint16_t block_size = 0x00;
+    // Disable txn_done interrupt since we'll poll it
+    uint32_t reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+    // Start DMA transfer
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK) |
+          (axi_dma_rd_route_AHB_FIFO << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
+          (axi_dma_wr_route_AXI_RD << AXI_DMA_REG_CTRL_WR_ROUTE_LOW);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+    // While DMA is busy, write to the control register again
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while (!(reg & AXI_DMA_REG_STATUS0_BUSY_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+    uint32_t ctrl_during_dma = lsu_read_32(CLP_AXI_DMA_REG_CTRL);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, ctrl_during_dma ^ 0x2); // Flip a different bit
+    uint32_t ctrl_after_write = lsu_read_32(CLP_AXI_DMA_REG_CTRL);
+    if (ctrl_after_write != ctrl_during_dma) {
+        VPRINTF(ERROR, "ERROR: AXI DMA control register was modified from AXI while DMA was busy!\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        return 2;
+    } else {
+        VPRINTF(LOW, "AXI DMA control register access from AXI while busy was blocked\n");
+    }
+    // Wait for DMA to complete
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    // Reenable txn_done interrupt
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+    return 0;
+}
+*/
+
+uint8_t soc_ifc_axi_slverr_from_axi_sram_write() {
+    VPRINTF(LOW, "AXI DMA transfer to invalid SRAM location\n");
+    uint32_t reg;
+    uint64_t src_addr;
+    uint64_t invalid_dst_addr;
+    uint32_t rd_route;
+    uint32_t wr_route;
+    uint8_t  rd_fixed;
+    uint8_t  wr_fixed;
+    uint32_t byte_count;
+    uint16_t block_size;
+    
+    src_addr = AXI_SRAM_BASE_ADDR;
+    invalid_dst_addr =  AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES; // Invalid address in SRAM
+    byte_count = 0x40; // 64 bytes
+    block_size = 0x00;
+    rd_route = axi_dma_rd_route_AXI_WR;
+    wr_route = axi_dma_wr_route_AXI_RD; 
+    rd_fixed = 0;
+    wr_fixed = 0;
+
+    // Disable txn_done interrupt since we'll poll it
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    // Wait for DMA idle
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+
+    // Arm DMA transfer to invalid address
+    VPRINTF(LOW, "Arming DMA transfer to invalid destination 0x%08x%08x\n", (uint32_t)(invalid_dst_addr >> 32), (uint32_t)(invalid_dst_addr & 0xffffffff));
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  invalid_dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (invalid_dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK) |
+          (rd_route << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)     |
+          (wr_route << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)   |
+          (rd_fixed << AXI_DMA_REG_CTRL_RD_FIXED_LOW)   |
+          (wr_fixed << AXI_DMA_REG_CTRL_WR_FIXED_LOW);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Poll for completion or error
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    VPRINTF(LOW, "FW: Poll DMA status\n");
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check for AXI_SLVERR (DMA error)
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(LOW, "AXI_SLVERR detected on AXI write during DMA.\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+    } else {
+        VPRINTF(ERROR, "ERROR: AXI DMA did not report AXI_SLVERR on read to invalid address!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+    
+    // Reenable txn_done interrupt
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    return 0;
+}
+
+/*
+uint8_t soc_ifc_axi_slverr_from_axi_sram_read() {
+    VPRINTF(LOW, "AXI DMA read from invalid SRAM location\n");
+    uint32_t reg;
+    uint64_t dst_addr;
+    uint64_t invalid_src_addr;
+    uint32_t rd_route;
+    uint32_t wr_route;
+    uint8_t  rd_fixed;
+    uint8_t  wr_fixed;
+    uint32_t byte_count;
+    uint16_t block_size;
+
+    dst_addr = AXI_SRAM_BASE_ADDR;
+    invalid_src_addr = AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES; // Invalid address in SRAM
+    byte_count = 0x40; // 64 bytes
+    block_size = 0x00;
+    rd_route = axi_dma_rd_route_AXI_WR;
+    wr_route = axi_dma_wr_route_AXI_RD; 
+    rd_fixed = 0;
+    wr_fixed = 0;
+
+    // Disable txn_done interrupt since we'll poll it
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    // Wait for DMA idle
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+
+    // Arm DMA transfer to invalid address (write)
+    VPRINTF(LOW, "Arming DMA read from invalid source 0x%08x%08x\n", (uint32_t)(invalid_src_addr >> 32), (uint32_t)(invalid_src_addr & 0xffffffff));
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  invalid_src_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (invalid_src_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK) |
+          (rd_route << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)     |
+          (wr_route << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)   |
+          (rd_fixed << AXI_DMA_REG_CTRL_RD_FIXED_LOW)   |
+          (wr_fixed << AXI_DMA_REG_CTRL_WR_FIXED_LOW);
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+    // Poll for completion or error
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    VPRINTF(LOW, "FW: Poll DMA status\n");
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check for AXI_SLVERR (DMA error)
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(LOW, "AXI_SLVERR detected on AXI read during DMA.\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+    } else {
+        VPRINTF(ERROR, "ERROR: AXI DMA did not report AXI_SLVERR on read from invalid address!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Reenable txn_done interrupt
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+    return 0;
+}
+*/
+
+// Test only the missing route combinations for cmd_inv_route_combo
+uint8_t soc_ifc_axi_dma_test_missing_route_combos(void) {
+    uint64_t src_addr = AXI_SRAM_BASE_ADDR;
+    uint64_t dst_addr = AXI_SRAM_BASE_ADDR + 0x4000;
+    uint32_t byte_count = 0x40;
+    uint16_t block_size = 0x00;
+    uint32_t reg;
+    struct { uint32_t rd_route; uint32_t wr_route; } combos[] = {
+        {axi_dma_rd_route_MBOX,    axi_dma_wr_route_MBOX},
+        {axi_dma_rd_route_MBOX,    axi_dma_wr_route_AHB_FIFO},
+        {axi_dma_rd_route_MBOX,    axi_dma_wr_route_AXI_RD},
+        {axi_dma_rd_route_AHB_FIFO,axi_dma_wr_route_MBOX},
+        {axi_dma_rd_route_AHB_FIFO,axi_dma_wr_route_AXI_RD},
+        {axi_dma_rd_route_AXI_WR,  axi_dma_wr_route_MBOX},
+        {axi_dma_rd_route_AXI_WR,  axi_dma_wr_route_AHB_FIFO}
+    };
+    
+    for (int i = 0; i < sizeof(combos)/sizeof(combos[0]); ++i) {
+        src_addr = (combos[i].rd_route == axi_dma_rd_route_MBOX) ? 0x4000 : (combos[i].rd_route == axi_dma_rd_route_AHB_FIFO) ? 0x8000 : AXI_SRAM_BASE_ADDR;
+        dst_addr = (combos[i].wr_route == axi_dma_wr_route_MBOX) ? 0x4000 : (combos[i].wr_route == axi_dma_wr_route_AHB_FIFO) ? 0x8000 : AXI_SRAM_BASE_ADDR;
+        VPRINTF(LOW, "Route Combo: RD: %d, WR: %d\n", combos[i].rd_route, combos[i].wr_route);
+        // Disable txn_done interrupt since we'll poll it
+        reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+        lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+
+        // Arm the error command
+        while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+        lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
+        lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
+        lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+        lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+        lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+        lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
+        reg = (AXI_DMA_REG_CTRL_GO_MASK) |
+              (combos[i].rd_route << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
+              (combos[i].wr_route << AXI_DMA_REG_CTRL_WR_ROUTE_LOW);
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+        // Check completion (error state expected)
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+        VPRINTF(LOW, "FW: Poll DMA status\n");
+        while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+            reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+        }
+        // Check status
+        VPRINTF(LOW, "FW: Check DMA status\n");
+        if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+            VPRINTF(LOW, "AXI DMA reports err status for err injection xfer\n");
+            lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        } else {
+            VPRINTF(ERROR, "ERROR: AXI DMA reports success status for err injection xfer!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+            //return 1;
+        }
+
+        // Reenable txn_done interrupt
+        reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+        lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+    }
+
+    return 0;
+}
+
 void main(void) {
         int argc=0;
         char *argv[1];
@@ -244,6 +550,28 @@ void main(void) {
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_rd_fixed   )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_wr_fixed   )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_mbox_lock  )) { fail = 1; }
+        if (soc_ifc_axi_dma_test_missing_route_combos()) { fail = 1; }
+
+        // ===========================================================================
+        // Test MBOX LOCK clear during DMA transfer
+        // ===========================================================================
+        // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+        // Use a FIXED transfer (only the final beat should be present at the target address)
+        VPRINTF(LOW, "Sending fixed payload via AHB i/f\n");
+        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR + 2*16*4, 1, fixed_send_payload, 2048, 0);
+        if (soc_ifc_mbox_lock_clear_during_dma_transfer(AXI_SRAM_BASE_ADDR + 2*16*4, 0x8800, 0, 2048, 0)) { fail = 1; }
+
+        // ===========================================================================
+        // Test AXI access to DMA control registers when DMA is idle
+        // ===========================================================================
+        //if (soc_ifc_axi_access_dma_ctrl_idle()) { fail = 1; }
+
+        // ===========================================================================
+        // Test AXI DMA access to invalid SRAM address (for both read and write)
+        // ===========================================================================
+        if (soc_ifc_axi_slverr_from_axi_sram_write()) { fail = 1; }
+        //if (soc_ifc_axi_slverr_from_axi_sram_read()) { fail = 1; }
+
 
         // ===========================================================================
         // If reset was executed, try to run another simple DMA test to check for life
@@ -278,272 +606,272 @@ void main(void) {
 
         } else if (rst_count == 1) {
 
-        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) == SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK) {
-            VPRINTF(FATAL, "rst_count is still 1 after warm reset!\n");
-            SEND_STDOUT_CTRL(0x1);
-            while(1);
-        }
+            if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) == SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK) {
+                VPRINTF(FATAL, "rst_count is still 1 after warm reset!\n");
+                SEND_STDOUT_CTRL(0x1);
+                while(1);
+            }
 
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
-        // ===========================================================================
-        // Send data through AHB interface to AXI_DMA, target the AXI SRAM
-        // ===========================================================================
-        VPRINTF(LOW, "Sending payload via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, 16*4, 0);
-
-
-        // ===========================================================================
-        // Send data through Mailbox to AXI_DMA, target the AXI SRAM
-        // ===========================================================================
-        VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
-        // Acquire the mailbox lock
-        if (soc_ifc_mbox_acquire_lock(1)) {
-            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
-            fail = 1;
-        }
-        // Write data into mailbox using direct-mode
-        for (uint32_t dw = 0; dw < 16; dw++) {
-            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
-        }
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
-        VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + 16*4, 0, 16*4, 0)) {
-            fail = 1;
-        }
+            // ===========================================================================
+            // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+            // ===========================================================================
+            VPRINTF(LOW, "Sending payload via AHB i/f\n");
+            soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, 16*4, 0);
 
 
-        // ===========================================================================
-        // Send data through AHB interface to AXI_DMA, target the AXI SRAM
-        // ===========================================================================
-        // Use a FIXED transfer (only the final beat should be present at the target address)
-        VPRINTF(LOW, "Sending fixed payload via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR + 2*16*4, 1, fixed_send_payload, 17*4, 0);
-
-
-        // ===========================================================================
-        // Move data from one address to another in AXI SRAM
-        // ===========================================================================
-        VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 0);
-
-
-        // ===========================================================================
-        // Read data back from AXI SRAM and confirm it matches
-        // ===========================================================================
-        VPRINTF(LOW, "Reading payload via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, 16*4, 0);
-        for (uint8_t ii = 0; ii < 16; ii++) {
-            if (read_payload[ii] != send_payload[ii]) {
-                VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
+            // ===========================================================================
+            // Send data through Mailbox to AXI_DMA, target the AXI SRAM
+            // ===========================================================================
+            VPRINTF(LOW, "Writing payload to Mailbox via Direct Mode\n");
+            // Acquire the mailbox lock
+            if (soc_ifc_mbox_acquire_lock(1)) {
+                VPRINTF(ERROR, "Acquire mailbox lock failed\n");
                 fail = 1;
             }
-        }
-
-
-        // ===========================================================================
-        // Read data back through mailbox using direct-mode
-        // ===========================================================================
-        VPRINTF(LOW, "Reading payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 17*4, 0)) {
-            fail = 1;
-        }
-        VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
-        // Acquire the mailbox lock
-        if (soc_ifc_mbox_acquire_lock(1)) {
-            VPRINTF(ERROR, "Acquire mailbox lock failed\n");
-            fail = 1;
-        }
-        for (uint32_t dw = 0; dw < 16; dw++) {
-            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
-            if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
-                VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
+            // Write data into mailbox using direct-mode
+            for (uint32_t dw = 0; dw < 16; dw++) {
+                lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
+            }
+            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+            VPRINTF(LOW, "Sending payload from Mailbox\n");
+            if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + 16*4, 0, 16*4, 0)) {
                 fail = 1;
             }
-        }
-        mbox_read_payload[16] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (16 << 2));
-        if (mbox_read_payload[16] != fixed_send_payload[16]) {
-            VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", 16, mbox_read_payload[16], 16, fixed_send_payload[16]);
-            fail = 1;
-        }
-        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 
-        // ===========================================================================
-        // FIFO test
-        // ===========================================================================
-        // Send data through AHB interface to AXI_DMA, target the AXI FIFO
-        // Use a FIXED transfer
-        VPRINTF(LOW, "Sending fixed payload to FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_send_payload, 17*4, 0);
 
-        // Read data back from AXI FIFO and confirm it matches
-        VPRINTF(LOW, "Reading fixed payload from FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_read_payload, 17*4, 0);
-        for (uint8_t ii = 0; ii < 17; ii++) {
-            if (fixed_read_payload[ii] != fixed_send_payload[ii]) {
-                VPRINTF(ERROR, "fixed_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", ii, fixed_read_payload[ii], ii, fixed_send_payload[ii]);
+            // ===========================================================================
+            // Send data through AHB interface to AXI_DMA, target the AXI SRAM
+            // ===========================================================================
+            // Use a FIXED transfer (only the final beat should be present at the target address)
+            VPRINTF(LOW, "Sending fixed payload via AHB i/f\n");
+            soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR + 2*16*4, 1, fixed_send_payload, 17*4, 0);
+
+
+            // ===========================================================================
+            // Move data from one address to another in AXI SRAM
+            // ===========================================================================
+            VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
+            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (2*16+1)*4, 0);
+
+
+            // ===========================================================================
+            // Read data back from AXI SRAM and confirm it matches
+            // ===========================================================================
+            VPRINTF(LOW, "Reading payload via AHB i/f\n");
+            soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, read_payload, 16*4, 0);
+            for (uint8_t ii = 0; ii < 16; ii++) {
+                if (read_payload[ii] != send_payload[ii]) {
+                    VPRINTF(ERROR, "read_payload[%d] (0x%x) does not match send_payload[%d] (0x%x)\n", ii, read_payload[ii], ii, send_payload[ii]);
+                    fail = 1;
+                }
+            }
+
+
+            // ===========================================================================
+            // Read data back through mailbox using direct-mode
+            // ===========================================================================
+            VPRINTF(LOW, "Reading payload to Mailbox\n");
+            if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 17*4, 0)) {
                 fail = 1;
             }
-        }
+            VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
+            // Acquire the mailbox lock
+            if (soc_ifc_mbox_acquire_lock(1)) {
+                VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+                fail = 1;
+            }
+            for (uint32_t dw = 0; dw < 16; dw++) {
+                mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+                if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
+                    VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
+                    fail = 1;
+                }
+            }
+            mbox_read_payload[16] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (16 << 2));
+            if (mbox_read_payload[16] != fixed_send_payload[16]) {
+                VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", 16, mbox_read_payload[16], 16, fixed_send_payload[16]);
+                fail = 1;
+            }
+            lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+            // ===========================================================================
+            // FIFO test
+            // ===========================================================================
+            // Send data through AHB interface to AXI_DMA, target the AXI FIFO
+            // Use a FIXED transfer
+            VPRINTF(LOW, "Sending fixed payload to FIFO via AHB i/f\n");
+            soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_send_payload, 17*4, 0);
 
+            // Read data back from AXI FIFO and confirm it matches
+            VPRINTF(LOW, "Reading fixed payload from FIFO via AHB i/f\n");
+            soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, fixed_read_payload, 17*4, 0);
+            for (uint8_t ii = 0; ii < 17; ii++) {
+                if (fixed_read_payload[ii] != fixed_send_payload[ii]) {
+                    VPRINTF(ERROR, "fixed_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", ii, fixed_read_payload[ii], ii, fixed_send_payload[ii]);
+                    fail = 1;
+                }
+            }
 
-        // ===========================================================================
-        // Read rand FIFO data into mailbox
-        // ===========================================================================
-        // Set auto-write
-        VPRINTF(LOW, "Enable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-        VPRINTF(LOW, "Reading rand payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*2, 0)) {
-            fail = 1;
-        }
-
-        // Clear auto-write
-        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
-
-
-        // ===========================================================================
-        // Send rand data through Mailbox to AXI_DMA, target the AXI FIFO
-        // ===========================================================================
-
-        // Set auto-read
-        VPRINTF(LOW, "Set FIFO to auto-read\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
-
-        VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, MAX_FIFO_SIZE*2, 0)) {
-            fail = 1;
-        }
-
-        // Clear auto-read
-        VPRINTF(LOW, "Disable FIFO to auto-read\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
-
-
-        // ===========================================================================
-        // Auto FIFO test
-        // ===========================================================================
-
-        // Set auto-read
-        VPRINTF(LOW, "Set FIFO to auto-read\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
-
-        // Generate rand data
-        srand(17);
-        for (uint32_t ii = 0; ii < (MAX_FIFO_SIZE/2); ii++) {
-            rand_payload[ii] = rand();
-            if ((ii & 0x7f) == 0x40) putchar('.');
-        }
-        putchar('\n');
-
-        // Send data through AHB interface to AXI_DMA, target the AXI FIFO
-        // Use a FIXED transfer
-        // Use total byte-count that is 2x FIFO depth
-        VPRINTF(LOW, "Sending large rand payload to FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
-
-        // Clear auto-read
-        VPRINTF(LOW, "Disable FIFO to auto-read\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
-        // Set auto-write
-        VPRINTF(LOW, "Enable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-        // Read data from AXI FIFO
-        VPRINTF(LOW, "Reading large payload from FIFO via AHB i/f\n");
-        soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
-
-        // Clear auto-write
-        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
 
-        // ===========================================================================
-        // Block Size test - AXItoMBOX Read
-        // ===========================================================================
-        VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
-            fail = 1;
-        }
+            // ===========================================================================
+            // Read rand FIFO data into mailbox
+            // ===========================================================================
+            // Set auto-write
+            VPRINTF(LOW, "Enable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
-        // Set auto-write
-        VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
-        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+            VPRINTF(LOW, "Reading rand payload to Mailbox\n");
+            if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*2, 0)) {
+                fail = 1;
+            }
 
-        soc_ifc_axi_dma_wait_idle (1);
-
-        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
-        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
-
-        // Set auto-write and enable recovery emulation _before_ arming DMA
-        VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
-        VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
-        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
-            fail = 1;
-        }
-
-        soc_ifc_axi_dma_wait_idle (1);
-
-        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
-        SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+            // Clear auto-write
+            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
 
 
-        // ===========================================================================
-        // Move data in AXI SRAM using same src/dst addr, rand delays
-        // ===========================================================================
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+            // ===========================================================================
+            // Send rand data through Mailbox to AXI_DMA, target the AXI FIFO
+            // ===========================================================================
 
-        VPRINTF(LOW, "Moving payload within SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR, 0, (2*16+1)*4, 0);
+            // Set auto-read
+            VPRINTF(LOW, "Set FIFO to auto-read\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+            VPRINTF(LOW, "Sending payload from Mailbox\n");
+            if (soc_ifc_axi_dma_send_mbox_payload(0, AXI_FIFO_BASE_ADDR, 1, MAX_FIFO_SIZE*2, 0)) {
+                fail = 1;
+            }
 
-
-        // ===========================================================================
-        // Move data in AXI SRAM using dst_addr == src_addr + 256B, rand delays
-        // ===========================================================================
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
-
-        VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer; R/W non-determinism is expected!\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + 256, 0, (137)*4, 0); // arbitrary number > 512, i.e. more than 2 AXI transactions
-
-        SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+            // Clear auto-read
+            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
 
 
-        // ===========================================================================
-        // Auto FIFO test with very large transfer and random RESET
-        // ===========================================================================
+            // ===========================================================================
+            // Auto FIFO test
+            // ===========================================================================
 
-        // Set auto-write
-        VPRINTF(LOW, "Enable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+            // Set auto-read
+            VPRINTF(LOW, "Set FIFO to auto-read\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-        // Read data from AXI FIFO
-        VPRINTF(LOW, "Request random reset and read large payload from FIFO to Mailbox\n");
-        SEND_STDOUT_CTRL(0xee);
-        soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*32, 0);
+            // Generate rand data
+            srand(17);
+            for (uint32_t ii = 0; ii < (MAX_FIFO_SIZE/2); ii++) {
+                rand_payload[ii] = rand();
+                if ((ii & 0x7f) == 0x40) putchar('.');
+            }
+            putchar('\n');
 
-        // Clear auto-write
-        // This shouldn't execute - the reset will clear the FIFO and auto-write flag
-        VPRINTF(LOW, "Disable FIFO to auto-write\n");
-        SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
-        SEND_STDOUT_CTRL(FIFO_CLEAR);
+            // Send data through AHB interface to AXI_DMA, target the AXI FIFO
+            // Use a FIXED transfer
+            // Use total byte-count that is 2x FIFO depth
+            VPRINTF(LOW, "Sending large rand payload to FIFO via AHB i/f\n");
+            soc_ifc_axi_dma_send_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
+
+            // Clear auto-read
+            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
+            // Set auto-write
+            VPRINTF(LOW, "Enable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+            // Read data from AXI FIFO
+            VPRINTF(LOW, "Reading large payload from FIFO via AHB i/f\n");
+            soc_ifc_axi_dma_read_ahb_payload(AXI_FIFO_BASE_ADDR, 1, rand_payload, MAX_FIFO_SIZE*2, 0);
+
+            // Clear auto-write
+            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
+
+
+            // ===========================================================================
+            // Block Size test - AXItoMBOX Read
+            // ===========================================================================
+            VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
+            if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+                fail = 1;
+            }
+
+            // Set auto-write
+            VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
+            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+            soc_ifc_axi_dma_wait_idle (1);
+
+            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
+            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+
+            // Set auto-write and enable recovery emulation _before_ arming DMA
+            VPRINTF(LOW, "Enable FIFO to auto-write and enable recovery-mode emulation\n");
+            VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
+            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+            if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+                fail = 1;
+            }
+
+            soc_ifc_axi_dma_wait_idle (1);
+
+            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
+            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
+
+
+            // ===========================================================================
+            // Move data in AXI SRAM using same src/dst addr, rand delays
+            // ===========================================================================
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+            VPRINTF(LOW, "Moving payload within SRAM via axi-to-axi xfer\n");
+            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR, 0, (2*16+1)*4, 0);
+
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+            // ===========================================================================
+            // Move data in AXI SRAM using dst_addr == src_addr + 256B, rand delays
+            // ===========================================================================
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+            VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer; R/W non-determinism is expected!\n");
+            soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + 256, 0, (137)*4, 0); // arbitrary number > 512, i.e. more than 2 AXI transactions
+
+            SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
+
+
+            // ===========================================================================
+            // Auto FIFO test with very large transfer and random RESET
+            // ===========================================================================
+
+            // Set auto-write
+            VPRINTF(LOW, "Enable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
+
+            // Read data from AXI FIFO
+            VPRINTF(LOW, "Request random reset and read large payload from FIFO to Mailbox\n");
+            SEND_STDOUT_CTRL(0xee);
+            soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, 0x0, 1, MAX_FIFO_SIZE*32, 0);
+
+            // Clear auto-write
+            // This shouldn't execute - the reset will clear the FIFO and auto-write flag
+            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+            SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+            SEND_STDOUT_CTRL(FIFO_CLEAR);
 
         }
 
