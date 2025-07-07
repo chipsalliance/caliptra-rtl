@@ -113,6 +113,15 @@ module soc_ifc_top
     input  logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
     output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
 
+    input logic aes_input_ready,
+    input logic aes_output_valid,
+    input logic aes_status_idle,
+    output logic aes_req_dv,
+    input  logic aes_req_hold,
+    output soc_ifc_req_t aes_req_data,
+    input logic [SOC_IFC_DATA_W-1:0] aes_rdata,
+    input logic aes_error, 
+
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
@@ -921,6 +930,7 @@ endgenerate
 
 always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
 
+
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -1192,6 +1202,17 @@ axi_dma_top #(
     .hold    (dma_reg_req_hold),
     .rdata   (dma_reg_rdata   ),
     .error   (dma_reg_error   ),
+
+    // AES IF
+    .aes_input_ready,
+    .aes_output_valid,
+    .aes_status_idle,
+    .aes_req_dv(aes_req_dv),
+    .aes_req_hold(aes_req_hold),
+    .aes_req_data(aes_req_data),
+    .aes_rdata(aes_rdata),
+    .aes_err(aes_error),
+
 
     // Mailbox SRAM INF
     .mb_dv   (dma_sram_req_dv  ),
