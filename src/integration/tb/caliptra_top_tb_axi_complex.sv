@@ -204,61 +204,194 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     logic       fifo_aw_hshake;
     logic       fifo_b_hshake;
 
-    always_comb begin
-        // AXI AR
-        m_axi_if.arready          = (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.arready :
-                                    (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.arready :
-                                                                                                                                                                                      1'b0;
-                                                    
-        // AXI R                                    
-        m_axi_if.rdata            = sram_r_active ? axi_sram_if.rdata :
-                                    fifo_r_active ? axi_fifo_if.rdata :
-                                                    '0;
-        m_axi_if.rresp            = sram_r_active ? axi_sram_if.rresp :
-                                    fifo_r_active ? axi_fifo_if.rresp :
-                                                    '0;
-        m_axi_if.rid              = sram_r_active ? axi_sram_if.rid   :
-                                    fifo_r_active ? axi_fifo_if.rid   :
-                                                    '0;
-        m_axi_if.ruser            = sram_r_active ? axi_sram_if.ruser :
-                                    fifo_r_active ? axi_fifo_if.ruser :
-                                                    '0;
-        m_axi_if.rlast            = sram_r_active ? axi_sram_if.rlast :
-                                    fifo_r_active ? axi_fifo_if.rlast :
-                                                    '0;
-        m_axi_if.ruser            = sram_r_active ? axi_sram_if.ruser :
-                                    fifo_r_active ? axi_fifo_if.ruser :
-                                                    '0;
-        m_axi_if.rvalid           = sram_r_active ? axi_sram_if.rvalid :
-                                    fifo_r_active ? axi_fifo_if.rvalid :
-                                                    '0;
-                                                    
-        // AXI AW                                   
-        m_axi_if.awready          = (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.awready :
-                                    (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.awready :
-                                                                                                                                                                                      1'b0;
-                                                    
-        // AXI W                                    
-        m_axi_if.wready           = sram_w_active ? axi_sram_if.wready :
-                                    fifo_w_active ? axi_fifo_if.wready :
-                                                    1'b0;
-                                                    
-        // AXI B                                    
-        m_axi_if.bresp            = sram_w_active ? axi_sram_if.bresp :
-                                    fifo_w_active ? axi_fifo_if.bresp :
-                                                    '0;
-        m_axi_if.bid              = sram_w_active ? axi_sram_if.bid :
-                                    fifo_w_active ? axi_fifo_if.bid :
-                                                    '0;
-        m_axi_if.buser            = sram_w_active ? axi_sram_if.buser :
-                                    fifo_w_active ? axi_fifo_if.buser :
-                                                    '0;
-        m_axi_if.bvalid           = sram_w_active ? axi_sram_if_bvalid_force :
-                                    fifo_w_active ? axi_fifo_if_bvalid_force :
-                                                    '0;
+    logic       illegal_read_addr;
+    logic       illegal_write_addr;
+    
+    assign illegal_read_addr = !( (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ||
+                              (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) );
+    assign illegal_write_addr = !( (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ||
+                               (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) );
+
+    // AXI SLVERR response state for illegal write address
+    typedef enum logic [1:0] {IDLE, DATA, RESP} illegal_wr_state_e;
+    illegal_wr_state_e illegal_wr_state = IDLE;
+    logic [CPTRA_AXI_DMA_ID_WIDTH-1:0] illegal_wr_id;
+    logic illegal_wr_pending;
+    logic [7:0] illegal_wr_burst_cnt; // Counter for W beats
+    logic [7:0] illegal_wr_burst_len; // Latched AWLEN
+
+    // Outputs from illegal write state machine
+    logic illegal_wr_bvalid;
+    logic [1:0] illegal_wr_bresp;
+    logic [CPTRA_AXI_DMA_ID_WIDTH-1:0] illegal_wr_bid;
+
+    always_ff @(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            illegal_wr_bvalid    <= 1'b0;
+            illegal_wr_bresp     <= 2'b00;
+            illegal_wr_bid       <= '0;
+            illegal_wr_state     <= IDLE;
+            illegal_wr_pending   <= 1'b0;
+            illegal_wr_burst_cnt <= 8'd0;
+            illegal_wr_burst_len <= 8'd0;
+        end else begin
+            case (illegal_wr_state)
+                IDLE: begin
+                    illegal_wr_bvalid <= 1'b0;
+                    if (illegal_write_addr && m_axi_if.awvalid && m_axi_if.awready) begin
+                        illegal_wr_state   <= DATA;
+                        illegal_wr_bid     <= m_axi_if.awid;
+                        illegal_wr_pending <= 1'b1;
+                        illegal_wr_burst_cnt <= 8'd0;
+                        illegal_wr_burst_len <= m_axi_if.awlen;
+                    end
+                end
+                DATA: begin
+                    if (m_axi_if.wvalid && m_axi_if.wready) begin
+                        illegal_wr_burst_cnt <= illegal_wr_burst_cnt + 1'b1;
+                        if (m_axi_if.wlast) begin
+                            illegal_wr_state <= RESP;
+                            illegal_wr_bvalid <= 1'b1; // Assert bvalid immediately after last W beat
+                            illegal_wr_bresp  <= AXI_RESP_SLVERR;
+                        end
+                    end
+                end
+                RESP: begin
+                    // bvalid remains asserted until bready
+                    if (m_axi_if.bready) begin
+                        illegal_wr_bvalid    <= 1'b0;
+                        illegal_wr_state     <= IDLE;
+                        illegal_wr_pending   <= 1'b0;
+                        illegal_wr_burst_cnt <= 8'd0;
+                        illegal_wr_burst_len <= 8'd0;
+                    end
+                end
+            endcase
+        end
     end
-    `CALIPTRA_ASSERT(AXI_COMPLEX_RD_DECODE, m_axi_if.arvalid |-> (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
-    `CALIPTRA_ASSERT(AXI_COMPLEX_WR_DECODE, m_axi_if.awvalid |-> (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
+
+    // AXI SLVERR response state for illegal read address
+    typedef enum logic [1:0] {RD_IDLE, RD_RESP} illegal_rd_state_e;
+    illegal_rd_state_e illegal_rd_state = RD_IDLE;
+    logic [CPTRA_AXI_DMA_ID_WIDTH-1:0] illegal_rd_id;
+    logic illegal_rd_pending;
+    logic [7:0] illegal_rd_burst_cnt; // Counter for R beats
+    logic [7:0] illegal_rd_burst_len; // Latched ARLEN (AXI: beats = arlen+1)
+    logic [7:0] illegal_rd_burst_len_next; // Temporary latch for ARLEN
+
+    // Outputs from illegal read state machine
+    logic illegal_rd_rvalid;
+    logic [1:0] illegal_rd_rresp;
+    logic [CPTRA_AXI_DMA_ID_WIDTH-1:0] illegal_rd_rid;
+    logic [CPTRA_AXI_DMA_DATA_WIDTH-1:0] illegal_rd_rdata;
+    logic illegal_rd_rlast;
+
+    always_ff @(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            illegal_rd_rvalid    <= 1'b0;
+            illegal_rd_rresp     <= 2'b00;
+            illegal_rd_rid       <= '0;
+            illegal_rd_rdata     <= '0;
+            illegal_rd_rlast     <= 1'b0;
+            illegal_rd_state     <= RD_IDLE;
+            illegal_rd_pending   <= 1'b0;
+            illegal_rd_burst_cnt <= 8'd0;
+            illegal_rd_burst_len <= 8'd0;
+            illegal_rd_burst_len_next <= 8'd0;
+        end else begin
+            case (illegal_rd_state)
+                RD_IDLE: begin
+                    illegal_rd_rvalid <= 1'b0;
+                    if (illegal_read_addr && m_axi_if.arvalid && m_axi_if.arready) begin
+                        illegal_rd_burst_len_next = m_axi_if.arlen; // Latch ARLEN immediately
+                        $display("[ILLEGAL_RD] Handshake: m_axi_if.arlen=0x%0h, assigned illegal_rd_burst_len=0x%0h", m_axi_if.arlen, illegal_rd_burst_len_next);
+                        illegal_rd_state   <= RD_RESP;
+                        illegal_rd_rid     <= m_axi_if.arid;
+                        illegal_rd_pending <= 1'b1;
+                        illegal_rd_burst_cnt <= 8'd0;
+                        illegal_rd_burst_len <= illegal_rd_burst_len_next; // Use latched value for burst_len
+                    end
+                end
+                RD_RESP: begin
+                    illegal_rd_rvalid <= 1'b1;
+                    illegal_rd_rresp  <= AXI_RESP_SLVERR;
+                    illegal_rd_rdata  <= '0;
+                    illegal_rd_rlast  <= (illegal_rd_burst_cnt == illegal_rd_burst_len);
+                    if (m_axi_if.rready && illegal_rd_rvalid) begin
+                        if (illegal_rd_burst_cnt == illegal_rd_burst_len) begin // last beat
+                            illegal_rd_state     <= RD_IDLE;
+                            illegal_rd_pending   <= 1'b0;
+                            illegal_rd_rvalid    <= 1'b0;
+                        end else begin
+                            illegal_rd_burst_cnt <= illegal_rd_burst_cnt + 1'b1;
+                        end
+                    end
+                end
+            endcase
+        end
+    end
+
+    always_comb begin
+        // AXI AR 
+        m_axi_if.arready = illegal_read_addr ? 1'b1 :
+                            (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.arready :
+                            (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.arready :
+                            1'b0;
+
+        m_axi_if.rvalid = illegal_rd_pending ? illegal_rd_rvalid :
+                          sram_r_active ? axi_sram_if.rvalid :
+                          fifo_r_active ? axi_fifo_if.rvalid :
+                          '0;
+        m_axi_if.rresp  = illegal_rd_pending ? illegal_rd_rresp :
+                          sram_r_active ? axi_sram_if.rresp :
+                          fifo_r_active ? axi_fifo_if.rresp :
+                          '0;
+        m_axi_if.rid    = illegal_rd_pending ? illegal_rd_rid :
+                          sram_r_active ? axi_sram_if.rid :
+                          fifo_r_active ? axi_fifo_if.rid :
+                          '0;
+        m_axi_if.rdata  = illegal_rd_pending ? illegal_rd_rdata :
+                          sram_r_active ? axi_sram_if.rdata :
+                          fifo_r_active ? axi_fifo_if.rdata :
+                          '0;
+        m_axi_if.rlast  = illegal_rd_pending ? illegal_rd_rlast :
+                          sram_r_active ? axi_sram_if.rlast :
+                          fifo_r_active ? axi_fifo_if.rlast :
+                          '0;
+        m_axi_if.ruser  = sram_r_active ? axi_sram_if.ruser :
+                          fifo_r_active ? axi_fifo_if.ruser :
+                          '0;
+        // AXI AW 
+        m_axi_if.awready = illegal_write_addr ? 1'b1 :
+                            (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.awready :
+                            (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.awready :
+                            1'b0;
+        // AXI B (legal path only)
+        m_axi_if.bresp  = illegal_wr_pending ? illegal_wr_bresp :
+                            sram_w_active ? axi_sram_if.bresp :
+                            fifo_w_active ? axi_fifo_if.bresp :
+                            '0;
+        m_axi_if.bvalid = illegal_wr_pending ? illegal_wr_bvalid :
+                            sram_w_active ? axi_sram_if_bvalid_force :
+                            fifo_w_active ? axi_fifo_if_bvalid_force :
+                            '0;
+        m_axi_if.bid    = illegal_wr_pending ? illegal_wr_bid :
+                            sram_w_active ? axi_sram_if.bid :
+                            fifo_w_active ? axi_fifo_if.bid :
+                            '0;
+        m_axi_if.buser  = sram_w_active ? axi_sram_if.buser :
+                          fifo_w_active ? axi_fifo_if.buser :
+                          '0;
+        // AXI W 
+        m_axi_if.wready = illegal_wr_pending ? 1'b1 : 
+                           sram_w_active ? axi_sram_if.wready :
+                          fifo_w_active ? axi_fifo_if.wready :
+                          1'b0;
+    end
+
+    // --------------------- AXI Complex Endpoint Decode ---------------------    
+    //`CALIPTRA_ASSERT(AXI_COMPLEX_RD_DECODE, m_axi_if.arvalid |-> (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
+    //`CALIPTRA_ASSERT(AXI_COMPLEX_WR_DECODE, m_axi_if.awvalid |-> (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) || (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]), core_clk, !cptra_rst_b)
 
     // --------------------- SRAM Endpoint ---------------------
     always_comb begin
@@ -545,5 +678,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
 
     `CALIPTRA_ASSERT_MUTEX(DMA_NO_SIMULT_RD, {|sram_r_active,|fifo_r_active/*TODO*/}, core_clk, !cptra_rst_b)
     `CALIPTRA_ASSERT_MUTEX(DMA_NO_SIMULT_WR, {|sram_w_active,|fifo_w_active/*TODO*/}, core_clk, !cptra_rst_b)
+
+    
 
 endmodule
