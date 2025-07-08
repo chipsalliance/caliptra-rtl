@@ -54,7 +54,8 @@ class soc_ifc_env_mbox_sha_accel_sequence extends soc_ifc_env_mbox_sequence_base
     extern virtual task mbox_read_resp_data();
 
     constraint sha_accel_op_c { sha_accel_op_rand.mailbox_mode dist {1 := 10,
-                                                                     0 := 1}; }
+                                                                     0 := 1};
+                                sha_accel_op_rand.endian_toggle == 1'b1; /* TODO: Implement endian-toggle testing */ }
 
     constraint mbox_cmd_c { (sha_accel_op_rand.sha512_mode == 1'b0 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA384_REQ;
                             (sha_accel_op_rand.sha512_mode == 1'b1 & sha_accel_op_rand.mailbox_mode == 1'b1) -> mbox_op_rand.cmd.cmd_e == MBOX_CMD_SHA512_REQ; 
