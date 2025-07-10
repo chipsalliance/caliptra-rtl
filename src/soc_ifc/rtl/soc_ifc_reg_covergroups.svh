@@ -1669,6 +1669,47 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_fld_cg with function sample(
+    input bit [32-1:0] addr_l
+    );
+        option.per_instance = 1;
+        addr_l_cp : coverpoint addr_l;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_fld_cg with function sample(
+    input bit [32-1:0] addr_h
+    );
+        option.per_instance = 1;
+        addr_h_cp : coverpoint addr_h;
+
+    endgroup
+
+
     /*----------------------- SOC_IFC_REG__SS_STRAP_GENERIC COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__SS_STRAP_GENERIC_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;

@@ -494,3 +494,4 @@ reg {
              [br]SOC Access:      RW1-S";
     field {sw=rw; hw=r; swwe; resetsignal=cptra_pwrgood;} lock=0;
 } CPTRA_OWNER_PK_HASH_LOCK;
+
