@@ -57,6 +57,7 @@ contents:
         - ../test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
         - ../test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
         - ../test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
+        - ../test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml        
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow.yml
         - ../test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
