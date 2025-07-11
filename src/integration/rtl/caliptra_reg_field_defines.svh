@@ -8663,6 +8663,12 @@
 `ifndef SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER
 `define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (32'h534)
 `endif
+`ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                            (32'h538)
+`endif
+`ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+`define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (32'h53c)
+`endif
 `ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0
 `define SOC_IFC_REG_SS_STRAP_GENERIC_0                                                              (32'h5a0)
 `endif

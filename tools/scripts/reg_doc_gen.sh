@@ -14,7 +14,32 @@
 # limitations under the License.
 #
 
-python3 tools/scripts/reg_doc_gen.py \
+# Initialize parameter string
+PARAM_ARGS=""
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --ss-mode)
+            PARAM_ARGS="--param CALIPTRA_SS_MODE=true"
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo "Options:"
+            echo "  --ss-mode    Enable CALIPTRA_SS_MODE (sets --param CALIPTRA_SS_MODE=true)"
+            echo "  -h, --help   Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use -h or --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+python3 tools/scripts/reg_doc_gen.py $PARAM_ARGS \
 src/integration/rtl/caliptra_reg.rdl \
 src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \

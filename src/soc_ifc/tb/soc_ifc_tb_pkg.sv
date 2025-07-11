@@ -33,6 +33,7 @@ package soc_ifc_tb_pkg;
   logic [63:0] strap_ss_caliptra_base_addr_tb;
   logic [63:0] strap_ss_mci_base_addr_tb;
   logic [63:0] strap_ss_recovery_ifc_base_addr_tb;
+  logic [63:0] strap_ss_external_staging_area_base_addr_tb;
   logic [63:0] strap_ss_otp_fc_base_addr_tb;
   logic [63:0] strap_ss_uds_seed_base_addr_tb;
   logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
@@ -216,6 +217,8 @@ package soc_ifc_tb_pkg;
     "SS_MCI_BASE_ADDR_H"                      : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_H,                                    // 0x50c
     "SS_RECOVERY_IFC_BASE_ADDR_L"             : SOCIFC_BASE + `SOC_IFC_REG_SS_RECOVERY_IFC_BASE_ADDR_L,                           // 0x510
     "SS_RECOVERY_IFC_BASE_ADDR_H"             : SOCIFC_BASE + `SOC_IFC_REG_SS_RECOVERY_IFC_BASE_ADDR_H,                           // 0x514
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L,                           // 0x510
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H,                           // 0x514
     "SS_OTP_FC_BASE_ADDR_L"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_BASE_ADDR_L,                                 // 0x518
     "SS_OTP_FC_BASE_ADDR_H"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_BASE_ADDR_H,                                 // 0x51c
     "SS_UDS_SEED_BASE_ADDR_L"                 : SOCIFC_BASE + `SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_L,                               // 0x520
@@ -400,6 +403,8 @@ package soc_ifc_tb_pkg;
     "SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
     "SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
     "SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"             : 32'hffff_ffff,
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"             : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
     "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
@@ -641,6 +646,8 @@ package soc_ifc_tb_pkg;
         "SS_MCI_BASE_ADDR_H"                      : return strap_ss_mci_base_addr_tb[63:32];
         "SS_RECOVERY_IFC_BASE_ADDR_L"             : return strap_ss_recovery_ifc_base_addr_tb[31:0];
         "SS_RECOVERY_IFC_BASE_ADDR_H"             : return strap_ss_recovery_ifc_base_addr_tb[63:32];
+        "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"    : return strap_ss_external_staging_area_base_addr_tb[31:0];
+        "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"    : return strap_ss_external_staging_area_base_addr_tb[63:32];
         "SS_OTP_FC_BASE_ADDR_L"                   : return strap_ss_otp_fc_base_addr_tb[31:0];
         "SS_OTP_FC_BASE_ADDR_H"                   : return strap_ss_otp_fc_base_addr_tb[63:32];
         "SS_UDS_SEED_BASE_ADDR_L"                 : return strap_ss_uds_seed_base_addr_tb[31:0];
@@ -1111,6 +1118,8 @@ package soc_ifc_tb_pkg;
           "SS_MCI_BASE_ADDR_H"                            : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_RECOVERY_IFC_BASE_ADDR_L"                   : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_RECOVERY_IFC_BASE_ADDR_H"                   : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"          : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_OTP_FC_BASE_ADDR_L"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_OTP_FC_BASE_ADDR_H"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_UDS_SEED_BASE_ADDR_L"                       : exp_data = fuses_locked ? curr_data : axi_indata;

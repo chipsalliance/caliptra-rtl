@@ -10899,6 +10899,14 @@
 #ifndef SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER
 #define SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER                                                        (0x534)
 #endif
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                        (0x30030538)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L                                            (0x538)
+#endif
+#define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                        (0x3003053c)
+#ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+#define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (0x53c)
+#endif
 #define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_0                                                          (0x300305a0)
 #ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0
 #define SOC_IFC_REG_SS_STRAP_GENERIC_0                                                              (0x5a0)
