@@ -35,6 +35,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   rand bit [63:0] strap_ss_caliptra_base_addr ;
   rand bit [63:0] strap_ss_mci_base_addr ;
   rand bit [63:0] strap_ss_recovery_ifc_base_addr ;
+  rand bit [63:0] strap_ss_external_staging_area_base_addr ;
   rand bit [63:0] strap_ss_otp_fc_base_addr ;
   rand bit [63:0] strap_ss_uds_seed_base_addr ;
   rand bit [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset ;
@@ -50,19 +51,25 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   constraint strap_ss_caliptra_base_addr_c { strap_ss_caliptra_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_mci_base_addr_c { strap_ss_mci_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_recovery_ifc_base_addr_c { strap_ss_recovery_ifc_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
+  constraint strap_ss_external_staging_area_base_addr_c { strap_ss_external_staging_area_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_otp_fc_base_addr_c { strap_ss_otp_fc_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   constraint strap_ss_uds_seed_base_addr_c { strap_ss_uds_seed_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }
   // All base address straps are configured to a different 4KiB region
   constraint strap_ss_addr_unique_c { (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_external_staging_area_base_addr & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_external_staging_area_base_addr & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                                       (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
-                                      (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000); }
+                                      (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_external_staging_area_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_external_staging_area_base_addr & 64'hFFFF_FFFF_FFFF_F000);
+                                      (strap_ss_external_staging_area_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000); }
   constraint strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_c { strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
   constraint strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_c { strap_ss_num_of_prod_debug_unlock_auth_pk_hashes dist {0 :/ 1, [1:32'hFFF] :/ 98, 32'h1000 :/ 1}; }
   constraint strap_ss_strap_generic_0_c { strap_ss_strap_generic_0 dist {0 :/ 1, [1:32'hFFFF_FFFE] :/ 98, 32'hFFFF_FFFF :/ 1}; }
@@ -151,7 +158,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("strap_ss_caliptra_base_addr:0x%x strap_ss_mci_base_addr:0x%x strap_ss_recovery_ifc_base_addr:0x%x strap_ss_otp_fc_base_addr:0x%x strap_ss_uds_seed_base_addr:0x%x strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset:0x%x strap_ss_num_of_prod_debug_unlock_auth_pk_hashes:0x%x strap_ss_strap_generic_0:0x%x strap_ss_strap_generic_1:0x%x strap_ss_strap_generic_2:0x%x strap_ss_strap_generic_3:0x%x strap_ss_caliptra_dma_axi_user:0x%x ss_debug_intent:0x%x %s",strap_ss_caliptra_base_addr,strap_ss_mci_base_addr,strap_ss_recovery_ifc_base_addr,strap_ss_otp_fc_base_addr,strap_ss_uds_seed_base_addr,strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,strap_ss_strap_generic_0,strap_ss_strap_generic_1,strap_ss_strap_generic_2,strap_ss_strap_generic_3,strap_ss_caliptra_dma_axi_user,ss_debug_intent,super.convert2string);
+    return $sformatf("strap_ss_caliptra_base_addr:0x%x strap_ss_mci_base_addr:0x%x strap_ss_recovery_ifc_base_addr:0x%x strap_ss_external_staging_area_base_addr:0x%x strap_ss_otp_fc_base_addr:0x%x strap_ss_uds_seed_base_addr:0x%x strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset:0x%x strap_ss_num_of_prod_debug_unlock_auth_pk_hashes:0x%x strap_ss_strap_generic_0:0x%x strap_ss_strap_generic_1:0x%x strap_ss_strap_generic_2:0x%x strap_ss_strap_generic_3:0x%x strap_ss_caliptra_dma_axi_user:0x%x ss_debug_intent:0x%x %s",strap_ss_caliptra_base_addr,strap_ss_mci_base_addr,strap_ss_recovery_ifc_base_addr,strap_ss_external_staging_area_base_addr,strap_ss_otp_fc_base_addr,strap_ss_uds_seed_base_addr,strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,strap_ss_strap_generic_0,strap_ss_strap_generic_1,strap_ss_strap_generic_2,strap_ss_strap_generic_3,strap_ss_caliptra_dma_axi_user,ss_debug_intent,super.convert2string);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -196,6 +203,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     this.strap_ss_caliptra_base_addr = RHS.strap_ss_caliptra_base_addr;
     this.strap_ss_mci_base_addr = RHS.strap_ss_mci_base_addr;
     this.strap_ss_recovery_ifc_base_addr = RHS.strap_ss_recovery_ifc_base_addr;
+    this.strap_ss_external_staging_area_base_addr = RHS.strap_ss_external_staging_area_base_addr;
     this.strap_ss_otp_fc_base_addr = RHS.strap_ss_otp_fc_base_addr;
     this.strap_ss_uds_seed_base_addr = RHS.strap_ss_uds_seed_base_addr;
     this.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset = RHS.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
@@ -232,6 +240,7 @@ class ss_mode_ctrl_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,strap_ss_caliptra_base_addr,"strap_ss_caliptra_base_addr");
     $add_attribute(transaction_view_h,strap_ss_mci_base_addr,"strap_ss_mci_base_addr");
     $add_attribute(transaction_view_h,strap_ss_recovery_ifc_base_addr,"strap_ss_recovery_ifc_base_addr");
+    $add_attribute(transaction_view_h,strap_ss_external_staging_area_base_addr,"strap_ss_external_staging_area_base_addr");
     $add_attribute(transaction_view_h,strap_ss_otp_fc_base_addr,"strap_ss_otp_fc_base_addr");
     $add_attribute(transaction_view_h,strap_ss_uds_seed_base_addr,"strap_ss_uds_seed_base_addr");
     $add_attribute(transaction_view_h,strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,"strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset");

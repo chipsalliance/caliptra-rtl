@@ -135,6 +135,7 @@ interface soc_ifc_cov_if
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
     input logic [63:0] strap_ss_recovery_ifc_base_addr,
+    input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
@@ -974,6 +975,14 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_SS_CALIPTRA_DMA_AXI_USER;
   logic [31:0]   full_addr_SS_CALIPTRA_DMA_AXI_USER = `CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER;
 
+  logic          hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+  logic [3:0]    bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+  logic [31:0]   full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = `CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+
+  logic          hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+  logic [3:0]    bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+  logic [31:0]   full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = `CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+
   logic          hit_SS_STRAP_GENERIC[0:3];
   logic [3:0]    bus_SS_STRAP_GENERIC[0:3];
   logic [31:0]   full_addr_SS_STRAP_GENERIC[0:3];
@@ -1812,6 +1821,12 @@ interface soc_ifc_cov_if
 
   assign hit_SS_CALIPTRA_DMA_AXI_USER = (soc_ifc_reg_req_data.addr == full_addr_SS_CALIPTRA_DMA_AXI_USER[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_CALIPTRA_DMA_AXI_USER = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_CALIPTRA_DMA_AXI_USER}};
+
+  assign hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = (soc_ifc_reg_req_data.addr == full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L}};
+
+  assign hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = (soc_ifc_reg_req_data.addr == full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H}};
 
   assign hit_SS_STRAP_GENERIC[0] = (soc_ifc_reg_req_data.addr == full_addr_SS_STRAP_GENERIC[0][18-1:0]);
   assign bus_SS_STRAP_GENERIC[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_STRAP_GENERIC[0]}};
@@ -3324,6 +3339,24 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L -----------------------
+  covergroup soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cp : coverpoint i_soc_ifc_reg.field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+    bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H -----------------------
+  covergroup soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cp : coverpoint i_soc_ifc_reg.field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+    bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP SS_STRAP_GENERIC [0:3] -----------------------
   covergroup soc_ifc_SS_STRAP_GENERIC_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
     SS_STRAP_GENERIC0_cp : coverpoint i_soc_ifc_reg.field_storage.SS_STRAP_GENERIC[0];
@@ -3968,6 +4001,8 @@ interface soc_ifc_cov_if
   soc_ifc_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES_cg SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES_cg = new(bus_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES);
   soc_ifc_SS_DEBUG_INTENT_cg SS_DEBUG_INTENT_cg = new(bus_SS_DEBUG_INTENT);
   soc_ifc_SS_CALIPTRA_DMA_AXI_USER_cg SS_CALIPTRA_DMA_AXI_USER_cg = new(bus_SS_CALIPTRA_DMA_AXI_USER);
+  soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cg SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cg = new(bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L);
+  soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg = new(bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H);
   soc_ifc_SS_STRAP_GENERIC_cg SS_STRAP_GENERIC_cg = new(bus_SS_STRAP_GENERIC);
   soc_ifc_SS_DBG_MANUF_SERVICE_REG_REQ_cg SS_DBG_MANUF_SERVICE_REG_REQ_cg = new(bus_SS_DBG_MANUF_SERVICE_REG_REQ);
   soc_ifc_SS_DBG_MANUF_SERVICE_REG_RSP_cg SS_DBG_MANUF_SERVICE_REG_RSP_cg = new(bus_SS_DBG_MANUF_SERVICE_REG_RSP);

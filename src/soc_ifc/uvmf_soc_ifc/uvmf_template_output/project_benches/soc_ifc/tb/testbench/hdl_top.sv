@@ -297,6 +297,7 @@ import aaxi_uvm_pkg::*;
         .strap_ss_caliptra_base_addr                            (ss_mode_ctrl_agent_bus.strap_ss_caliptra_base_addr                            ),
         .strap_ss_mci_base_addr                                 (ss_mode_ctrl_agent_bus.strap_ss_mci_base_addr                                 ),
         .strap_ss_recovery_ifc_base_addr                        (ss_mode_ctrl_agent_bus.strap_ss_recovery_ifc_base_addr                        ),
+        .strap_ss_external_staging_area_base_addr               (ss_mode_ctrl_agent_bus.strap_ss_external_staging_area_base_addr                        ),
         .strap_ss_otp_fc_base_addr                              (ss_mode_ctrl_agent_bus.strap_ss_otp_fc_base_addr                              ),
         .strap_ss_uds_seed_base_addr                            (ss_mode_ctrl_agent_bus.strap_ss_uds_seed_base_addr                            ),
         .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(ss_mode_ctrl_agent_bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),

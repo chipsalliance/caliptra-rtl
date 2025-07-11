@@ -25,10 +25,21 @@ from math import log, ceil
 import sys
 import os
 import shutil
+import argparse
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Generate register documentation from RDL files')
+parser.add_argument('files', nargs='+', help='RDL or JSON input files')
+parser.add_argument('--param', '-p', action='append', default=[], 
+                    help='Set RDL parameter (format: NAME=VALUE). Can be used multiple times.')
+args = parser.parse_args()
+
+# Process input files from parsed args
+input_files = args.files
 
 #output directory for dumping files
-filename = os.path.splitext(os.path.basename(sys.argv[1]))[0]
-rtl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
+filename = os.path.splitext(os.path.basename(input_files[0]))[0]
+rtl_output_dir = os.path.abspath(os.path.dirname(input_files[0]))
 html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_html")
 doc_output_dir = os.path.join(rtl_output_dir, '..', 'docs')
 
@@ -129,8 +140,6 @@ class HeaderPrintingListener(RDLListener):
             self.file.write((self.tick + "define " + mem_name.upper() + "_END_ADDR" + "\t(" + address + ")\n").expandtabs(100))
 
 
-#list of address map files to compile
-input_files = sys.argv[1:]
 
 # Create an instance of the compiler
 rdlc = RDLCompiler()
@@ -147,8 +156,34 @@ try:
       else:
         rdlc.compile_file(input_file)
 
+    # Build parameters dictionary from command line arguments
+    parameters = {}
+    for param in args.param:
+        if '=' not in param:
+            print(f"Error: Invalid parameter format '{param}'. Use NAME=VALUE")
+            sys.exit(1)
+        name, value = param.split('=', 1)
+
+        # Handle boolean values - only accept 'true' or 'false'
+        if value.lower() in ['true', 'false']:
+            parameters[name] = value.lower() == 'true'
+        # Handle hex values
+        elif value.startswith('0x'):
+            try:
+                parameters[name] = int(value, 16)
+            except ValueError:
+                print(f"Error: Invalid hex value '{value}'")
+                sys.exit(1)
+        # Handle integer values
+        elif value.isdigit() or (value.startswith('-') and value[1:].isdigit()):
+            parameters[name] = int(value)
+        # Default to string
+        else:
+            parameters[name] = value
+
+
     # Elaborate the design
-    root = rdlc.elaborate()
+    root = rdlc.elaborate(parameters=parameters if parameters else None)
 
     # checking if the html out directory exists or not.
     if os.path.exists(html_output_dir):
