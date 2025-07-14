@@ -57,6 +57,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
