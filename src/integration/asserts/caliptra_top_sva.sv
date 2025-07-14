@@ -924,4 +924,17 @@ module caliptra_top_sva
   fw_upd_rst_soc_ifc_idle: assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SOC_IFC_TOP_PATH.i_ahb_slv_sif_soc_ifc.dv)
                            else $display("SVA ERROR: SOC_IFC bus not idle after Firmware Update Reset!");
 
+
+  // hmac_drbg_zero_result:  assert property (
+  //                                     @(posedge `SVA_RDC_CLK)
+  //                                     `ECC_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.valid |-> (`ECC_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.valid != 384'h0 )
+  //                                     )
+  //                         else $display("SVA ERROR: drbg is zero when valid is high"); 
+
+  // hmac_drbg_illegal_above_prime:       assert property (
+  //                                     @(posedge `SVA_RDC_CLK)
+  //                                     `ECC_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.valid |-> (`ECC_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.valid < `ECC_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_DRBG_PRIME)
+  //                                     )
+  //                         else $display("SVA ERROR: drbg >= HMAC_DRBG_PRIME when valid is high"); 
+
 endmodule
