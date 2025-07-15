@@ -156,6 +156,7 @@ module soc_ifc_top
 
     //Other blocks reset
     output logic cptra_noncore_rst_b,
+    input logic cptra_noncore_rst_b_i,
     //uC reset
     output logic cptra_uc_rst_b,
     //Clock gating
@@ -350,7 +351,7 @@ axi_sub #(
     .C_LAT(0             )
 ) i_axi_sub_sif_soc_ifc (
     .clk  (soc_ifc_clk_cg     ),
-    .rst_n(cptra_noncore_rst_b),
+    .rst_n(cptra_noncore_rst_b_i),
 
     // AXI INF
     .s_axi_w_if(s_axi_w_if),
@@ -387,7 +388,7 @@ ahb_slv_sif #(
 i_ahb_slv_sif_soc_ifc (
     //AMBA AHB Lite INF
     .hclk(clk_cg),
-    .hreset_n(cptra_noncore_rst_b),
+    .hreset_n(cptra_noncore_rst_b_i),
     .haddr_i(haddr_i),
     .hwdata_i(hwdata_i),
     .hsel_i(hsel_i),
@@ -426,7 +427,7 @@ soc_ifc_arb #(
     )
     i_soc_ifc_arb (
     .clk(soc_ifc_clk_cg),
-    .rst_b(cptra_noncore_rst_b),
+    .rst_b(cptra_noncore_rst_b_i),
     .valid_mbox_users(valid_mbox_users),
     .valid_fuse_user(valid_fuse_user),
     .valid_sha_user(valid_sha_user),
@@ -481,7 +482,7 @@ always_comb soc_ifc_reg_req_hold = 1'b0;
 //Read and Write permissions are controlled within this block
 always_comb soc_ifc_reg_error = soc_ifc_reg_read_error | soc_ifc_reg_write_error;
 
-always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b;
+always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b_i;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
 
@@ -561,8 +562,8 @@ logic cptra_in_dbg_or_manuf_mode;
 assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
                                      ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 
-always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if (~cptra_noncore_rst_b_i) begin
         BootFSM_BrkPoint_Latched <= 0;
         BootFSM_BrkPoint_Flag <= 0;
     end
@@ -588,8 +589,8 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
      end
 end
 
-always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if (~cptra_noncore_rst_b_i) begin
         Warm_Reset_Capture_Flag <= 0;
     end
     else if(!Warm_Reset_Capture_Flag) begin
@@ -614,8 +615,8 @@ end
 
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if (~cptra_noncore_rst_b_i) begin
         security_state_debug_locked_d <= '0;
     end
     else begin
@@ -626,8 +627,8 @@ end
 always_comb security_state_debug_locked_p = security_state.debug_locked ^ security_state_debug_locked_d;
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b_i) begin
+    if (~cptra_noncore_rst_b_i) begin
         scan_mode_f <= '0;
     end
     else begin
@@ -663,8 +664,8 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_AXI_USER_LOCK.LOCK.swwel = soc_ifc_re
 // Can't write to RW-able fuses once fuse_done is set (implies the register is being locked using the fuse_wr_done)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if(~cptra_noncore_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if(~cptra_noncore_rst_b_i) begin
         fuse_wr_done_reg_write_observed <= 0;
     end
     else begin
@@ -740,8 +741,8 @@ always_comb cptra_uncore_dmi_locked_reg_wr_en   = (cptra_uncore_dmi_reg_wr_en & 
 assign strap_we_pre_fuse_done = strap_we & ~fuse_done;
 
 // Subsystem straps capture the initial value from input port on rising edge of noncore_rst
-always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-     if(~cptra_noncore_rst_b) begin
+always_ff @(posedge clk or negedge cptra_noncore_rst_b_i) begin
+     if(~cptra_noncore_rst_b_i) begin
         strap_we <= 1'b1;
     end
     else begin
@@ -941,8 +942,8 @@ always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.
 
 
 // Generate a pulse to set the interrupt bit
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if (~cptra_noncore_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if (~cptra_noncore_rst_b_i) begin
         uc_mbox_data_avail_d <= '0;
     end
     else begin
@@ -1027,8 +1028,8 @@ assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.va
 // sets CPTRA_FW_ERROR_FATAL or when a HW condition occurs that sets a bit
 // in CPTRA_HW_ERROR_FATAL
 // Interrupt only deasserts on reset
-always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if(~cptra_noncore_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if(~cptra_noncore_rst_b_i) begin
         cptra_error_fatal <= 1'b0;
     end
     // FW write that SETS a new (non-masked) bit results in interrupt assertion
@@ -1048,8 +1049,8 @@ always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
         cptra_error_fatal <= cptra_error_fatal;
     end
 end
-always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if(~cptra_noncore_rst_b) begin
+always_ff@(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if(~cptra_noncore_rst_b_i) begin
         cptra_error_non_fatal <= 1'b0;
     end
     // FW write that SETS a new (non-masked) bit results in interrupt assertion
@@ -1089,7 +1090,7 @@ sha512_acc_top #(
 )
 i_sha512_acc_top (
     .clk(soc_ifc_clk_cg),
-    .rst_b(cptra_noncore_rst_b),
+    .rst_b(cptra_noncore_rst_b_i),
     .cptra_pwrgood(cptra_pwrgood),
     
     .req_dv(sha_req_dv),
@@ -1127,7 +1128,7 @@ mbox
 )
 i_mbox (
     .clk(soc_ifc_clk_cg),
-    .rst_b(cptra_noncore_rst_b),
+    .rst_b(cptra_noncore_rst_b_i),
     .req_dv(mbox_req_dv), 
     .req_hold(mbox_req_hold),
     .dir_req_dv(mbox_dir_req_dv),
@@ -1186,7 +1187,7 @@ axi_dma_top #(
 ) i_axi_dma (
     .clk          (rdc_clk_cg         ),
     .cptra_pwrgood(cptra_pwrgood      ),
-    .rst_n        (cptra_noncore_rst_b),
+    .rst_n        (cptra_noncore_rst_b_i),
 
     // Recovery INF Interrupt
     // Should only assert when a full block_size of data is available at the
@@ -1256,8 +1257,8 @@ always_comb begin
 end
 
 //Generate t1 and t2 timeout interrupt pulse
-always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if(!cptra_noncore_rst_b) begin
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if(!cptra_noncore_rst_b_i) begin
         t1_timeout_f <= 'b0;
         t2_timeout_f <= 'b0;
     end
@@ -1275,8 +1276,8 @@ always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 //       It would be preferable to decode this from interrupt signals somehow,
 //       but that would require modifying interrupt register RDL which has been
 //       standardized.
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
-    if(!cptra_noncore_rst_b) begin
+always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b_i) begin
+    if(!cptra_noncore_rst_b_i) begin
         wdt_error_t1_intr_serviced <= 1'b0;
         wdt_error_t2_intr_serviced <= 1'b0;
     end
@@ -1294,7 +1295,7 @@ wdt #(
     .WDT_TIMEOUT_PERIOD_NUM_DWORDS(SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS)
 )i_wdt (
     .clk(rdc_clk_cg),
-    .cptra_rst_b(cptra_noncore_rst_b),
+    .cptra_rst_b(cptra_noncore_rst_b_i),
     .timer1_en(timer1_en),
     .timer2_en(timer2_en),
     .timer1_restart(timer1_restart),
@@ -1482,12 +1483,12 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (AXI_SUB_ID_WIDTH  , SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT      (AXI_SUB_ID_WIDTH  , SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b_i)
 
-`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b_i)
 //this generates an NMI in the core, but we don't have a handler so it just hangs
-`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, !cptra_noncore_rst_b_i)
 endmodule
