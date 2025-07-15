@@ -85,6 +85,7 @@
   typedef struct packed {
     logic mailbox_mode;
     logic sha512_mode;
+    logic endian_toggle; // (0) Input data assumed little-endian (1) Input data assumed big-endian
   } sha_accel_op_s;
 
   typedef struct packed {
