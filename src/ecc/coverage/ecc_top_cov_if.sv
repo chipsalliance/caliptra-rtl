@@ -135,8 +135,23 @@ interface ecc_top_cov_if
         r_input_outofrange_cp: coverpoint r_input_outofrange;
         s_input_outofrange_cp: coverpoint s_input_outofrange;
         pubkeyx_input_outofrange_cp: coverpoint pubkeyx_input_outofrange;
+        pubkeyx_input_outofrange_cross: cross pubkeyx_input_outofrange_cp, verifying_process, sharedkey_process {
+            // Exclude illegal state
+            ignore_bins both_active = binsof(verifying_process) intersect {1} && binsof(sharedkey_process) intersect {1};
+            ignore_bins neither_active = binsof(verifying_process) intersect {0} && binsof(sharedkey_process) intersect {0};
+        }
         pubkeyy_input_outofrange_cp: coverpoint pubkeyy_input_outofrange;
+        pubkeyy_input_outofrange_cross: cross pubkeyy_input_outofrange_cp, verifying_process, sharedkey_process {
+            // Exclude illegal state
+            ignore_bins both_active = binsof(verifying_process) intersect {1} && binsof(sharedkey_process) intersect {1};
+            ignore_bins neither_active = binsof(verifying_process) intersect {0} && binsof(sharedkey_process) intersect {0};
+        }
         pubkey_input_invalid_cp: coverpoint pubkey_input_invalid;
+        pubkey_input_invalid_cross: cross pubkey_input_invalid_cp, verifying_process, sharedkey_process {
+            // Exclude illegal state
+            ignore_bins both_active = binsof(verifying_process) intersect {1} && binsof(sharedkey_process) intersect {1};
+            ignore_bins neither_active = binsof(verifying_process) intersect {0} && binsof(sharedkey_process) intersect {0};
+        }
         pcr_sign_input_invalid_cp: coverpoint pcr_sign_input_invalid;
 
         privkey_output_outofrange_cp: coverpoint privkey_output_outofrange;
