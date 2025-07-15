@@ -194,7 +194,7 @@ reg {
 } SS_DBG_SERVICE_REG_REQ @0x5c0;
 
 reg {
-    name = "SUBSYSTEM DEBUG & MANUF SERVICE REG RESPONSE";
+    name = "SUBSYSTEM DEBUG SERVICE REG RESPONSE";
     desc = "JTAG in debug/manuf mode or SOC can read from this register for ROM/FW defined skips or services.
             [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
             [br]Caliptra Access: RW
@@ -211,7 +211,7 @@ reg {
     field {desc="UDS Programming is in progress. Only writable by Caliptra."                                                                                                                                 ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_IN_PROGRESS      = 1'b0;
     field {desc="Enables the TAP to acquire the mailbox lock. Only writable by Caliptra."                                                                                                                    ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} TAP_MAILBOX_AVAILABLE        = 1'b0;
     field {desc="RSVD"                                                                                                                                                                                       ; sw=r ; hw=w;                                      } RSVD[22];
-} SS_DBG_MANUF_SERVICE_REG_RSP;
+} SS_DBG_SERVICE_REG_RSP;
 
 reg {
     name = "SUBSYSTEM SOC DEBUG UNLOCK LEVEL";

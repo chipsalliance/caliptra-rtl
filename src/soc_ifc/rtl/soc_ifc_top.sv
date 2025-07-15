@@ -878,19 +878,19 @@ always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.swwe 
 always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_REQ.UDS_PROGRAM_REQ.swwe      = '0; //RO from sw
 
 // DEBUG service response signals are writable based on lifecycle state; success bits are also sticky until reset
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION) && !soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE       .swwe = !soc_ifc_reg_req_data.soc_req;
-always_comb soc_ifc_reg_hwif_in.SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next = '0;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS    .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING) && !soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL       .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS     .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION) && !soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL        .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS .swwe = !soc_ifc_reg_req_data.soc_req && soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_PRODUCTION);
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     .swwe = !soc_ifc_reg_req_data.soc_req; //Caliptra access only to this register field.
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE       .swwe = !soc_ifc_reg_req_data.soc_req;
+always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_RSP.RSVD.next = '0;
 
-always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
+always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value;
 
 // DEBUG unlock level signal is only writable by Caliptra, and only when DEBUG_INTENT is 1
 always_comb begin
@@ -1173,7 +1173,7 @@ i_mbox (
     .soc_req_mbox_lock(soc_req_mbox_lock),
     .mbox_protocol_error(mbox_protocol_error),
     .mbox_inv_axi_user_axs(mbox_inv_user_p),
-    .dmi_mbox_avail(soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value),
+    .dmi_mbox_avail(soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_inc_wrptr(dmi_inc_wrptr),
     .dmi_reg_wen(cptra_uncore_dmi_locked_reg_wr_en),
@@ -1394,17 +1394,17 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
                                                                                                                                  soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next[21:0],
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value,
-                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value}) ;
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_SERVICE_REG_RSP.RSVD.next[21:0],
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value,
+                                                                                                                                 soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value}) ;
 
 //DMI unlocked register read mux
 always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_MBOX_DLEN)}} & mbox_dmi_reg.MBOX_DLEN) | 
@@ -1450,17 +1450,17 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.UDS_PROGRAM_REQ.value,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ.value,
                                                                                                                                    soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.value}) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_MANUF_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_MANUF_SERVICE_REG_RSP.RSVD.next[21:0],
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value,
-                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_MANUF_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value}) |
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_SERVICE_REG_RSP)}} & {soc_ifc_reg_hwif_in .SS_DBG_SERVICE_REG_RSP.RSVD.next[21:0],
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_FAIL.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_IN_PROGRESS.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_FAIL.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.PROD_DBG_UNLOCK_SUCCESS.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_IN_PROGRESS.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_FAIL.value,
+                                                                                                                                   soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MANUF_DBG_UNLOCK_SUCCESS.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL0)}} & soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value ) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_SS_DBG_UNLOCK_LEVEL1)}} & soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value ) ;
 

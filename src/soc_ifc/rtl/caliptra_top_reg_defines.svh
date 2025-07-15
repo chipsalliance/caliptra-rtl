@@ -236,7 +236,7 @@
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_2                                    (32'h305a8)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_3                                    (32'h305ac)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_REQ                                (32'h305c0)
-`define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_DBG_MANUF_SERVICE_REG_RSP                          (32'h305c4)
+`define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_DBG_SERVICE_REG_RSP                                (32'h305c4)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_0                             (32'h305c8)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_SOC_DBG_UNLOCK_LEVEL_1                             (32'h305cc)
 `define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_GENERIC_FW_EXEC_CTRL_0                             (32'h305d0)

@@ -1718,7 +1718,7 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 // TODO
-                "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                "SS_DBG_SERVICE_REG_RSP": begin
                     `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 "SS_SOC_DBG_UNLOCK_LEVEL[0]",
@@ -2893,7 +2893,7 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             // TODO
-            "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+            "SS_DBG_SERVICE_REG_RSP": begin
                 `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             "SS_SOC_DBG_UNLOCK_LEVEL[0]",
@@ -4287,7 +4287,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
             `uvm_info("PRED_RESET", {"While processing reset of kind ", kind, ", observed noncore reset deassertion"}, UVM_MEDIUM)
             send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
             // START TODO
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
@@ -4479,7 +4479,7 @@ endfunction
 
 function void soc_ifc_predictor::populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
     txn.cptra_ss_debug_intent = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value();
-    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value();
+    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.get_mirrored_value();
     txn.ss_soc_dbg_unlock_level = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()),
                                    32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value())};
     txn.ss_generic_fw_exec_ctrl = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()),

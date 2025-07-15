@@ -290,30 +290,30 @@
         print_banner("3. AHB Write to SS_DEBUG_MANUF_SERVICE_REG_RSP - MANUFACTURING DEBUG UNLOCK RESPONSE and verify write successful.");
 
         // Caliptra write to SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n3a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n3a. Write to SS_DBG_SERVICE_REG_RSP over AHB");
+        wrtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
         //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"));
-        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK");
+        //$display("mask = 0x%0x", get_mask("SS_DBG_SERVICE_REG_RSP_MANUF_UNLOCK"));
+        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_SERVICE_REG_RSP_MANUF_UNLOCK");
         //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AHB, wrtrans_rsp_reg, .pfx("_MANUF_UNLOCK"));
 
         repeat (10) @(posedge clk_tb);
 
         //Caliptra read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n3b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n3b. Read SS_DBG_SERVICE_REG_RSP over AHB");
+        rdtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -321,17 +321,17 @@
         repeat (10) @(posedge clk_tb);
 
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n3c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
+        $display("\n3c. Read SS_DBG_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -339,31 +339,31 @@
         print_banner("4. AXI Write to SS_DEBUG_MANUF_SERVICE_REG_RSP - MANUFACTURING DEBUG UNLOCK RESPONSE and verify write fails.");
 
         // SoC write to SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n4a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
-        wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n4a. Write to SS_DBG_SERVICE_REG_RSP over AXI");
+        wrtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
         //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK"));
-        //ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_MANUF_UNLOCK");
+        //$display("mask = 0x%0x", get_mask("SS_DBG_SERVICE_REG_RSP_MANUF_UNLOCK"));
+        //ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_SERVICE_REG_RSP_MANUF_UNLOCK");
         ////$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_MANUF_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);
 
         //Caliptra read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n4b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n4b. Read SS_DBG_SERVICE_REG_RSP over AHB");
+        rdtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
         //Read data should match AHB write data from #3 above. 
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -371,18 +371,18 @@
         repeat (10) @(posedge clk_tb);
 
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n4c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
+        $display("\n4c. Read SS_DBG_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
         //Read data should match AHB write data from #3 above. 
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data == ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -390,30 +390,30 @@
         print_banner("5. AXI/AHB Write to SS_DEBUG_MANUF_SERVICE_REG_RSP - PRODUCTION DEBUG UNLOCK RESPONSE and verify write fails."); // Success only when device_lifecycle = PRODUCTION
 
         // SOC (AXI) write to SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5a. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
-        wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n5a. Write to SS_DBG_SERVICE_REG_RSP over AXI");
+        wrtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
         //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
-        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK");
+        //$display("mask = 0x%0x", get_mask("SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK"));
+        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK");
         //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_PROD_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);
 
         //Caliptra read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5b. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n5b. Read SS_DBG_SERVICE_REG_RSP over AHB");
+        rdtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -421,46 +421,46 @@
         repeat (10) @(posedge clk_tb);
 
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5c. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
+        $display("\n5c. Read SS_DBG_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
 
         // Caliptra (AHB) write to SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5d. Write to SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        wrtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n5d. Write to SS_DBG_SERVICE_REG_RSP over AHB");
+        wrtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         wrtrans_rsp_reg.randomize();
         //$display("Write data no mask = 0x%0x", wrtrans_rsp_reg.data);
-        //$display("mask = 0x%0x", get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK"));
-        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_MANUF_SERVICE_REG_RSP_PROD_UNLOCK");
+        //$display("mask = 0x%0x", get_mask("SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK"));
+        ss_debug_rsp_data = wrtrans_rsp_reg.data & get_mask("SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK");
         //$display("Write data with mask = 0x%0x", ss_debug_rsp_data);
         write_reg_trans(SET_AXI, wrtrans_rsp_reg, .pfx("_PROD_UNLOCK"), .exp_sts(FAIL));
 
         repeat (10) @(posedge clk_tb);
 
         //Caliptra read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5e. Read SS_DBG_MANUF_SERVICE_REG_RSP over AHB");
-        rdtrans_rsp_reg.update_byname("SS_DBG_MANUF_SERVICE_REG_RSP", 0, tid);
+        $display("\n5e. Read SS_DBG_SERVICE_REG_RSP over AHB");
+        rdtrans_rsp_reg.update_byname("SS_DBG_SERVICE_REG_RSP", 0, tid);
         read_reg_trans(GET_AHB, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end
@@ -468,17 +468,17 @@
         repeat (10) @(posedge clk_tb);
 
         //SOC read SS_DEBUG_MANUF_SERVICE_REG_RSP register
-        $display("\n5f. Read SS_DBG_MANUF_SERVICE_REG_RSP over AXI");
+        $display("\n5f. Read SS_DBG_SERVICE_REG_RSP over AXI");
         read_reg_trans(GET_AXI, rdtrans_rsp_reg);
         if (subsystem_mode_tb) begin
           assert(rdtrans_rsp_reg.data != ss_debug_rsp_data) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP read failed");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP read failed");
             error_ctr += 1;
           end
         end
         else begin
           assert(rdtrans_req_reg.data == '0) else begin
-            $display("TB ERROR. SS_DBG_MANUF_SERVICE_REG_RSP should be disabled in passive mode");
+            $display("TB ERROR. SS_DBG_SERVICE_REG_RSP should be disabled in passive mode");
             error_ctr += 1;
           end
         end

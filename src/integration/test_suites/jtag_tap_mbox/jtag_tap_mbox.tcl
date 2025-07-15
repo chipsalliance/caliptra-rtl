@@ -237,7 +237,7 @@ shutdown
 set SS_UDS_SEED_PROGRAMMING_BASE_ADDR_L 0x56
 set SS_UDS_SEED_PROGRAMMING_BASE_ADDR_H 0x57
 set SS_DBG_SERVICE_REG_REQ              0x70
-set SS_DBG_MANUF_SERVICE_REG_RSP        0x71
+set SS_DBG_SERVICE_REG_RSP        0x71
 
 # Define the values to write into the seed programming registers.
 # Replace these example values with the appropriate ones.
@@ -256,11 +256,11 @@ puts "SS_DBG_SERVICE_REG_REQ: $actual"
 
 # Polling UDS programming status
 puts "Polling UDS programming status: waiting for in-progress flag..."
-set status [riscv dmi_read $SS_DBG_MANUF_SERVICE_REG_RSP]
+set status [riscv dmi_read $SS_DBG_SERVICE_REG_RSP]
 puts "Expected in-progress flag (bit 9) not set initially. Waiting."
 while {([expr {$status & 0x100}] == 0)} {    
     after 100
-    set status [riscv dmi_read $SS_DBG_MANUF_SERVICE_REG_RSP]
+    set status [riscv dmi_read $SS_DBG_SERVICE_REG_RSP]
 }
 
 puts "In-progress flag set. Programming complete."
@@ -268,13 +268,13 @@ puts "In-progress flag set. Programming complete."
 # Now, continuously poll until the in-progress flag clears.
 while {($status & 0x100) != 0} {
     after 100    ;# Wait 1000ms between polls to avoid busy looping.
-    set status [riscv dmi_read $SS_DBG_MANUF_SERVICE_REG_RSP]
+    set status [riscv dmi_read $SS_DBG_SERVICE_REG_RSP]
 }
 
 puts "UDS programming in-progress flag cleared. Evaluating result..."
 
 # After the in-progress flag is cleared, read the response register.
-set rsp_val [riscv dmi_read $SS_DBG_MANUF_SERVICE_REG_RSP]
+set rsp_val [riscv dmi_read $SS_DBG_SERVICE_REG_RSP]
 # Check for failure (bit 8, mask 0x80) and success (bit 7, mask 0x40).
 set failure [expr {($rsp_val & 0x80) != 0}]
 set success [expr {($rsp_val & 0x40) != 0}]
