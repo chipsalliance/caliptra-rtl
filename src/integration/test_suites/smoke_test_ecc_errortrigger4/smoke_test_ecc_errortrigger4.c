@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    printf("----------------------------------------\n");
-    printf(" Running ECC Smoke Test error_trigger !!\n");
-    printf("----------------------------------------\n");
+    printf("-----------------------------------------\n");
+    printf(" Running ECDH Smoke Test error_trigger !!\n");
+    printf("-----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -202,36 +202,29 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        printf("\n TEST PCR WITH INVALID OUTPUT SIGN_S\n");
-        
-        // Program ECC IV
-        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        printf("\n ECDH WITH OUT OF RANGE PUBKEY\n");
+        // Program ECC PUBKEY_X
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
-            *reg_ptr++ = ecc_iv[offset++];
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+            *reg_ptr++ = value_greater_p[offset++];
         }
 
-        //Inject invalid zero sign_s
-        printf("%c",0x9a);
+        // Program ECC PUBKEY_Y
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+            *reg_ptr++ = value_greater_p[offset++];
+        }
 
-        //inject seed to kv key reg (in RTL)
-        printf("Inject PRIVKEY into KV slot 7\n");
-        privkey_inject_cmd = 0x88 + 0x7;
-        printf("%c", privkey_inject_cmd);
-
-        printf("Inject MSG into SHA512 digest\n");
-        printf("%c", 0x90);
-
-        // Enable ECC PCR SIGNING core
-        printf("\nECC PCR SIGNING\n");
-        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-    
+        // Enable ECDH core
+        printf("\nECDH\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
         
-        // wait for ECC PCR SIGNING process to be done
+        // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            printf("\nECC PCR s_output_outofrange error is not detected.\n");
+            printf("\nECDH pubkey_input_outofrange error is not detected.\n");
             printf("%c", 0x1);
             while(1);
         }
@@ -245,32 +238,29 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
-        
-        // Program ECC IV
-        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+        printf("\n ECDH TEST INVALID PUBKEY\n");
+        // Program ECC PUBKEY_X
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11) {
-            *reg_ptr++ = ecc_iv[offset++];
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+            *reg_ptr++ = ecc_pubkey_y[offset++];
         }
 
-        //inject seed to kv key reg (in RTL)
-        printf("Inject PRIVKEY into KV slot 7\n");
-        privkey_inject_cmd = 0x88 + 0x7;
-        printf("%c", privkey_inject_cmd);
+        // Program ECC PUBKEY_Y
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+            *reg_ptr++ = ecc_pubkey_x[offset++];
+        }
 
-        printf("Inject MSG into SHA512 digest\n");
-        printf("%c", 0x90);
-
-        printf("\nECC PCR SHARED_KEY\n");
-        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY| 
-                ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-    
+        // Enable ECDH core
+        printf("\nECDH\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
         
-        // wait for ECC VERIFYING process to be done
+        // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            printf("\nECC PCR invalid command error is not detected.\n");
+            printf("\nECDH pubkey_input_invalid error is not detected.\n");
             printf("%c", 0x1);
             while(1);
         }
