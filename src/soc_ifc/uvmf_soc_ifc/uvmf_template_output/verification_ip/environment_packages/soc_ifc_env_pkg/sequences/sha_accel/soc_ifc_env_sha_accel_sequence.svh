@@ -40,7 +40,7 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   extern virtual task sha_accel_setup();
   extern virtual task sha_accel_acquire_lock(output op_sts_e op_sts);
   extern virtual task sha_accel_set_cmd(input sha_accel_op_s op);
-  extern virtual task sha_accel_push_datain(input reg [3199:0][31:0] sha_block_data);
+  extern virtual task sha_accel_push_datain(input reg [3199:0][31:0] sha_block_data, input reg endian_toggle);
   extern virtual task sha_accel_execute();
   extern virtual task sha_accel_poll_status();
   extern virtual task sha_accel_read_result(input reg [15:0][31:0] sha_digest);
@@ -126,6 +126,7 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
 
     `uvm_info("SHA_ACCEL_SEQ", $sformatf("Test Case: %d", this.test_case), UVM_DEBUG)
     `uvm_info("SHA_ACCEL_SEQ", $sformatf("SHA512 Mode: %x", this.sha_accel_op_rand.sha512_mode), UVM_DEBUG)
+    `uvm_info("SHA_ACCEL_SEQ", $sformatf("Endian Toggle: %x", this.sha_accel_op_rand.endian_toggle), UVM_DEBUG)
 
     fd_r = $fopen(file_name,"r");
 
@@ -156,7 +157,7 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
     sha_accel_setup();
     sha_accel_acquire_lock(op_sts);
     sha_accel_set_cmd(sha_accel_op_rand);
-    sha_accel_push_datain(sha_block_data);
+    sha_accel_push_datain(sha_block_data, sha_accel_op_rand.endian_toggle);
     sha_accel_execute();
     sha_accel_poll_status();
     sha_accel_read_result(sha_digest);
@@ -196,6 +197,7 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_set_cmd(input sha_accel_op_s op);
     data = '0;
     data[0] = op.sha512_mode;
     data[1] = op.mailbox_mode;
+    data[2] = op.endian_toggle;
 
     reg_model.sha512_acc_csr_rm.MODE.write(reg_sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     report_reg_sts(reg_sts, "MODE");
@@ -213,7 +215,7 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_set_cmd(input sha_accel_op_s op);
     report_reg_sts(reg_sts, "DLEN");  
 endtask
 
-task soc_ifc_env_sha_accel_sequence::sha_accel_push_datain(reg [3199:0][31:0] sha_block_data);
+task soc_ifc_env_sha_accel_sequence::sha_accel_push_datain(input reg [3199:0][31:0] sha_block_data, input reg endian_toggle);
     int ii;
     reg [31:0] data;
     int most_sig_dword;
@@ -223,8 +225,8 @@ task soc_ifc_env_sha_accel_sequence::sha_accel_push_datain(reg [3199:0][31:0] sh
 
     if (this.dlen != 0) begin
         for (ii=most_sig_dword; ii >= 0 ; ii--) begin
-            data = sha_block_data[ii];
-            `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] Sending datain: 0x%x", ii, data), UVM_DEBUG)
+            data = endian_toggle ? sha_block_data[ii] : {sha_block_data[ii][7:0],sha_block_data[ii][15:8],sha_block_data[ii][23:16],sha_block_data[ii][31:24]};
+            `uvm_info("SHA_ACCEL_SEQ", $sformatf("[Iteration: %0d] sha_block_data: 0x%x. Sending datain: 0x%x", ii, sha_block_data[ii], data), UVM_DEBUG)
             reg_model.sha512_acc_csr_rm.DATAIN.write(reg_sts, uvm_reg_data_t'(data), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             report_reg_sts(reg_sts, "DATAIN");
         end
