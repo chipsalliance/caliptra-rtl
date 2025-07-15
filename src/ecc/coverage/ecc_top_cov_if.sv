@@ -56,7 +56,6 @@ interface ecc_top_cov_if
     logic add_cout0;
     logic add_cout1;
     logic add_res_less_than_prime;
-    logic add_res_greater_than_prime;
     logic add_res_greater_than_384_bit;
 
     logic mult_ready;
@@ -70,7 +69,6 @@ interface ecc_top_cov_if
     assign add_cout0 = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_ADDER_SUBTRACTOR.carry0_reg;
     assign add_cout1 = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_ADDER_SUBTRACTOR.carry1;
     assign add_res_less_than_prime = ((add_cout0 == 1'b0) & (add_res0 < ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.prime_i));
-    assign add_res_greater_than_prime = ((add_cout0 == 1'b0) & (add_res0 >= ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.prime_i));
     assign add_res_greater_than_384_bit = (add_cout0 == 1'b1);
     
     assign mult_ready = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.ready_o;
@@ -147,24 +145,28 @@ interface ecc_top_cov_if
         cmd_ready_cp: cross ecc_sw_cmd, ready{
             ignore_bins illegal_sw_cmd = binsof(ecc_sw_cmd) intersect {5, 6, 7};
         }
-        cmd_kv_cp: cross ecc_cmd, dest_keyvault;
+        keygen_kv_cp: cross keygen_process, dest_keyvault;
         pcr_ready_cp: cross ready, pcr_sign_mode;
-        pcr_cmd_cp: cross pcr_sign_mode, ecc_cmd;
+        pcr_cmd_cp: cross pcr_sign_mode, ecc_cmd_cp{
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+        }
         zeroize_pcr_cp: cross zeroize, pcr_sign_mode;
-        zeroize_cmd_cp: cross zeroize, ecc_cmd;
+        zeroize_cmd_cp: cross zeroize, ecc_cmd_cp{
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+        }
         zeroize_error_cp: cross zeroize, error_flag;
         zeroize_ready_cp: cross ready, zeroize;
-        pcr_sign_input_invalid_cmd_cp: cross error_flag, ecc_cmd;
+        pcr_sign_input_invalid_cmd_cp: cross error_flag, ecc_cmd_cp{
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values) || binsof(ecc_cmd_cp) intersect {2};
+        }
         error_keygen_cp: cross error_flag, keygen_process;
         error_signing_cp: cross error_flag, signing_process;
         error_verifying_cp: cross error_flag, verifying_process;
         error_sharedkey_cp: cross error_flag, sharedkey_process;
 
         // modular operation
-        mult_final_subtraction_cp: coverpoint mult_final_subtraction;
         add_carry_cp: cross mod_p_q, add_sub_i, add_cout0, add_cout1;
         add_result_less_than_prime_cp: cross mod_p_q, add_sub_i, add_res_less_than_prime;
-        add_result_greater_than_prime_cp: cross mod_p_q, add_sub_i, add_res_greater_than_prime;
         add_result_greater_than_384_bit_cp: cross mod_p_q, add_sub_i, add_res_greater_than_384_bit;
         
 

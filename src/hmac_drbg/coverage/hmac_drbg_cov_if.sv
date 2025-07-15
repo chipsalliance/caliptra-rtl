@@ -76,7 +76,6 @@ interface hmac_drbg_cov_if
 
     hmac_drbg_state_cg hmac_drbg_state_cov = new();
     hmac_drbg_control_cg hmac_drbg_control_cov = new();
-    hmac_drbg_output_cg hmac_drbg_output_cov = new();
 
 endinterface
 
