@@ -93,7 +93,7 @@ interface ecc_top_cov_if
 
     assign dest_keyvault = ecc_top.ecc_dsa_ctrl_i.dest_keyvault;
 
-    assign error_flag = ecc_top.ecc_dsa_ctrl_i.error_flag;
+    assign error_flag = ecc_top.ecc_dsa_ctrl_i.error_flag | ecc_top.ecc_dsa_ctrl_i.error_flag_reg;
     assign privkey_input_outofrange = ecc_top.ecc_dsa_ctrl_i.privkey_input_outofrange;
     assign r_output_outofrange = ecc_top.ecc_dsa_ctrl_i.r_output_outofrange;
     assign s_output_outofrange = ecc_top.ecc_dsa_ctrl_i.s_output_outofrange;
