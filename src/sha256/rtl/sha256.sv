@@ -258,12 +258,20 @@ module sha256
   always @ (posedge clk or negedge reset_n) begin
       if (!reset_n)
         wntz_fsm <= WNTZ_IDLE;
+      else if (zeroize_reg)
+        wntz_fsm <= WNTZ_IDLE;
       else
         wntz_fsm <= wntz_fsm_next;
   end
 
   always @ (posedge clk or negedge reset_n) begin
       if (!reset_n) begin
+        wntz_j_reg      <= '0;
+        wntz_prefix     <= '0;
+        wntz_n_mode_reg <= '0;
+        wntz_w_reg      <= '0;
+        wntz_iter_reg   <= '0;
+      end else if (zeroize_reg) begin
         wntz_j_reg      <= '0;
         wntz_prefix     <= '0;
         wntz_n_mode_reg <= '0;
@@ -285,6 +293,8 @@ module sha256
     always @ (posedge clk or negedge reset_n) begin
       if (!reset_n)
         wntz_init_reg <= 1'b0;
+      else if (zeroize_reg)
+        wntz_init_reg <= 1'b0;
       else begin
         if (wntz_init)
           wntz_init_reg <= 1'b1;
@@ -296,6 +306,8 @@ module sha256
 
     always @ (posedge clk or negedge reset_n) begin
       if (!reset_n)
+        mode_reg <= '0;
+      if (zeroize_reg)
         mode_reg <= '0;
       else begin
         if (ready_reg)
@@ -422,8 +434,8 @@ module sha256
     assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = (~wntz_busy & core_digest_valid & ~digest_valid_reg);
     assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = wntz_w_invalid | wntz_mode_invalid | wntz_j_invalid;
     assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = invalid_sha_op;
-    assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
-    assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0;
+    assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; 
 
     assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;    

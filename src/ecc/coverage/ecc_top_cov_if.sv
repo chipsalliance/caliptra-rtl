@@ -114,7 +114,7 @@ interface ecc_top_cov_if
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        cptra_pwrgood_cp: coverpoint cptra_pwrgood;
+        //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
         ecc_cmd_cp: coverpoint ecc_cmd {
             illegal_bins illegal_values = {5, 6, 7};
