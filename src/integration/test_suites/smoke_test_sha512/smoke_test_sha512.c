@@ -106,6 +106,20 @@ void main() {
     sha512_flow(sha512_block, SHA512_512_MODE, sha512_digest);
     sha512_zeroize();
 
+    // Zeroize SHA512 commands
+    VPRINTF(LOW, "Enable SHA512\n");
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,(((1 << SHA512_REG_SHA512_CTRL_INIT_LOW) & SHA512_REG_SHA512_CTRL_INIT_MASK) |
+                                             ((1 << SHA512_REG_SHA512_CTRL_NEXT_LOW) & SHA512_REG_SHA512_CTRL_NEXT_MASK) |
+                                             ((1 << SHA512_REG_SHA512_CTRL_RESTORE_LOW) & SHA512_REG_SHA512_CTRL_RESTORE_MASK) |
+                                             ((1 << SHA512_REG_SHA512_CTRL_ZEROIZE_LOW) & SHA512_REG_SHA512_CTRL_ZEROIZE_MASK)));
+    
+    // wait for SHA to be ready
+    while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
+    if ((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) != 0){
+        VPRINTF(LOW, "Wrong command is not detected\n");
+        printf("%c", 0x1);
+    }
+    
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);
     while(1);

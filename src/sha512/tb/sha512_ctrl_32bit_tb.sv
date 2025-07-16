@@ -798,7 +798,15 @@ module sha512_ctrl_32bit_tb
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #CLK_PERIOD;
           write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #CLK_PERIOD;
+          write_single_word(`CLP_SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
           #CLK_PERIOD;
         end
 
@@ -817,7 +825,11 @@ module sha512_ctrl_32bit_tb
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #CLK_PERIOD;
           write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(mode));
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
           #CLK_PERIOD;
         end
 
