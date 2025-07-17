@@ -290,7 +290,7 @@ void main() {
         }
 
         printf("Inject invalid shared_key\n");
-        printf("%c", 0x9c);
+        printf("%c", 0x97);
 
         // Enable ECDH core
         printf("\nECDH\n");

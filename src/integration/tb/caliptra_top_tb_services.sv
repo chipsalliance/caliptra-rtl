@@ -199,6 +199,8 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_s_needs_release;
     logic                       inject_invalid_privkey;
     logic                       inject_invalid_privkey_needs_release;
+    logic                       inject_invalid_dhkey;
+    logic                       inject_invalid_dhkey_needs_release;
     logic                       inject_invalid_pubkeyx;
     logic                       inject_invalid_pubkeyx_needs_release;
     logic                       inject_invalid_pubkeyy;
@@ -315,6 +317,7 @@ module caliptra_top_tb_services
     //         8'h92        - Check PCR ECC signing with randomized vector
     //         8'h93        - Issue PCR MLDSA signing with randomized vector   
     //         8'h94        - Check PCR MLDSA signing with randomized vector
+    //         8'h97        - Inject invalid dh_key into ECC
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
@@ -673,6 +676,8 @@ module caliptra_top_tb_services
             inject_zero_sign_s_needs_release <= 1'b0;
             inject_invalid_privkey <= 1'b0;
             inject_invalid_privkey_needs_release <= 1'b0;
+            inject_invalid_dhkey <= 1'b0;
+            inject_invalid_dhkey_needs_release <= 1'b0;
             inject_invalid_pubkeyx <= 1'b0;
             inject_invalid_pubkeyx_needs_release <= 1'b0;
             inject_invalid_pubkeyy <= 1'b0;
@@ -686,6 +691,9 @@ module caliptra_top_tb_services
         end
         else if((WriteData[7:0] == 8'h9c) && mailbox_write) begin
             inject_invalid_privkey <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h97) && mailbox_write) begin
+            inject_invalid_dhkey <= 1'b1;
         end
         else if((WriteData[7:0] == 8'h9d) && mailbox_write) begin
             inject_invalid_pubkeyx <= 1'b1;
@@ -712,13 +720,21 @@ module caliptra_top_tb_services
             end
         end
         else if(inject_invalid_privkey) begin
-            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd18 ||  //PRIVKEY_ID
-                `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd30) begin //DH_SHAREDKEY_ID
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd18) begin //PRIVKEY_ID
                 force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
                 inject_invalid_privkey_needs_release <= 1'b1;
             end
             else if (inject_invalid_privkey_needs_release) begin
                 inject_invalid_privkey <= 1'b0;
+            end
+        end
+        else if(inject_invalid_dhkey) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd30) begin //DH_SHAREDKEY_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_invalid_dhkey_needs_release <= 1'b1;
+            end
+            else if (inject_invalid_dhkey_needs_release) begin
+                inject_invalid_dhkey <= 1'b0;
             end
         end
         else if(inject_invalid_pubkeyx) begin
