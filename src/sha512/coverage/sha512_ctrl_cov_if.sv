@@ -75,12 +75,12 @@ interface sha512_ctrl_cov_if
         next_ready_cp: cross ready, next; //TB
         zeroize_ready_cp: cross ready, zeroize;
         mode_ready_cp: cross ready, mode;
-        pcr_ready_cp: cross ready, gen_hash_start;
-        pcr_init_cp: cross gen_hash_ip_cp, init; // TODO
-        pcr_next_cp: cross gen_hash_ip_cp, next; // TODO
-        zeroize_pcr_cp: cross zeroize, gen_hash_ip_cp;
-        zeroize_init_cp: cross zeroize, init;
-        zeroize_next_cp: cross zeroize, next;
+        pcr_ready_cp: cross ready, gen_hash_start; //TB
+        // pcr_init_cp: cross gen_hash_ip_cp, init; // TODO
+        // pcr_next_cp: cross gen_hash_ip_cp, next; // TODO
+        zeroize_pcr_cp: cross zeroize, gen_hash_ip_cp; //TB
+        zeroize_init_cp: cross zeroize, init; //TB
+        zeroize_next_cp: cross zeroize, next; //TB
         zeroize_restore_cp: cross zeroize, restore;
 
     endgroup

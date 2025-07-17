@@ -970,6 +970,33 @@ module sha512_ctrl_32bit_tb
 
       $display("*** TC%01d - zeroize test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
+
+      // Fifth test: assert zeroize after PCR      
+      write_block(block0);
+
+      write_single_word(`CLP_SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+      #(10 * CLK_PERIOD);
+
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      wait_ready();
+      read_digest();
+      if (digest_data == 0)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%128x", tc_ctr, 0);
+          $display("TC%01d: Got:      0x%128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - zeroize test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
     end
   endtask // zeroize_test
 

@@ -478,6 +478,7 @@ pv_gen_hash1
 (
   .clk(clk),
   .rst_b(reset_n),
+  .zeroize(zeroize_reg),
 
   .core_ready(ready_reg),
   .core_digest_valid(gen_hash_ip & dest_data_avail),
