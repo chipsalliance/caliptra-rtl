@@ -152,9 +152,13 @@ module caliptra_top_sva
 
   DOE_lock_hek_cold_reset:   assert property (
                                             @(posedge `SVA_CLK)
+                                            `ifdef CALIPTRA_OCP_LOCK_EN
                                             ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 0)
+                                            `else
+                                            ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 1)
+                                            `endif
                                           )
-                            else $display("SVA ERROR: lock_hek_flow was not reset on hard reset");
+                            else $display("SVA ERROR: lock_hek_flow was not reset to expected value on hard reset");
 
   DOE_lock_hek_warm_reset:   assert property (
                                             @(posedge `SVA_CLK)
@@ -321,9 +325,9 @@ module caliptra_top_sva
       DOE_HEK_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT/*FIXME*//*`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value*/][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
+                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
                                           )
-                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT/*FIXME*//*`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value*/][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
+                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
 
     end
     end
