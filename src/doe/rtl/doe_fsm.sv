@@ -17,7 +17,6 @@
 module doe_fsm 
     import doe_defines_pkg::*;
     import kv_defines_pkg::*;
-    import ocp_lock_pkg::*;
     #(
     parameter SRC_WIDTH = 128
    ,parameter DEST_WIDTH = 128

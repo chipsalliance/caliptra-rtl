@@ -30,7 +30,7 @@ module caliptra_top_tb (
 `endif
 
     import axi_pkg::*;
-    import ocp_lock_pkg::*;
+    import kv_defines_pkg::*;
     import soc_ifc_pkg::*;
     import caliptra_top_tb_pkg::*;
 

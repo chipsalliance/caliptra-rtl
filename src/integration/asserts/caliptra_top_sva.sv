@@ -320,14 +320,14 @@ module caliptra_top_sva
   endgenerate
   generate
     begin: HEK_data_check
-    for(genvar dword = 0; dword < ocp_lock_pkg::OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
+    for(genvar dword = 0; dword < kv_defines_pkg::OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
 
       DOE_HEK_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
+                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
                                           )
-                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
+                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
 
     end
     end

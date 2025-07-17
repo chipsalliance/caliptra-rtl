@@ -24,7 +24,6 @@ module caliptra_top
     import lc_ctrl_state_pkg::*;
     import lc_ctrl_reg_pkg::*;
     import lc_ctrl_pkg::*;
-    import ocp_lock_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;

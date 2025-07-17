@@ -35,7 +35,6 @@ module doe_cbc
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
   import doe_reg_pkg::*;
-  import ocp_lock_pkg::*;
  #(
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32

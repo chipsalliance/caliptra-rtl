@@ -21,7 +21,7 @@ module soc_ifc_top
     import soc_ifc_pkg::*;
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
-    import ocp_lock_pkg::*;
+    import kv_defines_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32

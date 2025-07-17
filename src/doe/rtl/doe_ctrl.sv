@@ -25,7 +25,6 @@
 module doe_ctrl 
     import doe_defines_pkg::*;
     import kv_defines_pkg::*;
-    import ocp_lock_pkg::*;
     #(
     parameter AHB_DATA_WIDTH = 32,
     parameter AHB_ADDR_WIDTH = 32,
