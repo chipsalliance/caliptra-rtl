@@ -28,7 +28,7 @@ enum doe_cmd_e {
 };
 
 /* --------------- Function Prototypes --------------- */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe);
+void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_fe);
 void doe_clear_secrets();
 
 #endif
