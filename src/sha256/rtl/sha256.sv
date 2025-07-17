@@ -307,7 +307,7 @@ module sha256
     always @ (posedge clk or negedge reset_n) begin
       if (!reset_n)
         mode_reg <= '0;
-      if (zeroize_reg)
+      else if (zeroize_reg)
         mode_reg <= '0;
       else begin
         if (ready_reg)
