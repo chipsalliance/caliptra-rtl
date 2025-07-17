@@ -637,12 +637,14 @@
     endgroup
     covergroup soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg with function sample(
     input bit [1-1:0] iTRNG_en,
-    input bit [3-1:0] RSVD_en,
+    input bit [1-1:0] Fuse_Granularity,
+    input bit [2-1:0] RSVD_en,
     input bit [1-1:0] LMS_acc_en,
     input bit [1-1:0] SUBSYSTEM_MODE_en
     );
         option.per_instance = 1;
         iTRNG_en_cp : coverpoint iTRNG_en;
+        Fuse_Granularity_cp : coverpoint Fuse_Granularity;
         RSVD_en_cp : coverpoint RSVD_en;
         LMS_acc_en_cp : coverpoint LMS_acc_en;
         SUBSYSTEM_MODE_en_cp : coverpoint SUBSYSTEM_MODE_en;
@@ -1730,8 +1732,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__SS_DBG_MANUF_SERVICE_REG_REQ COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_DBG_SERVICE_REG_REQ COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1742,7 +1744,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_fld_cg with function sample(
     input bit [1-1:0] MANUF_DBG_UNLOCK_REQ,
     input bit [1-1:0] PROD_DBG_UNLOCK_REQ,
     input bit [1-1:0] UDS_PROGRAM_REQ,
@@ -1756,8 +1758,8 @@
 
     endgroup
 
-    /*----------------------- SOC_IFC_REG__SS_DBG_MANUF_SERVICE_REG_RSP COVERGROUPS -----------------------*/
-    covergroup soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg with function sample(input bit reg_bit);
+    /*----------------------- SOC_IFC_REG__SS_DBG_SERVICE_REG_RSP COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
         reg_bit_cp : coverpoint reg_bit {
             bins value[2] = {0,1};
@@ -1768,7 +1770,7 @@
         }
 
     endgroup
-    covergroup soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_fld_cg with function sample(
+    covergroup soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_fld_cg with function sample(
     input bit [1-1:0] MANUF_DBG_UNLOCK_SUCCESS,
     input bit [1-1:0] MANUF_DBG_UNLOCK_FAIL,
     input bit [1-1:0] MANUF_DBG_UNLOCK_IN_PROGRESS,

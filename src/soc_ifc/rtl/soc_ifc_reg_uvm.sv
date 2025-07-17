@@ -916,11 +916,13 @@ package soc_ifc_reg_uvm;
         protected bit            m_is_read;
 
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg iTRNG_en_bit_cg[1];
-        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg RSVD_en_bit_cg[3];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg Fuse_Granularity_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg RSVD_en_bit_cg[2];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg LMS_acc_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg SUBSYSTEM_MODE_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
+        rand uvm_reg_field Fuse_Granularity;
         rand uvm_reg_field RSVD_en;
         rand uvm_reg_field LMS_acc_en;
         rand uvm_reg_field SUBSYSTEM_MODE_en;
@@ -937,14 +939,17 @@ package soc_ifc_reg_uvm;
         virtual function void build();
             this.iTRNG_en = new("iTRNG_en");
             this.iTRNG_en.configure(this, 1, 0, "RO", 1, 'h0, 0, 1, 0);
+            this.Fuse_Granularity = new("Fuse_Granularity");
+            this.Fuse_Granularity.configure(this, 1, 1, "RO", 1, 'h0, 0, 1, 0);
             this.RSVD_en = new("RSVD_en");
-            this.RSVD_en.configure(this, 3, 1, "RO", 1, 'h0, 0, 1, 0);
+            this.RSVD_en.configure(this, 2, 2, "RO", 1, 'h0, 0, 1, 0);
             this.LMS_acc_en = new("LMS_acc_en");
             this.LMS_acc_en.configure(this, 1, 4, "RO", 1, 'h0, 0, 1, 0);
             this.SUBSYSTEM_MODE_en = new("SUBSYSTEM_MODE_en");
             this.SUBSYSTEM_MODE_en.configure(this, 1, 5, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
+                foreach(Fuse_Granularity_bit_cg[bt]) Fuse_Granularity_bit_cg[bt] = new();
                 foreach(RSVD_en_bit_cg[bt]) RSVD_en_bit_cg[bt] = new();
                 foreach(LMS_acc_en_bit_cg[bt]) LMS_acc_en_bit_cg[bt] = new();
                 foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) SUBSYSTEM_MODE_en_bit_cg[bt] = new();
@@ -2499,23 +2504,23 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_STRAP_GENERIC
 
-    // Reg - soc_ifc_reg::SS_DBG_MANUF_SERVICE_REG_REQ
-    class soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_DBG_SERVICE_REG_REQ
+    class soc_ifc_reg__SS_DBG_SERVICE_REG_REQ extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_bit_cg MANUF_DBG_UNLOCK_REQ_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_bit_cg PROD_DBG_UNLOCK_REQ_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_bit_cg UDS_PROGRAM_REQ_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_bit_cg RSVD_bit_cg[29];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ_fld_cg fld_cg;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_bit_cg MANUF_DBG_UNLOCK_REQ_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_bit_cg PROD_DBG_UNLOCK_REQ_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_bit_cg UDS_PROGRAM_REQ_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_bit_cg RSVD_bit_cg[29];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_REQ_fld_cg fld_cg;
         rand uvm_reg_field MANUF_DBG_UNLOCK_REQ;
         rand uvm_reg_field PROD_DBG_UNLOCK_REQ;
         rand uvm_reg_field UDS_PROGRAM_REQ;
         rand uvm_reg_field RSVD;
 
-        function new(string name = "soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ");
+        function new(string name = "soc_ifc_reg__SS_DBG_SERVICE_REG_REQ");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2542,26 +2547,26 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ
+    endclass : soc_ifc_reg__SS_DBG_SERVICE_REG_REQ
 
-    // Reg - soc_ifc_reg::SS_DBG_MANUF_SERVICE_REG_RSP
-    class soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP extends uvm_reg;
+    // Reg - soc_ifc_reg::SS_DBG_SERVICE_REG_RSP
+    class soc_ifc_reg__SS_DBG_SERVICE_REG_RSP extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_SUCCESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_FAIL_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_IN_PROGRESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_SUCCESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_FAIL_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_IN_PROGRESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_SUCCESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_FAIL_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_IN_PROGRESS_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg TAP_MAILBOX_AVAILABLE_bit_cg[1];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_bit_cg RSVD_bit_cg[22];
-        soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP_fld_cg fld_cg;
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_SUCCESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_FAIL_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg MANUF_DBG_UNLOCK_IN_PROGRESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_SUCCESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_FAIL_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg PROD_DBG_UNLOCK_IN_PROGRESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_SUCCESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_FAIL_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg UDS_PROGRAM_IN_PROGRESS_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg TAP_MAILBOX_AVAILABLE_bit_cg[1];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_bit_cg RSVD_bit_cg[22];
+        soc_ifc_reg__SS_DBG_SERVICE_REG_RSP_fld_cg fld_cg;
         rand uvm_reg_field MANUF_DBG_UNLOCK_SUCCESS;
         rand uvm_reg_field MANUF_DBG_UNLOCK_FAIL;
         rand uvm_reg_field MANUF_DBG_UNLOCK_IN_PROGRESS;
@@ -2574,7 +2579,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field TAP_MAILBOX_AVAILABLE;
         rand uvm_reg_field RSVD;
 
-        function new(string name = "soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP");
+        function new(string name = "soc_ifc_reg__SS_DBG_SERVICE_REG_RSP");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -2622,7 +2627,7 @@ package soc_ifc_reg_uvm;
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP
+    endclass : soc_ifc_reg__SS_DBG_SERVICE_REG_RSP
 
     // Reg - soc_ifc_reg::SS_SOC_DBG_UNLOCK_LEVEL
     class soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL extends uvm_reg;
@@ -4709,8 +4714,8 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
         rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
         rand soc_ifc_reg__SS_STRAP_GENERIC SS_STRAP_GENERIC[4];
-        rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_REQ SS_DBG_MANUF_SERVICE_REG_REQ;
-        rand soc_ifc_reg__SS_DBG_MANUF_SERVICE_REG_RSP SS_DBG_MANUF_SERVICE_REG_RSP;
+        rand soc_ifc_reg__SS_DBG_SERVICE_REG_REQ SS_DBG_SERVICE_REG_REQ;
+        rand soc_ifc_reg__SS_DBG_SERVICE_REG_RSP SS_DBG_SERVICE_REG_RSP;
         rand soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL SS_SOC_DBG_UNLOCK_LEVEL[2];
         rand soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL SS_GENERIC_FW_EXEC_CTRL[4];
         rand soc_ifc_reg__internal_obf_key internal_obf_key[8];
@@ -5171,16 +5176,16 @@ package soc_ifc_reg_uvm;
                 this.SS_STRAP_GENERIC[i0].build();
                 this.default_map.add_reg(this.SS_STRAP_GENERIC[i0], 'h5a0 + i0*'h4);
             end
-            this.SS_DBG_MANUF_SERVICE_REG_REQ = new("SS_DBG_MANUF_SERVICE_REG_REQ");
-            this.SS_DBG_MANUF_SERVICE_REG_REQ.configure(this);
+            this.SS_DBG_SERVICE_REG_REQ = new("SS_DBG_SERVICE_REG_REQ");
+            this.SS_DBG_SERVICE_REG_REQ.configure(this);
 
-            this.SS_DBG_MANUF_SERVICE_REG_REQ.build();
-            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_REQ, 'h5c0);
-            this.SS_DBG_MANUF_SERVICE_REG_RSP = new("SS_DBG_MANUF_SERVICE_REG_RSP");
-            this.SS_DBG_MANUF_SERVICE_REG_RSP.configure(this);
+            this.SS_DBG_SERVICE_REG_REQ.build();
+            this.default_map.add_reg(this.SS_DBG_SERVICE_REG_REQ, 'h5c0);
+            this.SS_DBG_SERVICE_REG_RSP = new("SS_DBG_SERVICE_REG_RSP");
+            this.SS_DBG_SERVICE_REG_RSP.configure(this);
 
-            this.SS_DBG_MANUF_SERVICE_REG_RSP.build();
-            this.default_map.add_reg(this.SS_DBG_MANUF_SERVICE_REG_RSP, 'h5c4);
+            this.SS_DBG_SERVICE_REG_RSP.build();
+            this.default_map.add_reg(this.SS_DBG_SERVICE_REG_RSP, 'h5c4);
             foreach(this.SS_SOC_DBG_UNLOCK_LEVEL[i0]) begin
                 this.SS_SOC_DBG_UNLOCK_LEVEL[i0] = new($sformatf("SS_SOC_DBG_UNLOCK_LEVEL[%0d]", i0));
                 this.SS_SOC_DBG_UNLOCK_LEVEL[i0].configure(this);
