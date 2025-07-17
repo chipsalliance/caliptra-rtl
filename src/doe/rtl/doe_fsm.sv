@@ -223,7 +223,7 @@ end
 
 //latch the dest addr when starting, and when we roll over dest offset
 always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
-always_comb dest_addr_nxt = running_hek ? OCP_LOCK_HEK_SEED_KV_SLOT : doe_cmd_reg.dest_sel; // TODO necessary to tie HEK dest?
+always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_SEED_KV_SLOT : doe_cmd_reg.dest_sel; // TODO necessary to tie HEK dest?
 
 //drive outputs to kv
 always_comb kv_write.write_en = dest_write_en;

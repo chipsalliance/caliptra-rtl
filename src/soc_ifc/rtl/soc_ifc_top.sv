@@ -840,6 +840,7 @@ always_comb begin : ss_reg_hwwe
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.we                           = strap_we_pre_fuse_done; //RO by TAP
     soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.we                        = strap_we_pre_fuse_done; //RO by TAP
     soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.we                        = strap_we_pre_fuse_done; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_SIZE.size.we                                 = strap_we_pre_fuse_done; //RO by TAP
     soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.we = strap_we_pre_fuse_done; //No TAP access
     soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.we           = strap_we_pre_fuse_done; //No TAP access
 end
@@ -1529,8 +1530,8 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
-`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE , strap_ss_key_release_key_size[1:0] == 2'b00, clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE , strap_ss_key_release_key_size[15:0] <= 16'h40, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_DW_MULT , strap_ss_key_release_key_size[1:0]  == 2'b00 , clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_LTE_64  , strap_ss_key_release_key_size[15:0] <= 16'h40, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)

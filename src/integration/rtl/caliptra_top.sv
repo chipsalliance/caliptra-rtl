@@ -1401,7 +1401,7 @@ soc_ifc_top1
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
 
     // Subsystem mode OCP LOCK status
-    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
+    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress), // TODO route to AES/KeyVault for rules
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

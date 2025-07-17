@@ -201,8 +201,8 @@ assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets;
 
 assign doe_cmd_reg.cmd = doe_cmd_e'({hwif_out.DOE_CTRL.CMD_EXT.value,hwif_out.DOE_CTRL.CMD.value});
-// OCP LOCK flow for HEK deobf requires output be stored in a predetermined slot
-assign doe_cmd_reg.dest_sel = doe_cmd_reg.cmd == DOE_HEK ? OCP_LOCK_HEK_SEED_KV_SLOT : hwif_out.DOE_CTRL.DEST.value;
+// OCP LOCK flow for HEK deobf requires output be stored in a predetermined slot (TODO needed?)
+assign doe_cmd_reg.dest_sel = hwif_out.DOE_CTRL.DEST.value; // doe_cmd_reg.cmd == DOE_HEK ? OCP_LOCK_HEK_SEED_KV_SLOT : hwif_out.DOE_CTRL.DEST.value;
 
 //FW can do this to clear the obfuscation related secrets
 //the Obfuscated UDS, FE, and OBF KEY

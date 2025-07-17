@@ -15,7 +15,7 @@
 `ifndef OCP_LOCK_PKG
 `define OCP_LOCK_PKG
 
-package soc_ifc_pkg;
+package ocp_lock_pkg;
 
     import kv_defines_pkg::*;
 
