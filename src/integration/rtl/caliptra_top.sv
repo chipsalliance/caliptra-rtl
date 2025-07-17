@@ -24,6 +24,7 @@ module caliptra_top
     import lc_ctrl_state_pkg::*;
     import lc_ctrl_reg_pkg::*;
     import lc_ctrl_pkg::*;
+    import ocp_lock_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;
@@ -104,6 +105,8 @@ module caliptra_top
     input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [63:0] strap_ss_key_release_base_addr,
+    input logic [15:0] strap_ss_key_release_key_size,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
     input logic [31:0] strap_ss_caliptra_dma_axi_user,
@@ -199,6 +202,7 @@ module caliptra_top
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
+    logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed;
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_reg;
 
     //caliptra uncore jtag ports & pertinent logic
@@ -289,6 +293,9 @@ module caliptra_top
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_dbg;
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_dbg;
     logic                                      cptra_in_debug_scan_mode;
+
+    // Subsystem mode OCP LOCK status
+    logic ss_ocp_lock_in_progress;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -920,6 +927,7 @@ doe_ctrl #(
     .cptra_obf_key     (cptra_obf_key_dbg),
     .obf_uds_seed      (obf_uds_seed_dbg),
     .obf_field_entropy (obf_field_entropy_dbg),
+    .obf_hek_seed      (obf_hek_seed),
     .haddr_i           (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DOE)-1:0]),
     .hwdata_i          (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].hwdata),
     .hsel_i            (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].hsel),
@@ -1365,6 +1373,7 @@ soc_ifc_top1
     .cptra_obf_uds_seed_vld(cptra_obf_uds_seed_vld),
     .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
+    .obf_hek_seed(obf_hek_seed),
 
     // Subsystem mode straps
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
@@ -1373,6 +1382,8 @@ soc_ifc_top1
     .strap_ss_external_staging_area_base_addr               (strap_ss_external_staging_area_base_addr               ),
     .strap_ss_otp_fc_base_addr                              (strap_ss_otp_fc_base_addr                              ),
     .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
+    .strap_ss_key_release_base_addr                         (strap_ss_key_release_base_addr                         ),
+    .strap_ss_key_release_key_size                          (strap_ss_key_release_key_size                          ),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
     .strap_ss_caliptra_dma_axi_user                         (strap_ss_caliptra_dma_axi_user                         ),
@@ -1388,6 +1399,9 @@ soc_ifc_top1
 
     // Subsystem mode firmware execution control
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
+
+    // Subsystem mode OCP LOCK status
+    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

@@ -143,6 +143,26 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: lock_fe_flow toggled after warm reset");
 
+  DOE_lock_hek_set:        assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            disable iff (~`SVA_RST)
+                                            $rose(`DOE_PATH.flow_done) && $past(doe_cmd_reg_t'(`DOE_PATH.doe_cmd_reg.cmd) == DOE_HEK) |=> `DOE_PATH.lock_hek_flow
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow was not set after HEK flow");
+
+  DOE_lock_hek_cold_reset:   assert property (
+                                            @(posedge `SVA_CLK)
+                                            ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 0)
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow was not reset on hard reset");
+
+  DOE_lock_hek_warm_reset:   assert property (
+                                            @(posedge `SVA_CLK)
+                                            disable iff (~`DOE_PATH.rst_b && ~`DOE_PATH.hard_rst_b)
+                                            ~`DOE_PATH.rst_b |-> $past(`DOE_PATH.lock_hek_flow) == `DOE_PATH.lock_hek_flow
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow toggled after warm reset");
+
   //Corner case: when clear_obf_secrets and reset events happen in the same cycle, reset deassertion will cause SVA to start checking
   //But if clear_obf_secrets was already 1 (not a pulse), it expects to see status valid in the next clk, but in design, it takes an extra
   //cycle to update status. Adding a 1 cycle delay to avoid this case by starting the check when reset is deasserted
@@ -290,6 +310,20 @@ module caliptra_top_sva
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
+
+    end
+    end
+  endgenerate
+  generate
+    begin: HEK_data_check
+    for(genvar dword = 0; dword < ocp_lock_pkg::OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
+
+      DOE_HEK_data_check:  assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT/*FIXME*//*`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value*/][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
+                                          )
+                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[ocp_lock_pkg::OCP_LOCK_HEK_SEED_KV_SLOT/*FIXME*//*`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value*/][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
 
     end
     end

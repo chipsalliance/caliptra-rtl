@@ -23,7 +23,8 @@ enum doe_cmd_e {
     DOE_IDLE = 0,
     DOE_UDS = 1,
     DOE_FE = 2,
-    DOE_CLEAR_OBF_SECRETS = 3
+    DOE_CLEAR_OBF_SECRETS = 3,
+    DOE_HEK = 4
 };
 
 /* --------------- Function Prototypes --------------- */

@@ -57,6 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
     const uint32_t iv_data_uds[]  = {0xF046BDE4,0x8AB68862,0x484604A5,0x6024F793};
     const uint32_t iv_data_fe[]   = {0x15CEB4E6,0x8F5D504D,0x1D022FBA,0x9EEEB655};
+    const uint32_t iv_data_hek[]  = {0x15CEB4E6,0x8F5D504D,0x1D022FBA,0x9EEEB655}; // FIXME unique value from FE?
 
 /* CDI HMAC512 test vector
     KEY =   96cff59db2e5fb5800da7f598e032d465e1db55a3d52c5108e60b64608a2c857de5ca4924a13134a2d93b337a832609ec74b26e881c37f4be2eb38aa6abd1e83
@@ -327,7 +328,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 //****************************************************************** 
 void kv_doe(uint8_t doe_fe_dest_id){
 
-    doe_init(iv_data_uds, iv_data_fe, doe_fe_dest_id);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_fe_dest_id);
 
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 

@@ -19,6 +19,8 @@
 
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
+// Uncomment to enable OCP LOCK features
+//`define CALIPTRA_OCP_LOCK_EN
 
 // Uncomment if fuse granularity 32 bits.
 //`define CALIPTRA_FUSE_GRANULARITY_32

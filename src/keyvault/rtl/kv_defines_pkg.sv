@@ -32,6 +32,13 @@ parameter KV_ENTRY_FOR_ECC_SIGNING = 7;
 parameter KV_ENTRY_FOR_MLDSA_SIGNING = 8;
 parameter PCR_HASH_NUM_DWORDS = 16;
 
+localparam KV_DEST_IDX_HMAC_KEY   = 0;
+localparam KV_DEST_IDX_HMAC_BLOCK = 1;
+localparam KV_DEST_IDX_MLDSA_SEED = 2;
+localparam KV_DEST_IDX_ECC_PKEY   = 3;
+localparam KV_DEST_IDX_ECC_SEED   = 4;
+localparam KV_DEST_IDX_AES_KEY    = 5;
+    
 typedef struct packed {
     logic   [KV_ADDR_W-1:0] addr;
     logic   [KV_DATA_W-1:0] wdata;

@@ -41,6 +41,8 @@
 #define DOE_REG_DOE_CTRL_CMD_MASK                                                                   (0x3)
 #define DOE_REG_DOE_CTRL_DEST_LOW                                                                   (2)
 #define DOE_REG_DOE_CTRL_DEST_MASK                                                                  (0x7c)
+#define DOE_REG_DOE_CTRL_CMD_EXT_LOW                                                                (7)
+#define DOE_REG_DOE_CTRL_CMD_EXT_MASK                                                               (0x180)
 #endif
 #define CLP_DOE_REG_DOE_STATUS                                                                      (0x10000014)
 #ifndef DOE_REG_DOE_STATUS
@@ -55,6 +57,8 @@
 #define DOE_REG_DOE_STATUS_FE_FLOW_DONE_MASK                                                        (0x8)
 #define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_LOW                                                (4)
 #define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_MASK                                               (0x10)
+#define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_LOW                                                        (5)
+#define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_MASK                                                       (0x20)
 #endif
 #define CLP_DOE_REG_INTR_BLOCK_RF_START                                                             (0x10000800)
 #define CLP_DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x10000800)
@@ -10286,6 +10290,8 @@
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                                 (0x10)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                           (5)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                          (0x20)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                            (6)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                           (0x40)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                         (0x300300e4)
 #ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
@@ -10841,6 +10847,38 @@
 #define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                               (0)
 #define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                              (0xff)
 #endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_0                                                             (0x300303a4)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_0
+#define SOC_IFC_REG_FUSE_HEK_SEED_0                                                                 (0x3a4)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_1                                                             (0x300303a8)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_1
+#define SOC_IFC_REG_FUSE_HEK_SEED_1                                                                 (0x3a8)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_2                                                             (0x300303ac)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_2
+#define SOC_IFC_REG_FUSE_HEK_SEED_2                                                                 (0x3ac)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_3                                                             (0x300303b0)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_3
+#define SOC_IFC_REG_FUSE_HEK_SEED_3                                                                 (0x3b0)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_4                                                             (0x300303b4)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_4
+#define SOC_IFC_REG_FUSE_HEK_SEED_4                                                                 (0x3b4)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_5                                                             (0x300303b8)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_5
+#define SOC_IFC_REG_FUSE_HEK_SEED_5                                                                 (0x3b8)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_6                                                             (0x300303bc)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_6
+#define SOC_IFC_REG_FUSE_HEK_SEED_6                                                                 (0x3bc)
+#endif
+#define CLP_SOC_IFC_REG_FUSE_HEK_SEED_7                                                             (0x300303c0)
+#ifndef SOC_IFC_REG_FUSE_HEK_SEED_7
+#define SOC_IFC_REG_FUSE_HEK_SEED_7                                                                 (0x3c0)
+#endif
 #define CLP_SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L                                                     (0x30030500)
 #ifndef SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L
 #define SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L                                                         (0x500)
@@ -10906,6 +10944,26 @@
 #define CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                        (0x3003053c)
 #ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
 #define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (0x53c)
+#endif
+#define CLP_SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L                                                  (0x30030540)
+#ifndef SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L
+#define SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L                                                      (0x540)
+#endif
+#define CLP_SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H                                                  (0x30030544)
+#ifndef SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H
+#define SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H                                                      (0x544)
+#endif
+#define CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE                                                         (0x30030548)
+#ifndef SOC_IFC_REG_SS_KEY_RELEASE_SIZE
+#define SOC_IFC_REG_SS_KEY_RELEASE_SIZE                                                             (0x548)
+#define SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_LOW                                                    (0)
+#define SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK                                                   (0xffff)
+#endif
+#define CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL                                                            (0x3003054c)
+#ifndef SOC_IFC_REG_SS_OCP_LOCK_CTRL
+#define SOC_IFC_REG_SS_OCP_LOCK_CTRL                                                                (0x54c)
+#define SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_LOW                                           (0)
+#define SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK                                          (0x1)
 #endif
 #define CLP_SOC_IFC_REG_SS_STRAP_GENERIC_0                                                          (0x300305a0)
 #ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0

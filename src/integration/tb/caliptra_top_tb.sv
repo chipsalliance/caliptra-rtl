@@ -30,6 +30,7 @@ module caliptra_top_tb (
 `endif
 
     import axi_pkg::*;
+    import ocp_lock_pkg::*;
     import soc_ifc_pkg::*;
     import caliptra_top_tb_pkg::*;
 
@@ -62,6 +63,7 @@ module caliptra_top_tb (
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
+    logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0]      cptra_hek_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
 
     //jtag interface
@@ -147,6 +149,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
+    .cptra_hek_rand  (cptra_hek_rand  ),
     .cptra_obf_key_tb(cptra_obf_key_tb),
 
     .m_axi_bfm_if(m_axi_bfm_if),
@@ -358,6 +361,7 @@ caliptra_top_tb_services #(
     
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
+    .cptra_hek_tb(cptra_hek_rand),
     .cptra_obf_key_tb(cptra_obf_key_tb)
 
 );

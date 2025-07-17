@@ -205,11 +205,16 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t Fuse_Granularity;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__in_t OCP_LOCK_MODE_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{
@@ -377,6 +382,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_soc_manifest_max_svn__in_t;
 
     typedef struct packed{
+        soc_ifc_reg__Fuse_w32__in_t seed;
+    } soc_ifc_reg__fuse_hek_seed__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
@@ -450,6 +459,32 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t addr_h;
     } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_l;
+    } soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__in_t addr_h;
+    } soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__in_t;
+
+    typedef struct packed{
+        logic [15:0] next;
+        logic we;
+        logic swwel;
+    } soc_ifc_reg__strap_w16__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w16__in_t size;
+    } soc_ifc_reg__SS_KEY_RELEASE_SIZE__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__in_t LOCK_IN_PROGRESS;
+    } soc_ifc_reg__SS_OCP_LOCK_CTRL__in_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t data;
@@ -670,6 +705,7 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic cptra_rst_b;
+        logic core_only_rst_b;
         logic cptra_pwrgood;
         logic soc_req;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t CPTRA_HW_ERROR_FATAL;
@@ -715,6 +751,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_pqc_key_type__in_t fuse_pqc_key_type;
         soc_ifc_reg__fuse_soc_manifest_svn__in_t [4-1:0]fuse_soc_manifest_svn;
         soc_ifc_reg__fuse_soc_manifest_max_svn__in_t fuse_soc_manifest_max_svn;
+        soc_ifc_reg__fuse_hek_seed__in_t [8-1:0]fuse_hek_seed;
         soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__in_t SS_CALIPTRA_BASE_ADDR_L;
         soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__in_t SS_CALIPTRA_BASE_ADDR_H;
         soc_ifc_reg__SS_MCI_BASE_ADDR_L__in_t SS_MCI_BASE_ADDR_L;
@@ -731,6 +768,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__in_t SS_CALIPTRA_DMA_AXI_USER;
         soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
         soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__in_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L__in_t SS_KEY_RELEASE_BASE_ADDR_L;
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__in_t SS_KEY_RELEASE_BASE_ADDR_H;
+        soc_ifc_reg__SS_KEY_RELEASE_SIZE__in_t SS_KEY_RELEASE_SIZE;
+        soc_ifc_reg__SS_OCP_LOCK_CTRL__in_t SS_OCP_LOCK_CTRL;
         soc_ifc_reg__SS_STRAP_GENERIC__in_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__in_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_SERVICE_REG_RSP__in_t SS_DBG_SERVICE_REG_RSP;
@@ -1147,6 +1188,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__fuse_soc_manifest_max_svn__out_t;
 
     typedef struct packed{
+        soc_ifc_reg__Fuse_w32__out_t seed;
+    } soc_ifc_reg__fuse_hek_seed__out_t;
+
+    typedef struct packed{
         logic [31:0] value;
     } soc_ifc_reg__strap_w32__out_t;
 
@@ -1217,6 +1262,30 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t addr_h;
     } soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_l;
+    } soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w32__out_t addr_h;
+    } soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__out_t;
+
+    typedef struct packed{
+        logic [15:0] value;
+    } soc_ifc_reg__strap_w16__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__strap_w16__out_t size;
+    } soc_ifc_reg__SS_KEY_RELEASE_SIZE__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__out_t LOCK_IN_PROGRESS;
+    } soc_ifc_reg__SS_OCP_LOCK_CTRL__out_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t data;
@@ -1488,6 +1557,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__fuse_pqc_key_type__out_t fuse_pqc_key_type;
         soc_ifc_reg__fuse_soc_manifest_svn__out_t [4-1:0]fuse_soc_manifest_svn;
         soc_ifc_reg__fuse_soc_manifest_max_svn__out_t fuse_soc_manifest_max_svn;
+        soc_ifc_reg__fuse_hek_seed__out_t [8-1:0]fuse_hek_seed;
         soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L__out_t SS_CALIPTRA_BASE_ADDR_L;
         soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H__out_t SS_CALIPTRA_BASE_ADDR_H;
         soc_ifc_reg__SS_MCI_BASE_ADDR_L__out_t SS_MCI_BASE_ADDR_L;
@@ -1504,6 +1574,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER__out_t SS_CALIPTRA_DMA_AXI_USER;
         soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
         soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H__out_t SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L__out_t SS_KEY_RELEASE_BASE_ADDR_L;
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__out_t SS_KEY_RELEASE_BASE_ADDR_H;
+        soc_ifc_reg__SS_KEY_RELEASE_SIZE__out_t SS_KEY_RELEASE_SIZE;
+        soc_ifc_reg__SS_OCP_LOCK_CTRL__out_t SS_OCP_LOCK_CTRL;
         soc_ifc_reg__SS_STRAP_GENERIC__out_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__out_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_SERVICE_REG_RSP__out_t SS_DBG_SERVICE_REG_RSP;

@@ -38,6 +38,7 @@ module caliptra_top_tb_services
     import soc_ifc_pkg::*;
     import kv_defines_pkg::*;
     import caliptra_top_tb_pkg::*;
+    import ocp_lock_pkg::*;
 #(
     parameter UVM_TB = 0
 ) (
@@ -84,6 +85,7 @@ module caliptra_top_tb_services
 
     output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
     output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
+    output logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] cptra_hek_tb,
     output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
 
 );
@@ -239,6 +241,11 @@ module caliptra_top_tb_services
           logic [0:IV_NO-1][31:0] iv_fe;
           logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_plaintext;
           logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_ciphertext;
+
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0] obf_key_hek;
+          logic [0:IV_NO-1][31:0] iv_hek;
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] hek_plaintext;
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] hek_ciphertext;
     } doe_test_vector_t;
 
     doe_test_vector_t doe_test_vector;
@@ -318,6 +325,7 @@ module caliptra_top_tb_services
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
+    //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
     //         8'hd9        - Perform mldsa keygen
@@ -1011,6 +1019,10 @@ module caliptra_top_tb_services
             force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
             force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_fe[dword];
         end
+        else if ((WriteData[7:0] == 8'hd5) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_hek[dword];
+        end
         else begin
             release `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
             release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value;
@@ -1238,6 +1250,15 @@ endgenerate //IV_NO
             void'($sscanf(line_read, "%h", doe_test_vector.fe_plaintext));
             void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", doe_test_vector.fe_ciphertext));
+
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_hek));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_hek));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.hek_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.hek_ciphertext));
 
             $fclose(fd_r);
         end
@@ -1850,7 +1871,10 @@ endgenerate //IV_NO
                 cptra_uds_tb[dword] = doe_test_vector.uds_ciphertext[dword];
             end
             for(int dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
-                cptra_fe_tb[dword] = doe_test_vector.fe_ciphertext[dword];
+                cptra_fe_tb[dword]  = doe_test_vector.fe_ciphertext[dword];
+            end
+            for(int dword = 0; dword < OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
+                cptra_hek_tb[dword] = doe_test_vector.hek_ciphertext[dword];
             end
         end
         `endif

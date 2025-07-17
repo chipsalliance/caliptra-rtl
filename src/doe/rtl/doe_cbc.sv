@@ -35,6 +35,7 @@ module doe_cbc
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
   import doe_reg_pkg::*;
+  import ocp_lock_pkg::*;
  #(
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32
@@ -50,6 +51,7 @@ module doe_cbc
    //Obfuscated UDS and FE
    input wire [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
    input wire [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+   input wire [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed,
 
    // Control.
    input wire           cs,
@@ -112,7 +114,7 @@ module doe_cbc
   logic zeroize;
 
   logic flow_done;
-  logic flow_in_progress, lock_fe_flow, lock_uds_flow;
+  logic flow_in_progress, lock_fe_flow, lock_uds_flow, lock_hek_flow;
 
   doe_reg__in_t  hwif_in;
   doe_reg__out_t hwif_out;
@@ -186,18 +188,21 @@ module doe_cbc
 // Lock the UDS_FLOW_DONE & FE_FLOW_DONE status once the flow is done. Bit is reset only on cold reset on '1. FIXME: add an assertion
 assign hwif_in.DOE_STATUS.UDS_FLOW_DONE.next = lock_uds_flow;
 assign hwif_in.DOE_STATUS.FE_FLOW_DONE.next  = lock_fe_flow;
+assign hwif_in.DOE_STATUS.HEK_FLOW_DONE.next = lock_hek_flow;
 
 assign hwif_in.DOE_STATUS.DEOBF_SECRETS_CLEARED.hwset = clear_obf_secrets;
 
 assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
 assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
-assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod;
+assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
 
-assign hwif_in.DOE_CTRL.CMD.hwclr = flow_done | clear_obf_secrets;
+assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets;
+assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets;
 
-assign doe_cmd_reg.cmd = doe_cmd_e'(hwif_out.DOE_CTRL.CMD.value);
-assign doe_cmd_reg.dest_sel = hwif_out.DOE_CTRL.DEST.value;
+assign doe_cmd_reg.cmd = doe_cmd_e'({hwif_out.DOE_CTRL.CMD_EXT.value,hwif_out.DOE_CTRL.CMD.value});
+// OCP LOCK flow for HEK deobf requires output be stored in a predetermined slot
+assign doe_cmd_reg.dest_sel = doe_cmd_reg.cmd == DOE_HEK ? OCP_LOCK_HEK_SEED_KV_SLOT : hwif_out.DOE_CTRL.DEST.value;
 
 //FW can do this to clear the obfuscation related secrets
 //the Obfuscated UDS, FE, and OBF KEY
@@ -228,6 +233,7 @@ doe_fsm1
   //Obfuscated UDS and FE
   .obf_field_entropy(obf_field_entropy),
   .obf_uds_seed(obf_uds_seed),
+  .obf_hek_seed(obf_hek_seed),
 
   //client control register
   .doe_cmd_reg(doe_cmd_reg),
@@ -249,7 +255,8 @@ doe_fsm1
   .flow_done(flow_done),
   .flow_in_progress(flow_in_progress),
   .lock_uds_flow(lock_uds_flow),
-  .lock_fe_flow(lock_fe_flow),
+  .lock_fe_flow (lock_fe_flow ),
+  .lock_hek_flow(lock_hek_flow),
   .zeroize(zeroize)
 
 );
