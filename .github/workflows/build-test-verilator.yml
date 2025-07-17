@@ -184,6 +184,52 @@ jobs:
         with:
           path: /opt/riscv
           key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+      
+      - name: Delay before retry
+        if: steps.riscv_restore.outputs.cache-hit != 'true'
+        run: |
+          delay=$((RANDOM % 10 + 1))
+          echo "Cache restore failed or cache not found. Waiting ${delay} seconds before retry..."
+          sleep ${delay}
+
+      - name: Restore Risc V Toolchain (Retry)
+        if: steps.riscv_restore.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v3
+        id: riscv_restore_retry
+        with:
+          path: /opt/riscv
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+
+      - name: Verify RISC-V Toolchain Restored
+        run: |
+          echo "Cache restore results:"
+          echo "  First attempt cache-hit: ${{ steps.riscv_restore.outputs.cache-hit }}"
+          echo "  Retry attempt cache-hit: ${{ steps.riscv_restore_retry.outputs.cache-hit }}"
+          
+          # Check if either restore succeeded
+          if [[ "${{ steps.riscv_restore.outputs.cache-hit }}" == "true" ]] || \
+             [[ "${{ steps.riscv_restore_retry.outputs.cache-hit }}" == "true" ]]; then
+            echo "✓ Cache restore reported success"
+          else
+            echo "⚠ WARNING: Neither cache restore reported success"
+          fi
+          
+          # Verify the toolchain files actually exist
+          if [ -d "/opt/riscv/bin" ]; then
+            echo "✓ RISC-V directory exists at /opt/riscv/bin"
+            if [ -f "/opt/riscv/bin/riscv64-unknown-elf-gcc" ]; then
+              echo "✓ RISC-V GCC compiler found"
+              /opt/riscv/bin/riscv64-unknown-elf-gcc --version | head -1
+            else
+              echo "❌ ERROR: riscv64-unknown-elf-gcc not found in /opt/riscv/bin/"
+              ls -la /opt/riscv/bin/ | head -20
+              exit 1
+            fi
+          else
+            echo "❌ ERROR: RISC-V toolchain directory not found at /opt/riscv"
+            echo "Cache restore failed. This job depends on the build_tools job completing successfully."
+            exit 1
+          fi
 
       - name: Setup verilator path
         run: |

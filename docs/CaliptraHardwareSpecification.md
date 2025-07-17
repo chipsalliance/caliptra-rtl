@@ -27,13 +27,18 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
     * ECDH hardware support
     * HMAC512 hardware support
-    * AXI Manager with DMA support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-axi-manager--dma-assist))
+    * AXI Manager with DMA support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
     * Manufacturing and Debug Unlock
     * UDS programming
     * Read logic for Secret Fuses
     * Streaming Boot Support
 * RISC-V core PMP support
 * CSR HMAC key for manufacturing flow
+
+## Key Caliptra 2.1 Changes
+* AXI Manager DMA AES feature for OCP L.O.C.K. support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
+* [AES Big Endian mode](#aes-endian)
+* [External Staging Area](./CaliptraIntegrationSpecification.md#external-staging-area)
 
 ## Boot FSM
 
@@ -1431,6 +1436,12 @@ Additional registers have been added to support key vault integration. Keys from
 ### Operation
 
 For more information, see the [AES Programmer's Guide](https://github.com/vogelpi/opentitan/blob/aes-gcm-review/hw/ip/aes/doc/programmers_guide.md).
+
+## AES Endian
+
+The AES Core uses little endian for the DATA_IN and DATA_OUT registers. Caliptra allows a user to stream the data into and out of AES in big endian when AES_CLP.CTRL0.ENDIAN_SWAP is set to 1. This is done by swizzling the write and read data when a write targets DATA_IN or a read targets DATA_OUT. 
+
+By default little endian is selected.
 
 ### Signal descriptions
 

@@ -62,6 +62,7 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
+|CALIPTRA_FUSE_GRANULARITY_32 | config_defines.svh | Defining this means fuse row granularity is 32-bits. If not defined it means fuse row granularity is 64 bits. If defined, the ``CPTRA_HW_CONFIG.CALIPTRA_FUSE_GRANULARITY_32`` SOC_IFC register bit is set to 1 for 32-bit granularity. Otherwise, it is set to 0 for 64-bit granularity. This is used by Caliptra ROM for UDS and Field Entropy provisioning.|
 | CALIPTRA_INTERNAL_TRNG      | config_defines.svh   | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
 | CALIPTRA_MODE_SUBSYSTEM     | config_defines.svh   | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
 | USER_ICG                    | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
@@ -207,6 +208,7 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
@@ -278,6 +280,10 @@ Assertion of BootFSM\_BrkPoint stops the boot flow from releasing Caliptra from 
 #### Arbitration
 
 Caliptra has two interfaces attached to the AXI bus: a subordinate, incapable of initiating transfers, and a manager interface. The AXI manager is only enabled in Caliptra Subsystem mode, and must be tied to 0 in all other use-cases. The AXI subordinate is used by SoC agents to interact with the Caliptra external registers. If SoCs have multiple AXI agents or other proprietary-fabric protocols that require any special fabric arbitration, that arbitration is done at SoC level.
+
+#### AXI User
+
+AXI address user request signals (ARUSER and AWUSER, collectively "AxUSER") are used to uniquely identify AXI agents that have issued the request to Caliptra. Refer to [Mailbox AXI User Attribute Register](#mailbox-axi-user-attribute-register) and [SoC Integration Requirements](#soc-integration-requirements) for additional details.
 
 #### Unsupported features
 
@@ -405,9 +411,31 @@ The SoC communicates with the mailbox through an AXI Interface. The SoC acts as 
 
 The AXI_USER bits are used by the SoC to identify which device is accessing the mailbox.
 
+## External Staging Area
+
+To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to **16 KiB**.  
+Instead of passing images directly to Caliptra through the mailbox, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
+
+Caliptra Core receives the base address of this staging area through the **SOC_IFC** register `SS_EXTERNAL_STAGING_AREA_BASE_ADDR`. The address must be an AXI address accessable via the Caliptra DMA controller. This register is exposed as a strap ``strap_ss_external_staging_area_base_addr`` and is overridable by SW until ``FUSE_DONE`` is set. 
+
+For hitless updates or other image-processing operations, the Caliptra mailbox should be used to:
+
+1. Notify Caliptra that an image is available for processing.  
+2. Specify the command to run on the image.  
+3. Indicate the size of the image in the staging area.  
+
+References:
+
+- [Caliptra ROM MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/rom/dev/README.md#handling-commands-from-mailbox)
+- [Caliptra Runtime FW MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/runtime/README.md#mailbox-commands)
+- [Caliptra HW API](#mailbox)
+
+
+The external staging area must be within the Caliptra crypto boundary. Meaning there must be access restrictions similar to the MBOX preventing trusted entities from manipulating or accessing the data being processed by Caliptra.
+
 ## Mailbox
 
-The Caliptra mailbox is a 256 KiB buffer used for exchanging data between the SoC and the Caliptra microcontroller.
+The Caliptra mailbox is a 256 KiB when in passive mode and 16 KiB when in subsystem mode buffer used for exchanging data between the SoC and the Caliptra microcontroller. See [External Staging Area](#external-staging-area) why the MBOX SRAM size is smaller in subsystem mode. 
 
 When a mailbox is populated by the SoC, initiation of the operation by writing the execute bit triggers an interrupt to the microcontroller. This interrupt indicates that a command is available in the mailbox. The microcontroller is responsible for reading from and responding to the command.
 
@@ -812,11 +840,11 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
 6. If no parity error is detected but syndrome == 0 or the syndrome is invalid, the error is deemed uncorrectable.
 7. On both single and double errors, the read data is modified before being returned to Caliptra.
 8. Since single-bit errors shall be corrected through INTEGRATOR instantiated logic, Caliptra never sees single-bit errors from SRAM.
-9. Double-bit or uncorrectable errors would cause unpredictable data to be returned to Caliptra. Since this condition shall be detected and reported to MCRIP, there is no concern or expectation that Caliptra will operate correctly after a double error.
+9. Double-bit or uncorrectable errors would cause unpredictable data to be returned to Caliptra. Since this condition shall be detected and reported to MCRIP, there is no expectation that Caliptra will operate correctly after a double error.
 10. On detection, single errors are reported as transparent to MCRIP, double errors are reported as fatal.
 11. Along with error severity, MCRIP logs physical location of the error.
 12. After MCRIP logs an error, it has a choice to send out in-band notification to an external agent.
-13.  MCRIP logs can be queried by SoC software.
+13. MCRIP logs can be queried by SoC software.
 
 ### Error injection
 
@@ -829,26 +857,10 @@ Note that the example assumes that data and ECC codes are in non-deterministic b
     2. The non-intrusive error injection does not interfere with the operation of memories.
     3. The non-intrusive error injection is functional in Production fused parts.
 
-### Caliptra error and recovery flow
+### Caliptra error handling flow
 
-1. Caliptra Stuck:
-    1. SoC BC timeout mechanism with 300us timeout.
-2. Caliptra reports non-fatal error during boot flow:
-    1. cptra\_error\_non\_fatal is an output Caliptra signal, which shall be routed to SoC interrupt controller.
-    2. SoC can look at the Caliptra non-fatal error register for error source.
-    3. Assume Caliptra can report a non-fatal error at any time.
-    4. SoC should monitor the error interrupt or check it before sending any mailbox command.
-    5. In the event of a non-fatal error during boot (that is, prior to a ready for RT signal), SoC should enter recovery flow and attempt to boot again using alternate boot part/partition.
-    6. If SoC sees that a non-fatal error has occurred AFTER receiving the ready for RT signal, SoC may attempt to recover Caliptra by executing the “Run Self-Test” mailbox command (not yet defined).
-    7. If this command completes successfully, SoC may continue using Caliptra as before.
-    8. If this command is unsuccessful, Caliptra is in an error state for the remainder of the current boot.
-    9. Non-fatal ECC errors are never reported by Caliptra; SoC needs to monitor MCRIP for non-fatal Caliptra ECC errors.
-3. Caliptra reports fatal error during boot flow:
-    1. cptra\_error\_fatal is an output Caliptra signal, which shall be routed to SoC interrupt controller.
-    2. SoC can look at the Caliptra fatal error register for error source.
-    3. Assume Caliptra can report a fatal error at any time.
-    4. Fatal errors are generally hardware in nature. SoC may attempt to recover by full reset of the entire SoC, or can move on and know that Caliptra will be unavailable for the remainder of the current boot.
-    5. We cannot assume that uncorrectable errors will be correctly detected by Caliptra, ECC fatal errors shall be reported by SoC MCRIP.
+1. Any implementation of error and recovery flows must adhere to the error handling requirements specified in [Caliptra.md](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#error-reporting-and-handling)
+2. SoC level reporting and handling of fatal & non-fatal errors is product-specific architecture, outside the scope of Caliptra core definition. For example, a CPU and a PCIe device may handle fatal and non-fatal errors differently.
 
 # SoC integration requirements
 
@@ -905,12 +917,14 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Backend convergence              | Caliptra supports frequencies up to 400MHz using an industry standard, moderately advanced technology node as of 2023 September.                                                                                                                                               | Statement of conformance | Functional                                        |
 | Power saving                     | Caliptra clock gating shall be controlled by Caliptra firmware alone. SoC is provided a global clock gating enable signal (and a register) to control.                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
 | Power saving                     | SoC shall not power-gate Caliptra independently of the entire SoC.                                                                                                                                                                                                             | Statement of conformance | Required for Caliptra threat model                |
-| AXI USER                         | SoC shall drive AXI USER input in accordance with the IP integration spec. CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage.                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
+| AXI USER                         | SoC shall drive AXI USER input for all AXI requests that have a route to Caliptra (e.g. through the AXI interconnect). CANNOT use value 0xFFFFFFFF. This is reserved for Caliptra-internal usage.                                                                                                                        | Statement of conformance | Required for Caliptra threat model                |
+| AXI USER                         | Assigned AXI USER values must be unique for each agent on the interconnect. All SoC AXI agents that have an access path to Caliptra AXI subordinate (or any Caliptra Subsystem components, when using the Subsystem mode) via AXI must either (a) generate AXI transactions using an AXI_USER value that is unique from that used by all other AXI agents on the interconnect or (b) generate AXI transactions using an AXI_USER value that will never overlap with the configured valid AXI users, if the agent is not a valid mailbox user, valid fuse user, or valid trng user. For example, if any AXI agents utilize the AxUSER field for any type of dynamic metadata and are on the same AXI interconnect as Caliptra, all possible AxUSER values from those agents should be avoided for assigning Caliptra VALID AXI USER values. Because AXI AxUSER signals are used to identify accessing agents and enforce access rules, this rule ensures that no single agent may ever generate an AXI transaction that identifies it as originating from a different agent.  | Statement of conformance | Required for Caliptra threat model                |
 | Error reporting                  | SoC shall report Caliptra error outputs.                                                                                                                                                                                                                                       | Statement of conformance | Telemetry and monitoring                          |
 | Error reporting                  | SoC shall only recover Caliptra fatal errors via SoC power-good reset.                                                                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
-| TRNG AXI USER Programming rules    | If SoC doesn’t program the CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\], then Caliptra HW will not accept TRNG data from any SoC entity.                                                                                                                                                  | Security                 | Required for Caliptra threat model                |
-| TRNG AXI USER Programming rules    | If SoC programs CPTRA\_TRNG\_VALID\_AXI\_USER and sets CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\], then Caliptra HW will accept TRNG data only from the entity that is programmed into the AXI USER register.                                                                                | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | If SoC doesn’t program the CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\] and Caliptra is configured in external TRNG mode, then Caliptra HW will accept TRNG data from any SoC entity.                                                                                                                                                  | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | If SoC programs CPTRA\_TRNG\_VALID\_AXI\_USER and sets CPTRA\_TRNG\_AXI\_USER\_LOCK\[LOCK\] and Caliptra is configured in external TRNG mode, then Caliptra HW will accept TRNG data only from the entity that is programmed into the AXI USER register.                                                                                | Security                 | Required for Caliptra threat model                |
 | TRNG AXI USER Programming rules    | It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed.                                                                    | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules    | It is strongly recommended that integrators set the TRNG valid AXI_USER to a non-zero value, due to the above uniqueness requirement.                                                                    | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | 5 AXI USER attribute registers are implemented at SoC interface.                                                                                                                                                                                                                 | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | At boot time, a default SoC or AXI USER can access the mailbox. The value of this AXI USER is an integration parameter, CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER.                                                                                                                           | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | The value of CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\] register can be programmed by SoC. After it is locked, it becomes a valid AXI USER for accessing the mailbox.                                                                                                                     | Security                 | Required for Caliptra threat model                |
@@ -918,9 +932,11 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | MAILBOX AXI USER programming rules | SoC logic (ROM, HW) that is using the Caliptra mailbox right out of cold reset, without first configuring the programmable mailbox AXI USER registers, must send the mailbox accesses with the default AXI USER, CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER.                                  | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | For CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\], the corresponding lock bits MUST be programmed to ‘1. This enables the mailbox to accept transactions from non-default AXI USERS.                                                                                                         | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | It is strongly recommended that mailbox AXI USER registers are either set at integration time through integration parameters or are programmed by the SoC ROM before any mutable FW or ROM patches are applied.                                                                  | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER Programming rules | It is strongly recommended that integrators set the MAILBOX valid AXI_USER to non-zero values, due to the above uniqueness requirement.                                                                    | Security                 | Required for Caliptra threat model                |
 | FUSE AXI USER programming rules    | 1 AXI USER attribute register is implemented at SoC interface: CPTRA\_FUSE\_VALID\_AXI\_USER.                                                                                                                                                                                       | Security                 | Required for Caliptra threat model                |
 | FUSE AXI USER programming rules    | CPTRA\_FUSE\_AXI\_USER\_LOCK locks the programmable valid axi user register, and marks the programmed value as valid.                                                                                                                                                               | Security                 | Required for Caliptra threat model                |
 | FUSE AXI USER programming rules    | Integrators can choose to harden the valid axi user for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_AXI\_USER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_AXI\_USER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_AXI\_USER register. | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER Programming rules    | It is strongly recommended that integrators set the FUSE valid AXI_USER to a non-zero value, due to the above uniqueness requirement.                                                                    | Security                 | Required for Caliptra threat model                |
 | Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing).                  | Statement of conformance | Functionality                                     |
 | Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS\_SEED. It is strongly advised to implement manufacturing policies to protect UDS\_SEED as defense in depth measures. <br>1, Prevent leakage of UDS\_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS\_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra threat model |
 | Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model |

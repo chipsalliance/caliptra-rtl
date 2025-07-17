@@ -101,6 +101,7 @@ module caliptra_top
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
     input logic [63:0] strap_ss_recovery_ifc_base_addr,
+    input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
@@ -224,6 +225,18 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
+  
+    // AES status signals
+    logic aes_input_ready;
+    logic aes_output_valid;
+    logic aes_status_idle;
+
+    // AES CIF Signals
+    logic aes_cif_dma_req_dv;
+    logic aes_cif_dma_req_hold;
+    logic aes_cif_dma_req_error;
+    soc_ifc_req_t aes_cif_dma_req_data;
+    logic   [CPTRA_AXI_DMA_DATA_WIDTH-1 : 0] aes_cif_dma_req_rdata;
 
     // Interrupt Signals
     wire doe_error_intr;
@@ -889,8 +902,8 @@ sha256_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
-//override device secrets with debug values in Debug or Scan Mode or any device lifecycle other than PROD and MANUF
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | 
+//override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent | 
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
@@ -1015,7 +1028,11 @@ mldsa_top #(
      .mldsa_memory_export(mldsa_memory_export)
 );
 
+
+
+
 aes_clp_wrapper #(
+    .CIF_DATA_WIDTH(CPTRA_AXI_DMA_DATA_WIDTH),
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES))
 ) aes_inst (
@@ -1033,6 +1050,21 @@ aes_clp_wrapper #(
     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hresp),
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
+  
+    // status signals
+    .input_ready_o(aes_input_ready),
+    .output_valid_o(aes_output_valid),
+    .status_idle_o(aes_status_idle),
+    
+    // DMA CIF IF
+   .dma_req_dv(aes_cif_dma_req_dv),
+   .dma_req_write(aes_cif_dma_req_data.write),
+   .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
+   .dma_req_wdata(aes_cif_dma_req_data.wdata),
+   .dma_req_hold(aes_cif_dma_req_hold), 
+   .dma_req_error(aes_cif_dma_req_error),
+   .dma_req_rdata(aes_cif_dma_req_rdata),
+
 
     // kv interface
     .kv_read(kv_read[5]),
@@ -1257,6 +1289,18 @@ soc_ifc_top1
     .mailbox_data_avail(mailbox_data_avail),
     .mailbox_flow_done(mailbox_flow_done),
 
+    .aes_input_ready,
+    .aes_output_valid,
+    .aes_status_idle,
+
+    .aes_req_dv(aes_cif_dma_req_dv),
+    .aes_req_hold(aes_cif_dma_req_hold),
+    .aes_req_data(aes_cif_dma_req_data),
+    .aes_rdata(aes_cif_dma_req_rdata),
+    .aes_error(aes_cif_dma_req_error), 
+
+
+
     .recovery_data_avail     (recovery_data_avail     ),
     .recovery_image_activated(recovery_image_activated),
 
@@ -1326,6 +1370,7 @@ soc_ifc_top1
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
     .strap_ss_mci_base_addr                                 (strap_ss_mci_base_addr                                 ),
     .strap_ss_recovery_ifc_base_addr                        (strap_ss_recovery_ifc_base_addr                        ),
+    .strap_ss_external_staging_area_base_addr               (strap_ss_external_staging_area_base_addr               ),
     .strap_ss_otp_fc_base_addr                              (strap_ss_otp_fc_base_addr                              ),
     .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),

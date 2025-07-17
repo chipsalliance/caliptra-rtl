@@ -73,7 +73,7 @@ void main() {
     uint32_t read_data;
 
     //make tap mailbox available
-    lsu_write_32(CLP_SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP,SOC_IFC_REG_SS_DBG_MANUF_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP,SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK);
 
     //poll for mbox lock
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 1);

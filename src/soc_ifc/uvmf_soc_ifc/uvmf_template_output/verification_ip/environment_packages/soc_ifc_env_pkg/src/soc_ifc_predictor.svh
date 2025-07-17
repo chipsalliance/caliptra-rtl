@@ -245,6 +245,7 @@ class soc_ifc_predictor #(
       bit [63:0] caliptra_base_addr;
       bit [63:0] mci_base_addr;
       bit [63:0] recovery_ifc_base_addr;
+      bit [63:0] external_staging_area_base_addr;
       bit [63:0] otp_fc_base_addr;
       bit [63:0] uds_seed_base_addr;
       bit [31:0] prod_debug_unlock_auth_pk_hash_reg_bank_offset;
@@ -812,6 +813,7 @@ class soc_ifc_predictor #(
         this.strap_ss_val.caliptra_base_addr                             = (t.strap_ss_caliptra_base_addr                            );
         this.strap_ss_val.mci_base_addr                                  = (t.strap_ss_mci_base_addr                                 );
         this.strap_ss_val.recovery_ifc_base_addr                         = (t.strap_ss_recovery_ifc_base_addr                        );
+        this.strap_ss_val.external_staging_area_base_addr                = (t.strap_ss_external_staging_area_base_addr               );
         this.strap_ss_val.otp_fc_base_addr                               = (t.strap_ss_otp_fc_base_addr                              );
         this.strap_ss_val.uds_seed_base_addr                             = (t.strap_ss_uds_seed_base_addr                            );
         this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset = (t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
@@ -1697,6 +1699,8 @@ class soc_ifc_predictor #(
                 "SS_MCI_BASE_ADDR_H",
                 "SS_RECOVERY_IFC_BASE_ADDR_L",
                 "SS_RECOVERY_IFC_BASE_ADDR_H",
+                "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L",
+                "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H",
                 "SS_OTP_FC_BASE_ADDR_L",
                 "SS_OTP_FC_BASE_ADDR_H",
                 "SS_UDS_SEED_BASE_ADDR_L",
@@ -1710,11 +1714,11 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AHB", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
                 // TODO
-                "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+                "SS_DBG_SERVICE_REG_REQ": begin
                     `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 // TODO
-                "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+                "SS_DBG_SERVICE_REG_RSP": begin
                     `uvm_info("PRED_AHB", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
                 end
                 "SS_SOC_DBG_UNLOCK_LEVEL[0]",
@@ -2024,6 +2028,7 @@ class soc_ifc_predictor #(
                 "error_sha_lock_intr_count_r",
                 "error_fifo_oflow_intr_count_r",
                 "error_fifo_uflow_intr_count_r",
+                "error_aes_cif_intr_count_r",
                 "notif_txn_done_intr_count_r",
                 "notif_fifo_empty_intr_count_r",
                 "notif_fifo_not_empty_intr_count_r",
@@ -2043,6 +2048,7 @@ class soc_ifc_predictor #(
                 "error_sha_lock_intr_count_incr_r",
                 "error_fifo_oflow_intr_count_incr_r",
                 "error_fifo_uflow_intr_count_incr_r",
+                "error_aes_cif_intr_count_incr_r",
                 "notif_txn_done_intr_count_incr_r",
                 "notif_fifo_empty_intr_count_incr_r",
                 "notif_fifo_not_empty_intr_count_incr_r",
@@ -2868,6 +2874,8 @@ class soc_ifc_predictor #(
             "SS_MCI_BASE_ADDR_H",
             "SS_RECOVERY_IFC_BASE_ADDR_L",
             "SS_RECOVERY_IFC_BASE_ADDR_H",
+            "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L",
+            "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H",
             "SS_OTP_FC_BASE_ADDR_L",
             "SS_OTP_FC_BASE_ADDR_H",
             "SS_UDS_SEED_BASE_ADDR_L",
@@ -2881,11 +2889,11 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             // TODO
-            "SS_DBG_MANUF_SERVICE_REG_REQ": begin
+            "SS_DBG_SERVICE_REG_REQ": begin
                 `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             // TODO
-            "SS_DBG_MANUF_SERVICE_REG_RSP": begin
+            "SS_DBG_SERVICE_REG_RSP": begin
                 `uvm_info("PRED_AXI", $sformatf("FIXME: implement handling for %s", axs_reg.get_name()), UVM_NONE)
             end
             "SS_SOC_DBG_UNLOCK_LEVEL[0]",
@@ -2956,6 +2964,7 @@ class soc_ifc_predictor #(
             "error_sha_lock_intr_count_r",
             "error_fifo_oflow_intr_count_r",
             "error_fifo_uflow_intr_count_r",
+            "error_aes_cif_intr_count_r",
             "notif_txn_done_intr_count_r",
             "notif_fifo_empty_intr_count_r",
             "notif_fifo_not_empty_intr_count_r",
@@ -2968,6 +2977,7 @@ class soc_ifc_predictor #(
             "error_sha_lock_intr_count_incr_r",
             "error_fifo_oflow_intr_count_incr_r",
             "error_fifo_uflow_intr_count_incr_r",
+            "error_aes_cif_intr_count_incr_r",
             "notif_txn_done_intr_count_incr_r",
             "notif_fifo_empty_intr_count_incr_r",
             "notif_fifo_not_empty_intr_count_incr_r",
@@ -4277,7 +4287,7 @@ function void soc_ifc_predictor::predict_reset(input string kind = "HARD");
             `uvm_info("PRED_RESET", {"While processing reset of kind ", kind, ", observed noncore reset deassertion"}, UVM_MEDIUM)
             send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value() != this.strap_ss_val.debug_intent;
             // START TODO
-//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
+//            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.get_mirrored_value() != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value()   != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()   != fixme_signal;
 //            send_ss_mode_sts_txn |= p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[0].get_mirrored_value()   != fixme_signal;
@@ -4373,6 +4383,8 @@ function void soc_ifc_predictor::predict_strap_values();
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H.predict                               (this.strap_ss_val.mci_base_addr[63:32]                          );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L.predict                      (this.strap_ss_val.recovery_ifc_base_addr[31:00]                 );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H.predict                      (this.strap_ss_val.recovery_ifc_base_addr[63:32]                 );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L.predict             (this.strap_ss_val.external_staging_area_base_addr[31:00]        );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.predict             (this.strap_ss_val.external_staging_area_base_addr[63:32]        );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L.predict                            (this.strap_ss_val.otp_fc_base_addr[31:00]                       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
@@ -4391,6 +4403,8 @@ function void soc_ifc_predictor::predict_strap_values();
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_MCI_BASE_ADDR_H                               .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_L                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_RECOVERY_IFC_BASE_ADDR_H                      .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L             .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L             .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H             .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H             .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_L                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
@@ -4465,7 +4479,7 @@ endfunction
 
 function void soc_ifc_predictor::populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
     txn.cptra_ss_debug_intent = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DEBUG_INTENT.get_mirrored_value();
-    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_MANUF_SERVICE_REG_RSP.get_mirrored_value();
+    txn.ss_dbg_manuf_enable = p_soc_ifc_rm.soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.get_mirrored_value();
     txn.ss_soc_dbg_unlock_level = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[1].get_mirrored_value()),
                                    32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[0].get_mirrored_value())};
     txn.ss_generic_fw_exec_ctrl = {32'(p_soc_ifc_rm.soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[3].get_mirrored_value()),

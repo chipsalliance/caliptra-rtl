@@ -669,9 +669,9 @@ module ecc_dsa_ctrl
 
     assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
     assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
-    assign pubkeyx_input_outofrange = verifying_process & (pubkeyx_reg >= PRIME);
-    assign pubkeyy_input_outofrange = verifying_process & (pubkeyy_reg >= PRIME);
-    assign pubkey_input_invalid     = verifying_process & (pk_chk_reg != 0);
+    assign pubkeyx_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyx_reg >= PRIME);
+    assign pubkeyy_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyy_reg >= PRIME);
+    assign pubkey_input_invalid     = (verifying_process | sharedkey_process) & (pk_chk_reg != 0);
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
 

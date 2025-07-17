@@ -55,6 +55,8 @@ addrmap aes_clp_reg {
         
     } AES_VERSION[2];
 
+
+
     /* ---- Entropy Interface Seed ---- */
     reg {
         name = "Entropy Interface Seed";
@@ -79,6 +81,18 @@ addrmap aes_clp_reg {
 
         field {desc = "Entropy Interface Seed field";} ENTROPY_IF_SEED[32];
     } ENTROPY_IF_SEED[9] @0x00000110;
+    
+    /* ---- AES Wrapper controls   ---- */
+    reg {
+        name="AES Wrapper Control";
+        desc="AES Wrapper Controls";
+        field {
+            name="Endianness swap for AES";
+            desc="Default behavior assumes that data written into and read out of AES is little endian.
+                  [br]When set to 0, data written to AES and data read out of AES is left as is and is in little endian format.
+                  [br]When set to 1, data written to AES DATAIN and data read from DATAOUT is big endian format. Since the AES core always assumes little endian format, this control swizzles write data to DATAIN from big endian to little endian format. When data is read from DATAOUT it swizzle the read data from little endian to big endian format. Allowing for the user to stream big endian data into and out of the AES.";
+            sw=rw; hw=r;} ENDIAN_SWAP=0;
+    } CTRL0;
 
     /* ---- AES Key Vault Control Reg ---- */
     kv_read_ctrl_reg AES_KV_RD_KEY_CTRL @0x200;

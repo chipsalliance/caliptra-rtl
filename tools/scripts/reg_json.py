@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # 
@@ -325,18 +326,28 @@ class MyModelPrintingListener(RDLListener):
 if __name__ == '__main__':
   import sys
   import os
+  import argparse
 
   from systemrdl import RDLCompiler, RDLCompileError, RDLWalker
   from systemrdl.messages import FileSourceRef
   from peakrdl_systemrdl import SystemRDLExporter
 
+  # Parse command line arguments
+  parser = argparse.ArgumentParser(description='Import JSON register definitions and convert to SystemRDL')
+  parser.add_argument('files', nargs='+', help='RDL or JSON input files')
+  parser.add_argument('--param', '-p', action='append', default=[], 
+                      help='Set RDL parameter (format: NAME=VALUE). Can be used multiple times.')
+  args = parser.parse_args()
+
+  # Process input files from parsed args
+  input_files = args.files
+
   # Create a compiler session, and an importer attached to it
   rdlc = RDLCompiler()
   json_importer = JsonImporter(rdlc)
 
-  # import each JSON file provided from the command line
-  input_files = sys.argv[1:]
   try:
+    # import each JSON file provided from the command line
     for input_file in input_files:
       # compile or import based on the file extension
       ext = os.path.splitext(input_file)[1]
@@ -348,14 +359,41 @@ if __name__ == '__main__':
         rdlc.msg.fatal(
             'Unknown file extension: %s' % ext, FileSourceRef(input_file)
         )
-    # Elaborate when done
-    root = rdlc.elaborate()
+    
+    # Build parameters dictionary from command line arguments
+    parameters = {}
+    for param in args.param:
+        if '=' not in param:
+            print(f"Error: Invalid parameter format '{param}'. Use NAME=VALUE")
+            sys.exit(1)
+        name, value = param.split('=', 1)
+
+        # Handle boolean values - only accept 'true' or 'false'
+        if value.lower() in ['true', 'false']:
+            parameters[name] = value.lower() == 'true'
+        # Handle hex values
+        elif value.startswith('0x'):
+            try:
+                parameters[name] = int(value, 16)
+            except ValueError:
+                print(f"Error: Invalid hex value '{value}'")
+                sys.exit(1)
+        # Handle integer values
+        elif value.isdigit() or (value.startswith('-') and value[1:].isdigit()):
+            parameters[name] = int(value)
+        # Default to string
+        else:
+            parameters[name] = value
+    
+    # Elaborate with parameters
+    root = rdlc.elaborate(parameters=parameters if parameters else None)
+    
   except RDLCompileError:
     sys.exit(1)
 
   # Export SystemRDL
-  rdl_output_dir = os.path.abspath(os.path.dirname(sys.argv[1]))
-  rdl_output_file = os.path.splitext(os.path.basename(sys.argv[1]))[0] + '.rdl'
+  rdl_output_dir = os.path.abspath(os.path.dirname(input_files[0]))
+  rdl_output_file = os.path.splitext(os.path.basename(input_files[0]))[0] + '.rdl'
   exporter = SystemRDLExporter()
   exporter.export(root, os.path.join(rdl_output_dir, rdl_output_file))
 
