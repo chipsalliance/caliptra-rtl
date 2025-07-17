@@ -955,6 +955,58 @@ Several files contain code that may be specific to an integrator's implementatio
 | [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with a technology-specific sync cell.                            |
 | [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with a technology-specific sync cell. This synchronizer implements edge detection logic using a delayed flip flop on the output domain to produce a pulse output. Integrators must take care to ensure logical equivalence when replacing this logic with custom cells. |
 
+## Synthesis Constraints
+
+To ensure the integrity of security countermeasures, silicon integrators **must** apply `size_only` (or an equivalent) constraint to all cells whose instance names contain the `u__size_only__` tag. This prevents synthesis and Place-and-Route (PNR) tools from optimizing away critical redundant logic.
+
+### Primitive Instantiation
+
+Caliptra uses redundant logic to counteract Fault Injection (FI) and Side Channel Analysis (SCA). This logic is built using generic primitive modules, which act as placeholders. Integrators must replace these generic primitives with corresponding technology-specific cells from their standard cell library. This abstraction allows for applying the necessary constraints directly to the technology cells.
+
+The following generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
+
+*   `caliptra_prim_generic_and2`
+*   `caliptra_prim_generic_buf`
+*   `caliptra_prim_generic_clock_mux2`
+*   `caliptra_prim_generic_xnor2`
+*   `caliptra_prim_generic_xor2`
+*   `caliptra_prim_generic_flop`
+*   `caliptra_prim_generic_flop_en`
+
+To integrate technology-specific replacements, set the `CALIPTRA_PRIM_MODULE_PREFIX` and `CALIPTRA_PRIM_ROOT` environment variables. For details on how `CALIPTRA_PRIM_MODULE_PREFIX` is used to select between generic and technology-specific modules, see the implementation in [`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
+
+**Example: Technology-Specific Buffer**
+
+The following example shows how to create a technology-specific wrapper for the `caliptra_prim_generic_buf` primitive.
+
+```sv
+// In this example:
+// - `CALIPTRA_PRIM_MODULE_PREFIX` is assumed to be `caliptra_prim_tech_name`.
+// - `TECH_DEPENDENT_BUF` is the name of the technology-specific buffer cell.
+// - `PORT_NAME_IN` and `PORT_NAME_OUT` are its input and output ports.
+
+module caliptra_prim_tech_name_buf #(
+  parameter int Width = 1
+) (
+  input  logic [Width-1:0] in_i,
+  output logic [Width-1:0] out_o
+);
+
+  for (genvar k = 0; k < Width; k++) begin : gen_bufs
+    // The instance name "u__size_only__buf" contains the required tag.
+    // Synthesis tools must be configured to apply "size_only"
+    // constraints to any instance whose name includes "u__size_only__".
+    // This naming convention should be used for all replaced primitives.
+
+    TECH_DEPENDENT_BUF u__size_only__buf (
+      .<PORT_NAME_IN>(in_i[k]),
+      .<PORT_NAME_OUT>(out_o[k])
+    );
+  end
+
+endmodule : caliptra_prim_tech_name_buf
+```
+
 
 # CDC analysis and constraints
 
@@ -1182,7 +1234,7 @@ The target foundry technology node is an industry standard, advanced technology 
 *Table 27: Netlist synthesis data*
 
 | **IP Name** | **Combinational Area** | **Sequential Area** | **Memory Area** | **Total Area** | **Instance Count** |
-| :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- | 
+| :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- |
 | CALIPTRA_WRAPPER | 59934 | 430763 | 319147 | 491159 | 1559238 |
 
 *ROM area is not accounted for in the above table.*
