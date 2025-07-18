@@ -158,9 +158,9 @@
 
       foreach (fuse_regnames[ix]) begin
         $display("CUrrent fuse: %s", fuse_regnames[ix]);
-        $display(fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-        if ((fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
-            (fuse_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
+        $display(fuse_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
+        if ((fuse_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
+            (fuse_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
             (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
           //$display("Found %s", fuse_regnames[ix]);
           fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
@@ -168,9 +168,9 @@
         end
       end 
 
-      // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
+      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
       // Deleting it explicitly for now
-      del_from_strq(fuse_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
+      del_from_strq(fuse_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
 
       foreach (fuse_regnames[ix]) begin
         if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
