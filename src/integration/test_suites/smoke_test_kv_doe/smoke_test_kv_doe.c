@@ -514,7 +514,7 @@ void kv_mldsa(uint8_t seed_id){
 
     mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
 
     for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
@@ -531,7 +531,7 @@ void kv_mldsa(uint8_t seed_id){
 
     mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 }
 
 void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_id, uint8_t *mldsa_seed_id, uint8_t *privkey_id, uint8_t *cdi_ldevid_id){
