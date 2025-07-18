@@ -60,7 +60,7 @@ module caliptra_top
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_src           el2_mem_export,
-    mldsa_mem_if.req                   mldsa_memory_export,
+    abr_mem_if.req                     abr_memory_export,
 
     //SRAM interface for mbox
     output logic mbox_sram_cs,
@@ -250,8 +250,8 @@ module caliptra_top
     wire sha512_notif_intr;
     wire sha256_error_intr;
     wire sha256_notif_intr;
-    wire mldsa_error_intr;
-    wire mldsa_notif_intr;
+    wire abr_error_intr;
+    wire abr_notif_intr;
     wire soc_ifc_error_intr;
     wire soc_ifc_notif_intr;
     wire sha_error_intr;
@@ -302,7 +302,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy, mldsa_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic crypto_error;
 
     always_comb crypto_error = (hmac_busy & ecc_busy) |
@@ -430,8 +430,8 @@ always_comb begin
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
-    intr[`VEER_INTR_VEC_MLDSA_ERROR  -1]          = mldsa_error_intr;
-    intr[`VEER_INTR_VEC_MLDSA_NOTIF  -1]          = mldsa_notif_intr;
+    intr[`VEER_INTR_VEC_ABR_ERROR  -1]          = abr_error_intr;
+    intr[`VEER_INTR_VEC_ABR_NOTIF  -1]          = abr_notif_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
@@ -876,8 +876,6 @@ sha512_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
-always_comb kv_write[1] = '0;
-
 sha256_ctrl #(
     .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA256))
@@ -1000,10 +998,10 @@ hmac_ctrl #(
 
 );
 
-mldsa_top #(
+abr_top #(
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
-) mldsa (
+) abr_inst (
      .clk               (clk_cg),
      .rst_b             (cptra_noncore_rst_b),
      //TODO: pwrgood
@@ -1017,14 +1015,16 @@ mldsa_top #(
      .hresp_o           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
      .hreadyout_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
      .hrdata_o          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
-     .kv_read           (kv_read[2]),
-     .kv_rd_resp        (kv_rd_resp[2]),
+     .kv_read           ({kv_read[7:6],kv_read[2]}),
+     .kv_rd_resp        ({kv_rd_resp[7:6],kv_rd_resp[2]}),
+     .kv_write          (kv_write[1]),
+     .kv_wr_resp        (kv_wr_resp[1]),
      .pcr_signing_data  (pcr_signing_data),
-     .busy_o            (mldsa_busy),
-     .error_intr        (mldsa_error_intr),
-     .notif_intr        (mldsa_notif_intr),
+     .busy_o            (abr_busy),
+     .error_intr        (abr_error_intr),
+     .notif_intr        (abr_notif_intr),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
-     .mldsa_memory_export(mldsa_memory_export)
+     .abr_memory_export (abr_memory_export)
 );
 
 

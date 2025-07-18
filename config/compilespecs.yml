@@ -1,0 +1,73 @@
+name: integration_lib
+files:
+  # Components
+  - src/libs/config/compile.yml
+  - src/ahb_lite_bus/config/compile.yml
+  - src/riscv_core/veer_el2/config/compile.yml
+  - src/sha512/config/compile.yml
+  - src/sha256/config/compile.yml
+  - src/doe/config/compile.yml
+  - src/hmac/config/compile.yml
+  - src/soc_ifc/config/compile.yml
+  - src/hmac_drbg/config/compile.yml
+  - src/ecc/config/compile.yml
+  - src/keyvault/config/compile.yml
+  - src/pcrvault/config/compile.yml
+  - src/datavault/config/compile.yml
+  - src/integration/asserts/config/compile.yml
+  - src/sha512_masked/config/compile.yml
+  - src/axi/config/compile.yml
+  # -- Start RNG --
+  - src/caliptra_prim_generic/config/compile.yml
+  - src/caliptra_prim/config/compile.yml
+  - src/caliptra_tlul/config/compile.yml
+  - src/lc_ctrl/config/compile.yml
+  - src/aes/config/compile.yml
+  - src/edn/config/compile.yml
+  - src/kmac/config/compile.yml
+  - src/entropy_src/config/compile.yml
+  - src/csrng/config/compile.yml
+  # -- End RNG --
+
+  # UVMF TBs
+# - src/aes_secworks/uvmf_cbc_AllKAT/config/compile.yml
+  - src/ecc/uvmf_ecc/config/compile.yml
+  - src/hmac/uvmf_2022/config/compile.yml
+  - src/keyvault/uvmf_kv/config/compile.yml
+  - src/pcrvault/uvmf_pv/config/compile.yml
+# - src/sha256/uvmf_sha256/config/compile.yml
+  - src/sha512/uvmf_sha512/config/compile.yml
+  - src/soc_ifc/uvmf_soc_ifc/config/compile.yml
+  - src/integration/uvmf_caliptra_top/config/compile.yml
+
+  # Adams Bridge design
+  - submodules/adams-bridge/src/abr_libs/config/compile.yml
+  - submodules/adams-bridge/src/abr_prim_generic/config/compile.yml
+  - submodules/adams-bridge/src/abr_prim/config/compile.yml
+  - submodules/adams-bridge/src/abr_sha3/config/compile.yml
+  - submodules/adams-bridge/src/rej_sampler/config/compile.yml
+  - submodules/adams-bridge/src/rej_bounded/config/compile.yml
+  - submodules/adams-bridge/src/exp_mask/config/compile.yml
+  - submodules/adams-bridge/src/sample_in_ball/config/compile.yml
+  - submodules/adams-bridge/src/cbd_sampler/config/compile.yml
+  - submodules/adams-bridge/src/decompose/config/compile.yml
+  - submodules/adams-bridge/src/compress/config/compile.yml
+  - submodules/adams-bridge/src/decompress/config/compile.yml
+  - submodules/adams-bridge/src/sk_encode/config/compile.yml
+  - submodules/adams-bridge/src/sk_decode/config/compile.yml
+  - submodules/adams-bridge/src/makehint/config/compile.yml
+  - submodules/adams-bridge/src/norm_check/config/compile.yml
+  - submodules/adams-bridge/src/sig_encode_z/config/compile.yml
+  - submodules/adams-bridge/src/sig_decode_z/config/compile.yml
+  - submodules/adams-bridge/src/sigdecode_h/config/compile.yml
+  - submodules/adams-bridge/src/pk_decode/config/compile.yml
+  - submodules/adams-bridge/src/power2round/config/compile.yml
+  - submodules/adams-bridge/src/abr_sampler_top/config/compile.yml
+  - submodules/adams-bridge/src/ntt_top/config/compile.yml
+  - submodules/adams-bridge/src/barrett_reduction/config/compile.yml
+  - submodules/adams-bridge/src/abr_top/config/compile.yml
+  # UVMF TBs
+  - submodules/adams-bridge/src/abr_top/uvmf/config/compile.yml
+
+  # Please add your next file/folder above not below the line
+  - src/integration/config/compile.yml
