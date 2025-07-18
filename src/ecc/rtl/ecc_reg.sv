@@ -360,11 +360,11 @@ module ecc_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } todo1_key_dest_valid;
+            } mlkem_seed_dest_valid;
             struct packed{
                 logic next;
                 logic load_next;
-            } todo2_key_dest_valid;
+            } mlkem_msg_dest_valid;
             struct packed{
                 logic next;
                 logic load_next;
@@ -615,10 +615,10 @@ module ecc_reg (
             } aes_key_dest_valid;
             struct packed{
                 logic value;
-            } todo1_key_dest_valid;
+            } mlkem_seed_dest_valid;
             struct packed{
                 logic value;
-            } todo2_key_dest_valid;
+            } mlkem_msg_dest_valid;
             struct packed{
                 logic value;
             } dma_data_dest_valid;
@@ -1522,48 +1522,48 @@ module ecc_reg (
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value;
-    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value;
+        next_c = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value;
         load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value & ~decoded_wr_biten[12:12]) | (decoded_wr_data[12:12] & decoded_wr_biten[12:12]);
+            next_c = (field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value & ~decoded_wr_biten[12:12]) | (decoded_wr_data[12:12] & decoded_wr_biten[12:12]);
             load_next_c = '1;
         end
-        field_combo.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.next = next_c;
-        field_combo.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.load_next = load_next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.next;
+            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value <= 1'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.next;
         end
     end
-    assign hwif_out.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value;
-    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value;
+    // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value;
+        next_c = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value;
         load_next_c = '0;
         if(decoded_reg_strb.ecc_kv_wr_pkey_ctrl && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
+            next_c = (field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
             load_next_c = '1;
         end
-        field_combo.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.next = next_c;
-        field_combo.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.load_next = load_next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.next = next_c;
+        field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.next;
+            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value <= 1'h0;
+        end else if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.load_next) begin
+            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.next;
         end
     end
-    assign hwif_out.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value;
+    assign hwif_out.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value;
     // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
@@ -2057,8 +2057,8 @@ module ecc_reg (
     assign readback_array[93][9:9] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value : '0;
     assign readback_array[93][10:10] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value : '0;
     assign readback_array[93][11:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value : '0;
-    assign readback_array[93][12:12] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.todo1_key_dest_valid.value : '0;
-    assign readback_array[93][13:13] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.todo2_key_dest_valid.value : '0;
+    assign readback_array[93][12:12] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value : '0;
+    assign readback_array[93][13:13] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value : '0;
     assign readback_array[93][14:14] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value : '0;
     assign readback_array[93][31:15] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
     assign readback_array[94][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.READY.next : '0;
