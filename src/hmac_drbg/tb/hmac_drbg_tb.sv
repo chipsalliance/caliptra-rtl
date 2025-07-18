@@ -67,6 +67,7 @@ module hmac_drbg_tb();
   wire  [REG_SIZE-1 : 0]            drbg_tb;
 
   logic                     failure_injected;
+  logic                     busy_seen;
 
   initial begin
     if ($value$plusargs("HMAC_DRBG_TEST=%s", hmac_drbg_test_to_run)) begin
@@ -597,6 +598,64 @@ module hmac_drbg_tb();
     end
   endtask // hmac384_drbg_failure_injection
 
+  task hmac_drbg_zeroize_test();
+    begin
+      busy_seen = 0;
+
+      if (!ready_tb)
+        wait(ready_tb);
+            
+      $display("HMAC DRBG Zeroize...");
+      
+      entropy_tb = random_gen();
+      nonce_tb = random_gen();
+      lfsr_seed_tb = random_gen();
+
+      # CLK_PERIOD;
+      init_tb = 1'b1;  
+      zeroize_tb = 1'b1;  
+      
+      # CLK_PERIOD;
+      init_tb = 1'b0;  
+      zeroize_tb = 1'b0; 
+      for (int i=0; i < 10; i++) begin
+        # CLK_PERIOD;
+        if (!ready_tb)
+          busy_seen = 1;
+      end 
+
+      if (busy_seen)
+      begin
+        $display("*** ERROR: TC %0d NOT successful.\n", tc_number);
+        error_ctr = error_ctr + 1;
+      end
+
+      # CLK_PERIOD;
+      busy_seen = 0;
+
+      # CLK_PERIOD;
+      next_tb = 1'b1;  
+      zeroize_tb = 1'b1;  
+
+      # CLK_PERIOD;
+      next_tb = 1'b0;  
+      zeroize_tb = 1'b0; 
+      for (int i=0; i < 10; i++) begin
+        # CLK_PERIOD;
+        if (!ready_tb)
+          busy_seen = 1;
+      end 
+
+      if (busy_seen)
+      begin
+        $display("*** ERROR: TC %0d NOT successful.\n", tc_number);
+        error_ctr = error_ctr + 1;
+      end
+
+      tc_number = tc_number+1;
+    end
+  endtask
+
   //----------------------------------------------------------------
   // always_debug()
   //
@@ -634,6 +693,8 @@ module hmac_drbg_tb();
       else begin
         hmac_drbg_randomized_test();
       end
+
+      hmac_drbg_zeroize_test();
 
       display_test_results();
 

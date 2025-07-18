@@ -621,7 +621,11 @@ module hmac_ctrl_tb();
         begin
           write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
           #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #CLK_PERIOD;
           write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
           #CLK_PERIOD;
         end
 
@@ -641,7 +645,11 @@ module hmac_ctrl_tb();
         begin
           write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
           #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #CLK_PERIOD;
           write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
           #CLK_PERIOD;
         end
 

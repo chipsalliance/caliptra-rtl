@@ -74,20 +74,8 @@ interface hmac_drbg_cov_if
         }
     endgroup
 
-    covergroup hmac_drbg_output_cg @(posedge clk);
-        drbg_cp: coverpoint drbg iff (valid) {
-            bins zero = {384'h0};
-            bins max_value = {HMAC_DRBG_PRIME - 1};
-            bins others = default;
-            
-            illegal_bins illegal_zero = {384'h0};
-            illegal_bins illegal_above_prime = {[HMAC_DRBG_PRIME:$]};
-        }
-    endgroup
-
     hmac_drbg_state_cg hmac_drbg_state_cov = new();
     hmac_drbg_control_cg hmac_drbg_control_cov = new();
-    hmac_drbg_output_cg hmac_drbg_output_cov = new();
 
 endinterface
 

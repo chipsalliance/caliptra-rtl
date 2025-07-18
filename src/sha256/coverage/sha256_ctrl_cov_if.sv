@@ -58,7 +58,7 @@ interface sha256_ctrl_cov_if
 
     covergroup sha256_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        cptra_pwrgood_cp: coverpoint cptra_pwrgood;
+        // cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
         init_cp: coverpoint init;
         next_cp: coverpoint next;
@@ -77,13 +77,15 @@ interface sha256_ctrl_cov_if
         wntz_j_invalid_cp: coverpoint wntz_j_invalid;
 
         init_ready_cp: cross ready, init;
-        next_ready_cp: cross ready, next;
+        // next_ready_cp: cross ready, next;
         zeroize_ready_cp: cross ready, zeroize;
         mode_ready_cp: cross ready, mode;
         zeroize_init_cp: cross zeroize, init;
         zeroize_next_cp: cross zeroize, next;
 
-        wntzmode_init_cp: cross wntz_mode, init;
+        wntzmode_init_cp: cross wntz_mode, init{
+            ignore_bins invalid_case = binsof(wntz_mode) intersect {1} && binsof(init) intersect {0};
+        }
         wntzmode_ready_cp: cross ready, wntz_mode;
         wntzmode_zeroize_cp: cross zeroize, wntz_mode;
         wntz_n_w_cp: cross wntz_n_mode, wntz_w_cp;

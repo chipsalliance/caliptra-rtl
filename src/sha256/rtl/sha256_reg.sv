@@ -537,7 +537,7 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.SHA256_CTRL.INIT.value;
         load_next_c = '0;
-        if(decoded_reg_strb.SHA256_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.SHA256_CTRL && decoded_req_is_wr && hwif_in.sha256_ready) begin // SW write
             next_c = (field_storage.SHA256_CTRL.INIT.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
@@ -561,7 +561,7 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.SHA256_CTRL.NEXT.value;
         load_next_c = '0;
-        if(decoded_reg_strb.SHA256_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.SHA256_CTRL && decoded_req_is_wr && hwif_in.sha256_ready) begin // SW write
             next_c = (field_storage.SHA256_CTRL.NEXT.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0

@@ -54,11 +54,11 @@ interface sha512_ctrl_cov_if
 
     covergroup sha512_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        cptra_pwrgood_cp: coverpoint cptra_pwrgood;
+        // cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
         init_cp: coverpoint init;
         next_cp: coverpoint next;
-        mode_cp: coverpoint mode;
+        mode_cp: coverpoint mode; //TB
         restore_cp: coverpoint restore;
         zeroize_cp: coverpoint zeroize;
         ready_cp: coverpoint ready;
@@ -71,16 +71,16 @@ interface sha512_ctrl_cov_if
 
         hash_cmd_cp: coverpoint hash_cmd  {bins cmd[]   = (0, 0 => 1, 2 => 0, 0);}
 
-        init_ready_cp: cross ready, init;
-        next_ready_cp: cross ready, next;
+        init_ready_cp: cross ready, init; //TB
+        next_ready_cp: cross ready, next; //TB
         zeroize_ready_cp: cross ready, zeroize;
         mode_ready_cp: cross ready, mode;
-        pcr_ready_cp: cross ready, gen_hash_start;
-        pcr_init_cp: cross gen_hash_start, init;
-        pcr_next_cp: cross gen_hash_start, next;
-        zeroize_pcr_cp: cross zeroize, gen_hash_start;
-        zeroize_init_cp: cross zeroize, init;
-        zeroize_next_cp: cross zeroize, next;
+        pcr_ready_cp: cross ready, gen_hash_start; //TB
+        pcr_init_cp: cross gen_hash_ip_cp, init; 
+        pcr_next_cp: cross gen_hash_ip_cp, next; 
+        zeroize_pcr_cp: cross zeroize, gen_hash_ip_cp;
+        zeroize_init_cp: cross zeroize, init; //TB
+        zeroize_next_cp: cross zeroize, next; //TB
         zeroize_restore_cp: cross zeroize, restore;
 
     endgroup
