@@ -102,6 +102,9 @@ module soc_ifc_top
     // RV ECC Status Interface
     input rv_ecc_sts_t rv_ecc_sts,
 
+    // Clear KeyVault secrets
+    input logic debugUnlock_or_scan_mode_switch,
+
     //Obfuscated UDS and FE
     input  logic clear_obf_secrets,
     input  logic scan_mode,
@@ -124,6 +127,10 @@ module soc_ifc_top
     output soc_ifc_req_t aes_req_data,
     input logic [SOC_IFC_DATA_W-1:0] aes_rdata,
     input logic aes_error, 
+
+    // kv interface
+    output kv_read_t    kv_read,
+    input  kv_rd_resp_t kv_rd_resp,
 
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
@@ -1244,7 +1251,16 @@ axi_dma_top #(
 
     // SOC_IFC Internal Signaling
     .mbox_lock(uc_mbox_lock),
-    .sha_lock (1'b0), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
+    .sha_lock (1'b0        ), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch                               ),
+    .ocp_lock_in_progress           (ss_ocp_lock_in_progress                                       ),
+    .key_release_addr               ({soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.value,
+                                      soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.value}),
+    .key_release_size               (soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value           ),
+
+    // kv interface
+    .kv_read   (kv_read   ),
+    .kv_rd_resp(kv_rd_resp),
 
     // Configuration for requests
     .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value)),

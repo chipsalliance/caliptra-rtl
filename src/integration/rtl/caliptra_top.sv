@@ -1361,6 +1361,10 @@ soc_ifc_top1
     .dma_error_intr(dma_error_intr),
     .dma_notif_intr(dma_notif_intr),
     .timer_intr(timer_int),
+
+    //Clear KeyVault secrets
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
+
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
     .scan_mode(scan_mode),
@@ -1373,6 +1377,10 @@ soc_ifc_top1
     .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
     .obf_hek_seed(obf_hek_seed),
+
+    // kv interface
+    .kv_read   (kv_read   [KV_DEST_IDX_DMA_DATA]),
+    .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_DMA_DATA]),
 
     // Subsystem mode straps
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),

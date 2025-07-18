@@ -23,7 +23,7 @@ parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
 parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
-parameter KV_NUM_READ=7;
+parameter KV_NUM_READ=9;
 parameter KV_NUM_WRITE=4;
 parameter ECC_NUM_DWORDS = 12;
 parameter MLDSA_NUM_DWORDS = 8;
@@ -36,7 +36,8 @@ localparam OCP_LOCK_RT_OBF_KEY_KV_SLOT  = 16; // Stores the runtime MEK obf key 
 localparam OCP_LOCK_HEK_SEED_KV_SLOT    = 22; // Destination for deobf HEK seed, also for derived HEK
                                               // TODO -- do we need to be prescriptive about this, now that RT_OBF_KEY is used for MEK decryption instead of HEK?
 localparam OCP_LOCK_KEY_RELEASE_KV_SLOT = 23; // Stores the fully decrypted MEK
-localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed
+localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed -- used to define the write-size from DOE
+localparam OCP_LOCK_MEK_NUM_DWORDS      = 8;  // 256b MEK -- used to define the entry size fetched from KV
 
 localparam KV_DEST_IDX_HMAC_KEY   = 0;
 localparam KV_DEST_IDX_HMAC_BLOCK = 1;
@@ -44,6 +45,9 @@ localparam KV_DEST_IDX_MLDSA_SEED = 2;
 localparam KV_DEST_IDX_ECC_PKEY   = 3;
 localparam KV_DEST_IDX_ECC_SEED   = 4;
 localparam KV_DEST_IDX_AES_KEY    = 5;
+localparam KV_DEST_IDX_MLKEM_X    = 6;
+localparam KV_DEST_IDX_MLKEM_Y    = 7;
+localparam KV_DEST_IDX_DMA_DATA   = 8;
     
 // FIXME is this the correct set of KV permissions?
 localparam OCP_LOCK_HEK_SEED_DEST_VALID = (1 << KV_DEST_IDX_HMAC_KEY) |
