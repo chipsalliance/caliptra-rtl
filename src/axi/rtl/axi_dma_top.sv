@@ -19,6 +19,7 @@
 module axi_dma_top
 import axi_pkg::*;
 import soc_ifc_pkg::*;
+import kv_defines_pkg::*;
 #(
     parameter AW = 64,
     parameter DW = 32,         // Data Width

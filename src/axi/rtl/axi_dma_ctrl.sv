@@ -287,7 +287,7 @@ import kv_defines_pkg::*;
     kv_read_ctrl_reg_t        kv_read_ctrl_reg;
     logic                     kv_read_en;
     logic                     kv_data_write_en;
-    logic [DATA_OFFSET_W-1:0] kv_data_write_offset;
+//    logic [$clog2(OCP_LOCK_MEK_NUM_DWORDS)-1:0] kv_data_write_offset;
     logic [31:0]              kv_data_write_data;
     kv_error_code_e           kv_data_error_code;
     logic                     kv_data_kv_ready;
@@ -360,7 +360,8 @@ import kv_defines_pkg::*;
             DMA_WAIT_DATA: begin
                 // KV error occurs prior to any data movement, so DMA can transfer immediately to ERROR state
                 // without waiting for AXI transfer to gracefully end
-                if (fixme_kv_error || (all_bytes_transferred && (axi_error || mb_lock_error || aes_error))) begin
+                if ((all_bytes_transferred && (axi_error || mb_lock_error || aes_error)) ||
+                    (kv_read_en && kv_data_error_code != KV_SUCCESS)) begin
                     ctrl_fsm_ns = DMA_ERROR;
                 end
                 else if (all_bytes_transferred) begin
@@ -791,7 +792,7 @@ import kv_defines_pkg::*;
                  (!cmd_parse_error)) begin
             kv_read_en <= 1'b1;
         end
-        else if (kv_data_read_done)
+        else if (kv_data_read_done) begin
             kv_read_en <= 1'b0;
         end
     end
@@ -1290,7 +1291,7 @@ import kv_defines_pkg::*;
 
         //interface with client
         .write_en    (kv_data_write_en    ),
-        .write_offset(kv_data_write_offset), // TODO use this?
+        .write_offset(/*kv_data_write_offset*/), // TODO use this?
         .write_data  (kv_data_write_data  ),
 
         .error_code(kv_data_error_code),

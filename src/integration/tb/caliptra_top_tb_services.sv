@@ -38,7 +38,6 @@ module caliptra_top_tb_services
     import soc_ifc_pkg::*;
     import kv_defines_pkg::*;
     import caliptra_top_tb_pkg::*;
-    import kv_defines_pkg::*;
 #(
     parameter UVM_TB = 0
 ) (
