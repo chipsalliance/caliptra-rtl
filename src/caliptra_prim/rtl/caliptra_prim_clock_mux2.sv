@@ -20,7 +20,7 @@ module caliptra_prim_clock_mux2 #(
 );
 
 if (1) begin : gen_generic
-  `CALIPTRA_PRIM_MODULE_NAME(mux2) #(
+  `CALIPTRA_PRIM_MODULE_NAME(clock_mux2) #(
     .NoFpgaBufG(NoFpgaBufG)
   ) u_impl_generic (
     .*

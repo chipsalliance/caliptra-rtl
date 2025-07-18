@@ -17,7 +17,7 @@ module caliptra_prim_generic_clock_inv #(
 );
 
   if (HasScanMode) begin : gen_scan
-    `CALIPTRA_PRIM_MODULE_NAME(mux2) #(
+    `CALIPTRA_PRIM_MODULE_NAME(clock_mux2) #(
       .NoFpgaBufG(NoFpgaBufG)
     ) i_dft_tck_mux (
       .clk0_i ( ~clk_i     ),
