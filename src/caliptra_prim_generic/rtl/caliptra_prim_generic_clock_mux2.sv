@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 
 module caliptra_prim_generic_clock_mux2 #(
   parameter bit NoFpgaBufG = 1'b0 // this parameter serves no function in the generic model

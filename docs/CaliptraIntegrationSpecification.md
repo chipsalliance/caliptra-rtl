@@ -63,12 +63,14 @@ The following table describes integration parameters.
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
 |CALIPTRA_FUSE_GRANULARITY_32 | config_defines.svh | Defining this means fuse row granularity is 32-bits. If not defined it means fuse row granularity is 64 bits. If defined, the ``CPTRA_HW_CONFIG.CALIPTRA_FUSE_GRANULARITY_32`` SOC_IFC register bit is set to 1 for 32-bit granularity. Otherwise, it is set to 0 for 64-bit granularity. This is used by Caliptra ROM for UDS and Field Entropy provisioning.|
-| CALIPTRA_INTERNAL_TRNG  | config_defines.svh | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
-| CALIPTRA_MODE_SUBSYSTEM | config_defines.svh | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
-| USER_ICG                | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
-| TECH_SPECIFIC_ICG       | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
-| USER_EC_RV_ICG          | config_defines.svh | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
-| TECH_SPECIFIC_EC_RV_ICG | config_defines.svh | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
+| CALIPTRA_INTERNAL_TRNG      | config_defines.svh   | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
+| CALIPTRA_MODE_SUBSYSTEM     | config_defines.svh   | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
+| USER_ICG                    | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
+| TECH_SPECIFIC_ICG           | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
+| USER_EC_RV_ICG              | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
+| TECH_SPECIFIC_EC_RV_ICG     | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
+| CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology specific modules for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic. |
+| CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology specific modules for synthesus. Defaults to 'caliptra_prim_generic'. |
 
 ## Interface
 
@@ -969,6 +971,58 @@ Several files contain code that may be specific to an integrator's implementatio
 | [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with a technology-specific sync cell.                            |
 | [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with a technology-specific sync cell. This synchronizer implements edge detection logic using a delayed flip flop on the output domain to produce a pulse output. Integrators must take care to ensure logical equivalence when replacing this logic with custom cells. |
 
+## Synthesis Constraints
+
+To ensure the integrity of security countermeasures, silicon integrators **must** apply `size_only` (or an equivalent) constraint to all cells whose instance names contain the `u__size_only__` tag. This prevents synthesis and Place-and-Route (PNR) tools from optimizing away critical redundant logic.
+
+### Primitive Instantiation
+
+Caliptra uses redundant logic to counteract Fault Injection (FI) and Side Channel Analysis (SCA). This logic is built using generic primitive modules, which act as placeholders. Integrators must replace these generic primitives with corresponding technology-specific cells from their standard cell library. This abstraction allows for applying the necessary constraints directly to the technology cells.
+
+The following generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
+
+*   `caliptra_prim_generic_and2`
+*   `caliptra_prim_generic_buf`
+*   `caliptra_prim_generic_clock_mux2`
+*   `caliptra_prim_generic_xnor2`
+*   `caliptra_prim_generic_xor2`
+*   `caliptra_prim_generic_flop`
+*   `caliptra_prim_generic_flop_en`
+
+To integrate technology-specific replacements, set the `CALIPTRA_PRIM_MODULE_PREFIX` and `CALIPTRA_PRIM_ROOT` environment variables. For details on how `CALIPTRA_PRIM_MODULE_PREFIX` is used to select between generic and technology-specific modules, see the implementation in [`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
+
+**Example: Technology-Specific Buffer**
+
+The following example shows how to create a technology-specific wrapper for the `caliptra_prim_generic_buf` primitive.
+
+```sv
+// In this example:
+// - `CALIPTRA_PRIM_MODULE_PREFIX` is assumed to be `caliptra_prim_tech_name`.
+// - `TECH_DEPENDENT_BUF` is the name of the technology-specific buffer cell.
+// - `PORT_NAME_IN` and `PORT_NAME_OUT` are its input and output ports.
+
+module caliptra_prim_tech_name_buf #(
+  parameter int Width = 1
+) (
+  input  logic [Width-1:0] in_i,
+  output logic [Width-1:0] out_o
+);
+
+  for (genvar k = 0; k < Width; k++) begin : gen_bufs
+    // The instance name "u__size_only__buf" contains the required tag.
+    // Synthesis tools must be configured to apply "size_only"
+    // constraints to any instance whose name includes "u__size_only__".
+    // This naming convention should be used for all replaced primitives.
+
+    TECH_DEPENDENT_BUF u__size_only__buf (
+      .<PORT_NAME_IN>(in_i[k]),
+      .<PORT_NAME_OUT>(out_o[k])
+    );
+  end
+
+endmodule : caliptra_prim_tech_name_buf
+```
+
 
 # CDC analysis and constraints
 
@@ -1196,7 +1250,7 @@ The target foundry technology node is an industry standard, advanced technology 
 *Table 27: Netlist synthesis data*
 
 | **IP Name** | **Combinational Area** | **Sequential Area** | **Memory Area** | **Total Area** | **Instance Count** |
-| :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- | 
+| :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- |
 | CALIPTRA_WRAPPER | 59934 | 430763 | 319147 | 491159 | 1559238 |
 
 *ROM area is not accounted for in the above table.*
