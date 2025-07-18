@@ -17,7 +17,7 @@
 module kv_fsm 
     import kv_defines_pkg::*;
     #(
-    parameter DATA_WIDTH = 384
+    parameter DATA_WIDTH = 512
    ,parameter PAD = 0
    ,parameter HMAC = 0
    ,localparam OFFSET_W = $clog2(DATA_WIDTH/32)
@@ -33,7 +33,7 @@ module kv_fsm
     input logic pcr_hash_extend,
     input logic [OFFSET_W:0] num_dwords,
 
-    output logic [KV_ENTRY_SIZE_W-1:0] read_offset,
+    output logic [OFFSET_W-1:0] read_offset,
 
     output logic write_en,
     output logic [OFFSET_W-1:0] write_offset,
@@ -75,7 +75,7 @@ logic arc_KV_LENGTH_KV_DONE;
 
 logic offset_en;
 logic offset_rst;
-logic [KV_NUM_DWORDS_W:0] offset, offset_nxt;
+logic [OFFSET_W-1:0] offset, offset_nxt;
 
 //data width is in bits, divide by 32 to get dwords
 assign num_dwords_total = pcr_hash_extend ? 'd12 :
@@ -90,7 +90,7 @@ always_comb ready = (kv_fsm_ps == KV_IDLE);
 always_comb length_for_pad = (HMAC == 1) ? (32'b0 | ((num_dwords_data << 5) + 'd1024)) : (32'b0 | (num_dwords_data << 5));
 
 always_comb arc_KV_IDLE_KV_RW = start;
-always_comb arc_KV_RW_KV_DONE = ((PAD == 0) | pcr_hash_extend) & (offset_nxt == num_dwords_total); //jump to done when we've written all dwords
+always_comb arc_KV_RW_KV_DONE = ((PAD == 0) | pcr_hash_extend) & ((offset == (num_dwords_total-1)) | last); //jump to done when we've written all dwords
 always_comb arc_KV_RW_KV_PAD  = ((PAD == 1) & ~pcr_hash_extend) & last; //jump to pad when data is done
 always_comb arc_KV_PAD_KV_ZERO = kv_fsm_ps == KV_PAD; 
 always_comb arc_KV_ZERO_KV_LENGTH = (offset_nxt == 'd31); //jump to length when it's time to append length in the last dword
@@ -187,7 +187,7 @@ generate
     end
 endgenerate
 
-always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[KV_ENTRY_SIZE_W-1:0] : '0;
+always_comb read_offset = (kv_fsm_ps == KV_RW) ? offset[OFFSET_W-1:0] : '0;
 always_comb write_offset = offset[OFFSET_W-1:0];
 
 endmodule

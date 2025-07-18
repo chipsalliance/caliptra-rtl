@@ -80,7 +80,7 @@ kv_dest_write_fsm
 always_comb dest_keyvault = write_ctrl_reg.write_en;
 
 always_comb kv_write.write_entry = write_ctrl_reg.write_entry;
-always_comb kv_write.write_offset = dest_write_offset;
+always_comb kv_write.write_offset = KV_ENTRY_SIZE_W'(dest_write_offset);
 always_comb kv_write.write_en = dest_write_en;
 always_comb kv_write.write_data = dest_data[(DATA_NUM_DWORDS-1) - dest_read_offset];
 //write zeroes here until last cycle
