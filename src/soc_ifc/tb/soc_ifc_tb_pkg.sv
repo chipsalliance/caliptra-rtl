@@ -227,7 +227,9 @@ package soc_ifc_tb_pkg;
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : SOCIFC_BASE + `SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES,        // 0x52c
     "SS_DEBUG_INTENT"                               : SOCIFC_BASE + `SOC_IFC_REG_SS_DEBUG_INTENT,                                       // 0x530
     "SS_CPTRA_DMA_AXI_USER"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER,                              // 0x534
-    // 0x538..0x59c
+    "SS_CPTRA_STAGING_AREA_BASE_ADDR_L"       : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L,                  // 0x538
+    "SS_CPTRA_STAGING_AREA_BASE_ADDR_H"       : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H,                  // 0x53c
+    // 0x540..0x59c
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_SERVICE_REG_REQ"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ,                                 // 0x5c0
@@ -323,7 +325,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
     '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h04fc},
-    '{addr_min: SOCIFC_BASE + 16'h0538, addr_max: SOCIFC_BASE + 16'h059c},
+    '{addr_min: SOCIFC_BASE + 16'h0540, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
