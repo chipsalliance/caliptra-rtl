@@ -266,7 +266,7 @@ caliptra_top caliptra_top_dut (
     .strap_ss_external_staging_area_base_addr               (64'h0),
     .strap_ss_otp_fc_base_addr                              (64'h0),
     .strap_ss_uds_seed_base_addr                            (64'h0),
-    .strap_ss_key_release_base_addr                         (64'h0),
+    .strap_ss_key_release_base_addr                         (AXI_SRAM_BASE_ADDR),
     .strap_ss_key_release_key_size                          (16'h40),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
