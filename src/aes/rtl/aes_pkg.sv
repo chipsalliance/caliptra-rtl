@@ -743,4 +743,21 @@ function automatic logic [3:0][7:0] aes_prd_get_lsbs(
   return prd_lsbs;
 endfunction
 
+/* ------------------------- CALIPTRA definitions ------------------------- */
+
+// AES writes to KeyVault will always be 512b
+parameter CLP_AES_KV_WR_DW = 512;
+
+typedef struct packed {
+    logic kv_en;
+    logic kv_write_done;
+} caliptra2aes_t;
+
+typedef struct packed {
+    logic [CLP_AES_KV_WR_DW-1:0] kv_data_out;
+    logic                        kv_data_out_valid;
+} aes2caliptra_t;
+
+/* ---------------------- END CALIPTRA definitions ------------------------ */
+
 endpackage

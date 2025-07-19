@@ -24,7 +24,7 @@ parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
 parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
 parameter KV_NUM_READ=9;
-parameter KV_NUM_WRITE=4;
+parameter KV_NUM_WRITE=5;
 parameter ECC_NUM_DWORDS = 12;
 parameter MLDSA_NUM_DWORDS = 8;
 
@@ -38,6 +38,12 @@ localparam OCP_LOCK_HEK_SEED_KV_SLOT    = 22; // Destination for deobf HEK seed,
 localparam OCP_LOCK_KEY_RELEASE_KV_SLOT = 23; // Stores the fully decrypted MEK
 localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed -- used to define the write-size from DOE
 localparam OCP_LOCK_MEK_NUM_DWORDS      = 8;  // 256b MEK -- used to define the entry size fetched from KV
+
+localparam KV_WRITE_IDX_HMAC      = 0;
+localparam KV_WRITE_IDX_MLKEM     = 1;
+localparam KV_WRITE_IDX_ECC       = 2;
+localparam KV_WRITE_IDX_DOE       = 3;
+localparam KV_WRITE_IDX_AES       = 4;
 
 localparam KV_DEST_IDX_HMAC_KEY   = 0;
 localparam KV_DEST_IDX_HMAC_BLOCK = 1;

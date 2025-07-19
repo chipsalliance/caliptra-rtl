@@ -23,6 +23,7 @@
 //======================================================================
 
 module aes_clp_wrapper
+  import aes_pkg::*;
   import kv_defines_pkg::*;
   import aes_clp_reg_pkg::*;
   #(
@@ -66,6 +67,8 @@ module aes_clp_wrapper
   // kv interface
   output kv_read_t kv_read,
   input kv_rd_resp_t kv_rd_resp,
+  output kv_write_t kv_write,
+  input kv_wr_resp_t kv_wr_resp,
 
   output logic busy_o,
 
@@ -108,6 +111,9 @@ logic [caliptra_tlul_pkg::TL_AW-1 : 0] clp_reg_addr;
 aes_clp_reg_pkg::aes_clp_reg__in_t hwif_in;
 aes_clp_reg_pkg::aes_clp_reg__out_t hwif_out;
 
+caliptra2aes_t caliptra2aes;
+aes2caliptra_t aes2caliptra;
+
 caliptra_prim_mubi_pkg::mubi4_t aes_idle;
 
 kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
@@ -117,6 +123,12 @@ logic kv_key_ready, kv_key_done;
 logic kv_key_write_en;
 logic [2:0] kv_key_write_offset;
 logic [3:0][7:0] kv_key_write_data;
+
+kv_write_ctrl_reg_t kv_write_ctrl_reg;
+kv_error_code_e kv_write_error;
+logic kv_write_ready;
+//write 512 or 384 result based on mode bit
+logic [$clog2(CLP_AES_KV_WR_DW/32):0] kv_wr_num_dwords;
 
 edn_pkg::edn_req_t edn_req;
 
@@ -205,7 +217,7 @@ always_comb begin
   end 
 end
 
-assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0;
+assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0; // TODO block dma interface when kv write is requested
 assign ahb_rdata = ahb_dv ? aes_cif_req_rdata_post_endian: '0;
 
 
@@ -294,6 +306,10 @@ aes_inst (
   .input_ready_o,
   .output_valid_o,
 
+  // Caliptra interface
+  .caliptra2aes(caliptra2aes),
+  .aes2caliptra(aes2caliptra),
+
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
   .rst_edn_ni(reset_n),
@@ -330,6 +346,16 @@ always_comb begin
   hwif_in.AES_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
   //clear enable when busy
   hwif_in.AES_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
+  //set ready when keyvault isn't busy
+  hwif_in.AES_KV_WR_STATUS.READY.next = kv_write_ready;
+  //set error code
+  hwif_in.AES_KV_WR_STATUS.ERROR.next = kv_write_error;
+  //set valid when fsm is done
+  hwif_in.AES_KV_WR_STATUS.VALID.hwset = caliptra2aes.kv_write_done;
+  //clear valid when new request is made
+  hwif_in.AES_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
+  //clear enable when busy
+  hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //FIXME
   hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
@@ -341,6 +367,7 @@ end
 //keyault FSM
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, AES_KV_RD_KEY_CTRL)
+`CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, AES_KV_WR_CTRL)
 
 //Read Key
 kv_read_client #(
@@ -371,6 +398,43 @@ aes_key_kv_read
 );
 
 logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
+
+always_comb kv_wr_num_dwords = CLP_AES_KV_WR_DW/32; // FIXME should this be tied to AES control fields?
+
+// ============== AES Checks, conditions, HW rules for RAS TODO ============= //
+// * block reg API when writing to keyvault                                   //
+// * swizzle result data?                                                     //
+// * implement write path rules (as new module?)                              //
+// * check data count when receiving decrypt result?                          //
+// * Keyvault write is only accepted for specified request data count?        //
+// ================================ END TODO ================================ //
+//Write to keyvault
+kv_write_client #(
+  .DATA_WIDTH(CLP_AES_KV_WR_DW)
+)
+aes_result_kv_write
+(
+  .clk(clk),
+  .rst_b(reset_n),
+  .zeroize(debugUnlock_or_scan_mode_switch),
+
+  //client control register
+  .write_ctrl_reg(kv_write_ctrl_reg),
+  .num_dwords    (kv_wr_num_dwords ),
+
+  //interface with kv
+  .kv_write(kv_write  ),
+  .kv_resp (kv_wr_resp),
+
+  //interface with client
+  .dest_keyvault  (caliptra2aes.kv_en            ),
+  .dest_data_avail(aes2caliptra.kv_data_out_valid),
+  .dest_data      (aes2caliptra.kv_data_out      ),
+
+  .error_code(kv_write_error            ),
+  .kv_ready  (kv_write_ready            ),
+  .dest_done (caliptra2aes.kv_write_done)
+);
 
 //load keyvault key into local reg
 //swizzle keyvault value to match endianness of aes engine

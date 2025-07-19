@@ -942,8 +942,8 @@ doe_ctrl #(
     .notif_intr(doe_notif_intr),
     .clear_obf_secrets(clear_obf_secrets), //Output
     .busy_o(doe_busy),
-    .kv_write (kv_write[KV_NUM_WRITE-1]),
-    .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
+    .kv_write (kv_write[KV_WRITE_IDX_DOE]),
+    .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -970,8 +970,8 @@ ecc_top1
 
     .kv_read         (kv_read[4:3]),
     .kv_rd_resp      (kv_rd_resp[4:3]),
-    .kv_write        (kv_write[2]),
-    .kv_wr_resp      (kv_wr_resp[2]),
+    .kv_write        (kv_write[KV_WRITE_IDX_ECC]),
+    .kv_wr_resp      (kv_wr_resp[KV_WRITE_IDX_ECC]),
     .pcr_signing_data(pcr_signing_data),
     .busy_o          (ecc_busy),
     .error_intr      (ecc_error_intr),
@@ -998,9 +998,9 @@ hmac_ctrl #(
      .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hreadyout),
      .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hrdata),
      .kv_read       (kv_read[1:0]),
-     .kv_write      (kv_write[0]),
+     .kv_write      (kv_write[KV_WRITE_IDX_HMAC]),
      .kv_rd_resp    (kv_rd_resp[1:0]),
-     .kv_wr_resp    (kv_wr_resp[0]),
+     .kv_wr_resp    (kv_wr_resp[KV_WRITE_IDX_HMAC]),
      .busy_o        (hmac_busy),
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr),
@@ -1074,8 +1074,10 @@ aes_clp_wrapper #(
 
 
     // kv interface
-    .kv_read(kv_read[5]),
-    .kv_rd_resp(kv_rd_resp[5]),
+    .kv_read   (kv_read   [KV_DEST_IDX_AES_KEY]),
+    .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_AES_KEY]),
+    .kv_write  (kv_write  [KV_WRITE_IDX_AES]   ),
+    .kv_wr_resp(kv_wr_resp[KV_WRITE_IDX_AES]   ),
 
     .busy_o(aes_busy),
 

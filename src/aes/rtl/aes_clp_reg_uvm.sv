@@ -209,6 +209,91 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : kv_status_reg
 
+    // Reg - kv_write_ctrl_reg
+    class kv_write_ctrl_reg extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        kv_write_ctrl_reg_bit_cg write_en_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg write_entry_bit_cg[5];
+        kv_write_ctrl_reg_bit_cg hmac_key_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg hmac_block_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg mldsa_seed_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg ecc_pkey_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg ecc_seed_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg aes_key_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg mlkem_seed_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg mlkem_msg_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg dma_data_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg rsvd_bit_cg[17];
+        kv_write_ctrl_reg_fld_cg fld_cg;
+        rand uvm_reg_field write_en;
+        rand uvm_reg_field write_entry;
+        rand uvm_reg_field hmac_key_dest_valid;
+        rand uvm_reg_field hmac_block_dest_valid;
+        rand uvm_reg_field mldsa_seed_dest_valid;
+        rand uvm_reg_field ecc_pkey_dest_valid;
+        rand uvm_reg_field ecc_seed_dest_valid;
+        rand uvm_reg_field aes_key_dest_valid;
+        rand uvm_reg_field mlkem_seed_dest_valid;
+        rand uvm_reg_field mlkem_msg_dest_valid;
+        rand uvm_reg_field dma_data_dest_valid;
+        rand uvm_reg_field rsvd;
+
+        function new(string name = "kv_write_ctrl_reg");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.write_en = new("write_en");
+            this.write_en.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
+            this.write_entry = new("write_entry");
+            this.write_entry.configure(this, 5, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_key_dest_valid = new("hmac_key_dest_valid");
+            this.hmac_key_dest_valid.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.hmac_block_dest_valid = new("hmac_block_dest_valid");
+            this.hmac_block_dest_valid.configure(this, 1, 7, "RW", 0, 'h0, 1, 1, 0);
+            this.mldsa_seed_dest_valid = new("mldsa_seed_dest_valid");
+            this.mldsa_seed_dest_valid.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_pkey_dest_valid = new("ecc_pkey_dest_valid");
+            this.ecc_pkey_dest_valid.configure(this, 1, 9, "RW", 0, 'h0, 1, 1, 0);
+            this.ecc_seed_dest_valid = new("ecc_seed_dest_valid");
+            this.ecc_seed_dest_valid.configure(this, 1, 10, "RW", 0, 'h0, 1, 1, 0);
+            this.aes_key_dest_valid = new("aes_key_dest_valid");
+            this.aes_key_dest_valid.configure(this, 1, 11, "RW", 0, 'h0, 1, 1, 0);
+            this.mlkem_seed_dest_valid = new("mlkem_seed_dest_valid");
+            this.mlkem_seed_dest_valid.configure(this, 1, 12, "RW", 0, 'h0, 1, 1, 0);
+            this.mlkem_msg_dest_valid = new("mlkem_msg_dest_valid");
+            this.mlkem_msg_dest_valid.configure(this, 1, 13, "RW", 0, 'h0, 1, 1, 0);
+            this.dma_data_dest_valid = new("dma_data_dest_valid");
+            this.dma_data_dest_valid.configure(this, 1, 14, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd = new("rsvd");
+            this.rsvd.configure(this, 17, 15, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(write_en_bit_cg[bt]) write_en_bit_cg[bt] = new();
+                foreach(write_entry_bit_cg[bt]) write_entry_bit_cg[bt] = new();
+                foreach(hmac_key_dest_valid_bit_cg[bt]) hmac_key_dest_valid_bit_cg[bt] = new();
+                foreach(hmac_block_dest_valid_bit_cg[bt]) hmac_block_dest_valid_bit_cg[bt] = new();
+                foreach(mldsa_seed_dest_valid_bit_cg[bt]) mldsa_seed_dest_valid_bit_cg[bt] = new();
+                foreach(ecc_pkey_dest_valid_bit_cg[bt]) ecc_pkey_dest_valid_bit_cg[bt] = new();
+                foreach(ecc_seed_dest_valid_bit_cg[bt]) ecc_seed_dest_valid_bit_cg[bt] = new();
+                foreach(aes_key_dest_valid_bit_cg[bt]) aes_key_dest_valid_bit_cg[bt] = new();
+                foreach(mlkem_seed_dest_valid_bit_cg[bt]) mlkem_seed_dest_valid_bit_cg[bt] = new();
+                foreach(mlkem_msg_dest_valid_bit_cg[bt]) mlkem_msg_dest_valid_bit_cg[bt] = new();
+                foreach(dma_data_dest_valid_bit_cg[bt]) dma_data_dest_valid_bit_cg[bt] = new();
+                foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : kv_write_ctrl_reg
+
     // Reg - aes_clp_reg::global_intr_en_t
     class aes_clp_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -963,6 +1048,8 @@ package aes_clp_reg_uvm;
         rand aes_clp_reg__CTRL0 CTRL0;
         rand kv_read_ctrl_reg AES_KV_RD_KEY_CTRL;
         rand kv_status_reg AES_KV_RD_KEY_STATUS;
+        rand kv_write_ctrl_reg AES_KV_WR_CTRL;
+        rand kv_status_reg AES_KV_WR_STATUS;
         rand aes_clp_reg__intr_block_t intr_block_rf;
 
         function new(string name = "aes_clp_reg");
@@ -1007,6 +1094,16 @@ package aes_clp_reg_uvm;
 
             this.AES_KV_RD_KEY_STATUS.build();
             this.default_map.add_reg(this.AES_KV_RD_KEY_STATUS, 'h204);
+            this.AES_KV_WR_CTRL = new("AES_KV_WR_CTRL");
+            this.AES_KV_WR_CTRL.configure(this);
+
+            this.AES_KV_WR_CTRL.build();
+            this.default_map.add_reg(this.AES_KV_WR_CTRL, 'h208);
+            this.AES_KV_WR_STATUS = new("AES_KV_WR_STATUS");
+            this.AES_KV_WR_STATUS.configure(this);
+
+            this.AES_KV_WR_STATUS.build();
+            this.default_map.add_reg(this.AES_KV_WR_STATUS, 'h20c);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();
