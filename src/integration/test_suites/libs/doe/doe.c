@@ -75,14 +75,18 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
         *reg_ptr++ = iv_data_hek[offset++];
     }
 
-    //start HEK and store in KV22
-    // FIXME -- DOE should force result to KV22?
-    VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");
-    doe_set_ctrl(DOE_HEK, 22); // FIXME magic number
+    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) {
+        //start HEK and store in KV22
+        // FIXME -- DOE should force result to KV22?
+        VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");
+        doe_set_ctrl(DOE_HEK, 22); // FIXME magic number
 
-    // Check that HEK flow is done
-    while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
-    VPRINTF(MEDIUM,"DOE: HEK Seed Deobfuscation flow complete\n");
+        // Check that HEK flow is done
+        while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+        VPRINTF(MEDIUM,"DOE: HEK Seed Deobfuscation flow complete\n");
+    } else {
+        VPRINTF(LOW, "DOE: Skipping HEK Deobfuscation due to HW_CONFIG\n");
+    }
 
 }
 
