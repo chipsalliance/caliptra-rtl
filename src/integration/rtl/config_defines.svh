@@ -20,6 +20,7 @@
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 // Uncomment to enable OCP LOCK features
+// FIXME re-comment this `define before merging this PR
 `define CALIPTRA_OCP_LOCK_EN
 
 // Uncomment if fuse granularity 32 bits.
