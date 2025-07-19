@@ -54,7 +54,8 @@ enum axi_dma_wr_route_e {
     axi_dma_wr_route_DISABLE  = 0x0,
     axi_dma_wr_route_MBOX     = 0x1,
     axi_dma_wr_route_AHB_FIFO = 0x2,
-    axi_dma_wr_route_AXI_RD   = 0x3
+    axi_dma_wr_route_AXI_RD   = 0x3,
+    axi_dma_wr_route_KEYVAULT = 0x4
 };
 
 enum axi_dma_fsm_e {
