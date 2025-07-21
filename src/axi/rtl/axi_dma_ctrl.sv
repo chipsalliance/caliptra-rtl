@@ -520,7 +520,7 @@ import kv_defines_pkg::*;
                               (hwif_out.byte_count.count.value > CPTRA_MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX))) ||
-                              ((hwif_out.byte_count.count.value != key_release_size) &&
+                              ((hwif_out.byte_count.count.value != 32'(key_release_size)) &&
                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
         // power of 2 and word-aligned
         cmd_inv_block_size  = |(hwif_out.block_size.size.value & (hwif_out.block_size.size.value-1)) ||

@@ -265,6 +265,8 @@ module caliptra_top
     logic [NUM_INTR-1:0] intr;
 
     kv_read_t [KV_NUM_READ-1:0]  kv_read;
+    assign kv_read[KV_DEST_IDX_MLKEM_SEED] = '0; // FIXME 
+    assign kv_read[KV_DEST_IDX_MLKEM_MSG] = '0; // FIXME 
     kv_write_t [KV_NUM_WRITE-1:0]  kv_write;
     kv_rd_resp_t [KV_NUM_READ-1:0] kv_rd_resp;
     kv_wr_resp_t [KV_NUM_WRITE-1:0] kv_wr_resp;
