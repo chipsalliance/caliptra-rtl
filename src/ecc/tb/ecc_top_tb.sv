@@ -696,6 +696,8 @@ module ecc_top_tb
           #(10*CLK_PERIOD);
           trig_ECC(ECC_CMD_VERIFYING);
           #(10*CLK_PERIOD);
+          trig_ECC(ECC_CMD_SIGNING | `ECC_REG_ECC_CTRL_PCR_SIGN_MASK);
+          #(10*CLK_PERIOD);
         end
 
       wait_ready();
