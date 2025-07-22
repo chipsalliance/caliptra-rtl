@@ -197,6 +197,14 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_r_needs_release;
     logic                       inject_zero_sign_s;
     logic                       inject_zero_sign_s_needs_release;
+    logic                       inject_invalid_privkey;
+    logic                       inject_invalid_privkey_needs_release;
+    logic                       inject_invalid_dhkey;
+    logic                       inject_invalid_dhkey_needs_release;
+    logic                       inject_invalid_pubkeyx;
+    logic                       inject_invalid_pubkeyx_needs_release;
+    logic                       inject_invalid_pubkeyy;
+    logic                       inject_invalid_pubkeyy_needs_release;
 
     logic                       en_jtag_access;
     logic                       disable_mldsa_sva;
@@ -309,10 +317,14 @@ module caliptra_top_tb_services
     //         8'h92        - Check PCR ECC signing with randomized vector
     //         8'h93        - Issue PCR MLDSA signing with randomized vector   
     //         8'h94        - Check PCR MLDSA signing with randomized vector
+    //         8'h97        - Inject invalid dh_key into ECC
     //         8'h98        - Inject invalid zero sign_r into ECC 
     //         8'h99        - Inject zeroize into HMAC
     //         8'h9a        - Inject invalid zero sign_s into ECC 
     //         8'h9b        - Inject zeroize during keyvault read
+    //         8'h9c        - Inject invalid privkey/dh_key into ECC
+    //         8'h9d        - Inject invalid pubkey_x into ECC
+    //         8'h9e        - Inject invalid pubkey_y into ECC
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
@@ -662,12 +674,32 @@ module caliptra_top_tb_services
             inject_zero_sign_r_needs_release <= 1'b0;
             inject_zero_sign_s <= 1'b0;
             inject_zero_sign_s_needs_release <= 1'b0;
+            inject_invalid_privkey <= 1'b0;
+            inject_invalid_privkey_needs_release <= 1'b0;
+            inject_invalid_dhkey <= 1'b0;
+            inject_invalid_dhkey_needs_release <= 1'b0;
+            inject_invalid_pubkeyx <= 1'b0;
+            inject_invalid_pubkeyx_needs_release <= 1'b0;
+            inject_invalid_pubkeyy <= 1'b0;
+            inject_invalid_pubkeyy_needs_release <= 1'b0;
         end
         else if((WriteData[7:0] == 8'h98) && mailbox_write) begin
             inject_zero_sign_r <= 1'b1;
         end
         else if((WriteData[7:0] == 8'h9a) && mailbox_write) begin
             inject_zero_sign_s <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h9c) && mailbox_write) begin
+            inject_invalid_privkey <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h97) && mailbox_write) begin
+            inject_invalid_dhkey <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h9d) && mailbox_write) begin
+            inject_invalid_pubkeyx <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'h9e) && mailbox_write) begin
+            inject_invalid_pubkeyy <= 1'b1;
         end
         else if(inject_zero_sign_r) begin
             if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd21) begin //R_ID
@@ -685,6 +717,42 @@ module caliptra_top_tb_services
             end
             else if (inject_zero_sign_s_needs_release) begin
                 inject_zero_sign_s <= 1'b0;
+            end
+        end
+        else if(inject_invalid_privkey) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd18) begin //PRIVKEY_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_invalid_privkey_needs_release <= 1'b1;
+            end
+            else if (inject_invalid_privkey_needs_release) begin
+                inject_invalid_privkey <= 1'b0;
+            end
+        end
+        else if(inject_invalid_dhkey) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd30) begin //DH_SHAREDKEY_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_invalid_dhkey_needs_release <= 1'b1;
+            end
+            else if (inject_invalid_dhkey_needs_release) begin
+                inject_invalid_dhkey <= 1'b0;
+            end
+        end
+        else if(inject_invalid_pubkeyx) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd19) begin //PUBKEYX_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_invalid_pubkeyx_needs_release <= 1'b1;
+            end
+            else if (inject_invalid_pubkeyx_needs_release) begin
+                inject_invalid_pubkeyx <= 1'b0;
+            end
+        end
+        else if(inject_invalid_pubkeyy) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd20) begin //PUBKEYY_ID
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_invalid_pubkeyy_needs_release <= 1'b1;
+            end
+            else if (inject_invalid_pubkeyy_needs_release) begin
+                inject_invalid_pubkeyy <= 1'b0;
             end
         end
         else begin
