@@ -229,7 +229,7 @@ Verilog file lists are generated via VCS and included in the config directory fo
 6. Users have the option to run the entire suite of smoke tests using the provided python script `run_verilator_l0_regression.py`
     1. Ensure Python 3.9.2 is available by adding to the $PATH variable
     2. Run the script with:
-        `python3 run_verilator_l0_regression.py`
+        `python3 ${CALIPTRA_ROOT}/tools/scripts/run_verilator_l0_regression.py`
     3. NOTE: The script automatically creates run output folders at `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     4. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
 
