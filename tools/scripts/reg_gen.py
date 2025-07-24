@@ -29,7 +29,7 @@
 #       rdlc.register_udp(udp)
 
 from systemrdl import RDLCompiler, RDLCompileError, RDLWalker
-from systemrdl import RDLListener
+from systemrdl import RDLListener, rdltypes
 from systemrdl.node import FieldNode
 from peakrdl_regblock import RegblockExporter
 from peakrdl_uvm import UVMExporter
@@ -41,13 +41,19 @@ import sys
 import os
 import re
 import rdl_post_process
+import argparse
 
-# Arg processing
-myargs = iter(sys.argv[1:])
-rdl_file = next(myargs)
-build_cov = 0
-if next(myargs,"empty") == "--cov":
-    build_cov = 1
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Generate SystemVerilog registers from RDL files')
+parser.add_argument('rdl_file', help='RDL input file')
+parser.add_argument('--cov', action='store_true', help='Generate coverage files')
+parser.add_argument('--param', '-p', action='append', default=[], 
+                    help='Set RDL parameter (format: NAME=VALUE). Can be used multiple times.')
+args = parser.parse_args()
+
+# Process arguments
+rdl_file = args.rdl_file
+build_cov = args.cov
 
 #output directory for dumping files
 rtl_output_dir = os.path.abspath(os.path.dirname(rdl_file))
@@ -94,8 +100,30 @@ try:
     rdlc.compile_file(os.path.join(repo_root, "src/keyvault/rtl/kv_def.rdl")) 
     rdlc.compile_file(rdl_file)
 
-    # Elaborate the design
-    root = rdlc.elaborate()
+    # Build parameters dictionary from command line arguments
+    parameters = {}
+    for param in args.param:
+        if '=' not in param:
+            print(f"Error: Invalid parameter format '{param}'. Use NAME=VALUE")
+            sys.exit(1)
+        name, value = param.split('=', 1)
+        
+        # Handle boolean values - only accept 'true' or 'false'
+        if value.lower() in ['true', 'false']:
+            parameters[name] = value.lower() == 'true'
+        # Handle hex values
+        elif value.startswith('0x'):
+            try:
+                parameters[name] = int(value, 16)
+            except ValueError:
+                print(f"Error: Invalid hex value '{value}'")
+                sys.exit(1)
+        # Handle integer values
+        elif value.isdigit() or (value.startswith('-') and value[1:].isdigit()):
+            parameters[name] = int(value)
+
+    # Elaborate the design with parameters
+    root = rdlc.elaborate(parameters=parameters if parameters else None)
 
     # Export a SystemVerilog implementation
     exporter = RegblockExporter()

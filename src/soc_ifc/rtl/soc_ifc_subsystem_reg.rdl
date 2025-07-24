@@ -114,7 +114,6 @@ reg {
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
 } SS_UDS_SEED_BASE_ADDR_H;
-
 reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Offset";
     desc = "Provides an offset in the destination register bank at which a set of Public Key Hashes may be found. The number of hashes available at this offset is indicated by
@@ -154,6 +153,25 @@ reg {
 } SS_CALIPTRA_DMA_AXI_USER;
 
 reg {
+    name = "Subsystem External Staging Area Base Address (Low)";
+     desc = "External staging area lower 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    strap addr_l[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem External Staging Area Base Address (High)";
+     desc = "External staging area upper 32-bit address for Caliptra Core. The staging area shall be in Caliptra crypto boundary. Used by Caliptra Core crypo process images like its runtime image
+             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+     strap addr_h[32]=0x0;
+ } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+
+
+reg {
     name = "GENERIC STRAP";
     desc = "Straps reserved for late-binding features for survivability.
             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
@@ -163,7 +181,7 @@ reg {
 } SS_STRAP_GENERIC[4] @0x5a0;
 
 reg {
-    name = "SUBSYSTEM DEBUG & MANUF SERVICE REG REQUEST";
+    name = "SUBSYSTEM DEBUG SERVICE REG REQUEST";
     desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services.
             [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
             [br]Caliptra Access: RW
@@ -173,10 +191,10 @@ reg {
     field {desc="Production debug unlock request. Only writable when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."      ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_REQ = 1'b0;
     field {desc="UDS programming request."                                                                                                   ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_REQ = 1'b0;
     field {desc="RSVD"                                                                                                                       ; sw=r ; hw= w;                                               } RSVD[29];
-} SS_DBG_MANUF_SERVICE_REG_REQ @0x5c0;
+} SS_DBG_SERVICE_REG_REQ @0x5c0;
 
 reg {
-    name = "SUBSYSTEM DEBUG & MANUF SERVICE REG RESPONSE";
+    name = "SUBSYSTEM DEBUG SERVICE REG RESPONSE";
     desc = "JTAG in debug/manuf mode or SOC can read from this register for ROM/FW defined skips or services.
             [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
             [br]Caliptra Access: RW
@@ -193,7 +211,7 @@ reg {
     field {desc="UDS Programming is in progress. Only writable by Caliptra."                                                                                                                                 ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_IN_PROGRESS      = 1'b0;
     field {desc="Enables the TAP to acquire the mailbox lock. Only writable by Caliptra."                                                                                                                    ; sw=rw; hw=r; swwe=true; resetsignal = cptra_rst_b;} TAP_MAILBOX_AVAILABLE        = 1'b0;
     field {desc="RSVD"                                                                                                                                                                                       ; sw=r ; hw=w;                                      } RSVD[22];
-} SS_DBG_MANUF_SERVICE_REG_RSP;
+} SS_DBG_SERVICE_REG_RSP;
 
 reg {
     name = "SUBSYSTEM SOC DEBUG UNLOCK LEVEL";

@@ -26,6 +26,7 @@ addrmap sha512_reg {
 
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+    signal {} sha512_ready;
 
     /* -----------------------
     * Register definitive definitions
@@ -68,26 +69,26 @@ addrmap sha512_reg {
         field {desc = "Control init command bit: Trigs the SHA512 core to start the 
                                 processing for the first padded message block. 
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe = sha512_ready;} INIT = 1'b0;
         field {desc = "Control next command bit: Trigs the SHA512 core to start the 
                                 processing for the remining padded message block. 
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe = sha512_ready;} NEXT = 1'b0;
         field {desc = "Control mode command bits: Indicates the SHA512 core to set dynamically
                                  the type of hashing algorithm. This can be:
                                  00 for SHA512/224
                                  01 for SHA512/256
                                  10 for SHA384
-                                 11 for SHA512";} MODE[2] = 2'b10;
+                                 11 for SHA512"; swwe = sha512_ready;} MODE[2] = 2'b10;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA process, to avoid SCA leakage.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Indicates last iteration for keyvault or hash extend function. 
-                       Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr;} LAST = 1'b0;
+                       Result of this INIT or NEXT cycle will be written back to the appropriate vault"; hwclr; swwe = sha512_ready;} LAST = 1'b0;
         field {desc = "Control restore command bit: Restore SHA512 core to use the given digest to continue the 
                                 processing for the remining padded message block. 
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} RESTORE = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe = sha512_ready;} RESTORE = 1'b0;
     
     } SHA512_CTRL @0x00000010;
 
@@ -156,7 +157,7 @@ addrmap sha512_reg {
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
-        field {desc = "Command to start hash function"; singlepulse;} START = 1'b0;
+        field {desc = "Command to start hash function"; singlepulse; swwe = sha512_ready;} START = 1'b0;
     } SHA512_GEN_PCR_HASH_CTRL;
     reg {
         name = "SHA512 PCR Hash Status";

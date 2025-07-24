@@ -13,8 +13,11 @@
 // limitations under the License.
 //
 
-addrmap clp {
-    desc="Address Map for Caliptra Register Space";
+addrmap clp #(
+    boolean CALIPTRA_SS_MODE = false
+) {
+        // You can use the parameter in a description property to "see" it
+    desc = "Caliptra address map (SS_MODE= $CALIPTRA_SS_MODE";
 
     doe_reg doe_reg @ 0x1000_0000;
 
@@ -55,7 +58,7 @@ addrmap clp {
                [br]Caliptra Access: RW
                [br]SOC Access:      -";
          memwidth=32;
-         mementries=65536;
+         mementries = CALIPTRA_SS_MODE ? 4096 : 65536;  // SS mode: 16KB, Passive mode: 256KB
          sw=rw;
     } external mbox_sram @ 0x3004_0000;
 

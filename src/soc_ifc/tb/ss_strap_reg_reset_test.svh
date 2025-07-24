@@ -45,9 +45,9 @@
   
       foreach (ss_strap_soc_rw_regnames[ix]) begin
         //$display("Current ss_strap: %s", ss_strap_soc_rw_regnames[ix]);
-        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
-            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
+        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
+        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
+            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
             (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin ////||
           $display("Found %s", ss_strap_soc_rw_regnames[ix]);
           ss_strap_soc_rw_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
@@ -55,9 +55,9 @@
         end
       end 
   
-      // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
+      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
       // Deleting it explicitly for now
-      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
+      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
 
       // SS_SOC_DBG_UNLOCK_LEVEL can be written only when SS_DEBUG_INTENT = 1 (TAPJTAG mode)/
       delm_from_strq(ss_strap_soc_rw_regnames, "SS_SOC_DBG_UNLOCK_LEVEL");
@@ -178,9 +178,9 @@
   
       foreach (ss_strap_soc_rw_regnames[ix]) begin
         //$display("Current ss_strap: %s", ss_strap_soc_rw_regnames[ix]);
-        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP");
-        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_REQ") || // Writeable by SOC
-            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_MANUF_SERVICE_REG_RSP") || // Writeable by Caliptra
+        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
+        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
+            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
             (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin //||
             //(ss_strap_soc_rw_regnames[ix] == "SS_CALIPTRA_DMA_AXI_USER")) begin //writeable only by TAP
           $display("Found %s", ss_strap_soc_rw_regnames[ix]);
@@ -189,9 +189,9 @@
         end
       end 
   
-      // SS_DBG_MANUF_SERVICE_REG_RSP is not getting deleted in the above loop. 
+      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
       // Deleting it explicitly for now
-      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_MANUF_SERVICE_REG_RSP"); // SS_DBG_MANUF_SERVICE_REG_RSP
+      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
 
       // SS_SOC_DBG_UNLOCK_LEVEL can be written only when SS_DEBUG_INTENT = 1 (TAPJTAG mode)/
       delm_from_strq(ss_strap_soc_rw_regnames, "SS_SOC_DBG_UNLOCK_LEVEL");
