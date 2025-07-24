@@ -18,6 +18,7 @@ module kv_write_client
     import kv_defines_pkg::*;
     #(
     parameter DATA_WIDTH = 512
+   ,parameter KV_WRITE_SWAP_DWORDS = 1 
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
    ,localparam DATA_NUM_DWORDS = (DATA_WIDTH/32)
 
@@ -82,7 +83,7 @@ always_comb dest_keyvault = write_ctrl_reg.write_en;
 always_comb kv_write.write_entry = write_ctrl_reg.write_entry;
 always_comb kv_write.write_offset = KV_ENTRY_SIZE_W'(dest_write_offset);
 always_comb kv_write.write_en = dest_write_en;
-always_comb kv_write.write_data = dest_data[(DATA_NUM_DWORDS-1) - dest_read_offset];
+always_comb kv_write.write_data = KV_WRITE_SWAP_DWORDS ? dest_data[(DATA_NUM_DWORDS-1) - dest_read_offset] : dest_data[dest_read_offset];
 //write zeroes here until last cycle
 always_comb kv_write.write_dest_valid = write_last ? write_ctrl_reg.write_dest_vld : '0;
 
