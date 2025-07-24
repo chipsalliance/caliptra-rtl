@@ -20,3 +20,6 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_locked_api/smoke_test_mldsa_locked_api.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/mldsa_pcr_inject_failure/mldsa_pcr_inject_failure.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem/smoke_test_mlkem.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_kv/smoke_test_mlkem_kv.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_shared_key/smoke_test_mlkem_shared_key.yml
