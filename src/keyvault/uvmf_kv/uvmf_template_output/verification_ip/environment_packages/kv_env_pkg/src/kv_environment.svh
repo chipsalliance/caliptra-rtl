@@ -45,8 +45,8 @@ class kv_environment  extends uvmf_environment_base #(
   typedef kv_write_agent  kv_hmac_write_agent_t;
   kv_hmac_write_agent_t kv_hmac_write_agent;
 
-  typedef kv_write_agent  kv_sha512_write_agent_t;
-  kv_sha512_write_agent_t kv_sha512_write_agent;
+  typedef kv_write_agent  kv_mlkem_write_agent_t;
+  kv_mlkem_write_agent_t kv_mlkem_write_agent;
 
   typedef kv_write_agent  kv_ecc_write_agent_t;
   kv_ecc_write_agent_t kv_ecc_write_agent;
@@ -101,7 +101,7 @@ class kv_environment  extends uvmf_environment_base #(
    //typedef uvm_reg_predictor #(kv_write_transaction) write_reg_predictor_t;
    typedef kv_reg_predictor #(kv_write_transaction) write_reg_predictor_t;
    write_reg_predictor_t    hmac_write_reg_predictor;
-   write_reg_predictor_t    sha512_write_reg_predictor;
+   write_reg_predictor_t    mlkem_write_reg_predictor;
    write_reg_predictor_t    ecc_write_reg_predictor;
    write_reg_predictor_t    doe_write_reg_predictor;
 
@@ -146,7 +146,7 @@ class kv_environment  extends uvmf_environment_base #(
 
     typedef kv_write2reg_adapter write_reg_adapter_t;
     write_reg_adapter_t kv_hmac_write_reg_adapter;
-    write_reg_adapter_t kv_sha512_write_reg_adapter;
+    write_reg_adapter_t kv_mlkem_write_reg_adapter;
     write_reg_adapter_t kv_ecc_write_reg_adapter;
     write_reg_adapter_t kv_doe_write_reg_adapter;
 
@@ -188,8 +188,8 @@ class kv_environment  extends uvmf_environment_base #(
     kv_rst_agent.set_config(configuration.kv_rst_agent_config);
     kv_hmac_write_agent = kv_hmac_write_agent_t::type_id::create("kv_hmac_write_agent",this);
     kv_hmac_write_agent.set_config(configuration.kv_hmac_write_agent_config);
-    kv_sha512_write_agent = kv_sha512_write_agent_t::type_id::create("kv_sha512_write_agent",this);
-    kv_sha512_write_agent.set_config(configuration.kv_sha512_write_agent_config);
+    kv_mlkem_write_agent = kv_mlkem_write_agent_t::type_id::create("kv_mlkem_write_agent",this);
+    kv_mlkem_write_agent.set_config(configuration.kv_mlkem_write_agent_config);
     kv_ecc_write_agent = kv_ecc_write_agent_t::type_id::create("kv_ecc_write_agent",this);
     kv_ecc_write_agent.set_config(configuration.kv_ecc_write_agent_config);
     kv_doe_write_agent = kv_doe_write_agent_t::type_id::create("kv_doe_write_agent",this);
@@ -214,7 +214,7 @@ class kv_environment  extends uvmf_environment_base #(
   // Build register model predictor if prediction is enabled
   if (configuration.enable_reg_prediction) begin
     hmac_write_reg_predictor    = write_reg_predictor_t::type_id::create("hmac_write_reg_predictor", this);
-    sha512_write_reg_predictor  = write_reg_predictor_t::type_id::create("sha512_write_reg_predictor", this);
+    mlkem_write_reg_predictor  = write_reg_predictor_t::type_id::create("mlkem_write_reg_predictor", this);
     ecc_write_reg_predictor     = write_reg_predictor_t::type_id::create("ecc_write_reg_predictor", this);
     doe_write_reg_predictor     = write_reg_predictor_t::type_id::create("doe_write_reg_predictor", this);
 
@@ -250,7 +250,7 @@ class kv_environment  extends uvmf_environment_base #(
     kv_rst_agent.monitored_ap.connect(kv_pred.kv_rst_agent_ae);
     
     kv_hmac_write_agent.monitored_ap.connect(kv_pred.kv_hmac_write_agent_ae);
-    kv_sha512_write_agent.monitored_ap.connect(kv_pred.kv_sha512_write_agent_ae);
+    kv_mlkem_write_agent.monitored_ap.connect(kv_pred.kv_mlkem_write_agent_ae);
     kv_ecc_write_agent.monitored_ap.connect(kv_pred.kv_ecc_write_agent_ae);
     kv_doe_write_agent.monitored_ap.connect(kv_pred.kv_doe_write_agent_ae);
     
@@ -265,7 +265,7 @@ class kv_environment  extends uvmf_environment_base #(
 
     //kv_pred.kv_sb_ap.connect(kv_sb.expected_analysis_export);
     kv_pred.kv_hmac_write_sb_ap.connect(kv_sb.expected_hmac_write_analysis_export);
-    kv_pred.kv_sha512_write_sb_ap.connect(kv_sb.expected_sha512_write_analysis_export);
+    kv_pred.kv_mlkem_write_sb_ap.connect(kv_sb.expected_mlkem_write_analysis_export);
     kv_pred.kv_ecc_write_sb_ap.connect(kv_sb.expected_ecc_write_analysis_export);
     kv_pred.kv_doe_write_sb_ap.connect(kv_sb.expected_doe_write_analysis_export);
 
@@ -278,7 +278,7 @@ class kv_environment  extends uvmf_environment_base #(
     kv_pred.kv_sb_ahb_ap.connect(kv_sb.expected_ahb_analysis_export);
     
     kv_hmac_write_agent.monitored_ap.connect(kv_sb.actual_hmac_write_analysis_export);
-    kv_sha512_write_agent.monitored_ap.connect(kv_sb.actual_sha512_write_analysis_export);
+    kv_mlkem_write_agent.monitored_ap.connect(kv_sb.actual_mlkem_write_analysis_export);
     kv_ecc_write_agent.monitored_ap.connect(kv_sb.actual_ecc_write_analysis_export);
     kv_doe_write_agent.monitored_ap.connect(kv_sb.actual_doe_write_analysis_export);
 
@@ -302,7 +302,7 @@ class kv_environment  extends uvmf_environment_base #(
         // that are not aligned to 64-bit width (the native AHB interface width)
 
         kv_hmac_write_reg_adapter   = write_reg_adapter_t::type_id::create("kv_write2reg_adapter");
-        kv_sha512_write_reg_adapter = write_reg_adapter_t::type_id::create("kv_write2reg_adapter");
+        kv_mlkem_write_reg_adapter = write_reg_adapter_t::type_id::create("kv_write2reg_adapter");
         kv_ecc_write_reg_adapter    = write_reg_adapter_t::type_id::create("kv_write2reg_adapter");
         kv_doe_write_reg_adapter    = write_reg_adapter_t::type_id::create("kv_write2reg_adapter");
 
@@ -331,8 +331,8 @@ class kv_environment  extends uvmf_environment_base #(
       if (kv_hmac_write_agent.sequencer != null)
         configuration.kv_rm.kv_hmac_write_map.set_sequencer(kv_hmac_write_agent.sequencer, kv_hmac_write_reg_adapter);
     
-      if (kv_sha512_write_agent.sequencer != null)
-        configuration.kv_rm.kv_sha512_write_map.set_sequencer(kv_sha512_write_agent.sequencer, kv_sha512_write_reg_adapter);
+      if (kv_mlkem_write_agent.sequencer != null)
+        configuration.kv_rm.kv_mlkem_write_map.set_sequencer(kv_mlkem_write_agent.sequencer, kv_mlkem_write_reg_adapter);
     
       if (kv_ecc_write_agent.sequencer != null)
         configuration.kv_rm.kv_ecc_write_map.set_sequencer(kv_ecc_write_agent.sequencer, kv_ecc_write_reg_adapter);
@@ -379,9 +379,9 @@ class kv_environment  extends uvmf_environment_base #(
       hmac_write_reg_predictor.adapter = kv_hmac_write_reg_adapter;
       //configuration.kv_rm.kv_hmac_write_map.set_auto_predict(1);
 
-      sha512_write_reg_predictor.map = configuration.kv_rm.kv_sha512_write_map;
-      sha512_write_reg_predictor.adapter = kv_sha512_write_reg_adapter;
-      //configuration.kv_rm.kv_sha512_write_map.set_auto_predict(1);
+      mlkem_write_reg_predictor.map = configuration.kv_rm.kv_mlkem_write_map;
+      mlkem_write_reg_predictor.adapter = kv_mlkem_write_reg_adapter;
+      //configuration.kv_rm.kv_mlkem_write_map.set_auto_predict(1);
 
       ecc_write_reg_predictor.map = configuration.kv_rm.kv_ecc_write_map;
       ecc_write_reg_predictor.adapter = kv_ecc_write_reg_adapter;
@@ -432,7 +432,7 @@ class kv_environment  extends uvmf_environment_base #(
 
       //Write connections:
       kv_hmac_write_agent.monitored_ap.connect(hmac_write_reg_predictor.bus_in);
-      kv_sha512_write_agent.monitored_ap.connect(sha512_write_reg_predictor.bus_in);
+      kv_mlkem_write_agent.monitored_ap.connect(mlkem_write_reg_predictor.bus_in);
       kv_ecc_write_agent.monitored_ap.connect(ecc_write_reg_predictor.bus_in);
       kv_doe_write_agent.monitored_ap.connect(doe_write_reg_predictor.bus_in);
 

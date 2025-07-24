@@ -40,7 +40,7 @@ class kv_wr_rd_rst_sequence #(
 
     typedef kv_write_key_entry_sequence kv_write_agent_key_entry_sequence_t;
     kv_write_agent_key_entry_sequence_t hmac_write_seq;
-    kv_write_agent_key_entry_sequence_t sha512_write_seq;
+    kv_write_agent_key_entry_sequence_t mlkem_write_seq;
     kv_write_agent_key_entry_sequence_t ecc_write_seq;
     kv_write_agent_key_entry_sequence_t doe_write_seq;
 
@@ -51,9 +51,11 @@ class kv_wr_rd_rst_sequence #(
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
     kv_read_agent_key_entry_sequence_t aes_key_read_seq;
+    kv_read_agent_key_entry_sequence_t mlkem_seed_read_seq;
+    kv_read_agent_key_entry_sequence_t mlkem_msg_read_seq;
 
-    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
-    //constraint valid_entry {hmac_write_entry != sha512_write_entry != ecc_write_entry != doe_write_entry;}
+    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, mlkem_write_entry, ecc_write_entry, doe_write_entry;    
+    //constraint valid_entry {hmac_write_entry != mlkem_write_entry != ecc_write_entry != doe_write_entry;}
     
     //Event to indicate dut is out of reset to avoid sending wr/rd during this time
     uvm_event reset_phase;
@@ -71,7 +73,7 @@ class kv_wr_rd_rst_sequence #(
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
-        sha512_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("sha512_write_seq");
+        mlkem_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("mlkem_write_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
         ecc_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("ecc_write_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
@@ -90,6 +92,10 @@ class kv_wr_rd_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         aes_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("aes_key_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        mlkem_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mlkem_seed_read_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        mlkem_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mlkem_msg_read_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         
     endfunction
 
@@ -105,29 +111,29 @@ class kv_wr_rd_rst_sequence #(
 
         std::randomize(hmac_write_entry) with {
             hmac_write_entry < KV_NUM_KEYS;
-            hmac_write_entry != sha512_write_entry;
+            hmac_write_entry != mlkem_write_entry;
             hmac_write_entry != ecc_write_entry;
             hmac_write_entry != doe_write_entry;
         };
 
-        std::randomize(sha512_write_entry) with {
-            sha512_write_entry < KV_NUM_KEYS;
-            sha512_write_entry != hmac_write_entry;
-            sha512_write_entry != ecc_write_entry;
-            sha512_write_entry != doe_write_entry;
+        std::randomize(mlkem_write_entry) with {
+            mlkem_write_entry < KV_NUM_KEYS;
+            mlkem_write_entry != hmac_write_entry;
+            mlkem_write_entry != ecc_write_entry;
+            mlkem_write_entry != doe_write_entry;
         };
 
         std::randomize(ecc_write_entry) with {
             ecc_write_entry < KV_NUM_KEYS;
             ecc_write_entry != hmac_write_entry;
-            ecc_write_entry != sha512_write_entry;
+            ecc_write_entry != mlkem_write_entry;
             ecc_write_entry != doe_write_entry;
         };
 
         std::randomize(doe_write_entry) with {
             doe_write_entry < KV_NUM_KEYS;
             doe_write_entry != hmac_write_entry;
-            doe_write_entry != sha512_write_entry;
+            doe_write_entry != mlkem_write_entry;
             doe_write_entry != ecc_write_entry;
         };
 
@@ -164,8 +170,8 @@ class kv_wr_rd_rst_sequence #(
                 end
 
                 repeat(10) begin
-                    uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
-                    sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+                    uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mlkem_write_agent.sequencer.mlkem_write_seq", "local_write_entry",mlkem_write_entry);
+                    mlkem_write_seq.start(configuration.kv_mlkem_write_agent_config.sequencer);
                 end
             end
             begin
@@ -196,6 +202,12 @@ class kv_wr_rd_rst_sequence #(
                 repeat(10) aes_key_read_seq.start(configuration.kv_aes_key_read_agent_config.sequencer);
             end
             begin
+                repeat(10) mlkem_seed_read_seq.start(configuration.kv_mlkem_seed_read_agent_config.sequencer);
+            end
+            begin
+                repeat(10) mlkem_msg_read_seq.start(configuration.kv_mlkem_msg_read_agent_config.sequencer);
+            end
+            begin
                 kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
                 reset_phase.trigger;
                 if(!kv_rst_agent_warm_rst_seq.req.assert_rst) begin
@@ -208,7 +220,7 @@ class kv_wr_rd_rst_sequence #(
         active_phase.reset;
         configuration.kv_rst_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1000);
-        configuration.kv_sha512_write_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mlkem_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_doe_write_agent_config.wait_for_num_clocks(1000);
         configuration.kv_hmac_key_read_agent_config.wait_for_num_clocks(1000);
@@ -217,6 +229,8 @@ class kv_wr_rd_rst_sequence #(
         configuration.kv_ecc_privkey_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_ecc_seed_read_agent_config.wait_for_num_clocks(1000);
         configuration.kv_aes_key_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mlkem_seed_read_agent_config.wait_for_num_clocks(1000);
+        configuration.kv_mlkem_msg_read_agent_config.wait_for_num_clocks(1000);
         
     endtask
 
