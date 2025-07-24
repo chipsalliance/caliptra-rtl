@@ -861,8 +861,14 @@
 #define ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_SEED_DEST_VALID_MASK                                        (0x400)
 #define ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_LOW                                          (11)
 #define ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_MASK                                         (0x800)
-#define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_LOW                                                        (12)
-#define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_MASK                                                       (0xfffff000)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_SEED_DEST_VALID_LOW                                       (12)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_SEED_DEST_VALID_MASK                                      (0x1000)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_MSG_DEST_VALID_LOW                                        (13)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_MSG_DEST_VALID_MASK                                       (0x2000)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_DMA_DATA_DEST_VALID_LOW                                         (14)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_DMA_DATA_DEST_VALID_MASK                                        (0x4000)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_LOW                                                        (15)
+#define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_MASK                                                       (0xffff8000)
 #endif
 #define CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS                                                           (0x10008614)
 #ifndef ECC_REG_ECC_KV_WR_PKEY_STATUS
@@ -1359,8 +1365,14 @@
 #define HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK                                        (0x400)
 #define HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_LOW                                          (11)
 #define HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK                                         (0x800)
-#define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_LOW                                                        (12)
-#define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_MASK                                                       (0xfffff000)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW                                       (12)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                      (0x1000)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                        (13)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                       (0x2000)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                         (14)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                        (0x4000)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_LOW                                                        (15)
+#define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_MASK                                                       (0xffff8000)
 #endif
 #define CLP_HMAC_REG_HMAC512_KV_WR_STATUS                                                           (0x10010614)
 #ifndef HMAC_REG_HMAC512_KV_WR_STATUS
@@ -1759,6 +1771,44 @@
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW                                                  (2)
 #define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK                                                 (0x3fc)
 #endif
+#define CLP_AES_CLP_REG_AES_KV_WR_CTRL                                                              (0x10011a08)
+#ifndef AES_CLP_REG_AES_KV_WR_CTRL
+#define AES_CLP_REG_AES_KV_WR_CTRL                                                                  (0x208)
+#define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_EN_LOW                                                     (0)
+#define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_EN_MASK                                                    (0x1)
+#define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_ENTRY_LOW                                                  (1)
+#define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_ENTRY_MASK                                                 (0x3e)
+#define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_KEY_DEST_VALID_LOW                                          (6)
+#define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK                                         (0x40)
+#define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_LOW                                        (7)
+#define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK                                       (0x80)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_LOW                                        (8)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK                                       (0x100)
+#define AES_CLP_REG_AES_KV_WR_CTRL_ECC_PKEY_DEST_VALID_LOW                                          (9)
+#define AES_CLP_REG_AES_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK                                         (0x200)
+#define AES_CLP_REG_AES_KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW                                          (10)
+#define AES_CLP_REG_AES_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK                                         (0x400)
+#define AES_CLP_REG_AES_KV_WR_CTRL_AES_KEY_DEST_VALID_LOW                                           (11)
+#define AES_CLP_REG_AES_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK                                          (0x800)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW                                        (12)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                       (0x1000)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                         (13)
+#define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                        (0x2000)
+#define AES_CLP_REG_AES_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                          (14)
+#define AES_CLP_REG_AES_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                         (0x4000)
+#define AES_CLP_REG_AES_KV_WR_CTRL_RSVD_LOW                                                         (15)
+#define AES_CLP_REG_AES_KV_WR_CTRL_RSVD_MASK                                                        (0xffff8000)
+#endif
+#define CLP_AES_CLP_REG_AES_KV_WR_STATUS                                                            (0x10011a0c)
+#ifndef AES_CLP_REG_AES_KV_WR_STATUS
+#define AES_CLP_REG_AES_KV_WR_STATUS                                                                (0x20c)
+#define AES_CLP_REG_AES_KV_WR_STATUS_READY_LOW                                                      (0)
+#define AES_CLP_REG_AES_KV_WR_STATUS_READY_MASK                                                     (0x1)
+#define AES_CLP_REG_AES_KV_WR_STATUS_VALID_LOW                                                      (1)
+#define AES_CLP_REG_AES_KV_WR_STATUS_VALID_MASK                                                     (0x2)
+#define AES_CLP_REG_AES_KV_WR_STATUS_ERROR_LOW                                                      (2)
+#define AES_CLP_REG_AES_KV_WR_STATUS_ERROR_MASK                                                     (0x3fc)
+#endif
 #define CLP_AES_CLP_REG_INTR_BLOCK_RF_START                                                         (0x10011c00)
 #define CLP_AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x10011c00)
 #ifndef AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
@@ -1899,9 +1949,9 @@
 #define KV_REG_KEY_CTRL_0_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_0_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_0_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_0_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_0_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_0_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_0_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_0_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_0_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_1                                                                       (0x10018004)
 #ifndef KV_REG_KEY_CTRL_1
@@ -1917,9 +1967,9 @@
 #define KV_REG_KEY_CTRL_1_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_1_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_1_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_1_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_1_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_1_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_1_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_1_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_1_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_2                                                                       (0x10018008)
 #ifndef KV_REG_KEY_CTRL_2
@@ -1935,9 +1985,9 @@
 #define KV_REG_KEY_CTRL_2_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_2_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_2_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_2_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_2_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_2_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_2_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_2_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_2_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_3                                                                       (0x1001800c)
 #ifndef KV_REG_KEY_CTRL_3
@@ -1953,9 +2003,9 @@
 #define KV_REG_KEY_CTRL_3_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_3_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_3_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_3_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_3_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_3_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_3_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_3_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_3_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_4                                                                       (0x10018010)
 #ifndef KV_REG_KEY_CTRL_4
@@ -1971,9 +2021,9 @@
 #define KV_REG_KEY_CTRL_4_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_4_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_4_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_4_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_4_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_4_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_4_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_4_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_4_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_5                                                                       (0x10018014)
 #ifndef KV_REG_KEY_CTRL_5
@@ -1989,9 +2039,9 @@
 #define KV_REG_KEY_CTRL_5_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_5_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_5_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_5_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_5_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_5_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_5_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_5_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_5_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_6                                                                       (0x10018018)
 #ifndef KV_REG_KEY_CTRL_6
@@ -2007,9 +2057,9 @@
 #define KV_REG_KEY_CTRL_6_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_6_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_6_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_6_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_6_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_6_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_6_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_6_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_6_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_7                                                                       (0x1001801c)
 #ifndef KV_REG_KEY_CTRL_7
@@ -2025,9 +2075,9 @@
 #define KV_REG_KEY_CTRL_7_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_7_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_7_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_7_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_7_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_7_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_7_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_7_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_7_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_8                                                                       (0x10018020)
 #ifndef KV_REG_KEY_CTRL_8
@@ -2043,9 +2093,9 @@
 #define KV_REG_KEY_CTRL_8_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_8_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_8_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_8_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_8_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_8_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_8_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_8_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_8_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_9                                                                       (0x10018024)
 #ifndef KV_REG_KEY_CTRL_9
@@ -2061,9 +2111,9 @@
 #define KV_REG_KEY_CTRL_9_RSVD1_LOW                                                                 (4)
 #define KV_REG_KEY_CTRL_9_RSVD1_MASK                                                                (0x1f0)
 #define KV_REG_KEY_CTRL_9_DEST_VALID_LOW                                                            (9)
-#define KV_REG_KEY_CTRL_9_DEST_VALID_MASK                                                           (0x1fe00)
-#define KV_REG_KEY_CTRL_9_LAST_DWORD_LOW                                                            (17)
-#define KV_REG_KEY_CTRL_9_LAST_DWORD_MASK                                                           (0x1e0000)
+#define KV_REG_KEY_CTRL_9_DEST_VALID_MASK                                                           (0x3fe00)
+#define KV_REG_KEY_CTRL_9_LAST_DWORD_LOW                                                            (18)
+#define KV_REG_KEY_CTRL_9_LAST_DWORD_MASK                                                           (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_10                                                                      (0x10018028)
 #ifndef KV_REG_KEY_CTRL_10
@@ -2079,9 +2129,9 @@
 #define KV_REG_KEY_CTRL_10_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_10_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_10_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_10_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_10_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_10_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_10_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_10_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_10_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_11                                                                      (0x1001802c)
 #ifndef KV_REG_KEY_CTRL_11
@@ -2097,9 +2147,9 @@
 #define KV_REG_KEY_CTRL_11_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_11_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_11_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_11_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_11_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_11_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_11_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_11_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_11_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_12                                                                      (0x10018030)
 #ifndef KV_REG_KEY_CTRL_12
@@ -2115,9 +2165,9 @@
 #define KV_REG_KEY_CTRL_12_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_12_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_12_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_12_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_12_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_12_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_12_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_12_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_12_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_13                                                                      (0x10018034)
 #ifndef KV_REG_KEY_CTRL_13
@@ -2133,9 +2183,9 @@
 #define KV_REG_KEY_CTRL_13_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_13_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_13_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_13_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_13_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_13_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_13_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_13_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_13_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_14                                                                      (0x10018038)
 #ifndef KV_REG_KEY_CTRL_14
@@ -2151,9 +2201,9 @@
 #define KV_REG_KEY_CTRL_14_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_14_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_14_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_14_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_14_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_14_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_14_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_14_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_14_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_15                                                                      (0x1001803c)
 #ifndef KV_REG_KEY_CTRL_15
@@ -2169,9 +2219,9 @@
 #define KV_REG_KEY_CTRL_15_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_15_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_15_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_15_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_15_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_15_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_15_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_15_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_15_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_16                                                                      (0x10018040)
 #ifndef KV_REG_KEY_CTRL_16
@@ -2187,9 +2237,9 @@
 #define KV_REG_KEY_CTRL_16_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_16_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_16_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_16_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_16_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_16_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_16_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_16_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_16_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_17                                                                      (0x10018044)
 #ifndef KV_REG_KEY_CTRL_17
@@ -2205,9 +2255,9 @@
 #define KV_REG_KEY_CTRL_17_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_17_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_17_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_17_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_17_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_17_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_17_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_17_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_17_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_18                                                                      (0x10018048)
 #ifndef KV_REG_KEY_CTRL_18
@@ -2223,9 +2273,9 @@
 #define KV_REG_KEY_CTRL_18_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_18_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_18_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_18_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_18_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_18_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_18_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_18_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_18_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_19                                                                      (0x1001804c)
 #ifndef KV_REG_KEY_CTRL_19
@@ -2241,9 +2291,9 @@
 #define KV_REG_KEY_CTRL_19_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_19_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_19_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_19_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_19_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_19_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_19_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_19_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_19_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_20                                                                      (0x10018050)
 #ifndef KV_REG_KEY_CTRL_20
@@ -2259,9 +2309,9 @@
 #define KV_REG_KEY_CTRL_20_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_20_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_20_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_20_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_20_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_20_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_20_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_20_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_20_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_21                                                                      (0x10018054)
 #ifndef KV_REG_KEY_CTRL_21
@@ -2277,9 +2327,9 @@
 #define KV_REG_KEY_CTRL_21_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_21_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_21_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_21_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_21_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_21_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_21_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_21_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_21_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_22                                                                      (0x10018058)
 #ifndef KV_REG_KEY_CTRL_22
@@ -2295,9 +2345,9 @@
 #define KV_REG_KEY_CTRL_22_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_22_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_22_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_22_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_22_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_22_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_22_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_22_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_22_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_CTRL_23                                                                      (0x1001805c)
 #ifndef KV_REG_KEY_CTRL_23
@@ -2313,9 +2363,9 @@
 #define KV_REG_KEY_CTRL_23_RSVD1_LOW                                                                (4)
 #define KV_REG_KEY_CTRL_23_RSVD1_MASK                                                               (0x1f0)
 #define KV_REG_KEY_CTRL_23_DEST_VALID_LOW                                                           (9)
-#define KV_REG_KEY_CTRL_23_DEST_VALID_MASK                                                          (0x1fe00)
-#define KV_REG_KEY_CTRL_23_LAST_DWORD_LOW                                                           (17)
-#define KV_REG_KEY_CTRL_23_LAST_DWORD_MASK                                                          (0x1e0000)
+#define KV_REG_KEY_CTRL_23_DEST_VALID_MASK                                                          (0x3fe00)
+#define KV_REG_KEY_CTRL_23_LAST_DWORD_LOW                                                           (18)
+#define KV_REG_KEY_CTRL_23_LAST_DWORD_MASK                                                          (0x3c0000)
 #endif
 #define CLP_KV_REG_KEY_ENTRY_0_0                                                                    (0x10018600)
 #ifndef KV_REG_KEY_ENTRY_0_0
@@ -7349,8 +7399,14 @@
 #define SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK                                       (0x400)
 #define SHA512_REG_SHA512_KV_WR_CTRL_AES_KEY_DEST_VALID_LOW                                         (11)
 #define SHA512_REG_SHA512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK                                        (0x800)
-#define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_LOW                                                       (12)
-#define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_MASK                                                      (0xfffff000)
+#define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW                                      (12)
+#define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                     (0x1000)
+#define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                       (13)
+#define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                      (0x2000)
+#define SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                        (14)
+#define SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                       (0x4000)
+#define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_LOW                                                       (15)
+#define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_MASK                                                      (0xffff8000)
 #endif
 #define CLP_SHA512_REG_SHA512_KV_WR_STATUS                                                          (0x1002060c)
 #ifndef SHA512_REG_SHA512_KV_WR_STATUS
@@ -9657,9 +9713,9 @@
 #define AXI_DMA_REG_CTRL_RSVD2_LOW                                                                  (21)
 #define AXI_DMA_REG_CTRL_RSVD2_MASK                                                                 (0xe00000)
 #define AXI_DMA_REG_CTRL_WR_ROUTE_LOW                                                               (24)
-#define AXI_DMA_REG_CTRL_WR_ROUTE_MASK                                                              (0x3000000)
-#define AXI_DMA_REG_CTRL_RSVD3_LOW                                                                  (26)
-#define AXI_DMA_REG_CTRL_RSVD3_MASK                                                                 (0xc000000)
+#define AXI_DMA_REG_CTRL_WR_ROUTE_MASK                                                              (0x7000000)
+#define AXI_DMA_REG_CTRL_RSVD3_LOW                                                                  (27)
+#define AXI_DMA_REG_CTRL_RSVD3_MASK                                                                 (0x8000000)
 #define AXI_DMA_REG_CTRL_WR_FIXED_LOW                                                               (28)
 #define AXI_DMA_REG_CTRL_WR_FIXED_MASK                                                              (0x10000000)
 #define AXI_DMA_REG_CTRL_RSVD4_LOW                                                                  (29)
@@ -9755,6 +9811,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_MASK                          (0x40)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_LOW                              (7)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK                             (0x80)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_EN_LOW                                (8)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_EN_MASK                               (0x100)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                               (0x30022808)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
@@ -9801,6 +9859,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK                   (0x40)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_LOW                       (7)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK                      (0x80)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_STS_LOW                         (8)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_STS_MASK                        (0x100)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                         (0x30022818)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
@@ -9835,6 +9895,8 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_MASK                      (0x40)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_LOW                          (7)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_MASK                         (0x80)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_TRIG_LOW                            (8)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_TRIG_MASK                           (0x100)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                             (0x30022820)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
@@ -9881,6 +9943,10 @@
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                    (0x3002291c)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                        (0x91c)
+#endif
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_R                                      (0x30022920)
+#ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_R
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_R                                          (0x920)
 #endif
 #define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R                                   (0x30022980)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R
@@ -9950,33 +10016,39 @@
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_LOW                         (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_MASK                        (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                              (0x30022a20)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R                                 (0x30022a20)
+#ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R                                     (0xa20)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R_PULSE_LOW                           (0)
+#define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R_PULSE_MASK                          (0x1)
+#endif
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                              (0x30022a24)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (0xa20)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (0xa24)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                            (0x30022a24)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                            (0x30022a28)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (0xa24)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (0xa28)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                     (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                        (0x30022a28)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                        (0x30022a2c)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (0xa28)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (0xa2c)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                 (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                             (0x30022a2c)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                             (0x30022a30)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (0xa2c)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (0xa30)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_LOW                       (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_MASK                      (0x1)
 #endif
-#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                         (0x30022a30)
+#define CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                         (0x30022a34)
 #ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R
-#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (0xa30)
+#define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (0xa34)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
 #define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_MASK                  (0x1)
 #endif
