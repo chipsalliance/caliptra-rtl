@@ -237,7 +237,7 @@ inline void service_sha512_acc_notif_intr() {
 
 inline void service_mldsa_error_intr() {return;}
 inline void service_mldsa_notif_intr() {
-    uint32_t * reg = (uint32_t *) (CLP_MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
