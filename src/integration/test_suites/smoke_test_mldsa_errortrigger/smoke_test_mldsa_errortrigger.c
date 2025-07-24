@@ -634,7 +634,58 @@ void main() {
         rst_count++;
         printf("%c",0xf6);
     }
+    else if(rst_count == 3) {
+        // wait for MLDSA to be ready
+        printf("Waiting for mldsa status ready\n");
+        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
 
+        printf("\n TEST INVALID HINT\n");
+
+        uint8_t invalid_hint = rand() % 75 + 1; // +1 for the additional 00
+        uint8_t dword_index = invalid_hint / 4;
+        uint8_t byte_offset = invalid_hint % 4;
+
+        // Clear the targeted byte
+        sign[dword_index] &= ~(0xFF << (8 * byte_offset));
+        // Set the targeted byte with invalid_hint
+        sign[dword_index] |= (invalid_hint << (8 * byte_offset));
+
+        printf("inject invalid coefficeint [%x] to index number %x!\n", byte_offset, dword_index);
+
+
+        // Program MLDSA MSG
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
+
+        // Program MLDSA PUBKEY
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR, pubkey, MLDSA87_PUBKEY_SIZE);
+
+        // Program MLDSA SIGNATURE
+        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
+
+        // Enable MLDSA VERIFYING core
+        printf("\nMLDSA VERIFYING\n");
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+
+        // wait for MLDSA KEYGEN process to be done
+        wait_for_mldsa_intr();
+        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
+        // Read the data back from MLDSA register
+        printf("Load VERIFY_RES data from MLDSA\n");
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
+            if (*reg_ptr != 0) {
+                printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", *reg_ptr);
+                printf("Expected data: 0x%x\n", 0);
+                printf("%c", fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
+
+        mldsa_zeroize();
+    }
 
     //End the test
     printf("%c",0xff); 
