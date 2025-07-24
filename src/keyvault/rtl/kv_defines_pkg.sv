@@ -37,7 +37,7 @@ localparam OCP_LOCK_HEK_SEED_KV_SLOT    = 22; // Destination for deobf HEK seed,
                                               // TODO -- do we need to be prescriptive about this, now that RT_OBF_KEY is used for MEK decryption instead of HEK?
 localparam OCP_LOCK_KEY_RELEASE_KV_SLOT = 23; // Stores the fully decrypted MEK
 localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed -- used to define the write-size from DOE
-localparam OCP_LOCK_MEK_NUM_DWORDS      = 8;  // 256b MEK -- used to define the entry size fetched from KV
+localparam OCP_LOCK_MEK_NUM_DWORDS      = 16; // 512b MEK -- used to define the entry size fetched from KV
 
 localparam KV_WRITE_IDX_HMAC      = 0;
 localparam KV_WRITE_IDX_MLKEM     = 1;
