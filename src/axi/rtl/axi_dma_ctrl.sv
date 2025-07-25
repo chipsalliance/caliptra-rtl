@@ -286,6 +286,7 @@ import kv_defines_pkg::*;
     // KeyVault signals
     kv_read_ctrl_reg_t        kv_read_ctrl_reg;
     logic                     kv_read_en;
+    logic                     kv_read_once;
     logic                     kv_data_write_en;
 //    logic [$clog2(OCP_LOCK_MEK_NUM_DWORDS)-1:0] kv_data_write_offset;
     logic [31:0]              kv_data_write_data;
@@ -787,13 +788,26 @@ import kv_defines_pkg::*;
         if (!rst_n) begin
             kv_read_en <= 1'b0;
         end
-        else if (hwif_out.ctrl.go.value &&
+        else if (!kv_read_once && 
+                 hwif_out.ctrl.go.value &&
                  (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) &&
                  (!cmd_parse_error)) begin
             kv_read_en <= 1'b1;
         end
         else if (kv_data_read_done) begin
             kv_read_en <= 1'b0;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            kv_read_once <= 1'b0;
+        end
+        else if (kv_read_en) begin
+            kv_read_once <= 1'b1;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE) begin
+            kv_read_once <= 1'b0;
         end
     end
 
