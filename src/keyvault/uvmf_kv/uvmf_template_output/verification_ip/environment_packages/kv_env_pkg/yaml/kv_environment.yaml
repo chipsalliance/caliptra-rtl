@@ -108,3 +108,9 @@ uvmf:
       - driver: kv_aes_key_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
+      - driver: kv_mlkem_seed_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_mlkem_msg_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'

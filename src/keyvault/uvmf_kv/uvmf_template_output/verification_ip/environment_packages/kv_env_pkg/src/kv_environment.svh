@@ -72,6 +72,12 @@ class kv_environment  extends uvmf_environment_base #(
   typedef kv_read_agent  kv_aes_key_read_agent_t;
   kv_aes_key_read_agent_t kv_aes_key_read_agent;
 
+  typedef kv_read_agent  kv_mlkem_seed_read_agent_t;
+  kv_mlkem_seed_read_agent_t kv_mlkem_seed_read_agent;
+
+  typedef kv_read_agent  kv_mlkem_msg_read_agent_t;
+  kv_mlkem_msg_read_agent_t kv_mlkem_msg_read_agent;
+
 
 
 
@@ -113,6 +119,8 @@ class kv_environment  extends uvmf_environment_base #(
    read_reg_predictor_t    ecc_privkey_read_reg_predictor;
    read_reg_predictor_t    ecc_seed_read_reg_predictor;
    read_reg_predictor_t    aes_key_read_reg_predictor;
+   read_reg_predictor_t    mlkem_seed_read_reg_predictor;
+   read_reg_predictor_t    mlkem_msg_read_reg_predictor;
 
    
 
@@ -157,6 +165,8 @@ class kv_environment  extends uvmf_environment_base #(
     read_reg_adapter_t kv_ecc_privkey_read_reg_adapter;
     read_reg_adapter_t kv_ecc_seed_read_reg_adapter;
     read_reg_adapter_t kv_aes_key_read_reg_adapter;
+    read_reg_adapter_t kv_mlkem_seed_read_reg_adapter;
+    read_reg_adapter_t kv_mlkem_msg_read_reg_adapter;
 
 
 
@@ -206,6 +216,10 @@ class kv_environment  extends uvmf_environment_base #(
     kv_ecc_seed_read_agent.set_config(configuration.kv_ecc_seed_read_agent_config);
     kv_aes_key_read_agent = kv_aes_key_read_agent_t::type_id::create("kv_aes_key_read_agent",this);
     kv_aes_key_read_agent.set_config(configuration.kv_aes_key_read_agent_config);
+    kv_mlkem_seed_read_agent = kv_mlkem_seed_read_agent_t::type_id::create("kv_mlkem_seed_read_agent",this);
+    kv_mlkem_seed_read_agent.set_config(configuration.kv_mlkem_seed_read_agent_config);
+    kv_mlkem_msg_read_agent = kv_mlkem_msg_read_agent_t::type_id::create("kv_mlkem_msg_read_agent",this);
+    kv_mlkem_msg_read_agent.set_config(configuration.kv_mlkem_msg_read_agent_config);
     kv_pred = kv_pred_t::type_id::create("kv_pred",this);
     kv_pred.configuration = configuration;
     kv_sb = kv_sb_t::type_id::create("kv_sb",this);
@@ -224,6 +238,8 @@ class kv_environment  extends uvmf_environment_base #(
     ecc_privkey_read_reg_predictor  = read_reg_predictor_t::type_id::create("ecc_privkey_read_reg_predictor", this);
     ecc_seed_read_reg_predictor     = read_reg_predictor_t::type_id::create("ecc_seed_read_reg_predictor", this);
     aes_key_read_reg_predictor      = read_reg_predictor_t::type_id::create("aes_key_read_reg_predictor", this);
+    mlkem_seed_read_reg_predictor   = read_reg_predictor_t::type_id::create("mlkem_seed_read_reg_predictor", this);
+    mlkem_msg_read_reg_predictor    = read_reg_predictor_t::type_id::create("mlkem_msg_read_reg_predictor", this);
 
     ahb_reg_predictor = ahb_reg_predictor_t::type_id::create("ahb_reg_predictor", this);
   end
@@ -260,6 +276,8 @@ class kv_environment  extends uvmf_environment_base #(
     kv_ecc_privkey_read_agent.monitored_ap.connect(kv_pred.kv_ecc_privkey_read_agent_ae);
     kv_ecc_seed_read_agent.monitored_ap.connect(kv_pred.kv_ecc_seed_read_agent_ae);
     kv_aes_key_read_agent.monitored_ap.connect(kv_pred.kv_aes_key_read_agent_ae);
+    kv_mlkem_seed_read_agent.monitored_ap.connect(kv_pred.kv_mlkem_seed_read_agent_ae);
+    kv_mlkem_msg_read_agent.monitored_ap.connect(kv_pred.kv_mlkem_msg_read_agent_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(kv_pred.ahb_slave_0_ae);
 
@@ -275,6 +293,8 @@ class kv_environment  extends uvmf_environment_base #(
     kv_pred.kv_ecc_privkey_read_sb_ap.connect(kv_sb.expected_ecc_privkey_read_analysis_export);
     kv_pred.kv_ecc_seed_read_sb_ap.connect(kv_sb.expected_ecc_seed_read_analysis_export);
     kv_pred.kv_aes_key_read_sb_ap.connect(kv_sb.expected_aes_key_read_analysis_export);
+    kv_pred.kv_mlkem_seed_read_sb_ap.connect(kv_sb.expected_mlkem_seed_read_analysis_export);
+    kv_pred.kv_mlkem_msg_read_sb_ap.connect(kv_sb.expected_mlkem_msg_read_analysis_export);
     kv_pred.kv_sb_ahb_ap.connect(kv_sb.expected_ahb_analysis_export);
     
     kv_hmac_write_agent.monitored_ap.connect(kv_sb.actual_hmac_write_analysis_export);
@@ -288,6 +308,8 @@ class kv_environment  extends uvmf_environment_base #(
     kv_ecc_privkey_read_agent.monitored_ap.connect(kv_sb.actual_ecc_privkey_read_analysis_export);
     kv_ecc_seed_read_agent.monitored_ap.connect(kv_sb.actual_ecc_seed_read_analysis_export);
     kv_aes_key_read_agent.monitored_ap.connect(kv_sb.actual_aes_key_read_analysis_export);
+    kv_mlkem_seed_read_agent.monitored_ap.connect(kv_sb.actual_mlkem_seed_read_analysis_export);
+    kv_mlkem_msg_read_agent.monitored_ap.connect(kv_sb.actual_mlkem_msg_read_analysis_export);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(kv_sb.actual_ahb_analysis_export);
 
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
@@ -312,6 +334,8 @@ class kv_environment  extends uvmf_environment_base #(
         kv_ecc_privkey_read_reg_adapter   = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
         kv_ecc_seed_read_reg_adapter      = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
         kv_aes_key_read_reg_adapter       = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
+        kv_mlkem_seed_read_reg_adapter    = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
+        kv_mlkem_msg_read_reg_adapter     = read_reg_adapter_t::type_id::create("kv_read2reg_adapter");
 
     end
 // UVMF_CHANGE_ME: QVIP_AGENT_USED_FOR_REG_MAP:
@@ -365,6 +389,12 @@ class kv_environment  extends uvmf_environment_base #(
       if (kv_aes_key_read_agent.sequencer != null)
         configuration.kv_rm.kv_aes_key_read_map.set_sequencer(kv_aes_key_read_agent.sequencer, kv_aes_key_read_reg_adapter);
 
+      if (kv_mlkem_seed_read_agent.sequencer != null)
+        configuration.kv_rm.kv_mlkem_seed_read_map.set_sequencer(kv_mlkem_seed_read_agent.sequencer, kv_mlkem_seed_read_reg_adapter);
+
+      if (kv_mlkem_msg_read_agent.sequencer != null)
+        configuration.kv_rm.kv_mlkem_msg_read_map.set_sequencer(kv_mlkem_msg_read_agent.sequencer, kv_mlkem_msg_read_reg_adapter);
+
     end
 
     
@@ -416,6 +446,14 @@ class kv_environment  extends uvmf_environment_base #(
       aes_key_read_reg_predictor.adapter = kv_aes_key_read_reg_adapter;
       //configuration.kv_rm.kv_aes_key_read_map.set_auto_predict(1);
 
+      mlkem_seed_read_reg_predictor.map = configuration.kv_rm.kv_mlkem_seed_read_map;
+      mlkem_seed_read_reg_predictor.adapter = kv_mlkem_seed_read_reg_adapter;
+      //configuration.kv_rm.kv_mlkem_seed_read_map.set_auto_predict(1);
+
+      mlkem_msg_read_reg_predictor.map = configuration.kv_rm.kv_mlkem_msg_read_map;
+      mlkem_msg_read_reg_predictor.adapter = kv_mlkem_msg_read_reg_adapter;
+      //configuration.kv_rm.kv_mlkem_msg_read_map.set_auto_predict(1);
+
       // The connection between the agent analysis_port and uvm_reg_predictor 
       // analysis_export could cause problems due to a uvm register package bug,
       // if this environment is used as a sub-environment at a higher level.
@@ -443,6 +481,8 @@ class kv_environment  extends uvmf_environment_base #(
       kv_ecc_privkey_read_agent.monitored_ap.connect(ecc_privkey_read_reg_predictor.bus_in);
       kv_ecc_seed_read_agent.monitored_ap.connect(ecc_seed_read_reg_predictor.bus_in);
       kv_aes_key_read_agent.monitored_ap.connect(aes_key_read_reg_predictor.bus_in);
+      kv_mlkem_seed_read_agent.monitored_ap.connect(mlkem_seed_read_reg_predictor.bus_in);
+      kv_mlkem_msg_read_agent.monitored_ap.connect(mlkem_msg_read_reg_predictor.bus_in);
     end
     // pragma uvmf custom reg_model_connect_phase end
   endfunction

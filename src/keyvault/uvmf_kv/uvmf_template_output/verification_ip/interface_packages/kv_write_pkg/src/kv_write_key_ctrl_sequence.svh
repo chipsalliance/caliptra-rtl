@@ -70,7 +70,7 @@ class kv_write_key_ctrl_sequence #(
         req.write_en = 1'b1; //Tie write en to 1 for entire write seq
         req.write_offset = 'h0;
         req.write_entry = entry;
-        req.write_dest_valid = 'h3F;
+        req.write_dest_valid = 'hFF;
         start_item(req);
         // Randomize the transaction
         if(!req.randomize()) `uvm_fatal("SEQ", "kv_write_key_ctrl_sequence::body()-kv_write_transaction randomization failed")

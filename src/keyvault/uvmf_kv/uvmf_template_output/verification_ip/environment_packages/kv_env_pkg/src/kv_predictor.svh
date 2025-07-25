@@ -882,11 +882,10 @@ endclass
     kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
 
     lock_use = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.read_entry].lock_use.get_lsb_pos()];
-    dest_valid = kv_reg_data[14:9]; //[16:15] are rsvd
+    dest_valid = kv_reg_data[16:9];
     // dest_valid = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].dest_valid.get_lsb_pos()];
     
     case(client) inside
-
       "hmac_key_read"     : client_dest_valid = dest_valid[0];
       "hmac_block_read"   : client_dest_valid = dest_valid[1];
       "mldsa_key_read"    : client_dest_valid = dest_valid[2];

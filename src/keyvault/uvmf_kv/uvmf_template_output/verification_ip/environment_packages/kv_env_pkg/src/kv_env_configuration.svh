@@ -236,10 +236,10 @@ extends uvmf_environment_configuration_base;
      kv_aes_key_read_agent_config.initialize( interface_activity[11], {environment_path,".kv_aes_key_read_agent"}, interface_names[11]);
      kv_aes_key_read_agent_config.initiator_responder = INITIATOR;
      kv_aes_key_read_agent_config.has_coverage = 1;
-     kv_mlkem_seed_read_agent_config.initialize( interface_activity[12], {environment_path,".kv_mlkem_seed_read_agent"}, interface_names[8]);
+     kv_mlkem_seed_read_agent_config.initialize( interface_activity[12], {environment_path,".kv_mlkem_seed_read_agent"}, interface_names[12]);
      kv_mlkem_seed_read_agent_config.initiator_responder = INITIATOR;
      kv_mlkem_seed_read_agent_config.has_coverage = 1;
-     kv_mlkem_msg_read_agent_config.initialize( interface_activity[13], {environment_path,".kv_mlkem_msg_read_agent"}, interface_names[8]);
+     kv_mlkem_msg_read_agent_config.initialize( interface_activity[13], {environment_path,".kv_mlkem_msg_read_agent"}, interface_names[13]);
      kv_mlkem_msg_read_agent_config.initiator_responder = INITIATOR;
      kv_mlkem_msg_read_agent_config.has_coverage = 1;
 
