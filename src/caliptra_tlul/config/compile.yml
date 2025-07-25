@@ -19,3 +19,8 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_tlul_data_integ_dec.sv
       - $COMPILE_ROOT/rtl/caliptra_tlul_data_integ_enc.sv
       - $COMPILE_ROOT/rtl/caliptra_tlul_err.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_err_resp.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_fifo_sync.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_socket_1n.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_sram_byte.sv
+      - $COMPILE_ROOT/rtl/caliptra_tlul_adapter_sram.sv

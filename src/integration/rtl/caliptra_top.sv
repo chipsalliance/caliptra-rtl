@@ -389,6 +389,7 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
 
    //=========================================================================-
    // RTL instance
@@ -902,8 +903,34 @@ sha256_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
+sha3_ctrl #(
+    .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
+    .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA3))
+) sha3 (
+    .clk            (clk_cg),
+    .reset_n        (cptra_noncore_rst_b),
+    .cptra_pwrgood  (cptra_pwrgood),
+    .haddr_i        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA3)-1:0]),
+    .hwdata_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hwdata),
+    .hsel_i         (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hsel),
+    .hwrite_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hwrite),
+    .hready_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hready),
+    .htrans_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].htrans),
+    .hsize_i        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hsize),
+    .hresp_o        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hresp),
+    .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hreadyout),
+    .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hrdata),
+    .busy_o         ( ),
+
+    // Interrupt TODO
+    .error_intr( ),
+    .notif_intr( ),
+
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
+);
+
 //override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent | 
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent |
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;

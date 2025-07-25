@@ -1,0 +1,31 @@
+---
+provides: [sha3_ctrl]
+schema_version: 2.4.0
+requires:
+  - libs
+  - caliptra_prim
+  - caliptra_tlul_pkg
+  - kmac_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/kmac_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/sha3_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/keccak_2share.sv
+      - $COMPILE_ROOT/rtl/keccak_round.sv
+      - $COMPILE_ROOT/rtl/kmac_app.sv
+      - $COMPILE_ROOT/rtl/kmac_core.sv
+      - $COMPILE_ROOT/rtl/kmac_entropy.v
+      - $COMPILE_ROOT/rtl/kmac_errchk.v
+      - $COMPILE_ROOT/rtl/kmac_msgfifo.v
+      - $COMPILE_ROOT/rtl/kmac_reg_top.sv
+      - $COMPILE_ROOT/rtl/kmac_staterd.sv
+      - $COMPILE_ROOT/rtl/kmac.sv
+      - $COMPILE_ROOT/rtl/sha3_ctrl.sv
+      - $COMPILE_ROOT/rtl/sha3pad.sv
+      - $COMPILE_ROOT/rtl/sha3_reg.sv
+      - $COMPILE_ROOT/rtl/sha3.sv
+    tops: [sha3_ctrl]
+  rtl_lint:
+    directories: []
