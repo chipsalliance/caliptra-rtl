@@ -54,7 +54,7 @@ package kv_env_pkg;
  
   `uvm_analysis_imp_decl(_kv_rst_agent_ae)
   `uvm_analysis_imp_decl(_kv_hmac_write_agent_ae)
-  `uvm_analysis_imp_decl(_kv_sha512_write_agent_ae)
+  `uvm_analysis_imp_decl(_kv_mlkem_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_ecc_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_doe_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_hmac_key_read_agent_ae)
@@ -63,14 +63,16 @@ package kv_env_pkg;
   `uvm_analysis_imp_decl(_kv_ecc_privkey_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_ecc_seed_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_aes_key_read_agent_ae)
+  `uvm_analysis_imp_decl(_kv_mlkem_seed_read_agent_ae)
+  `uvm_analysis_imp_decl(_kv_mlkem_msg_read_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   // `uvm_analysis_imp_decl(_expected_analysis_export)
   // `uvm_analysis_imp_decl(_actual_analysis_export)
   `uvm_analysis_imp_decl(_expected_hmac_write_analysis_export)
   `uvm_analysis_imp_decl(_actual_hmac_write_analysis_export)
 
-  `uvm_analysis_imp_decl(_expected_sha512_write_analysis_export)
-  `uvm_analysis_imp_decl(_actual_sha512_write_analysis_export)
+  `uvm_analysis_imp_decl(_expected_mlkem_write_analysis_export)
+  `uvm_analysis_imp_decl(_actual_mlkem_write_analysis_export)
 
   `uvm_analysis_imp_decl(_expected_ecc_write_analysis_export)
   `uvm_analysis_imp_decl(_actual_ecc_write_analysis_export)
@@ -95,6 +97,12 @@ package kv_env_pkg;
 
   `uvm_analysis_imp_decl(_expected_aes_key_read_analysis_export)
   `uvm_analysis_imp_decl(_actual_aes_key_read_analysis_export)
+
+  `uvm_analysis_imp_decl(_expected_mlkem_seed_read_analysis_export)
+  `uvm_analysis_imp_decl(_actual_mlkem_seed_read_analysis_export)
+
+  `uvm_analysis_imp_decl(_expected_mlkem_msg_read_analysis_export)
+  `uvm_analysis_imp_decl(_actual_mlkem_msg_read_analysis_export)
 
   `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)

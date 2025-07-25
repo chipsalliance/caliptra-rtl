@@ -58,8 +58,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0,
+    .abr_error      = 0,
+    .abr_notif      = 0,
     .axi_dma_notif    = 0,
     .axi_dma_error    = 0,
 };
@@ -98,44 +98,44 @@ void main() {
     uint8_t fail_cmd = 0x1;
     
     printf("Waiting for mldsa status ready in keygen\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
-                                                        ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
+                                                        ((seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
     // Check that MLDSA SEED is loaded
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_VALID_MASK) == 0);
     
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_MSG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
     }
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_7) {
         *reg_ptr++ = sign_rnd[offset++];
     }
 
     // Write MLDSA ENTROPY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_15) {
         *reg_ptr++ = entropy[offset++];
     }
 
-    status_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_STATUS;
+    status_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_STATUS;
 
     printf("\nMLDSA KEYGEN + SIGNING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
     printf("Try to Load Locked SIGN data from MLDSA\n");
     while (*status_ptr == 0){
-        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+        reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             if ((*reg_ptr != 0) & (*status_ptr == 0)) {
@@ -155,7 +155,7 @@ void main() {
 
     // Read the data back from MLDSA register
     printf("Try to Load Locked PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
@@ -170,11 +170,11 @@ void main() {
     }
 
     printf("MLDSA zeroize flow.\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
 
     // Read the data back from MLDSA register
     printf("Try to Load zeroized PRIVKEY data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
@@ -188,7 +188,7 @@ void main() {
         offset++;
     }
 
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

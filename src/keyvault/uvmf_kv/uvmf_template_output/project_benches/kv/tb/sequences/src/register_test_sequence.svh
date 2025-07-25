@@ -53,7 +53,7 @@ class register_test_sequence extends kv_bench_sequence_base;
       // fork-join for this code block may be unnecessary based on your situation.
       kv_rst_agent_config.wait_for_reset();
       kv_hmac_write_agent_config.wait_for_reset();
-      kv_sha512_write_agent_config.wait_for_reset();
+      kv_mlkem_write_agent_config.wait_for_reset();
       kv_ecc_write_agent_config.wait_for_reset();
       kv_doe_write_agent_config.wait_for_reset();
       kv_hmac_key_read_agent_config.wait_for_reset();
@@ -62,6 +62,8 @@ class register_test_sequence extends kv_bench_sequence_base;
       kv_ecc_privkey_read_agent_config.wait_for_reset();
       kv_ecc_seed_read_agent_config.wait_for_reset();
       kv_aes_key_read_agent_config.wait_for_reset();
+      kv_mlkem_seed_read_agent_config.wait_for_reset();
+      kv_mlkem_msg_read_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 

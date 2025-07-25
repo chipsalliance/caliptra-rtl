@@ -520,7 +520,7 @@ void main() {
     if(rst_count == 0) {
         // wait for MLDSA to be ready
         printf("Waiting for mldsa status ready\n");
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         printf("\n TEST INVALID s1/s2\n");
 
@@ -549,7 +549,7 @@ void main() {
 
         // Program MLDSA PRIVKEY
         printf("Writing privkey\n");
-        reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+        reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_PRIVKEY_SIZE) {
             *reg_ptr++ = privkey[offset++];
@@ -557,11 +557,11 @@ void main() {
 
         // Enable MLDSA SIGNING core
         printf("\nMLDSA SIGNING\n");
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
+        lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
 
         // wait for MLDSA SIGNING process to be done
         wait_for_mldsa_intr();
-        if ((cptra_intr_rcv.mldsa_error == 0)){
+        if ((cptra_intr_rcv.abr_error == 0)){
             printf("\nMLDSA invalid s1/s2 error is not detected.\n");
             printf("%c", 0x1);
             while(1);
@@ -575,7 +575,7 @@ void main() {
     else if(rst_count == 1) {
         // wait for MLDSA to be ready
         printf("Waiting for mldsa status ready\n");
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         printf("\n TEST PCR WITH INVALID KEYGEN COMMAND\n");
 
@@ -586,13 +586,13 @@ void main() {
 
         // Enable MLDSA PCR KEYGEN core
         printf("\nMLDSA PCR KEYGEN\n");
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN | 
-                ((1 << MLDSA_REG_MLDSA_CTRL_PCR_SIGN_LOW) & MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK));
+        lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN | 
+                ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK));
     
         
         // wait for MLDSA KEYGEN process to be done
         wait_for_mldsa_intr();
-        if ((cptra_intr_rcv.mldsa_error == 0)){
+        if ((cptra_intr_rcv.abr_error == 0)){
             printf("\nMLDSA PCR with invalid keygen error is not detected.\n");
             printf("%c", 0x1);
             while(1);
@@ -606,7 +606,7 @@ void main() {
     else if(rst_count == 2) {
         // wait for MLDSA to be ready
         printf("Waiting for mldsa status ready\n");
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         printf("\n TEST PCR WITH INVALID VERIFY COMMAND\n");
 
@@ -617,13 +617,13 @@ void main() {
 
         // Enable MLDSA PCR VERIFY core
         printf("\nMLDSA PCR VERIFY\n");
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING | 
-                ((1 << MLDSA_REG_MLDSA_CTRL_PCR_SIGN_LOW) & MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK));
+        lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING | 
+                ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK));
     
         
         // wait for MLDSA KEYGEN process to be done
         wait_for_mldsa_intr();
-        if ((cptra_intr_rcv.mldsa_error == 0)){
+        if ((cptra_intr_rcv.abr_error == 0)){
             printf("\nMLDSA PCR with invalid keygen error is not detected.\n");
             printf("%c", 0x1);
             while(1);

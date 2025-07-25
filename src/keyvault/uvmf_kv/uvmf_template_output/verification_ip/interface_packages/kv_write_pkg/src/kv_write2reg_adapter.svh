@@ -95,7 +95,7 @@ class kv_write2reg_adapter #(
     trans_h.write_entry = wr_entry;
     trans_h.write_offset = wr_offset;
     trans_h.write_data = rw.data;
-    trans_h.write_dest_valid = 'h3F;
+    trans_h.write_dest_valid = 'hFF;
     //Copy over write data
     // trans_h.data = rw.data;
 
@@ -135,7 +135,7 @@ class kv_write2reg_adapter #(
     // rw.addr = trans_h.addr;
     rw.addr = convert_kv_to_addr({wr_offset, wr_entry}); 
     //Copy over read data
-    rw.data = trans_h.write_data; //Note, dest_valid always 'h3F in kv_reg_predictor
+    rw.data = trans_h.write_data; //Note, dest_valid always 'hFF in kv_reg_predictor
     // rw.data = trans_h.data;
     //Check for errors on the bus and return UVM_NOT_OK if there is an error
     // rw.status = UVM_IS_OK;

@@ -49,17 +49,17 @@ void main() {
 
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Enable MLDSA keygen sign
     printf("\nMLDSA PCR SIGNING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
-                                          ((1 << MLDSA_REG_MLDSA_CTRL_PCR_SIGN_LOW) & MLDSA_REG_MLDSA_CTRL_PCR_SIGN_MASK));
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
+                                          ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK));
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
     mldsa_zeroize();
 
     printf("%c",0xff); //End the test

@@ -50,7 +50,7 @@ qvip_memory_message_handler message_handler;
     uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
     kv_rst_agent_BFM /* kv_rst_agent     [1] */ , 
     kv_hmac_write_agent_BFM /* kv_hmac_write_agent     [2] */ , 
-    kv_sha512_write_agent_BFM /* kv_sha512_write_agent     [3] */ , 
+    kv_mlkem_write_agent_BFM /* kv_mlkem_write_agent     [3] */ , 
     kv_ecc_write_agent_BFM /* kv_ecc_write_agent     [4] */ , 
     kv_doe_write_agent_BFM /* kv_doe_write_agent     [5] */ , 
     kv_hmac_key_read_agent_BFM /* kv_hmac_key_read_agent     [6] */ , 
@@ -58,14 +58,16 @@ qvip_memory_message_handler message_handler;
     kv_mldsa_key_read_agent_BFM /* kv_mldsa_key_read_agent     [8] */ , 
     kv_ecc_privkey_read_agent_BFM /* kv_ecc_privkey_read_agent     [9] */ , 
     kv_ecc_seed_read_agent_BFM /* kv_ecc_seed_read_agent     [10] */ ,
-    kv_aes_key_read_agent_BFM /* kv_aes_key_read_agent     [11] */ 
+    kv_aes_key_read_agent_BFM /* kv_aes_key_read_agent     [11] */ ,
+    kv_mlkem_seed_read_agent_BFM /* kv_mlkem_seed_read_agent     [12] */ , 
+    kv_mlkem_msg_read_agent_BFM /* kv_mlkem_msg_read_agent     [13] */
 };
 
 uvmf_active_passive_t interface_activities[] = { 
     ACTIVE /* ahb_lite_slave_0     [0] */ , 
     ACTIVE /* kv_rst_agent     [1] */ , 
     ACTIVE /* kv_hmac_write_agent     [2] */ , 
-    ACTIVE /* kv_sha512_write_agent     [3] */ , 
+    ACTIVE /* kv_mlkem_write_agent     [3] */ , 
     ACTIVE /* kv_ecc_write_agent     [4] */ , 
     ACTIVE /* kv_doe_write_agent     [5] */ , 
     ACTIVE /* kv_hmac_key_read_agent     [6] */ , 
@@ -73,7 +75,9 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* kv_mldsa_key_read_agent     [8] */ , 
     ACTIVE /* kv_ecc_privkey_read_agent     [9] */ , 
     ACTIVE /* kv_ecc_seed_read_agent     [10] */ ,
-    ACTIVE /* kv_aes_key_read_agent     [11] */
+    ACTIVE /* kv_aes_key_read_agent     [11] */ ,
+    ACTIVE /* kv_mlkem_seed_read_agent     [12] */ , 
+    ACTIVE /* kv_mlkem_msg_read_agent     [14] */
 };
 
   // pragma uvmf custom class_item_additional begin

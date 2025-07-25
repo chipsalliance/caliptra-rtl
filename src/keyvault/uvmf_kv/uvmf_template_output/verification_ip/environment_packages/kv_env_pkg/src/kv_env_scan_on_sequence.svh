@@ -46,7 +46,7 @@ class kv_env_scan_on_sequence #(
 
     typedef kv_write_key_entry_sequence kv_write_agent_key_entry_sequence_t;
     kv_write_agent_key_entry_sequence_t hmac_write_seq;
-    kv_write_agent_key_entry_sequence_t sha512_write_seq;
+    kv_write_agent_key_entry_sequence_t mlkem_write_seq;
     kv_write_agent_key_entry_sequence_t ecc_write_seq;
     kv_write_agent_key_entry_sequence_t doe_write_seq;
 
@@ -57,8 +57,10 @@ class kv_env_scan_on_sequence #(
     kv_read_agent_key_entry_sequence_t ecc_privkey_read_seq;
     kv_read_agent_key_entry_sequence_t ecc_seed_read_seq;
     kv_read_agent_key_entry_sequence_t aes_key_read_seq;
+    kv_read_agent_key_entry_sequence_t mlkem_seed_read_seq;
+    kv_read_agent_key_entry_sequence_t mlkem_msg_read_seq;
 
-    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;    
+    rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, mlkem_write_entry, ecc_write_entry, doe_write_entry;    
     rand int unsigned wait_cycles_from_seq;
     rand bit debug_type;
     rand reg [1:0] clear_secrets_data;
@@ -81,7 +83,7 @@ class kv_env_scan_on_sequence #(
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV WRITE seq");
-        sha512_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("sha512_write_seq");
+        mlkem_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("mlkem_write_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV WRITE seq");
         ecc_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("ecc_write_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV WRITE seq");
@@ -99,6 +101,10 @@ class kv_env_scan_on_sequence #(
         ecc_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("ecc_seed_read_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV READ seq");
         aes_key_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("aes_key_read_seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV READ seq");
+        mlkem_seed_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mlkem_seed_read_seq");
+        if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV READ seq");
+        mlkem_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mlkem_msg_read_seq");
         if(!this.randomize()) `uvm_error("KV_ENV_SCAN_ON", "Failed to randomize KV READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
     endfunction

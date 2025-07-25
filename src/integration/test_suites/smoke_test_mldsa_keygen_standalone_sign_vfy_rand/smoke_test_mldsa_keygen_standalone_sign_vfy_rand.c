@@ -44,51 +44,51 @@ void main() {
 
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in keygen\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     printf("\nMLDSA KEYGEN\n");
     // Enable MLDSA KEYGEN
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
 
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
 
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     //--------------------------------------------------------------
     printf("%c", 0xda); //inject msg, sk for signing
 
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in signing\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     printf("\nMLDSA SIGNING\n");
     // Enable MLDSA SIGNING
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
 
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     //--------------------------------------------------------------
     printf("%c", 0xdb); //inject msg, sig, pk for verifying
 
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in verify\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     printf("\nMLDSA VERIFY\n");
     // Enable MLDSA Verify
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
 
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
 

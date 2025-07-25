@@ -51,8 +51,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0,
+    .abr_error      = 0,
+    .abr_notif      = 0,
     .axi_dma_notif    = 0,
     .axi_dma_error    = 0,
 };
@@ -533,11 +533,11 @@ void main() {
 
     // mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     // mldsa_zeroize();
-    // cptra_intr_rcv.mldsa_notif = 0;
+    // cptra_intr_rcv.abr_notif = 0;
     mldsa_keyload_error_flow(seed);
     mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

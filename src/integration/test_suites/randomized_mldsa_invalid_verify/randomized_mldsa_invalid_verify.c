@@ -582,24 +582,24 @@ void main() {
     /* VERIFY OPERATION*/
 
     // wait for MLDSA to be ready
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
     
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_MSG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
     }
 
     // Program MLDSA PUBKEY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PUBKEY_SIZE) {
         *reg_ptr++ = pubkey[offset++];
     }
 
     // Program MLDSA SIGNATURE
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         *reg_ptr++ = sign[offset++];
@@ -607,17 +607,17 @@ void main() {
 
     // Enable MLDSA VERIFYING core
     printf("\nMLDSA VERIFYING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
     
     // wait for MLDSA VERIFYING process to be done
     wait_for_mldsa_intr();
 
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
     printf("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     uint16_t mismatch = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         if (*reg_ptr != verify_res[offset]) {
             // printf("Actual   data: 0x%x\n", *reg_ptr);
             // printf("Expected data: 0x%x\n", verify_res[offset]);
@@ -634,7 +634,7 @@ void main() {
     }
 
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

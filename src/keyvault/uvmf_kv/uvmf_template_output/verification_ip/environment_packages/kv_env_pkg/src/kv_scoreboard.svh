@@ -66,16 +66,16 @@ class kv_scoreboard #(
                               .BASE_T(BASE_T)
                               )
   ) actual_hmac_write_analysis_export;
-  uvm_analysis_imp_expected_sha512_write_analysis_export #(kv_write_transaction, kv_scoreboard #(
+  uvm_analysis_imp_expected_mlkem_write_analysis_export #(kv_write_transaction, kv_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) expected_sha512_write_analysis_export;
-  uvm_analysis_imp_actual_sha512_write_analysis_export #(kv_write_transaction, kv_scoreboard #(
+  ) expected_mlkem_write_analysis_export;
+  uvm_analysis_imp_actual_mlkem_write_analysis_export #(kv_write_transaction, kv_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-  ) actual_sha512_write_analysis_export;
+  ) actual_mlkem_write_analysis_export;
   uvm_analysis_imp_expected_ecc_write_analysis_export #(kv_write_transaction, kv_scoreboard #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -163,6 +163,28 @@ class kv_scoreboard #(
                               )
   ) actual_aes_key_read_analysis_export;
 
+  uvm_analysis_imp_expected_mlkem_seed_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) expected_mlkem_seed_read_analysis_export;
+  uvm_analysis_imp_actual_mlkem_seed_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) actual_mlkem_seed_read_analysis_export;
+
+  uvm_analysis_imp_expected_mlkem_msg_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) expected_mlkem_msg_read_analysis_export;
+  uvm_analysis_imp_actual_mlkem_msg_read_analysis_export #(kv_read_transaction, kv_scoreboard #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+  ) actual_mlkem_msg_read_analysis_export;
+
  
   // Instantiate QVIP analysis exports
   uvm_analysis_imp_expected_ahb_analysis_export #(mvc_sequence_item_base, kv_scoreboard #(
@@ -181,16 +203,18 @@ class kv_scoreboard #(
 
     //Associative array of expected transactions keyed with the integer accessed using the transactions get_key() interface
     kv_write_transaction kv_hmac_write_expected_hash [int unsigned];
-    kv_write_transaction kv_sha512_write_expected_hash [int unsigned];
+    kv_write_transaction kv_mlkem_write_expected_hash [int unsigned];
     kv_write_transaction kv_ecc_write_expected_hash [int unsigned];
     kv_write_transaction kv_doe_write_expected_hash [int unsigned];
 
-    kv_read_transaction kv_hmac_key_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_hmac_block_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_mldsa_key_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_ecc_privkey_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_ecc_seed_read_expected_hash [int unsigned]; //FIXME
-    kv_read_transaction kv_aes_key_read_expected_hash [int unsigned]; //FIXME
+    kv_read_transaction kv_hmac_key_read_expected_hash [int unsigned];
+    kv_read_transaction kv_hmac_block_read_expected_hash [int unsigned];
+    kv_read_transaction kv_mldsa_key_read_expected_hash [int unsigned];
+    kv_read_transaction kv_ecc_privkey_read_expected_hash [int unsigned];
+    kv_read_transaction kv_ecc_seed_read_expected_hash [int unsigned];
+    kv_read_transaction kv_aes_key_read_expected_hash [int unsigned];
+    kv_read_transaction kv_mlkem_seed_read_expected_hash [int unsigned];
+    kv_read_transaction kv_mlkem_msg_read_expected_hash [int unsigned];
 
     //Use queues for AHB txns since there is no get_key() method
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
@@ -237,8 +261,8 @@ class kv_scoreboard #(
     expected_hmac_write_analysis_export = new("expected_hmac_write_analysis_export", this);
     actual_hmac_write_analysis_export = new("actual_hmac_write_analysis_export", this);
 
-    expected_sha512_write_analysis_export = new("expected_sha512_write_analysis_export", this);
-    actual_sha512_write_analysis_export = new("actual_sha512_write_analysis_export", this);
+    expected_mlkem_write_analysis_export = new("expected_mlkem_write_analysis_export", this);
+    actual_mlkem_write_analysis_export = new("actual_mlkem_write_analysis_export", this);
 
     expected_ecc_write_analysis_export = new("expected_ecc_write_analysis_export", this);
     actual_ecc_write_analysis_export = new("actual_ecc_write_analysis_export", this);
@@ -264,6 +288,12 @@ class kv_scoreboard #(
     expected_aes_key_read_analysis_export = new("expected_aes_key_read_analysis_export", this);
     actual_aes_key_read_analysis_export = new("actual_aes_key_read_analysis_export", this);
 
+    expected_mlkem_seed_read_analysis_export = new("expected_mlkem_seed_read_analysis_export", this);
+    actual_mlkem_seed_read_analysis_export = new("actual_mlkem_seed_read_analysis_export", this);
+
+    expected_mlkem_msg_read_analysis_export = new("expected_mlkem_msg_read_analysis_export", this);
+    actual_mlkem_msg_read_analysis_export = new("actual_mlkem_msg_read_analysis_export", this);
+
     expected_ahb_analysis_export = new("expected_ahb_analysis_export", this);
     actual_ahb_analysis_export = new("actual_ahb_analysis_export", this);
 
@@ -288,12 +318,12 @@ class kv_scoreboard #(
   // FUNCTION: write_expected_analysis_export
   // Transactions received through expected_analysis_export initiate the execution of this function.
   // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_expected_sha512_write_analysis_export(kv_write_transaction t);
+  virtual function void write_expected_mlkem_write_analysis_export(kv_write_transaction t);
     // pragma uvmf custom expected_analysis_export_scoreboard begin
-    `uvm_info("SCBD_KV_WRITE", "Transaction Received through expected_sha512_write_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_WRITE", "Transaction Received through expected_mlkem_write_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_KV_WRITE", {"            Data: ",t.convert2string()}, UVM_FULL)
 
-    kv_sha512_write_expected_hash[t.get_key()] = t;
+    kv_mlkem_write_expected_hash[t.get_key()] = t;
     `uvm_info("SCBD_KV_WRITE", $sformatf("EXPECTED txn is {Write entry: 0x%x}, {Write offset: 0x%x}, {Write Data: 0x%x}, {Write resp err: %h}", t.write_entry,t.write_offset,t.write_data, t.error ), UVM_MEDIUM)
     
     // pragma uvmf custom expected_analysis_export_scoreboard end
@@ -358,16 +388,16 @@ class kv_scoreboard #(
   // FUNCTION: write_actual_analysis_export
   // Transactions received through actual_analysis_export initiate the execution of this function.
   // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_actual_sha512_write_analysis_export(kv_write_transaction t);
+  virtual function void write_actual_mlkem_write_analysis_export(kv_write_transaction t);
     // pragma uvmf custom actual_analysis_export_scoreboard begin
     kv_write_transaction t_expected;
     bit txn_eq;
 
-    `uvm_info("SCBD_KV_WRITE", "Transaction Received through actual_sha512_write_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_WRITE", "Transaction Received through actual_mlkem_write_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_KV_WRITE", {"            Data: ",t.convert2string()}, UVM_FULL)
 
-    if (kv_sha512_write_expected_hash.exists(t.get_key())) begin
-      t_expected = kv_sha512_write_expected_hash[t.get_key()];
+    if (kv_mlkem_write_expected_hash.exists(t.get_key())) begin
+      t_expected = kv_mlkem_write_expected_hash[t.get_key()];
       txn_eq = t.compare(t_expected);
 
       if(txn_eq) `uvm_info("SCBD_KV_WRITE", $sformatf("Actual txn with {Write entry: 0x%x}, {Write offset: 0x%x}, {Write Data: 0x%x}, {Write resp err: %h} matches expected!", t.write_entry,t.write_offset,t.write_data,t.error ), UVM_HIGH)
@@ -662,6 +692,80 @@ class kv_scoreboard #(
     // pragma uvmf custom actual_analysis_export_scoreboard end
   endfunction
 
+  //------------------------------------------------
+
+  virtual function void write_expected_mlkem_seed_read_analysis_export(kv_read_transaction t);
+    // pragma uvmf custom expected_analysis_export_scoreboard begin
+    `uvm_info("SCBD_KV_READ", "Transaction Received through expected_mlkem_seed_read_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
+
+    kv_mlkem_seed_read_expected_hash[t.get_key()] = t;
+    `uvm_info("SCBD_KV_READ", $sformatf("EXPECTED txn is {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_MEDIUM)
+    
+    // pragma uvmf custom expected_analysis_export_scoreboard end
+  endfunction
+
+  virtual function void write_actual_mlkem_seed_read_analysis_export(kv_read_transaction t);
+    // pragma uvmf custom actual_analysis_export_scoreboard begin
+    kv_read_transaction t_expected;
+    bit txn_eq;
+
+    `uvm_info("SCBD_KV_READ", "Transaction Received through actual_mlkem_seed_read_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
+
+    if (kv_mlkem_seed_read_expected_hash.exists(t.get_key())) begin
+        t_expected = kv_mlkem_seed_read_expected_hash[t.get_key()];
+        txn_eq = t.compare(t_expected);
+
+        if(txn_eq) `uvm_info("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} matches expected!", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_HIGH)
+        else       `uvm_error("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} does not match expected txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error, t_expected.read_entry,t_expected.read_offset,t_expected.read_data,t_expected.last, t_expected.error ))
+
+        if(t.error) `uvm_info("SCBD_KV_READ", "Trying to read a locked reg or reg with dest_valid = 0 will return 0s", UVM_MEDIUM);
+    end
+    else begin
+        `uvm_error("SCBD_KV_READ", "Received unmatched read transaction. Cannot find corresponding expected txn!");
+    end
+ 
+    // pragma uvmf custom actual_analysis_export_scoreboard end
+  endfunction
+
+  //------------------------------------------------
+
+  virtual function void write_expected_mlkem_msg_read_analysis_export(kv_read_transaction t);
+    // pragma uvmf custom expected_analysis_export_scoreboard begin
+    `uvm_info("SCBD_KV_READ", "Transaction Received through expected_mlkem_msg_read_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
+
+    kv_mlkem_msg_read_expected_hash[t.get_key()] = t;
+    `uvm_info("SCBD_KV_READ", $sformatf("EXPECTED txn is {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_MEDIUM)
+    
+    // pragma uvmf custom expected_analysis_export_scoreboard end
+  endfunction
+
+  virtual function void write_actual_mlkem_msg_read_analysis_export(kv_read_transaction t);
+    // pragma uvmf custom actual_analysis_export_scoreboard begin
+    kv_read_transaction t_expected;
+    bit txn_eq;
+
+    `uvm_info("SCBD_KV_READ", "Transaction Received through actual_mlkem_msg_read_analysis_export", UVM_MEDIUM)
+    `uvm_info("SCBD_KV_READ", {"            Data: ",t.convert2string()}, UVM_FULL)
+
+    if (kv_mlkem_msg_read_expected_hash.exists(t.get_key())) begin
+        t_expected = kv_mlkem_msg_read_expected_hash[t.get_key()];
+        txn_eq = t.compare(t_expected);
+
+        if(txn_eq) `uvm_info("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} matches expected!", t.read_entry,t.read_offset,t.read_data,t.last,t.error ), UVM_HIGH)
+        else       `uvm_error("SCBD_KV_READ", $sformatf("Actual txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read Data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h} does not match expected txn with {Read entry: 0x%x}, {Read offset: 0x%x}, {Read data: 0x%x}, {Read last dword: 0x%x}, {Read resp err: %h}", t.read_entry,t.read_offset,t.read_data,t.last,t.error, t_expected.read_entry,t_expected.read_offset,t_expected.read_data,t_expected.last, t_expected.error ))
+
+        if(t.error) `uvm_info("SCBD_KV_READ", "Trying to read a locked reg or reg with dest_valid = 0 will return 0s", UVM_MEDIUM);
+    end
+    else begin
+        `uvm_error("SCBD_KV_READ", "Received unmatched read transaction. Cannot find corresponding expected txn!");
+    end
+ 
+    // pragma uvmf custom actual_analysis_export_scoreboard end
+  endfunction
+
   //-----------------------------------------------
 
 
@@ -767,6 +871,8 @@ function void kv_scoreboard::disable_wait_for_scoreboard_empty();
      if (kv_ecc_privkey_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (kv_ecc_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (kv_aes_key_read_expected_hash.size() != 0) entries_remaining |= 1;
+     if (kv_mlkem_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
+     if (kv_mlkem_msg_read_expected_hash.size() != 0) entries_remaining |= 1;
      if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
      while (entries_remaining) begin : while_entries_remaining
          @entry_received; // FIXME
@@ -777,6 +883,8 @@ function void kv_scoreboard::disable_wait_for_scoreboard_empty();
          if (kv_ecc_privkey_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (kv_ecc_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (kv_aes_key_read_expected_hash.size() != 0) entries_remaining |= 1;
+         if (kv_mlkem_seed_read_expected_hash.size() != 0) entries_remaining |= 1;
+         if (kv_mlkem_msg_read_expected_hash.size() != 0) entries_remaining |= 1;
          if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
     end : while_entries_remaining
  endtask

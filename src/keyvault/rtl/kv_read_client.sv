@@ -45,7 +45,7 @@ module kv_read_client
     output logic read_done
 );
 
-logic [KV_ENTRY_SIZE_W-1:0] read_offset;
+logic [DATA_OFFSET_W-1:0] read_offset;
 logic [DATA_OFFSET_W:0] num_dwords;
 logic write_pad;
 logic [31:0] pad_data;
@@ -78,7 +78,7 @@ kv_read_fsm
 );
 
 always_comb kv_read.read_entry = read_ctrl_reg.read_entry;
-always_comb kv_read.read_offset = read_offset;
+always_comb kv_read.read_offset = KV_ENTRY_SIZE_W'(read_offset);
 
 always_comb write_data = write_pad ? pad_data : kv_resp.read_data;
 
