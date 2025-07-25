@@ -41,6 +41,7 @@ void main() {
     uint32_t actual_ek[MLKEM_EK_SIZE];
     uint32_t actual_dk[MLKEM_DK_SIZE];
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
+    uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
 
     printf("----------------------------\n");
     printf(" Running MLKEM Smoke Test !!\n");
@@ -67,7 +68,7 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key);
+    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

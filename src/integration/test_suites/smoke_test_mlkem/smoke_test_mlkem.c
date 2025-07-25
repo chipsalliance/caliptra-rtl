@@ -647,10 +647,10 @@ void main() {
     mlkem_seed seed;
     mlkem_msg msg;
     mlkem_shared_key shared_key;
-    mlkem_shared_key exp_shared_key;
     uint32_t actual_ek[MLKEM_EK_SIZE];
     uint32_t actual_dk[MLKEM_DK_SIZE];
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
+    uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
 
     printf("----------------------------\n");
     printf(" Running MLKEM Smoke Test !!\n");
@@ -675,8 +675,6 @@ void main() {
         shared_key.data[i] = shared_key_array[i];
     }
 
-    exp_shared_key.kv_intf = FALSE;
-
     mlkem_keygen_check(seed, abr_entropy, exp_encaps_key, exp_decaps_key);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
@@ -694,11 +692,17 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, exp_shared_key);
+    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, exp_shared_key);
+
+    shared_key.kv_intf = FALSE;
+    for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
+        shared_key.data[i] = actual_sharedkey[i];
+    }
+
+    mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     
