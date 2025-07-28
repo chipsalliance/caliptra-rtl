@@ -323,11 +323,11 @@ void main() {
   init_interrupts();
 
   VPRINTF(LOW, "Running SHA3 test.\n");
-  run_sha3_test(CLP_SHA3_REG_BASE_ADDR);
+  run_sha3_test(CLP_SHA3_BASE_ADDR);
   VPRINTF(LOW, "Running SHA3 allignment test.\n");
-  run_sha3_alignment_test(CLP_SHA3_REG_BASE_ADDR);
+  run_sha3_alignment_test(CLP_SHA3_BASE_ADDR);
   VPRINTF(LOW, "Running SHAKE test.\n");
-  run_shake_test(CLP_SHA3_REG_BASE_ADDR);
+  run_shake_test(CLP_SHA3_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.
   SEND_STDOUT_CTRL(0xff);

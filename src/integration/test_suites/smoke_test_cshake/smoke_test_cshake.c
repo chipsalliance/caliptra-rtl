@@ -153,7 +153,7 @@ void main(void) {
   // Call interrupt init
   init_interrupts();
 
-  run_cshake_test(CLP_SHA3_REG_BASE_ADDR);
+  run_cshake_test(CLP_SHA3_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.
   SEND_STDOUT_CTRL(0xff);
