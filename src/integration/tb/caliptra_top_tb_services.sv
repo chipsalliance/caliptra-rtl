@@ -2677,7 +2677,7 @@ while (!$feof(fd) && words_read < bit_length_words) begin
     array[words_read] = reversed_word;
     words_read++;
     // Remove the parsed part from the line
-    line = line.substr(8);
+    line = line.substr(8, line.len() - 1);
     end
 end
 endfunction
