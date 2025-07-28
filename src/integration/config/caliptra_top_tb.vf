@@ -49,6 +49,7 @@
 +incdir+${CALIPTRA_ROOT}/src/kmac/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
++incdir+${CALIPTRA_ROOT}/src/sha3/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
 +incdir+${CALIPTRA_AXI4PC_DIR}
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb

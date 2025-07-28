@@ -84,5 +84,10 @@ ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_chk.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err_resp.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_fifo_sync.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_socket_1n.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_sram_byte.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_adapter_sram.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/keymgr_pkg.sv
