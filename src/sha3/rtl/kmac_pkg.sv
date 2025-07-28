@@ -5,8 +5,8 @@
 // kmac_pkg
 
 package kmac_pkg;
-  parameter int MsgWidth = sha3_pkg::MsgWidth;
-  parameter int MsgStrbW = sha3_pkg::MsgStrbW;
+  parameter int MsgWidth = ot_sha3_pkg::MsgWidth;
+  parameter int MsgStrbW = ot_sha3_pkg::MsgStrbW;
 
   // Message FIFO depth
   //
@@ -214,12 +214,12 @@ package kmac_pkg;
   parameter logic [71:0] EncodedStringLcCtrl  = 72'h   4c_5254_435f_434C_3801;
   // encoded_string("ROM_CTRL")
   parameter logic [79:0] EncodedStringRomCtrl = 80'h 4c52_5443_5f4d_4f52_4001;
-  parameter int unsigned NSPrefixW = sha3_pkg::NSRegisterSize*8;
+  parameter int unsigned NSPrefixW = ot_sha3_pkg::NSRegisterSize*8;
 
   typedef struct packed {
     app_mode_e Mode;
 
-    sha3_pkg::keccak_strength_e KeccakStrength;
+    ot_sha3_pkg::keccak_strength_e KeccakStrength;
 
     // PrefixMode determines the origin value of Prefix that is used in KMAC
     // and cSHAKE operations.
@@ -234,7 +234,7 @@ package kmac_pkg;
 
   parameter app_config_t AppCfgKeyMgr = '{
     Mode: AppKMAC, // KeyMgr uses KMAC operation
-    KeccakStrength: sha3_pkg::L256,
+    KeccakStrength: ot_sha3_pkg::L256,
     PrefixMode: 1'b1,   // Use prefix parameter
     // {fname: encoded_string("KMAC"), custom_str: encoded_string("")}
     Prefix: NSPrefixW'({EncodedStringEmpty, EncodedStringKMAC})
@@ -242,7 +242,7 @@ package kmac_pkg;
 
   parameter app_config_t AppCfgKeyMgrStripped = '{
     Mode: AppCShake, // For the stripped KMAC KeyMgr uses cSHAKE operation
-    KeccakStrength: sha3_pkg::L256,
+    KeccakStrength: ot_sha3_pkg::L256,
     PrefixMode: 1'b1,   // Use prefix parameter
     // {fname: encoded_string("KMAC"), custom_str: encoded_string("")}
     Prefix: NSPrefixW'({EncodedStringEmpty, EncodedStringKMAC})
@@ -250,7 +250,7 @@ package kmac_pkg;
 
   parameter app_config_t AppCfgLcCtrl= '{
     Mode: AppCShake,
-    KeccakStrength: sha3_pkg::L128,
+    KeccakStrength: ot_sha3_pkg::L128,
     PrefixMode: 1'b1,     // Use prefix parameter
     // {fname: encode_string(""), custom_str: encode_string("LC_CTRL")}
     Prefix: NSPrefixW'({EncodedStringLcCtrl, EncodedStringEmpty})
@@ -258,7 +258,7 @@ package kmac_pkg;
 
   parameter app_config_t AppCfgRomCtrl = '{
     Mode: AppCShake,
-    KeccakStrength: sha3_pkg::L256,
+    KeccakStrength: ot_sha3_pkg::L256,
     PrefixMode: 1'b1,     // Use prefix parameter
     // {fname: encode_string(""), custom_str: encode_string("ROM_CTRL")}
     Prefix: NSPrefixW'({EncodedStringRomCtrl, EncodedStringEmpty})
