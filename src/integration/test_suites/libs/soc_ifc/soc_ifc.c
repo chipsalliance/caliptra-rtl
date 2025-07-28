@@ -536,6 +536,29 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
     return 0;
 }
 
+uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count) {
+    soc_ifc_axi_dma_send_kv_to_axi_no_wait(dst_addr, byte_count);
+    VPRINTF(LOW, "FW: Done with KV no wait\n");
+    soc_ifc_axi_dma_wait_idle(0);
+    VPRINTF(LOW, "FW: Done with KV wait idle\n");
+}
+
+uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count) {
+    uint32_t reg;
+
+    // Arm the command
+    while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
+    lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                                 |
+          (axi_dma_rd_route_DISABLE  << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
+          (axi_dma_wr_route_KEYVAULT << AXI_DMA_REG_CTRL_WR_ROUTE_LOW);
+    VPRINTF(LOW, "CONTROL REGISTER: 0x%x AXI_RD: 0x%x AXI_WR: 0x%x\n", reg, (axi_dma_rd_route_AXI_WR   << AXI_DMA_REG_CTRL_RD_ROUTE_LOW), (axi_dma_wr_route_KEYVAULT << AXI_DMA_REG_CTRL_WR_ROUTE_LOW));
+    lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
+
+}
+
 uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
     soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
     soc_ifc_axi_dma_wait_idle(0);
@@ -568,9 +591,11 @@ uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
 
     // Check completion
     reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    VPRINTF(LOW, "FW: Waiting on AXI DMA_REG_STS0 !BUSY or ERROR FIXME REMOVE BEFORE PR\n");
     while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
         reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
     }
+    VPRINTF(LOW, "FW: DONE!!! FIXME REMOVE BEFORE PR\n");
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
