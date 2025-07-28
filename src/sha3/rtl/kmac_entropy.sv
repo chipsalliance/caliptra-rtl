@@ -26,7 +26,7 @@ module kmac_entropy
   // Entropy to internal
   output logic                          rand_valid_o,
   output logic                          rand_early_o,
-  output logic [sha3_pkg::StateW/2-1:0] rand_data_o,
+  output logic [ot_sha3_pkg::StateW/2-1:0] rand_data_o,
   output logic                          rand_aux_o,
   input                                 rand_update_i,
   input                                 rand_consumed_i,

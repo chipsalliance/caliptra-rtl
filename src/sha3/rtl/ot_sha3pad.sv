@@ -6,9 +6,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module sha3pad
+module ot_sha3pad
   import caliptra_prim_mubi_pkg::*;
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   parameter  bit EnMasking = 0,
   localparam int Share = (EnMasking) ? 2 : 1
