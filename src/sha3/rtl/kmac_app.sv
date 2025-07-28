@@ -26,12 +26,12 @@ module kmac_app
   input key_len_e       reg_key_len_i,
 
   // Prefix from register
-  input [sha3_pkg::NSRegisterSize*8-1:0] reg_prefix_i,
+  input [ot_sha3_pkg::NSRegisterSize*8-1:0] reg_prefix_i,
 
   // mode, strength, kmac_en from register
   input                             reg_kmac_en_i,
-  input sha3_pkg::sha3_mode_e       reg_sha3_mode_i,
-  input sha3_pkg::keccak_strength_e reg_keccak_strength_i,
+  input ot_sha3_pkg::sha3_mode_e       reg_sha3_mode_i,
+  input ot_sha3_pkg::keccak_strength_e reg_keccak_strength_i,
 
   // Data from Software
   input                sw_valid_i,
@@ -61,19 +61,19 @@ module kmac_app
   output logic kmac_en_o,
 
   // To Sha3 Core
-  output logic [sha3_pkg::NSRegisterSize*8-1:0] sha3_prefix_o,
-  output sha3_pkg::sha3_mode_e                  sha3_mode_o,
-  output sha3_pkg::keccak_strength_e            keccak_strength_o,
+  output logic [ot_sha3_pkg::NSRegisterSize*8-1:0] sha3_prefix_o,
+  output ot_sha3_pkg::sha3_mode_e                  sha3_mode_o,
+  output ot_sha3_pkg::keccak_strength_e            keccak_strength_o,
 
   // STATE from SHA3 Core
   input                        keccak_state_valid_i,
-  input [sha3_pkg::StateW-1:0] keccak_state_i [Share],
+  input [ot_sha3_pkg::StateW-1:0] keccak_state_i [Share],
 
   // to STATE TL-window if Application is not active, the incoming state goes to
   // register if kdf_en is set, the state value goes to application and the
   // output to the register is all zero.
   output logic                        reg_state_valid_o,
-  output logic [sha3_pkg::StateW-1:0] reg_state_o [Share],
+  output logic [ot_sha3_pkg::StateW-1:0] reg_state_o [Share],
 
   // Configurations If key_en is set, the logic uses KeyMgr's sideloaded key as
   // a secret key rather than register values. This only affects when software
@@ -124,12 +124,12 @@ module kmac_app
   output logic sparse_fsm_error_o
 );
 
-  import sha3_pkg::KeccakBitCapacity;
-  import sha3_pkg::L128;
-  import sha3_pkg::L224;
-  import sha3_pkg::L256;
-  import sha3_pkg::L384;
-  import sha3_pkg::L512;
+  import ot_sha3_pkg::KeccakBitCapacity;
+  import ot_sha3_pkg::L128;
+  import ot_sha3_pkg::L224;
+  import ot_sha3_pkg::L256;
+  import ot_sha3_pkg::L384;
+  import ot_sha3_pkg::L512;
 
   /////////////////
   // Definitions //
@@ -775,11 +775,11 @@ module kmac_app
         if (keymgr_key_en_i) begin
           for (int i = 0; i < Share; i++) begin
             unique case (reg_keccak_strength_i)
-              L128: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L128]] = '0;
-              L224: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L224]] = '0;
-              L256: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L256]] = '0;
-              L384: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L384]] = '0;
-              L512: reg_state_o[i][sha3_pkg::StateW-1-:KeccakBitCapacity[L512]] = '0;
+              L128: reg_state_o[i][ot_sha3_pkg::StateW-1-:KeccakBitCapacity[L128]] = '0;
+              L224: reg_state_o[i][ot_sha3_pkg::StateW-1-:KeccakBitCapacity[L224]] = '0;
+              L256: reg_state_o[i][ot_sha3_pkg::StateW-1-:KeccakBitCapacity[L256]] = '0;
+              L384: reg_state_o[i][ot_sha3_pkg::StateW-1-:KeccakBitCapacity[L384]] = '0;
+              L512: reg_state_o[i][ot_sha3_pkg::StateW-1-:KeccakBitCapacity[L512]] = '0;
               default: reg_state_o[i] = '0;
             endcase
           end
@@ -935,15 +935,15 @@ module kmac_app
   //  by default, it uses reg cfg. When app intf reqs come, it uses AppCfg.
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      sha3_mode_o       <= sha3_pkg::Sha3;
-      keccak_strength_o <= sha3_pkg::L256;
+      sha3_mode_o       <= ot_sha3_pkg::Sha3;
+      keccak_strength_o <= ot_sha3_pkg::L256;
     end else if (clr_appid) begin
       // As App completed, latch reg value
       sha3_mode_o       <= reg_sha3_mode_i;
       keccak_strength_o <= reg_keccak_strength_i;
     end else if (set_appid) begin
       sha3_mode_o       <= AppCfg[arb_idx].Mode == AppSHA3
-                           ? sha3_pkg::Sha3 : sha3_pkg::CShake;
+                           ? ot_sha3_pkg::Sha3 : ot_sha3_pkg::CShake;
       keccak_strength_o <= AppCfg[arb_idx].KeccakStrength ;
     end else if (st == StIdle) begin
       sha3_mode_o       <= reg_sha3_mode_i;

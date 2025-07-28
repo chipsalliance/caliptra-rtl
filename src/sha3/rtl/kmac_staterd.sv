@@ -26,13 +26,13 @@ module kmac_staterd
   output caliptra_tlul_pkg::tl_d2h_t tl_o,
 
   // State in
-  input [sha3_pkg::StateW-1:0] state_i [Share],
+  input [ot_sha3_pkg::StateW-1:0] state_i [Share],
 
   // Config
   input endian_swap_i
 );
 
-  localparam int StateAddrW = $clog2(sha3_pkg::StateW/32);
+  localparam int StateAddrW = $clog2(ot_sha3_pkg::StateW/32);
   localparam int SelAddrW   = AddrW-2-StateAddrW;
 
   /////////////
@@ -108,7 +108,7 @@ module kmac_staterd
 
   for (genvar i = 0 ; i < Share ; i++) begin : gen_slicer
     caliptra_prim_slicer #(
-      .InW (sha3_pkg::StateW),
+      .InW (ot_sha3_pkg::StateW),
       .OutW (32),
       .IndexW (StateAddrW)
     ) u_state_slice (

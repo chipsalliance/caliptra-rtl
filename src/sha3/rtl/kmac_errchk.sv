@@ -46,8 +46,8 @@
 module kmac_errchk
   import caliptra_prim_mubi_pkg::*;
   import kmac_pkg::*;
-  import sha3_pkg::sha3_mode_e;
-  import sha3_pkg::keccak_strength_e;
+  import ot_sha3_pkg::sha3_mode_e;
+  import ot_sha3_pkg::keccak_strength_e;
 #(
   parameter bit EnMasking = 1'b 1
 ) (
@@ -91,17 +91,17 @@ module kmac_errchk
   output logic sparse_fsm_error_o
 );
 
-  // sha3_pkg::sha3_mode_e
-  import sha3_pkg::L128;
-  import sha3_pkg::L224;
-  import sha3_pkg::L256;
-  import sha3_pkg::L384;
-  import sha3_pkg::L512;
+  // ot_sha3_pkg::sha3_mode_e
+  import ot_sha3_pkg::L128;
+  import ot_sha3_pkg::L224;
+  import ot_sha3_pkg::L256;
+  import ot_sha3_pkg::L384;
+  import ot_sha3_pkg::L512;
 
-  // sha3_pkg::keccak_strength_e
-  import sha3_pkg::Sha3;
-  import sha3_pkg::Shake;
-  import sha3_pkg::CShake;
+  // ot_sha3_pkg::keccak_strength_e
+  import ot_sha3_pkg::Sha3;
+  import ot_sha3_pkg::Shake;
+  import ot_sha3_pkg::CShake;
 
   /////////////////
   // Definitions //

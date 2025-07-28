@@ -35,7 +35,7 @@
 
 `include "caliptra_prim_assert.sv"
 
-module keccak_round
+module ot_keccak_round
   import caliptra_prim_mubi_pkg::*;
 #(
   parameter int Width = 1600, // b= {25, 50, 100, 200, 400, 800, 1600}
@@ -96,7 +96,7 @@ module keccak_round
   input  mubi4_t clear_i     // Clear internal state to '0
 );
 
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 
   /////////////////////
   // Control signals //
@@ -520,7 +520,7 @@ module keccak_round
   //////////////
   // Datapath //
   //////////////
-  keccak_2share #(
+  ot_keccak_2share #(
     .Width(Width),
     .EnMasking(EnMasking),
     .ForceRandExt(ForceRandExt)

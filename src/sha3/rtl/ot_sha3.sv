@@ -8,9 +8,9 @@
 
 `include "caliptra_prim_assert.sv"
 
-module sha3
+module ot_sha3
   import caliptra_prim_mubi_pkg::*;
-  import sha3_pkg::*;
+  import ot_sha3_pkg::*;
 #(
   // Enable Masked Keccak if 1
   parameter  bit EnMasking = 0,
@@ -35,7 +35,7 @@ module sha3
   output logic              rand_consumed_o,
 
   // N, S: Used in cSHAKE mode only
-  input [NSRegisterSize*8-1:0] ns_data_i, // See sha3_pkg for details
+  input [NSRegisterSize*8-1:0] ns_data_i, // See ot_sha3_pkg for details
 
   // configurations
   input sha3_mode_e       mode_i,     // see sha3pad for details
@@ -413,7 +413,7 @@ module sha3
   ///////////////
 
   // SHA3 pad logic
-  sha3pad #(
+  ot_sha3pad #(
     .EnMasking (EnMasking)
   ) u_pad (
     .clk_i,
@@ -456,9 +456,9 @@ module sha3
   );
 
   // Keccak round logic
-  keccak_round #(
-    .Width    (sha3_pkg::StateW),
-    .DInWidth (sha3_pkg::MsgWidth),
+  ot_keccak_round #(
+    .Width    (ot_sha3_pkg::StateW),
+    .DInWidth (ot_sha3_pkg::MsgWidth),
 
     .EnMasking  (EnMasking)
   ) u_keccak (
@@ -520,7 +520,7 @@ module sha3
   // `state_valid_o` asserts only in between the completion and done
   //`CALIPTRA_ASSERT(StateValidPeriod_A, state_valid_o |-> )
 
-  // skip the msg interface assertions as they are in sha3pad.sv
+  // skip the msg interface assertions as they are in ot_sha3pad.sv
 
   // Software run signal happens in Squeezing stage
   `CALIPTRA_ASSUME(SwRunInSqueezing_a, run_i |-> error_o.valid || (st == StSqueeze_sparse))
