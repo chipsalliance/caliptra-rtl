@@ -74,11 +74,11 @@ addrmap sha256_reg {
         field {desc = "Control init command bit: Trigs the SHA256 core to start the 
                                 processing for the first padded message block.
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} INIT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe = sha256_ready;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the SHA256 core to start the 
                                 processing for the remining padded message block.
                                 [br] Software write generates only a single-cycle pulse on the 
-                                hardware interface and then will be erased"; singlepulse;} NEXT = 1'b0;
+                                hardware interface and then will be erased"; singlepulse; swwe = sha256_ready;} NEXT = 1'b0;
         field {desc = "Control mode command bits: Indicates the SHA256 core to set dynamically
                                  the type of hashing algorithm. This can be:
                                  0 for SHA256/224

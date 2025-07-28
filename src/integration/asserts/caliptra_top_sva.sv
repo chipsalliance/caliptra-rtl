@@ -46,6 +46,7 @@
 `define HMAC_REG_PATH       `HMAC_PATH.i_hmac_reg
 `define ECC_PATH            `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
 `define ECC_REG_PATH        `CPTRA_TOP_PATH.ecc_top1.ecc_reg1
+`define HMAC_DRBG_PATH      `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i
 `define SHA256_PATH         `CPTRA_TOP_PATH.sha256.sha256_inst
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
@@ -923,5 +924,18 @@ module caliptra_top_sva
                            else $display("SVA ERROR: SHA512 bus not idle after Firmware Update Reset!");
   fw_upd_rst_soc_ifc_idle: assert property (@(posedge `SVA_RDC_CLK) `CPTRA_FW_UPD_RST_WINDOW |-> !`SOC_IFC_TOP_PATH.i_ahb_slv_sif_soc_ifc.dv)
                            else $display("SVA ERROR: SOC_IFC bus not idle after Firmware Update Reset!");
+
+
+  hmac_drbg_zero_result:  assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      `HMAC_DRBG_PATH.valid |-> (`HMAC_DRBG_PATH.drbg != 384'h0 )
+                                      )
+                          else $display("SVA ERROR: drbg is zero when valid is high"); 
+
+  hmac_drbg_illegal_above_prime:       assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      `HMAC_DRBG_PATH.valid |-> (`HMAC_DRBG_PATH.drbg < `HMAC_DRBG_PATH.HMAC_DRBG_PRIME)
+                                      )
+                          else $display("SVA ERROR: drbg >= HMAC_DRBG_PRIME when valid is high"); 
 
 endmodule

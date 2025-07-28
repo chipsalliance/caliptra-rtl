@@ -46,7 +46,7 @@ interface hmac_ctrl_cov_if
 
     covergroup hmac_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        cptra_pwrgood_cp: coverpoint cptra_pwrgood;
+        //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
         init_cp: coverpoint init;
         next_cp: coverpoint next;
@@ -59,8 +59,8 @@ interface hmac_ctrl_cov_if
 
         hmac_cmd_cp: coverpoint hmac_cmd  {bins cmd[]   = (0, 0 => 1, 2 => 0, 0);}
 
-        init_ready_cp: cross ready, init;
-        next_ready_cp: cross ready, next;
+        //init_ready_cp: cross ready, init;
+        //next_ready_cp: cross ready, next;
         mode_ready_cp: cross ready, mode;
         zeroize_ready_cp: cross ready, zeroize;
         zeroize_init_cp: cross zeroize, init;

@@ -165,10 +165,14 @@ void main() {
 
     sha256_io sha256_block;
     sha256_io sha256_digest;
+    sha256_io block_wntz_j_invalid;
 
     sha256_block.data_size = 16;
-    for (int i = 0; i < sha256_block.data_size; i++)
+    block_wntz_j_invalid.data_size = 16;
+    for (int i = 0; i < sha256_block.data_size; i++){
         sha256_block.data[i] = block_data[i];
+        block_wntz_j_invalid.data[i] = block_data[i];
+    }
 
     // sha256_block.data_size = 16;
     // for (int i = 0; i < sha256_block.data_size; i++)
@@ -249,6 +253,44 @@ void main() {
     // sha256_flow(sha256_block, SHA256_MODE_SHA_224, 1, 8, 0, sha256_digest);
     sha256_error_flow(sha256_block, SHA256_MODE_SHA_224, 0, 1, 8, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
     sha256_zeroize();
+
+    //Invalid wntz_j
+    sha256_digest.data_size = 8;
+    block_wntz_j_invalid.data[5] = 0xFFFFFFFF;
+    for (int i = 0; i < sha256_digest.data_size; i++)
+        sha256_digest.data[i] = expected_wntz_digest_w8_192[i];
+    // sha256_flow(sha256_block, SHA256_MODE_SHA_224, 1, 8, 0, sha256_digest);
+    sha256_error_flow(block_wntz_j_invalid, SHA256_MODE_SHA_224, 0, 1, 2, 0, sha256_digest, SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
+    sha256_zeroize();
+
+    // Invalid SHA256 commands
+    VPRINTF(LOW, "Enable SHA256\n");
+    lsu_write_32(CLP_SHA256_REG_SHA256_CTRL,(((0 << SHA256_REG_SHA256_CTRL_INIT_LOW) & SHA256_REG_SHA256_CTRL_INIT_MASK) |
+                                             ((1 << SHA256_REG_SHA256_CTRL_NEXT_LOW) & SHA256_REG_SHA256_CTRL_NEXT_MASK) |
+                                             ((SHA256_MODE_SHA_224 << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK) |
+                                             ((1 << SHA256_REG_SHA256_CTRL_WNTZ_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_MODE_MASK) |
+                                             ((2 << SHA256_REG_SHA256_CTRL_WNTZ_W_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_W_MASK) |
+                                             ((0 << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK) |
+                                             ((1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK)));
+    
+    if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
+        VPRINTF(LOW, "Wrong command is not detected\n");
+        printf("%c", 0x1);
+    }
+
+
+    lsu_write_32(CLP_SHA256_REG_SHA256_CTRL,(((1 << SHA256_REG_SHA256_CTRL_INIT_LOW) & SHA256_REG_SHA256_CTRL_INIT_MASK) |
+                                             ((0 << SHA256_REG_SHA256_CTRL_NEXT_LOW) & SHA256_REG_SHA256_CTRL_NEXT_MASK) |
+                                             ((SHA256_MODE_SHA_224 << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK) |
+                                             ((1 << SHA256_REG_SHA256_CTRL_WNTZ_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_MODE_MASK) |
+                                             ((2 << SHA256_REG_SHA256_CTRL_WNTZ_W_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_W_MASK) |
+                                             ((0 << SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_LOW) & SHA256_REG_SHA256_CTRL_WNTZ_N_MODE_MASK) |
+                                             ((1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK)));
+    
+    if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
+        VPRINTF(LOW, "Wrong command is not detected\n");
+        printf("%c", 0x1);
+    }
 
     //SVA in place to check init and next in same cycle
     // //Invalid wntz op (init and next in same cycle)
