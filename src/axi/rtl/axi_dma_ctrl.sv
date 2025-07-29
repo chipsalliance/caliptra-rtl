@@ -1321,12 +1321,13 @@ import kv_defines_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth            (FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
+      .resetOnClear     (1), // Reset FIFO when clr_i set
       .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
     ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (ctrl_fsm_ps == DMA_IDLE && hwif_out.ctrl.flush.value), // TODO clear with debugUnlock_or_scan_mode_switch while allowing AXI to end gracefully?
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE), // TODO clear with debugUnlock_or_scan_mode_switch while allowing AXI to end gracefully?
       // write port
       .wvalid_i(fifo_w_valid  ),
       .wready_o(fifo_w_ready  ),
@@ -1361,12 +1362,13 @@ import kv_defines_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth             (AES_FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
+      .resetOnClear     (1), // Reset FIFO when clr_i set
       .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
     ) i_aes_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (aes_fsm_ps == AES_IDLE),
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE), 
       // write port
       .wvalid_i(aes_fifo_w_valid  ),
       .wready_o(aes_fifo_w_ready  ),
