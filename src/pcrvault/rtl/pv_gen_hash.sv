@@ -29,6 +29,7 @@ module pv_gen_hash
     (
     input logic clk,
     input logic rst_b,
+    input logic zeroize,
 
     input logic start,
     input logic core_ready,
@@ -197,6 +198,13 @@ assign block_offset = block_offset_i[BLOCK_OFFSET_W-1:0];
 
   always_ff @(posedge clk or negedge rst_b) begin : api_regs
     if (~rst_b) begin
+      gen_hash_fsm_ps <= GEN_HASH_IDLE;
+      block_offset_i <= '0;
+      nonce_offset_i <= '0;
+      read_entry <= '0;
+      read_offset <= '0;
+    end
+    else if (zeroize) begin
       gen_hash_fsm_ps <= GEN_HASH_IDLE;
       block_offset_i <= '0;
       nonce_offset_i <= '0;

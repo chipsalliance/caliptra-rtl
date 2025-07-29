@@ -5,6 +5,8 @@
 // This file is auto-generated.
 // Used parser: Verible
 
+`include "caliptra_prim_module_name_macros.svh"
+
 `ifndef PRIM_DEFAULT_IMPL
   `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
@@ -31,7 +33,7 @@ if (Impl == caliptra_prim_pkg::ImplXilinx) begin : gen_xilinx
       .*
     );
 end else begin : gen_generic
-    caliptra_prim_generic_buf #(
+    `CALIPTRA_PRIM_MODULE_NAME(buf) #(
       .Width(Width)
     ) u_impl_generic (
       .*
