@@ -51,8 +51,8 @@ extends uvmf_environment_configuration_base;
     typedef kv_write_configuration kv_hmac_write_agent_config_t;
     rand kv_hmac_write_agent_config_t kv_hmac_write_agent_config;
 
-    typedef kv_write_configuration kv_sha512_write_agent_config_t;
-    rand kv_sha512_write_agent_config_t kv_sha512_write_agent_config;
+    typedef kv_write_configuration kv_mlkem_write_agent_config_t;
+    rand kv_mlkem_write_agent_config_t kv_mlkem_write_agent_config;
 
     typedef kv_write_configuration kv_ecc_write_agent_config_t;
     rand kv_ecc_write_agent_config_t kv_ecc_write_agent_config;
@@ -78,6 +78,12 @@ extends uvmf_environment_configuration_base;
     typedef kv_read_configuration kv_aes_key_read_agent_config_t;
     rand kv_aes_key_read_agent_config_t kv_aes_key_read_agent_config;
 
+    typedef kv_read_configuration kv_mlkem_seed_read_agent_config_t;
+    rand kv_mlkem_seed_read_agent_config_t kv_mlkem_seed_read_agent_config;
+
+    typedef kv_read_configuration kv_mlkem_msg_read_agent_config_t;
+    rand kv_mlkem_msg_read_agent_config_t kv_mlkem_msg_read_agent_config;
+
 
 
     qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
@@ -101,7 +107,7 @@ extends uvmf_environment_configuration_base;
 
     kv_rst_agent_config = kv_rst_agent_config_t::type_id::create("kv_rst_agent_config");
     kv_hmac_write_agent_config = kv_hmac_write_agent_config_t::type_id::create("kv_hmac_write_agent_config");
-    kv_sha512_write_agent_config = kv_sha512_write_agent_config_t::type_id::create("kv_sha512_write_agent_config");
+    kv_mlkem_write_agent_config = kv_mlkem_write_agent_config_t::type_id::create("kv_mlkem_write_agent_config");
     kv_ecc_write_agent_config = kv_ecc_write_agent_config_t::type_id::create("kv_ecc_write_agent_config");
     kv_doe_write_agent_config = kv_doe_write_agent_config_t::type_id::create("kv_doe_write_agent_config");
     kv_hmac_key_read_agent_config = kv_hmac_key_read_agent_config_t::type_id::create("kv_hmac_key_read_agent_config");
@@ -110,6 +116,8 @@ extends uvmf_environment_configuration_base;
     kv_ecc_privkey_read_agent_config = kv_ecc_privkey_read_agent_config_t::type_id::create("kv_ecc_privkey_read_agent_config");
     kv_ecc_seed_read_agent_config = kv_ecc_seed_read_agent_config_t::type_id::create("kv_ecc_seed_read_agent_config");
     kv_aes_key_read_agent_config = kv_aes_key_read_agent_config_t::type_id::create("kv_aes_key_read_agent_config");
+    kv_mlkem_seed_read_agent_config = kv_mlkem_seed_read_agent_config_t::type_id::create("kv_mlkem_seed_read_agent_config");
+    kv_mlkem_msg_read_agent_config = kv_mlkem_msg_read_agent_config_t::type_id::create("kv_mlkem_msg_read_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
 
@@ -150,7 +158,7 @@ extends uvmf_environment_configuration_base;
      
      "\n", kv_rst_agent_config.convert2string,
      "\n", kv_hmac_write_agent_config.convert2string,
-     "\n", kv_sha512_write_agent_config.convert2string,
+     "\n", kv_mlkem_write_agent_config.convert2string,
      "\n", kv_ecc_write_agent_config.convert2string,
      "\n", kv_doe_write_agent_config.convert2string,
      "\n", kv_hmac_key_read_agent_config.convert2string,
@@ -159,6 +167,8 @@ extends uvmf_environment_configuration_base;
      "\n", kv_ecc_privkey_read_agent_config.convert2string,
      "\n", kv_ecc_seed_read_agent_config.convert2string,
      "\n", kv_aes_key_read_agent_config.convert2string,
+     "\n", kv_mlkem_seed_read_agent_config.convert2string,
+     "\n", kv_mlkem_msg_read_agent_config.convert2string,
 
      "\n", qvip_ahb_lite_slave_subenv_config.convert2string
        };
@@ -199,9 +209,9 @@ extends uvmf_environment_configuration_base;
      kv_hmac_write_agent_config.initialize( interface_activity[2], {environment_path,".kv_hmac_write_agent"}, interface_names[2]);
      kv_hmac_write_agent_config.initiator_responder = INITIATOR;
      kv_hmac_write_agent_config.has_coverage = 1;
-     kv_sha512_write_agent_config.initialize( interface_activity[3], {environment_path,".kv_sha512_write_agent"}, interface_names[3]);
-     kv_sha512_write_agent_config.initiator_responder = INITIATOR;
-     kv_sha512_write_agent_config.has_coverage = 1;
+     kv_mlkem_write_agent_config.initialize( interface_activity[3], {environment_path,".kv_mlkem_write_agent"}, interface_names[3]);
+     kv_mlkem_write_agent_config.initiator_responder = INITIATOR;
+     kv_mlkem_write_agent_config.has_coverage = 1;
      kv_ecc_write_agent_config.initialize( interface_activity[4], {environment_path,".kv_ecc_write_agent"}, interface_names[4]);
      kv_ecc_write_agent_config.initiator_responder = INITIATOR;
      kv_ecc_write_agent_config.has_coverage = 1;
@@ -226,6 +236,12 @@ extends uvmf_environment_configuration_base;
      kv_aes_key_read_agent_config.initialize( interface_activity[11], {environment_path,".kv_aes_key_read_agent"}, interface_names[11]);
      kv_aes_key_read_agent_config.initiator_responder = INITIATOR;
      kv_aes_key_read_agent_config.has_coverage = 1;
+     kv_mlkem_seed_read_agent_config.initialize( interface_activity[12], {environment_path,".kv_mlkem_seed_read_agent"}, interface_names[12]);
+     kv_mlkem_seed_read_agent_config.initiator_responder = INITIATOR;
+     kv_mlkem_seed_read_agent_config.has_coverage = 1;
+     kv_mlkem_msg_read_agent_config.initialize( interface_activity[13], {environment_path,".kv_mlkem_msg_read_agent"}, interface_names[13]);
+     kv_mlkem_msg_read_agent_config.initiator_responder = INITIATOR;
+     kv_mlkem_msg_read_agent_config.has_coverage = 1;
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation

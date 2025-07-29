@@ -42,8 +42,8 @@ addrmap kv_reg {
               [br]dest_valid[3] = ecc_pkey_dest_valid
               [br]dest_valid[4] = ecc_seed_dest_valid
               [br]dest_valid[5] = aes_key_dest_valid
-              [br]dest_valid[6] = rsvd
-              [br]dest_valid[7] = rsvd";
+              [br]dest_valid[6] = mlkem_seed_dest_valid
+              [br]dest_valid[7] = mlkem_msg_dest_valid";
               sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} dest_valid[8]=0;
        field {desc = "Stores the offset of the last valid dword, used to indicate last cycle on reads.";
               sw=r; hw=rw; we=true; hwclr; resetsignal = hard_reset_b;} last_dword[4]=0;

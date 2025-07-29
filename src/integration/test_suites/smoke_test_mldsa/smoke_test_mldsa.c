@@ -503,19 +503,19 @@ void main() {
 
     mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     mldsa_signing_flow(privkey, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
     
     mldsa_verifying_flow(msg, pubkey, sign, verify_res);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

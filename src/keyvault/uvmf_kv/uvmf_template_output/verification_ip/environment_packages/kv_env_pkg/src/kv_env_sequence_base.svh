@@ -36,7 +36,7 @@ class kv_env_sequence_base #(
                            ) );
 
    parameter int HMAC_WRITE = 0;
-   parameter int SHA512_WRITE = 1;
+   parameter int MLKEM_WRITE = 1;
    parameter int ECC_WRITE = 2;
    parameter int DOE_WRITE = 3;
 
@@ -44,7 +44,7 @@ class kv_env_sequence_base #(
 // This handle needs to be set before use.
   kv_reg_model_top  reg_model;
 
-  rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, sha512_write_entry, ecc_write_entry, doe_write_entry;   
+  rand reg [KV_ENTRY_ADDR_W-1:0] hmac_write_entry, mlkem_write_entry, ecc_write_entry, doe_write_entry;   
   rand reg [KV_NUM_WRITE-1:0] wr_clients; 
 
 // This kv_env_sequence_base contains a handle to a kv_env_configuration object 
@@ -58,7 +58,7 @@ class kv_env_sequence_base #(
   // Initiator agent sequencers in kv_environment:
     // configuration.kv_rst_agent_config.sequencer
     // configuration.kv_hmac_write_agent_config.sequencer
-    // configuration.kv_sha512_write_agent_config.sequencer
+    // configuration.kv_mlkem_write_agent_config.sequencer
     // configuration.kv_ecc_write_agent_config.sequencer
     // configuration.kv_doe_write_agent_config.sequencer
     // configuration.kv_hmac_key_read_agent_config.sequencer
@@ -67,6 +67,8 @@ class kv_env_sequence_base #(
     // configuration.kv_ecc_privkey_read_agent_config.sequencer
     // configuration.kv_ecc_seed_read_agent_config.sequencer
     // configuration.kv_aes_key_read_agent_config.sequencer
+    // configuration.kv_mlkem_seed_read_agent_config.sequencer
+    // configuration.kv_mlkem_msg_read_agent_config.sequencer
 
   // Responder agent sequencers in kv_environment:
 
@@ -76,7 +78,7 @@ class kv_env_sequence_base #(
 
     typedef kv_write_key_entry_sequence kv_write_agent_key_entry_sequence_t;
     kv_write_agent_key_entry_sequence_t hmac_write_seq;
-    kv_write_agent_key_entry_sequence_t sha512_write_seq;
+    kv_write_agent_key_entry_sequence_t mlkem_write_seq;
     kv_write_agent_key_entry_sequence_t ecc_write_seq;
     kv_write_agent_key_entry_sequence_t doe_write_seq;
 
@@ -98,6 +100,12 @@ class kv_env_sequence_base #(
     typedef kv_read_random_sequence kv_aes_key_read_agent_random_sequence_t;
     kv_aes_key_read_agent_random_sequence_t kv_aes_key_read_agent_rand_seq;
 
+    typedef kv_read_random_sequence kv_mlkem_seed_read_agent_random_sequence_t;
+    kv_mlkem_seed_read_agent_random_sequence_t kv_mlkem_seed_read_agent_rand_seq;
+
+    typedef kv_read_random_sequence kv_mlkem_msg_read_agent_random_sequence_t;
+    kv_mlkem_msg_read_agent_random_sequence_t kv_mlkem_msg_read_agent_rand_seq;
+
 
 
 
@@ -109,7 +117,7 @@ class kv_env_sequence_base #(
     kv_rst_agent_rand_seq = kv_rst_agent_random_sequence_t::type_id::create("kv_rst_agent_rand_seq");
     hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
     if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
-    sha512_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("sha512_write_seq");
+    mlkem_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("mlkem_write_seq");
     if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
     ecc_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("ecc_write_seq");
     if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
@@ -121,6 +129,8 @@ class kv_env_sequence_base #(
     kv_ecc_privkey_read_agent_rand_seq = kv_ecc_privkey_read_agent_random_sequence_t::type_id::create("kv_ecc_privkey_read_agent_rand_seq");
     kv_ecc_seed_read_agent_rand_seq = kv_ecc_seed_read_agent_random_sequence_t::type_id::create("kv_ecc_seed_read_agent_rand_seq");
     kv_aes_key_read_agent_rand_seq = kv_aes_key_read_agent_random_sequence_t::type_id::create("kv_aes_key_read_agent_rand_seq");
+    kv_mlkem_seed_read_agent_rand_seq = kv_mlkem_seed_read_agent_random_sequence_t::type_id::create("kv_mlkem_seed_read_agent_rand_seq");
+    kv_mlkem_msg_read_agent_rand_seq = kv_mlkem_msg_read_agent_random_sequence_t::type_id::create("kv_mlkem_msg_read_agent_rand_seq");
 
 
   endfunction
@@ -128,29 +138,29 @@ class kv_env_sequence_base #(
 virtual task gen_rand_entries();
    std::randomize(hmac_write_entry) with {
        hmac_write_entry < KV_NUM_KEYS;
-       hmac_write_entry != sha512_write_entry;
+       hmac_write_entry != mlkem_write_entry;
        hmac_write_entry != ecc_write_entry;
        hmac_write_entry != doe_write_entry;
    };
 
-   std::randomize(sha512_write_entry) with {
-       sha512_write_entry < KV_NUM_KEYS;
-       sha512_write_entry != hmac_write_entry;
-       sha512_write_entry != ecc_write_entry;
-       sha512_write_entry != doe_write_entry;
+   std::randomize(mlkem_write_entry) with {
+       mlkem_write_entry < KV_NUM_KEYS;
+       mlkem_write_entry != hmac_write_entry;
+       mlkem_write_entry != ecc_write_entry;
+       mlkem_write_entry != doe_write_entry;
    };
 
    std::randomize(ecc_write_entry) with {
        ecc_write_entry < KV_NUM_KEYS;
        ecc_write_entry != hmac_write_entry;
-       ecc_write_entry != sha512_write_entry;
+       ecc_write_entry != mlkem_write_entry;
        ecc_write_entry != doe_write_entry;
    };
 
    std::randomize(doe_write_entry) with {
        doe_write_entry < KV_NUM_KEYS;
        doe_write_entry != hmac_write_entry;
-       doe_write_entry != sha512_write_entry;
+       doe_write_entry != mlkem_write_entry;
        doe_write_entry != ecc_write_entry;
    };
 
@@ -171,10 +181,10 @@ virtual task queue_writes();
             end
          end
          begin
-            if (wr_clients[SHA512_WRITE]) begin
-                `uvm_info("QUEUE_SHA512_WRITE", $sformatf("mldsa write with entry = %h", sha512_write_entry), UVM_HIGH)
-                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_sha512_write_agent.sequencer.sha512_write_seq", "local_write_entry",sha512_write_entry);
-                sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+            if (wr_clients[MLKEM_WRITE]) begin
+                `uvm_info("QUEUE_MLKEM_WRITE", $sformatf("mldsa write with entry = %h", mlkem_write_entry), UVM_HIGH)
+                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mlkem_write_agent.sequencer.mlkem_write_seq", "local_write_entry",mlkem_write_entry);
+                mlkem_write_seq.start(configuration.kv_mlkem_write_agent_config.sequencer);
             end
          end
          begin
@@ -193,7 +203,7 @@ virtual task queue_writes();
          end
       //   join
          configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
-         configuration.kv_sha512_write_agent_config.wait_for_num_clocks(100);
+         configuration.kv_mlkem_write_agent_config.wait_for_num_clocks(100);
          configuration.kv_ecc_write_agent_config.wait_for_num_clocks(100);
          configuration.kv_doe_write_agent_config.wait_for_num_clocks(100);
         end
@@ -205,8 +215,8 @@ virtual task queue_writes();
        repeat (25) kv_rst_agent_rand_seq.start(configuration.kv_rst_agent_config.sequencer);
     if ( configuration.kv_hmac_write_agent_config.sequencer != null )
        repeat (25) hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
-    if ( configuration.kv_sha512_write_agent_config.sequencer != null )
-       repeat (25) sha512_write_seq.start(configuration.kv_sha512_write_agent_config.sequencer);
+    if ( configuration.kv_mlkem_write_agent_config.sequencer != null )
+       repeat (25) mlkem_write_seq.start(configuration.kv_mlkem_write_agent_config.sequencer);
     if ( configuration.kv_ecc_write_agent_config.sequencer != null )
        repeat (25) ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
     if ( configuration.kv_doe_write_agent_config.sequencer != null )
@@ -224,6 +234,10 @@ virtual task queue_writes();
        repeat (25) kv_ecc_seed_read_agent_rand_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
     if ( configuration.kv_aes_key_read_agent_config.sequencer != null )
        repeat (25) kv_aes_key_read_agent_rand_seq.start(configuration.kv_aes_key_read_agent_config.sequencer);
+    if ( configuration.kv_mlkem_seed_read_agent_config.sequencer != null )
+       repeat (25) kv_mlkem_seed_read_agent_rand_seq.start(configuration.kv_mlkem_seed_read_agent_config.sequencer);
+    if ( configuration.kv_mlkem_msg_read_agent_config.sequencer != null )
+       repeat (25) kv_mlkem_msg_read_agent_rand_seq.start(configuration.kv_mlkem_msg_read_agent_config.sequencer);
 
 
   endtask
