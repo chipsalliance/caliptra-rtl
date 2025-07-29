@@ -17,9 +17,9 @@ SHELL = /usr/bin/env bash
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration
-# Current release version is 2.0 - smoke test uses this value to check HW_REV_ID register
-# Update the value here after 2.0
-CALIPTRA_HW_REV_ID=0x0002
+# Current release version is 2.0.1 - smoke test uses this value to check HW_REV_ID register
+# Update the value here after 2.0.1
+CALIPTRA_HW_REV_ID=0x0102
 # After 1.1, LMS accelerator is always available
 HWCFG_CFLAGS ?= -DCALIPTRA_HWCONFIG_LMS_EN -DCALIPTRA_HW_REV_ID=$(CALIPTRA_HW_REV_ID)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)

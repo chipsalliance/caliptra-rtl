@@ -7106,7 +7106,7 @@ module soc_ifc_reg (
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 51][31:0] = (decoded_reg_strb.CPTRA_GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_OUTPUT_WIRES[i0].generic_wires.value : '0;
     end
-    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h2 : '0;
+    assign readback_array[53][15:0] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? 16'h102 : '0;
     assign readback_array[53][31:16] = (decoded_reg_strb.CPTRA_HW_REV_ID && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_REV_ID.SOC_STEPPING_ID.next : '0;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 54][31:0] = (decoded_reg_strb.CPTRA_FW_REV_ID[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value : '0;

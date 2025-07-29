@@ -335,7 +335,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_AXI_USER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_AXI_USER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h02,
+    "CPTRA_HW_REV_ID"                      : 32'h0102,
     //"CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
