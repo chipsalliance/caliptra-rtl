@@ -1,0 +1,25 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["directed", "nightly", "firmware"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge.yml
+        # - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml  // TODO: uncomment when External_Mu is enabled
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/randomized_pcr_mldsa_signing/randomized_pcr_mldsa_signing.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_errortrigger/smoke_test_mldsa_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/randomized_mldsa_invalid_verify/randomized_mldsa_invalid_verify.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_keygen_sign_vfy_rand/smoke_test_mldsa_keygen_sign_vfy_rand.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_keygen_standalone_sign_vfy_rand/smoke_test_mldsa_keygen_standalone_sign_vfy_rand.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow/smoke_test_kv_crypto_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_crypto_flow2/smoke_test_kv_crypto_flow2.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_locked_api/smoke_test_mldsa_locked_api.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/mldsa_pcr_inject_failure/mldsa_pcr_inject_failure.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem/smoke_test_mlkem.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_kv/smoke_test_mlkem_kv.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_shared_key/smoke_test_mlkem_shared_key.yml

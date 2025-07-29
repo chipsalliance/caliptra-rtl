@@ -511,15 +511,15 @@ void main() {
 
     mldsa_keygen_signing_external_mu_flow(seed, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     mldsa_signing_external_mu_flow(privkey, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
     
     mldsa_verifying_external_mu_flow(external_mu, pubkey, sign, verify_res);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

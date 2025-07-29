@@ -65,6 +65,7 @@ COMP_LIB_NAMES := aes \
 		  doe \
 		  ecc \
 		  mldsa \
+		  mlkem \
 		  hmac \
 		  keyvault \
 		  datavault \

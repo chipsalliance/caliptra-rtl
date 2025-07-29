@@ -118,7 +118,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   aes_wait_idle();
 
   //Write the key
-  if (~aes_input.key.kv_intf){
+  if (!aes_input.key.kv_intf) {
       // Load key from hw_data and write to AES
       VPRINTF(LOW, "Load Key data to AES\n");
       for (int j = 0; j < 8; j++) {
@@ -269,6 +269,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               while(1);
             }
           }
+          
         }
       }
     }
