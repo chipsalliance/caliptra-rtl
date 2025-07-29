@@ -212,7 +212,7 @@ def main():
         return 1
     elif ((os.environ.get('CALIPTRA_ROOT') != os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), "Caliptra"    )) and
           (os.environ.get('CALIPTRA_ROOT') != os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), "chipsalliance", "caliptra-rtl"))):
-        logger.error(f"CALIPTRA_ROOT definition [{os.environ.get('CALIPTRA_ROOT')}] is invalid! Expected [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE', 'Caliptra'))}] or [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE', 'chipsalliance', 'caliptra-rtl'))}]")
+        logger.error(f"CALIPTRA_ROOT definition [{os.environ.get('CALIPTRA_ROOT')}] is invalid! Expected [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), 'Caliptra')}] or [{os.path.join(os.environ.get('CALIPTRA_WORKSPACE'), 'chipsalliance', 'caliptra-rtl')}]")
         return 1
     # Create a scratch space for run outputs
     scratch = createScratch()
