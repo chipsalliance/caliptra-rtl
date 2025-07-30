@@ -152,11 +152,7 @@ module caliptra_top_sva
 
   DOE_lock_hek_cold_reset:   assert property (
                                             @(posedge `SVA_CLK)
-                                            `ifdef CALIPTRA_OCP_LOCK_EN
                                             ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 0)
-                                            `else
-                                            ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 1)
-                                            `endif
                                           )
                             else $display("SVA ERROR: lock_hek_flow was not reset to expected value on hard reset");
 
