@@ -43,6 +43,9 @@ import caliptra_top_tb_pkg::*; #(
 
     axi_if m_axi_bfm_if,
 
+    output logic [15:0] strap_ss_key_release_key_size,
+    output logic [63:0] strap_ss_key_release_base_addr,
+
     input logic ready_for_fuses,
     input logic ready_for_mb_processing,
     input logic mailbox_data_avail,
@@ -135,6 +138,55 @@ import caliptra_top_tb_pkg::*; #(
     end
     // Leave reset asserted for 32 clock cycles
     always_comb deassert_rst_flag_from_fatal = count_deassert_rst_flag_from_fatal == 31;
+
+    initial begin
+        // Initialize strap_ss_key_release_key_size based on plusargs
+        if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL")) begin
+            if (!$value$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL=%h", strap_ss_key_release_key_size)) begin
+                $error("Failed to get value for +STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL");
+            end
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE set manually to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_LOW")) begin
+            // Randomize from 1 DWORD (4 bytes) to 0x40, ensure DWORD alignment
+            strap_ss_key_release_key_size = $urandom_range(16'h4, 16'h40);
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (0x4-0x40, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_HIGH")) begin
+            strap_ss_key_release_key_size = $urandom_range(16'h44, 16'hFFFF);
+            // Ensure DWORD alignment by clearing lower 2 bits
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (>0x40, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_ANY")) begin
+            strap_ss_key_release_key_size = $urandom();
+            // Ensure DWORD alignment by clearing lower 2 bits
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (any value, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else begin
+            // Default value (already DWORD aligned)
+            strap_ss_key_release_key_size = 16'h40;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE set to default value 0x%04x", strap_ss_key_release_key_size);
+        end
+        
+        // Initialize strap_ss_key_release_base_addr based on plusargs
+        if ($test$plusargs("STRAP_SS_KEY_RELEASE_BASE_ADDR_RAND_SRAM")) begin
+            logic [63:0] random_offset;
+            // Ensure address is at least 64 bytes (512 bits) before end of SRAM
+            random_offset = $urandom_range(64'h0, AXI_SRAM_SIZE_BYTES - 64 - 1);
+            random_offset = random_offset & ~64'h3;
+            strap_ss_key_release_base_addr = AXI_SRAM_BASE_ADDR + random_offset;
+            $display("STRAP_SS_KEY_RELEASE_BASE_ADDR randomized within AXI SRAM to 0x%016x", strap_ss_key_release_base_addr);
+        end
+        else begin
+            // Default value
+            strap_ss_key_release_base_addr = AXI_SRAM_BASE_ADDR;
+            $display("STRAP_SS_KEY_RELEASE_BASE_ADDR set to default value 0x%016x", strap_ss_key_release_base_addr);
+        end
+    end
+
 
     initial begin
         cptra_pwrgood = 1'b0;

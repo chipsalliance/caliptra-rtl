@@ -50,6 +50,9 @@ module caliptra_top_tb (
     int                         cycleCnt;
 
 
+    logic [15:0] strap_ss_key_release_key_size;
+    logic [63:0] strap_ss_key_release_base_addr;
+
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
     logic                       BootFSM_BrkPoint;
@@ -146,6 +149,9 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .cptra_obf_key      (cptra_obf_key   ),
     .cptra_csr_hmac_key (cptra_csr_hmac_key),
+
+    .strap_ss_key_release_key_size,
+    .strap_ss_key_release_base_addr,
 
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
@@ -266,8 +272,8 @@ caliptra_top caliptra_top_dut (
     .strap_ss_external_staging_area_base_addr               (64'h0),
     .strap_ss_otp_fc_base_addr                              (64'h0),
     .strap_ss_uds_seed_base_addr                            (64'h0),
-    .strap_ss_key_release_base_addr                         (64'(AXI_SRAM_BASE_ADDR)),
-    .strap_ss_key_release_key_size                          (16'h40),
+    .strap_ss_key_release_base_addr                         ,
+    .strap_ss_key_release_key_size                          ,
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
     .strap_ss_caliptra_dma_axi_user                         (32'h0),
