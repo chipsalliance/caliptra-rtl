@@ -453,6 +453,12 @@ always_comb begin
   el2_icache_stub.ic_tag_data_raw_pre = '0;
 end
 
+logic cptra_panic;
+
+`ifndef RV_LOCKSTEP_ENABLE
+assign cptra_panic = 1'b0;
+`endif
+
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
@@ -590,6 +596,13 @@ el2_veer_wrapper rvtop (
 
     // Caliptra Memory Export Interface
     .el2_mem_export         (el2_mem_export),
+
+`ifdef RV_LOCKSTEP_ENABLE
+    // Shadow Core control
+    .disable_corruption_detection_i(1'b0),
+    .lockstep_err_injection_en_i(1'b0),
+    .corruption_detected_o(cptra_panic),
+`endif
 
     .core_id                ('0),
     .scan_mode              ( scan_mode ), // To enable scan mode
@@ -1404,6 +1417,8 @@ soc_ifc_top1
     .fw_update_rst_window(fw_update_rst_window),
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
+    // DCLS error
+    .dcls_error  (cptra_panic ),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),
