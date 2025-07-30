@@ -65,6 +65,26 @@ enum axi_dma_fsm_e {
     axi_dma_fsm_DMA_ERROR     = 0x3
 };
 
+enum err_inj_type {
+//    cmd_inv_rd_route    ,
+    cmd_inv_wr_route_kv    ,
+    cmd_inv_wr_route_invld_range    ,
+    cmd_inv_route_combo ,
+    cmd_inv_route_combo_kv ,
+    cmd_inv_src_addr    ,
+    cmd_inv_dst_addr    ,
+    cmd_inv_dst_addr_kv ,
+    cmd_inv_byte_count  ,
+    cmd_inv_byte_count_kv  ,
+    cmd_inv_rd_fixed    ,
+    cmd_inv_wr_fixed    ,
+    cmd_inv_wr_fixed_kv ,
+    cmd_inv_block_size,
+    cmd_inv_mbox_lock
+//    cmd_inv_sha_lock
+};
+
+
 /**
 * Decode:
 *   [31]: Firmware command
@@ -160,5 +180,6 @@ uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_f
 uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_wait_idle      (uint8_t clr_lock);
+uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type);
 
 #endif
