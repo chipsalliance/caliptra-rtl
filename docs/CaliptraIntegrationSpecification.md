@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 2.0</p>
+<p style="text-align: center;">Version 2.0.1</p>
 
 <div style="page-break-after: always"></div>
 
