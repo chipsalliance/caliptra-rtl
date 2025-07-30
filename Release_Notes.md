@@ -24,7 +24,6 @@ _*Last Update: 2025/07/30*_
 - Caliptra testplan: see docs/ folder
 - Enhancements:
     - Expanded several testcases to improve coverage
-    - Adams Bridge enhancement: TODO
     - SHA Accelerator: Enabled endian-swizzling in streaming mode, necessary for streaming boot operations in Subsystem mode
     - Integration: Added workflow to support integrator custom primitive modules; clarified steps in Integration Specification for protecting cryptographic countermeasures
     - Integration: Added integrator-provided synthesis checks to support compilation with non-standard toolchain
@@ -33,6 +32,7 @@ _*Last Update: 2025/07/30*_
   - [BUG FIX] Fixed zeroization logic in cryptographic blocks: PCR Vault, SHA256, SHA512 (#923)
   - [BUG FIX] Fix ECDH pubkey check (#921)
   - [BUG FIX] Corrected a few instances of incorrectly-named ASSERT macro calls
+  - [BUG FIX] Fix variable message byte drop bug in Adams Bridge [#145](https://github.com/chipsalliance/adams-bridge/issues/145)
 
 ## Previous Releases ##
 
