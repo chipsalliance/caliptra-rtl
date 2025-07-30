@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - kv_defines_pkg
   - doe_defines_pkg
+  - axi_dma
   - libs
 targets:
   tb:

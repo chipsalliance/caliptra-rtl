@@ -591,11 +591,9 @@ uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
 
     // Check completion
     reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    VPRINTF(LOW, "FW: Waiting on AXI DMA_REG_STS0 !BUSY or ERROR FIXME REMOVE BEFORE PR\n");
     while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
         reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
     }
-    VPRINTF(LOW, "FW: DONE!!! FIXME REMOVE BEFORE PR\n");
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
