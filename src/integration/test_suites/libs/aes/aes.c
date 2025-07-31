@@ -371,6 +371,7 @@ void aes_flow_new(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_
     kv_write_ctrl(CLP_AES_CLP_REG_AES_KV_WR_CTRL, 
                   aes_input.key_o.kv_id,
                   aes_input.key_o.dest_valid);
+    VPRINTF(LOW, "Set AES KV Write to slot %d\n", aes_input.key_o.kv_id);
   }
 
   uint32_t aes_ctrl =

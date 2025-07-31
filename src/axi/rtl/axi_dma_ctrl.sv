@@ -936,6 +936,7 @@ import kv_defines_pkg::*;
         else if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) begin
             fifo_w_data  = kv_data_write_data;
             fifo_w_valid = kv_data_write_en; // FIXME no backpressure on this signal, FIFO must accept every assertion
+                                             // TODO if write offset exceeds key_size, don't drive fifo_w_valid
         end
         else begin
             fifo_w_data  = r_data_i;

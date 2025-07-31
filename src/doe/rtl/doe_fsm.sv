@@ -264,11 +264,7 @@ always_ff @(posedge clk or negedge hard_rst_b) begin
     if (~hard_rst_b) begin
         lock_uds_flow <= '0;
         lock_fe_flow <= '0;
-        `ifdef CALIPTRA_OCP_LOCK_EN
         lock_hek_flow <= '0;
-        `else
-        lock_hek_flow <= '1;
-        `endif
     end
     else begin
         lock_uds_flow <= running_uds & flow_done ? '1 : lock_uds_flow;
