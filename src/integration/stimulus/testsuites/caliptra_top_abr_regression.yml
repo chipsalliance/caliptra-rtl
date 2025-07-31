@@ -24,3 +24,4 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_kv/smoke_test_mlkem_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_shared_key/smoke_test_mlkem_shared_key.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_errortrigger/smoke_test_mlkem_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_locked_api/smoke_test_mlkem_locked_api.yml
