@@ -867,7 +867,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.CPTRA_GENERATION = new("CPTRA_GENERATION");
-            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h2, 1, 1, 0);
+            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h102, 1, 1, 0);
             this.SOC_STEPPING_ID = new("SOC_STEPPING_ID");
             this.SOC_STEPPING_ID.configure(this, 16, 16, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin

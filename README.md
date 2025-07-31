@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2025/04/29*_
+_*Last Update: 2025/07/30*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
@@ -96,6 +96,8 @@ with the provided Makefile for compiling test C programs.
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains a subdirectory "chipsalliance" which, in turn, contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
 `CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/chipsalliance/caliptra-rtl`.<BR>
+`CALIPTRA_PRIM_ROOT`: Refer to ./docs/CaliptraIntegrationSpecification.md
+`CALIPTRA_PRIM_MODULE_PREFIX`: Refer to ./docs/CaliptraIntegrationSpecification.md
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder; only used for `caliptra_top_tb` tests<BR>
@@ -327,7 +329,7 @@ The UVM Framework generation tool was used to create the baseline UVM testbench 
 
 ### Standalone SystemVerilog Testbench Regression ###
 Only tests from the L0 Regression List should be run.
-The list is defined in the file [L0_regression.yml](https://github.com/chipsalliance/caliptra-rtl/blob/main/src/integration/stimulus/L0_regression.yml)
+The list is defined in the file [L0_regression.yml](./src/integration/stimulus/L0_regression.yml)
 
 ### UVM Regression ###
 The UVM simulation environment for `caliptra_top` uses a special set of validation firmware to generate stimulus as required for the test plan. This firmware suite is found in `src/integration/test_suites` and includes:

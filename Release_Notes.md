@@ -14,7 +14,27 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/04/29*_
+_*Last Update: 2025/07/30*_
+
+### Rev 2.0.1 ###
+
+#### Rev 2.0.1 release date: 2025/07/30 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Enhancements:
+    - Expanded several testcases to improve coverage
+    - SHA Accelerator: Enabled endian-swizzling in streaming mode, necessary for streaming boot operations in Subsystem mode
+    - Integration: Added workflow to support integrator custom primitive modules; clarified steps in Integration Specification for protecting cryptographic countermeasures
+    - Integration: Added integrator-provided synthesis checks to support compilation with non-standard toolchain
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
+- Bug fixes:
+  - [BUG FIX] Fixed zeroization logic in cryptographic blocks: PCR Vault, SHA256, SHA512 (#923)
+  - [BUG FIX] Fix ECDH pubkey check (#921)
+  - [BUG FIX] Corrected a few instances of incorrectly-named ASSERT macro calls
+  - [BUG FIX] Fix variable message byte drop bug in Adams Bridge [#145](https://github.com/chipsalliance/adams-bridge/issues/145)
+
+## Previous Releases ##
 
 ### Rev 2p0 ###
 
@@ -24,8 +44,6 @@ _*Last Update: 2025/04/29*_
 - Bug fixes:
   - [BUG FIX] fix missing V update in DRBG corner case
   - [BUG FIX] Subsystem Mode only: TAP mailbox lock priority
-
-## Previous Releases ##
 
 ### Rev 2p0-rc1 ###
 
@@ -327,7 +345,3 @@ _*Last Update: 2025/04/29*_
     - Smoke tests for all of the above passing including bring up/boot of the caliptra IP (KV testing for ECC & SHA are pending)
     - UVMF for multiple DUT blocks and SOC interface
     - NOTE: 0p8 release will have stress validation on SOC interface with random resets, clock gating, impactless update crossed with mailbox protocol etc.
-
-
-
-
