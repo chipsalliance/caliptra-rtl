@@ -249,19 +249,19 @@ module aes
       for (kv_ii=0; kv_ii < CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE; kv_ii++) begin
           always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_reg
               if (!rst_ni) begin
-                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
               else if (1'b0/*FIXME fixme_purge_kv_data*/) begin
-                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
               else if (incr_kv_data_counter && (kv_data_counter == kv_ii)) begin
-                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[3].d,
-                                                                                                   hw2reg_caliptra.data_out[2].d,
-                                                                                                   hw2reg_caliptra.data_out[1].d,
-                                                                                                   hw2reg_caliptra.data_out[0].d}; // FIXME endianness?
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[0].d,
+                                                                                                                                            hw2reg_caliptra.data_out[1].d,
+                                                                                                                                            hw2reg_caliptra.data_out[2].d,
+                                                                                                                                            hw2reg_caliptra.data_out[3].d}; // Fixed endianness
               end
               else if (caliptra2aes.kv_write_done) begin
-                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
           end
       end
