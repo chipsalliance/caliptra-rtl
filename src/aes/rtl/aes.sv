@@ -255,10 +255,10 @@ module aes
                   aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
               else if (incr_kv_data_counter && (kv_data_counter == kv_ii)) begin
-                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg.data_out[3].d,
-                                                                                                   hw2reg.data_out[2].d,
-                                                                                                   hw2reg.data_out[1].d,
-                                                                                                   hw2reg.data_out[0].d}; // FIXME endianness?
+                  aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[3].d,
+                                                                                                   hw2reg_caliptra.data_out[2].d,
+                                                                                                   hw2reg_caliptra.data_out[1].d,
+                                                                                                   hw2reg_caliptra.data_out[0].d}; // FIXME endianness?
               end
               else if (caliptra2aes.kv_write_done) begin
                   aes2caliptra.kv_data_out[kv_ii*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
