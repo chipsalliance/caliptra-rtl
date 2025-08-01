@@ -98,11 +98,11 @@ end
   assign dummy_i = bus.dummy;
   assign kv_write_i = bus.kv_write;
   assign kv_wr_resp_i = bus.kv_wr_resp;
-  assign write_en_i          = kv_write_i[47]; //[0];
-  assign write_entry_i       = kv_write_i[46:42]; //[4:2];
-  assign write_offset_i      = kv_write_i[41:38]; //[8:5];
-  assign write_data_i        = kv_write_i[37:6]; //[40:9];
-  assign write_dest_valid_i  = kv_write_i[5:0]; //[46:41];
+  assign write_en_i          = kv_write_i[49]; //[0];
+  assign write_entry_i       = kv_write_i[48:44]; //[4:2];
+  assign write_offset_i      = kv_write_i[43:40]; //[8:5];
+  assign write_data_i        = kv_write_i[39:8]; //[40:9];
+  assign write_dest_valid_i  = kv_write_i[7:0]; //[48:41];
   assign error_i             = kv_wr_resp_i[0];
 
   // Proxy handle to UVM monitor
@@ -231,7 +231,7 @@ end
     kv_write_monitor_struct.write_entry       = write_entry_o; //kv_write_i[4:2];
     kv_write_monitor_struct.write_offset      = write_offset_o; //kv_write_i[8:5];
     kv_write_monitor_struct.write_data        = write_data_o; //kv_write_i[40:9];
-    kv_write_monitor_struct.write_dest_valid  = write_dest_valid_o; //kv_write_i[46:41];
+    kv_write_monitor_struct.write_dest_valid  = write_dest_valid_o; //kv_write_i[48:41];
     kv_write_monitor_struct.error             = error_o;
 
     // pragma uvmf custom do_monitor end

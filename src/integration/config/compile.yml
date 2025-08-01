@@ -28,7 +28,7 @@ requires:
   - doe_ctrl
   - hmac_ctrl
   - ecc_top
-  - mldsa_top
+  - abr_top
   - keyvault
   - pcrvault
   - datavault
@@ -79,7 +79,7 @@ requires:
   - soc_ifc_coverage
   - pcrvault_cov
   - keyvault_cov
-  - mldsa_coverage
+  - abr_coverage
   - axi_dma_coverage
 targets:
   dpi_compile:
@@ -133,9 +133,11 @@ targets:
     pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
-                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
-                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
-                && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .'
+                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
+                && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
+                && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+                
 global:
   tool:
     vcs:
@@ -175,9 +177,11 @@ targets:
     pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
                 && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
                 && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
-                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
-                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
-                && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .'
+                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
+                && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
+                && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+                
 global:
   tool:
     vcs:

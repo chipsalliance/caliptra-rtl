@@ -9,7 +9,7 @@ uvmf:
         name: kv_hmac_write_agent
         type: kv_write
       - initiator_responder: INITIATOR
-        name: kv_sha512_write_agent
+        name: kv_mlkem_write_agent
         type: kv_write
       - initiator_responder: INITIATOR
         name: kv_ecc_write_agent
@@ -34,6 +34,12 @@ uvmf:
         type: kv_read
       - initiator_responder: INITIATOR
         name: kv_aes_key_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_mlkem_seed_read_agent
+        type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_mlkem_msg_read_agent
         type: kv_read
       analysis_components:
       - name: kv_pred
@@ -100,5 +106,11 @@ uvmf:
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
       - driver: kv_aes_key_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_mlkem_seed_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_mlkem_msg_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'

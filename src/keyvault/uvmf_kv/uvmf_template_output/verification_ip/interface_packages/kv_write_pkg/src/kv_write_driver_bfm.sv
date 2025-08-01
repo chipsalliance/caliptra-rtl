@@ -206,14 +206,14 @@ end
        //   logic   [4:0] write_entry ;
        //   logic   [3:0] write_offset;
        //   logic   [31:0] write_data ;
-       //   logic   [5:0] write_dest_valid ;
+       //   logic   [7:0] write_dest_valid ;
        //   logic error ;
        // Members within the kv_write_responder_struct:
        //   logic write_en ;
        //   logic   [4:0] write_entry ;
        //   logic   [3:0] write_offset;
        //   logic   [31:0] write_data ;
-       //   logic   [5:0] write_dest_valid ;
+       //   logic   [7:0] write_dest_valid ;
        //   logic error ;
        initiator_struct = kv_write_initiator_struct;
        //
@@ -249,14 +249,14 @@ end
 
 
     @(posedge clk_i);
-    kv_write_o[47] <= 1'b0; //Set write_en to 0 after txn is complete
+    kv_write_o[49] <= 1'b0; //Set write_en to 0 after txn is complete
     //kv_write_o[45] <= 1'b0; //Set entry_is_pcr to 0 after txn is complete
 
-    kv_write_responder_struct.write_en          = kv_write_i[47];//kv_write_i[0];
-    kv_write_responder_struct.write_entry       = kv_write_i[46:42];//kv_write_i[4:2];
-    kv_write_responder_struct.write_offset      = kv_write_i[41:38];//kv_write_i[8:5];
-    kv_write_responder_struct.write_data        = kv_write_i[37:6];//kv_write_i[40:9];
-    kv_write_responder_struct.write_dest_valid  = kv_write_i[5:0];//kv_write_i[46:41];
+    kv_write_responder_struct.write_en          = kv_write_i[49];//kv_write_i[0];
+    kv_write_responder_struct.write_entry       = kv_write_i[48:44];//kv_write_i[4:2];
+    kv_write_responder_struct.write_offset      = kv_write_i[43:40];//kv_write_i[8:5];
+    kv_write_responder_struct.write_data        = kv_write_i[39:8];//kv_write_i[40:9];
+    kv_write_responder_struct.write_dest_valid  = kv_write_i[7:0];//kv_write_i[48:41];
 
     responder_struct = kv_write_responder_struct;
   endtask        
@@ -285,13 +285,13 @@ bit first_transfer=1;
   //   logic   [4:0] write_entry ;
   //   logic   [3:0] write_offset;
   //   logic   [31:0] write_data ;
-  //   logic   [5:0] write_dest_valid ;
+  //   logic   [7:0] write_dest_valid ;
   // Variables within the kv_write_responder_struct:
   //   logic write_en ;
   //   logic   [4:0] write_entry ;
   //   logic   [3:0] write_offset;
   //   logic   [31:0] write_data ;
-  //   logic   [5:0] write_dest_valid ;
+  //   logic   [7:0] write_dest_valid ;
        // Reference code;
        //    How to wait for signal value
        //      while (control_signal == 1'b1) @(posedge clk_i);

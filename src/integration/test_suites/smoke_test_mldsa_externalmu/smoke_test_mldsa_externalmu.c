@@ -482,44 +482,45 @@ void main() {
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < MLDSA87_SEED_SIZE; i++)
-        seed.data[i] = mldsa_seed[i];
+        seed.data[i] = mldsa_seed[MLDSA87_SEED_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
-        sign_rnd[i] = mldsa_sign_rnd[i];
+        sign_rnd[i] = mldsa_sign_rnd[MLDSA87_SIGN_RND_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
-        entropy[i] = mldsa_entropy[i];
+        entropy[i] = mldsa_entropy[MLDSA87_ENTROPY_SIZE-1-i];
     
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
-        msg[i] = mldsa_msg[i];
-    
+        msg[i] = mldsa_msg[MLDSA87_MSG_SIZE-1-i];
+
     for (int i = 0; i < MLDSA87_EXTERNAL_MU_SIZE; i++)
-        external_mu[i] = mldsa_external_mu[i];
+        external_mu[i] = mldsa_external_mu[MLDSA87_EXTERNAL_MU_SIZE-1-i];
     
     for (int i = 0; i < MLDSA87_PRIVKEY_SIZE; i++)
-        privkey[i] = mldsa_privkey[i];
+        privkey[i] = mldsa_privkey[MLDSA87_PRIVKEY_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
-        pubkey[i] = mldsa_pubkey[i];
+        pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_SIGN_SIZE; i++)
-        sign[i] = mldsa_sign[i];
+        sign[i] = mldsa_sign[MLDSA87_SIGN_SIZE-1-i];
 
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
-        verify_res[i] = mldsa_verify_res[i];
+        verify_res[i] = mldsa_verify_res[MLDSA_VERIFY_RES_SIZE-1-i];
+   
 
 
     mldsa_keygen_signing_external_mu_flow(seed, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     mldsa_signing_external_mu_flow(privkey, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
     
     mldsa_verifying_external_mu_flow(external_mu, pubkey, sign, verify_res);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

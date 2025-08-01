@@ -5,6 +5,8 @@
 // This file is auto-generated.
 // Used parser: Fallback (regex)
 
+`include "caliptra_prim_module_name_macros.svh"
+
 `ifndef PRIM_DEFAULT_IMPL
   `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
@@ -37,7 +39,7 @@ if (Impl == caliptra_prim_pkg::ImplXilinx) begin : gen_xilinx
       .*
     );
 end else begin : gen_generic
-    caliptra_prim_generic_flop #(
+    `CALIPTRA_PRIM_MODULE_NAME(flop) #(
       .ResetValue(ResetValue),
       .Width(Width)
     ) u_impl_generic (
