@@ -6934,6 +6934,181 @@
 `define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
 `define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (32'h1)
 `endif
+`ifndef SHA3_SHA3_NAME_0
+`define SHA3_SHA3_NAME_0                                                                            (32'h0)
+`endif
+`ifndef SHA3_SHA3_NAME_1
+`define SHA3_SHA3_NAME_1                                                                            (32'h4)
+`endif
+`ifndef SHA3_SHA3_VERSION_0
+`define SHA3_SHA3_VERSION_0                                                                         (32'h8)
+`endif
+`ifndef SHA3_SHA3_VERSION_1
+`define SHA3_SHA3_VERSION_1                                                                         (32'hc)
+`endif
+`ifndef SHA3_ALERT_TEST
+`define SHA3_ALERT_TEST                                                                             (32'h1c)
+`define SHA3_ALERT_TEST_RECOV_OPERATION_ERR_LOW                                                     (0)
+`define SHA3_ALERT_TEST_RECOV_OPERATION_ERR_MASK                                                    (32'h1)
+`define SHA3_ALERT_TEST_FATAL_FAULT_ERR_LOW                                                         (1)
+`define SHA3_ALERT_TEST_FATAL_FAULT_ERR_MASK                                                        (32'h2)
+`endif
+`ifndef SHA3_CFG_REGWEN
+`define SHA3_CFG_REGWEN                                                                             (32'h20)
+`define SHA3_CFG_REGWEN_EN_LOW                                                                      (0)
+`define SHA3_CFG_REGWEN_EN_MASK                                                                     (32'h1)
+`endif
+`ifndef SHA3_CFG_SHADOWED
+`define SHA3_CFG_SHADOWED                                                                           (32'h24)
+`define SHA3_CFG_SHADOWED_KSTRENGTH_LOW                                                             (1)
+`define SHA3_CFG_SHADOWED_KSTRENGTH_MASK                                                            (32'he)
+`define SHA3_CFG_SHADOWED_MODE_LOW                                                                  (4)
+`define SHA3_CFG_SHADOWED_MODE_MASK                                                                 (32'h30)
+`define SHA3_CFG_SHADOWED_MSG_ENDIANNESS_LOW                                                        (8)
+`define SHA3_CFG_SHADOWED_MSG_ENDIANNESS_MASK                                                       (32'h100)
+`define SHA3_CFG_SHADOWED_STATE_ENDIANNESS_LOW                                                      (9)
+`define SHA3_CFG_SHADOWED_STATE_ENDIANNESS_MASK                                                     (32'h200)
+`endif
+`ifndef SHA3_CMD
+`define SHA3_CMD                                                                                    (32'h28)
+`define SHA3_CMD_CMD_LOW                                                                            (0)
+`define SHA3_CMD_CMD_MASK                                                                           (32'h3f)
+`define SHA3_CMD_ERR_PROCESSED_LOW                                                                  (10)
+`define SHA3_CMD_ERR_PROCESSED_MASK                                                                 (32'h400)
+`endif
+`ifndef SHA3_STATUS
+`define SHA3_STATUS                                                                                 (32'h2c)
+`define SHA3_STATUS_SHA3_IDLE_LOW                                                                   (0)
+`define SHA3_STATUS_SHA3_IDLE_MASK                                                                  (32'h1)
+`define SHA3_STATUS_SHA3_ABSORB_LOW                                                                 (1)
+`define SHA3_STATUS_SHA3_ABSORB_MASK                                                                (32'h2)
+`define SHA3_STATUS_SHA3_SQUEEZE_LOW                                                                (2)
+`define SHA3_STATUS_SHA3_SQUEEZE_MASK                                                               (32'h4)
+`define SHA3_STATUS_FIFO_DEPTH_LOW                                                                  (8)
+`define SHA3_STATUS_FIFO_DEPTH_MASK                                                                 (32'h1f00)
+`define SHA3_STATUS_FIFO_EMPTY_LOW                                                                  (14)
+`define SHA3_STATUS_FIFO_EMPTY_MASK                                                                 (32'h4000)
+`define SHA3_STATUS_FIFO_FULL_LOW                                                                   (15)
+`define SHA3_STATUS_FIFO_FULL_MASK                                                                  (32'h8000)
+`define SHA3_STATUS_ALERT_FATAL_FAULT_LOW                                                           (16)
+`define SHA3_STATUS_ALERT_FATAL_FAULT_MASK                                                          (32'h10000)
+`define SHA3_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_LOW                                                 (17)
+`define SHA3_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_MASK                                                (32'h20000)
+`endif
+`ifndef SHA3_ERR_CODE
+`define SHA3_ERR_CODE                                                                               (32'hd0)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
+`define SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                         (32'h400)
+`define SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                            (0)
+`define SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                           (32'h1)
+`define SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                            (1)
+`define SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                           (32'h2)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                          (32'h404)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_LOW                                            (0)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK                                           (32'h1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_LOW                                            (1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_MASK                                           (32'h2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_LOW                                            (2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK                                           (32'h4)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_LOW                                            (3)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK                                           (32'h8)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                          (32'h408)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                                    (0)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                                   (32'h1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_LOW                              (1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK                             (32'h2)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
+`define SHA3_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                                      (32'h40c)
+`define SHA3_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                          (0)
+`define SHA3_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                         (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                                      (32'h410)
+`define SHA3_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                          (0)
+`define SHA3_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                         (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                    (32'h414)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_LOW                                     (0)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK                                    (32'h1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_LOW                                     (1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK                                    (32'h2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_LOW                                     (2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK                                    (32'h4)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_LOW                                     (3)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK                                    (32'h8)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                    (32'h418)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                             (0)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                            (32'h1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MSG_FIFO_EMPTY_STS_LOW                       (1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MSG_FIFO_EMPTY_STS_MASK                      (32'h2)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                        (32'h41c)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_LOW                                        (0)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_MASK                                       (32'h1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_LOW                                        (1)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_MASK                                       (32'h2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_LOW                                        (2)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_MASK                                       (32'h4)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_LOW                                        (3)
+`define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_MASK                                       (32'h8)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                        (32'h420)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                                (0)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                               (32'h1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_MSG_FIFO_EMPTY_TRIG_LOW                          (1)
+`define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_MSG_FIFO_EMPTY_TRIG_MASK                         (32'h2)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R
+`define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                                      (32'h500)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R
+`define SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                                      (32'h504)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R
+`define SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                                      (32'h508)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R
+`define SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                                      (32'h50c)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                              (32'h580)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R
+`define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                                 (32'h600)
+`define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_LOW                                       (0)
+`define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_MASK                                      (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R
+`define SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                                 (32'h604)
+`define SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_LOW                                       (0)
+`define SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_MASK                                      (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R
+`define SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                                 (32'h608)
+`define SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_LOW                                       (0)
+`define SHA3_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_MASK                                      (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R
+`define SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                                 (32'h60c)
+`define SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_LOW                                       (0)
+`define SHA3_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_MASK                                      (32'h1)
+`endif
+`ifndef SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
+`define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                         (32'h610)
+`define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                               (0)
+`define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                              (32'h1)
+`endif
 `ifndef CSRNG_REG_INTERRUPT_STATE
 `define CSRNG_REG_INTERRUPT_STATE                                                                   (32'h0)
 `define CSRNG_REG_INTERRUPT_STATE_CS_CMD_REQ_DONE_LOW                                               (0)
