@@ -28,7 +28,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
-        # - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml  // TODO: uncomment when External_Mu is enabled
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
