@@ -2,6 +2,7 @@
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
@@ -15,6 +16,7 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
@@ -109,5 +111,4 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_gf_mult.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/lc_ctrl/rtl/lc_ctrl_pkg.sv

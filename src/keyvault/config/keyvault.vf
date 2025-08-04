@@ -1,7 +1,9 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
@@ -21,5 +23,4 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh

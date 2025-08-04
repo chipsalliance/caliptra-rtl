@@ -1,4 +1,5 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
@@ -9,6 +10,7 @@
 +incdir+${CALIPTRA_ROOT}/src/ecc/rtl
 +incdir+${CALIPTRA_ROOT}/src/ecc/tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
@@ -77,5 +79,4 @@ ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pe_final.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_mult_dsp.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_add_sub_mod_alter.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_adder.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/ecc/tb/ecc_montgomerymultiplier_tb.sv

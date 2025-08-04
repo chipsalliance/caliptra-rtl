@@ -37,12 +37,6 @@ args = parser.parse_args()
 # Process input files from parsed args
 input_files = args.files
 
-#output directory for dumping files
-filename = os.path.splitext(os.path.basename(input_files[0]))[0]
-rtl_output_dir = os.path.abspath(os.path.dirname(input_files[0]))
-html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_html")
-doc_output_dir = os.path.join(rtl_output_dir, '..', 'docs')
-
 # Listener block will print register name and address into C Header file
 class HeaderPrintingListener(RDLListener):
     def __init__(self, file_path, filename, ext, tick, do_global=1, do_rel=1):
@@ -181,6 +175,18 @@ try:
         else:
             parameters[name] = value
 
+
+    #output directory for dumping files
+    filename = os.path.splitext(os.path.basename(input_files[0]))[0]
+    rtl_output_dir = os.path.abspath(os.path.dirname(input_files[0]))
+
+    # Append filename for ss mode
+    if parameters.get("CALIPTRA_SS_MODE", False):
+        html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_ss" + "_html")
+        rtl_output_dir = os.path.join(rtl_output_dir, filename + "_ss")
+    else:
+        html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_html")
+        rtl_output_dir = os.path.join(rtl_output_dir, filename)
 
     # Elaborate the design
     root = rdlc.elaborate(parameters=parameters if parameters else None)

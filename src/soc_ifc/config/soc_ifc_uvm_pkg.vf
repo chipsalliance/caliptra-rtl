@@ -1,14 +1,15 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_uvm.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_uvm.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr_uvm.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg_uvm.sv
