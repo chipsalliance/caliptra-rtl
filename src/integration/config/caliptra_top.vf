@@ -291,6 +291,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/barrett_reduction/rtl/barrett_reduction.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/barrett_reduction/rtl/masked_barrett_if_cond.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/barrett_reduction/rtl/masked_barrett_reduction.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/barrett_reduction/rtl/masked_barrett_if_cond_v2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_butterfly2x2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_butterfly.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mult_dsp.sv
@@ -305,10 +306,14 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_twiddle_lookup.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_ctrl.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_top.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_BFU_add_sub.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mlkem_masked_BFU_add_sub.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_BFU_mult.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mlkem_masked_BFU_mult.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_gs_butterfly.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mlkem_masked_gs_butterfly.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_pwm.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_butterfly1x2.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mlkem_masked_butterfly1x2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_hybrid_butterfly_2x2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_karatsuba_pairwm.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_masked_pairwm.sv
