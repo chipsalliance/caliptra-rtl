@@ -120,6 +120,75 @@ void main() {
     printf("Waiting for mlkem status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
+    printf("\nTry fw read during kv access\n");
+
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SEED_D_0;
+    offset = 0;
+    // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                        ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
+    
+    while (offset < MLKEM_SEED_SIZE) {
+        if (*reg_ptr != 0) {
+            printf("At offset [%d], mlkem seed data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", *reg_ptr);
+            printf("Expected data: 0x%x\n", 0);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+    
+    mlkem_zeroize();
+
+    printf("\nTry fw read by asserting zeroize during kv access\n");
+    printf("%c",0xb4); //inject zeroize during kv access
+
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SEED_D_0;
+    offset = 0;
+    // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                        ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
+        
+    while (offset < MLKEM_SEED_SIZE) {
+        if (*reg_ptr != 0) {
+            printf("At offset [%d], mlkem seed data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", *reg_ptr);
+            printf("Expected data: 0x%x\n", 0);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+    
+    mlkem_zeroize();
+
+    printf("\nTry fw read by asserting zeroize during kv access\n");
+    printf("%c",0xb4); //inject zeroize during kv access
+    
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
+    offset = 0;
+    // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
+                                                    ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
+    
+    while (offset < MLKEM_MSG_SIZE) {
+        if (*reg_ptr != 0) {
+            printf("At offset [%d], mlkem msg data mismatch!\n", offset);
+            printf("Actual   data: 0x%x\n", *reg_ptr);
+            printf("Expected data: 0x%x\n", 0);
+            printf("%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+    
+    mlkem_zeroize();
+    
+    printf("\nProgram MLKEM_SEED\n");
     // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                         ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
