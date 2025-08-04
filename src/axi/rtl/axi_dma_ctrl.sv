@@ -279,6 +279,7 @@ import kv_defines_pkg::*;
     logic [AXI_LEN_BC_WIDTH-1:0] wr_req_byte_count;       // byte-count calculated for the current read request
 
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
+    logic [31:0] rd_fifo_bytes_remaining; // Decrements with arrive of data into FIFIO
     logic all_bytes_transferred;
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
@@ -522,6 +523,8 @@ import kv_defines_pkg::*;
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
                                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX))) ||
                               ((hwif_out.byte_count.count.value != 32'(key_release_size)) &&
+                               (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)) ||
+                              ((hwif_out.byte_count.count.value > (OCP_LOCK_MEK_NUM_DWORDS << 2))  &&
                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
         // power of 2 and word-aligned
         cmd_inv_block_size  = |(hwif_out.block_size.size.value & (hwif_out.block_size.size.value-1)) ||
@@ -924,6 +927,18 @@ import kv_defines_pkg::*;
         end
     end
 
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rd_fifo_bytes_remaining <= '0;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE && hwif_out.ctrl.go.value) begin
+            rd_fifo_bytes_remaining <= hwif_out.byte_count.count;
+        end
+        else if (fifo_w_valid && fifo_w_ready) begin
+            rd_fifo_bytes_remaining <= rd_fifo_bytes_remaining - BC;
+        end
+    end
+
     always_comb begin
         if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) begin
             fifo_w_data  = req_data.wdata;
@@ -935,8 +950,7 @@ import kv_defines_pkg::*;
         end
         else if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) begin
             fifo_w_data  = kv_data_write_data;
-            fifo_w_valid = kv_data_write_en; // FIXME no backpressure on this signal, FIFO must accept every assertion
-                                             // TODO if write offset exceeds key_size, don't drive fifo_w_valid
+            fifo_w_valid = kv_data_write_en && |(rd_fifo_bytes_remaining); // FIXME no backpressure on this signal, FIFO must accept every assertion
         end
         else begin
             fifo_w_data  = r_data_i;
