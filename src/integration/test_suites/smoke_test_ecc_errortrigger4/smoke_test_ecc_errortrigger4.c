@@ -266,6 +266,45 @@ void main() {
         }
 
         ecc_zeroize();
+        //Issue warm reset
+        rst_count++;
+        printf("%c",0xf6);
+    } 
+    else if(rst_count == 2) {
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+        printf("\n ECDH TEST INVALID SHARED_KEY\n");
+        // Program ECC PUBKEY_X
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+            *reg_ptr++ = ecc_pubkey_x[offset++];
+        }
+
+        // Program ECC PUBKEY_Y
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+            *reg_ptr++ = ecc_pubkey_y[offset++];
+        }
+
+        printf("Inject invalid shared_key\n");
+        printf("%c", 0x97);
+
+        // Enable ECDH core
+        printf("\nECDH\n");
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
+        
+        // wait for ECC SIGNING process to be done
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
+            printf("\nECDH sharedkey_outofrange error is not detected.\n");
+            printf("%c", 0x1);
+            while(1);
+        }
+
+        ecc_zeroize();
     }
 
     printf("%c",0xff); //End the test

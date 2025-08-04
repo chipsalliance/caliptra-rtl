@@ -42,7 +42,7 @@ package kv_parameters_pkg;
   parameter string uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0  = "uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"; /* [0] */
   parameter string kv_rst_agent_BFM  = "kv_rst_agent_BFM"; /* [1] */
   parameter string kv_hmac_write_agent_BFM  = "kv_hmac_write_agent_BFM"; /* [2] */
-  parameter string kv_sha512_write_agent_BFM  = "kv_sha512_write_agent_BFM"; /* [3] */
+  parameter string kv_mlkem_write_agent_BFM  = "kv_mlkem_write_agent_BFM"; /* [3] */
   parameter string kv_ecc_write_agent_BFM  = "kv_ecc_write_agent_BFM"; /* [4] */
   parameter string kv_doe_write_agent_BFM  = "kv_doe_write_agent_BFM"; /* [5] */
   parameter string kv_hmac_key_read_agent_BFM  = "kv_hmac_key_read_agent_BFM"; /* [6] */
@@ -51,6 +51,8 @@ package kv_parameters_pkg;
   parameter string kv_ecc_privkey_read_agent_BFM  = "kv_ecc_privkey_read_agent_BFM"; /* [9] */
   parameter string kv_ecc_seed_read_agent_BFM  = "kv_ecc_seed_read_agent_BFM"; /* [10] */
   parameter string kv_aes_key_read_agent_BFM  = "kv_aes_key_read_agent_BFM"; /* [11] */
+  parameter string kv_mlkem_seed_read_agent_BFM  = "kv_mlkem_seed_read_agent_BFM"; /* [12] */
+  parameter string kv_mlkem_msg_read_agent_BFM  = "kv_mlkem_msg_read_agent_BFM"; /* [13] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

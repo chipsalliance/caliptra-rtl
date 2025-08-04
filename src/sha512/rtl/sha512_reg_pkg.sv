@@ -161,6 +161,7 @@ package sha512_reg_pkg;
     typedef struct packed{
         logic reset_b;
         logic error_reset_b;
+        logic sha512_ready;
         sha512_reg__SHA512_NAME__in_t [2-1:0]SHA512_NAME;
         sha512_reg__SHA512_VERSION__in_t [2-1:0]SHA512_VERSION;
         sha512_reg__SHA512_CTRL__in_t SHA512_CTRL;

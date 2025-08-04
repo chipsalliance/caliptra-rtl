@@ -20,6 +20,11 @@
 #include "caliptra_reg.h"
 #include "riscv_hw_if.h"
 
+#define MLDSA_CMD_KEYGEN       0x1
+#define MLDSA_CMD_SIGNING      0x2
+#define MLDSA_CMD_VERIFYING    0x3
+#define MLDSA_CMD_KEYGEN_SIGN  0x4
+
 #define MLDSA87_SEED_SIZE 8
 #define MLDSA87_SIGN_RND_SIZE 8
 #define MLDSA87_ENTROPY_SIZE 16

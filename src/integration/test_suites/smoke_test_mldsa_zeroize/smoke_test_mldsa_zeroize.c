@@ -59,15 +59,15 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .soc_ifc_notif    = 0,
     .sha512_acc_error = 0,
     .sha512_acc_notif = 0,
-    .mldsa_error      = 0,
-    .mldsa_notif      = 0,
+    .abr_error      = 0,
+    .abr_notif      = 0,
     .axi_dma_notif    = 0,
     .axi_dma_error    = 0,
 };
 
 void inject_command(uint8_t cmd){
     if (cmd == 0){
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, (1 << MLDSA_REG_MLDSA_CTRL_ZEROIZE_LOW) & MLDSA_REG_MLDSA_CTRL_ZEROIZE_MASK);
+        lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
     }
     else{
         printf("Enable scan mode\n");
@@ -115,23 +115,23 @@ void main() {
         printf("%c", 0x93);
         
         printf("Waiting for mldsa status ready\n");
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
-                                                            ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+        lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
+                                                            ((seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
         // Check that MLDSA SEED is loaded
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_STATUS) & MLDSA_REG_MLDSA_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_VALID_MASK) == 0);
         
         // Program MLDSA MSG
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
         // Program MLDSA Sign Rnd
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
         // Program MLDSA ENTROPY
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
-        status_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_STATUS;
+        status_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_STATUS;
 
         uint8_t inject_cmd = rand() % 2;
         uint8_t test_mode = rand() % 16;
@@ -140,18 +140,18 @@ void main() {
             inject_command(inject_cmd);
 
             printf("\nMLDSA KEYGEN + SIGNING\n");
-            lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
         }
         else if (test_mode == 1){
             printf("\nMLDSA KEYGEN + SIGNING\n");
-            lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
             printf("\nApplying MLDSA zeroize/scan_mode just after enabling MLDSA.\n");
             inject_command(inject_cmd);
         }
         else {
             printf("\nMLDSA KEYGEN + SIGNING\n");
-            lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
         
             // Randomly apply zeroize during engine execution
             uint32_t zeroize_time = rand() % 3000;
@@ -169,22 +169,22 @@ void main() {
         switch (zeroize_target_api){
             case 0:
                 printf("\nTry to Load zeroized Pubkey data from MLDSA\n");
-                reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+                reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
                 end_addr = MLDSA87_PUBKEY_SIZE;
                 break;
             case 1:
                 printf("\nTry to Load zeroized PRIVKEY_OUT data from MLDSA\n");
-                reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
+                reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
                 end_addr = MLDSA87_PRIVKEY_SIZE;
                 break;
             case 2:
                 printf("\nTry to Load zeroized SIGNATURE data from MLDSA\n");
-                reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+                reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
                 end_addr = MLDSA87_SIGN_SIZE;
                 break;
             case 3:
                 printf("\nTry to Load zeroized PRIVKEY_IN data from MLDSA\n");
-                reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+                reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
                 end_addr = MLDSA87_PRIVKEY_SIZE;
                 break;
         }
@@ -204,7 +204,7 @@ void main() {
             offset++;
         }
 
-        cptra_intr_rcv.mldsa_notif = 0;
+        cptra_intr_rcv.abr_notif = 0;
     }
 
     printf("%c",0xff); //End the test
