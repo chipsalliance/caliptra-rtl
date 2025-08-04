@@ -303,12 +303,13 @@ void main(void) {
             fail = 1;
         }
         // Write data into mailbox using direct-mode
+        // Place contents in the middle of the mailbox
         for (uint32_t dw = 0; dw < 16; dw++) {
-            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + 0x4400 + (dw << 2), mbox_send_payload[dw]);
+            lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + (MBOX_DIR_SPAN >> 2) + (dw << 2), mbox_send_payload[dw]);
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
         VPRINTF(LOW, "Sending payload from Mailbox\n");
-        if (soc_ifc_axi_dma_send_mbox_payload(0x4400, AXI_SRAM_BASE_ADDR + 16*4, 0, 16*4, 0)) {
+        if (soc_ifc_axi_dma_send_mbox_payload((MBOX_DIR_SPAN >> 2), AXI_SRAM_BASE_ADDR + 16*4, 0, 16*4, 0)) {
             fail = 1;
         }
 
@@ -345,7 +346,8 @@ void main(void) {
         // Read data back through mailbox using direct-mode
         // ===========================================================================
         VPRINTF(LOW, "Reading payload to Mailbox\n");
-        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, 0x8800, 0, 17*4, 0)) {
+        //Place contents at the end of the mailbox
+        if (soc_ifc_axi_dma_read_mbox_payload(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2 + 16*4, ((MBOX_DIR_SPAN-4)-(17*4)), 0, 17*4, 0)) {
             fail = 1;
         }
         VPRINTF(LOW, "Reading payload from Mailbox via Direct Mode\n");
@@ -355,13 +357,13 @@ void main(void) {
             fail = 1;
         }
         for (uint32_t dw = 0; dw < 16; dw++) {
-            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (dw << 2));
+            mbox_read_payload[dw] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + ((MBOX_DIR_SPAN-4)-(17*4)) + (dw << 2));
             if (mbox_read_payload[dw] != mbox_send_payload[dw]) {
                 VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match mbox_send_payload[%d] (0x%x)\n", dw, mbox_read_payload[dw], dw, mbox_send_payload[dw]);
                 fail = 1;
             }
         }
-        mbox_read_payload[16] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + 0x8800 + (16 << 2));
+        mbox_read_payload[16] = lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + ((MBOX_DIR_SPAN-4)-(17*4)) + (16 << 2));
         if (mbox_read_payload[16] != fixed_send_payload[16]) {
             VPRINTF(ERROR, "mbox_read_payload[%d] (0x%x) does not match fixed_send_payload[%d] (0x%x)\n", 16, mbox_read_payload[16], 16, fixed_send_payload[16]);
             fail = 1;
@@ -470,7 +472,8 @@ void main(void) {
         // Block Size test - AXItoMBOX Read
         // ===========================================================================
         VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+        // Offset chosen to test the FIXED burst size feature and DMA support for a smaller final burst
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 256)) {
             fail = 1;
         }
 
@@ -492,7 +495,7 @@ void main(void) {
         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x415C, 256)) {
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 256)) {
             fail = 1;
         }
 

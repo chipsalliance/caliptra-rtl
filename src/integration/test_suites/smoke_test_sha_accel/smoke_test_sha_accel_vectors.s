@@ -17,18 +17,18 @@
 hw_data:
 SHA384ExpRes:
 // expected value
-.word 0xcad195e7
-.word 0xc3f2b250
-.word 0xb35ac78b
-.word 0x17b7c2f2
-.word 0x29e134b8
-.word 0x61f2d0be
-.word 0x15b7d954
-.word 0x6971f85e
-.word 0xc040693e
-.word 0x5a222188
-.word 0x7977fdea
-.word 0x6f89efee
+.word 0x65b1f43f
+.word 0x6d050521
+.word 0x05877300
+.word 0xa44c7ec5
+.word 0x699bbe85
+.word 0x10aae4c9
+.word 0xc64f2787
+.word 0x1bd5effa
+.word 0x69e8367f
+.word 0x5787f66c
+.word 0xe815a33e
+.word 0x5cc8d26e
 SHA512ShortMsg:
 // SHA512ShortMsgvector_2
 // vector length
