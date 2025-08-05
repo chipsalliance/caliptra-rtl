@@ -102,10 +102,8 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
     // quit (client disconnect)
     act_quit = true;
   } else {
-    //fprintf(stderr,
-    //        "JTAG DPI Protocol violation detected: unsupported command %c\n",
-    //        cmd);
-    //exit(1);
+    // quit if unknown command
+    act_quit = true;
   }
 
   // send tdo as response
