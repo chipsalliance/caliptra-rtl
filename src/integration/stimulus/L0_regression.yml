@@ -28,6 +28,9 @@ contents:
         - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
+        - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml
+        - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_short.yml
+        - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_large.yml
         - ../test_suites/smoke_test_aes_kv_rand/smoke_test_aes_kv_rand.yml
         - ../test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
