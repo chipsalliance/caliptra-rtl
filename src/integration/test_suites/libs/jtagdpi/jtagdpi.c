@@ -103,6 +103,7 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
     act_quit = true;
   } else {
     // quit if unknown command
+    printf("JTAG DPI: unsupported command %c\n", cmd);
     act_quit = true;
   }
 
