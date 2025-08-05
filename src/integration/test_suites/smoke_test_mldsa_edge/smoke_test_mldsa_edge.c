@@ -512,39 +512,39 @@ void main() {
 
     // wait for MLDSA to be ready
     printf("Waiting for mldsa status ready in keygen\n");
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SEED_7) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SEED_7) {
         *reg_ptr++ = seed.data[offset++];
     }
 
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_MSG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
     }
 
     // Program MLDSA Sign Rnd
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGN_RND_7) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_7) {
         *reg_ptr++ = sign_rnd[offset++];
     }
 
     // Write MLDSA ENTROPY
     printf("Writing entropy\n");
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_ENTROPY_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_15) {
         *reg_ptr++ = entropy[offset++];
     }
 
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
     printf("Injecting random failure\n");
     printf("%c",0xd7);
@@ -554,7 +554,7 @@ void main() {
 
     // Read the data back from MLDSA register
     printf("Load SIGN data from MLDSA\n");
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         if (sign[offset] != *reg_ptr) {
@@ -573,24 +573,24 @@ void main() {
     // **********************************************
 
     // wait for MLDSA to be ready
-    while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
     
     // Program MLDSA MSG
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_MSG_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_MSG_15) {
         *reg_ptr++ = msg[offset++];
     }
 
     // Program MLDSA PUBKEY
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PUBKEY_SIZE) {
         *reg_ptr++ = pubkey[offset++];
     }
 
     // Program MLDSA SIGNATURE
-    reg_ptr = (uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         *reg_ptr++ = sign[offset++];
@@ -598,7 +598,7 @@ void main() {
 
     // Enable MLDSA VERIFYING core
     printf("\nMLDSA VERIFYING\n");
-    lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
 
     printf("Injecting norm check failure\n");
     printf("%c",0xd7);
@@ -606,11 +606,11 @@ void main() {
     // wait for MLDSA VERIFYING process to be done
     wait_for_mldsa_intr();
     
-    reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
+    reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
     printf("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
+    while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         if (verify_res[offset] != *reg_ptr) {
             printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
             printf("Actual   data: 0x%x\n", *reg_ptr);
@@ -623,7 +623,7 @@ void main() {
     }
 
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

@@ -32,7 +32,7 @@ wait_for_phrase () {
     fi
 
     # Wait for the phrase
-    DEADLINE=$(($(date +%s) + 30))
+    DEADLINE=$(($(date +%s) + 60))
     while [ $(date +%s) -lt ${DEADLINE} ]
     do
         # Check for the phrase

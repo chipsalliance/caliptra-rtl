@@ -406,7 +406,7 @@ void main() {
 
     mldsa_signing_flow(privkey, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
-    cptra_intr_rcv.mldsa_notif = 0;
+    cptra_intr_rcv.abr_notif = 0;
     
 
     printf("%c",0xff); //End the test

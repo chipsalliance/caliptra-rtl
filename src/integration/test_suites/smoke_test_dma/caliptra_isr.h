@@ -48,8 +48,8 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
-    uint32_t mldsa_error;
-    uint32_t mldsa_notif;
+    uint32_t abr_error;
+    uint32_t abr_notif;
     uint32_t axi_dma_error;
     uint32_t axi_dma_notif;
 } caliptra_intr_received_s;
@@ -233,8 +233,8 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
-inline void service_mldsa_error_intr() {return;}
-inline void service_mldsa_notif_intr() {return;}
+inline void service_abr_error_intr() {return;}
+inline void service_abr_notif_intr() {return;}
 
 inline void service_axi_dma_error_intr() {
     uint32_t * reg = (uint32_t *) (CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
