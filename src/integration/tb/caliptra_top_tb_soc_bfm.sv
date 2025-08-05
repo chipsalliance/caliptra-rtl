@@ -154,6 +154,7 @@ import caliptra_top_tb_pkg::*; #(
             $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (0x4-0x40, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
         end
         else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_HIGH")) begin
+            $assertoff(0, caliptra_top_tb.caliptra_top_dut.soc_ifc_top1.SS_STRAP_KEY_SIZE_LTE_64);
             strap_ss_key_release_key_size = $urandom_range(16'h44, 16'hFFFF);
             // Ensure DWORD alignment by clearing lower 2 bits
             strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
