@@ -976,7 +976,7 @@ import soc_ifc_pkg::*;
                 // After writing 4 words
                 if (aes_cif_write_block_done) begin
                     aes_init_done_next = 1'b1;
-                    if (!aes_init_done && (bytes_remaining < 0)) begin
+                    if (!aes_init_done && (bytes_remaining > 0)) begin
                         aes_fsm_ns = AES_WAIT_INPUT_READY;
                     end else begin
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
