@@ -976,7 +976,7 @@ import soc_ifc_pkg::*;
                 // After writing 4 words
                 if (aes_cif_write_block_done) begin
                     aes_init_done_next = 1'b1;
-                    if (!aes_init_done) begin
+                    if (!aes_init_done && (bytes_remaining < 0)) begin
                         aes_fsm_ns = AES_WAIT_INPUT_READY;
                     end else begin
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
@@ -1244,7 +1244,7 @@ import soc_ifc_pkg::*;
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (aes_fsm_ps == AES_IDLE),
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE),
       // write port
       .wvalid_i(aes_fifo_w_valid  ),
       .wready_o(aes_fifo_w_ready  ),

@@ -45,6 +45,11 @@ typedef enum {
 } aes_key_len_e;
 
 typedef enum {
+  AES_LITTLE_ENDIAN = 0,
+  AES_BIG_ENDIAN = 1
+} aes_endian_e;
+
+typedef enum {
   GCM_INIT    = (1 << 0),
   GCM_RESTORE = (1 << 1),
   GCM_AAD     = (1 << 2),
@@ -84,8 +89,9 @@ typedef struct {
 } aes_flow_t;
 
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size);
+void aes_lsu_write_32(uint32_t addr, uint32_t data, aes_endian_e endian_mode);
 void aes_wait_idle();
-void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input);
+void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input, aes_endian_e endian_mode);
 void aes_zeroize();
 
 #endif
