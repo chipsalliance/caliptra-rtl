@@ -314,18 +314,18 @@ module caliptra_top_sva
         MLDSA_privkey_even_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}))
+            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}))
         )
-        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+(2*dword));
+        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+(2*dword));
       end
 
       for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
         MLDSA_privkey_odd_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}))
+            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}))
         )
-        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+1+(2*dword));
+        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+1+(2*dword));
       end
 
       for (genvar dword = 0; dword < 8; dword++) begin
@@ -345,9 +345,9 @@ module caliptra_top_sva
           MLDSA_pubkey_8_647_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.mldsa_pk_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}))
+            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}))
           )
-          else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %0d %0d", `ABR_RAMS_PATH.mldsa_pk_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}, i, j);
+          else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %0d %0d", `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}, i, j);
         end
       end
     end
@@ -380,9 +380,9 @@ module caliptra_top_sva
           MLDSA_sig_37_1135_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
-            (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
+            (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
           )
-          else $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
+          else $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
         end
       end
     end
@@ -424,9 +424,9 @@ module caliptra_top_sva
         for (genvar j = 0; j < 5; j++) begin
           PCR_MLDSA_sig_37_1135_data_check: assert property (
             @(posedge `SVA_RDC_CLK)
-           (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`ABR_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
+           (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
           )
-          else $display("SVA ERROR: [PCR MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.mldsa_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
+          else $display("SVA ERROR: [PCR MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
         end
       end
     end
@@ -554,7 +554,7 @@ module caliptra_top_sva
         ZERO_MLDSA_sk_mem_bank0_zero: assert property (
             @(posedge `SVA_RDC_CLK)
             $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.mldsa_sk_mem_bank0_inst.ram[dword] == 0)
+            (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] == 0)
         )
         else $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero", dword);
       end
@@ -564,7 +564,7 @@ module caliptra_top_sva
         ZERO_MLDSA_sk_mem_bank1_zero: assert property (
             @(posedge `SVA_RDC_CLK)
             $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.mldsa_sk_mem_bank1_inst.ram[dword] == 0)
+            (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] == 0)
         )
         else $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero", dword);
       end
