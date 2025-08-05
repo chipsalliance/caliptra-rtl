@@ -76,6 +76,7 @@ enum err_inj_type {
     cmd_inv_dst_addr_kv ,
     cmd_inv_byte_count  ,
     cmd_inv_byte_count_kv  ,
+    cmd_inv_byte_count_kv_large  ,
     cmd_inv_rd_fixed    ,
     cmd_inv_wr_fixed    ,
     cmd_inv_wr_fixed_kv ,
@@ -176,10 +177,13 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
 uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
+uint8_t soc_ifc_axi_dma_send_axi_to_axi_error(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
 uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
 uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count);
+uint8_t soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_wait_idle      (uint8_t clr_lock);
+uint8_t soc_ifc_axi_dma_wait_error     (uint8_t clr_lock);
 uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type);
 
 #endif

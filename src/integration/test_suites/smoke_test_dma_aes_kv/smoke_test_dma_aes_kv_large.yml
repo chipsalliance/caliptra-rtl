@@ -18,3 +18,4 @@ testname: smoke_test_dma_aes_kv
 plusargs:
   - +CLP_DMA_TB_MODE_NOT_EMPTY
   - +STRAP_SS_KEY_RELEASE_BASE_ADDR_RAND_SRAM
+  - +STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_HIGH

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 
+#include <stdlib.h>
 #include "caliptra_defines.h"
 #include "caliptra_reg.h"
 #include "soc_ifc.h"
@@ -536,11 +537,22 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
     return 0;
 }
 
-uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count) {
+uint8_t soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count) {
+    uint32_t reg;
+    VPRINTF(LOW, "FW: Sending KV to AXI with ERR\n");
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
     soc_ifc_axi_dma_send_kv_to_axi_no_wait(dst_addr, byte_count);
-    VPRINTF(LOW, "FW: Done with KV no wait\n");
+    soc_ifc_axi_dma_wait_error(0);
+    // Reenable txn_done interrupt
+    reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
+    lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
+}
+
+uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count) {
+    VPRINTF(LOW, "FW: Sending KV to AXI\n");
+    soc_ifc_axi_dma_send_kv_to_axi_no_wait(dst_addr, byte_count);
     soc_ifc_axi_dma_wait_idle(0);
-    VPRINTF(LOW, "FW: Done with KV wait idle\n");
 }
 
 uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count) {
@@ -554,9 +566,13 @@ uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_
     reg = (AXI_DMA_REG_CTRL_GO_MASK)                                 |
           (axi_dma_rd_route_DISABLE  << AXI_DMA_REG_CTRL_RD_ROUTE_LOW) |
           (axi_dma_wr_route_KEYVAULT << AXI_DMA_REG_CTRL_WR_ROUTE_LOW);
-    VPRINTF(LOW, "CONTROL REGISTER: 0x%x AXI_RD: 0x%x AXI_WR: 0x%x\n", reg, (axi_dma_rd_route_AXI_WR   << AXI_DMA_REG_CTRL_RD_ROUTE_LOW), (axi_dma_wr_route_KEYVAULT << AXI_DMA_REG_CTRL_WR_ROUTE_LOW));
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
+}
+
+uint8_t soc_ifc_axi_dma_send_axi_to_axi_error(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
+    soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
+    soc_ifc_axi_dma_wait_error(0);
 }
 
 uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
@@ -607,6 +623,30 @@ uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
     }
 }
 
+uint8_t soc_ifc_axi_dma_wait_error(uint8_t clr_lock) {
+    uint32_t reg;
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check status
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        VPRINTF(LOW, "AXI DMA reports err status for err injection xfer\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+    } else {
+        VPRINTF(FATAL, "FATAL: AXI DMA reports success status for err injection xfer!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    if (clr_lock) {
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    }
+}
+
 
 uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     uint32_t reg;
@@ -647,7 +687,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
         rd_route = axi_dma_rd_route_MBOX;
     } else if (err_type == cmd_inv_route_combo_kv) {
         rd_route = 1 + (rand() % 3);  // 1, 2, or 3 (excludes 0x0/DISABLE)
-    } else if (err_type == cmd_inv_wr_route_kv || err_type == cmd_inv_byte_count_kv || err_type == cmd_inv_dst_addr_kv || err_type == cmd_inv_wr_fixed_kv) {
+    } else if (err_type == cmd_inv_wr_route_kv || err_type == cmd_inv_byte_count_kv || err_type == cmd_inv_byte_count_kv_large || err_type == cmd_inv_dst_addr_kv || err_type == cmd_inv_wr_fixed_kv) {
         rd_route = axi_dma_rd_route_DISABLE;
     } else {
         rd_route = axi_dma_rd_route_AXI_WR; // Default to valid route
@@ -659,7 +699,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
         wr_route = axi_dma_wr_route_AHB_FIFO;
     } else if (err_type == cmd_inv_mbox_lock) {
         wr_route = axi_dma_wr_route_DISABLE;
-    } else if (err_type == cmd_inv_wr_route_kv || err_type == cmd_inv_byte_count_kv || err_type == cmd_inv_dst_addr_kv || err_type == cmd_inv_wr_fixed_kv || err_type ==  cmd_inv_route_combo_kv) {
+    } else if (err_type == cmd_inv_wr_route_kv || err_type == cmd_inv_byte_count_kv || err_type == cmd_inv_dst_addr_kv || err_type == cmd_inv_wr_fixed_kv || err_type ==  cmd_inv_route_combo_kv || err_type == cmd_inv_byte_count_kv_large) {
         wr_route = axi_dma_wr_route_KEYVAULT; // Invalid becasue OCP LOCK IN PROGRESS not set
     } else if (err_type == cmd_inv_wr_route_invld_range) {
         // Invalid range 0x5-0xF
@@ -676,9 +716,10 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
            byte_count = rand() % 0x10000;
             byte_count = (byte_count + 3) & ~3;  // Round up to next dword boundary
-        } while (byte_count == CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE);
+        } while (byte_count == lsu_read_32(CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE));
+    } else if (err_type == cmd_inv_byte_count_kv_large) {
+        byte_count = lsu_read_32(CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE) & SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK;
     } else {
-        byte_count = lsu_read_32(CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE) & SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK; // Invalid byte count
         byte_count = 0x40; // Default valid byte count
     }
     block_size = (err_type == cmd_inv_block_size) ? 0x13 : 0x00;
@@ -712,24 +753,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
           (wr_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
-    // Check completion (error state expected)
-    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    VPRINTF(LOW, "FW: Poll DMA status\n");
-    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
-        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    }
-
-    // Check status
-    VPRINTF(LOW, "FW: Check DMA status\n");
-    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(LOW, "AXI DMA reports err status for err injection xfer\n");
-        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
-    } else {
-        VPRINTF(ERROR, "ERROR: AXI DMA reports success status for err injection xfer!\n");
-        SEND_STDOUT_CTRL(0x1);
-        while(1);
-        //return 1;
-    }
+    soc_ifc_axi_dma_wait_error(0);
 
     // Reenable txn_done interrupt
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);

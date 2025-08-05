@@ -94,7 +94,6 @@ typedef struct {
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size);
 void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input);
-void aes_flow_new(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input);
 void aes_zeroize();
 
 #endif
