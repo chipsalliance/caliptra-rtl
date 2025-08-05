@@ -294,6 +294,9 @@ import kv_defines_pkg::*;
     kv_error_code_e           kv_data_error_code;
     logic                     kv_data_kv_ready;
     logic                     kv_data_read_done;
+    logic                     kv_read_error;           // KV read operation error
+    logic                     kv_premature_done_error; // KV read done before expected key size read
+    logic                     kv_any_error; // Any KV read error  
 
 
     // --------------------------------------- //
@@ -363,7 +366,7 @@ import kv_defines_pkg::*;
                 // KV error occurs prior to any data movement, so DMA can transfer immediately to ERROR state
                 // without waiting for AXI transfer to gracefully end
                 if ((all_bytes_transferred && (axi_error || mb_lock_error || aes_error)) ||
-                    (kv_read_en && kv_data_error_code != KV_SUCCESS)) begin
+                    (kv_any_error)) begin
                     ctrl_fsm_ns = DMA_ERROR;
                 end
                 else if (all_bytes_transferred) begin
@@ -591,7 +594,8 @@ import kv_defines_pkg::*;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = 1'b0; // SHA accelerator direct-mode not enabled; sha locking should be checked by API user (i.e. FW) instead of in HW
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts    .hwset = (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) &&  fifo_w_valid && !fifo_w_ready;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts    .hwset = (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !fifo_r_valid &&  fifo_r_ready;
-    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_kv_rd_sts         .hwset = kv_read_en && kv_data_error_code != KV_SUCCESS;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_kv_rd_sts         .hwset = kv_read_error;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_kv_rd_large_sts   .hwset = kv_premature_done_error;
 
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts      .hwset = ctrl_fsm_ps inside {DMA_DONE,DMA_ERROR};
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts    .hwset =  fifo_empty && !fifo_empty_r;
@@ -813,6 +817,20 @@ import kv_defines_pkg::*;
             kv_read_once <= 1'b0;
         end
     end
+
+    // KeyVault Error Detection - Separate Signals for Better Observability
+    always_comb begin
+        // KV read operation error (existing functionality)
+        kv_read_error = kv_read_en && (kv_data_error_code != KV_SUCCESS) && (ctrl_fsm_ps == DMA_WAIT_DATA);
+
+        // KV premature completion error (new functionality)
+        kv_premature_done_error = kv_data_read_done && 
+                                 (ctrl_fsm_ps == DMA_WAIT_DATA) && 
+                                 (rd_fifo_bytes_remaining != 32'h0);
+
+        // Combined error signal for FSM transitions
+        kv_any_error = kv_read_error || kv_premature_done_error;
+    end 
 
     always_comb begin
         kv_read_ctrl_reg.read_en         = kv_read_en && kv_data_kv_ready;
