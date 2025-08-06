@@ -95,5 +95,6 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
 void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input);
 void aes_zeroize();
+void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt);
 
 #endif
