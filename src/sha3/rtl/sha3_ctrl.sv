@@ -229,7 +229,7 @@ u_sha_inst (
 
   // KeyMgr sideload (secret key) interface
   //TODO connect
-  .keymgr_key_i                   (),
+  .keymgr_key_i                   ('0),
 
   // KeyMgr KDF data path
   .app_i                          ('0),
@@ -262,12 +262,22 @@ always_comb begin
   hwif_in.SHA3_VERSION[0].VERSION.next = '0; // TODO
   hwif_in.SHA3_VERSION[1].VERSION.next = '0; // TODO
 
+  hwif_in.STATUS = '{default: '0}; // TODO
+  hwif_in.STATE = '{default: '0}; // TODO
+  hwif_in.MSG_FIFO = '{default: '0}; // TODO
+  hwif_in.ERR_CODE.ERR_CODE.next = '0; // TODO
+  hwif_in.CFG_SHADOWED = '{default: '0}; // TODO
+  hwif_in.CFG_REGWEN.en.next = 1'b0; // TODO
+
   hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = 1'b0; // TODO
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.hwset = 1'b0; // TODO
+
+  error_intr = 1'b0; // TODO
+  notif_intr = 1'b0; // TODO
 end
 
 endmodule

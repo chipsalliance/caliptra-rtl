@@ -147,7 +147,7 @@ module kmac
   kmac_hw2reg_t hw2reg;
 
   // Window
-  typedef enum int {
+  typedef enum logic [0:0] {
     WinState   = 0,
     WinMsgFifo = 1
   } tl_window_e;
