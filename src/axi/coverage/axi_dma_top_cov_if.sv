@@ -83,8 +83,8 @@ interface axi_dma_top_cov_if
     
 
     logic w_valid;
-    logic ctrl_fsm_ps;
-    logic ctrl_fsm_ns;
+    logic [1:0] ctrl_fsm_ps;
+    logic [1:0] ctrl_fsm_ns;
     logic ahb_rd;
     logic mb_dv;
     logic mb_wr;
