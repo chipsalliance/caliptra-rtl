@@ -8899,7 +8899,7 @@
 #define SHA3_ERR_CODE                                                                               (0xd0)
 #endif
 #define CLP_SHA3_STATE_BASE_ADDR                                                                    (0x10040200)
-#define CLP_SHA3_STATE_END_ADDR                                                                     (0x100403ff)
+#define CLP_SHA3_STATE_END_ADDR                                                                     (0x100402ff)
 #define CLP_SHA3_INTR_BLOCK_RF_START                                                                (0x10040400)
 #define CLP_SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                     (0x10040400)
 #ifndef SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
@@ -9032,7 +9032,7 @@
 #define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                              (0x1)
 #endif
 #define CLP_SHA3_MSG_FIFO_BASE_ADDR                                                                 (0x10040c00)
-#define CLP_SHA3_MSG_FIFO_END_ADDR                                                                  (0x10040fff)
+#define CLP_SHA3_MSG_FIFO_END_ADDR                                                                  (0x10040cff)
 #define CLP_CSRNG_REG_BASE_ADDR                                                                     (0x20002000)
 #define CLP_CSRNG_REG_INTERRUPT_STATE                                                               (0x20002000)
 #ifndef CSRNG_REG_INTERRUPT_STATE

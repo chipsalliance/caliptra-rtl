@@ -38,7 +38,7 @@ addrmap sha3_reg {
         default sw = r;
         default hw = w;
         field {desc = "Version field";} VERSION[32];
-        
+
     } SHA3_VERSION[2] @0x00000008;
 
 
@@ -65,7 +65,7 @@ addrmap sha3_reg {
             reset = 0x1;
         } en[0:0];
     } CFG_REGWEN @0x20;
-    
+
     reg {
         name = "SHA3/SHAKE component Configuration register";
         //Since this is a shadowed register which is not supported by systemrdl, we use external implementation
@@ -203,7 +203,7 @@ addrmap sha3_reg {
             reset = 0x1;
             desc = "If 1, SHA3 hashing engine is in idle state.";
         } sha3_idle[0:0];
-        
+
         field {
             sw = r;
             reset = 0x0;
@@ -236,7 +236,7 @@ addrmap sha3_reg {
             reset = 0x0;
             desc = "Message FIFO Full indicator.";
         } fifo_full[15:15];
-        
+
         field {
             sw = r;
             reset = 0x0;
@@ -247,7 +247,7 @@ addrmap sha3_reg {
             iii) errors in the message, round, or key counter 
             iv) any internal FSM entering an invalid state.";
         } ALERT_FATAL_FAULT[16:16];
-        
+
         field {
             sw = r;
             reset = 0x0;
@@ -277,7 +277,7 @@ addrmap sha3_reg {
                 // | 0x08  | ERR_SW_CMD_SEQUENCE | Incorrect command sequence |
                 // | 0xC1  | ERR_FATAL_ERROR | Fatal error occurred |
                 ErrNone = 8'h00;
-   
+
                 // ErrSwPushMsgFifo: Sw writes data into Msg FIFO abruptly.
                 // This error occurs in below scenario:
                 //   - Sw does not send "Start" command to SHA3 then writes data into
@@ -301,11 +301,10 @@ addrmap sha3_reg {
         } ERR_CODE[31:0];
     } ERR_CODE @ 0xD0;
 
-    
     mem {
         name = "SHA3/SHAKE component Keccak State memory";
         sw = r;
-        mementries = 0x80;
+        mementries = 0x40;
         memwidth = 0x20;
         desc = "Keccak State (1600 bit) memory.
         The software can get the processed digest by reading this memory
@@ -322,17 +321,15 @@ addrmap sha3_reg {
     mem {
         name = "SHA3/SHAKE component Message FIFO";
         sw = w;
-        mementries = 0x100;
+        mementries = 0x40;
         memwidth = 0x20;
-        desc = "Message FIFO. window size is 1024 bytes.
+        desc = "Message FIFO. window size is 2048 bytes.
         Any write operation to this window will be appended to MSG_FIFO. SW can
         simply write bytes/words to any address within this address range.
         Ordering and packing of the incoming bytes/words are handled
         internally. Therefore, the least significant 10 bits of the address
         are ignored.";
     } external MSG_FIFO @ 0xC00;
-
-
 
     /* ---- Global Interrupt Enable ---- */
     reg global_intr_en_t {
@@ -645,5 +642,5 @@ addrmap sha3_reg {
      * Register File instance
      * ----------------------- */
     intr_block_t intr_block_rf @0x400;
-    
+
 };
