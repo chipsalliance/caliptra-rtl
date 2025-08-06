@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mldsa.h"
+#include "sha3.h"
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
@@ -39,7 +40,7 @@ const uint32_t mldsa_msg[] = {
 };
 
 const uint32_t mldsa_external_mu[] = {
-0x769d3deb, 0xb1833ef7, 0xe64ca44f, 0xf0bbb717, 0xcca119c2, 0xb4ff5671, 0xabe18725, 0x359ff31f, 
+0x769d3deb, 0xb1833ef7, 0xe64ca44f, 0xf0bbb717, 0xcca119c2, 0xb4ff5671, 0xabe18725, 0x359ff31f,
 0x0d063a6d, 0x871dae66, 0x3c9bef06, 0xa24ed769, 0xf54c20a5, 0x3ad97d2b, 0xc8612189, 0x102e8003
 };
 
@@ -470,6 +471,60 @@ const uint32_t mldsa_verify_res [] = {
 0x31bdb345, 0x9c3994a9, 0x54dd20b6, 0x83f77540, 0xd7e53766, 0x784cb5fc, 0x41be7973, 0xf8a8b10b
 };
 
+// Processed message to calculate external mu must be prepended by one zero byte, the length of the context and then the context.
+// In our case the context is empty so this message header is two zero bytes.
+#define EXTERNAL_MU_HEADER_LEN (2)
+
+// This function calculates external mu based on the message and public key and compares it against the expected external mu value.
+void check_external_mu(uintptr_t kmac, const char *message, const size_t message_len, const char *public_key, const uint32_t *expected_external_mu) {
+    uint32_t mu[MLDSA87_EXTERNAL_MU_SIZE];
+    uint32_t public_key_hash[MLDSA87_PUBKEY_HASH_SIZE];
+    dif_kmac_operation_state_t operation_state;
+    const char message_header[EXTERNAL_MU_HEADER_LEN] = "\x00\x00";
+    char public_key_hash_str[MLDSA87_PUBKEY_HASH_SIZE*4];
+
+    printf("External mu: Checking pre-computed value with SHA3 engine.\n");
+
+    // Calculate `tr` which is the 64-bit SHAKE hash of the public key.
+    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256);
+    dif_kmac_absorb(kmac, &operation_state, public_key, MLDSA87_PUBKEY_SIZE*4, NULL);
+    dif_kmac_squeeze(kmac, &operation_state, public_key_hash, MLDSA87_PUBKEY_HASH_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
+    dif_kmac_end(kmac, &operation_state);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
+
+    // Convert 32-bit integers into a character array to pass back to the engine as a message.
+    for (int i = 0; i < MLDSA87_PUBKEY_HASH_SIZE; i++) {
+        uint32_t word = public_key_hash[i];
+        for (int j = 0; j < 4; j++) {
+            public_key_hash_str[i*4 + j] = (char) (word & 0xFF);
+            word >>= 8;
+        }
+    }
+
+    // Calculate External mu which is a 64-bit SHAKE hash of the formatted message `tr ^ M'`.
+    // `M' = 0 ^ 0 ^ M` where ^ is concatenation is M is the message.
+    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256);
+    // Absorb the public key hash digest.
+    dif_kmac_absorb(kmac, &operation_state, public_key_hash_str, MLDSA87_PUBKEY_HASH_SIZE*4, NULL);
+    // Absorb the formatted message.
+    dif_kmac_absorb(kmac, &operation_state, message_header, EXTERNAL_MU_HEADER_LEN, NULL);
+    dif_kmac_absorb(kmac, &operation_state, message, message_len, NULL);
+    dif_kmac_squeeze(kmac, &operation_state, mu, MLDSA87_EXTERNAL_MU_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
+    dif_kmac_end(kmac, &operation_state);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
+
+    // Check that the calculated mu is as expected and otherwise fail the test.
+    for (int i = 0; i < MLDSA87_EXTERNAL_MU_SIZE; ++i) {
+        if (mu[i] != expected_external_mu[i]) {
+            printf("External mu: mismatch at %d got=0x%x want=0x%x", i, mu[i], expected_external_mu[i]);
+            SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
+            while (1);
+            return;
+        }
+    }
+    printf("External mu: check successfull!\n");
+}
+
 void main() {
     VPRINTF(LOW, "-----------------------------------------------\n");
     VPRINTF(LOW, " Running MLDSA Smoke Test in ExternalMu mode !!\n");
@@ -479,6 +534,8 @@ void main() {
     init_interrupts();
     mldsa_io seed;
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], privkey[MLDSA87_PRIVKEY_SIZE], pubkey[MLDSA87_PUBKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE], verify_res[MLDSA_VERIFY_RES_SIZE], external_mu[MLDSA87_EXTERNAL_MU_SIZE];
+    char msg_char[MLDSA87_MSG_SIZE*4];
+    char pubkey_char[MLDSA87_PUBKEY_SIZE*4];
 
     seed.kv_intf = FALSE;
     for (int i = 0; i < MLDSA87_SEED_SIZE; i++)
@@ -489,26 +546,38 @@ void main() {
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
         entropy[i] = mldsa_entropy[MLDSA87_ENTROPY_SIZE-1-i];
-    
-    for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
+
+    for (int i = 0; i < MLDSA87_MSG_SIZE; i++) {
         msg[i] = mldsa_msg[MLDSA87_MSG_SIZE-1-i];
+        uint32_t word = msg[i];
+        for (int j = 0; j < 4; j++) {
+            msg_char[i*4 + j] = (char) (word & 0xFF);
+            word >>= 8;
+        }
+    }
 
     for (int i = 0; i < MLDSA87_EXTERNAL_MU_SIZE; i++)
         external_mu[i] = mldsa_external_mu[MLDSA87_EXTERNAL_MU_SIZE-1-i];
-    
+
     for (int i = 0; i < MLDSA87_PRIVKEY_SIZE; i++)
         privkey[i] = mldsa_privkey[MLDSA87_PRIVKEY_SIZE-1-i];
 
-    for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
+    for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++) {
         pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
+        uint32_t word = pubkey[i];
+        for (int j = 0; j < 4; j++) {
+            pubkey_char[i*4 + j] = (char) (word & 0xFF);
+            word >>= 8;
+        }
+    }
 
     for (int i = 0; i < MLDSA87_SIGN_SIZE; i++)
         sign[i] = mldsa_sign[MLDSA87_SIGN_SIZE-1-i];
 
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
         verify_res[i] = mldsa_verify_res[MLDSA_VERIFY_RES_SIZE-1-i];
-   
 
+    check_external_mu(CLP_KMAC_BASE_ADDR, msg_char, MLDSA87_MSG_SIZE*4, pubkey_char, external_mu);
 
     mldsa_keygen_signing_external_mu_flow(seed, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
@@ -517,13 +586,13 @@ void main() {
     mldsa_signing_external_mu_flow(privkey, external_mu, sign_rnd, entropy, sign);
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
-    
+
     mldsa_verifying_external_mu_flow(external_mu, pubkey, sign, verify_res);
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
     SEND_STDOUT_CTRL(0xff); //End the test
-    
+
 }
 
 
