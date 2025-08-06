@@ -558,8 +558,8 @@ module caliptra_top_tb_services
     logic [15:0][31:0]   mlkem_seed_random;
     logic [15:0][31:0]   mlkem_msg_random;
     logic [15:0] key_release_size_val = `CPTRA_TOP_PATH.soc_ifc_top1.i_axi_dma.key_release_size;
-    logic [3:0] min_dwords ;
-    logic [3:0] max_dwords ;
+    logic [7:0] min_dwords ;
+    logic [7:0] max_dwords ;
     logic [3:0] random_key_size ;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
@@ -694,7 +694,7 @@ module caliptra_top_tb_services
                     else if((WriteData[7:0] == 8'hca) && mailbox_write) begin
                         // Generate random key size with bounds checking
                         min_dwords = (key_release_size_val >> 2); // Convert bytes to dwords
-                        max_dwords = 4'h40; 
+                        max_dwords = 8'h40; 
                         random_key_size =  min_dwords + ($urandom() % (max_dwords - min_dwords + 1));
                         inject_kv23_rand_length_key <= '1;
                         if (slot_id == 23 && dword_i < random_key_size) begin
