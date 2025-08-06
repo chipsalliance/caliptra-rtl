@@ -18,6 +18,9 @@ uvmf:
         name: kv_doe_write_agent
         type: kv_write
       - initiator_responder: INITIATOR
+        name: kv_aes_write_agent
+        type: kv_write
+      - initiator_responder: INITIATOR
         name: kv_hmac_key_read_agent
         type: kv_read
       - initiator_responder: INITIATOR
@@ -41,13 +44,13 @@ uvmf:
       - initiator_responder: INITIATOR
         name: kv_mlkem_msg_read_agent
         type: kv_read
+      - initiator_responder: INITIATOR
+        name: kv_dma_read_agent
+        type: kv_read
       analysis_components:
       - name: kv_pred
         parameters: []
         type: kv_predictor
-      # - name: kv_reg_pred
-      #   parameters: []
-      #   type: kv_reg_predictor
       - name: kv_sb
         parameters: []
         type: kv_scoreboard
@@ -112,5 +115,8 @@ uvmf:
         receiver: kv_sb.actual_analysis_export
         validate: 'True'
       - driver: kv_mlkem_msg_read_agent.monitored_ap
+        receiver: kv_sb.actual_analysis_export
+        validate: 'True'
+      - driver: kv_dma_read_agent.monitored_ap
         receiver: kv_sb.actual_analysis_export
         validate: 'True'

@@ -53,14 +53,16 @@ qvip_memory_message_handler message_handler;
     kv_mlkem_write_agent_BFM /* kv_mlkem_write_agent     [3] */ , 
     kv_ecc_write_agent_BFM /* kv_ecc_write_agent     [4] */ , 
     kv_doe_write_agent_BFM /* kv_doe_write_agent     [5] */ , 
-    kv_hmac_key_read_agent_BFM /* kv_hmac_key_read_agent     [6] */ , 
-    kv_hmac_block_read_agent_BFM /* kv_hmac_block_read_agent     [7] */ , 
-    kv_mldsa_key_read_agent_BFM /* kv_mldsa_key_read_agent     [8] */ , 
-    kv_ecc_privkey_read_agent_BFM /* kv_ecc_privkey_read_agent     [9] */ , 
-    kv_ecc_seed_read_agent_BFM /* kv_ecc_seed_read_agent     [10] */ ,
-    kv_aes_key_read_agent_BFM /* kv_aes_key_read_agent     [11] */ ,
-    kv_mlkem_seed_read_agent_BFM /* kv_mlkem_seed_read_agent     [12] */ , 
-    kv_mlkem_msg_read_agent_BFM /* kv_mlkem_msg_read_agent     [13] */
+    kv_aes_write_agent_BFM /* kv_aes_write_agent     [6] */ , 
+    kv_hmac_key_read_agent_BFM /* kv_hmac_key_read_agent     [7] */ , 
+    kv_hmac_block_read_agent_BFM /* kv_hmac_block_read_agent     [8] */ , 
+    kv_mldsa_key_read_agent_BFM /* kv_mldsa_key_read_agent     [9] */ , 
+    kv_ecc_privkey_read_agent_BFM /* kv_ecc_privkey_read_agent     [10] */ , 
+    kv_ecc_seed_read_agent_BFM /* kv_ecc_seed_read_agent     [11] */ ,
+    kv_aes_key_read_agent_BFM /* kv_aes_key_read_agent     [12] */ ,
+    kv_mlkem_seed_read_agent_BFM /* kv_mlkem_seed_read_agent     [13] */ , 
+    kv_mlkem_msg_read_agent_BFM /* kv_mlkem_msg_read_agent     [14] */, 
+    kv_dma_read_agent_BFM /* kv_dma_read_agent     [15] */
 };
 
 uvmf_active_passive_t interface_activities[] = { 
