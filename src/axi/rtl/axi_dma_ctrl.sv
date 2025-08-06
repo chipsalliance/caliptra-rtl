@@ -976,9 +976,18 @@ import soc_ifc_pkg::*;
                 // After writing 4 words
                 if (aes_cif_write_block_done) begin
                     aes_init_done_next = 1'b1;
+                    // If transfer is > 4 DWORDs we need to push 
+                    // more content into AES before we start
+                    // reading data out.
                     if (!aes_init_done && (bytes_remaining > 0)) begin
                         aes_fsm_ns = AES_WAIT_INPUT_READY;
                     end else begin
+                        // If the transfer is =< 4DWORDs the "init" transfer
+                        // is the last transfer and we need to indicate
+                        // to AES_READ_OUTPUT this is the last transfer.
+                        if(!aes_init_done && (bytes_remaining == 0)) begin
+                            aes_to_axi_last_transfer_next = 1'b1;
+                        end
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
                     end
                 end
@@ -990,6 +999,8 @@ import soc_ifc_pkg::*;
             end
             AES_READ_OUTPUT: begin
                 if (aes_cif_read_block_done) begin
+                    // Final transfer and read out of AES is done so go into
+                    // AES_ERROR or AES_DONE state
                     if (aes_to_axi_last_transfer) begin
                         if(aes_error) begin
                             aes_fsm_ns = AES_ERROR;
@@ -997,19 +1008,27 @@ import soc_ifc_pkg::*;
                             aes_fsm_ns = AES_DONE;
                         end
                     end
+                    // At this point we have transerted all data into 
+                    // AES but we still have one more block to read out of 
+                    // AES that we "buffered" into the AES on the first set of 
+                    // writes into AES. This allows us to read that last bit
+                    // of data out of AES and the next time around we will
+                    // transition into AES_ERROR or AES_DONE. This only
+                    // happens when the size of the transfer is > 4 DWORDs
+                    // anything smaller and there is not buffering of data
+                    // since the payload is too small.
                     else if(bytes_remaining == '0) begin 
                         aes_to_axi_last_transfer_next = 1'b1;
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
-                    end else if (aes_to_axi_last_transfer) begin
-                        if(aes_error) begin
-                            aes_fsm_ns = AES_ERROR;
-                        end else begin
-                            aes_fsm_ns = AES_DONE;
-                        end
                     end
+                    // When we are at the last block of data transfered into
+                    // the AES we need to update the byte count in the AES if
+                    // we are in GCM mode. 
                     else if(bytes_remaining > 0 && bytes_remaining < 16 && hwif_out.ctrl.aes_gcm_mode.value) begin
                         aes_fsm_ns = AES_WAIT_IDLE;
                     end
+                    // Typical transfer into AES is done and we are streaming
+                    // another 4 DWORDs into the AES.
                     else begin
                         aes_fsm_ns = AES_WRITE_BLOCK;
                     end
