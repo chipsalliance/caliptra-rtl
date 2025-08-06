@@ -90,28 +90,28 @@ interface axi_dma_top_cov_if
     logic mb_wr;
     logic [SOC_IFC_DATA_W-1:0] mb_wdata;
     logic [1:0] rd_route;
-    logic [1:0] wr_route;
+    logic [2:0] wr_route;
 
     logic awvalid_seen;
     logic arvalid_seen;
 
     logic [SOC_IFC_DATA_W-1:0] rdata;
 
-    logic [11:0] total_expected_byte_count;
-    logic [11:0] bytes_remaining;
+    logic [31:0] total_expected_byte_count;
+    logic [31:0] bytes_remaining;
 
     logic        dma_xfer_start_pulse;
 
     assign w_valid = axi_dma_top.w_valid;
     assign ctrl_fsm_ps = axi_dma_top.i_axi_dma_ctrl.ctrl_fsm_ps;
     assign ctrl_fsm_ns = axi_dma_top.i_axi_dma_ctrl.ctrl_fsm_ns;
-    assign ahb_rd = axi_dma_top.i_axi_dma_ctrl.hwif_out.read_data;
+    assign ahb_rd = axi_dma_top.i_axi_dma_ctrl.hwif_out.read_data.rdata.swacc;
     assign rdata = axi_dma_top.rdata;
     assign mb_dv = axi_dma_top.mb_dv;
     assign mb_wr = axi_dma_top.mb_data.write;
     assign mb_wdata = axi_dma_top.mb_data.wdata;
-    assign rd_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route;
-    assign wr_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route;
+    assign rd_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route.value;
+    assign wr_route = axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route.value;
     assign bytes_remaining = axi_dma_top.i_axi_dma_ctrl.bytes_remaining;
     assign cmd_inv_rd_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_rd_route;
     assign cmd_inv_wr_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_wr_route;
