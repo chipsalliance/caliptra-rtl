@@ -141,8 +141,8 @@ module sha3_reg (
         decoded_reg_strb.CMD = cpuif_req_masked & (cpuif_addr == 12'h28);
         decoded_reg_strb.STATUS = cpuif_req_masked & (cpuif_addr == 12'h2c);
         decoded_reg_strb.ERR_CODE = cpuif_req_masked & (cpuif_addr == 12'hd0);
-        decoded_reg_strb.STATE = cpuif_req_masked & (cpuif_addr >= 12'h200) & (cpuif_addr <= 12'h200 + 12'h1ff);
-        is_external |= cpuif_req_masked & (cpuif_addr >= 12'h200) & (cpuif_addr <= 12'h200 + 12'h1ff);
+        decoded_reg_strb.STATE = cpuif_req_masked & (cpuif_addr >= 12'h200) & (cpuif_addr <= 12'h200 + 12'hff);
+        is_external |= cpuif_req_masked & (cpuif_addr >= 12'h200) & (cpuif_addr <= 12'h200 + 12'hff);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h400);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h404);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h408);
@@ -162,8 +162,8 @@ module sha3_reg (
         decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'h608);
         decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'h60c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'h610);
-        decoded_reg_strb.MSG_FIFO = cpuif_req_masked & (cpuif_addr >= 12'hc00) & (cpuif_addr <= 12'hc00 + 12'h3ff);
-        is_external |= cpuif_req_masked & (cpuif_addr >= 12'hc00) & (cpuif_addr <= 12'hc00 + 12'h3ff);
+        decoded_reg_strb.MSG_FIFO = cpuif_req_masked & (cpuif_addr >= 12'hc00) & (cpuif_addr <= 12'hc00 + 12'hff);
+        is_external |= cpuif_req_masked & (cpuif_addr >= 12'hc00) & (cpuif_addr <= 12'hc00 + 12'hff);
         decoded_strb_is_external = is_external;
         external_req = is_external;
     end
@@ -609,7 +609,7 @@ module sha3_reg (
     end
     assign hwif_out.CMD.err_processed.value = field_storage.CMD.err_processed.value;
     assign hwif_out.STATE.req = decoded_reg_strb.STATE;
-    assign hwif_out.STATE.addr = decoded_addr[9:0];
+    assign hwif_out.STATE.addr = decoded_addr[8:0];
     assign hwif_out.STATE.req_is_wr = decoded_req_is_wr;
     assign hwif_out.STATE.wr_data = decoded_wr_data;
     assign hwif_out.STATE.wr_biten = decoded_wr_biten;
@@ -1442,7 +1442,7 @@ module sha3_reg (
         end
     end
     assign hwif_out.MSG_FIFO.req = decoded_reg_strb.MSG_FIFO;
-    assign hwif_out.MSG_FIFO.addr = decoded_addr[10:0];
+    assign hwif_out.MSG_FIFO.addr = decoded_addr[8:0];
     assign hwif_out.MSG_FIFO.req_is_wr = decoded_req_is_wr;
     assign hwif_out.MSG_FIFO.wr_data = decoded_wr_data;
     assign hwif_out.MSG_FIFO.wr_biten = decoded_wr_biten;

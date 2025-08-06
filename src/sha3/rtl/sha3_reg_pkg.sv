@@ -184,7 +184,7 @@ package sha3_reg_pkg;
 
     typedef struct packed{
         logic req;
-        logic [8:0] addr;
+        logic [7:0] addr;
         logic req_is_wr;
         logic [31:0] wr_data;
         logic [31:0] wr_biten;
@@ -215,7 +215,7 @@ package sha3_reg_pkg;
 
     typedef struct packed{
         logic req;
-        logic [9:0] addr;
+        logic [7:0] addr;
         logic req_is_wr;
         logic [31:0] wr_data;
         logic [31:0] wr_biten;
@@ -230,6 +230,6 @@ package sha3_reg_pkg;
         sha3_reg__MSG_FIFO__external__out_t MSG_FIFO;
     } sha3_reg__out_t;
 
-    localparam SHA3_REG_ADDR_WIDTH = 32'd13;
+    localparam SHA3_REG_ADDR_WIDTH = 32'd12;
 
 endpackage

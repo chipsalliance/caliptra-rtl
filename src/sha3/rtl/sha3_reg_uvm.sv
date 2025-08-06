@@ -314,7 +314,7 @@ package sha3_reg_uvm;
 
         virtual function void build();
             this.default_map = create_map("reg_map", 0, 4.0, UVM_NO_ENDIAN);
-            this.m_mem = new("m_mem", 128, 32, "RO");
+            this.m_mem = new("m_mem", 64, 32, "RO");
             this.m_mem.configure(this);
             this.default_map.add_mem(this.m_mem, 0);
         endfunction : build
@@ -1091,7 +1091,7 @@ package sha3_reg_uvm;
 
         virtual function void build();
             this.default_map = create_map("reg_map", 0, 4.0, UVM_NO_ENDIAN);
-            this.m_mem = new("m_mem", 256, 32, "RW");
+            this.m_mem = new("m_mem", 64, 32, "RW");
             this.m_mem.configure(this);
             this.default_map.add_mem(this.m_mem, 0);
         endfunction : build
