@@ -95,7 +95,7 @@ class kv_write2reg_adapter #(
     trans_h.write_entry = wr_entry;
     trans_h.write_offset = wr_offset;
     trans_h.write_data = rw.data;
-    trans_h.write_dest_valid = 'hFF;
+    trans_h.write_dest_valid = 'h1FF;
     //Copy over write data
     // trans_h.data = rw.data;
 

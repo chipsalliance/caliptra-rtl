@@ -50,7 +50,7 @@ uvmf:
       - comment: ''
         iscompare: 'True'
         isrand: 'True'
-        name: last 
+        name: last
         type: logic
         unpacked_dimension: ''
       - comment: ''

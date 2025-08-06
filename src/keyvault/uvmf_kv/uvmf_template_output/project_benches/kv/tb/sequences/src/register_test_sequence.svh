@@ -56,6 +56,7 @@ class register_test_sequence extends kv_bench_sequence_base;
       kv_mlkem_write_agent_config.wait_for_reset();
       kv_ecc_write_agent_config.wait_for_reset();
       kv_doe_write_agent_config.wait_for_reset();
+      kv_aes_write_agent_config.wait_for_reset();
       kv_hmac_key_read_agent_config.wait_for_reset();
       kv_hmac_block_read_agent_config.wait_for_reset();
       kv_mldsa_key_read_agent_config.wait_for_reset();
@@ -64,6 +65,7 @@ class register_test_sequence extends kv_bench_sequence_base;
       kv_aes_key_read_agent_config.wait_for_reset();
       kv_mlkem_seed_read_agent_config.wait_for_reset();
       kv_mlkem_msg_read_agent_config.wait_for_reset();
+      kv_dma_read_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 
