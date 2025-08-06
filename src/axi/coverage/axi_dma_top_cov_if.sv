@@ -130,7 +130,7 @@ interface axi_dma_top_cov_if
     assign cmd_parse_error = axi_dma_top.i_axi_dma_ctrl.cmd_parse_error;
 
     assign kv_read_en = axi_dma_top.i_axi_dma_ctrl.kv_read_en;
-    assign kv_data_error_code = axi_dma_top.i_axi_dma_ctrl.kv_data_error_code;
+    assign kv_data_error_code = kv_defines_pkg::kv_error_code_e'(axi_dma_top.i_axi_dma_ctrl.kv_data_error_code);
     assign axi_error = axi_dma_top.i_axi_dma_ctrl.axi_error;
     assign mb_lock_error = axi_dma_top.i_axi_dma_ctrl.mb_lock_error;
     assign aes_error = axi_dma_top.i_axi_dma_ctrl.aes_error;
