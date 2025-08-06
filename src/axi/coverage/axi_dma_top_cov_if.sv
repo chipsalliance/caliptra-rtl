@@ -427,52 +427,52 @@ interface axi_dma_top_cov_if
         }
 
         // 2a-d. AES mode enabled with specific byte counts
-        aes_mode_byte_count_4: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.aes_gcm_mode.value && 
-                                          hwif_out.ctrl.go.value && hwif_out.byte_count.count.value == 32'h4) {
+        aes_mode_byte_count_4: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                          axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'h4) {
             bins aes_byte_count_4 = {1};
         }
 
-        aes_mode_byte_count_12: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.aes_gcm_mode.value && 
-                                           hwif_out.ctrl.go.value && hwif_out.byte_count.count.value == 32'd12) {
+        aes_mode_byte_count_12: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                           axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'd12) {
             bins aes_byte_count_12 = {1};
         }
 
-        aes_mode_byte_count_16: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.aes_gcm_mode.value && 
-                                           hwif_out.ctrl.go.value && hwif_out.byte_count.count.value == 32'd16) {
+        aes_mode_byte_count_16: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                           axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'd16) {
             bins aes_byte_count_16 = {1};
         }
 
-        aes_mode_byte_count_gt_fifo: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.aes_gcm_mode.value && 
-                                                 hwif_out.ctrl.go.value && hwif_out.byte_count.count.value > FIFO_BC) {
+        aes_mode_byte_count_gt_fifo: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                                 axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value > FIFO_BC) {
             bins aes_byte_count_gt_fifo = {1};
         }
 
         // 3. AXI error in DMA_WAIT_DATA with AES mode enabled
-        axi_error_dma_wait_aes: coverpoint (ctrl_fsm_ps == DMA_WAIT_DATA && axi_error && hwif_out.ctrl.aes_mode_en.value) {
+        axi_error_dma_wait_aes: coverpoint (ctrl_fsm_ps == DMA_WAIT_DATA && axi_error && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value) {
             bins axi_error_wait_aes = {1};
         }
 
         // 4a. cmd_inv_aes_route_combo with rd_route != AXI_WR (but wr_route == AXI_RD)
         aes_route_combo_rd_not_axi_wr: coverpoint (cmd_inv_aes_route_combo && 
-                                                   hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) 
-                                                   iff (hwif_out.ctrl.wr_route.value == 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)) {
+                                                   axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) 
+                                                   iff (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route.value == 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)) {
             bins rd_route_not_axi_wr = {1};
         }
 
         // 4b. cmd_inv_aes_route_combo with wr_route != AXI_RD (but rd_route == AXI_WR)
         aes_route_combo_wr_not_axi_rd: coverpoint (cmd_inv_aes_route_combo && 
-                                                   hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD))
-                                                   iff (hwif_out.ctrl.rd_route.value == 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) {
+                                                   axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD))
+                                                   iff (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route.value == 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) {
             bins wr_route_not_axi_rd = {1};
         }
 
         // 5a. AES mode with GCM mode set
-        aes_gcm_mode_set: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.go.value && hwif_out.ctrl.aes_gcm_mode.value) {
+        aes_gcm_mode_set: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value) {
             bins aes_gcm_set = {1};
         }
 
         // 5b. AES mode with GCM mode not set
-        aes_gcm_mode_not_set: coverpoint (hwif_out.ctrl.aes_mode_en.value && hwif_out.ctrl.go.value && !hwif_out.ctrl.aes_gcm_mode.value) {
+        aes_gcm_mode_not_set: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value) {
             bins aes_gcm_not_set = {1};
         }
 
@@ -497,12 +497,12 @@ interface axi_dma_top_cov_if
         }
 
         // 8. cmd_inv_aes_fixed with rd_fixed and not wr_fixed
-        aes_fixed_rd_only: coverpoint (cmd_inv_aes_fixed && hwif_out.ctrl.rd_fixed.value && !hwif_out.ctrl.wr_fixed.value) {
+        aes_fixed_rd_only: coverpoint (cmd_inv_aes_fixed && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_fixed.value && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_fixed.value) {
             bins aes_fixed_rd_not_wr = {1};
         }
 
         // 9. cmd_inv_aes_fixed with wr_fixed and not rd_fixed
-        aes_fixed_wr_only: coverpoint (cmd_inv_aes_fixed && !hwif_out.ctrl.rd_fixed.value && hwif_out.ctrl.wr_fixed.value) {
+        aes_fixed_wr_only: coverpoint (cmd_inv_aes_fixed && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_fixed.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_fixed.value) {
             bins aes_fixed_wr_not_rd = {1};
         }
 
@@ -517,7 +517,7 @@ interface axi_dma_top_cov_if
         }
 
         // 11. wr_aes_ceil_req_byte_count in DMA_WAIT_DATA with AES mode
-        wr_aes_ceil_req_dma_wait: coverpoint (wr_aes_ceil_req_byte_count && hwif_out.ctrl.aes_mode_en.value && 
+        wr_aes_ceil_req_dma_wait: coverpoint (wr_aes_ceil_req_byte_count && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && 
                                               ctrl_fsm_ps == DMA_WAIT_DATA) {
             bins wr_aes_ceil_dma_wait = {1};
         }
