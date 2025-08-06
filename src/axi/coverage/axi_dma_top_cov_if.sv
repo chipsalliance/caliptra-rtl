@@ -50,13 +50,13 @@ interface axi_dma_top_cov_if
     localparam DMA_DONE         = 2'h2;
     localparam DMA_ERROR = 2'h3;
 
-    localparam AES_ERROR = 2'h3;
+    localparam AES_ERROR = 4'h8;
     
     localparam FIFO_BC = 512;
 
     logic w_valid;
-    logic ctrl_fsm_ps;
-    logic ctrl_fsm_ns;
+    logic [1:0] ctrl_fsm_ps;
+    logic [1:0] ctrl_fsm_ns;
     logic ahb_rd;
     logic mb_dv;
     logic mb_wr;
@@ -74,7 +74,7 @@ interface axi_dma_top_cov_if
 
     logic        dma_xfer_start_pulse;
 
-    logic aes_fsm_ps;
+    logic [3:0] aes_fsm_ps;
     logic axi_error;
     logic mb_lock_error;
     logic aes_error;
