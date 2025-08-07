@@ -87,6 +87,8 @@ targets:
       - hvl_top
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
+    # Not sure which flag controls generation of this file...
+    post_exec: 'rm ./AXI4_tracker.txt'
 global:
   tool:
     vcs:

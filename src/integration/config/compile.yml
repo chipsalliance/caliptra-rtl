@@ -137,6 +137,7 @@ targets:
                 && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
                 && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+    post_exec: 'rm -r ./ml-kem ./cm.log'
                 
 global:
   tool:
@@ -180,6 +181,7 @@ targets:
                 && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
                 && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+    post_exec: 'rm -r ./ml-kem ./cm.log'
                 
 global:
   tool:
