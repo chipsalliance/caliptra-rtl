@@ -63,4 +63,3 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_hamming_72_64_de
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_hamming_72_64_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_hamming_76_68_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_inv_hamming_76_68_enc.sv
-${CALIPTRA_ROOT}/src/caliptra_prim/rtl/keymgr_pkg.sv

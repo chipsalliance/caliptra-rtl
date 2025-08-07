@@ -76,4 +76,3 @@ ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pe_final.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_mult_dsp.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_add_sub_mod_alter.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_adder.sv
-${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv

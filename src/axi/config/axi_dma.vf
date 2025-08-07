@@ -121,4 +121,3 @@ ${CALIPTRA_ROOT}/src/axi/rtl/axi_mgr_rd.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_mgr_wr.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_ctrl.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_top.sv
-${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_pkg.sv

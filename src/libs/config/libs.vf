@@ -12,4 +12,3 @@ ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_2ff_sync.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/skidbuffer.v
-${CALIPTRA_ROOT}/src/libs/rtl/skidbuffer.v
