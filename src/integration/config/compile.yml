@@ -5,22 +5,47 @@ targets:
   tb:
     directories: 
       - $COMPILE_ROOT/rtl
-      - $COMPILE_ROOT/rtl/caliptra_reg
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
   rtl:
     directories:
       - $COMPILE_ROOT/rtl
-      - $COMPILE_ROOT/rtl/caliptra_reg
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
+---
+provides: [caliptra_top_reg_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/rtl/caliptra_reg
+    files:
       - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+  rtl:
+    directories:
+      - $COMPILE_ROOT/rtl/caliptra_reg
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+---
+provides: [caliptra_top_reg_ss_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+  rtl:
+    directories:
+      - $COMPILE_ROOT/rtl/caliptra_reg
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0
 requires:
   - caliptra_top_defines
+  - caliptra_top_reg_defines
   - libs
   - kv_defines_pkg
   - pv_defines_pkg
@@ -67,6 +92,7 @@ provides: [caliptra_top_ss_mode]
 schema_version: 2.4.0
 requires:
   - caliptra_top_defines
+  - caliptra_top_reg_ss_defines
   - libs
   - kv_defines_pkg
   - pv_defines_pkg
@@ -107,6 +133,7 @@ global:
   tool:
     vcs:
       default:
+        - '+define+CALIPTRA_MODE_SUBSYSTEM'
         - '-assert svaext'
 ---
 provides: [caliptra_top_tb_pkg]
@@ -116,7 +143,6 @@ requires:
   - axi_pc
   - libs
   - caliptra_axi_sram
-  - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
   - physical_rng
@@ -165,11 +191,11 @@ targets:
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
-
 ---
 provides: [caliptra_top_tb]
 schema_version: 2.4.0
 requires:
+  - caliptra_top
   - caliptra_top_tb_pkg
 targets:
   tb:
@@ -213,6 +239,7 @@ global:
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
 requires:
+  - caliptra_top
   - caliptra_top_tb_pkg
 targets:
   tb:
@@ -243,6 +270,7 @@ global:
 provides: [caliptra_top_ss_mode_tb]
 schema_version: 2.4.0
 requires:
+  - caliptra_top_ss_mode
   - caliptra_top_tb_pkg
 targets:
   tb:

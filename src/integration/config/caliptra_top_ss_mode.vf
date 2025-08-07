@@ -50,8 +50,9 @@
 +incdir+${CALIPTRA_ROOT}/src/kmac/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_ss
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv

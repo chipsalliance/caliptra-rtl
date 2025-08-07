@@ -1,5 +1,4 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
-+incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
@@ -9,7 +8,6 @@
 +incdir+${CALIPTRA_ROOT}/src/hmac/coverage
 +incdir+${CALIPTRA_ROOT}/src/hmac/tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv

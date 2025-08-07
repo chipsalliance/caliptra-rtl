@@ -1,10 +1,8 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
-+incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim/rtl
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv

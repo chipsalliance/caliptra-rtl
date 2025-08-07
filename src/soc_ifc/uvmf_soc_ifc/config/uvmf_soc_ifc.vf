@@ -1,6 +1,5 @@
 +define+MAP_PROT_ATTR
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
-+incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
@@ -61,7 +60,6 @@
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/testbench
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_pkg.sv
