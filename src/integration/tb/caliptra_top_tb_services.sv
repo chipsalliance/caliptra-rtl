@@ -347,7 +347,8 @@ module caliptra_top_tb_services
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
     //         8'hb3        - Check MLKEM KV result against shared key test vector
-    //         8'hb4:bf     - Unused
+    //         8'hb4        - Inject MLKEM zeroize during KV access
+    //         8'hb5:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8: 8'hd5 - Unused
     //         8'hd6        - Inject mldsa timeout
@@ -1279,6 +1280,40 @@ endgenerate //IV_NO
             force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value = 1'b1;
         end else begin
             release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value;
+        end
+    end
+
+
+    logic inject_mlkem_zeroize_kv_read;
+    logic inject_zeroize_to_mlkem;
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if (~cptra_rst_b) begin
+            inject_mlkem_zeroize_kv_read <= 1'b0;
+            inject_zeroize_to_mlkem <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'hb4) && mailbox_write) begin
+            inject_mlkem_zeroize_kv_read <= 1'b1;
+        end
+        else if (inject_mlkem_zeroize_kv_read) begin
+            if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_en & 
+                (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_offset == 3)) begin
+                inject_zeroize_to_mlkem <= 1'b1;
+            end
+            else if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_en & 
+                (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_offset == 3)) begin
+                inject_zeroize_to_mlkem <= 1'b1;
+            end
+            if (inject_zeroize_to_mlkem) begin
+                inject_zeroize_to_mlkem <= 1'b0;
+                inject_mlkem_zeroize_kv_read <= 1'b0;
+            end
+        end
+    end
+    always@(negedge clk) begin
+        if (inject_zeroize_to_mlkem) begin
+            force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLKEM_CTRL.ZEROIZE.value = 1'b1;
+        end else begin
+            release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLKEM_CTRL.ZEROIZE.value;
         end
     end
 

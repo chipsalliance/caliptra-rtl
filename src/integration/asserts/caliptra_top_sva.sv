@@ -64,6 +64,7 @@
   `define SVA_RST `CPTRA_TB_TOP_NAME.cptra_rst_b
 `endif
 `define MLDSA_ZEROIZATION   `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value
+`define MLKEM_ZEROIZATION   `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLKEM_CTRL.ZEROIZE.value
 `define ABR_SCAN_DEBUG    `CPTRA_TOP_PATH.abr_inst.debugUnlock_or_scan_mode_switch
 
 module caliptra_top_sva
@@ -437,14 +438,14 @@ module caliptra_top_sva
     for (genvar i = 0; i < ABR_SCRATCH_REG_NUM_DWORDS; i++) begin: privkey_check
       ZERO_MLDSA_K_scratch_reg_check: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.abr_scratch_reg.raw[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.abr_scratch_reg.raw[i] == 0))
       )
       else $display("SVA ERROR: ABR_PATH.abr_scratch_reg.raw[%0d] is not zero", i);
     end
 
     ZERO_MLDSA_priv_key_rd_port: assert property (
       @(posedge `SVA_RDC_CLK)
-      ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.api_reg_rdata == 0))
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.api_reg_rdata == 0))
     )
     else $display("SVA ERROR: ABR_PATH.api_reg_rdata is not zero");
 
@@ -452,7 +453,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < MLDSA_SEED_NUM_DWORDS; i++) begin: seed_check
       ZERO_MLDSA_seed_reg: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.mldsa_seed_reg[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.mldsa_seed_reg[i] == 0))
       )
       else $display("SVA ERROR: ABR_PATH.mldsa_seed_reg[%0d] is not zero", i);
     end
@@ -461,7 +462,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < MLDSA_ENTROPY_NUM_DWORDS; i++) begin: entropy_check
       ZERO_MLDSA_entropy_reg: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.entropy_reg[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.entropy_reg[i] == 0))
       )
       else $display("SVA ERROR: ABR_PATH.entropy_reg[%0d] is not zero", i);
     end
@@ -470,7 +471,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < MLDSA_SIGN_RND_NUM_DWORDS; i++) begin: sign_rnd_check
       ZERO_MLDSA_sign_rnd_reg: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.sign_rnd_reg[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_PATH.sign_rnd_reg[i] == 0))
       )
       else $display("SVA ERROR: ABR_PATH.sign_rnd_reg[%0d] is not zero", i);
     end
@@ -482,14 +483,14 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: skencode_mem_rd_data_check
       ZERO_MLDSA_skencode_mem_rd_data: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.skencode_mem_rd_data[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.skencode_mem_rd_data[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.skencode_mem_rd_data[%0d] is not zero", i);
     end
     // skencode_wr_data: Single vector of DATA_WIDTH bits.
     ZERO_MLDSA_skencode_wr_data: assert property (
       @(posedge `SVA_RDC_CLK)
-      ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.skencode_wr_data == 0))
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.skencode_wr_data == 0))
     )
     else $display("SVA ERROR: ABR_TOP_PATH.skencode_wr_data is not zero");
 
@@ -497,7 +498,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: skdecode_mem_wr_data_check
       ZERO_MLDSA_skdecode_mem_wr_data: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.skdecode_mem_wr_data[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.skdecode_mem_wr_data[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data[%0d] is not zero", i);
     end
@@ -506,7 +507,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: skdecode_rd_data_check
       ZERO_MLDSA_skdecode_rd_data: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.skdecode_rd_data[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.skdecode_rd_data[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.skdecode_rd_data[%0d] is not zero", i);
     end
@@ -515,7 +516,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: abr_mem_rdata0_bank_check
       ZERO_MLDSA_abr_mem_rdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##3 (`ABR_TOP_PATH.abr_mem_rdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##3 (`ABR_TOP_PATH.abr_mem_rdata0_bank[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[%0d] is not zero", i);
     end
@@ -524,7 +525,7 @@ module caliptra_top_sva
     for (genvar i = 1; i < 3; i++) begin: abr_mem_wdata_check
       ZERO_MLDSA_abr_mem_wdata: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.abr_mem_wdata[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.abr_mem_wdata[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
     end
@@ -533,7 +534,7 @@ module caliptra_top_sva
     for (genvar i = 3; i <= 3; i++) begin: abr_mem_masked_wdata_check
       ZERO_MLDSA_abr_mem_wdata: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.abr_mem_masked_wdata[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##1 (`ABR_TOP_PATH.abr_mem_masked_wdata[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
     end
@@ -542,7 +543,7 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: abr_mem_wdata0_bank_check
       ZERO_MLDSA_abr_mem_wdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.abr_mem_wdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##4 (`ABR_TOP_PATH.abr_mem_wdata0_bank[i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
     end
@@ -570,10 +571,10 @@ module caliptra_top_sva
       end
 
       // Assertion to check that `ABR_PATH.zeroize_mem_done` transitions from low to high 
-      // when (`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) is active
+      // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
       ZEROIZE_MEM_DONE_TRANSITION: assert property (
         @(posedge `SVA_RDC_CLK)
-        (`MLDSA_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
+        (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
         ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
         $rose(`ABR_PATH.zeroize_mem_done)
       )
