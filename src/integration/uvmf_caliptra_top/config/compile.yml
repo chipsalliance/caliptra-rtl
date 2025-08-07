@@ -198,4 +198,5 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
+        - +aaxi_dbg_name=no_tracker
 #        - +aaxi_dbg_name=all
