@@ -57,6 +57,8 @@ targets:
         echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)"
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
         $MSFT_SCRIPTS_DIR/run_test_makefile
+    # Not sure which flag controls generation of this file...
+    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -121,6 +123,7 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
+        - +aaxi_dbg_name=no_tracker
 #        - +aaxi_dbg_name=all
 ---
 provides: [uvmf_caliptra_top_itrng]
@@ -137,6 +140,8 @@ targets:
         echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)"
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
         $MSFT_SCRIPTS_DIR/run_test_makefile
+    # Not sure which flag controls generation of this file...
+    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -197,4 +202,5 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
+        - +aaxi_dbg_name=no_tracker
 #        - +aaxi_dbg_name=all

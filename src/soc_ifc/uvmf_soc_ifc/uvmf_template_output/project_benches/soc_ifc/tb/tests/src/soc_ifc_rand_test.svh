@@ -45,6 +45,7 @@ class soc_ifc_rand_test extends test_top;
     // Execute the build_phase of test_top AFTER all factory overrides have been created.
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
+    set_config_int("*", "recording_detail", 0);
     // UVMF_CHANGE_ME Test specific configuration values can be set here.
     // The configuration structure has already been randomized.
     // pragma uvmf custom configuration_settings_post_randomize end
