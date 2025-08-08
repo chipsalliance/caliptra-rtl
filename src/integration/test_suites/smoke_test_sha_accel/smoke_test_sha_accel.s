@@ -56,7 +56,7 @@ _start:
    li x1, SHA512_ACC_CSR_LOCK_LOCK_MASK
    sw x1, 0(x3)
 
-    //SHA the entire mailbox
+    //SHA the entire mailbox for SS mode size (16KB)
     //Acquire SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
     lock_poll_loop4:
@@ -75,7 +75,7 @@ _start:
     // set t3 to constantly tracking current ptr
     la t3, SHA384ExpRes
     // x7 has the length in bytes
-    li x7, 0x20000
+    li x7, 0x4000
     sw x7, 0(x4)
 
     // Acquire lock before direct access to mailbox

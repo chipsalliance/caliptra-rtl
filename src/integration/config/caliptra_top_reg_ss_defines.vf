@@ -1,0 +1,2 @@
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_ss
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
