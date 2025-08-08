@@ -248,7 +248,7 @@ module aes
   //       Probably not needed. Timing of the kv write request is tightly controlled, and that's the only
   //       place this signal is used.
   always_comb aes2caliptra.aes_operation_is_ecb_decrypt = (  aes_op_e'(hw2reg.ctrl_shadowed.operation.d)     == AES_DEC) &&
-                                                          (aes_mode_e'(reg2hw_caliptra.ctrl_shadowed.mode.d) == AES_ECB);
+                                                          (aes_mode_e'(reg2hw_caliptra.ctrl_shadowed.mode.q) == AES_ECB);
 
   // Capture data_out until operation is done
   generate

@@ -303,7 +303,8 @@ caliptra_top caliptra_top_dut (
     .trace_rv_i_tval_ip     (), // TODO
 
     .security_state(security_state),
-    .scan_mode     (scan_mode)
+    .scan_mode     (scan_mode),
+    .ss_ocp_lock_en(0) //FIXME Tied off
 );
 
 

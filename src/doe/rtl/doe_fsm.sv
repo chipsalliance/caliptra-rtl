@@ -237,8 +237,10 @@ always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_S
 // check KV filtering rules
 always_comb begin
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_en;
-    kv_write_metrics.kv_key_present       = 1'b0;
-    kv_write_metrics.kv_key_entry         = '0;
+    kv_write_metrics.kv_data0_present     = 1'b0;
+    kv_write_metrics.kv_data0_entry       = '0;
+    kv_write_metrics.kv_data1_present     = 1'b0;
+    kv_write_metrics.kv_data1_entry       = '0;
     kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_DOE);
     kv_write_metrics.kv_write_entry       = dest_addr;
     kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;

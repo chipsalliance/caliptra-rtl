@@ -77,12 +77,12 @@ import kv_defines_pkg::*;
     //   THEN (dest = FW)
     // TODO aes.sv still needs to be updated to enforce that kv write IS requested when the input criteria are met
     always_comb begin
-        rule_fail.aes_dec_to_rt_obf_key = kv_write_src[KV_WRITE_IDX_AES] &&
+        rule_fail.aes_dec_to_rt_obf_key = write_metrics.kv_write_src[KV_WRITE_IDX_AES] &&
                                           (!write_metrics.ocp_lock_in_progress ||
-                                           !aes_decrypt_ecb_op ||
-                                           !kv_data0_present ||
-                                            kv_data0_entry != OCP_LOCK_RT_OBF_KEY_KV_SLOT ||
-                                            kv_write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT);
+                                           !write_metrics.aes_decrypt_ecb_op ||
+                                           !write_metrics.kv_data0_present ||
+                                            write_metrics.kv_data0_entry != OCP_LOCK_RT_OBF_KEY_KV_SLOT ||
+                                            write_metrics.kv_write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT);
     end
 
 

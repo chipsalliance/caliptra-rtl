@@ -48,6 +48,8 @@ targets:
       - $COMPILE_ROOT/rtl/kv_fsm.sv
       - $COMPILE_ROOT/rtl/kv_read_client.sv
       - $COMPILE_ROOT/rtl/kv_write_client.sv
+      - $COMPILE_ROOT/rtl/kv_read_rule_check.sv
+      - $COMPILE_ROOT/rtl/kv_write_rule_check.sv
     tops: [kv]
   rtl_lint:
     directories: []
