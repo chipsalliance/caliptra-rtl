@@ -88,7 +88,7 @@ targets:
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
     # Not sure which flag controls generation of this file...
-    post_exec: 'rm ./AXI4_tracker.txt'
+    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
