@@ -135,7 +135,6 @@ ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/qvip_ahb_lite_slave_
 ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/hdl_qvip_ahb_lite_slave.sv
 ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_clk_gen.sv
 ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_reset_gen.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/ecc/coverage/ecc_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/ecc/coverage/ecc_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/ecc/uvmf_ecc/uvmf_template_output/verification_ip/interface_packages/ECC_in_pkg/ECC_in_pkg_hdl.sv

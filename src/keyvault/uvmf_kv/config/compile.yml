@@ -6,6 +6,7 @@ requires:
   - kv_uvm_pkg
   - keyvault
   - caliptra_top_defines
+  - caliptra_top_reg_defines
   - keyvault_cov
 targets:
   tb:

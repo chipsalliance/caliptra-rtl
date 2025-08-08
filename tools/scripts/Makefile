@@ -54,7 +54,11 @@ TBDIR = $(CALIPTRA_ROOT)/src/integration/tb
 RISCV_HW_IF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/riscv_hw_if
 ISR_DIR    = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/caliptra_isr
 PRINTF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/printf
-
+ifeq ($(CALIPTRA_MODE_SUBSYSTEM), 1)
+CLP_REG_DIR = $(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg_ss
+else
+CLP_REG_DIR = $(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg
+endif
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
@@ -78,7 +82,7 @@ COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration
 AUX_HEADER_FILES ?=
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
-		$(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg.h  \
+		$(CLP_REG_DIR)/caliptra_reg.h  \
 		$(RISCV_HW_IF_DIR)/riscv_hw_if.h \
 		$(wildcard $(TEST_DIR)/*.h) \
 		$(PRINTF_DIR)/printf.h \

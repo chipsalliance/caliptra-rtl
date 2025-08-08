@@ -17,5 +17,3 @@ ${CALIPTRA_ROOT}/src/datavault/rtl/dv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/datavault/rtl/dv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/datavault/rtl/dv_reg.sv
 ${CALIPTRA_ROOT}/src/datavault/rtl/dv.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
-${CALIPTRA_ROOT}/src/datavault/rtl/dv_defines_pkg.sv
