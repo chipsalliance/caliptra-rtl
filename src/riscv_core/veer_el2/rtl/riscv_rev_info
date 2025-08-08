@@ -1,8 +1,7 @@
-commit fd5be5efffbedbfc664d3c4f6a887432591a05fa
-Merge: b2e15dada5a c489c0d8883
+commit 2e70f32b1c8baff662cefb35a7ed99132754af8e
 Author: Karol Gugala <kgugala@antmicro.com>
-Date:   Thu Jan 30 19:42:01 2025 +0100
+Date:   Mon Jul 21 14:41:11 2025 +0200
 
-    Merge pull request #354 from chipsalliance/dcls
+    DCLS: update test
 
-    DCLS support and documentation
+    Signed-off-by: Karol Gugala <kgugala@antmicro.com>

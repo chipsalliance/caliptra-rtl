@@ -16,6 +16,7 @@
 
 module el2_veer_lockstep
   import el2_pkg::*;
+  import el2_mubi_pkg::*;
 #(
     `include "el2_param.vh"
 ) (
@@ -113,7 +114,7 @@ module el2_veer_lockstep
     input logic ic_sel_premux_data,  // Select premux data
 
 
-    input logic [  pt.ICACHE_INDEX_HI:3] ic_debug_addr,       // Read/Write addresss to the Icache.
+    input logic [  pt.ICACHE_INDEX_HI:3] ic_debug_addr,       // Read/Write address to the Icache.
     input logic                          ic_debug_rd_en,      // Icache debug rd
     input logic                          ic_debug_wr_en,      // Icache debug wr
     input logic                          ic_debug_tag_array,  // Debug tag array
@@ -384,14 +385,22 @@ module el2_veer_lockstep
     input logic                      soft_int,
     input logic                      scan_mode,
 
+    // Shadow Core trace
+    output logic [31:0] shadow_core_trace_rv_i_insn_ip,
+    output logic [31:0] shadow_core_trace_rv_i_address_ip,
+    output logic shadow_core_trace_rv_i_valid_ip,
+    output logic shadow_core_trace_rv_i_exception_ip,
+    output logic [4:0] shadow_core_trace_rv_i_ecause_ip,
+    output logic shadow_core_trace_rv_i_interrupt_ip,
+    output logic [31:0] shadow_core_trace_rv_i_tval_ip,
+
     // Shadow Core control
-    input logic disable_corruption_detection_i,
-    input logic lockstep_err_injection_en_i,
+    input el2_mubi_t disable_corruption_detection_i,
+    input el2_mubi_t lockstep_err_injection_en_i,
 
     // Equivalency Checker output
-    output logic corruption_detected_o
+    output el2_mubi_t corruption_detected_o
 );
-
   localparam int unsigned LockstepDelay = pt.LOCKSTEP_DELAY;  // Delay I/O; in clock cycles
 
   // Outputs
@@ -1003,19 +1012,19 @@ module el2_veer_lockstep
 
   // Delay the inputs and outputs
   always_ff @(posedge clk or negedge rst_l) begin
-      if (~rst_l) begin
-        delay_input_d[0]  <= veer_inputs_t'(0);
-        delay_output_d[0] <= veer_outputs_t'(0);
-      end else begin
-        delay_input_d[0]  <= main_core_inputs;
-        delay_output_d[0] <= main_core_outputs;
-      end
+    if (~rst_l) begin
+      delay_input_d[0]  <= veer_inputs_t'(0);
+      delay_output_d[0] <= veer_outputs_t'(0);
+    end else begin
+      delay_input_d[0]  <= main_core_inputs;
+      delay_output_d[0] <= main_core_outputs;
     end
+  end
   for (genvar i = 0; i < LockstepDelay; i++) begin
     always_ff @(posedge clk or negedge rst_l) begin
       if (!rst_l) begin
-          delay_input_d[i+1]  <= veer_inputs_t'(0);
-          delay_output_d[i+1] <= veer_outputs_t'(0);
+        delay_input_d[i+1]  <= veer_inputs_t'(0);
+        delay_output_d[i+1] <= veer_outputs_t'(0);
       end else begin
         delay_input_d[i+1]  <= delay_input_d[i];
         delay_output_d[i+1] <= delay_output_d[i];
@@ -1040,8 +1049,8 @@ module el2_veer_lockstep
   for (genvar i = 0; i < LockstepDelay; i++) begin
     always_ff @(posedge clk or negedge rst_l) begin
       if (!rst_l) begin
-          delayed_main_core_regfile[i+1].gpr <= '0;
-          delayed_main_core_regfile[i+1].tlu <= '0;
+        delayed_main_core_regfile[i+1].gpr <= '0;
+        delayed_main_core_regfile[i+1].tlu <= '0;
       end else begin
         delayed_main_core_regfile[i+1].gpr <= delayed_main_core_regfile[i].gpr;
         delayed_main_core_regfile[i+1].tlu <= delayed_main_core_regfile[i].tlu;
@@ -1371,26 +1380,51 @@ module el2_veer_lockstep
       .scan_mode(shadow_core_inputs.scan_mode)
   );
 
+  // Trace
+  assign shadow_core_trace_rv_i_insn_ip = shadow_core_outputs.trace_rv_i_insn_ip;
+  assign shadow_core_trace_rv_i_address_ip = shadow_core_outputs.trace_rv_i_address_ip;
+  assign shadow_core_trace_rv_i_valid_ip = shadow_core_outputs.trace_rv_i_valid_ip;
+  assign shadow_core_trace_rv_i_exception_ip = shadow_core_outputs.trace_rv_i_exception_ip;
+  assign shadow_core_trace_rv_i_ecause_ip = shadow_core_outputs.trace_rv_i_ecause_ip;
+  assign shadow_core_trace_rv_i_interrupt_ip = shadow_core_outputs.trace_rv_i_interrupt_ip;
+  assign shadow_core_trace_rv_i_tval_ip = shadow_core_outputs.trace_rv_i_tval_ip;
+
   // Equivalence Check
   logic rst_n;
   assign rst_n = rst_shadow & rst_dbg_shadow;
 
-  logic corruption_detected, outputs_corrupted;
+  logic outputs_corrupted;
+  el2_mubi_t corruption_detected;
   assign outputs_corrupted = delayed_main_core_outputs != shadow_core_outputs;
 
 `ifdef RV_LOCKSTEP_REGFILE_ENABLE
   logic regfile_corrupted;
   assign regfile_corrupted   = (delayed_main_core_regfile[LockstepDelay].gpr != shadow_core_regfile.gpr)
                              | (delayed_main_core_regfile[LockstepDelay].tlu != shadow_core_regfile.tlu);
-  assign corruption_detected = outputs_corrupted | regfile_corrupted;
+  assign corruption_detected = mubi_from_bool(outputs_corrupted | regfile_corrupted);
 `else
-  assign corruption_detected = outputs_corrupted;
+  assign corruption_detected = mubi_from_bool(outputs_corrupted);
 `endif
 
-// Report corruption if all of the below requirements are fulfilled:
-// - IOs of Main Core and Shadow Core differ OR error injection is enabled
-// - Shadow Core is out of reset
-// - Shadow Core is enabled
-assign corruption_detected_o = ((corruption_detected | lockstep_err_injection_en_i) & rst_n) & ~disable_corruption_detection_i;
+  el2_mubi_t err_injection_invalid, disable_detection_invalid;
+  assign err_injection_invalid = mubi_check_invalid(lockstep_err_injection_en_i);
+  assign disable_detection_invalid = mubi_check_invalid(disable_corruption_detection_i);
 
+  // Report corruption if one of the scenarios is fulfilled:
+  // Scenario I:
+  // - Shadow Core is out of reset
+  // - Shadow Core is enabled
+  // - One of:
+  //    * IOs (or regfiles if enabled) of Main Core and Shadow Core differ
+  //    * error injection (`lockstep_err_injection_en_i`) is enabled
+  //    * `lockstep_err_injection_en_i` drives invalid multibit encoding
+  // Scenario II:
+  // - Shadow Core is out of reset
+  // - `disable_corruption_detection_i` drives invalid multibit encoding
+  el2_mubi_t any_corruption, case0, case1;
+
+  assign any_corruption = mubi_or(mubi_or(corruption_detected, lockstep_err_injection_en_i), err_injection_invalid);
+  assign case0 = mubi_and(any_corruption, ~disable_corruption_detection_i);
+  assign case1 = disable_detection_invalid;
+  assign corruption_detected_o = mubi_and(mubi_or(case0, case1), mubi_from_bool(rst_n));
 endmodule : el2_veer_lockstep
