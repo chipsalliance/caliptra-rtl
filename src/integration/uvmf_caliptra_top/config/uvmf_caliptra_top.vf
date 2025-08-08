@@ -1,5 +1,6 @@
 +define+MAP_PROT_ATTR
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
@@ -15,7 +16,6 @@
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512/rtl
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
-+incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/datavault/rtl
 +incdir+${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha256/rtl
@@ -112,6 +112,7 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/testbench
 +incdir+${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/../tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr_pkg.sv
@@ -266,7 +267,6 @@ ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_top.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/wdt.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/datavault/rtl/dv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/dbg/el2_dbg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/dec/el2_dec_decode_ctl.sv
