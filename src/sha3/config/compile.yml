@@ -30,3 +30,5 @@ targets:
     tops: [sha3_ctrl]
   rtl_lint:
     directories: []
+    waiver_files:
+      - $MSFT_REPO_ROOT/src/sha3/config/design_lint/sglint_waivers
