@@ -756,6 +756,8 @@ typedef struct packed {
 typedef struct packed {
     logic [CLP_AES_KV_WR_DW-1:0] kv_data_out;
     logic                        kv_data_out_valid;
+    logic                        kv_key_in_use;
+    logic                        aes_operation_is_ecb_decrypt;
 } aes2caliptra_t;
 
 /* ---------------------- END CALIPTRA definitions ------------------------ */

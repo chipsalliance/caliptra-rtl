@@ -54,12 +54,18 @@ package doe_reg_pkg;
     } doe_reg__DOE_STATUS__HEK_FLOW_DONE__in_t;
 
     typedef struct packed{
+        logic hwclr;
+        logic hwset;
+    } doe_reg__DOE_STATUS__ERROR__in_t;
+
+    typedef struct packed{
         doe_reg__DOE_STATUS__READY__in_t READY;
         doe_reg__DOE_STATUS__VALID__in_t VALID;
         doe_reg__DOE_STATUS__UDS_FLOW_DONE__in_t UDS_FLOW_DONE;
         doe_reg__DOE_STATUS__FE_FLOW_DONE__in_t FE_FLOW_DONE;
         doe_reg__DOE_STATUS__DEOBF_SECRETS_CLEARED__in_t DEOBF_SECRETS_CLEARED;
         doe_reg__DOE_STATUS__HEK_FLOW_DONE__in_t HEK_FLOW_DONE;
+        doe_reg__DOE_STATUS__ERROR__in_t ERROR;
     } doe_reg__DOE_STATUS__in_t;
 
     typedef struct packed{

@@ -71,6 +71,7 @@ module doe_cbc
 
    //interface with kv
    output kv_write_t kv_write,
+   input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
    input  logic debugUnlock_or_scan_mode_switch
   );
 
@@ -113,6 +114,7 @@ module doe_cbc
   logic zeroize;
 
   logic flow_done;
+  logic flow_error;
   logic flow_in_progress, lock_fe_flow, lock_uds_flow, lock_hek_flow;
 
   doe_reg__in_t  hwif_in;
@@ -195,6 +197,8 @@ assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
 assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
+assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error;
+assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
 
 assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets;
@@ -236,6 +240,7 @@ doe_fsm1
 
   //client control register
   .doe_cmd_reg(doe_cmd_reg),
+  .ocp_lock_en(ocp_lock_en),
 
   //interface with kv
   .kv_write(kv_write),
@@ -252,6 +257,7 @@ doe_fsm1
   .dest_data(kv_result_reg),
 
   .flow_done(flow_done),
+  .flow_error(flow_error),
   .flow_in_progress(flow_in_progress),
   .lock_uds_flow(lock_uds_flow),
   .lock_fe_flow (lock_fe_flow ),

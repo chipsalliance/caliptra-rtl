@@ -279,13 +279,14 @@ import kv_defines_pkg::*;
     logic [AXI_LEN_BC_WIDTH-1:0] wr_req_byte_count;       // byte-count calculated for the current read request
 
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
-    logic [31:0] rd_fifo_bytes_remaining; // Decrements with arrive of data into FIFIO
+    logic [31:0] rd_fifo_bytes_remaining; // Decrements with arrival of data into FIFO
     logic all_bytes_transferred;
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
 
     // KeyVault signals
     kv_read_ctrl_reg_t        kv_read_ctrl_reg;
+    kv_read_filter_metrics_t  kv_read_metrics;
     logic                     kv_read_en;
     logic                     kv_read_once;
     logic                     kv_data_write_en;
@@ -1318,6 +1319,12 @@ import kv_defines_pkg::*;
     // --------------------------------------- //
     // KeyVault Read Client                    //
     // --------------------------------------- //
+    always_comb begin
+        kv_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+        kv_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_DMA_DATA);
+        kv_read_metrics.kv_key_entry         = kv_read_ctrl_reg.read_entry;
+    end
+
     //Read Key (as data)
     kv_read_client #(
         .DATA_WIDTH(OCP_LOCK_MEK_NUM_DWORDS*32), // NOTE: key_release_size does not override this! But we only transfer FIFO contents in specified DW count to endpoint. This is a static size for KV reads.
@@ -1331,6 +1338,9 @@ import kv_defines_pkg::*;
 
         //client control register
         .read_ctrl_reg(kv_read_ctrl_reg),
+
+        //access filtering rule metrics
+        .read_metrics(kv_read_metrics),
 
         //interface with kv
         .kv_read(kv_read),

@@ -86,6 +86,7 @@ package doe_reg_uvm;
         doe_reg__DOE_STATUS_bit_cg FE_FLOW_DONE_bit_cg[1];
         doe_reg__DOE_STATUS_bit_cg DEOBF_SECRETS_CLEARED_bit_cg[1];
         doe_reg__DOE_STATUS_bit_cg HEK_FLOW_DONE_bit_cg[1];
+        doe_reg__DOE_STATUS_bit_cg ERROR_bit_cg[1];
         doe_reg__DOE_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
@@ -93,6 +94,7 @@ package doe_reg_uvm;
         rand uvm_reg_field FE_FLOW_DONE;
         rand uvm_reg_field DEOBF_SECRETS_CLEARED;
         rand uvm_reg_field HEK_FLOW_DONE;
+        rand uvm_reg_field ERROR;
 
         function new(string name = "doe_reg__DOE_STATUS");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -116,6 +118,8 @@ package doe_reg_uvm;
             this.DEOBF_SECRETS_CLEARED.configure(this, 1, 4, "RO", 1, 'h0, 1, 1, 0);
             this.HEK_FLOW_DONE = new("HEK_FLOW_DONE");
             this.HEK_FLOW_DONE.configure(this, 1, 5, "RO", 1, 'h0, 1, 1, 0);
+            this.ERROR = new("ERROR");
+            this.ERROR.configure(this, 1, 8, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(READY_bit_cg[bt]) READY_bit_cg[bt] = new();
                 foreach(VALID_bit_cg[bt]) VALID_bit_cg[bt] = new();
@@ -123,6 +127,7 @@ package doe_reg_uvm;
                 foreach(FE_FLOW_DONE_bit_cg[bt]) FE_FLOW_DONE_bit_cg[bt] = new();
                 foreach(DEOBF_SECRETS_CLEARED_bit_cg[bt]) DEOBF_SECRETS_CLEARED_bit_cg[bt] = new();
                 foreach(HEK_FLOW_DONE_bit_cg[bt]) HEK_FLOW_DONE_bit_cg[bt] = new();
+                foreach(ERROR_bit_cg[bt]) ERROR_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

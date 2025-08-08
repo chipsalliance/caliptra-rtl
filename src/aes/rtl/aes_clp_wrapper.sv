@@ -50,6 +50,9 @@ module aes_clp_wrapper
   output logic hreadyout_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
   
+  // OCP LOCK
+  input  logic ocp_lock_in_progress,
+
   // status signals
   output logic input_ready_o,
   output logic output_valid_o,
@@ -117,14 +120,17 @@ aes2caliptra_t aes2caliptra;
 caliptra_prim_mubi_pkg::mubi4_t aes_idle;
 
 kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
+kv_read_filter_metrics_t kv_key_read_metrics;
 kv_error_code_e kv_key_error;
 logic kv_key_ready, kv_key_done;
+logic [KV_ENTRY_ADDR_W-1:0] kv_key_present_slot;
 
 logic kv_key_write_en;
 logic [2:0] kv_key_write_offset;
 logic [3:0][7:0] kv_key_write_data;
 
 kv_write_ctrl_reg_t kv_write_ctrl_reg;
+kv_write_filter_metrics_t kv_write_metrics;
 kv_error_code_e kv_write_error;
 logic kv_write_ready;
 //write 512 or 384 result based on mode bit
@@ -369,6 +375,22 @@ end
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, AES_KV_RD_KEY_CTRL)
 `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, AES_KV_WR_CTRL)
 
+//Read Key context
+always_ff@(posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+        kv_key_present_slot <= '0;
+    end
+    else if (kv_key_read_ctrl_reg.read_en) begin
+        kv_key_present_slot <= kv_key_read_ctrl_reg.read_entry;
+    end
+end
+
+always_comb begin
+    kv_key_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_key_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_AES_KEY);
+    kv_key_read_metrics.kv_key_entry         = kv_key_read_ctrl_reg.read_entry;
+end
+
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(keymgr_pkg::KeyWidth),
@@ -382,6 +404,9 @@ aes_key_kv_read
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
+
+    //access filtering rule metrics
+    .read_metrics (kv_key_read_metrics),
 
     //interface with kv
     .kv_read(kv_read),
@@ -408,6 +433,17 @@ always_comb kv_wr_num_dwords = CLP_AES_KV_WR_DW/32; // FIXME should this be tied
 // * check data count when receiving decrypt result?                          //
 // * Keyvault write is only accepted for specified request data count?        //
 // ================================ END TODO ================================ //
+always_comb begin
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_write_metrics.kv_data0_present     = aes2caliptra.kv_key_in_use; // TODO -- what if FW toggles sideload while op is in progress?
+    kv_write_metrics.kv_data0_entry       = kv_key_present_slot;
+    kv_write_metrics.kv_data1_present     = 1'b0;
+    kv_write_metrics.kv_data1_entry       = KV_ENTRY_ADDR_W'(0);
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_AES);
+    kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
+    kv_write_metrics.aes_decrypt_ecb_op   = aes2caliptra.aes_operation_is_ecb_decrypt;
+end
+
 //Write to keyvault
 kv_write_client #(
   .DATA_WIDTH(CLP_AES_KV_WR_DW)
@@ -421,6 +457,9 @@ aes_result_kv_write
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),
   .num_dwords    (kv_wr_num_dwords ),
+
+  //access filtering rule metrics
+  .write_metrics (kv_write_metrics),
 
   //interface with kv
   .kv_write(kv_write  ),

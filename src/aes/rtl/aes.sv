@@ -243,6 +243,12 @@ module aes
           aes2caliptra.kv_data_out_valid <= 1'b0;
       end
   end
+  assign aes2caliptra.kv_key_in_use = reg2hw_caliptra.ctrl_shadowed.sideload.q;
+  // TODO: Qualify this with anything?
+  //       Probably not needed. Timing of the kv write request is tightly controlled, and that's the only
+  //       place this signal is used.
+  always_comb aes2caliptra.aes_operation_is_ecb_decrypt = (  aes_op_e'(hw2reg.ctrl_shadowed.operation.d)     == AES_DEC) &&
+                                                          (aes_mode_e'(reg2hw_caliptra.ctrl_shadowed.mode.d) == AES_ECB);
 
   // Capture data_out until operation is done
   generate
@@ -256,9 +262,9 @@ module aes
               end
               else if (incr_kv_data_counter && (kv_data_counter == kv_ii)) begin
                   aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[0].d,
-                                                                                                                                            hw2reg_caliptra.data_out[1].d,
-                                                                                                                                            hw2reg_caliptra.data_out[2].d,
-                                                                                                                                            hw2reg_caliptra.data_out[3].d}; // Fixed endianness
+                                                                                                                                              hw2reg_caliptra.data_out[1].d,
+                                                                                                                                              hw2reg_caliptra.data_out[2].d,
+                                                                                                                                              hw2reg_caliptra.data_out[3].d}; // Fixed endianness
               end
               else if (caliptra2aes.kv_write_done) begin
                   aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);

@@ -115,6 +115,9 @@ module caliptra_top
     input logic [31:0] strap_ss_strap_generic_3,
     input logic        ss_debug_intent,
 
+    // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
+    input logic        ss_ocp_lock_en,
+
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
     output logic [63:0] ss_soc_dbg_unlock_level,
@@ -942,6 +945,7 @@ doe_ctrl #(
     .busy_o(doe_busy),
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
+    .ocp_lock_en(ss_ocp_lock_en),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -971,6 +975,7 @@ ecc_top1
     .kv_write        (kv_write[KV_WRITE_IDX_ECC]),
     .kv_wr_resp      (kv_wr_resp[KV_WRITE_IDX_ECC]),
     .pcr_signing_data(pcr_signing_data),
+    .ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .busy_o          (ecc_busy),
     .error_intr      (ecc_error_intr),
     .notif_intr      (ecc_notif_intr),
@@ -1002,6 +1007,7 @@ hmac_ctrl #(
      .busy_o        (hmac_busy),
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr),
+     .ocp_lock_in_progress(ss_ocp_lock_in_progress),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 
 );
@@ -1031,6 +1037,7 @@ abr_top #(
      .busy_o            (abr_busy),
      .error_intr        (abr_error_intr),
      .notif_intr        (abr_notif_intr),
+     .ocp_lock_in_progress(ss_ocp_lock_in_progress),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
      .abr_memory_export (abr_memory_export)
 );
@@ -1058,6 +1065,9 @@ aes_clp_wrapper #(
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
   
+  
+    // OCP LOCK
+    .ocp_lock_in_progress(ss_ocp_lock_in_progress),
     // status signals
     .input_ready_o(aes_input_ready),
     .output_valid_o(aes_output_valid),
@@ -1410,7 +1420,8 @@ soc_ifc_top1
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
 
     // Subsystem mode OCP LOCK status
-    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress), // TODO route to AES/KeyVault for rules
+    .ss_ocp_lock_en(ss_ocp_lock_en),
+    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress), // TODO route to AES/abr/ECC/hmac/KeyVault for rules
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

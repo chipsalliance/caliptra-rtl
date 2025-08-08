@@ -42,6 +42,7 @@ module doe_fsm
 
     //client control register
     input doe_cmd_reg_t doe_cmd_reg,
+    input logic         ocp_lock_en,
 
     //interface with kv
     output kv_write_t kv_write,
@@ -58,6 +59,7 @@ module doe_fsm
     input logic [DEST_NUM_DWORDS-1:0][31:0] dest_data,
 
     output logic flow_done,
+    output logic flow_error,
     output logic flow_in_progress,
     output logic lock_uds_flow,
     output logic lock_fe_flow,
@@ -85,6 +87,11 @@ typedef enum logic [2:0] {
 } kv_doe_fsm_state_e;
 
 logic running_uds, running_fe, running_hek;
+
+//access filtering rule metrics
+//NOTE: must be stabilized 1 clock cycle prior to dest_data_avail
+kv_write_filter_metrics_t kv_write_metrics;
+logic                     kv_write_allow;
 
 logic [KV_ENTRY_ADDR_W-1:0] dest_addr, dest_addr_nxt;
 logic dest_addr_en;
@@ -157,6 +164,7 @@ always_comb begin : kv_doe_fsm
     dest_write_offset_en ='0;
     dest_write_offset_nxt = dest_write_offset;
     flow_done = '0;
+    flow_error = '0;
 
     unique case (kv_doe_fsm_ps)
         DOE_IDLE: begin
@@ -181,10 +189,11 @@ always_comb begin : kv_doe_fsm
             else if (arc_DOE_WAIT_DOE_BLOCK) kv_doe_fsm_ns = DOE_BLOCK;
         end
         DOE_WRITE: begin
-            dest_write_en = '1;
+            dest_write_en = kv_write_allow; // If rule-check fails, no data is written to KV and FSM hangs in this state
             //increment dest offset each clock, clear when done
-            dest_write_offset_en = '1;
+            dest_write_offset_en = kv_write_allow;
             dest_write_offset_nxt = dest_write_offset + 'd1;
+            flow_error = !kv_write_allow;
 
             //go back to idle if dest done, and done with blocks
             if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
@@ -216,6 +225,7 @@ always_comb begin : kv_doe_fsm
             dest_write_offset_en ='0;
             dest_write_offset_nxt = dest_write_offset;
             flow_done = '0;
+            flow_error = '0;
         end
     endcase
 end
@@ -223,6 +233,26 @@ end
 //latch the dest addr when starting, and when we roll over dest offset
 always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
 always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_SEED_KV_SLOT : doe_cmd_reg.dest_sel; // TODO necessary to tie HEK dest?
+
+// check KV filtering rules
+always_comb begin
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_en;
+    kv_write_metrics.kv_key_present       = 1'b0;
+    kv_write_metrics.kv_key_entry         = '0;
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_DOE);
+    kv_write_metrics.kv_write_entry       = dest_addr;
+    kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
+end
+
+// Output kv_write_allow will stabilize by first entry to DOE_WAIT
+kv_write_rule_check kv_write_rules
+(
+    .clk  (clk  ),
+    .rst_b(rst_b),
+
+    .write_metrics(kv_write_metrics),
+    .write_allow  (kv_write_allow  )
+);
 
 //drive outputs to kv
 always_comb kv_write.write_en = dest_write_en;

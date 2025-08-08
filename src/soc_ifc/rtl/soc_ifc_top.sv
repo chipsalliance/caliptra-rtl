@@ -159,6 +159,7 @@ module soc_ifc_top
     output logic [127:0] ss_generic_fw_exec_ctrl,
 
     // Subsystem mode OCP LOCK status
+    input  logic         ss_ocp_lock_en,
     output logic         ss_ocp_lock_in_progress,
 
     // NMI Vector 
@@ -520,11 +521,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
 `endif
-`ifdef CALIPTRA_OCP_LOCK_EN
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b1;
-`else
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
-`endif
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
 
 //SOC Stepping ID update
 always_comb begin
@@ -763,11 +760,7 @@ end
 // OCP Lock progress register is w1-set, meaning once set to 1 it persists until reset (on the uC fw upd reset domain)
 // It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN macro)
 always_comb begin
-    `ifdef CALIPTRA_OCP_LOCK_EN
-    soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
-    `else
-    soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
-    `endif
+    soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = !ss_ocp_lock_en || soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
 end
 
 assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;

@@ -114,6 +114,8 @@ addrmap doe_reg {
         field {desc = "FE flow completed";            sw = r; hw = w; resetsignal=cptra_pwrgood;} FE_FLOW_DONE = 1'b0;
         field {desc = "Clear Secrets flow completed"; sw = r; hw = na; hwset; resetsignal=cptra_pwrgood;} DEOBF_SECRETS_CLEARED = 1'b0;
         field {desc = "HEK flow completed";           sw = r; hw = w; resetsignal=cptra_pwrgood;} HEK_FLOW_DONE = 1'b0;
+        /* bits 7:6 RESERVED */
+        field {desc = "Status error bit - Indicates if the DOE operation failed and results were not written to the keyvault."; sw = r; hw = na; hwset; hwclr; } ERROR[8:8] = 1'b0;
     
     } DOE_STATUS;
 

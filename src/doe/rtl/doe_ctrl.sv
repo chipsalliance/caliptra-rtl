@@ -65,6 +65,7 @@ module doe_ctrl
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
+    input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
     input  logic debugUnlock_or_scan_mode_switch
 );
 
@@ -98,6 +99,7 @@ module doe_ctrl
         .busy_o(busy_o),
         .clear_obf_secrets(clear_obf_secrets),
         .kv_write(kv_write),
+        .ocp_lock_en(ocp_lock_en), // Synth-time constant strap input instead of ocp_lock_in_progress
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 
