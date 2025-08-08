@@ -736,11 +736,17 @@ module caliptra_top_sva
                                       )
                           else $display("SVA ERROR: DOE block zeroize mismatch!"); 
 
-  doe_reg_zeroize:      assert property (
+  doe_block_reg_zeroize:  assert property (
                                       @(posedge `DOE_INST_PATH.clk)
-                                      `DOE_INST_PATH.zeroize |=> (`DOE_INST_PATH.core_block == 0) & (`DOE_INST_PATH.core_IV == 0)
+                                      `DOE_INST_PATH.zeroize |=> (`DOE_INST_PATH.core_block == 0)
                                       )
-                          else $display("SVA ERROR: DOE reg zeroize mismatch!"); 
+                          else $display("SVA ERROR: DOE block reg zeroize mismatch!"); 
+
+  doe_iv_reg_zeroize:     assert property (
+                                      @(posedge `DOE_INST_PATH.clk)
+                                      $rose(`DOE_INST_PATH.zeroize) |=> (`DOE_INST_PATH.core_IV == 0)
+                                      )
+                          else $display("SVA ERROR: DOE iv reg zeroize mismatch!"); 
 
   doe_key_clear:      assert property (
                                       @(posedge `DOE_INST_PATH.clk)
