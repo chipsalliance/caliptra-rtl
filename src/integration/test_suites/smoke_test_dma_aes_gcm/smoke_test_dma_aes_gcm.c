@@ -41,6 +41,7 @@ void main(void) {
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;
     aes_key_len_e key_len;
+    aes_endian_e endian_mode; // AES_LITTLE_ENDIAN or AES_BIG_ENDIAN
 
 
     const char key_str3[] = "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308";
@@ -68,6 +69,8 @@ void main(void) {
     uint32_t tag_length;
 
     aes_key_t aes_key;
+
+    endian_mode = AES_LITTLE_ENDIAN;
 
     VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
@@ -108,7 +111,7 @@ void main(void) {
 
 
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, endian_mode);
 
     SEND_STDOUT_CTRL( 0xff);
     while(1);
