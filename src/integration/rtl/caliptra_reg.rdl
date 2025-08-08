@@ -16,8 +16,8 @@
 addrmap clp #(
     boolean CALIPTRA_SS_MODE = false
 ) {
-        // You can use the parameter in a description property to "see" it
-    desc = "Caliptra address map (SS_MODE= $CALIPTRA_SS_MODE";
+    // You can use the parameter in a description property to "see" it
+    desc = "Caliptra address map (SS_MODE = $CALIPTRA_SS_MODE)";
 
     doe_reg doe_reg @ 0x1000_0000;
 
