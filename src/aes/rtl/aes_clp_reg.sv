@@ -72,6 +72,8 @@ module aes_clp_reg (
         logic CTRL0;
         logic AES_KV_RD_KEY_CTRL;
         logic AES_KV_RD_KEY_STATUS;
+        logic AES_KV_WR_CTRL;
+        logic AES_KV_WR_STATUS;
         struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -113,6 +115,8 @@ module aes_clp_reg (
         decoded_reg_strb.CTRL0 = cpuif_req_masked & (cpuif_addr == 11'h134);
         decoded_reg_strb.AES_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 11'h200);
         decoded_reg_strb.AES_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 11'h204);
+        decoded_reg_strb.AES_KV_WR_CTRL = cpuif_req_masked & (cpuif_addr == 11'h208);
+        decoded_reg_strb.AES_KV_WR_STATUS = cpuif_req_masked & (cpuif_addr == 11'h20c);
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h400);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h404);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h408);
@@ -180,6 +184,62 @@ module aes_clp_reg (
                 logic load_next;
             } VALID;
         } AES_KV_RD_KEY_STATUS;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } write_en;
+            struct packed{
+                logic [4:0] next;
+                logic load_next;
+            } write_entry;
+            struct packed{
+                logic next;
+                logic load_next;
+            } hmac_key_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } hmac_block_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } mldsa_seed_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ecc_pkey_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ecc_seed_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } aes_key_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } mlkem_seed_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } mlkem_msg_dest_valid;
+            struct packed{
+                logic next;
+                logic load_next;
+            } dma_data_dest_valid;
+            struct packed{
+                logic [16:0] next;
+                logic load_next;
+            } rsvd;
+        } AES_KV_WR_CTRL;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } VALID;
+        } AES_KV_WR_STATUS;
         struct packed{
             struct packed{
                 struct packed{
@@ -389,6 +449,49 @@ module aes_clp_reg (
                 logic value;
             } VALID;
         } AES_KV_RD_KEY_STATUS;
+        struct packed{
+            struct packed{
+                logic value;
+            } write_en;
+            struct packed{
+                logic [4:0] value;
+            } write_entry;
+            struct packed{
+                logic value;
+            } hmac_key_dest_valid;
+            struct packed{
+                logic value;
+            } hmac_block_dest_valid;
+            struct packed{
+                logic value;
+            } mldsa_seed_dest_valid;
+            struct packed{
+                logic value;
+            } ecc_pkey_dest_valid;
+            struct packed{
+                logic value;
+            } ecc_seed_dest_valid;
+            struct packed{
+                logic value;
+            } aes_key_dest_valid;
+            struct packed{
+                logic value;
+            } mlkem_seed_dest_valid;
+            struct packed{
+                logic value;
+            } mlkem_msg_dest_valid;
+            struct packed{
+                logic value;
+            } dma_data_dest_valid;
+            struct packed{
+                logic [16:0] value;
+            } rsvd;
+        } AES_KV_WR_CTRL;
+        struct packed{
+            struct packed{
+                logic value;
+            } VALID;
+        } AES_KV_WR_STATUS;
         struct packed{
             struct packed{
                 struct packed{
@@ -671,6 +774,284 @@ module aes_clp_reg (
             field_storage.AES_KV_RD_KEY_STATUS.VALID.value <= 1'h0;
         end else if(field_combo.AES_KV_RD_KEY_STATUS.VALID.load_next) begin
             field_storage.AES_KV_RD_KEY_STATUS.VALID.value <= field_combo.AES_KV_RD_KEY_STATUS.VALID.next;
+        end
+    end
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.write_en
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.write_en.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.write_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end else if(hwif_in.AES_KV_WR_CTRL.write_en.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.write_en.next = next_c;
+        field_combo.AES_KV_WR_CTRL.write_en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.write_en.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.write_en.load_next) begin
+            field_storage.AES_KV_WR_CTRL.write_en.value <= field_combo.AES_KV_WR_CTRL.write_en.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.write_en.value = field_storage.AES_KV_WR_CTRL.write_en.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.write_entry
+    always_comb begin
+        automatic logic [4:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.write_entry.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.write_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.write_entry.next = next_c;
+        field_combo.AES_KV_WR_CTRL.write_entry.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.write_entry.value <= 5'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.write_entry.load_next) begin
+            field_storage.AES_KV_WR_CTRL.write_entry.value <= field_combo.AES_KV_WR_CTRL.write_entry.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.write_entry.value = field_storage.AES_KV_WR_CTRL.write_entry.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.hmac_key_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.hmac_key_dest_valid.value = field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.hmac_block_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.hmac_block_dest_valid.value = field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.mldsa_seed_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.ecc_pkey_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value = field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.ecc_seed_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value & ~decoded_wr_biten[10:10]) | (decoded_wr_data[10:10] & decoded_wr_biten[10:10]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.ecc_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.aes_key_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value & ~decoded_wr_biten[11:11]) | (decoded_wr_data[11:11] & decoded_wr_biten[11:11]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.aes_key_dest_valid.value = field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.mlkem_seed_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value & ~decoded_wr_biten[12:12]) | (decoded_wr_data[12:12] & decoded_wr_biten[12:12]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.mlkem_msg_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value = field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.dma_data_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value & ~decoded_wr_biten[14:14]) | (decoded_wr_data[14:14] & decoded_wr_biten[14:14]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.next = next_c;
+        field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.load_next) begin
+            field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value <= field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.dma_data_dest_valid.value = field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value;
+    // Field: aes_clp_reg.AES_KV_WR_CTRL.rsvd
+    always_comb begin
+        automatic logic [16:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_CTRL.rsvd.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.AES_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:15]) | (decoded_wr_data[31:15] & decoded_wr_biten[31:15]);
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_CTRL.rsvd.next = next_c;
+        field_combo.AES_KV_WR_CTRL.rsvd.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_CTRL.rsvd.value <= 17'h0;
+        end else if(field_combo.AES_KV_WR_CTRL.rsvd.load_next) begin
+            field_storage.AES_KV_WR_CTRL.rsvd.value <= field_combo.AES_KV_WR_CTRL.rsvd.next;
+        end
+    end
+    assign hwif_out.AES_KV_WR_CTRL.rsvd.value = field_storage.AES_KV_WR_CTRL.rsvd.value;
+    // Field: aes_clp_reg.AES_KV_WR_STATUS.VALID
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AES_KV_WR_STATUS.VALID.value;
+        load_next_c = '0;
+        if(hwif_in.AES_KV_WR_STATUS.VALID.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.AES_KV_WR_STATUS.VALID.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.AES_KV_WR_STATUS.VALID.next = next_c;
+        field_combo.AES_KV_WR_STATUS.VALID.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.AES_KV_WR_STATUS.VALID.value <= 1'h0;
+        end else if(field_combo.AES_KV_WR_STATUS.VALID.load_next) begin
+            field_storage.AES_KV_WR_STATUS.VALID.value <= field_combo.AES_KV_WR_STATUS.VALID.next;
         end
     end
     // Field: aes_clp_reg.intr_block_rf.global_intr_en_r.error_en
@@ -1451,7 +1832,7 @@ module aes_clp_reg (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [26-1:0][31:0] readback_array;
+    logic [28-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
         assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.AES_NAME[i0] && !decoded_req_is_wr) ? hwif_in.AES_NAME[i0].NAME.next : '0;
     end
@@ -1468,49 +1849,65 @@ module aes_clp_reg (
     assign readback_array[6][1:1] = (decoded_reg_strb.AES_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_STATUS.VALID.value : '0;
     assign readback_array[6][9:2] = (decoded_reg_strb.AES_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_RD_KEY_STATUS.ERROR.next : '0;
     assign readback_array[6][31:10] = '0;
-    assign readback_array[7][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[7][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[7][31:2] = '0;
-    assign readback_array[8][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[8][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[8][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[8][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[8][31:4] = '0;
-    assign readback_array[9][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[9][31:1] = '0;
-    assign readback_array[10][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[10][31:1] = '0;
-    assign readback_array[11][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
+    assign readback_array[7][0:0] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.write_en.value : '0;
+    assign readback_array[7][5:1] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.write_entry.value : '0;
+    assign readback_array[7][6:6] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
+    assign readback_array[7][7:7] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
+    assign readback_array[7][8:8] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value : '0;
+    assign readback_array[7][9:9] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
+    assign readback_array[7][10:10] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
+    assign readback_array[7][11:11] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value : '0;
+    assign readback_array[7][12:12] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value : '0;
+    assign readback_array[7][13:13] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value : '0;
+    assign readback_array[7][14:14] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value : '0;
+    assign readback_array[7][31:15] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.rsvd.value : '0;
+    assign readback_array[8][0:0] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_WR_STATUS.READY.next : '0;
+    assign readback_array[8][1:1] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.AES_KV_WR_STATUS.VALID.value : '0;
+    assign readback_array[8][9:2] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_WR_STATUS.ERROR.next : '0;
+    assign readback_array[8][31:10] = '0;
+    assign readback_array[9][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+    assign readback_array[9][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+    assign readback_array[9][31:2] = '0;
+    assign readback_array[10][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
+    assign readback_array[10][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
+    assign readback_array[10][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
+    assign readback_array[10][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
+    assign readback_array[10][31:4] = '0;
+    assign readback_array[11][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
     assign readback_array[11][31:1] = '0;
-    assign readback_array[12][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[12][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[12][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[12][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[12][31:4] = '0;
-    assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
+    assign readback_array[12][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
+    assign readback_array[12][31:1] = '0;
+    assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
     assign readback_array[13][31:1] = '0;
-    assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[14][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[14][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[14][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
+    assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
+    assign readback_array[14][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
+    assign readback_array[14][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
+    assign readback_array[14][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
     assign readback_array[14][31:4] = '0;
-    assign readback_array[15][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
+    assign readback_array[15][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
     assign readback_array[15][31:1] = '0;
-    assign readback_array[16][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[17][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[18][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[19][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[20][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[21][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[21][31:1] = '0;
-    assign readback_array[22][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[22][31:1] = '0;
-    assign readback_array[23][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[16][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
+    assign readback_array[16][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
+    assign readback_array[16][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
+    assign readback_array[16][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
+    assign readback_array[16][31:4] = '0;
+    assign readback_array[17][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
+    assign readback_array[17][31:1] = '0;
+    assign readback_array[18][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
+    assign readback_array[19][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
+    assign readback_array[20][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
+    assign readback_array[21][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
+    assign readback_array[22][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
+    assign readback_array[23][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
     assign readback_array[23][31:1] = '0;
-    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
     assign readback_array[24][31:1] = '0;
-    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
     assign readback_array[25][31:1] = '0;
+    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[26][31:1] = '0;
+    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
+    assign readback_array[27][31:1] = '0;
 
     // Reduce the array
     always_comb begin
@@ -1518,7 +1915,7 @@ module aes_clp_reg (
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<26; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<28; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

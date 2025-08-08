@@ -315,7 +315,8 @@ package sha512_reg_uvm;
         kv_write_ctrl_reg_bit_cg aes_key_dest_valid_bit_cg[1];
         kv_write_ctrl_reg_bit_cg mlkem_seed_dest_valid_bit_cg[1];
         kv_write_ctrl_reg_bit_cg mlkem_msg_dest_valid_bit_cg[1];
-        kv_write_ctrl_reg_bit_cg rsvd_bit_cg[18];
+        kv_write_ctrl_reg_bit_cg dma_data_dest_valid_bit_cg[1];
+        kv_write_ctrl_reg_bit_cg rsvd_bit_cg[17];
         kv_write_ctrl_reg_fld_cg fld_cg;
         rand uvm_reg_field write_en;
         rand uvm_reg_field write_entry;
@@ -327,6 +328,7 @@ package sha512_reg_uvm;
         rand uvm_reg_field aes_key_dest_valid;
         rand uvm_reg_field mlkem_seed_dest_valid;
         rand uvm_reg_field mlkem_msg_dest_valid;
+        rand uvm_reg_field dma_data_dest_valid;
         rand uvm_reg_field rsvd;
 
         function new(string name = "kv_write_ctrl_reg");
@@ -359,8 +361,10 @@ package sha512_reg_uvm;
             this.mlkem_seed_dest_valid.configure(this, 1, 12, "RW", 0, 'h0, 1, 1, 0);
             this.mlkem_msg_dest_valid = new("mlkem_msg_dest_valid");
             this.mlkem_msg_dest_valid.configure(this, 1, 13, "RW", 0, 'h0, 1, 1, 0);
+            this.dma_data_dest_valid = new("dma_data_dest_valid");
+            this.dma_data_dest_valid.configure(this, 1, 14, "RW", 0, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 18, 14, "RW", 0, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 17, 15, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(write_en_bit_cg[bt]) write_en_bit_cg[bt] = new();
                 foreach(write_entry_bit_cg[bt]) write_entry_bit_cg[bt] = new();
@@ -372,6 +376,7 @@ package sha512_reg_uvm;
                 foreach(aes_key_dest_valid_bit_cg[bt]) aes_key_dest_valid_bit_cg[bt] = new();
                 foreach(mlkem_seed_dest_valid_bit_cg[bt]) mlkem_seed_dest_valid_bit_cg[bt] = new();
                 foreach(mlkem_msg_dest_valid_bit_cg[bt]) mlkem_msg_dest_valid_bit_cg[bt] = new();
+                foreach(dma_data_dest_valid_bit_cg[bt]) dma_data_dest_valid_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))

@@ -47,7 +47,7 @@ module caliptra_top_tb_services
 
     // Caliptra Memory Export Interface
     el2_mem_if.veer_sram_sink          el2_mem_export,
-    abr_mem_if.resp                  abr_memory_export,
+    abr_mem_if.resp                    abr_memory_export,
 
     //SRAM interface for mbox
     input  wire logic mbox_sram_cs,
@@ -84,6 +84,7 @@ module caliptra_top_tb_services
 
     output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
     output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
+    output logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] cptra_hek_tb,
     output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
 
 );
@@ -174,6 +175,9 @@ module caliptra_top_tb_services
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
     logic                       inject_mlkem_kv;
+    logic                       inject_kv16_zero_key;
+    logic                       inject_kv23_small_rand_key;
+    logic                       inject_kv23_rand_length_key;
     logic                       inject_random_data;
     logic                       check_pcr_ecc_signing;
     logic                       check_pcr_mldsa_signing;
@@ -249,6 +253,11 @@ module caliptra_top_tb_services
           logic [0:IV_NO-1][31:0] iv_fe;
           logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_plaintext;
           logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] fe_ciphertext;
+
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0] obf_key_hek;
+          logic [0:IV_NO-1][31:0] iv_hek;
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] hek_plaintext;
+          logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] hek_ciphertext;
     } doe_test_vector_t;
 
     doe_test_vector_t doe_test_vector;
@@ -350,7 +359,11 @@ module caliptra_top_tb_services
     //         8'hb4        - Inject MLKEM zeroize during KV access
     //         8'hb5:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
-    //         8'hc8: 8'hd5 - Unused
+    //         8'hc8        - Inject key 0x0 into slot 16 for AES 
+    //         8'hc9        - Inject key smaller than key_release_size into KV23
+    //         8'hca        - Inject key larger than key_release_size into KV23
+    //         8'hcb: 8'hd4 - Unused
+    //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
     //         8'hd8        - Unused
@@ -545,6 +558,10 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   mldsa_seed_random;
     logic [15:0][31:0]   mlkem_seed_random;
     logic [15:0][31:0]   mlkem_msg_random;
+    logic [15:0] key_release_size_val = `CPTRA_TOP_PATH.soc_ifc_top1.i_axi_dma.key_release_size;
+    logic [7:0] min_dwords ;
+    logic [7:0] max_dwords ;
+    logic [3:0] random_key_size ;
     
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
     always_comb mldsa_seed_random = change_endian({256'h0, mldsa_test_vector.seed});
@@ -646,6 +663,50 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
+                    // inject key 0x0 into slot 16 for AES
+                    else if((WriteData[7:0] == 8'hc8) && mailbox_write) begin
+                        inject_kv16_zero_key <= '1;
+                        if (slot_id == 16) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b000100000; // AES access
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
+                        end
+
+                    end
+                    // inject key size 8 in KV 23
+                    else if((WriteData[7:0] == 8'hc9) && mailbox_write) begin
+                        // Generate random key size with bounds checking
+                        max_dwords = (key_release_size_val >> 2); // Convert bytes to dwords
+                        random_key_size = (max_dwords > 0) ? (($urandom() % max_dwords) + 1) : 1;
+                        inject_kv23_small_rand_key <= '1;
+                        if (slot_id == 23 && dword_i < random_key_size) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1; 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
+                        end
+                    end
+                    // inject key size 8 in KV 23
+                    else if((WriteData[7:0] == 8'hca) && mailbox_write) begin
+                        // Generate random key size with bounds checking
+                        min_dwords = (key_release_size_val >> 2); // Convert bytes to dwords
+                        max_dwords = 8'h40; 
+                        random_key_size =  min_dwords + ($urandom() % (max_dwords - min_dwords + 1));
+                        inject_kv23_rand_length_key <= '1;
+                        if (slot_id == 23 && dword_i < random_key_size) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1; 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
+                        end
+                    end
                     //inject valid hmac_block dest and hmac512_block value to key reg
                     else if((WriteData[7:0] == 8'hb0) && mailbox_write) begin
                         inject_hmac_block <= 1'b1;
@@ -712,6 +773,9 @@ module caliptra_top_tb_services
                         inject_random_data <= '0;
                         inject_hmac_block <= '0;
                         inject_mlkem_kv <= 1'b0;
+                        inject_kv16_zero_key <= '0;
+                        inject_kv23_small_rand_key <= '0;
+                        inject_kv23_rand_length_key <= '0;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
                         release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
@@ -1164,6 +1228,10 @@ module caliptra_top_tb_services
             force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
             force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_fe[dword];
         end
+        else if ((WriteData[7:0] == 8'hd5) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod = 'b1;
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value = doe_test_vector.iv_hek[dword];
+        end
         else begin
             release `CPTRA_TOP_PATH.doe.doe_inst.hwif_out.DOE_IV[dword].IV.swmod;
             release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_IV[dword].IV.value;
@@ -1425,6 +1493,15 @@ endgenerate //IV_NO
             void'($sscanf(line_read, "%h", doe_test_vector.fe_plaintext));
             void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", doe_test_vector.fe_ciphertext));
+
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.obf_key_hek));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.iv_hek));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.hek_plaintext));
+            void'($fgets(line_read, fd_r));
+            void'($sscanf(line_read, "%h", doe_test_vector.hek_ciphertext));
 
             $fclose(fd_r);
         end
@@ -2130,7 +2207,10 @@ endgenerate //IV_NO
                 cptra_uds_tb[dword] = doe_test_vector.uds_ciphertext[dword];
             end
             for(int dword = 0; dword < `CLP_OBF_FE_DWORDS; dword++) begin
-                cptra_fe_tb[dword] = doe_test_vector.fe_ciphertext[dword];
+                cptra_fe_tb[dword]  = doe_test_vector.fe_ciphertext[dword];
+            end
+            for(int dword = 0; dword < OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
+                cptra_hek_tb[dword] = doe_test_vector.hek_ciphertext[dword];
             end
         end
         `endif

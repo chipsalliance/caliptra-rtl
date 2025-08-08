@@ -21,6 +21,7 @@ module soc_ifc_top
     import soc_ifc_pkg::*;
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
+    import kv_defines_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32
@@ -101,6 +102,9 @@ module soc_ifc_top
     // RV ECC Status Interface
     input rv_ecc_sts_t rv_ecc_sts,
 
+    // Clear KeyVault secrets
+    input logic debugUnlock_or_scan_mode_switch,
+
     //Obfuscated UDS and FE
     input  logic clear_obf_secrets,
     input  logic scan_mode,
@@ -112,6 +116,8 @@ module soc_ifc_top
     input  logic                                 cptra_obf_uds_seed_vld,
     input  logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
     output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+    output logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed,
+
 
     input logic aes_input_ready,
     input logic aes_output_valid,
@@ -122,6 +128,10 @@ module soc_ifc_top
     input logic [SOC_IFC_DATA_W-1:0] aes_rdata,
     input logic aes_error, 
 
+    // kv interface
+    output kv_read_t    kv_read,
+    input  kv_rd_resp_t kv_rd_resp,
+
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
@@ -129,6 +139,8 @@ module soc_ifc_top
     input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [63:0] strap_ss_key_release_base_addr,
+    input logic [15:0] strap_ss_key_release_key_size,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
     input logic [31:0] strap_ss_strap_generic_0,
@@ -145,6 +157,10 @@ module soc_ifc_top
 
     // Subsystem mode firmware execution control
     output logic [127:0] ss_generic_fw_exec_ctrl,
+
+    // Subsystem mode OCP LOCK status
+    input  logic         ss_ocp_lock_en,
+    output logic         ss_ocp_lock_in_progress,
 
     // NMI Vector 
     output logic [31:0] nmi_vector,
@@ -481,6 +497,7 @@ always_comb soc_ifc_reg_req_hold = 1'b0;
 //Read and Write permissions are controlled within this block
 always_comb soc_ifc_reg_error = soc_ifc_reg_read_error | soc_ifc_reg_write_error;
 
+always_comb soc_ifc_reg_hwif_in.core_only_rst_b = cptra_uc_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
@@ -501,8 +518,10 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.RSVD_en.next = 3'b0;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
 `endif
 
 //SOC Stepping ID update
@@ -534,6 +553,9 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
+    end
+    for (int i = 0; i < OCP_LOCK_HEK_NUM_DWORDS; i++) begin
+        obf_hek_seed[i] = soc_ifc_reg_hwif_out.fuse_hek_seed[i].seed.value;
     end
 
     //flow status
@@ -712,6 +734,10 @@ always_comb begin
     for (int i=0; i<4; i++) begin
         soc_ifc_reg_hwif_in.fuse_soc_manifest_svn[i].svn.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
+
+    foreach(soc_ifc_reg_hwif_in.fuse_hek_seed[i]) begin
+        soc_ifc_reg_hwif_in.fuse_hek_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    end
 end
 
 always_comb soc_ifc_reg_hwif_in.fuse_ecc_revocation.ecc_revocation.swwel     = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -731,6 +757,16 @@ always_comb begin
         soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
     end
 end
+
+// OCP Lock progress register is w1-set, meaning once set to 1 it persists until reset (on the uC fw upd reset domain)
+// It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN strap)
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = !ss_ocp_lock_en || soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
+`else
+always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
+`endif
+
+assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
 
 
 //Uncore registers only open for debug unlock or manufacturing
@@ -805,6 +841,9 @@ always_comb begin : ss_reg_hwwe
     //STRAPS WITH RO or NO TAP ACCESS
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.we                           = strap_we_pre_fuse_done; //RO by TAP
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.we                           = strap_we_pre_fuse_done; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.we                        = strap_we_pre_fuse_done; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.we                        = strap_we_pre_fuse_done; //RO by TAP
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_SIZE.size.we                                 = strap_we_pre_fuse_done; //RO by TAP
     soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.we = strap_we_pre_fuse_done; //No TAP access
     soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.we           = strap_we_pre_fuse_done; //No TAP access
 end
@@ -836,6 +875,9 @@ always_comb begin : ss_reg_next_vals
     //STRAPS WITH RO or NO TAP ACCESS
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_L.addr_l.next                           = strap_ss_uds_seed_base_addr[31:0];
     soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.next                           = strap_ss_uds_seed_base_addr[63:32];
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.next                        = strap_ss_key_release_base_addr[31:0];
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.next                        = strap_ss_key_release_base_addr[63:32];
+    soc_ifc_reg_hwif_in.SS_KEY_RELEASE_SIZE.size.next                                 = {strap_ss_key_release_key_size[15:2],2'b00}; // Enforce dw-multiple
     soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.next = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
     soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.next           = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
 
@@ -867,6 +909,9 @@ always_comb soc_ifc_reg_hwif_in.SS_UDS_SEED_BASE_ADDR_H.addr_h.swwel            
 always_comb soc_ifc_reg_hwif_in.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.offset.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_CALIPTRA_DMA_AXI_USER.user.swwel                              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.swwel                          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.swwel                          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_KEY_RELEASE_SIZE.size.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[0].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[1].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[2].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
@@ -1202,7 +1247,16 @@ axi_dma_top #(
 
     // SOC_IFC Internal Signaling
     .mbox_lock(uc_mbox_lock),
-    .sha_lock (1'b0), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
+    .sha_lock (1'b0        ), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
+    .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch                               ),
+    .ocp_lock_in_progress           (ss_ocp_lock_in_progress                                       ),
+    .key_release_addr               ({soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.value,
+                                      soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.value}),
+    .key_release_size               (soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value           ),
+
+    // kv interface
+    .kv_read   (kv_read   ),
+    .kv_rd_resp(kv_rd_resp),
 
     // Configuration for requests
     .axuser(AXIM_USER_WIDTH'(soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value)),
@@ -1488,6 +1542,11 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
+`ifndef CALIPTRA_MODE_SUBSYSTEM
+`CALIPTRA_ASSERT_INIT_NET(SS_STRAP_OCP_LOCK_EN   , ss_ocp_lock_en == 1'b0)
+`endif
+`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_DW_MULT , strap_ss_key_release_key_size[1:0]  == 2'b00 , clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_LTE_64  , strap_ss_key_release_key_size[15:0] <= 16'h40, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)

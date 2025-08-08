@@ -17,9 +17,6 @@
 `ifndef SOC_IFC_TB_PKG
 `define SOC_IFC_TB_PKG
 
-`define CALIPTRA_MODE_SUBSYSTEM
-
-
 package soc_ifc_tb_pkg;
 
   `include "caliptra_reg_defines.svh" // This is from integration/rtl level 

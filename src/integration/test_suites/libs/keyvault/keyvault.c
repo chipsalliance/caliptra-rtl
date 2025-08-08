@@ -49,7 +49,11 @@ void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_va
               ((dest_valid.hmac_block << KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_LOW) & KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK) |
               ((dest_valid.mldsa_seed << KV_WR_CTRL_MLDSA_SEED_DEST_VALID_LOW) & KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK) |
               ((dest_valid.ecc_pkey << KV_WR_CTRL_ECC_PKEY_DEST_VALID_LOW) & KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK) |
-              ((dest_valid.ecc_seed << KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW) & KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK);
+              ((dest_valid.ecc_seed << KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW) & KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK) |
+              ((dest_valid.aes_key << KV_WR_CTRL_AES_KEY_DEST_VALID_LOW) & KV_WR_CTRL_AES_KEY_DEST_VALID_MASK) |
+              ((dest_valid.mlkem_seed << KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW) & KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK) |
+              ((dest_valid.mlkem_msg << KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW) & KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK) |
+              ((dest_valid.dma_data << KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW) & KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK);
 
     //write to the appropriate read control register
     lsu_write_32(reg_addr, wr_data);

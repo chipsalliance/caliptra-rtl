@@ -16,6 +16,7 @@
 #include "soc_ifc.h"
 #include "printf.h"
 #include "aes.h"
+#include "keyvault.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -91,6 +92,13 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
       while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK) == 0);
   }
 
+  // Load key into kevault if expected
+  if (aes_input.key_o.kv_intf) {
+    kv_write_ctrl(CLP_AES_CLP_REG_AES_KV_WR_CTRL, 
+                  aes_input.key_o.kv_id,
+                  aes_input.key_o.dest_valid);
+    VPRINTF(LOW, "Set AES KV Write to slot %d\n", aes_input.key_o.kv_id);
+  }
   uint32_t aes_ctrl =
     ((op << AES_REG_CTRL_SHADOWED_OPERATION_LOW) & AES_REG_CTRL_SHADOWED_OPERATION_MASK) |
     ((mode << AES_REG_CTRL_SHADOWED_MODE_LOW) & AES_REG_CTRL_SHADOWED_MODE_MASK) |
@@ -236,40 +244,41 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           }
         }                      
 
-        // Wait for OUTPUT_VALID bit
-        while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
+        if( !aes_input.key_o.kv_intf ) {
+            // Wait for OUTPUT_VALID bit
+            while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
 
-        // Read Output Data Block I
-        for (int j = 0; j < 4; j++) {
-          ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-          VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+            // Read Output Data Block I
+            for (int j = 0; j < 4; j++) {
+              ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
+              VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
 
-          //byte mask
-          uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
-          //this is the last block, and the partial is inside this dword
-          if ((i == num_blocks_text-1) && (partial_text_len > 0) && (partial_text_len >= j*4) && (partial_text_len < (j+1)*4)) {
-            mask = (1 << (partial_text_len%4)*8) - 1;
-            masked = 0x1;
-          }
-          
-          if (op == AES_ENC) {
-            if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
-              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-              VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
-              VPRINTF(FATAL,"%c", fail_cmd);
-              while(1);
+              //byte mask
+              uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
+              //this is the last block, and the partial is inside this dword
+              if ((i == num_blocks_text-1) && (partial_text_len > 0) && (partial_text_len >= j*4) && (partial_text_len < (j+1)*4)) {
+                mask = (1 << (partial_text_len%4)*8) - 1;
+                masked = 0x1;
+              }
+              
+              if (op == AES_ENC) {
+                if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
+                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
+                  VPRINTF(FATAL,"%c", fail_cmd);
+                  while(1);
+                }
+              } else if (op == AES_DEC) {
+                if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
+                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
+                  VPRINTF(FATAL,"%c", fail_cmd);
+                  while(1);
+                }
+              }
             }
-          } else if (op == AES_DEC) {
-            if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
-              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-              VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
-              VPRINTF(FATAL,"%c", fail_cmd);
-              while(1);
-            }
-          }
-          
         }
       }
     }
@@ -336,3 +345,58 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                                      (0x1 << AES_REG_TRIGGER_DATA_OUT_CLEAR_LOW));
 
 }
+
+
+void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt) {
+    //CASE1
+    VPRINTF(LOW, "Loading KV via AES ECB\n");
+
+    // Check that override_text_length is not larger than 512 bits (16 dwords)
+    if (override_text_length > 16) {
+        VPRINTF(ERROR, "ERROR: override_text_length (%d) exceeds maximum allowed size of 16 dwords (512 bits)\n", override_text_length);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }   
+    const char ciphertext_str[]  = "0aa9a935b694b29dd3d3e251084e7c4d393eebd18438b8d2dd609513eb21b039e27a20ca93a08897c4de30ce248867eac0e67fc54595a2559df10d8fb49fd7e1";
+    const char plaintext_str[]   = "062c4cc774e213be68663bc0e933787ee2caae3afa443ee67defaa89121ca261736e6ebbb8609d3568e6b723c9bc330f0ca00eca39659172b473b9362dd33ca5";
+
+    aes_op_e op = AES_DEC;
+    aes_mode_e mode = AES_ECB;
+    aes_key_len_e key_len = AES_256;
+    aes_flow_t aes_input;
+
+    uint32_t plaintext[32]; //arbitrary length here
+    uint32_t plaintext_length;
+    uint32_t ciphertext[32]; //arbitrary length here
+    uint32_t ciphertext_length;
+       
+    if (encrypt) {
+        op = AES_ENC;
+    }   
+
+    hex_to_uint32_array(ciphertext_str, ciphertext, &ciphertext_length);
+    hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
+
+    if(override_text_length > 0) {
+        plaintext_length = override_text_length;
+        ciphertext_length = override_text_length;
+    }   
+    VPRINTF(LOW, "Populate KV with key length: %d\n", ciphertext_length);
+       
+    for (int i = 0; i < plaintext_length; i++) {
+        expected_key[i] = plaintext[i];
+    }   
+       
+    aes_input.key = aes_key;
+    aes_input.iv = 0;
+    aes_input.aad = 0;
+    aes_input.text_len = plaintext_length;
+    aes_input.plaintext = plaintext;
+    aes_input.ciphertext = ciphertext;
+    aes_input.key_o = aes_key_o;
+
+    //Run ENC
+    aes_flow(op, mode, key_len, aes_input);
+
+}
+

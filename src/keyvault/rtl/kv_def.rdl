@@ -69,6 +69,7 @@
         field {desc = "AES KEY is a valid destination";} aes_key_dest_valid = 0;
         field {desc = "MLKEM SEED is a valid destination";} mlkem_seed_dest_valid = 0;
         field {desc = "MLKEM MSG is a valid destination";} mlkem_msg_dest_valid = 0;
-        field {desc = "Reserved field";} rsvd[18] = 0;
+        field {desc = "AXI DMA data is a valid destination";} dma_data_dest_valid = 0;
+        field {desc = "Reserved field";} rsvd[17] = 0;
 
     };

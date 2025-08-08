@@ -57,6 +57,7 @@ module hmac
 
         output wire error_intr,
         output wire notif_intr,
+        input logic ocp_lock_in_progress,
         input logic debugUnlock_or_scan_mode_switch
       );
 
@@ -127,6 +128,9 @@ module hmac
   kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
+  kv_read_filter_metrics_t  kv_key_read_metrics;
+  kv_read_filter_metrics_t  kv_block_read_metrics;
+  kv_write_filter_metrics_t kv_write_metrics;
   logic core_tag_we;
 
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
@@ -398,6 +402,13 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // T
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
+//Key Vault Control Modules
+always_comb begin
+    kv_key_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_key_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_HMAC_KEY);
+    kv_key_read_metrics.kv_key_entry         = kv_key_read_ctrl_reg.read_entry;
+end
+
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(KEY_SIZE),
@@ -411,6 +422,7 @@ hmac_key_kv_read
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
+    .read_metrics (kv_key_read_metrics ),
 
     //interface with kv
     .kv_read(kv_read[0]),
@@ -426,6 +438,13 @@ hmac_key_kv_read
     .read_done(kv_key_done)
 );
 
+//Key Vault Control Modules
+always_comb begin
+    kv_block_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_block_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_HMAC_BLOCK);
+    kv_block_read_metrics.kv_key_entry         = kv_block_read_ctrl_reg.read_entry;
+end
+
 //Read Block
 kv_read_client #(
   .DATA_WIDTH(BLOCK_SIZE),
@@ -440,6 +459,7 @@ hmac_block_kv_read
 
     //client control register
     .read_ctrl_reg(kv_block_read_ctrl_reg),
+    .read_metrics(kv_block_read_metrics),
 
     //interface with kv
     .kv_read(kv_read[1]),
@@ -460,6 +480,17 @@ logic [$clog2(TAG_SIZE/32):0] num_dwords;
 always_comb num_dwords = mode_reg ? 'd16 : 'd12;
 
 //Write to keyvault
+always_comb begin
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_write_metrics.kv_data0_present     = kv_key_data_present;
+    kv_write_metrics.kv_data0_entry       = kv_key_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_data1_present     = kv_data_present;
+    kv_write_metrics.kv_data1_entry       = kv_block_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_HMAC);
+    kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
+    kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
+end
+
 kv_write_client #(
   .DATA_WIDTH(TAG_SIZE)
 )
@@ -471,6 +502,7 @@ hmac_result_kv_write
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),
+  .write_metrics(kv_write_metrics),
   .num_dwords(num_dwords), 
 
   //interface with kv

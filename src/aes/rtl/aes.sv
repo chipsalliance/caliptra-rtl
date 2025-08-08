@@ -57,6 +57,10 @@ module aes
   output logic input_ready_o,
   output logic output_valid_o,
 
+  // Caliptra interface
+  input  caliptra2aes_t caliptra2aes,
+  output aes2caliptra_t aes2caliptra,
+
 
   // Key manager (keymgr) key sideload interface
   input  keymgr_pkg::hw_key_req_t                   keymgr_key_i,
@@ -125,6 +129,149 @@ module aes
     .lc_en_i ( lc_escalate_en_i ),
     .lc_en_o ( {lc_escalate_en} )
   );
+
+  ////////////////////////////////
+  // Caliptra Control Intercept //
+  ////////////////////////////////
+  localparam CLP_AES_KV_CHUNK_SIZE = NumRegsData*32; // Size of data that can be stored at once, atomically, at end of AES op
+  genvar kv_ii;
+
+  aes_hw2reg_t hw2reg_caliptra;
+  aes_reg2hw_t reg2hw_caliptra;
+  logic kv_data_intercept;
+  logic kv_data_intercept_end;
+  logic [CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1:0] kv_data_counter; // This will peg at the max value if decrypted plaintext is larger than CLP_AES_KV_WR_DW
+  logic incr_kv_data_counter;
+  logic [4*$bits(aes_hw2reg_data_out_mreg_t)-1:0] hw2reg_data_out_mask;
+  logic output_valid_r;
+
+  // Mask to conceal data_out from reg API (when dest is KV)
+  assign hw2reg_data_out_mask = {4*$bits(aes_hw2reg_data_out_mreg_t){~kv_data_intercept}};
+
+  always_comb begin
+      // Passthrough
+      hw2reg.key_share0        = hw2reg_caliptra.key_share0       ;
+      hw2reg.key_share1        = hw2reg_caliptra.key_share1       ;
+      hw2reg.iv                = hw2reg_caliptra.iv               ;
+      hw2reg.data_in           = hw2reg_caliptra.data_in          ;
+      hw2reg.ctrl_shadowed     = hw2reg_caliptra.ctrl_shadowed    ;
+      hw2reg.trigger           = hw2reg_caliptra.trigger          ;
+      hw2reg.status            = hw2reg_caliptra.status           ;
+      hw2reg.ctrl_gcm_shadowed = hw2reg_caliptra.ctrl_gcm_shadowed;
+      // Concealed
+      hw2reg.data_out          = hw2reg_caliptra.data_out         & hw2reg_data_out_mask;
+  end
+  always_comb begin
+      // Passthrough
+      reg2hw_caliptra.alert_test        = reg2hw.alert_test       ;
+      reg2hw_caliptra.key_share0        = reg2hw.key_share0       ;
+      reg2hw_caliptra.key_share1        = reg2hw.key_share1       ;
+      reg2hw_caliptra.iv                = reg2hw.iv               ;
+      reg2hw_caliptra.data_in           = reg2hw.data_in          ;
+      reg2hw_caliptra.ctrl_shadowed     = reg2hw.ctrl_shadowed    ;
+      reg2hw_caliptra.ctrl_aux_shadowed = reg2hw.ctrl_aux_shadowed;
+      reg2hw_caliptra.trigger           = reg2hw.trigger          ;
+      reg2hw_caliptra.status            = reg2hw.status           ;
+      reg2hw_caliptra.ctrl_gcm_shadowed = reg2hw.ctrl_gcm_shadowed;
+      // RE intercept
+      foreach (reg2hw.data_out[idx]) begin
+      reg2hw_caliptra.data_out[idx].q   = reg2hw.data_out[idx].q  ;
+      reg2hw_caliptra.data_out[idx].re  = kv_data_intercept ? output_valid_r :
+                                                              reg2hw.data_out[idx].re;
+      end
+  end
+
+  // Flag to detect when data out shall be routed to Caliptra KeyVault
+  always_ff @(posedge clk_i or negedge rst_ni) begin: kv_data_intercept_reg
+      if (!rst_ni) begin
+          kv_data_intercept <= 1'b0;
+      end
+      // FW must arm the KV write prior to starting AES operation
+      else if ((kv_data_counter == 0) && reg2hw_caliptra.data_in[0].qe) begin
+          kv_data_intercept <= caliptra2aes.kv_en;
+      end
+      // TODO support for Manual operation mode with trigger.start.q?
+      else if (kv_data_intercept_end) begin
+          kv_data_intercept <= 1'b0;
+      end
+  end
+
+  // NOTE: This assumes that output_valid will always assert prior to entering idle state, which should be true.
+  //       If this doesn't hold, then kv_data_intercept will deassert before the final data beat is captured, and
+  //       the KV write won't be issued
+  always_comb kv_data_intercept_end = hw2reg.status.idle.de && hw2reg.status.idle.d && !reg2hw_caliptra.status.idle.q && (kv_data_counter == (CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1)/*TODO -- this should be the key_size strap value?*/);
+
+  // Latch when data_out is valid, used to generate read-enable and signal data capture
+  always_ff @(posedge clk_i or negedge rst_ni) begin: output_valid_dd_reg
+      if (!rst_ni) begin
+          output_valid_r <= 1'b0;
+      end
+      else if (hw2reg.status.output_valid.de) begin
+          output_valid_r <= hw2reg.status.output_valid.d;
+      end
+  end
+
+  // Index into the KV output data based on number of AES rounds observed
+  always_comb incr_kv_data_counter = kv_data_intercept && output_valid_r;
+  always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_counter_reg
+      if (!rst_ni) begin
+          kv_data_counter <= '0;
+      end
+      else if (!kv_data_intercept) begin
+          kv_data_counter <= '0;
+      end
+      else if (incr_kv_data_counter && (kv_data_counter == (CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1)/*TODO -- this should be the key_size strap value?*/)) begin
+          kv_data_counter <= kv_data_counter;
+      end
+      else if (incr_kv_data_counter) begin
+          kv_data_counter <= kv_data_counter + 1;
+      end
+  end
+
+  // Signal data is valid for KV write client once full AES operation is done
+  always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_valid_reg
+      if (!rst_ni) begin
+          aes2caliptra.kv_data_out_valid <= 1'b0;
+      end
+      else if (1'b0/*FIXME fixme_purge_kv_data*/) begin
+          aes2caliptra.kv_data_out_valid <= 1'b0;
+      end
+      else if (kv_data_intercept_end) begin
+          aes2caliptra.kv_data_out_valid <= 1'b1;
+      end
+      else if (caliptra2aes.kv_write_done) begin
+          aes2caliptra.kv_data_out_valid <= 1'b0;
+      end
+  end
+  assign aes2caliptra.kv_key_in_use = reg2hw_caliptra.ctrl_shadowed.sideload.q;
+  // TODO: Qualify this with anything?
+  //       Probably not needed. Timing of the kv write request is tightly controlled, and that's the only
+  //       place this signal is used.
+  always_comb aes2caliptra.aes_operation_is_ecb_decrypt = (  aes_op_e'(hw2reg.ctrl_shadowed.operation.d)     == AES_DEC) &&
+                                                          (aes_mode_e'(reg2hw_caliptra.ctrl_shadowed.mode.q) == AES_ECB);
+
+  // Capture data_out until operation is done
+  generate
+      for (kv_ii=0; kv_ii < CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE; kv_ii++) begin
+          always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_reg
+              if (!rst_ni) begin
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+              end
+              else if (1'b0/*FIXME fixme_purge_kv_data*/) begin
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+              end
+              else if (incr_kv_data_counter && (kv_data_counter == kv_ii)) begin
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[0].d,
+                                                                                                                                              hw2reg_caliptra.data_out[1].d,
+                                                                                                                                              hw2reg_caliptra.data_out[2].d,
+                                                                                                                                              hw2reg_caliptra.data_out[3].d}; // Fixed endianness
+              end
+              else if (caliptra2aes.kv_write_done) begin
+                  aes2caliptra.kv_data_out[(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1-kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+              end
+          end
+      end
+  endgenerate
 
   ///////////////////
   // EDN Interface //
@@ -215,8 +362,8 @@ module aes
     .alert_recov_o          ( alert[0]             ),
     .alert_fatal_o          ( alert[1]             ),
 
-    .reg2hw                 ( reg2hw               ),
-    .hw2reg                 ( hw2reg               )
+    .reg2hw                 ( reg2hw_caliptra      ),
+    .hw2reg                 ( hw2reg_caliptra      )
   );
 
   assign idle_o = caliptra_prim_mubi_pkg::mubi4_bool_to_mubi(reg2hw.status.idle.q);

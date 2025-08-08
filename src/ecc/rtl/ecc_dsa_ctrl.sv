@@ -79,6 +79,7 @@ module ecc_dsa_ctrl
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
 
+    input  logic ocp_lock_in_progress,
     output logic busy_o,
 
     // Interrupts (from ecc_reg)
@@ -184,6 +185,9 @@ module ecc_dsa_ctrl
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
+    kv_read_filter_metrics_t kv_privkey_read_metrics;
+    kv_read_filter_metrics_t kv_seed_read_metrics;
+    kv_write_filter_metrics_t kv_write_metrics;
 
     logic pcr_sign_mode;
     
@@ -856,6 +860,12 @@ module ecc_dsa_ctrl
     always_comb ecc_ready_reg = !(dsa_busy | pm_busy_o);
     
     //Key Vault Control Modules
+    always_comb begin
+        kv_privkey_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+        kv_privkey_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_ECC_PKEY);
+        kv_privkey_read_metrics.kv_key_entry         = kv_privkey_read_ctrl_reg.read_entry;
+    end
+
     //Read PRIVKEY
     kv_read_client #(
         .DATA_WIDTH(REG_SIZE),
@@ -869,6 +879,7 @@ module ecc_dsa_ctrl
 
         //client control register
         .read_ctrl_reg(kv_privkey_read_ctrl_reg),
+        .read_metrics(kv_privkey_read_metrics),
 
         //interface with kv
         .kv_read(kv_read[0]),
@@ -885,6 +896,12 @@ module ecc_dsa_ctrl
     );
 
     //Read SEED
+    always_comb begin
+        kv_seed_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+        kv_seed_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_ECC_SEED);
+        kv_seed_read_metrics.kv_key_entry         = kv_seed_read_ctrl_reg.read_entry;
+    end
+
     kv_read_client #(
         .DATA_WIDTH(REG_SIZE),
         .PAD(0)
@@ -897,6 +914,7 @@ module ecc_dsa_ctrl
 
         //client control register
         .read_ctrl_reg(kv_seed_read_ctrl_reg),
+        .read_metrics(kv_seed_read_metrics),
 
         //interface with kv
         .kv_read(kv_read[1]),
@@ -913,6 +931,17 @@ module ecc_dsa_ctrl
     );
 
     //Write to keyvault
+    always_comb begin
+        kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+        kv_write_metrics.kv_data0_present     = kv_seed_data_present;
+        kv_write_metrics.kv_data0_entry       = kv_seed_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+        kv_write_metrics.kv_data1_present     = kv_key_data_present;
+        kv_write_metrics.kv_data1_entry       = kv_privkey_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+        kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_ECC);
+        kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
+        kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
+    end
+
     kv_write_client #(
         .DATA_WIDTH(REG_SIZE)
     )
@@ -925,6 +954,7 @@ module ecc_dsa_ctrl
         //client control register
         .write_ctrl_reg(kv_write_ctrl_reg),
         .num_dwords(REG_NUM_DWORDS[4:0]),
+        .write_metrics(kv_write_metrics),
 
         //interface with kv
         .kv_write(kv_write),
