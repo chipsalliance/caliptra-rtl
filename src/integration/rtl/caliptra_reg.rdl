@@ -38,8 +38,10 @@ addrmap clp #(
     sha512_reg sha512_reg @ 0x1002_0000;
 
     sha256_reg sha256_reg @ 0x1002_8000;
-    
+
     abr_reg abr_reg @ 0x1003_0000;
+
+    sha3_reg sha3 @ 0x1004_0000;
 
     csrng csrng_reg @ 0x2000_2000;
 

@@ -160,6 +160,11 @@ ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_chk.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err_resp.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_fifo_sync.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_socket_1n.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_sram_byte.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_adapter_sram.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_masked.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_cipher_core.sv
