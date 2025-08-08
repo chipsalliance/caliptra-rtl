@@ -236,7 +236,11 @@ always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_S
 
 // check KV filtering rules
 always_comb begin
+    `ifdef CALIPTRA_MODE_SUBSYSTEM
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_en;
+    `else
+    kv_write_metrics.ocp_lock_in_progress = 1'b0;
+    `endif
     kv_write_metrics.kv_data0_present     = 1'b0;
     kv_write_metrics.kv_data0_entry       = '0;
     kv_write_metrics.kv_data1_present     = 1'b0;

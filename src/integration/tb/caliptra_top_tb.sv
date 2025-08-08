@@ -107,6 +107,8 @@ module caliptra_top_tb (
     //device lifecycle
     security_state_t security_state;
 
+    logic ss_ocp_lock_en;
+
     ras_test_ctrl_t ras_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
@@ -135,6 +137,15 @@ module caliptra_top_tb (
     begin : clk_gen
       core_clk = #5ns ~core_clk;
     end // clk_gen
+`endif
+
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+initial begin
+    if ($test$plusargs("CLP_OCP_LOCK_EN"))
+        ss_ocp_lock_en = 1'b1;
+end
+`else
+assign ss_ocp_lock_en = 1'b0;
 `endif
     
 
@@ -282,6 +293,9 @@ caliptra_top caliptra_top_dut (
     .strap_ss_strap_generic_2                               (32'h0),
     .strap_ss_strap_generic_3                               (32'h0),
     .ss_debug_intent                                        ( 1'b0),
+
+    // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
+    .ss_ocp_lock_en                                         (ss_ocp_lock_en),
 
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (/*TODO*/),

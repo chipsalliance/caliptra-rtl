@@ -518,10 +518,11 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.RSVD_en.next = 3'b0;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
 `endif
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
 
 //SOC Stepping ID update
 always_comb begin
@@ -758,10 +759,12 @@ always_comb begin
 end
 
 // OCP Lock progress register is w1-set, meaning once set to 1 it persists until reset (on the uC fw upd reset domain)
-// It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN macro)
-always_comb begin
-    soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = !ss_ocp_lock_en || soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
-end
+// It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN strap)
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = !ss_ocp_lock_en || soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
+`else
+always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
+`endif
 
 assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
 
@@ -1539,6 +1542,9 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
+`ifndef CALIPTRA_MODE_SUBSYSTEM
+`CALIPTRA_ASSERT_INIT_NET(SS_STRAP_OCP_LOCK_EN   , ss_ocp_lock_en == 1'b0)
+`endif
 `CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_DW_MULT , strap_ss_key_release_key_size[1:0]  == 2'b00 , clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_LTE_64  , strap_ss_key_release_key_size[15:0] <= 16'h40, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)
