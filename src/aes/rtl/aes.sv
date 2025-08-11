@@ -142,24 +142,38 @@ module aes
   logic kv_data_intercept_end;
   logic [CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1:0] kv_data_counter; // This will peg at the key_size value if decrypted plaintext is larger than CLP_AES_KV_WR_DW
   logic incr_kv_data_counter;
+  logic hw2reg_data_out_mask_en;
   logic [4*$bits(aes_hw2reg_data_out_mreg_t)-1:0] hw2reg_data_out_mask;
   logic output_valid_r;
 
   // Mask to conceal data_out from reg API (when dest is KV)
-  assign hw2reg_data_out_mask = {4*$bits(aes_hw2reg_data_out_mreg_t){~kv_data_intercept}};
+  assign hw2reg_data_out_mask = {4*$bits(aes_hw2reg_data_out_mreg_t){hw2reg_data_out_mask_en}};
 
   always_comb begin
       // Passthrough
-      hw2reg.key_share0        = hw2reg_caliptra.key_share0       ;
-      hw2reg.key_share1        = hw2reg_caliptra.key_share1       ;
-      hw2reg.iv                = hw2reg_caliptra.iv               ;
-      hw2reg.data_in           = hw2reg_caliptra.data_in          ;
-      hw2reg.ctrl_shadowed     = hw2reg_caliptra.ctrl_shadowed    ;
-      hw2reg.trigger           = hw2reg_caliptra.trigger          ;
-      hw2reg.status            = hw2reg_caliptra.status           ;
-      hw2reg.ctrl_gcm_shadowed = hw2reg_caliptra.ctrl_gcm_shadowed;
+      hw2reg.key_share0                         = hw2reg_caliptra.key_share0       ;
+      hw2reg.key_share1                         = hw2reg_caliptra.key_share1       ;
+      hw2reg.iv                                 = hw2reg_caliptra.iv               ;
+      hw2reg.data_in                            = hw2reg_caliptra.data_in          ;
+      hw2reg.ctrl_shadowed                      = hw2reg_caliptra.ctrl_shadowed    ;
+      hw2reg.trigger                            = hw2reg_caliptra.trigger          ;
+      hw2reg.status.idle                        = hw2reg_caliptra.status.idle      ;
+      hw2reg.status.stall                       = hw2reg_caliptra.status.stall     ;
+      hw2reg.status.input_ready                 = hw2reg_caliptra.status.input_ready;
+      hw2reg.status.alert_recov_ctrl_update_err = hw2reg_caliptra.status.alert_recov_ctrl_update_err;
+      hw2reg.status.alert_fatal_fault           = hw2reg_caliptra.status.alert_fatal_fault;
+      hw2reg.ctrl_gcm_shadowed                  = hw2reg_caliptra.ctrl_gcm_shadowed;
+      // Augmented
+      hw2reg.status.output_lost.d               = hw2reg_caliptra.status.output_lost.de ? hw2reg_caliptra.status.output_lost.d :
+                                                                                          1'b1;
+      hw2reg.status.output_lost.de              = hw2reg_caliptra.status.output_lost.de ||
+                                                 (hw2reg_caliptra.status.output_valid.de &&
+                                                  hw2reg_caliptra.status.output_valid.d  &&
+                                                  caliptra2aes.block_reg_output);
+      hw2reg.status.output_valid.d              = hw2reg_caliptra.status.output_valid.d ;
+      hw2reg.status.output_valid.de             = hw2reg_caliptra.status.output_valid.de;
       // Concealed
-      hw2reg.data_out          = hw2reg_caliptra.data_out         & hw2reg_data_out_mask;
+      hw2reg.data_out.d                         = hw2reg_caliptra.data_out.d       & hw2reg_data_out_mask;
   end
   always_comb begin
       // Passthrough
@@ -184,15 +198,18 @@ module aes
   // Flag to detect when data out shall be routed to Caliptra KeyVault
   always_ff @(posedge clk_i or negedge rst_ni) begin: kv_data_intercept_reg
       if (!rst_ni) begin
-          kv_data_intercept <= 1'b0;
+          kv_data_intercept       <= 1'b0;
+          hw2reg_data_out_mask_en <= 1'b1;
       end
       // FW must arm the KV write prior to starting AES operation
       else if ((kv_data_counter == 0) && reg2hw_caliptra.data_in[0].qe) begin
-          kv_data_intercept <= caliptra2aes.kv_en;
+          kv_data_intercept       <=  caliptra2aes.kv_en;
+          hw2reg_data_out_mask_en <= ~caliptra2aes.kv_en && ~caliptra2aes.block_reg_output; // This signal winds up being effectively (~kv_data_intercept || caliptra2aes.block_reg_output)
       end
       // TODO support for Manual operation mode with trigger.start.q?
       else if (kv_data_intercept_end) begin
-          kv_data_intercept <= 1'b0;
+          kv_data_intercept       <= 1'b0;
+          hw2reg_data_out_mask_en <= 1'b1;
       end
   end
 
@@ -206,8 +223,8 @@ module aes
       if (!rst_ni) begin
           output_valid_r <= 1'b0;
       end
-      else if (hw2reg.status.output_valid.de) begin
-          output_valid_r <= hw2reg.status.output_valid.d;
+      else if (hw2reg_caliptra.status.output_valid.de) begin
+          output_valid_r <= hw2reg_caliptra.status.output_valid.d;
       end
   end
 

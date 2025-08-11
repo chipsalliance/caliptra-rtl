@@ -751,6 +751,7 @@ parameter CLP_AES_KV_WR_DW = 512;
 typedef struct packed {
     logic kv_en;
     logic kv_write_done;
+    logic block_reg_output;
     logic clear_secrets;
     logic [15:0] key_release_key_size;
 } caliptra2aes_t;

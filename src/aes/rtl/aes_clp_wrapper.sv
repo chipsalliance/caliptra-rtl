@@ -429,7 +429,7 @@ logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 
 // AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
 // Key size is in bytes
-always_comb kv_wr_num_dwords = key_release_key_size>>2; // FIXME should this be tied to AES control fields?
+always_comb kv_wr_num_dwords = key_release_key_size>>2;
 
 // ============== AES Checks, conditions, HW rules for RAS TODO ============= //
 // * block reg API when writing to keyvault                                   //
@@ -448,6 +448,10 @@ always_comb begin
     kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
     kv_write_metrics.aes_decrypt_ecb_op   = aes2caliptra.aes_operation_is_ecb_decrypt;
 end
+
+always_comb caliptra2aes.block_reg_output = ocp_lock_in_progress &&
+                                            (aes2caliptra.kv_key_in_use && kv_key_present_slot == OCP_LOCK_RT_OBF_KEY_KV_SLOT) &&
+                                            aes2caliptra.aes_operation_is_ecb_decrypt;
 
 //Write to keyvault
 kv_write_client #(
