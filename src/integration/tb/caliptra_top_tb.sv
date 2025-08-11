@@ -143,6 +143,8 @@ module caliptra_top_tb (
 initial begin
     if ($test$plusargs("CLP_OCP_LOCK_EN"))
         ss_ocp_lock_en = 1'b1;
+    else
+        ss_ocp_lock_en = 1'b0;
 end
 `else
 assign ss_ocp_lock_en = 1'b0;
