@@ -5,6 +5,7 @@
 +incdir+${CALIPTRA_ROOT}/src/sha512/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512_masked/rtl
 +incdir+${CALIPTRA_ROOT}/src/hmac/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/hmac/coverage
 +incdir+${CALIPTRA_ROOT}/src/hmac/tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
@@ -52,6 +53,7 @@ ${CALIPTRA_ROOT}/src/hmac/rtl/hmac.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.v
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_lfsr.sv
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_if.sv
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_bind.sv
 ${CALIPTRA_ROOT}/src/hmac/tb/hmac_ctrl_tb.sv
