@@ -281,6 +281,19 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             }
         }
       }
+      if (aes_input.key_o.kv_intf ) {
+        VPRINTF(LOW, "WAITING FOR KV WRITE TO FINISH\n");
+        kv_poll_valid(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
+        VPRINTF(LOW, "CHECKING FOR KV WRITE ERR\n");
+        if(aes_input.key_o.kv_expect_err == TRUE) {
+            VPRINTF(LOW, "EXPECTING KV ERR\n");
+            kv_expect_error_check(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
+        }
+        else {
+            VPRINTF(LOW, "EXPECTING NO KV ERR\n");
+            kv_error_check(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
+        }
+      }
     }
   }
 

@@ -26,6 +26,15 @@ void kv_error_check(uint32_t reg_addr) {
     }
 }
 
+
+void kv_expect_error_check(uint32_t reg_addr) {
+    VPRINTF(MEDIUM,"KV: checking errors present\n");
+    if ((lsu_read_32(reg_addr) & KV_RD_STATUS_ERROR_MASK) == 0) {
+        VPRINTF(FATAL,"NO KV ERROR\n");
+        SEND_STDOUT_CTRL( 0x01);
+    }
+}
+
 void kv_read_ctrl(uint32_t reg_addr, uint32_t read_entry) {
     VPRINTF(MEDIUM,"KV: prog kv read ctrl\n");
     uint32_t wr_data;

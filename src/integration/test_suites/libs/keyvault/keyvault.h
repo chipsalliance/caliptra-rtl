@@ -77,8 +77,10 @@ void kv_set_lock_wr(uint32_t entry);
 void kv_set_clear(uint32_t entry);
 
 void kv_error_check(uint32_t reg_addr);
+void kv_expect_error_check(uint32_t reg_addr);
 void kv_read_ctrl(uint32_t reg_addr, uint32_t read_entry);
 void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_valid);
+
 
 void pv_hash_extend(uint32_t pcr_entry);
 
