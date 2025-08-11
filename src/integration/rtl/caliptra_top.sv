@@ -35,7 +35,7 @@ module caliptra_top
     input logic                        cptra_rst_b,
 
     input logic [255:0]                              cptra_obf_key,
-    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,    
+    input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,
     input logic                                      cptra_obf_field_entropy_vld,
     input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0]      cptra_obf_field_entropy,
     input logic                                      cptra_obf_uds_seed_vld,
@@ -132,6 +132,16 @@ module caliptra_top
     output logic                trace_rv_i_interrupt_ip,
     output logic [31:0]         trace_rv_i_tval_ip,
 
+`ifdef RV_LOCKSTEP_ENABLE
+    output logic [31:0]         shadow_core_trace_rv_i_insn_ip,
+    output logic [31:0]         shadow_core_trace_rv_i_address_ip,
+    output logic                shadow_core_trace_rv_i_valid_ip,
+    output logic                shadow_core_trace_rv_i_exception_ip,
+    output logic [4:0]          shadow_core_trace_rv_i_ecause_ip,
+    output logic                shadow_core_trace_rv_i_interrupt_ip,
+    output logic [31:0]         shadow_core_trace_rv_i_tval_ip,
+`endif
+
     input security_state_t             security_state,
     input logic                        scan_mode
 );
@@ -214,7 +224,7 @@ module caliptra_top
     security_state_t            cptra_security_state_Latched_d;
     security_state_t            cptra_security_state_Latched_f;
     logic                       cptra_dmi_reg_en_preQ;
-    
+
     logic                       fw_update_rst_window;
 
     logic cptra_ss_debug_intent; //qualified debug intent
@@ -225,7 +235,7 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
-  
+
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -299,7 +309,7 @@ module caliptra_top
     logic [2:0] imem_hsize;
     logic [63:0] imem_hrdata;
     logic imem_hresp;
-    
+
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
@@ -318,7 +328,7 @@ always_comb begin
     mbox_sram_resp.rdata = mbox_sram_rdata; // Contains data + ecc fields
 end
     //========================================================================
-    // AHB Slave ports. 
+    // AHB Slave ports.
     // Slave 0: LMEM
     // Slave 1: DMA Slave port
     //========================================================================
@@ -441,7 +451,7 @@ end
 //Open Core TAP only for debug unlocked
 always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked);
 //Open Uncore TAP for debug unlocked, or DEVICE_MANUFACTURING, or debug intent set
-always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
+always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) |
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
@@ -465,7 +475,7 @@ el2_veer_wrapper rvtop (
 `else
     .rst_l                  ( cptra_uc_rst_b),
 `endif
-    .dbg_rst_l              ( cptra_pwrgood), 
+    .dbg_rst_l              ( cptra_pwrgood),
     .clk                    ( uc_clk_cg    ),
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
@@ -598,6 +608,15 @@ el2_veer_wrapper rvtop (
     .el2_mem_export         (el2_mem_export),
 
 `ifdef RV_LOCKSTEP_ENABLE
+    // Shadow Core trace
+    .shadow_core_trace_rv_i_insn_ip(shadow_core_trace_rv_i_insn_ip),
+    .shadow_core_trace_rv_i_address_ip(shadow_core_trace_rv_i_address_ip),
+    .shadow_core_trace_rv_i_valid_ip(shadow_core_trace_rv_i_valid_ip),
+    .shadow_core_trace_rv_i_exception_ip(shadow_core_trace_rv_i_exception_ip),
+    .shadow_core_trace_rv_i_ecause_ip(shadow_core_trace_rv_i_ecause_ip),
+    .shadow_core_trace_rv_i_interrupt_ip(shadow_core_trace_rv_i_interrupt_ip),
+    .shadow_core_trace_rv_i_tval_ip(shadow_core_trace_rv_i_tval_ip),
+
     // Shadow Core control
     .disable_corruption_detection_i(1'b0),
     .lockstep_err_injection_en_i(1'b0),
@@ -676,9 +695,9 @@ el2_veer_wrapper rvtop (
             cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
         end
-        else if (unlock_caliptra_security_state) begin 
+        else if (unlock_caliptra_security_state) begin
             cptra_security_state_Latched_d <= security_state;
-        end 
+        end
         else begin
             cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
         end
@@ -701,7 +720,7 @@ el2_veer_wrapper rvtop (
     always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
     //Only assert scan mode once both flops have set
     always_comb cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
-    
+
     // When scan mode goes from 0->1, generate a pulse to clear the assets
     // Note that when scan goes to '1, Caliptra state as well as SOC state
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
@@ -914,7 +933,7 @@ sha256_ctrl #(
 );
 
 //override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent | 
+always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent |
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
@@ -949,7 +968,7 @@ doe_ctrl #(
     .kv_write (kv_write[KV_NUM_WRITE-1]),
     .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
-    
+
 );
 
 ecc_top #(
@@ -1063,18 +1082,18 @@ aes_clp_wrapper #(
     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hresp),
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
-  
+
     // status signals
     .input_ready_o(aes_input_ready),
     .output_valid_o(aes_output_valid),
     .status_idle_o(aes_status_idle),
-    
+
     // DMA CIF IF
    .dma_req_dv(aes_cif_dma_req_dv),
    .dma_req_write(aes_cif_dma_req_data.write),
    .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
    .dma_req_wdata(aes_cif_dma_req_data.wdata),
-   .dma_req_hold(aes_cif_dma_req_hold), 
+   .dma_req_hold(aes_cif_dma_req_hold),
    .dma_req_error(aes_cif_dma_req_error),
    .dma_req_rdata(aes_cif_dma_req_rdata),
 
@@ -1286,7 +1305,7 @@ soc_ifc_top #(
     .AXIM_ID_WIDTH  (CPTRA_AXI_DMA_ID_WIDTH),
     .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH)
     )
-soc_ifc_top1 
+soc_ifc_top1
     (
     .clk           (clk           ),
     .clk_cg        (clk_cg        ),
@@ -1310,7 +1329,7 @@ soc_ifc_top1
     .aes_req_hold(aes_cif_dma_req_hold),
     .aes_req_data(aes_cif_dma_req_data),
     .aes_rdata(aes_cif_dma_req_rdata),
-    .aes_error(aes_cif_dma_req_error), 
+    .aes_error(aes_cif_dma_req_error),
 
 
 
@@ -1318,9 +1337,9 @@ soc_ifc_top1
     .recovery_image_activated(recovery_image_activated),
 
     .security_state(cptra_security_state_Latched),
-    
+
     .BootFSM_BrkPoint (BootFSM_BrkPoint),
-    
+
     .generic_input_wires(generic_input_wires),
     .generic_output_wires(generic_output_wires),
 
@@ -1336,9 +1355,9 @@ soc_ifc_top1
     .s_axi_r_if(s_axi_r_if),
 
     //AHB Interface with uC
-    .haddr_i    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]), 
-    .hwdata_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwdata), 
-    .hsel_i     (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hsel), 
+    .haddr_i    (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0]),
+    .hwdata_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwdata),
+    .hsel_i     (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hsel),
     .hwrite_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwrite),
     .hready_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hready),
     .htrans_i   (responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].htrans),
@@ -1402,7 +1421,7 @@ soc_ifc_top1
     // Subsystem mode firmware execution control
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
 
-    // NMI Vector 
+    // NMI Vector
     .nmi_vector(nmi_vector),
     .nmi_intr(nmi_int),
     // ICCM Lock

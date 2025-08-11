@@ -291,6 +291,16 @@ caliptra_top caliptra_top_dut (
     .trace_rv_i_interrupt_ip(), // TODO
     .trace_rv_i_tval_ip     (), // TODO
 
+`ifdef RV_LOCKSTEP_ENABLE
+    .shadow_core_trace_rv_i_insn_ip     (),
+    .shadow_core_trace_rv_i_address_ip  (),
+    .shadow_core_trace_rv_i_valid_ip    (),
+    .shadow_core_trace_rv_i_exception_ip(),
+    .shadow_core_trace_rv_i_ecause_ip   (),
+    .shadow_core_trace_rv_i_interrupt_ip(),
+    .shadow_core_trace_rv_i_tval_ip     (),
+`endif
+
     .security_state(security_state),
     .scan_mode     (scan_mode)
 );
