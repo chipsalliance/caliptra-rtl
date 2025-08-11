@@ -179,6 +179,9 @@ typedef struct packed {
 	logic [6:0]      LSU_NUM_NBLOAD_WIDTH;
 	logic [8:0]      LSU_SB_BITS;
 	logic [7:0]      LSU_STBUF_DEPTH;
+	logic [35:0]     MUBI_FALSE;
+	logic [35:0]     MUBI_TRUE;
+	logic [9:0]      MUBI_WIDTH;
 	logic [4:0]      NO_ICCM_NO_ICACHE;
 	logic [4:0]      PIC_2CYCLE;
 	logic [35:0]     PIC_BASE_ADDR;
