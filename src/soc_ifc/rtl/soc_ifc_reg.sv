@@ -420,7 +420,7 @@ module soc_ifc_reg (
                 logic load_next;
             } crypto_err;
             struct packed{
-                logic next;
+                logic [1:0] next;
                 logic load_next;
             } dcls_error;
         } CPTRA_HW_ERROR_FATAL;
@@ -1530,7 +1530,7 @@ module soc_ifc_reg (
                 logic value;
             } crypto_err;
             struct packed{
-                logic value;
+                logic [1:0] value;
             } dcls_error;
         } CPTRA_HW_ERROR_FATAL;
         struct packed{
@@ -2470,12 +2470,12 @@ module soc_ifc_reg (
     assign hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value = field_storage.CPTRA_HW_ERROR_FATAL.crypto_err.value;
     // Field: soc_ifc_reg.CPTRA_HW_ERROR_FATAL.dcls_error
     always_comb begin
-        automatic logic [0:0] next_c;
+        automatic logic [1:0] next_c;
         automatic logic load_next_c;
         next_c = field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value;
         load_next_c = '0;
         if(decoded_reg_strb.CPTRA_HW_ERROR_FATAL && decoded_req_is_wr) begin // SW write 1 clear
-            next_c = field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value & ~(decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
+            next_c = field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value & ~(decoded_wr_data[5:4] & decoded_wr_biten[5:4]);
             load_next_c = '1;
         end else if(hwif_in.CPTRA_HW_ERROR_FATAL.dcls_error.we) begin // HW Write - we
             next_c = hwif_in.CPTRA_HW_ERROR_FATAL.dcls_error.next;
@@ -2486,7 +2486,7 @@ module soc_ifc_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
-            field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value <= 1'h0;
+            field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value <= 2'h0;
         end else if(field_combo.CPTRA_HW_ERROR_FATAL.dcls_error.load_next) begin
             field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value <= field_combo.CPTRA_HW_ERROR_FATAL.dcls_error.next;
         end
@@ -7152,8 +7152,8 @@ module soc_ifc_reg (
     assign readback_array[0][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value : '0;
     assign readback_array[0][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value : '0;
     assign readback_array[0][3:3] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.crypto_err.value : '0;
-    assign readback_array[0][4:4] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value : '0;
-    assign readback_array[0][31:5] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next : '0;
+    assign readback_array[0][5:4] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dcls_error.value : '0;
+    assign readback_array[0][31:6] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next : '0;
     assign readback_array[1][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.value : '0;
     assign readback_array[1][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo.value : '0;
     assign readback_array[1][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_NON_FATAL.mbox_ecc_unc.value : '0;

@@ -8140,9 +8140,9 @@
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW                                             (3)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK                                            (32'h8)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCLS_ERROR_LOW                                             (4)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCLS_ERROR_MASK                                            (32'h10)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (5)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffffe0)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCLS_ERROR_MASK                                            (32'h30)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffffc0)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                        (32'h4)
