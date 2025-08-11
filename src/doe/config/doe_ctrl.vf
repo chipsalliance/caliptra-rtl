@@ -34,5 +34,3 @@ ${CALIPTRA_ROOT}/src/doe/rtl/doe_cbc.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_core_cbc.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_reg.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_fsm.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
-${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
