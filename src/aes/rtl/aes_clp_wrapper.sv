@@ -52,6 +52,7 @@ module aes_clp_wrapper
   
   // OCP LOCK
   input  logic ocp_lock_in_progress,
+  input logic [15:0] key_release_key_size,
 
   // status signals
   output logic input_ready_o,
@@ -133,7 +134,6 @@ kv_write_ctrl_reg_t kv_write_ctrl_reg;
 kv_write_filter_metrics_t kv_write_metrics;
 kv_error_code_e kv_write_error;
 logic kv_write_ready;
-//write 512 or 384 result based on mode bit
 logic [$clog2(CLP_AES_KV_WR_DW/32):0] kv_wr_num_dwords;
 
 edn_pkg::edn_req_t edn_req;
@@ -296,6 +296,9 @@ edn_pkg::edn_rsp_t edn_i;
 logic [edn_pkg::ENDPOINT_BUS_WIDTH-1:0] edn_bus;
 assign edn_i = '{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:edn_bus};
 
+assign caliptra2aes.clear_secrets = debugUnlock_or_scan_mode_switch;
+assign caliptra2aes.key_release_key_size = key_release_key_size;
+
 //AES Engine
 aes
 aes_inst (
@@ -424,7 +427,9 @@ aes_key_kv_read
 
 logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 
-always_comb kv_wr_num_dwords = CLP_AES_KV_WR_DW/32; // FIXME should this be tied to AES control fields?
+// AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
+// Key size is in bytes
+always_comb kv_wr_num_dwords = key_release_key_size>>2; // FIXME should this be tied to AES control fields?
 
 // ============== AES Checks, conditions, HW rules for RAS TODO ============= //
 // * block reg API when writing to keyvault                                   //
@@ -446,7 +451,8 @@ end
 
 //Write to keyvault
 kv_write_client #(
-  .DATA_WIDTH(CLP_AES_KV_WR_DW)
+  .DATA_WIDTH(CLP_AES_KV_WR_DW),
+  .KV_WRITE_SWAP_DWORDS(0)
 )
 aes_result_kv_write
 (
