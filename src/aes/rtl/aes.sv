@@ -164,6 +164,10 @@ module aes
       hw2reg.status.alert_fatal_fault           = hw2reg_caliptra.status.alert_fatal_fault;
       hw2reg.ctrl_gcm_shadowed                  = hw2reg_caliptra.ctrl_gcm_shadowed;
       // Augmented
+      // For OCP LOCK use-cases, add a condition to set output_lost if output data is required to go to KV but AES is not programmed
+      // to do the KV write.
+      // Output Lost is usually only used for Manual mode. TODO if we support manual mode with OCP LOCK flows (and KV WR) this may
+      // need to be updated.
       hw2reg.status.output_lost.d               = hw2reg_caliptra.status.output_lost.de ? hw2reg_caliptra.status.output_lost.d :
                                                                                           1'b1;
       hw2reg.status.output_lost.de              = hw2reg_caliptra.status.output_lost.de ||

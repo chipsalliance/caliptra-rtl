@@ -432,11 +432,7 @@ logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 always_comb kv_wr_num_dwords = key_release_key_size>>2;
 
 // ============== AES Checks, conditions, HW rules for RAS TODO ============= //
-// * block reg API when writing to keyvault                                   //
 // * swizzle result data?                                                     //
-// * implement write path rules (as new module?)                              //
-// * check data count when receiving decrypt result?                          //
-// * Keyvault write is only accepted for specified request data count?        //
 // ================================ END TODO ================================ //
 always_comb begin
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
