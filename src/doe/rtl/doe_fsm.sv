@@ -235,6 +235,8 @@ always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT)
 always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_SEED_KV_SLOT : doe_cmd_reg.dest_sel; // TODO necessary to tie HEK dest?
 
 // check KV filtering rules
+// Use the strap ocp_lock_en instead of the register ocp_lock_in_progress because DOE
+// is a ROM flow and occurs prior to setting the register
 always_comb begin
     `ifdef CALIPTRA_MODE_SUBSYSTEM
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_en;
