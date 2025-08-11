@@ -143,11 +143,11 @@ module aes
   logic [CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE-1:0] kv_data_counter; // This will peg at the key_size value if decrypted plaintext is larger than CLP_AES_KV_WR_DW
   logic incr_kv_data_counter;
   logic hw2reg_data_out_mask_en;
-  logic [4*$bits(aes_hw2reg_data_out_mreg_t)-1:0] hw2reg_data_out_mask;
+  logic [$bits(aes_hw2reg_data_out_mreg_t)-1:0] hw2reg_data_out_mask;
   logic output_valid_r;
 
   // Mask to conceal data_out from reg API (when dest is KV)
-  assign hw2reg_data_out_mask = {4*$bits(aes_hw2reg_data_out_mreg_t){hw2reg_data_out_mask_en}};
+  assign hw2reg_data_out_mask = {$bits(aes_hw2reg_data_out_mreg_t){hw2reg_data_out_mask_en}};
 
   always_comb begin
       // Passthrough
@@ -173,7 +173,9 @@ module aes
       hw2reg.status.output_valid.d              = hw2reg_caliptra.status.output_valid.d ;
       hw2reg.status.output_valid.de             = hw2reg_caliptra.status.output_valid.de;
       // Concealed
-      hw2reg.data_out.d                         = hw2reg_caliptra.data_out.d       & hw2reg_data_out_mask;
+      foreach (hw2reg.data_out[idx]) begin
+      hw2reg.data_out[idx].d                    = hw2reg_caliptra.data_out[idx].d & hw2reg_data_out_mask;
+      end
   end
   always_comb begin
       // Passthrough
