@@ -10220,8 +10220,10 @@
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK                                               (0x4)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW                                             (3)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK                                            (0x8)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (4)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xfffffff0)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCLS_ERROR_LOW                                             (4)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCLS_ERROR_MASK                                            (0x30)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xffffffc0)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                    (0x30030004)
 #ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL

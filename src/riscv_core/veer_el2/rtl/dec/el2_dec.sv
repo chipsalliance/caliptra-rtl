@@ -138,7 +138,7 @@ module el2_dec
     input logic        [pt.BTB_ADDR_HI:pt.BTB_ADDR_LO] ifu_i0_bp_index,  // BP index
     input logic        [          pt.BHT_GHR_SIZE-1:0] ifu_i0_bp_fghr,   // BP FGHR
     input logic        [         pt.BTB_BTAG_SIZE-1:0] ifu_i0_bp_btag,   // BP tag
-    input logic        [      $clog2(pt.BTB_SIZE)-1:0] ifu_i0_fa_index,  // Fully associt btb index
+    input logic        [      $clog2(pt.BTB_SIZE)-1:0] ifu_i0_fa_index,  // Fully associative btb index
 
     input el2_lsu_error_pkt_t lsu_error_pkt_r,           // LSU exception/error packet
     input logic               lsu_single_ecc_error_incr, // LSU inc SB error counter
@@ -280,7 +280,7 @@ module el2_dec
     output logic [pt.BTB_ADDR_HI:pt.BTB_ADDR_LO] i0_predict_index_d,  // DEC predict index
     output logic [pt.BTB_BTAG_SIZE-1:0] i0_predict_btag_d,  // DEC predict branch tag
 
-    output logic [$clog2(pt.BTB_SIZE)-1:0] dec_fa_error_index,  // Fully associt btb error index
+    output logic [$clog2(pt.BTB_SIZE)-1:0] dec_fa_error_index,  // Fully associative btb error index
 
     output logic dec_lsu_valid_raw_d,
 
@@ -326,6 +326,10 @@ module el2_dec
     output logic dec_tlu_picio_clk_override,  // override PICIO clock domain gating
     output logic dec_tlu_dccm_clk_override,   // override DCCM clock domain gating
     output logic dec_tlu_icm_clk_override,    // override ICCM clock domain gating
+
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+    el2_regfile_if.veer_rf_src regfile,
+`endif
 
     output logic dec_tlu_i0_commit_cmt,  // committed i0 instruction
     // Excluding scan_mode from coverage as its usage is determined by the integrator of the VeeR core.
@@ -394,7 +398,7 @@ module el2_dec
   logic [pt.BTB_ADDR_HI:pt.BTB_ADDR_LO] dec_i0_bp_index;
   logic [pt.BHT_GHR_SIZE-1:0] dec_i0_bp_fghr;
   logic [pt.BTB_BTAG_SIZE-1:0] dec_i0_bp_btag;
-  logic [$clog2(pt.BTB_SIZE)-1:0] dec_i0_bp_fa_index;  // Fully associt btb index
+  logic [$clog2(pt.BTB_SIZE)-1:0] dec_i0_bp_fa_index;  // Fully associative btb index
 
   logic [31:1] dec_tlu_i0_pc_r;
   logic dec_tlu_i0_kill_writeb_wb;
@@ -429,14 +433,52 @@ module el2_dec
 
   el2_dec_decode_ctl #(.pt(pt)) decode (.*);
 
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+      el2_regfile_if regfile_if ();
+      assign regfile.gpr.ra = regfile_if.gpr.ra;
+      assign regfile.gpr.sp = regfile_if.gpr.sp;
+      assign regfile.gpr.fp = regfile_if.gpr.fp;
+      assign regfile.gpr.a0 = regfile_if.gpr.a0;
+      assign regfile.gpr.a1 = regfile_if.gpr.a1;
+      assign regfile.gpr.a2 = regfile_if.gpr.a2;
+      assign regfile.gpr.a3 = regfile_if.gpr.a3;
+      assign regfile.gpr.a4 = regfile_if.gpr.a4;
+      assign regfile.gpr.a5 = regfile_if.gpr.a5;
+      assign regfile.gpr.a6 = regfile_if.gpr.a6;
+      assign regfile.gpr.a7 = regfile_if.gpr.a7;
 
-  el2_dec_tlu_ctl #(.pt(pt)) tlu (.*);
+      assign regfile.tlu.pc        = regfile_if.tlu.pc;
+      assign regfile.tlu.npc       = regfile_if.tlu.npc;
+      assign regfile.tlu.mstatus   = regfile_if.tlu.mstatus;
+      assign regfile.tlu.mie       = regfile_if.tlu.mie;
+      assign regfile.tlu.mtvec     = regfile_if.tlu.mtvec;
+      assign regfile.tlu.mscratch  = regfile_if.tlu.mscratch;
+      assign regfile.tlu.mepc      = regfile_if.tlu.mepc;
+      assign regfile.tlu.mcause    = regfile_if.tlu.mcause;
+      assign regfile.tlu.mtval     = regfile_if.tlu.mtval;
+      assign regfile.tlu.mip       = regfile_if.tlu.mip;
+      assign regfile.tlu.mcyclel   = regfile_if.tlu.mcyclel;
+      assign regfile.tlu.mcycleh   = regfile_if.tlu.mcycleh;
+      assign regfile.tlu.minstretl = regfile_if.tlu.minstretl;
+      assign regfile.tlu.minstreth = regfile_if.tlu.minstreth;
+      assign regfile.tlu.mrac      = regfile_if.tlu.mrac;
+`endif
+
+  el2_dec_tlu_ctl #(.pt(pt)
+  ) tlu (
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+      .regfile(regfile_if.veer_tlu_rf),
+`endif
+      .*);
 
 
   el2_dec_gpr_ctl #(
       .pt(pt)
   ) arf (
       .*,
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+      .regfile(regfile_if.veer_gpr_rf),
+`endif
       // inputs
       .raddr0(dec_i0_rs1_d[4:0]),
       .raddr1(dec_i0_rs2_d[4:0]),

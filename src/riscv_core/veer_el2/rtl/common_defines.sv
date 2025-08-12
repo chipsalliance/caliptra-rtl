@@ -16,9 +16,9 @@
 
 
 // NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-// This is an automatically generated file by cwhitehead on Tue Jan 14 14:44:30 PST 2025
+// This is an automatically generated file by ant on Mon Aug 11 01:38:36 PM CEST 2025
 //
-// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -fpga_optimize=0 -snapshot=Cores-VeeR-EL2 
+// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=mubi_width=2 -fpga_optimize=0 -snapshot=dcls
 //
 `ifndef RV_COMMON_DEFINES
 `define RV_COMMON_DEFINES
@@ -27,7 +27,7 @@
 `define RV_BHT_ADDR_HI 9
 `define RV_BHT_ADDR_LO 2
 `define RV_BHT_ARRAY_DEPTH 256
-`define RV_BHT_GHR_HASH_1 
+`define RV_BHT_GHR_HASH_1
 `define RV_BHT_GHR_RANGE 7:0
 `define RV_BHT_GHR_SIZE 8
 `define RV_BHT_HASH_STRING {hashin[8+1:2]^ghr[8-1:0]}// cf2
@@ -90,14 +90,14 @@
 `define RV_DCCM_FDATA_WIDTH 39
 `define RV_DCCM_INDEX_BITS 14
 `define RV_DCCM_NUM_BANKS 4
-`define RV_DCCM_NUM_BANKS_4 
+`define RV_DCCM_NUM_BANKS_4
 `define RV_DCCM_OFFSET 28'h00000
 `define RV_DCCM_REGION 4'h5
 `define RV_DCCM_RESERVED 'h1400
 `define RV_DCCM_ROWS 16384
 `define RV_DCCM_SADR 32'h50000000
 `define RV_DCCM_SIZE 256
-`define RV_DCCM_SIZE_256 
+`define RV_DCCM_SIZE_256
 `define RV_DCCM_WIDTH_BITS 2
 `define RV_LSU_SB_BITS 18
 `define RV_ICACHE_2BANKS 1
@@ -145,14 +145,14 @@
 `define RV_ICCM_ENABLE 1
 `define RV_ICCM_INDEX_BITS 14
 `define RV_ICCM_NUM_BANKS 4
-`define RV_ICCM_NUM_BANKS_4 
+`define RV_ICCM_NUM_BANKS_4
 `define RV_ICCM_OFFSET 10'h0
 `define RV_ICCM_REGION 4'h4
 `define RV_ICCM_RESERVED 'h1000
 `define RV_ICCM_ROWS 16384
 `define RV_ICCM_SADR 32'h40000000
 `define RV_ICCM_SIZE 256
-`define RV_ICCM_SIZE_256 
+`define RV_ICCM_SIZE_256
 `define RV_DEBUG_SB_MEM 'hc0580000
 `define RV_EXTERNAL_DATA 'he0580000
 `define RV_EXTERNAL_DATA_1 'hd0000000
@@ -244,6 +244,12 @@
 `define RV_INST_ACCESS_MASK5 'hffffffff
 `define RV_INST_ACCESS_MASK6 'hffffffff
 `define RV_INST_ACCESS_MASK7 'hffffffff
+`define RV_LOCKSTEP_DELAY 3
+`define RV_LOCKSTEP_ENABLE 1
+`define RV_LOCKSTEP_REGFILE_ENABLE 1
+`define RV_MUBI_FALSE 'h1
+`define RV_MUBI_TRUE 'h2
+`define RV_MUBI_WIDTH 2
 `define RV_PMP_ENTRIES 64
 `define REGWIDTH 32
 `define RV_RESET_VEC 'h00000000
@@ -263,7 +269,7 @@
 `define RV_XLEN 32
 `ifndef SYNTHESIS
 `ifndef VERILATOR
-    `define RV_ASSERT_ON 
+    `define RV_ASSERT_ON
 `endif
 `endif
 

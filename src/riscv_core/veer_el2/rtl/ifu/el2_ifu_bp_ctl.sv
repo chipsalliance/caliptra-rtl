@@ -107,7 +107,7 @@ import el2_pkg::*;
    logic exu_mp_valid_write;
    logic exu_mp_ataken;
    logic exu_mp_valid; // conditional branch mispredict
-   logic exu_mp_boffset; // branch offsett
+   logic exu_mp_boffset; // branch offset
    logic exu_mp_pc4; // branch is a 4B inst
    logic exu_mp_call; // branch is a call inst
    logic exu_mp_ret; // branch is a ret inst
@@ -822,7 +822,10 @@ end // if (!pt.BTB_FULLYA)
                     .dout(btb_used[pt.BTB_SIZE-1:0]));
 
 end // block: fa
-
+else begin
+   assign ifu_bp_fa_index_f[1] = '0;
+   assign ifu_bp_fa_index_f[0] = '0;
+end
 
    //-----------------------------------------------------------------------------
    // BHT
@@ -845,6 +848,8 @@ end // block: fa
                                     (bht_wr_en2[i] & ((bht_wr_addr2[pt.BHT_ADDR_HI: NUM_BHT_LOOP_OUTER_LO]==k) |  BHT_NO_ADDR_MATCH));
 `ifndef RV_FPGA_OPTIMIZE
      rvclkhdr bht_bank_grp_cgc ( .en(bht_bank_clken[i][k]), .l1clk(bht_bank_clk[i][k]), .* ); // ifndef RV_FPGA_OPTIMIZE
+`else
+     assign bht_bank_clk[i][k] = clk;
 `endif
 
      for (j=0 ; j<NUM_BHT_LOOP ; j++) begin : BHT_FLOPS

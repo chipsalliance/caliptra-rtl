@@ -12,7 +12,12 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__in_t;
 
     typedef struct packed{
-        logic [27:0] next;
+        logic [1:0] next;
+        logic we;
+    } soc_ifc_reg__rw_rw_sticky_hw_w2__in_t;
+
+    typedef struct packed{
+        logic [25:0] next;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t;
 
     typedef struct packed{
@@ -20,6 +25,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__in_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__in_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__in_t crypto_err;
+        soc_ifc_reg__rw_rw_sticky_hw_w2__in_t dcls_error;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
@@ -747,10 +753,15 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__out_t;
 
     typedef struct packed{
+        logic [1:0] value;
+    } soc_ifc_reg__rw_rw_sticky_hw_w2__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__out_t iccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__out_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__out_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__out_t crypto_err;
+        soc_ifc_reg__rw_rw_sticky_hw_w2__out_t dcls_error;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
 
     typedef struct packed{

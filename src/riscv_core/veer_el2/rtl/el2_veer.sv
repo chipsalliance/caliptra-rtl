@@ -124,7 +124,7 @@ import el2_pkg::*;
    output logic                      ic_sel_premux_data, // Select premux data
 
 
-   output logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write addresss to the Icache.
+   output logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write address to the Icache.
    output logic                      ic_debug_rd_en,     // Icache debug rd
    output logic                      ic_debug_wr_en,     // Icache debug wr
    output logic                      ic_debug_tag_array, // Debug tag array
@@ -455,6 +455,11 @@ import el2_pkg::*;
    output logic                 dccm_ecc_single_error,
    output logic                 dccm_ecc_double_error,
 
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+   // Register file
+   el2_regfile_if.veer_rf_src regfile,
+`endif
+
    input logic [pt.PIC_TOTAL_INT:1]           extintsrc_req,
    input logic                   timer_int,
    input logic                   soft_int,
@@ -496,7 +501,6 @@ import el2_pkg::*;
    logic                         lsu_axi_awready_int;
    logic                         lsu_axi_wready_int;
    logic                         lsu_axi_bvalid_int;
-   logic                         lsu_axi_bready_int;
    logic [1:0]                   lsu_axi_bresp_int;
    logic [pt.LSU_BUS_TAG-1:0]    lsu_axi_bid_int;
    logic                         lsu_axi_arready_int;
@@ -522,7 +526,6 @@ import el2_pkg::*;
    logic                         ifu_axi_awready_int;
    logic                         ifu_axi_wready_int;
    logic                         ifu_axi_bvalid_int;
-   logic                         ifu_axi_bready_int;
    logic [1:0]                   ifu_axi_bresp_int;
    logic [pt.IFU_BUS_TAG-1:0]    ifu_axi_bid_int;
    logic                         ifu_axi_arready_int;
@@ -548,7 +551,6 @@ import el2_pkg::*;
    logic                         sb_axi_awready_int;
    logic                         sb_axi_wready_int;
    logic                         sb_axi_bvalid_int;
-   logic                         sb_axi_bready_int;
    logic [1:0]                   sb_axi_bresp_int;
    logic [pt.SB_BUS_TAG-1:0]     sb_axi_bid_int;
    logic                         sb_axi_arready_int;
@@ -1353,13 +1355,44 @@ import el2_pkg::*;
          .*
       );
 
-   end
+  end else begin : g_tie_unused_ahb
+    always_comb begin
+      haddr = '0;
+      hburst = '0;
+      hmastlock = '0;
+      hprot = '0;
+      hsize = '0;
+      htrans = '0;
+      hwrite = '0;
+
+      lsu_haddr = '0;
+      lsu_hburst = '0;
+      lsu_hmastlock = '0;
+      lsu_hprot = '0;
+      lsu_hsize = '0;
+      lsu_htrans = '0;
+      lsu_hwrite = '0;
+      lsu_hwdata = '0;
+
+      sb_haddr = '0;
+      sb_hburst = '0;
+      sb_hmastlock = '0;
+      sb_hprot = '0;
+      sb_hsize = '0;
+      sb_htrans = '0;
+      sb_hwrite = '0;
+      sb_hwdata = '0;
+
+      dma_hrdata = '0;
+      dma_hreadyout = '0;
+      dma_hresp = '0;
+    end
+  end
 
    // Drive the final AXI inputs
    assign lsu_axi_awready_int                 = pt.BUILD_AHB_LITE ? lsu_axi_awready_ahb : lsu_axi_awready;
    assign lsu_axi_wready_int                  = pt.BUILD_AHB_LITE ? lsu_axi_wready_ahb : lsu_axi_wready;
    assign lsu_axi_bvalid_int                  = pt.BUILD_AHB_LITE ? lsu_axi_bvalid_ahb : lsu_axi_bvalid;
-   assign lsu_axi_bready_int                  = pt.BUILD_AHB_LITE ? lsu_axi_bready_ahb : lsu_axi_bready;
    assign lsu_axi_bresp_int[1:0]              = pt.BUILD_AHB_LITE ? lsu_axi_bresp_ahb[1:0] : lsu_axi_bresp[1:0];
    assign lsu_axi_bid_int[pt.LSU_BUS_TAG-1:0] = pt.BUILD_AHB_LITE ? lsu_axi_bid_ahb[pt.LSU_BUS_TAG-1:0] : lsu_axi_bid[pt.LSU_BUS_TAG-1:0];
    assign lsu_axi_arready_int                 = pt.BUILD_AHB_LITE ? lsu_axi_arready_ahb : lsu_axi_arready;
@@ -1372,7 +1405,6 @@ import el2_pkg::*;
    assign ifu_axi_awready_int                 = pt.BUILD_AHB_LITE ? ifu_axi_awready_ahb : ifu_axi_awready;
    assign ifu_axi_wready_int                  = pt.BUILD_AHB_LITE ? ifu_axi_wready_ahb : ifu_axi_wready;
    assign ifu_axi_bvalid_int                  = pt.BUILD_AHB_LITE ? ifu_axi_bvalid_ahb : ifu_axi_bvalid;
-   assign ifu_axi_bready_int                  = pt.BUILD_AHB_LITE ? ifu_axi_bready_ahb : ifu_axi_bready;
    assign ifu_axi_bresp_int[1:0]              = pt.BUILD_AHB_LITE ? ifu_axi_bresp_ahb[1:0] : ifu_axi_bresp[1:0];
    assign ifu_axi_bid_int[pt.IFU_BUS_TAG-1:0] = pt.BUILD_AHB_LITE ? ifu_axi_bid_ahb[pt.IFU_BUS_TAG-1:0] : ifu_axi_bid[pt.IFU_BUS_TAG-1:0];
    assign ifu_axi_arready_int                 = pt.BUILD_AHB_LITE ? ifu_axi_arready_ahb : ifu_axi_arready;
@@ -1385,7 +1417,6 @@ import el2_pkg::*;
    assign sb_axi_awready_int                  = pt.BUILD_AHB_LITE ? sb_axi_awready_ahb : sb_axi_awready;
    assign sb_axi_wready_int                   = pt.BUILD_AHB_LITE ? sb_axi_wready_ahb : sb_axi_wready;
    assign sb_axi_bvalid_int                   = pt.BUILD_AHB_LITE ? sb_axi_bvalid_ahb : sb_axi_bvalid;
-   assign sb_axi_bready_int                   = pt.BUILD_AHB_LITE ? sb_axi_bready_ahb : sb_axi_bready;
    assign sb_axi_bresp_int[1:0]               = pt.BUILD_AHB_LITE ? sb_axi_bresp_ahb[1:0] : sb_axi_bresp[1:0];
    assign sb_axi_bid_int[pt.SB_BUS_TAG-1:0]   = pt.BUILD_AHB_LITE ? sb_axi_bid_ahb[pt.SB_BUS_TAG-1:0] : sb_axi_bid[pt.SB_BUS_TAG-1:0];
    assign sb_axi_arready_int                  = pt.BUILD_AHB_LITE ? sb_axi_arready_ahb : sb_axi_arready;
