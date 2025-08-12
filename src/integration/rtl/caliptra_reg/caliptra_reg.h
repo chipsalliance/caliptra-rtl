@@ -59,6 +59,8 @@
 #define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_MASK                                               (0x10)
 #define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_LOW                                                        (5)
 #define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_MASK                                                       (0x20)
+#define DOE_REG_DOE_STATUS_ERROR_LOW                                                                (8)
+#define DOE_REG_DOE_STATUS_ERROR_MASK                                                               (0x100)
 #endif
 #define CLP_DOE_REG_INTR_BLOCK_RF_START                                                             (0x10000800)
 #define CLP_DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x10000800)

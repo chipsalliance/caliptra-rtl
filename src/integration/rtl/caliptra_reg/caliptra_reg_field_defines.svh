@@ -51,6 +51,8 @@
 `define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_MASK                                               (32'h10)
 `define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_LOW                                                        (5)
 `define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_MASK                                                       (32'h20)
+`define DOE_REG_DOE_STATUS_ERROR_LOW                                                                (8)
+`define DOE_REG_DOE_STATUS_ERROR_MASK                                                               (32'h100)
 `endif
 `ifndef DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (32'h800)
