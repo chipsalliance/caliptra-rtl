@@ -59,6 +59,8 @@
 #define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_MASK                                               (0x10)
 #define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_LOW                                                        (5)
 #define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_MASK                                                       (0x20)
+#define DOE_REG_DOE_STATUS_ERROR_LOW                                                                (8)
+#define DOE_REG_DOE_STATUS_ERROR_MASK                                                               (0x100)
 #endif
 #define CLP_DOE_REG_INTR_BLOCK_RF_START                                                             (0x10000800)
 #define CLP_DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x10000800)
@@ -7959,6 +7961,8 @@
 #define ABR_REG_MLDSA_STATUS_VALID_MASK                                                             (0x2)
 #define ABR_REG_MLDSA_STATUS_MSG_STREAM_READY_LOW                                                   (2)
 #define ABR_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK                                                  (0x4)
+#define ABR_REG_MLDSA_STATUS_ERROR_LOW                                                              (3)
+#define ABR_REG_MLDSA_STATUS_ERROR_MASK                                                             (0x8)
 #endif
 #define CLP_ABR_REG_ABR_ENTROPY_0                                                                   (0x10030018)
 #ifndef ABR_REG_ABR_ENTROPY_0
@@ -8609,6 +8613,8 @@
 #define ABR_REG_MLKEM_STATUS_READY_MASK                                                             (0x1)
 #define ABR_REG_MLKEM_STATUS_VALID_LOW                                                              (1)
 #define ABR_REG_MLKEM_STATUS_VALID_MASK                                                             (0x2)
+#define ABR_REG_MLKEM_STATUS_ERROR_LOW                                                              (2)
+#define ABR_REG_MLKEM_STATUS_ERROR_MASK                                                             (0x4)
 #endif
 #define CLP_ABR_REG_MLKEM_SEED_D_0                                                                  (0x10038018)
 #ifndef ABR_REG_MLKEM_SEED_D_0
@@ -11719,7 +11725,7 @@
 #define SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R_PULSE_MASK                  (0x1)
 #endif
 #define CLP_MBOX_SRAM_BASE_ADDR                                                                     (0x30040000)
-#define CLP_MBOX_SRAM_END_ADDR                                                                      (0x3007ffff)
+#define CLP_MBOX_SRAM_END_ADDR                                                                      (0x30043fff)
 
 
 #endif

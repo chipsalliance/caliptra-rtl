@@ -139,17 +139,6 @@ module caliptra_top_tb (
     end // clk_gen
 `endif
 
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-initial begin
-    if ($test$plusargs("CLP_OCP_LOCK_EN"))
-        ss_ocp_lock_en = 1'b1;
-    else
-        ss_ocp_lock_en = 1'b0;
-end
-`else
-assign ss_ocp_lock_en = 1'b0;
-`endif
-    
 
 caliptra_top_tb_soc_bfm soc_bfm_inst (
     .core_clk        (core_clk        ),
@@ -165,6 +154,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
+    .ss_ocp_lock_en,
 
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
@@ -198,7 +188,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 // JTAG DPI
 jtagdpi #(
     .Name           ("jtag0"),
-    .ListenPort     (5000)
+    .ListenPort     (63224)
 ) jtagdpi (
     .clk_i          (core_clk),
     .rst_ni         (cptra_rst_b),

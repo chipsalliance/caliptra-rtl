@@ -161,6 +161,7 @@ module soc_ifc_top
     // Subsystem mode OCP LOCK status
     input  logic         ss_ocp_lock_en,
     output logic         ss_ocp_lock_in_progress,
+    output logic [15:0]  ss_key_release_key_size,
 
     // NMI Vector 
     output logic [31:0] nmi_vector,
@@ -767,6 +768,7 @@ always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
 `endif
 
 assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
+assign ss_key_release_key_size = soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value;
 
 
 //Uncore registers only open for debug unlock or manufacturing
@@ -1252,7 +1254,7 @@ axi_dma_top #(
     .ocp_lock_in_progress           (ss_ocp_lock_in_progress                                       ),
     .key_release_addr               ({soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_H.addr_h.value,
                                       soc_ifc_reg_hwif_out.SS_KEY_RELEASE_BASE_ADDR_L.addr_l.value}),
-    .key_release_size               (soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value           ),
+    .key_release_size               (ss_key_release_key_size                                       ),
 
     // kv interface
     .kv_read   (kv_read   ),

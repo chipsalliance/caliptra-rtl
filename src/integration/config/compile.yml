@@ -6,16 +6,40 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
-      - $COMPILE_ROOT/rtl/caliptra_reg_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
 ---
+provides: [caliptra_top_reg_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+  rtl:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+---
+provides: [caliptra_top_reg_ss_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+  rtl:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+---
 provides: [caliptra_top]
 schema_version: 2.4.0
 requires:
   - caliptra_top_defines
+  - caliptra_top_reg_defines
   - libs
   - kv_defines_pkg
   - pv_defines_pkg
@@ -57,8 +81,54 @@ global:
     vcs:
       default:
         - '-assert svaext'
-#        - '+define+CALIPTRA_INTERNAL_TRNG'
-        #- '-v2k_generate'
+---
+provides: [caliptra_top_ss_mode]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_defines
+  - caliptra_top_reg_ss_defines
+  - libs
+  - kv_defines_pkg
+  - pv_defines_pkg
+  - dv_defines_pkg
+  - el2_veer_pkg
+  - el2_veer_wrapper
+  - ahb_lite_bus
+  - sha512_ctrl
+  - sha256_ctrl
+  - doe_ctrl
+  - hmac_ctrl
+  - ecc_top
+  - abr_top
+  - keyvault
+  - pcrvault
+  - datavault
+  - soc_ifc_top
+  - entropy_src
+  - csrng
+  - aes
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/caliptra_top.sv
+    tops: [caliptra_top]
+  rtl_lint:
+    waiver_files:
+      - $MSFT_REPO_ROOT/src/integration/config/design_lint/sglint_waivers
+    options:
+      - '+define+CALIPTRA_INTERNAL_TRNG'
+      - '+define+CALIPTRA_AXI_DMA_ADDR_WIDTH=32'
+  cdc:
+    tcl_files:
+      - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
+      - $COMPILE_ROOT/config/cdc/integration_top.waivers.tcl
+global:
+  tool:
+    vcs:
+      default:
+        - '+define+CALIPTRA_MODE_SUBSYSTEM'
+        - '-assert svaext'
 ---
 provides: [caliptra_top_tb_pkg]
 schema_version: 2.4.0
@@ -67,7 +137,6 @@ requires:
   - axi_pc
   - libs
   - caliptra_axi_sram
-  - caliptra_top
   - el2_veer_pkg
   - el2_veer_wrapper
   - physical_rng
@@ -116,11 +185,11 @@ targets:
       - $COMPILE_ROOT/coverage/caliptra_top_cov_props.sv
       - $COMPILE_ROOT/coverage/caliptra_top_cov_bind.sv
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.sv
-
 ---
 provides: [caliptra_top_tb]
 schema_version: 2.4.0
 requires:
+  - caliptra_top
   - caliptra_top_tb_pkg
 targets:
   tb:
@@ -137,6 +206,7 @@ targets:
                 && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
                 && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
                 
 global:
   tool:
@@ -164,6 +234,7 @@ global:
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
 requires:
+  - caliptra_top
   - caliptra_top_tb_pkg
 targets:
   tb:
@@ -180,7 +251,8 @@ targets:
                 && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
                 && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
                 && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
-                
+    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+
 global:
   tool:
     vcs:
@@ -189,3 +261,43 @@ global:
         - +define+CLP_ASSERT_ON
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
+
+---  
+provides: [caliptra_top_ss_mode_tb]
+schema_version: 2.4.0
+requires:
+  - caliptra_top_ss_mode
+  - caliptra_top_tb_pkg
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/caliptra_top_tb.sv
+    tops: [caliptra_top_tb]
+  sim:
+    pre_exec: '$MSFT_SCRIPTS_DIR/run_test_makefile && echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}" && cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe . 
+                && echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}" && cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
+                && echo "[PRE-EXEC] Copying SHA256 wntz vector generator to ${pwd}" && cp $COMPILE_ROOT/../sha256/tb/sha256_wntz_test_gen.py .
+                && echo "[PRE-EXEC] Copying MLDSA vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 .
+                && echo "[PRE-EXEC] Copying MLDSA debug vector generator to ${pwd}" && cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug .
+                && echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}" && cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
+                && echo "[PRE-EXEC] Copying MLKEM vector generator to $pwd" && cp -r $MSFT_SCRIPTS_DIR/models/ml-kem . && mkdir ml-kem/tv'
+    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+                
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '+define+CALIPTRA_MODE_SUBSYSTEM'
+        - '+define+CALIPTRA_TOP_TB'
+        - '+define+CLP_ASSERT_ON'
+        - '-noinherit_timescale=1ns/1ps'
+      elab:
+        # Suppress "Bit Size Exceeded" warning.
+        # VCS flags this during elab for ram signals (found under
+        # caliptra_top_tb_services) that are too large to collect
+        # coverage on.
+        # We don't want coverage on these, so disable the warning.
+        - '-suppress=VCM-BSZEX'

@@ -298,6 +298,8 @@ module caliptra_top
 
     // Subsystem mode OCP LOCK status
     logic ss_ocp_lock_in_progress;
+    // Key release size (used as input to AES operation)
+    logic [15:0] ss_key_release_key_size;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -1064,23 +1066,24 @@ aes_clp_wrapper #(
     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hresp),
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
-  
-  
+
+
     // OCP LOCK
     .ocp_lock_in_progress(ss_ocp_lock_in_progress),
+    .key_release_key_size(ss_key_release_key_size),
     // status signals
     .input_ready_o(aes_input_ready),
     .output_valid_o(aes_output_valid),
     .status_idle_o(aes_status_idle),
-    
+
     // DMA CIF IF
-   .dma_req_dv(aes_cif_dma_req_dv),
-   .dma_req_write(aes_cif_dma_req_data.write),
-   .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
-   .dma_req_wdata(aes_cif_dma_req_data.wdata),
-   .dma_req_hold(aes_cif_dma_req_hold), 
-   .dma_req_error(aes_cif_dma_req_error),
-   .dma_req_rdata(aes_cif_dma_req_rdata),
+    .dma_req_dv(aes_cif_dma_req_dv),
+    .dma_req_write(aes_cif_dma_req_data.write),
+    .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
+    .dma_req_wdata(aes_cif_dma_req_data.wdata),
+    .dma_req_hold(aes_cif_dma_req_hold),
+    .dma_req_error(aes_cif_dma_req_error),
+    .dma_req_rdata(aes_cif_dma_req_rdata),
 
 
     // kv interface
@@ -1421,7 +1424,8 @@ soc_ifc_top1
 
     // Subsystem mode OCP LOCK status
     .ss_ocp_lock_en(ss_ocp_lock_en),
-    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress), // TODO route to AES/abr/ECC/hmac/KeyVault for rules
+    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
+    .ss_key_release_key_size(ss_key_release_key_size),
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

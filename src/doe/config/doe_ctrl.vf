@@ -22,6 +22,8 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_ctrl.sv
@@ -34,5 +36,3 @@ ${CALIPTRA_ROOT}/src/doe/rtl/doe_cbc.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_core_cbc.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_reg.sv
 ${CALIPTRA_ROOT}/src/doe/rtl/doe_fsm.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
-${CALIPTRA_ROOT}/src/doe/rtl/doe_defines_pkg.sv

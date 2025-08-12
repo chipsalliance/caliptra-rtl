@@ -8,4 +8,3 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_pkg.sv
 ${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv
-${CALIPTRA_ROOT}/src/edn/rtl/edn_pkg.sv

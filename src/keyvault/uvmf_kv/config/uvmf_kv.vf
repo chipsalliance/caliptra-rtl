@@ -2,6 +2,7 @@
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
++incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${UVM_HOME}/src
 +incdir+${UVM_HOME}/src/dpi
 +incdir+${QUESTA_MVC_HOME}/questa_mvc_src/sv
@@ -49,6 +50,9 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${UVM_HOME}/src/uvm_pkg.sv
 ${QUESTA_MVC_HOME}/include/questa_mvc_svapi.svh
 ${QUESTA_MVC_HOME}/questa_mvc_src/sv/mvc_pkg.sv
@@ -81,7 +85,6 @@ ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/hdl_qvip_ahb_lite_sl
 ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_clk_gen.sv
 ${CALIPTRA_ROOT}/src/libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/default_reset_gen.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_uvm.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_if.sv
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_props.sv
 ${CALIPTRA_ROOT}/src/keyvault/coverage/keyvault_cov_bind.sv

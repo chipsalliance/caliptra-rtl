@@ -27,6 +27,8 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
@@ -52,7 +54,6 @@ ${CALIPTRA_ROOT}/src/hmac/rtl/hmac.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.v
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_lfsr.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_if.sv
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_bind.sv
 ${CALIPTRA_ROOT}/src/hmac/tb/hmac_ctrl_tb.sv
