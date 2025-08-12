@@ -304,27 +304,29 @@ void main(void) {
             /////////////////////////////////////
             //// TEST 5: ERR ROUTE KV16 to FW with a DECRYPT OPERATION         
             /////////////////////////////////////
-            // FIXME ADD WHEN LOGIC IN VPRINTF(LOW, "START TEST 5: ROUTE KV16 to FW - ERR\n");
-            // FIXME ADD WHEN LOGIC IN 
-            // FIXME ADD WHEN LOGIC IN // Preload KV16 with a zero key
-            // FIXME ADD WHEN LOGIC IN SEND_STDOUT_CTRL(ZERO_KV16_KEY);
-            // FIXME ADD WHEN LOGIC IN 
-            // FIXME ADD WHEN LOGIC IN // Key to KV
-            // FIXME ADD WHEN LOGIC IN aes_key_o.kv_intf = FALSE;
+            VPRINTF(LOW, "START TEST 5: ROUTE KV16 to FW - ERR\n");
 
-            // FIXME ADD WHEN LOGIC IN //Key from KV
-            // FIXME ADD WHEN LOGIC IN aes_key.kv_intf = TRUE;
-            // FIXME ADD WHEN LOGIC IN aes_key.kv_id = 16;
-            // FIXME ADD WHEN LOGIC IN for (int i = 0; i < 8; i++) {
-            // FIXME ADD WHEN LOGIC IN     aes_key.key_share0[i] = 0x0;
-            // FIXME ADD WHEN LOGIC IN     aes_key.key_share1[i] = 0x00000000;
-            // FIXME ADD WHEN LOGIC IN } 
-            // FIXME ADD WHEN LOGIC IN 
-            // FIXME ADD WHEN LOGIC IN // Preload KV16 with a zero key
-            // FIXME ADD WHEN LOGIC IN SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+            for(int i = 0; i < 23; i++){
+                kv_set_clear(i);
+            }
+            VPRINTF(LOW, "DONE CLEARING KEYS\n");
+            
+            // Key to KV
+            aes_key_o.kv_intf = FALSE;
 
-            // FIXME ADD WHEN LOGIC IN // Loading the KV23 slot with a key from AES
-            // FIXME ADD WHEN LOGIC IN populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+            //Key from KV
+            aes_key.kv_intf = TRUE;
+            aes_key.kv_id = 16;
+            for (int i = 0; i < 8; i++) {
+                aes_key.key_share0[i] = 0x0;
+                aes_key.key_share1[i] = 0x00000000;
+            } 
+            
+            // Preload KV16 with a zero key
+            SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+
+            // Loading the KV23 slot with a key from AES
+            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
             
             ///////////////////////////////////
             // TEST 6: BASIC TEST AES KV 23 to DMA

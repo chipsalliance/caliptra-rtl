@@ -245,8 +245,30 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }                      
 
         if( !aes_input.key_o.kv_intf ) {
+            uint8_t ocp_lock_block_output;
             // Wait for OUTPUT_VALID bit
             while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) == 0);
+            
+            ocp_lock_block_output = (lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL) & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) &&
+                                    (aes_input.key.kv_intf == TRUE) && (aes_input.key.kv_id == 16) &&
+                                    (mode == AES_ECB);
+
+
+
+            // Checking OUTPUT_LOST is the correct value. If OCP LOCK logic is engaged
+            // trying to route key to FW should result in OUTPUT_LOST being set
+            if(ocp_lock_block_output) {
+                if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) == 0) {
+                    VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be non-zero since OCP LOCK protections are blocking the output to FW\n");
+                    VPRINTF(FATAL,"%c", fail_cmd);
+                    while(1);
+                }
+            
+            } else if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) != 0) {
+                VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be 0x0 - Actual: 0x%x", (lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK));
+                VPRINTF(FATAL,"%c", fail_cmd);
+                while(1);
+            }
 
             // Read Output Data Block I
             for (int j = 0; j < 4; j++) {
@@ -261,7 +283,17 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                 masked = 0x1;
               }
               
-              if (op == AES_ENC) {
+              if(ocp_lock_block_output) {
+                if ((ciphertext[j] & mask) != 0) {
+                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
+                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF(FATAL, "Expected data: 0x0\n");
+                  VPRINTF(FATAL,"%c", fail_cmd);
+                  while(1);
+                }
+
+              }
+              else if (op == AES_ENC) {
                 if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
                   VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
                   VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
