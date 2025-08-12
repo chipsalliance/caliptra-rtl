@@ -213,7 +213,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           
           if (op == AES_ENC) {
             if ((read_payload[j] & mask) != (aes_input.ciphertext[j] & mask)) {
-              VPRINTF(LOW, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(LOW, "Actual   data: 0x%x\n", read_payload[j] & mask);
               VPRINTF(LOW, "Expected data: 0x%x\n", aes_input.ciphertext[j] & mask);
               VPRINTF(LOW,"%c", fail_cmd);
@@ -221,7 +221,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             }
           } else if (op == AES_DEC) {
             if ((read_payload[j] & mask) != (aes_input.plaintext[j] & mask)) {
-              VPRINTF(LOW, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(LOW, "Actual   data: 0x%x\n", read_payload[j] & mask);
               VPRINTF(LOW, "Expected data: 0x%x\n", aes_input.plaintext[j] & mask);
               VPRINTF(LOW,"%c", fail_cmd);
@@ -282,7 +282,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           
           if (op == AES_ENC) {
             if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
-              VPRINTF(LOW, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(LOW, "Actual   data: 0x%x\n", ciphertext[j] & mask);
               VPRINTF(LOW, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
               VPRINTF(LOW,"%c", fail_cmd);
@@ -290,7 +290,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             }
           } else if (op == AES_DEC) {
             if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
-              VPRINTF(LOW, "At offset [%d], output data mismatch!\n", j);
+              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(LOW, "Actual   data: 0x%x\n", ciphertext[j] & mask);
               VPRINTF(LOW, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
               VPRINTF(LOW,"%c", fail_cmd);
@@ -359,7 +359,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
       tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
       VPRINTF(MEDIUM, "TAG: 0x%x\n", tag[j]);
       if (tag[j] != expected_tag[j]) {
-        VPRINTF(LOW,"At offset [%d], tag data mismatch!\n", j);
+        VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
         VPRINTF(LOW,"Actual   data: 0x%x\n", tag[j]);
         VPRINTF(LOW,"Expected data: 0x%x\n", expected_tag[j]);
         VPRINTF(LOW,"%c", fail_cmd);
