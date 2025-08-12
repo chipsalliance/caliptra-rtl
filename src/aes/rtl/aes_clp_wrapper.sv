@@ -429,7 +429,7 @@ logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 
 // AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
 // Key size is in bytes
-always_comb kv_wr_num_dwords = key_release_key_size>>2;
+always_comb kv_wr_num_dwords = ($clog2(CLP_AES_KV_WR_DW/32)+1)'(key_release_key_size>>2);
 
 // ============== AES Checks, conditions, HW rules for RAS TODO ============= //
 // * swizzle result data?                                                     //
