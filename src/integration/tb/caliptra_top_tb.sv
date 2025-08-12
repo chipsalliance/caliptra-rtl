@@ -57,7 +57,7 @@ module caliptra_top_tb (
     logic                       recovery_data_avail;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
-    
+
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
@@ -125,13 +125,21 @@ module caliptra_top_tb (
     el2_mem_if el2_mem_export ();
     abr_mem_if abr_memory_export();
 
+`ifdef RV_LOCKSTEP_ENABLE
+    // Lockstep CTRL
+    el2_mubi_pkg::el2_mubi_t disable_corruption_detection;
+    el2_mubi_pkg::el2_mubi_t lockstep_err_injection_en;
+    assign disable_corruption_detection = el2_mubi_pkg::El2MuBiFalse;
+    assign lockstep_err_injection_en = el2_mubi_pkg::El2MuBiFalse;
+`endif
+
 `ifndef VERILATOR
     always
     begin : clk_gen
       core_clk = #5ns ~core_clk;
     end // clk_gen
 `endif
-    
+
 
 caliptra_top_tb_soc_bfm soc_bfm_inst (
     .core_clk        (core_clk        ),
@@ -161,7 +169,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .cptra_error_fatal(cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
-    
+
     //Interrupt flags
     .int_flag(int_flag),
     .cycleCnt_smpl_en(cycleCnt_smpl_en),
@@ -172,7 +180,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .deassert_rst_flag_from_service(deassert_rst_flag_from_service)
 
 );
-    
+
 // JTAG DPI
 jtagdpi #(
     .Name           ("jtag0"),
@@ -209,7 +217,7 @@ caliptra_top caliptra_top_dut (
     .jtag_trst_n(jtag_trst_n),
     .jtag_tdo(jtag_tdo),
     .jtag_tdoEn(jtag_tdoEn),
-    
+
     //SoC AXI Interface
     .s_axi_w_if(m_axi_bfm_if.w_sub),
     .s_axi_r_if(m_axi_bfm_if.r_sub),
@@ -220,7 +228,7 @@ caliptra_top caliptra_top_dut (
 
     .el2_mem_export(el2_mem_export.veer_sram_src),
     .abr_memory_export(abr_memory_export.req),
-    
+
     .ready_for_fuses(ready_for_fuses),
     .ready_for_mb_processing(ready_for_mb_processing),
     .ready_for_runtime(),
@@ -230,7 +238,7 @@ caliptra_top caliptra_top_dut (
     .mbox_sram_addr(mbox_sram_addr),
     .mbox_sram_wdata(mbox_sram_wdata),
     .mbox_sram_rdata(mbox_sram_rdata),
-        
+
     .imem_cs(imem_cs),
     .imem_addr(imem_addr),
     .imem_rdata(imem_rdata),
@@ -292,13 +300,16 @@ caliptra_top caliptra_top_dut (
     .trace_rv_i_tval_ip     (), // TODO
 
 `ifdef RV_LOCKSTEP_ENABLE
-    .shadow_core_trace_rv_i_insn_ip     (),
-    .shadow_core_trace_rv_i_address_ip  (),
-    .shadow_core_trace_rv_i_valid_ip    (),
-    .shadow_core_trace_rv_i_exception_ip(),
-    .shadow_core_trace_rv_i_ecause_ip   (),
-    .shadow_core_trace_rv_i_interrupt_ip(),
-    .shadow_core_trace_rv_i_tval_ip     (),
+    .shadow_core_trace_rv_i_insn_ip     (), // TODO
+    .shadow_core_trace_rv_i_address_ip  (), // TODO
+    .shadow_core_trace_rv_i_valid_ip    (), // TODO
+    .shadow_core_trace_rv_i_exception_ip(), // TODO
+    .shadow_core_trace_rv_i_ecause_ip   (), // TODO
+    .shadow_core_trace_rv_i_interrupt_ip(), // TODO
+    .shadow_core_trace_rv_i_tval_ip     (), // TODO
+
+    .disable_corruption_detection       (disable_corruption_detection),
+    .lockstep_err_injection_en          (lockstep_err_injection_en),
 `endif
 
     .security_state(security_state),
@@ -365,7 +376,7 @@ caliptra_top_tb_services #(
 
     .assert_rst_flag(assert_rst_flag_from_service),
     .deassert_rst_flag(deassert_rst_flag_from_service),
-    
+
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
     .cptra_obf_key_tb(cptra_obf_key_tb)

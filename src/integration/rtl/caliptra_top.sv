@@ -133,6 +133,7 @@ module caliptra_top
     output logic [31:0]         trace_rv_i_tval_ip,
 
 `ifdef RV_LOCKSTEP_ENABLE
+    // Shadow core trace
     output logic [31:0]         shadow_core_trace_rv_i_insn_ip,
     output logic [31:0]         shadow_core_trace_rv_i_address_ip,
     output logic                shadow_core_trace_rv_i_valid_ip,
@@ -140,6 +141,10 @@ module caliptra_top
     output logic [4:0]          shadow_core_trace_rv_i_ecause_ip,
     output logic                shadow_core_trace_rv_i_interrupt_ip,
     output logic [31:0]         shadow_core_trace_rv_i_tval_ip,
+
+    // Locksetp ctrl
+    input el2_mubi_pkg::el2_mubi_t disable_corruption_detection,
+    input el2_mubi_pkg::el2_mubi_t lockstep_err_injection_en,
 `endif
 
     input security_state_t             security_state,
@@ -618,8 +623,8 @@ el2_veer_wrapper rvtop (
     .shadow_core_trace_rv_i_tval_ip(shadow_core_trace_rv_i_tval_ip),
 
     // Shadow Core control
-    .disable_corruption_detection_i(1'b0),
-    .lockstep_err_injection_en_i(1'b0),
+    .disable_corruption_detection_i(disable_corruption_detection),
+    .lockstep_err_injection_en_i(lockstep_err_injection_en),
     .corruption_detected_o(cptra_panic),
 `endif
 
