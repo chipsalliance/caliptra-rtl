@@ -242,7 +242,7 @@ void main(void) {
 
 
             ///////////////////////////////////
-            // TEST 3: ERR KV SLOT KEY SMALLER THAN KEY_RELEAE_SIZE STRAP
+            // TEST 3: ERR KV SLOT KEY SMALLER THAN KEY_RELEASE_SIZE STRAP
             ///////////////////////////////////
             if(kv_key_size > 0x4) {
                 // Test when key in KV slot is smaller than the key_release_size
@@ -272,10 +272,10 @@ void main(void) {
             }
 
             ///////////////////////////////////
-            // TEST 4: ERR KV SLOT KEY SMALLER THAN KEY_RELEAE_SIZE STRAP
+            // TEST 4: ERR KV SLOT KEY LARGER THAN KEY_RELEASE_SIZE STRAP
             ///////////////////////////////////
             if(kv_key_size <= 0x3C) {
-                // Test when key in KV slot is smaller than the key_release_size
+                // Test when key in KV slot is larger than the key_release_size
                 VPRINTF(LOW, "START TEST 4: LARGE KV23\n");
 
                 lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
