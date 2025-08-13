@@ -1479,7 +1479,7 @@ package soc_ifc_reg_model_top_pkg;
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_SUCCESS         , soc_ifc_reg_fuse_cb);
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_FAIL            , soc_ifc_reg_fuse_cb);
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_RSP.UDS_PROGRAM_IN_PROGRESS     , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS                       , soc_ifc_reg_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_cb)
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS                       , soc_ifc_reg_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_cb);
         foreach (soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_SOC_DBG_UNLOCK_LEVEL[ii].LEVEL                       , soc_ifc_reg_SS_SOC_DBG_UNLOCK_LEVEL_LEVEL_cb);
         foreach (soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii].go                          , soc_ifc_reg_internal_cb);
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                                , soc_ifc_reg_key_cb);
