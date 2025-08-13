@@ -54,6 +54,9 @@ module caliptra_top_tb (
     logic                       BootFSM_BrkPoint;
     logic                       scan_mode;
 
+    logic 			cptra_uc_rst_b_o;
+    logic 			cptra_noncore_rst_b_o;      
+
     logic                       recovery_data_avail;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
@@ -195,6 +198,12 @@ caliptra_top caliptra_top_dut (
     .cptra_pwrgood              (cptra_pwrgood),
     .cptra_rst_b                (cptra_rst_b),
     .clk                        (core_clk),
+
+    .cptra_uc_rst_b_o		(cptra_uc_rst_b_o),
+    .cptra_uc_rst_b_i           (cptra_uc_rst_b_o),
+
+    .cptra_noncore_rst_b_o	(cptra_noncore_rst_b_o),
+    .cptra_noncore_rst_b_i	(cptra_noncore_rst_b_o),			       
 
     .cptra_obf_key              (cptra_obf_key),
     .cptra_obf_uds_seed_vld     ('0), //TODO
