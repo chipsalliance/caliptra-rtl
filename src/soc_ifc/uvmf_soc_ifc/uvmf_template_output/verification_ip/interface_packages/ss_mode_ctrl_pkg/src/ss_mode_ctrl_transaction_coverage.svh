@@ -49,6 +49,8 @@ class ss_mode_ctrl_transaction_coverage  extends uvm_subscriber #(.T(ss_mode_ctr
     strap_ss_external_staging_area_base_addr: coverpoint coverage_trans.strap_ss_external_staging_area_base_addr;
     strap_ss_otp_fc_base_addr: coverpoint coverage_trans.strap_ss_otp_fc_base_addr;
     strap_ss_uds_seed_base_addr: coverpoint coverage_trans.strap_ss_uds_seed_base_addr;
+    strap_ss_key_release_base_addr: coverpoint coverage_trans.strap_ss_key_release_base_addr;
+    strap_ss_key_release_key_size: coverpoint coverage_trans.strap_ss_key_release_key_size;
     strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset: coverpoint coverage_trans.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
     strap_ss_num_of_prod_debug_unlock_auth_pk_hashes: coverpoint coverage_trans.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
     strap_ss_strap_generic_0: coverpoint coverage_trans.strap_ss_strap_generic_0;
