@@ -61,7 +61,7 @@ void main(void) {
     uint8_t rand_aes_encrypt;
 
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES KV  !!\n----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\nSmoke Test AES KV RAND  !!\n----------------------------------\n");
     rst_count++;
 
     //set NMI vector
