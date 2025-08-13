@@ -14,9 +14,9 @@
 // limitations under the License.
 //----------------------------------------------------------------------
 
-class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK extends uvm_reg_cbs;
+class soc_ifc_reg_cbs_soc_ifc_reg_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS extends uvm_reg_cbs;
 
-    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK)
+    `uvm_object_utils(soc_ifc_reg_cbs_soc_ifc_reg_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS)
 
     string AHB_map_name = "soc_ifc_AHB_map";
     string AXI_map_name = "soc_ifc_AXI_map";
@@ -46,9 +46,20 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK extends uvm_reg_cbs;
                 end
                 UVM_PREDICT_WRITE: begin
                     if (previous) begin
-                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_CAP_LOCK. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to LOCK_IN_PROGRESS already set. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
                     end
+                    `ifndef CALIPTRA_MODE_SUBSYSTEM
+                    else if (1'b1) begin
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CALIPTRA_MODE_SUBSYSTEM: 0. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                        value = previous;
+                    end
+                    `else
+                    else if (1'b1) begin
+                        // TODO add a check on ocp_lock_en strap to configure a swwe for this register
+                        `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
+                    end
+                    `endif
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                     end
@@ -60,15 +71,12 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK extends uvm_reg_cbs;
         end
         else if (map.get_name() == this.AXI_map_name) begin
             case (kind) inside
-                UVM_PREDICT_READ: begin
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
-                end
                 UVM_PREDICT_WRITE: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to internal reg field %s on map %s. value: 0x%x previous: 0x%x", fld.get_full_name(), map.get_name(), value, previous), UVM_LOW)
                     value = previous;
                 end
                 default: begin
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on internal register field %s. value: 0x%x previous: 0x%x", kind, map.get_name(), fld.get_full_name(), value, previous), UVM_FULL)
                 end
             endcase
         end
