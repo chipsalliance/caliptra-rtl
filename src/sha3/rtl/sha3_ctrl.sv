@@ -24,11 +24,11 @@
 
 module sha3_ctrl
   import sha3_reg_pkg::*;
-  #(
+  import kmac_pkg::*;
+#(
   parameter AHB_DATA_WIDTH = 32,
   parameter AHB_ADDR_WIDTH = 32
-)
-(
+) (
   // Clock and reset.
   input wire           clk,
   input wire           reset_n,
@@ -209,7 +209,9 @@ kmac
 #(
   .EnMasking                      (0),
   .EnFullKmac                     (0),
-  .SwKeyMasked                    (0)
+  .SwKeyMasked                    (0),
+  .NumAppIntf                     (2),
+  .AppCfg                         ('{AppCfgKeyMgrStripped, AppCfgKeyMgrStripped})
 )
 u_sha_inst (
   .clk_i                          (clk),

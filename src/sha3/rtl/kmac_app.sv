@@ -15,8 +15,8 @@ module kmac_app
   parameter  bit          EnFullKmac         = 1'b1,
   localparam int          Share              = (EnMasking) ? 2 : 1, // derived parameter
   parameter  bit          SecIdleAcceptSwMsg = 1'b0,
-  parameter  int unsigned NumAppIntf         = 3,
-  parameter  app_config_t AppCfg[NumAppIntf] = '{AppCfgKeyMgr, AppCfgLcCtrl, AppCfgRomCtrl}
+  parameter  int unsigned NumAppIntf         = 2,
+  parameter  app_config_t AppCfg[NumAppIntf] = '{AppCfgKeyMgrStripped, AppCfgKeyMgrStripped}
 ) (
   input clk_i,
   input rst_ni,
