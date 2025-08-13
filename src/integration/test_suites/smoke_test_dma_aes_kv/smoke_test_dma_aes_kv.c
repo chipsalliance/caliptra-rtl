@@ -152,6 +152,7 @@ void main(void) {
             VPRINTF(LOW, "START TEST 1: BASIC TEST AES KV 23 to DMA\n");
             // Key to KV
             aes_key_o.kv_intf = TRUE;
+            aes_key_o.kv_expect_err = FALSE;
             aes_key_o.kv_id = 23; //KV slot 23
             aes_key_o.dest_valid = (dest_valid_t){0}; // Clear all destinations
             aes_key_o.dest_valid.dma_data = 1; // Only allow DMA access
@@ -207,6 +208,7 @@ void main(void) {
 
             // Key to KV
             aes_key_o.kv_intf = TRUE;
+            aes_key_o.kv_expect_err = FALSE;
             aes_key_o.kv_id = 23; //KV slot 23
             aes_key_o.dest_valid = (dest_valid_t){0}; // Clear all destinations
 
@@ -270,7 +272,7 @@ void main(void) {
             }
 
             ///////////////////////////////////
-            // TEST 3: ERR KV SLOT KEY SMALLER THAN KEY_RELEAE_SIZE STRAP
+            // TEST 4: ERR KV SLOT KEY SMALLER THAN KEY_RELEAE_SIZE STRAP
             ///////////////////////////////////
             if(kv_key_size <= 0x3C) {
                 // Test when key in KV slot is smaller than the key_release_size
@@ -298,6 +300,65 @@ void main(void) {
                     }
                 }
             }
+            
+            /////////////////////////////////////
+            //// TEST 5: ERR ROUTE KV16 to FW with a DECRYPT OPERATION         
+            /////////////////////////////////////
+            VPRINTF(LOW, "START TEST 5: ROUTE KV16 to FW - ERR\n");
+
+            for(int i = 0; i < 23; i++){
+                kv_set_clear(i);
+            }
+            VPRINTF(LOW, "DONE CLEARING KEYS\n");
+            
+            // Key to KV
+            aes_key_o.kv_intf = FALSE;
+
+            //Key from KV
+            aes_key.kv_intf = TRUE;
+            aes_key.kv_id = 16;
+            for (int i = 0; i < 8; i++) {
+                aes_key.key_share0[i] = 0x0;
+                aes_key.key_share1[i] = 0x00000000;
+            } 
+            
+            // Preload KV16 with a zero key
+            SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+
+            // Loading the KV23 slot with a key from AES
+            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+            
+            ///////////////////////////////////
+            // TEST 6: BASIC TEST AES KV 23 to DMA
+            ///////////////////////////////////
+
+            VPRINTF(LOW, "START TEST 6: ERR ROUTE KV16 to KV != KV23\n");
+            
+            // Clearing SRAM where we expect the key to be written
+            soc_ifc_axi_dma_send_ahb_payload(kv_key_dest, 0, send_payload, kv_key_size, 0);
+
+            // Key to KV
+            aes_key_o.kv_intf = TRUE;
+            aes_key_o.kv_expect_err = TRUE;
+            aes_key_o.kv_id = rand() % 23; // Random KV slot 0-22
+            aes_key_o.dest_valid = (dest_valid_t){0}; // Clear all destinations
+            aes_key_o.dest_valid.dma_data = 1; // Only allow DMA access
+
+            //Key from KV
+            aes_key.kv_intf = TRUE;
+            aes_key.kv_id = 16;
+            for (int i = 0; i < 8; i++) {
+                aes_key.key_share0[i] = 0x0;
+                aes_key.key_share1[i] = 0x00000000;
+            } 
+            
+            // Preload KV16 with a zero key
+            SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+
+            // Loading the KV slot with a key from AES
+            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+
+
 
         }
         else {

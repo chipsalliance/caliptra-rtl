@@ -28,6 +28,12 @@ uvmf:
       - name: strap_ss_uds_seed_base_addr
         dir: output
         width: '64'
+      - name: strap_ss_key_release_base_addr
+        dir: output
+        width: '64'
+      - name: strap_ss_key_release_key_size 
+        dir: output
+        width: '16'
       - name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset
         dir: output
         width: '32'
@@ -66,6 +72,10 @@ uvmf:
         value: "{ strap_ss_otp_fc_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }"
       - name: strap_ss_uds_seed_base_addr_c
         value: "{ strap_ss_uds_seed_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }"
+      - name: strap_ss_key_release_base_addr_c
+        value: "{ strap_ss_key_release_base_addr dist {0 :/ 1, [1:64'hFFFF_FFFF_FFFF_FFFE] :/ 98, 64'hFFFF_FFFF_FFFF_FFFF :/ 1}; }"
+      - name: strap_ss_key_release_key_size_c
+        value: "{ strap_ss_key_release_key_size == 16'h40; }"
       # All base address straps are configured to a different 4KiB region
       - name: strap_ss_addr_unique_c
         value: "{
@@ -116,6 +126,14 @@ uvmf:
         isrand: 'True'
       - name: strap_ss_uds_seed_base_addr
         type: bit [63:0]
+        iscompare: 'False'
+        isrand: 'True'
+      - name: strap_ss_key_release_base_addr
+        type: bit [63:0]
+        iscompare: 'False'
+        isrand: 'True'
+      - name: strap_ss_key_release_key_size 
+        type: bit [15:0]
         iscompare: 'False'
         isrand: 'True'
       - name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset

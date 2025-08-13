@@ -42,7 +42,7 @@ import kv_defines_pkg::*;
     // IF (OCP_LOCK_IN_PROGRESS) THEN (cryptos shall not read from OCP_LOCK_KEY_RELEASE_KV_SLOT)
     always_comb begin
         rule_fail.no_read_key_release = read_metrics.ocp_lock_in_progress &&
-                                        read_metrics.kv_read_dest != KV_DEST_IDX_DMA_DATA &&
+                                        read_metrics.kv_read_dest != (8'h1 << KV_DEST_IDX_DMA_DATA) &&
                                         read_metrics.kv_key_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT;
     end
 

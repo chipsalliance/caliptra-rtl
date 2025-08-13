@@ -64,6 +64,7 @@ typedef struct {
 typedef struct {
     BOOL      kv_intf;
     uint8_t   kv_id;
+    BOOL      kv_expect_err;
     dest_valid_t dest_valid;
 } aes_key_o_t;
 
