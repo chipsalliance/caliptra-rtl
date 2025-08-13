@@ -38,6 +38,12 @@ void hmac_zeroize(){
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
 }
 
+void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        base_addr[i] = data[i];
+    }
+}
+
 void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
