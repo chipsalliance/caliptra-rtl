@@ -108,6 +108,7 @@ requires:
   - entropy_src
   - csrng
   - aes
+  - sha3_ctrl
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
