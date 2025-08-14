@@ -43,6 +43,7 @@ typedef struct {
     aes_key_len_e key_len;   // AES_128, AES_192, AES_256
     aes_endian_e endian_mode; // AES_LITTLE_ENDIAN or AES_BIG_ENDIAN
     const char* test_name;   // Test description
+    uint8_t use_src_as_dst;
 } test_config_t;
 
 // hex_to_uint32_array_with_endianess
@@ -200,11 +201,15 @@ void run_aes_test(test_config_t test_config) {
     aes_input.key = aes_key;
     
     aes_input.data_src_mode  = AES_DATA_DMA;
-    aes_input.dma_transfer_data.src_addr = AXI_SRAM_BASE_ADDR;
-    aes_input.dma_transfer_data.dst_addr = AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2;
-   
-   
 
+    if(test_config.use_src_as_dst == 1){
+        VPRINTF(LOW, "Using.. source address as destination address\n");
+        aes_input.dma_transfer_data.src_addr = (uint64_t)AXI_SRAM_BASE_ADDR;
+        aes_input.dma_transfer_data.dst_addr = (uint64_t)AXI_SRAM_BASE_ADDR;
+    } else {
+        aes_input.dma_transfer_data.src_addr = (uint64_t)AXI_SRAM_BASE_ADDR;
+        aes_input.dma_transfer_data.dst_addr = (uint64_t)(AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2);
+    }
 
     // ===========================================================================
     // Sending image over to AXI SRAM for usage during DMA AES calculation
@@ -217,7 +222,6 @@ void run_aes_test(test_config_t test_config) {
         soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, aes_input.ciphertext, aes_input.text_len, 0);
     }
 
-
     aes_flow(op, mode, key_len, aes_input, test_config.endian_mode);
 }
 
@@ -227,15 +231,25 @@ void main(void) {
 
     // Define all test cases
     test_config_t test_cases[] = {
+
+        // using source as destination
         // GCM Tests
-        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)"},
-        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)"},
-        {AES_ENC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Encrypt GCM image big endian via AXI DMA"},
-        {AES_DEC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Decrypt GCM image big endian via AXI DMA"},
+        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 1},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 1},
+        {AES_ENC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Encrypt GCM image big endian via AXI DMA", 1},
+        {AES_DEC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Decrypt GCM image big endian via AXI DMA", 1},
+
+        // GCM Tests
+        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 0},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 0},
+        {AES_ENC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Encrypt GCM image big endian via AXI DMA", 0},
+        {AES_DEC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Decrypt GCM image big endian via AXI DMA", 0},
         
         // Non-GCM Tests (ECB mode)
-        {AES_ENC, AES_ECB, AES_256, AES_LITTLE_ENDIAN, "AES DMA Encrypt non-GCM image via AXI DMA (Little Endian)"},
-        {AES_DEC, AES_ECB, AES_256, AES_LITTLE_ENDIAN, "AES DMA Decrypt non-GCM image via AXI DMA (Little Endian)"}
+        {AES_ENC, AES_ECB, AES_256, AES_LITTLE_ENDIAN, "AES DMA Encrypt non-GCM image via AXI DMA (Little Endian)", 0},
+        {AES_DEC, AES_ECB, AES_256, AES_LITTLE_ENDIAN, "AES DMA Decrypt non-GCM image via AXI DMA (Little Endian)", 0},
+
+
     };
 
     int num_tests = sizeof(test_cases) / sizeof(test_config_t);

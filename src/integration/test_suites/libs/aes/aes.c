@@ -92,7 +92,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
   // wait for AES to be idle
   aes_wait_idle();
-
+  
   // Configure endianness if needed
   if (endian_mode == AES_BIG_ENDIAN) {
       VPRINTF(LOW, "Configuring AES for big endian mode\n");
@@ -196,10 +196,14 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
   // Wait for IDLE
   //aes_wait_idle();
-
   if (aes_input.text_len > 0) { 
     if (aes_input.data_src_mode == AES_DATA_DMA){
-        VPRINTF(LOW, "Streaming in text data via DMA: Source: 0x%x Destination: 0x%x\n", aes_input.dma_transfer_data.src_addr, aes_input.dma_transfer_data.dst_addr);
+
+        VPRINTF(LOW, "SRC: { 0x%0x_%0x } to DST: { 0x%0x_%0x }\n", 
+          (uint32_t)((aes_input.dma_transfer_data.src_addr >> 32) & 0xFFFFFFFF), 
+          (uint32_t)(aes_input.dma_transfer_data.src_addr & 0xFFFFFFFF),
+          (uint32_t)((aes_input.dma_transfer_data.dst_addr >> 32) & 0xFFFFFFFF),
+          (uint32_t)(aes_input.dma_transfer_data.dst_addr & 0xFFFFFFFF));
 
         soc_ifc_axi_dma_send_axi_to_axi(aes_input.dma_transfer_data.src_addr, 0, aes_input.dma_transfer_data.dst_addr, 0,  aes_input.text_len, 0, 1, gcm_mode);
 
