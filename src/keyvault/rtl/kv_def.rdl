@@ -42,6 +42,7 @@
 
         default sw = rw;
         default hw = r;
+        default swwe = true;
 
         field {desc = "Indicates that the read data is to come from the key vault.
                        Setting this bit to 1 initiates copying of data from the key vault."; hwclr;} read_en = 0;
@@ -57,6 +58,7 @@
 
         default sw = rw;
         default hw = r;
+        default swwe = true;
 
         field {desc = "Indicates that the result is to be stored in the key vault.
                        Setting this bit to 1 will copy the result to the keyvault when it is ready."; hwclr;} write_en = 0;
