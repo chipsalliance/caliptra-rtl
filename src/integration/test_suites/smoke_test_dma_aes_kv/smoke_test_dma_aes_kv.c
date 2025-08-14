@@ -270,6 +270,9 @@ void main(void) {
                     }
                 }
             }
+            else {
+                VPRINTF(LOW, "SKIP TEST 3: SMALL KV23\n");
+            }
 
             ///////////////////////////////////
             // TEST 4: ERR KV SLOT KEY LARGER THAN KEY_RELEASE_SIZE STRAP
@@ -299,6 +302,9 @@ void main(void) {
                         fail = 1;
                     }
                 }
+            }
+            else {
+                VPRINTF(LOW, "SKIP TEST 4: LARGE KV23\n");
             }
             
             /////////////////////////////////////
