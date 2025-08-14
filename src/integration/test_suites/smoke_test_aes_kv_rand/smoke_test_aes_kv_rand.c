@@ -298,10 +298,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE2
     VPRINTF(LOW, "Test Case 2 - CBC\n");
@@ -318,10 +318,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //Non-full block plaintext
     hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
@@ -341,10 +341,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE4
     VPRINTF(LOW, "Test Case 4 - OFB\n");
@@ -361,10 +361,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE5
     VPRINTF(LOW, "Test Case 5 - CTR\n");
@@ -381,10 +381,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE6
     VPRINTF(LOW, "Test Case 6 - GCM 256\n");
@@ -404,10 +404,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE7
     VPRINTF(LOW, "Test Case 7 - GCM 128\n");
@@ -427,10 +427,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 
     //End Test

@@ -149,7 +149,7 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE2
     VPRINTF(LOW, "Test Case 2\n");
@@ -177,7 +177,7 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE3
     VPRINTF(LOW, "Test Case 3\n");
@@ -205,7 +205,7 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE4
     VPRINTF(LOW, "Test Case 4\n");
@@ -233,7 +233,7 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     SEND_STDOUT_CTRL( 0xff);
     while(1);

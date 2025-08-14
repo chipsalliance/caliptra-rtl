@@ -174,7 +174,7 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_input.ciphertext = ciphertext;
 
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 }
 
