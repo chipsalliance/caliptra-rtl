@@ -27,6 +27,7 @@ schema_version: 2.4.0
 requires: 
   - hmac_ctrl
   - hmac_coverage
+  - caliptra_top_reg_defines
 targets:
   tb:
     directories: 
