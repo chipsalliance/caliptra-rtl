@@ -255,26 +255,26 @@ always_comb begin
 end
 
 // Software write-enables to prevent KV reg manipulation mid-operation
-always_comb AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle_o && input_ready_o && kv_key_ready;
-always_comb AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle_o && input_ready_o && kv_key_ready;
-always_comb AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle_o && input_ready_o && kv_key_ready;
-always_comb AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle_o && input_ready_o && kv_key_ready;
 
 // KV write control must be written while AES engine is idle, even though
 // output isn't written to KV until the end of the operation.
 // Prevent partial-key attacks by blocking register modifications during core execution.
-always_comb AES_KV_WR_CTRL.write_en.swwe              = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.write_entry.swwe           = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.hmac_key_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.hmac_block_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.aes_key_dest_valid.swwe    = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.dma_data_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb AES_KV_WR_CTRL.rsvd.swwe                  = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.write_en.swwe              = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.write_entry.swwe           = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_key_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_block_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.aes_key_dest_valid.swwe    = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.dma_data_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.rsvd.swwe                  = status_idle_o && input_ready_o;
 
 //keyault FSM
 //keyvault control reg macros for assigning to struct

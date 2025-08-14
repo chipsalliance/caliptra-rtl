@@ -488,31 +488,31 @@ module ecc_dsa_ctrl
     end
 
     // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && kv_privkey_ready;
-    always_comb ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && kv_privkey_ready;
-    always_comb ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = !kv_key_data_present && kv_privkey_ready;
-    always_comb ecc_kv_rd_pkey_ctrl.rsvd.swwe            = !kv_key_data_present && kv_privkey_ready;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = !kv_key_data_present && ecc_ready_reg;
 
-    always_comb ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && kv_seed_ready;
-    always_comb ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && kv_seed_ready;
-    always_comb ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = !kv_seed_data_present && kv_seed_ready;
-    always_comb ecc_kv_rd_seed_ctrl.rsvd.swwe            = !kv_seed_data_present && kv_seed_ready;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = !kv_seed_data_present && ecc_ready_reg;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    always_comb ecc_kv_wr_pkey_ctrl.write_en.swwe              = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.write_entry.swwe           = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = ecc_ready_reg;
-    always_comb ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = ecc_ready_reg;
 
     //keyvault control reg macros for assigning to struct
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)

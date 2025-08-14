@@ -328,31 +328,31 @@ always_comb begin
 end
 
 // Software write-enables to prevent KV reg manipulation mid-operation
-always_comb HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && kv_key_ready;
-always_comb HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && kv_key_ready;
-always_comb HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = !kv_key_data_present && kv_key_ready;
-always_comb HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = !kv_key_data_present && kv_key_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = !kv_key_data_present && core_ready;
 
-always_comb HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_data_present && kv_block_ready;
-always_comb HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_data_present && kv_block_ready;
-always_comb HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = !kv_data_present && kv_block_ready;
-always_comb HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = !kv_data_present && kv_block_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = !kv_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = !kv_data_present && core_ready;
 
 // KV write control must be written before HMAC core operation begins, even though
 // output isn't written to KV until the end of the operation.
 // Prevent partial-key attacks by blocking register modifications during core execution.
-always_comb HMAC512_KV_WR_CTRL.write_en.swwe              = core_ready;
-always_comb HMAC512_KV_WR_CTRL.write_entry.swwe           = core_ready;
-always_comb HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = core_ready;
-always_comb HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = core_ready;
-always_comb HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = core_ready;
-always_comb HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = core_ready;
-always_comb HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = core_ready;
-always_comb HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = core_ready;
-always_comb HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = core_ready;
-always_comb HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = core_ready;
-always_comb HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = core_ready;
-always_comb HMAC512_KV_WR_CTRL.rsvd.swwe                  = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe              = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe           = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = core_ready;
 
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)
