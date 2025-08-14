@@ -220,8 +220,7 @@ void main() {
 
 
     //inject hmac512_key to kv key reg (in RTL)
-    uint8_t key512_inject_cmd = 0xa8 + (hmac512_key.kv_id & 0x7);
-    printf("%c", key512_inject_cmd);
+    lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
     hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();

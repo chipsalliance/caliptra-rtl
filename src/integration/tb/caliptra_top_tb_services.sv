@@ -351,7 +351,8 @@ module caliptra_top_tb_services
     //         8'h9f        - Unused
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
-    //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
+    //         8'ha9        - Inject HMAC512_KEY to kv_key register
+    //         8'haa: 8'haf - Unused
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
@@ -652,9 +653,9 @@ module caliptra_top_tb_services
                         end
                     end
                     //inject valid hmac_key dest and hmac512_key value to key reg
-                    else if((WriteData[7:0] > 8'ha8) && (WriteData[7:0] <= 8'haf) && mailbox_write) begin
+                    else if((WriteData[7:0] == 8'ha9) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
