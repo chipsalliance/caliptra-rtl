@@ -130,6 +130,8 @@ module sha512
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg_q;
   kv_read_ctrl_reg_t kv_read_ctrl_reg;
+  kv_read_filter_metrics_t kv_read_metrics;
+  kv_write_filter_metrics_t kv_write_metrics;
 
   //KV Read Data Present 
   logic kv_read_data_present;
@@ -328,6 +330,28 @@ module sha512
 
   end
 
+    // Software write-enables to prevent KV reg manipulation mid-operation
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_en.swwe         = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_entry.swwe      = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.pcr_hash_extend.swwe = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.rsvd.swwe            = !kv_read_data_present && ready_reg && !gen_hash_ip;
+
+    // KV write control must be written before SHA core operation begins, even though
+    // output isn't written to KV until the end of the operation.
+    // Prevent partial-key attacks by blocking register modifications during core execution.
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_en.swwe              = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_entry.swwe           = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_block_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.rsvd.swwe                  = ready_reg && !gen_hash_ip;
+
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
   `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_VAULT_RD_CTRL)
 
@@ -394,6 +418,8 @@ always_comb pv_read =  gen_hash_ip ? gen_hash_pv_read :
                        pcr_hash_extend_ip ? vault_read : '0;
 always_comb vault_rd_resp = pv_rd_resp;
 
+
+
 kv_read_client #(
     .DATA_WIDTH(BLOCK_SIZE),
     .PAD(1)
@@ -406,6 +432,7 @@ sha512_block_kv_read
 
     //client control register
     .read_ctrl_reg(kv_read_ctrl_reg),
+    .read_metrics(kv_read_metrics),
 
     //interface with kv
     .kv_read(vault_read),
@@ -446,6 +473,12 @@ always_comb begin
   end
 end
 
+//No filtering rules for SHA512, goes to PCR vault
+always_comb begin
+  kv_read_metrics = '{default: '0};
+  kv_write_metrics = '{default: '0};
+end
+
 kv_write_client #(
   .DATA_WIDTH(PV_NUM_DWORDS*PV_DATA_W)
 )
@@ -458,6 +491,7 @@ sha512_result_kv_write
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg_q),
   .num_dwords(PV_NUM_DWORDS[4:0]),
+  .write_metrics(kv_write_metrics),
 
   //interface with kv
   .kv_write(vault_write),

@@ -63,6 +63,7 @@ void main() {
                              0x6a752c32,
                              0x9056d884,
                              0xdaf3c89d};
+    const uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d}; // TODO unique value
 
     VPRINTF(MEDIUM, "----------------------------------\n");
     VPRINTF(LOW,    "- Caliptra Validation ROM!!\n"       );
@@ -78,7 +79,7 @@ void main() {
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
         VPRINTF(LOW, "Beginning Cold Boot flow\n");
-        doe_init(iv_data_uds, iv_data_fe, 0x6); // TODO replace 0x6 with entry indicators
+        doe_init(iv_data_uds, iv_data_fe, iv_data_hek, 0x6); // TODO replace 0x6 with entry indicators
 
         VPRINTF(LOW, "Setting Flow Status\n");
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);

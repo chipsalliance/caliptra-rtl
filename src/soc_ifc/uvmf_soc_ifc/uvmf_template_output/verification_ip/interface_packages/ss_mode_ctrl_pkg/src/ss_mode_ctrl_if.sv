@@ -38,6 +38,8 @@
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_recovery_ifc_base_addr), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_otp_fc_base_addr), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_uds_seed_base_addr), // Agent output 
+// .dut_signal_port(ss_mode_ctrl_bus.strap_ss_key_release_base_addr), // Agent output 
+// .dut_signal_port(ss_mode_ctrl_bus.strap_ss_key_release_key_size), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes), // Agent output 
 // .dut_signal_port(ss_mode_ctrl_bus.strap_ss_strap_generic_0), // Agent output 
@@ -61,6 +63,8 @@ interface  ss_mode_ctrl_if
   inout tri [63:0] strap_ss_external_staging_area_base_addr,
   inout tri [63:0] strap_ss_otp_fc_base_addr,
   inout tri [63:0] strap_ss_uds_seed_base_addr,
+  inout tri [63:0] strap_ss_key_release_base_addr,
+  inout tri [15:0] strap_ss_key_release_key_size,
   inout tri [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
   inout tri [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
   inout tri [31:0] strap_ss_strap_generic_0,
@@ -81,6 +85,8 @@ modport monitor_port
   input strap_ss_external_staging_area_base_addr,
   input strap_ss_otp_fc_base_addr,
   input strap_ss_uds_seed_base_addr,
+  input strap_ss_key_release_base_addr,
+  input strap_ss_key_release_key_size,
   input strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
   input strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
   input strap_ss_strap_generic_0,
@@ -101,6 +107,8 @@ modport initiator_port
   output strap_ss_external_staging_area_base_addr,
   output strap_ss_otp_fc_base_addr,
   output strap_ss_uds_seed_base_addr,
+  output strap_ss_key_release_base_addr,
+  output strap_ss_key_release_key_size,
   output strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
   output strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
   output strap_ss_strap_generic_0,
@@ -121,6 +129,8 @@ modport responder_port
   input strap_ss_external_staging_area_base_addr,
   input strap_ss_otp_fc_base_addr,
   input strap_ss_uds_seed_base_addr,
+  input strap_ss_key_release_base_addr,
+  input strap_ss_key_release_key_size,
   input strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
   input strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
   input strap_ss_strap_generic_0,

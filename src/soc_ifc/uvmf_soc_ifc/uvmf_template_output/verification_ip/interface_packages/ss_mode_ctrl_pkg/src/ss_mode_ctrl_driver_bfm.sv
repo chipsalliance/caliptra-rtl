@@ -118,6 +118,10 @@ end
   reg [63:0] strap_ss_otp_fc_base_addr_o = 'bz;
   tri [63:0] strap_ss_uds_seed_base_addr_i;
   reg [63:0] strap_ss_uds_seed_base_addr_o = 'bz;
+  tri [63:0] strap_ss_key_release_base_addr_i;
+  reg [63:0] strap_ss_key_release_base_addr_o = 'bz;
+  tri [15:0] strap_ss_key_release_key_size_i;
+  reg [15:0] strap_ss_key_release_key_size_o = 'bz;
   tri [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
   reg [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o = 'bz;
   tri [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;
@@ -159,6 +163,10 @@ end
   assign strap_ss_otp_fc_base_addr_i = bus.strap_ss_otp_fc_base_addr;
   assign bus.strap_ss_uds_seed_base_addr = (initiator_responder == INITIATOR) ? strap_ss_uds_seed_base_addr_o : 'bz;
   assign strap_ss_uds_seed_base_addr_i = bus.strap_ss_uds_seed_base_addr;
+  assign bus.strap_ss_key_release_base_addr = (initiator_responder == INITIATOR) ? strap_ss_key_release_base_addr_o : 'bz;
+  assign strap_ss_key_release_base_addr_i = bus.strap_ss_key_release_base_addr;
+  assign bus.strap_ss_key_release_key_size = (initiator_responder == INITIATOR) ? strap_ss_key_release_key_size_o : 'bz;
+  assign strap_ss_key_release_key_size_i = bus.strap_ss_key_release_key_size;
   assign bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset = (initiator_responder == INITIATOR) ? strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o : 'bz;
   assign strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i = bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
   assign bus.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes = (initiator_responder == INITIATOR) ? strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_o : 'bz;
@@ -212,6 +220,8 @@ end
        strap_ss_external_staging_area_base_addr_o <= 'bz;
        strap_ss_otp_fc_base_addr_o <= 'bz;
        strap_ss_uds_seed_base_addr_o <= 'bz;
+       strap_ss_key_release_base_addr_o <= 'bz;
+       strap_ss_key_release_key_size_o <= 'bz;
        strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o <= 'bz;
        strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_o <= 'bz;
        strap_ss_strap_generic_0_o <= 'bz;
@@ -264,6 +274,8 @@ end
        //   bit [63:0] strap_ss_recovery_ifc_base_addr ;
        //   bit [63:0] strap_ss_otp_fc_base_addr ;
        //   bit [63:0] strap_ss_uds_seed_base_addr ;
+       //   bit [63:0] strap_ss_key_release_base_addr ;
+       //   bit [15:0] strap_ss_key_release_key_size ;
        //   bit [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset ;
        //   bit [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes ;
        //   bit [31:0] strap_ss_strap_generic_0 ;
@@ -278,6 +290,8 @@ end
        //   bit [63:0] strap_ss_recovery_ifc_base_addr ;
        //   bit [63:0] strap_ss_otp_fc_base_addr ;
        //   bit [63:0] strap_ss_uds_seed_base_addr ;
+       //   bit [63:0] strap_ss_key_release_base_addr ;
+       //   bit [15:0] strap_ss_key_release_key_size ;
        //   bit [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset ;
        //   bit [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes ;
        //   bit [31:0] strap_ss_strap_generic_0 ;
@@ -305,6 +319,8 @@ end
        //      strap_ss_recovery_ifc_base_addr_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [63:0] 
        //      strap_ss_otp_fc_base_addr_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [63:0] 
        //      strap_ss_uds_seed_base_addr_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [63:0] 
+       //      strap_ss_key_release_base_addr_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [63:0]
+       //      strap_ss_key_release_key_size <= ss_mode_ctrl_initiator_struct.xyz;  //    [15:0]
        //      strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
        //      strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
        //      strap_ss_strap_generic_0_o <= ss_mode_ctrl_initiator_struct.xyz;  //    [31:0] 
@@ -319,9 +335,11 @@ end
     strap_ss_caliptra_base_addr_o                             <= ss_mode_ctrl_initiator_struct.strap_ss_caliptra_base_addr                            ;
     strap_ss_mci_base_addr_o                                  <= ss_mode_ctrl_initiator_struct.strap_ss_mci_base_addr                                 ;
     strap_ss_recovery_ifc_base_addr_o                         <= ss_mode_ctrl_initiator_struct.strap_ss_recovery_ifc_base_addr                        ;
-    strap_ss_external_staging_area_base_addr_o                <= ss_mode_ctrl_initiator_struct.strap_ss_external_staging_area_base_addr                        ;
+    strap_ss_external_staging_area_base_addr_o                <= ss_mode_ctrl_initiator_struct.strap_ss_external_staging_area_base_addr               ;
     strap_ss_otp_fc_base_addr_o                               <= ss_mode_ctrl_initiator_struct.strap_ss_otp_fc_base_addr                              ;
     strap_ss_uds_seed_base_addr_o                             <= ss_mode_ctrl_initiator_struct.strap_ss_uds_seed_base_addr                            ;
+    strap_ss_key_release_base_addr_o                          <= ss_mode_ctrl_initiator_struct.strap_ss_key_release_base_addr                         ;
+    strap_ss_key_release_key_size_o                           <= ss_mode_ctrl_initiator_struct.strap_ss_key_release_key_size                          ;
     strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_o <= ss_mode_ctrl_initiator_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
     strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_o        <= ss_mode_ctrl_initiator_struct.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ;
     strap_ss_strap_generic_0_o                                <= ss_mode_ctrl_initiator_struct.strap_ss_strap_generic_0                               ;
@@ -336,9 +354,11 @@ end
     ss_mode_ctrl_responder_struct.strap_ss_caliptra_base_addr                             <= strap_ss_caliptra_base_addr_i                            ;
     ss_mode_ctrl_responder_struct.strap_ss_mci_base_addr                                  <= strap_ss_mci_base_addr_i                                 ;
     ss_mode_ctrl_responder_struct.strap_ss_recovery_ifc_base_addr                         <= strap_ss_recovery_ifc_base_addr_i                        ;
-    ss_mode_ctrl_responder_struct.strap_ss_external_staging_area_base_addr                <= strap_ss_external_staging_area_base_addr_i                        ;
+    ss_mode_ctrl_responder_struct.strap_ss_external_staging_area_base_addr                <= strap_ss_external_staging_area_base_addr_i               ;
     ss_mode_ctrl_responder_struct.strap_ss_otp_fc_base_addr                               <= strap_ss_otp_fc_base_addr_i                              ;
     ss_mode_ctrl_responder_struct.strap_ss_uds_seed_base_addr                             <= strap_ss_uds_seed_base_addr_i                            ;
+    ss_mode_ctrl_responder_struct.strap_ss_key_release_base_addr                          <= strap_ss_key_release_base_addr_i                         ;
+    ss_mode_ctrl_responder_struct.strap_ss_key_release_key_size                           <= strap_ss_key_release_key_size_i                          ;
     ss_mode_ctrl_responder_struct.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset <= strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;
     ss_mode_ctrl_responder_struct.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes        <= strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i       ;
     ss_mode_ctrl_responder_struct.strap_ss_strap_generic_0                                <= strap_ss_strap_generic_0_i                               ;
@@ -375,6 +395,8 @@ bit first_transfer=1;
   //   bit [63:0] strap_ss_recovery_ifc_base_addr ;
   //   bit [63:0] strap_ss_otp_fc_base_addr ;
   //   bit [63:0] strap_ss_uds_seed_base_addr ;
+  //   bit [63:0] strap_ss_key_release_base_addr ;
+  //   bit [15:0] strap_ss_key_release_key_size ;
   //   bit [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset ;
   //   bit [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes ;
   //   bit [31:0] strap_ss_strap_generic_0 ;
@@ -389,6 +411,8 @@ bit first_transfer=1;
   //   bit [63:0] strap_ss_recovery_ifc_base_addr ;
   //   bit [63:0] strap_ss_otp_fc_base_addr ;
   //   bit [63:0] strap_ss_uds_seed_base_addr ;
+  //   bit [63:0] strap_ss_key_release_base_addr ;
+  //   bit [15:0] strap_ss_key_release_key_size ;
   //   bit [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset ;
   //   bit [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes ;
   //   bit [31:0] strap_ss_strap_generic_0 ;
@@ -409,6 +433,8 @@ bit first_transfer=1;
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_recovery_ifc_base_addr_i;  //    [63:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_otp_fc_base_addr_i;  //    [63:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_uds_seed_base_addr_i;  //    [63:0] 
+       //      ss_mode_ctrl_responder_struct.xyz = strap_ss_key_release_base_addr_i;  //    [63:0] 
+       //      ss_mode_ctrl_responder_struct.xyz = strap_ss_key_release_key_size_i;  //    [15:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i;  //    [31:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_i;  //    [31:0] 
        //      ss_mode_ctrl_responder_struct.xyz = strap_ss_strap_generic_0_i;  //    [31:0] 

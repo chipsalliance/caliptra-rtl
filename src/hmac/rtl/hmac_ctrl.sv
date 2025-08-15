@@ -64,6 +64,7 @@ module hmac_ctrl
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
+    input  logic ocp_lock_in_progress,
     input  logic debugUnlock_or_scan_mode_switch
 );
 
@@ -97,6 +98,7 @@ module hmac_ctrl
         .error_intr(error_intr),
         .notif_intr(notif_intr),
         .busy_o(busy_o),
+        .ocp_lock_in_progress(ocp_lock_in_progress),
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 

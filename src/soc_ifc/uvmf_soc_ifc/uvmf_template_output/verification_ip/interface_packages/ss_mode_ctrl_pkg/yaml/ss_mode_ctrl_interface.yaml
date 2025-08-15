@@ -33,6 +33,14 @@ uvmf:
         reset_value: '''bz'
         width: '64'
       - dir: output
+        name: strap_ss_key_release_base_addr
+        reset_value: '''bz'
+        width: '64'
+      - dir: output
+        name: strap_ss_key_release_key_size
+        reset_value: '''bz'
+        width: '16'
+      - dir: output
         name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset
         reset_value: '''bz'
         width: '32'
@@ -82,6 +90,9 @@ uvmf:
       - comment: ''
         name: strap_ss_uds_seed_base_addr_c
         value: '{ strap_ss_uds_seed_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
+      - comment: ''
+        name: strap_ss_key_release_base_addr_c
+        value: '{ strap_ss_key_release_base_addr dist {0 :/ 1, [1:64''hFFFF_FFFF_FFFF_FFFE] :/ 98, 64''hFFFF_FFFF_FFFF_FFFF :/ 1}; }'
       - comment: 'All base address straps are configured to a different 4KiB region'
         name: strap_ss_addr_unique_c
         value: "{
@@ -89,12 +100,17 @@ uvmf:
                   (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                  (strap_ss_caliptra_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_key_release_base_addr  & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                  (strap_ss_mci_base_addr          & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_key_release_base_addr  & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                  (strap_ss_recovery_ifc_base_addr & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_key_release_base_addr  & 64'hFFFF_FFFF_FFFF_F000);
                   (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000);
+                  (strap_ss_otp_fc_base_addr       & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_key_release_base_addr  & 64'hFFFF_FFFF_FFFF_F000);
+                  (strap_ss_uds_seed_base_addr     & 64'hFFFF_FFFF_FFFF_F000) != (strap_ss_key_release_base_addr  & 64'hFFFF_FFFF_FFFF_F000);
                   }"
       - comment: ''
         name: strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_c
@@ -150,6 +166,18 @@ uvmf:
         isrand: 'True'
         name: strap_ss_uds_seed_base_addr
         type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_key_release_base_addr
+        type: bit [63:0]
+        unpacked_dimension: ''
+      - comment: ''
+        iscompare: 'False'
+        isrand: 'True'
+        name: strap_ss_key_release_key_size
+        type: bit [15:0]
         unpacked_dimension: ''
       - comment: ''
         iscompare: 'False'

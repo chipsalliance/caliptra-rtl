@@ -34,6 +34,8 @@
 `define DOE_REG_DOE_CTRL_CMD_MASK                                                                   (32'h3)
 `define DOE_REG_DOE_CTRL_DEST_LOW                                                                   (2)
 `define DOE_REG_DOE_CTRL_DEST_MASK                                                                  (32'h7c)
+`define DOE_REG_DOE_CTRL_CMD_EXT_LOW                                                                (7)
+`define DOE_REG_DOE_CTRL_CMD_EXT_MASK                                                               (32'h180)
 `endif
 `ifndef DOE_REG_DOE_STATUS
 `define DOE_REG_DOE_STATUS                                                                          (32'h14)
@@ -47,6 +49,10 @@
 `define DOE_REG_DOE_STATUS_FE_FLOW_DONE_MASK                                                        (32'h8)
 `define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_LOW                                                (4)
 `define DOE_REG_DOE_STATUS_DEOBF_SECRETS_CLEARED_MASK                                               (32'h10)
+`define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_LOW                                                        (5)
+`define DOE_REG_DOE_STATUS_HEK_FLOW_DONE_MASK                                                       (32'h20)
+`define DOE_REG_DOE_STATUS_ERROR_LOW                                                                (8)
+`define DOE_REG_DOE_STATUS_ERROR_MASK                                                               (32'h100)
 `endif
 `ifndef DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define DOE_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (32'h800)
@@ -677,8 +683,10 @@
 `define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_SEED_DEST_VALID_MASK                                      (32'h1000)
 `define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_MSG_DEST_VALID_LOW                                        (13)
 `define ECC_REG_ECC_KV_WR_PKEY_CTRL_MLKEM_MSG_DEST_VALID_MASK                                       (32'h2000)
-`define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_LOW                                                        (14)
-`define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_MASK                                                       (32'hffffc000)
+`define ECC_REG_ECC_KV_WR_PKEY_CTRL_DMA_DATA_DEST_VALID_LOW                                         (14)
+`define ECC_REG_ECC_KV_WR_PKEY_CTRL_DMA_DATA_DEST_VALID_MASK                                        (32'h4000)
+`define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_LOW                                                        (15)
+`define ECC_REG_ECC_KV_WR_PKEY_CTRL_RSVD_MASK                                                       (32'hffff8000)
 `endif
 `ifndef ECC_REG_ECC_KV_WR_PKEY_STATUS
 `define ECC_REG_ECC_KV_WR_PKEY_STATUS                                                               (32'h614)
@@ -1076,8 +1084,10 @@
 `define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                      (32'h1000)
 `define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                        (13)
 `define HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                       (32'h2000)
-`define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_LOW                                                        (14)
-`define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_MASK                                                       (32'hffffc000)
+`define HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                         (14)
+`define HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                        (32'h4000)
+`define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_LOW                                                        (15)
+`define HMAC_REG_HMAC512_KV_WR_CTRL_RSVD_MASK                                                       (32'hffff8000)
 `endif
 `ifndef HMAC_REG_HMAC512_KV_WR_STATUS
 `define HMAC_REG_HMAC512_KV_WR_STATUS                                                               (32'h614)
@@ -1403,6 +1413,42 @@
 `define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW                                                  (2)
 `define AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK                                                 (32'h3fc)
 `endif
+`ifndef AES_CLP_REG_AES_KV_WR_CTRL
+`define AES_CLP_REG_AES_KV_WR_CTRL                                                                  (32'h208)
+`define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_EN_LOW                                                     (0)
+`define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_EN_MASK                                                    (32'h1)
+`define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_ENTRY_LOW                                                  (1)
+`define AES_CLP_REG_AES_KV_WR_CTRL_WRITE_ENTRY_MASK                                                 (32'h3e)
+`define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_KEY_DEST_VALID_LOW                                          (6)
+`define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK                                         (32'h40)
+`define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_LOW                                        (7)
+`define AES_CLP_REG_AES_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK                                       (32'h80)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_LOW                                        (8)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK                                       (32'h100)
+`define AES_CLP_REG_AES_KV_WR_CTRL_ECC_PKEY_DEST_VALID_LOW                                          (9)
+`define AES_CLP_REG_AES_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK                                         (32'h200)
+`define AES_CLP_REG_AES_KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW                                          (10)
+`define AES_CLP_REG_AES_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK                                         (32'h400)
+`define AES_CLP_REG_AES_KV_WR_CTRL_AES_KEY_DEST_VALID_LOW                                           (11)
+`define AES_CLP_REG_AES_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK                                          (32'h800)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW                                        (12)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                       (32'h1000)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                         (13)
+`define AES_CLP_REG_AES_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                        (32'h2000)
+`define AES_CLP_REG_AES_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                          (14)
+`define AES_CLP_REG_AES_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                         (32'h4000)
+`define AES_CLP_REG_AES_KV_WR_CTRL_RSVD_LOW                                                         (15)
+`define AES_CLP_REG_AES_KV_WR_CTRL_RSVD_MASK                                                        (32'hffff8000)
+`endif
+`ifndef AES_CLP_REG_AES_KV_WR_STATUS
+`define AES_CLP_REG_AES_KV_WR_STATUS                                                                (32'h20c)
+`define AES_CLP_REG_AES_KV_WR_STATUS_READY_LOW                                                      (0)
+`define AES_CLP_REG_AES_KV_WR_STATUS_READY_MASK                                                     (32'h1)
+`define AES_CLP_REG_AES_KV_WR_STATUS_VALID_LOW                                                      (1)
+`define AES_CLP_REG_AES_KV_WR_STATUS_VALID_MASK                                                     (32'h2)
+`define AES_CLP_REG_AES_KV_WR_STATUS_ERROR_LOW                                                      (2)
+`define AES_CLP_REG_AES_KV_WR_STATUS_ERROR_MASK                                                     (32'h3fc)
+`endif
 `ifndef AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h400)
 `define AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)
@@ -1521,9 +1567,9 @@
 `define KV_REG_KEY_CTRL_0_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_0_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_0_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_0_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_0_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_0_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_0_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_0_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_0_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_1
 `define KV_REG_KEY_CTRL_1                                                                           (32'h4)
@@ -1538,9 +1584,9 @@
 `define KV_REG_KEY_CTRL_1_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_1_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_1_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_1_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_1_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_1_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_1_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_1_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_1_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_2
 `define KV_REG_KEY_CTRL_2                                                                           (32'h8)
@@ -1555,9 +1601,9 @@
 `define KV_REG_KEY_CTRL_2_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_2_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_2_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_2_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_2_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_2_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_2_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_2_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_2_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_3
 `define KV_REG_KEY_CTRL_3                                                                           (32'hc)
@@ -1572,9 +1618,9 @@
 `define KV_REG_KEY_CTRL_3_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_3_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_3_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_3_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_3_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_3_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_3_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_3_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_3_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_4
 `define KV_REG_KEY_CTRL_4                                                                           (32'h10)
@@ -1589,9 +1635,9 @@
 `define KV_REG_KEY_CTRL_4_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_4_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_4_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_4_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_4_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_4_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_4_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_4_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_4_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_5
 `define KV_REG_KEY_CTRL_5                                                                           (32'h14)
@@ -1606,9 +1652,9 @@
 `define KV_REG_KEY_CTRL_5_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_5_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_5_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_5_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_5_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_5_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_5_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_5_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_5_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_6
 `define KV_REG_KEY_CTRL_6                                                                           (32'h18)
@@ -1623,9 +1669,9 @@
 `define KV_REG_KEY_CTRL_6_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_6_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_6_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_6_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_6_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_6_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_6_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_6_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_6_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_7
 `define KV_REG_KEY_CTRL_7                                                                           (32'h1c)
@@ -1640,9 +1686,9 @@
 `define KV_REG_KEY_CTRL_7_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_7_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_7_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_7_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_7_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_7_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_7_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_7_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_7_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_8
 `define KV_REG_KEY_CTRL_8                                                                           (32'h20)
@@ -1657,9 +1703,9 @@
 `define KV_REG_KEY_CTRL_8_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_8_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_8_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_8_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_8_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_8_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_8_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_8_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_8_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_9
 `define KV_REG_KEY_CTRL_9                                                                           (32'h24)
@@ -1674,9 +1720,9 @@
 `define KV_REG_KEY_CTRL_9_RSVD1_LOW                                                                 (4)
 `define KV_REG_KEY_CTRL_9_RSVD1_MASK                                                                (32'h1f0)
 `define KV_REG_KEY_CTRL_9_DEST_VALID_LOW                                                            (9)
-`define KV_REG_KEY_CTRL_9_DEST_VALID_MASK                                                           (32'h1fe00)
-`define KV_REG_KEY_CTRL_9_LAST_DWORD_LOW                                                            (17)
-`define KV_REG_KEY_CTRL_9_LAST_DWORD_MASK                                                           (32'h1e0000)
+`define KV_REG_KEY_CTRL_9_DEST_VALID_MASK                                                           (32'h3fe00)
+`define KV_REG_KEY_CTRL_9_LAST_DWORD_LOW                                                            (18)
+`define KV_REG_KEY_CTRL_9_LAST_DWORD_MASK                                                           (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_10
 `define KV_REG_KEY_CTRL_10                                                                          (32'h28)
@@ -1691,9 +1737,9 @@
 `define KV_REG_KEY_CTRL_10_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_10_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_10_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_10_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_10_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_10_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_10_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_10_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_10_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_11
 `define KV_REG_KEY_CTRL_11                                                                          (32'h2c)
@@ -1708,9 +1754,9 @@
 `define KV_REG_KEY_CTRL_11_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_11_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_11_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_11_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_11_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_11_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_11_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_11_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_11_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_12
 `define KV_REG_KEY_CTRL_12                                                                          (32'h30)
@@ -1725,9 +1771,9 @@
 `define KV_REG_KEY_CTRL_12_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_12_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_12_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_12_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_12_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_12_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_12_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_12_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_12_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_13
 `define KV_REG_KEY_CTRL_13                                                                          (32'h34)
@@ -1742,9 +1788,9 @@
 `define KV_REG_KEY_CTRL_13_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_13_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_13_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_13_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_13_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_13_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_13_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_13_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_13_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_14
 `define KV_REG_KEY_CTRL_14                                                                          (32'h38)
@@ -1759,9 +1805,9 @@
 `define KV_REG_KEY_CTRL_14_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_14_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_14_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_14_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_14_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_14_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_14_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_14_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_14_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_15
 `define KV_REG_KEY_CTRL_15                                                                          (32'h3c)
@@ -1776,9 +1822,9 @@
 `define KV_REG_KEY_CTRL_15_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_15_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_15_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_15_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_15_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_15_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_15_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_15_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_15_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_16
 `define KV_REG_KEY_CTRL_16                                                                          (32'h40)
@@ -1793,9 +1839,9 @@
 `define KV_REG_KEY_CTRL_16_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_16_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_16_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_16_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_16_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_16_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_16_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_16_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_16_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_17
 `define KV_REG_KEY_CTRL_17                                                                          (32'h44)
@@ -1810,9 +1856,9 @@
 `define KV_REG_KEY_CTRL_17_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_17_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_17_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_17_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_17_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_17_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_17_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_17_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_17_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_18
 `define KV_REG_KEY_CTRL_18                                                                          (32'h48)
@@ -1827,9 +1873,9 @@
 `define KV_REG_KEY_CTRL_18_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_18_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_18_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_18_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_18_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_18_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_18_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_18_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_18_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_19
 `define KV_REG_KEY_CTRL_19                                                                          (32'h4c)
@@ -1844,9 +1890,9 @@
 `define KV_REG_KEY_CTRL_19_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_19_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_19_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_19_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_19_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_19_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_19_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_19_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_19_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_20
 `define KV_REG_KEY_CTRL_20                                                                          (32'h50)
@@ -1861,9 +1907,9 @@
 `define KV_REG_KEY_CTRL_20_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_20_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_20_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_20_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_20_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_20_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_20_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_20_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_20_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_21
 `define KV_REG_KEY_CTRL_21                                                                          (32'h54)
@@ -1878,9 +1924,9 @@
 `define KV_REG_KEY_CTRL_21_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_21_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_21_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_21_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_21_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_21_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_21_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_21_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_21_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_22
 `define KV_REG_KEY_CTRL_22                                                                          (32'h58)
@@ -1895,9 +1941,9 @@
 `define KV_REG_KEY_CTRL_22_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_22_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_22_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_22_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_22_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_22_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_22_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_22_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_22_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_CTRL_23
 `define KV_REG_KEY_CTRL_23                                                                          (32'h5c)
@@ -1912,9 +1958,9 @@
 `define KV_REG_KEY_CTRL_23_RSVD1_LOW                                                                (4)
 `define KV_REG_KEY_CTRL_23_RSVD1_MASK                                                               (32'h1f0)
 `define KV_REG_KEY_CTRL_23_DEST_VALID_LOW                                                           (9)
-`define KV_REG_KEY_CTRL_23_DEST_VALID_MASK                                                          (32'h1fe00)
-`define KV_REG_KEY_CTRL_23_LAST_DWORD_LOW                                                           (17)
-`define KV_REG_KEY_CTRL_23_LAST_DWORD_MASK                                                          (32'h1e0000)
+`define KV_REG_KEY_CTRL_23_DEST_VALID_MASK                                                          (32'h3fe00)
+`define KV_REG_KEY_CTRL_23_LAST_DWORD_LOW                                                           (18)
+`define KV_REG_KEY_CTRL_23_LAST_DWORD_MASK                                                          (32'h3c0000)
 `endif
 `ifndef KV_REG_KEY_ENTRY_0_0
 `define KV_REG_KEY_ENTRY_0_0                                                                        (32'h600)
@@ -5787,8 +5833,10 @@
 `define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                                     (32'h1000)
 `define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                       (13)
 `define SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                      (32'h2000)
-`define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_LOW                                                       (14)
-`define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_MASK                                                      (32'hffffc000)
+`define SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                        (14)
+`define SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                       (32'h4000)
+`define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_LOW                                                       (15)
+`define SHA512_REG_SHA512_KV_WR_CTRL_RSVD_MASK                                                      (32'hffff8000)
 `endif
 `ifndef SHA512_REG_SHA512_KV_WR_STATUS
 `define SHA512_REG_SHA512_KV_WR_STATUS                                                              (32'h60c)
@@ -6863,8 +6911,10 @@
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK                               (32'h1000)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW                                 (13)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK                                (32'h2000)
-`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_LOW                                                 (14)
-`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_MASK                                                (32'hffffc000)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_DMA_DATA_DEST_VALID_LOW                                  (14)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_DMA_DATA_DEST_VALID_MASK                                 (32'h4000)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_LOW                                                 (15)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_MASK                                                (32'hffff8000)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                        (32'hae34)
@@ -8027,9 +8077,9 @@
 `define AXI_DMA_REG_CTRL_RSVD2_LOW                                                                  (21)
 `define AXI_DMA_REG_CTRL_RSVD2_MASK                                                                 (32'he00000)
 `define AXI_DMA_REG_CTRL_WR_ROUTE_LOW                                                               (24)
-`define AXI_DMA_REG_CTRL_WR_ROUTE_MASK                                                              (32'h3000000)
-`define AXI_DMA_REG_CTRL_RSVD3_LOW                                                                  (26)
-`define AXI_DMA_REG_CTRL_RSVD3_MASK                                                                 (32'hc000000)
+`define AXI_DMA_REG_CTRL_WR_ROUTE_MASK                                                              (32'h7000000)
+`define AXI_DMA_REG_CTRL_RSVD3_LOW                                                                  (27)
+`define AXI_DMA_REG_CTRL_RSVD3_MASK                                                                 (32'h8000000)
 `define AXI_DMA_REG_CTRL_WR_FIXED_LOW                                                               (28)
 `define AXI_DMA_REG_CTRL_WR_FIXED_MASK                                                              (32'h10000000)
 `define AXI_DMA_REG_CTRL_RSVD4_LOW                                                                  (29)
@@ -8112,6 +8162,10 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_FIFO_UFLOW_EN_MASK                          (32'h40)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_LOW                              (7)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK                             (32'h80)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_EN_LOW                                (8)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_EN_MASK                               (32'h100)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_LARGE_EN_LOW                          (9)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_KV_RD_LARGE_EN_MASK                         (32'h200)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (32'h808)
@@ -8154,6 +8208,10 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_FIFO_UFLOW_STS_MASK                   (32'h40)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_LOW                       (7)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK                      (32'h80)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_STS_LOW                         (8)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_STS_MASK                        (32'h100)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_LARGE_STS_LOW                   (9)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_KV_RD_LARGE_STS_MASK                  (32'h200)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (32'h818)
@@ -8186,6 +8244,10 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_FIFO_UFLOW_TRIG_MASK                      (32'h40)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_LOW                          (7)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_AES_CIF_TRIG_MASK                         (32'h80)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_TRIG_LOW                            (8)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_TRIG_MASK                           (32'h100)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_LARGE_TRIG_LOW                      (9)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_KV_RD_LARGE_TRIG_MASK                     (32'h200)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (32'h820)
@@ -8223,6 +8285,12 @@
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_R                                        (32'h91c)
+`endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_R                                          (32'h920)
+`endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_R                                    (32'h924)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_R                                       (32'h980)
@@ -8279,28 +8347,38 @@
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_LOW                         (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_AES_CIF_INTR_COUNT_INCR_R_PULSE_MASK                        (32'h1)
 `endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R                                     (32'ha20)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R_PULSE_LOW                           (0)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_INTR_COUNT_INCR_R_PULSE_MASK                          (32'h1)
+`endif
+`ifndef AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_INCR_R
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_INCR_R                               (32'ha24)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_INCR_R_PULSE_LOW                     (0)
+`define AXI_DMA_REG_INTR_BLOCK_RF_ERROR_KV_RD_LARGE_INTR_COUNT_INCR_R_PULSE_MASK                    (32'h1)
+`endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (32'ha20)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R                                  (32'ha28)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_TXN_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (32'ha24)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R                                (32'ha2c)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                      (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                     (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (32'ha28)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R                            (32'ha30)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_EMPTY_INTR_COUNT_INCR_R_PULSE_MASK                 (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (32'ha2c)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R                                 (32'ha34)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_LOW                       (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_FULL_INTR_COUNT_INCR_R_PULSE_MASK                      (32'h1)
 `endif
 `ifndef AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R
-`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (32'ha30)
+`define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R                             (32'ha38)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
 `define AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_FIFO_NOT_FULL_INTR_COUNT_INCR_R_PULSE_MASK                  (32'h1)
 `endif
@@ -8556,6 +8634,8 @@
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                                 (32'h10)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                           (5)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                          (32'h20)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                            (6)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                           (32'h40)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                             (32'he4)
@@ -8982,6 +9062,30 @@
 `define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                               (0)
 `define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                              (32'hff)
 `endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_0
+`define SOC_IFC_REG_FUSE_HEK_SEED_0                                                                 (32'h3a4)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_1
+`define SOC_IFC_REG_FUSE_HEK_SEED_1                                                                 (32'h3a8)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_2
+`define SOC_IFC_REG_FUSE_HEK_SEED_2                                                                 (32'h3ac)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_3
+`define SOC_IFC_REG_FUSE_HEK_SEED_3                                                                 (32'h3b0)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_4
+`define SOC_IFC_REG_FUSE_HEK_SEED_4                                                                 (32'h3b4)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_5
+`define SOC_IFC_REG_FUSE_HEK_SEED_5                                                                 (32'h3b8)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_6
+`define SOC_IFC_REG_FUSE_HEK_SEED_6                                                                 (32'h3bc)
+`endif
+`ifndef SOC_IFC_REG_FUSE_HEK_SEED_7
+`define SOC_IFC_REG_FUSE_HEK_SEED_7                                                                 (32'h3c0)
+`endif
 `ifndef SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L
 `define SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L                                                         (32'h500)
 `endif
@@ -9031,6 +9135,22 @@
 `endif
 `ifndef SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
 `define SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                            (32'h53c)
+`endif
+`ifndef SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L
+`define SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L                                                      (32'h540)
+`endif
+`ifndef SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H
+`define SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H                                                      (32'h544)
+`endif
+`ifndef SOC_IFC_REG_SS_KEY_RELEASE_SIZE
+`define SOC_IFC_REG_SS_KEY_RELEASE_SIZE                                                             (32'h548)
+`define SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_LOW                                                    (0)
+`define SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK                                                   (32'hffff)
+`endif
+`ifndef SOC_IFC_REG_SS_OCP_LOCK_CTRL
+`define SOC_IFC_REG_SS_OCP_LOCK_CTRL                                                                (32'h54c)
+`define SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_LOW                                           (0)
+`define SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK                                          (32'h1)
 `endif
 `ifndef SOC_IFC_REG_SS_STRAP_GENERIC_0
 `define SOC_IFC_REG_SS_STRAP_GENERIC_0                                                              (32'h5a0)

@@ -76,6 +76,7 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
+  bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] obf_hek_seed ; \
   bit [31:0] nmi_vector ; \
   bit nmi_intr_pending ; \
   bit iccm_locked ; \
@@ -98,6 +99,7 @@ typedef struct packed  { \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
+            this.obf_hek_seed , \
             this.nmi_vector , \
             this.nmi_intr_pending , \
             this.iccm_locked  \
@@ -121,6 +123,7 @@ typedef struct packed  { \
             this.cptra_obf_key_reg , \
             this.obf_field_entropy , \
             this.obf_uds_seed , \
+            this.obf_hek_seed , \
             this.nmi_vector , \
             this.nmi_intr_pending , \
             this.iccm_locked  \
@@ -146,6 +149,7 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
+  bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] obf_hek_seed ; \
   bit [31:0] nmi_vector ; \
   bit nmi_intr_pending ; \
   bit iccm_locked ; \
@@ -168,6 +172,7 @@ typedef struct packed  { \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
+           this.obf_hek_seed , \
            this.nmi_vector , \
            this.nmi_intr_pending , \
            this.iccm_locked  \
@@ -191,6 +196,7 @@ typedef struct packed  { \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
+           this.obf_hek_seed , \
            this.nmi_vector , \
            this.nmi_intr_pending , \
            this.iccm_locked  \
@@ -216,6 +222,7 @@ typedef struct packed  { \
   bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] cptra_obf_key_reg ; \
   bit [`CLP_OBF_FE_DWORDS-1:0] [31:0] obf_field_entropy ; \
   bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] obf_uds_seed ; \
+  bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] obf_hek_seed ; \
   bit [31:0] nmi_vector ; \
   bit nmi_intr_pending ; \
   bit iccm_locked ; \
@@ -238,6 +245,7 @@ typedef struct packed  { \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
+           this.obf_hek_seed , \
            this.nmi_vector , \
            this.nmi_intr_pending , \
            this.iccm_locked  \
@@ -261,6 +269,7 @@ typedef struct packed  { \
            this.cptra_obf_key_reg , \
            this.obf_field_entropy , \
            this.obf_uds_seed , \
+           this.obf_hek_seed , \
            this.nmi_vector , \
            this.nmi_intr_pending , \
            this.iccm_locked  \

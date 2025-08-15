@@ -24,13 +24,13 @@ uvmf:
       - dir: input
         name: kv_wr_resp
         reset_value: '''bz'
-        width: '$bits(kv_defines_pkg::kv_wr_resp_t)'
+        width: $bits(kv_defines_pkg::kv_wr_resp_t)
       reset: dummy
       reset_assertion_level: 'False'
       transaction_constraints:
       - comment: ''
         name: dest_valid_c
-        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE"}) write_dest_valid == 63; }'
+        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "MLDSA"}) write_dest_valid == 63; }'
       transaction_vars:
       - comment: ''
         iscompare: 'False'

@@ -56,6 +56,7 @@ module ecc_top
     //PCR Signing
     input pcr_signing_t pcr_signing_data,
 
+    input  logic ocp_lock_in_progress,
     output logic busy_o,
 
     output logic error_intr,
@@ -150,6 +151,7 @@ module ecc_top
         .kv_wr_resp(kv_wr_resp),
         .pcr_signing_data(pcr_signing_data),
         
+        .ocp_lock_in_progress(ocp_lock_in_progress),
         .busy_o(busy_o),
 
         .error_intr(error_intr),

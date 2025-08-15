@@ -72,9 +72,6 @@ package kv_write_pkg;
    `include "src/kv_write_transaction_coverage.svh"
    `include "src/kv_write_sequence_base.svh"
    `include "src/kv_write_random_sequence.svh"
-   `include "src/kv_write_key_ctrl_sequence.svh"
-   `include "src/kv_write_key_entry_sequence.svh"
-   `include "src/kv_write_AHB_lock_set_sequence.svh"
 
    `include "src/kv_write_responder_sequence.svh"
    `include "src/kv_write2reg_adapter.svh"
@@ -86,6 +83,9 @@ package kv_write_pkg;
    //    be sure to add the sequence file here so that it will be
    //    compiled as part of the interface package.  Be sure to place
    //    the new sequence after any base sequences of the new sequence.
+   `include "src/kv_write_key_ctrl_sequence.svh"
+   `include "src/kv_write_key_entry_sequence.svh"
+   `include "src/kv_write_AHB_lock_set_sequence.svh"
    // pragma uvmf custom package_item_additional end
 
 endpackage

@@ -45,6 +45,15 @@
 #define KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK)
 #define KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW (SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_LOW)
 #define KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK)
+#define KV_WR_CTRL_AES_KEY_DEST_VALID_LOW (SHA512_REG_SHA512_KV_WR_CTRL_AES_KEY_DEST_VALID_LOW)
+#define KV_WR_CTRL_AES_KEY_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK)
+#define KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW (SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_LOW)
+#define KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK)
+#define KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW (SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_LOW)
+#define KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK)
+#define KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW (SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_LOW)
+#define KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK (SHA512_REG_SHA512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK)
+
 
 #define KV_RD_STATUS_READY_MASK (SHA512_REG_SHA512_VAULT_RD_STATUS_READY_MASK)
 #define KV_RD_STATUS_VALID_MASK (SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK)
@@ -56,6 +65,10 @@ typedef struct {
     unsigned mldsa_seed:1;
     unsigned ecc_pkey:1;
     unsigned ecc_seed:1;
+    unsigned aes_key:1;
+    unsigned mlkem_seed:1;
+    unsigned mlkem_msg:1;
+    unsigned dma_data:1;
 } dest_valid_t;
 
 /* --------------- Function Prototypes --------------- */
@@ -64,8 +77,10 @@ void kv_set_lock_wr(uint32_t entry);
 void kv_set_clear(uint32_t entry);
 
 void kv_error_check(uint32_t reg_addr);
+void kv_expect_error_check(uint32_t reg_addr);
 void kv_read_ctrl(uint32_t reg_addr, uint32_t read_entry);
 void kv_write_ctrl(uint32_t reg_addr, uint32_t write_entry, dest_valid_t dest_valid);
+
 
 void pv_hash_extend(uint32_t pcr_entry);
 

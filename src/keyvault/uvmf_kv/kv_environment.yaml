@@ -11,10 +11,16 @@ uvmf:
       - name: kv_hmac_write_agent
         type: kv_write
         initiator_responder: "INITIATOR"
+      - name: kv_mlkem_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
       - name: kv_ecc_write_agent
         type: kv_write
         initiator_responder: "INITIATOR"
       - name: kv_doe_write_agent
+        type: kv_write
+        initiator_responder: "INITIATOR"
+      - name: kv_aes_write_agent
         type: kv_write
         initiator_responder: "INITIATOR"
       - name: kv_hmac_key_read_agent
@@ -33,6 +39,15 @@ uvmf:
         type: kv_read
         initiator_responder: "INITIATOR"
       - name: kv_aes_key_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_mlkem_seed_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_mlkem_msg_read_agent
+        type: kv_read
+        initiator_responder: "INITIATOR"
+      - name: kv_dma_read_agent
         type: kv_read
         initiator_responder: "INITIATOR"
 
@@ -91,7 +106,13 @@ uvmf:
       - driver: kv_ecc_seed_read_agent.monitored_ap       #
         receiver: kv_sb.actual_analysis_export            #
       - driver: kv_aes_key_read_agent.monitored_ap        #
-        receiver: kv_sb.actual_analysis_export            #        
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_mlkem_seed_read_agent.monitored_ap     #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_mlkem_msg_read_agent.monitored_ap      #
+        receiver: kv_sb.actual_analysis_export            #
+      - driver: kv_dma_read_agent.monitored_ap            #
+        receiver: kv_sb.actual_analysis_export            #
 
       register_model:
         use_adapter: "True"

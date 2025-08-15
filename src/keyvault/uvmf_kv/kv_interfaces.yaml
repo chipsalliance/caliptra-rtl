@@ -80,7 +80,7 @@ uvmf:
       parameters:
       - name: "KV_WRITE_REQUESTOR"
         type: "string"
-        # Can be HMAC, ECC, DOE, MLDSA
+        # Can be HMAC, ECC, DOE, MLKEM, AES
         value: '"HMAC"'
 
       ports:
@@ -141,7 +141,7 @@ uvmf:
       parameters:
       - name: "KV_READ_REQUESTOR"
         type: "string"
-        # Can be HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED, AES_KEY
+        # Can be HMAC_KEY, HMAC_BLOCK, MLDSA_KEY, ECC_PRIVKEY, ECC_SEED, AES_KEY, MLKEM_SEED, MLKEM_MSG, DMA
         value: '"HMAC_KEY"'
 
       ports:

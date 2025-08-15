@@ -43,6 +43,7 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
   cptra_status_transaction_bit_cg cptra_obf_key_reg_bit_cg[`CLP_OBF_KEY_DWORDS-1:0] [31:0];
   cptra_status_transaction_bit_cg obf_field_entropy_bit_cg[`CLP_OBF_FE_DWORDS -1:0] [31:0];
   cptra_status_transaction_bit_cg obf_uds_seed_bit_cg     [`CLP_OBF_UDS_DWORDS-1:0] [31:0];
+  cptra_status_transaction_bit_cg obf_hek_seed_bit_cg     [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0];
   // pragma uvmf custom class_item_additional end
   
   // ****************************************************************************
@@ -116,6 +117,11 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
         bins rand_uds  = {[1:{`CLP_OBF_UDS_DWORDS{32'hFFFF_FFFF}}-1]};
         bins ones_uds  = {{`CLP_OBF_UDS_DWORDS{32'hFFFF_FFFF}}};
     }
+    obf_hek_seed: coverpoint coverage_trans.obf_hek_seed {
+        bins zero_hek  = {0};
+        bins rand_hek  = {[1:{OCP_LOCK_HEK_NUM_DWORDS{32'hFFFF_FFFF}}-1]};
+        bins ones_hek  = {{OCP_LOCK_HEK_NUM_DWORDS{32'hFFFF_FFFF}}};
+    }
     nmi_vector: coverpoint coverage_trans.nmi_vector {
                  bins zero = {32'h0};
         wildcard bins rom  = {32'h0000_????};
@@ -146,6 +152,7 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt] = new;
     foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt] = new;
     foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt] = new;
+    foreach (coverage_trans.obf_hek_seed     [dw,bt]) obf_hek_seed_bit_cg     [dw][bt] = new;
   endfunction
 
   // ****************************************************************************
@@ -157,6 +164,7 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt].set_inst_name($sformatf("cptra_obf_key_reg_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
     foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt].set_inst_name($sformatf("obf_field_entropy_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
     foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt].set_inst_name($sformatf("obf_uds_seed_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
+    foreach (coverage_trans.obf_hek_seed     [dw,bt]) obf_hek_seed_bit_cg     [dw][bt].set_inst_name($sformatf("obf_hek_seed_bit_cg_%d_%d_%s",dw, bt, get_full_name()));
   endfunction
 
   // ****************************************************************************
@@ -172,6 +180,7 @@ class cptra_status_transaction_coverage  extends uvm_subscriber #(.T(cptra_statu
     foreach (coverage_trans.cptra_obf_key_reg[dw,bt]) cptra_obf_key_reg_bit_cg[dw][bt].sample(coverage_trans.cptra_obf_key_reg[dw][bt]);
     foreach (coverage_trans.obf_field_entropy[dw,bt]) obf_field_entropy_bit_cg[dw][bt].sample(coverage_trans.obf_field_entropy[dw][bt]);
     foreach (coverage_trans.obf_uds_seed     [dw,bt]) obf_uds_seed_bit_cg     [dw][bt].sample(coverage_trans.obf_uds_seed     [dw][bt]);
+    foreach (coverage_trans.obf_hek_seed     [dw,bt]) obf_hek_seed_bit_cg     [dw][bt].sample(coverage_trans.obf_hek_seed     [dw][bt]);
   endfunction
 
 endclass

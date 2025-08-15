@@ -48,6 +48,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
   rand uvm_reg_data_t uds_seed_rand      [`CLP_OBF_UDS_DWORDS];
   rand uvm_reg_data_t field_entropy_rand [`CLP_OBF_FE_DWORDS];
+  rand uvm_reg_data_t hek_seed_rand      [OCP_LOCK_HEK_NUM_DWORDS];
   rand uvm_reg_data_t owner_pk_hash_rand [12];
   rand uvm_reg_data_t vendor_pk_hash_rand [12];
   rand uvm_reg_data_t idevid_cert_attr_rand [24];
@@ -59,6 +60,7 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   rand struct packed {
     bit uds;
     bit field_entropy;
+    bit hek;
     bit [0:11] vendor_pk_hash;
     bit [0:11] owner_pk_hash;
     bit ecc_revocation;
@@ -145,6 +147,15 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
         for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_field_entropy); ii++) begin
             reg_model.soc_ifc_reg_rm.fuse_field_entropy[ii].write(sts, field_entropy_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
             if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to field_entropy index %0d", ii))
+        end
+    end
+
+    // Write HEK
+    if (this.fuses_to_set.hek) begin
+        `uvm_info("SOC_IFC_RST", "Writing obfuscated HEK seed to fuse bank", UVM_LOW)
+        for (int ii = 0; ii < $size(reg_model.soc_ifc_reg_rm.fuse_hek_seed); ii++) begin
+            reg_model.soc_ifc_reg_rm.fuse_hek_seed[ii].write(sts, hek_seed_rand[ii], UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+            if (sts != UVM_IS_OK) `uvm_error("SOC_IFC_RST", $sformatf("Failed when writing to fuse_hek_seed index %0d", ii))
         end
     end
 

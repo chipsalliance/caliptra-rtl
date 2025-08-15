@@ -12,6 +12,8 @@ uvmf:
         type: kv_write_transaction
       - name: kv_doe_write_agent_ae
         type: kv_write_transaction
+      - name: kv_aes_write_agent_ae
+        type: kv_write_transaction
       - name: kv_hmac_key_read_agent_ae
         type: kv_read_transaction
       - name: kv_hmac_block_read_agent_ae
@@ -27,6 +29,8 @@ uvmf:
       - name: kv_mlkem_seed_read_agent_ae
         type: kv_read_transaction
       - name: kv_mlkem_msg_read_agent_ae
+        type: kv_read_transaction
+      - name: kv_dma_read_agent_ae
         type: kv_read_transaction
       - name: ahb_slave_0_ae
         type: mvc_sequence_item_base

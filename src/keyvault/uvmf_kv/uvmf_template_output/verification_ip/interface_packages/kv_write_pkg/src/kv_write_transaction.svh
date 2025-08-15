@@ -44,7 +44,7 @@ class kv_write_transaction #(
   logic error;
 
   //Constraints for the transaction variables:
-  constraint dest_valid_c {0 <= write_dest_valid < 256;} //{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE"}) write_dest_valid == 63; }
+  constraint dest_valid_c {0 <= write_dest_valid < 512;} //{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE"}) write_dest_valid == 63; }
   constraint write_en_c {write_en == 1'b1;}
   constraint write_entry_c {write_entry >= 0; write_entry < KV_NUM_KEYS;}
   constraint write_offset_c {write_offset >= 0; write_offset < KV_NUM_DWORDS;}
@@ -152,7 +152,8 @@ class kv_write_transaction #(
   virtual function bit do_compare (uvm_object rhs, uvm_comparer comparer);
     kv_write_transaction #(
         .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-        ) RHS;
+        )
+ RHS;
     if (!$cast(RHS,rhs)) return 0;
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
@@ -174,7 +175,8 @@ class kv_write_transaction #(
   virtual function void do_copy (uvm_object rhs);
     kv_write_transaction #(
         .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-        ) RHS;
+        )
+ RHS;
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);

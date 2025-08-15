@@ -32,13 +32,16 @@
 class kv_write_random_sequence #(
       string KV_WRITE_REQUESTOR = "HMAC"
       )
+
   extends kv_write_sequence_base #(
       .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-      );
+      )
+;
 
   `uvm_object_param_utils( kv_write_random_sequence #(
                            KV_WRITE_REQUESTOR
-                           ))
+                           )
+)
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end

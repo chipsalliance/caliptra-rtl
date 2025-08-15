@@ -139,3 +139,10 @@ reg {
             [br]SOC Access:      RWL-S";
     Fuse svn[8]=8'b0;
 } fuse_soc_manifest_max_svn;
+reg {
+    name = "OCP LOCK HEK";
+    desc = "Obfuscated HEK (Hard Epoch Key) seed. Tied to device ownership transfers in OCP LOCK.
+            [br]Caliptra Access: -
+            [br]SOC Access:      WL-S";
+    Fuse seed[32]=0;
+} fuse_hek_seed[8];

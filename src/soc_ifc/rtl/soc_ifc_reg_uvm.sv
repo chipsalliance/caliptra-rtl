@@ -920,12 +920,14 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg RSVD_en_bit_cg[2];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg LMS_acc_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg SUBSYSTEM_MODE_en_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_CONFIG_bit_cg OCP_LOCK_MODE_en_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_CONFIG_fld_cg fld_cg;
         rand uvm_reg_field iTRNG_en;
         rand uvm_reg_field Fuse_Granularity;
         rand uvm_reg_field RSVD_en;
         rand uvm_reg_field LMS_acc_en;
         rand uvm_reg_field SUBSYSTEM_MODE_en;
+        rand uvm_reg_field OCP_LOCK_MODE_en;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_CONFIG");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -947,12 +949,15 @@ package soc_ifc_reg_uvm;
             this.LMS_acc_en.configure(this, 1, 4, "RO", 1, 'h0, 0, 1, 0);
             this.SUBSYSTEM_MODE_en = new("SUBSYSTEM_MODE_en");
             this.SUBSYSTEM_MODE_en.configure(this, 1, 5, "RO", 1, 'h0, 0, 1, 0);
+            this.OCP_LOCK_MODE_en = new("OCP_LOCK_MODE_en");
+            this.OCP_LOCK_MODE_en.configure(this, 1, 6, "RO", 1, 'h0, 0, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
                 foreach(Fuse_Granularity_bit_cg[bt]) Fuse_Granularity_bit_cg[bt] = new();
                 foreach(RSVD_en_bit_cg[bt]) RSVD_en_bit_cg[bt] = new();
                 foreach(LMS_acc_en_bit_cg[bt]) LMS_acc_en_bit_cg[bt] = new();
                 foreach(SUBSYSTEM_MODE_en_bit_cg[bt]) SUBSYSTEM_MODE_en_bit_cg[bt] = new();
+                foreach(OCP_LOCK_MODE_en_bit_cg[bt]) OCP_LOCK_MODE_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -1994,6 +1999,36 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_soc_manifest_max_svn
 
+    // Reg - soc_ifc_reg::fuse_hek_seed
+    class soc_ifc_reg__fuse_hek_seed extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__fuse_hek_seed_bit_cg seed_bit_cg[32];
+        soc_ifc_reg__fuse_hek_seed_fld_cg fld_cg;
+        rand uvm_reg_field seed;
+
+        function new(string name = "soc_ifc_reg__fuse_hek_seed");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.seed = new("seed");
+            this.seed.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(seed_bit_cg[bt]) seed_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__fuse_hek_seed
+
     // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_L
     class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -2473,6 +2508,126 @@ package soc_ifc_reg_uvm;
                 fld_cg = new();
         endfunction : build
     endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+
+    // Reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_L
+    class soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L_bit_cg addr_l_bit_cg[32];
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L_fld_cg fld_cg;
+        rand uvm_reg_field addr_l;
+
+        function new(string name = "soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.addr_l = new("addr_l");
+            this.addr_l.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(addr_l_bit_cg[bt]) addr_l_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L
+
+    // Reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_H
+    class soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H_bit_cg addr_h_bit_cg[32];
+        soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H_fld_cg fld_cg;
+        rand uvm_reg_field addr_h;
+
+        function new(string name = "soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.addr_h = new("addr_h");
+            this.addr_h.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(addr_h_bit_cg[bt]) addr_h_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H
+
+    // Reg - soc_ifc_reg::SS_KEY_RELEASE_SIZE
+    class soc_ifc_reg__SS_KEY_RELEASE_SIZE extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_KEY_RELEASE_SIZE_bit_cg size_bit_cg[16];
+        soc_ifc_reg__SS_KEY_RELEASE_SIZE_fld_cg fld_cg;
+        rand uvm_reg_field size;
+
+        function new(string name = "soc_ifc_reg__SS_KEY_RELEASE_SIZE");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.size = new("size");
+            this.size.configure(this, 16, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(size_bit_cg[bt]) size_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_KEY_RELEASE_SIZE
+
+    // Reg - soc_ifc_reg::SS_OCP_LOCK_CTRL
+    class soc_ifc_reg__SS_OCP_LOCK_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__SS_OCP_LOCK_CTRL_bit_cg LOCK_IN_PROGRESS_bit_cg[1];
+        soc_ifc_reg__SS_OCP_LOCK_CTRL_fld_cg fld_cg;
+        rand uvm_reg_field LOCK_IN_PROGRESS;
+
+        function new(string name = "soc_ifc_reg__SS_OCP_LOCK_CTRL");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.LOCK_IN_PROGRESS = new("LOCK_IN_PROGRESS");
+            this.LOCK_IN_PROGRESS.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(LOCK_IN_PROGRESS_bit_cg[bt]) LOCK_IN_PROGRESS_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__SS_OCP_LOCK_CTRL
 
     // Reg - soc_ifc_reg::SS_STRAP_GENERIC
     class soc_ifc_reg__SS_STRAP_GENERIC extends uvm_reg;
@@ -4697,6 +4852,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__fuse_pqc_key_type fuse_pqc_key_type;
         rand soc_ifc_reg__fuse_soc_manifest_svn fuse_soc_manifest_svn[4];
         rand soc_ifc_reg__fuse_soc_manifest_max_svn fuse_soc_manifest_max_svn;
+        rand soc_ifc_reg__fuse_hek_seed fuse_hek_seed[8];
         rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L SS_CALIPTRA_BASE_ADDR_L;
         rand soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H SS_CALIPTRA_BASE_ADDR_H;
         rand soc_ifc_reg__SS_MCI_BASE_ADDR_L SS_MCI_BASE_ADDR_L;
@@ -4713,6 +4869,10 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER SS_CALIPTRA_DMA_AXI_USER;
         rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
         rand soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+        rand soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L SS_KEY_RELEASE_BASE_ADDR_L;
+        rand soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H SS_KEY_RELEASE_BASE_ADDR_H;
+        rand soc_ifc_reg__SS_KEY_RELEASE_SIZE SS_KEY_RELEASE_SIZE;
+        rand soc_ifc_reg__SS_OCP_LOCK_CTRL SS_OCP_LOCK_CTRL;
         rand soc_ifc_reg__SS_STRAP_GENERIC SS_STRAP_GENERIC[4];
         rand soc_ifc_reg__SS_DBG_SERVICE_REG_REQ SS_DBG_SERVICE_REG_REQ;
         rand soc_ifc_reg__SS_DBG_SERVICE_REG_RSP SS_DBG_SERVICE_REG_RSP;
@@ -5089,6 +5249,13 @@ package soc_ifc_reg_uvm;
 
             this.fuse_soc_manifest_max_svn.build();
             this.default_map.add_reg(this.fuse_soc_manifest_max_svn, 'h3a0);
+            foreach(this.fuse_hek_seed[i0]) begin
+                this.fuse_hek_seed[i0] = new($sformatf("fuse_hek_seed[%0d]", i0));
+                this.fuse_hek_seed[i0].configure(this);
+                
+                this.fuse_hek_seed[i0].build();
+                this.default_map.add_reg(this.fuse_hek_seed[i0], 'h3a4 + i0*'h4);
+            end
             this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
             this.SS_CALIPTRA_BASE_ADDR_L.configure(this);
 
@@ -5169,6 +5336,26 @@ package soc_ifc_reg_uvm;
 
             this.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H.build();
             this.default_map.add_reg(this.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H, 'h53c);
+            this.SS_KEY_RELEASE_BASE_ADDR_L = new("SS_KEY_RELEASE_BASE_ADDR_L");
+            this.SS_KEY_RELEASE_BASE_ADDR_L.configure(this);
+
+            this.SS_KEY_RELEASE_BASE_ADDR_L.build();
+            this.default_map.add_reg(this.SS_KEY_RELEASE_BASE_ADDR_L, 'h540);
+            this.SS_KEY_RELEASE_BASE_ADDR_H = new("SS_KEY_RELEASE_BASE_ADDR_H");
+            this.SS_KEY_RELEASE_BASE_ADDR_H.configure(this);
+
+            this.SS_KEY_RELEASE_BASE_ADDR_H.build();
+            this.default_map.add_reg(this.SS_KEY_RELEASE_BASE_ADDR_H, 'h544);
+            this.SS_KEY_RELEASE_SIZE = new("SS_KEY_RELEASE_SIZE");
+            this.SS_KEY_RELEASE_SIZE.configure(this);
+
+            this.SS_KEY_RELEASE_SIZE.build();
+            this.default_map.add_reg(this.SS_KEY_RELEASE_SIZE, 'h548);
+            this.SS_OCP_LOCK_CTRL = new("SS_OCP_LOCK_CTRL");
+            this.SS_OCP_LOCK_CTRL.configure(this);
+
+            this.SS_OCP_LOCK_CTRL.build();
+            this.default_map.add_reg(this.SS_OCP_LOCK_CTRL, 'h54c);
             foreach(this.SS_STRAP_GENERIC[i0]) begin
                 this.SS_STRAP_GENERIC[i0] = new($sformatf("SS_STRAP_GENERIC[%0d]", i0));
                 this.SS_STRAP_GENERIC[i0].configure(this);

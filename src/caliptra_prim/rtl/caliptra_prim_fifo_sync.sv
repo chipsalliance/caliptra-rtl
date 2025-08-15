@@ -7,11 +7,12 @@
 `include "caliptra_prim_assert.sv"
 
 module caliptra_prim_fifo_sync #(
-  parameter int unsigned Width       = 16,
-  parameter bit Pass                 = 1'b1, // if == 1 allow requests to pass through empty FIFO
-  parameter int unsigned Depth       = 4,
-  parameter bit OutputZeroIfEmpty    = 1'b1, // if == 1 always output 0 when FIFO is empty
-  parameter bit Secure               = 1'b0, // use prim count for pointers
+  parameter int unsigned Width        = 16,
+  parameter bit Pass                  = 1'b1, // if == 1 allow requests to pass through empty FIFO
+  parameter int unsigned Depth        = 4,
+  parameter bit OutputZeroIfEmpty     = 1'b1, // if == 1 always output 0 when FIFO is empty
+  parameter bit Secure                = 1'b0, // use prim count for pointers
+  parameter int unsigned resetOnClear = 0, // if == 1, reset the FIFO on clear
   // derived parameter
   localparam int          DepthW     = caliptra_prim_util_pkg::vbits(Depth+1)
 ) (
@@ -107,10 +108,24 @@ module caliptra_prim_fifo_sync #(
     if (Depth == 1) begin : gen_depth_eq1
       assign storage_rdata = storage[0];
 
-      always_ff @(posedge clk_i)
-        if (fifo_incr_wptr) begin
-          storage[0] <= wdata_i;
-        end
+      if (resetOnClear) begin : gen_depth_eq1_reset
+        
+        always_ff @(posedge clk_i)
+          if (clr_i) begin
+            storage[0] <= '0;
+          end
+          else if (fifo_incr_wptr) begin
+            storage[0] <= wdata_i;
+          end
+
+      end else begin : gen_depth_eq1_reset
+
+        always_ff @(posedge clk_i)
+          if (fifo_incr_wptr) begin
+            storage[0] <= wdata_i;
+          end
+
+      end
 
       logic unused_ptrs;
       assign unused_ptrs = ^{fifo_wptr, fifo_rptr};
@@ -119,10 +134,25 @@ module caliptra_prim_fifo_sync #(
     end else begin : gen_depth_gt1
       assign storage_rdata = storage[fifo_rptr];
 
-      always_ff @(posedge clk_i)
-        if (fifo_incr_wptr) begin
-          storage[fifo_wptr] <= wdata_i;
-        end
+      if (resetOnClear) begin : gen_depth_gt1_reset
+        
+        always_ff @(posedge clk_i)
+          if (clr_i) begin
+            storage <= '0;
+          end
+          else if (fifo_incr_wptr) begin
+            storage[fifo_wptr] <= wdata_i;
+          end
+
+      end else begin : gen_depth_gt1_no_reset
+
+        always_ff @(posedge clk_i)
+          if (fifo_incr_wptr) begin
+            storage[fifo_wptr] <= wdata_i;
+          end
+
+      end
+
     end
 
     logic [Width-1:0] rdata_int;

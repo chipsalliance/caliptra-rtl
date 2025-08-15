@@ -335,6 +335,7 @@ reg {
     field {sw=r; hw=w;} RSVD_en[2];
     field {sw=r; hw=w;} LMS_acc_en;
     field {sw=r; hw=w;} SUBSYSTEM_MODE_en;
+    field {sw=r; hw=w;} OCP_LOCK_MODE_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1

@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+import kv_defines_pkg::*;
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -39,6 +40,7 @@
 // .dut_signal_port(cptra_status_bus.cptra_obf_key_reg), // Agent output 
 // .dut_signal_port(cptra_status_bus.obf_field_entropy), // Agent output 
 // .dut_signal_port(cptra_status_bus.obf_uds_seed), // Agent output 
+// .dut_signal_port(cptra_status_bus.obf_hek_seed), // Agent output 
 // .dut_signal_port(cptra_status_bus.soc_ifc_error_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.soc_ifc_notif_intr), // Agent output 
 // .dut_signal_port(cptra_status_bus.sha_error_intr), // Agent output 
@@ -64,6 +66,7 @@ interface  cptra_status_if
   inout tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg,
   inout tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy,
   inout tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+  inout tri [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed,
   inout tri  soc_ifc_error_intr,
   inout tri  soc_ifc_notif_intr,
   inout tri  sha_error_intr,
@@ -86,6 +89,7 @@ modport monitor_port
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,
+  input obf_hek_seed,
   input soc_ifc_error_intr,
   input soc_ifc_notif_intr,
   input sha_error_intr,
@@ -108,6 +112,7 @@ modport initiator_port
   output cptra_obf_key_reg,
   output obf_field_entropy,
   output obf_uds_seed,
+  output obf_hek_seed,
   output soc_ifc_error_intr,
   output soc_ifc_notif_intr,
   output sha_error_intr,
@@ -130,6 +135,7 @@ modport responder_port
   input cptra_obf_key_reg,
   input obf_field_entropy,
   input obf_uds_seed,
+  input obf_hek_seed,
   input soc_ifc_error_intr,
   input soc_ifc_notif_intr,
   input sha_error_intr,

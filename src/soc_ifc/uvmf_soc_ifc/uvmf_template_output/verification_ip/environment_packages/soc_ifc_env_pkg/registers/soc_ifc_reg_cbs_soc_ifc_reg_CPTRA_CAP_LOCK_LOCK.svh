@@ -42,7 +42,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK extends uvm_reg_cbs;
         if (map.get_name() == this.AHB_map_name) begin
             case (kind) inside
                 UVM_PREDICT_READ: begin
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on register field %s, which is only modifiable by SoC (via AXI)", kind, map.get_name(), fld.get_full_name()), UVM_FULL)
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] on map [%s] has no effect on internal register field %s", kind, map.get_name(), fld.get_full_name()), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
                     if (previous) begin
@@ -64,7 +64,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK extends uvm_reg_cbs;
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
-                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to external reg field %s on map %s. value: 0x%x previous: 0x%x", fld.get_full_name(), map.get_name(), value, previous), UVM_LOW)
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to internal reg field %s on map %s. value: 0x%x previous: 0x%x", fld.get_full_name(), map.get_name(), value, previous), UVM_LOW)
                     value = previous;
                 end
                 default: begin

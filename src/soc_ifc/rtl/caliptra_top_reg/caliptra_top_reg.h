@@ -390,6 +390,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK                                        (0x10)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW                                  (5)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                 (0x20)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                   (6)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                  (0x40)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                   (0x300e4)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
@@ -945,6 +947,38 @@
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                      (0)
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                     (0xff)
 #endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                       (0x303a4)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                                        (0x3a4)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                       (0x303a8)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                                        (0x3a8)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                       (0x303ac)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                                        (0x3ac)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                       (0x303b0)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                                        (0x3b0)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                       (0x303b4)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                                        (0x3b4)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                       (0x303b8)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                                        (0x3b8)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                       (0x303bc)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                                        (0x3bc)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                       (0x303c0)
+#ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                                        (0x3c0)
+#endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_CALIPTRA_BASE_ADDR_L                               (0x30500)
 #ifndef GENERIC_AND_FUSE_REG_SS_CALIPTRA_BASE_ADDR_L
 #define GENERIC_AND_FUSE_REG_SS_CALIPTRA_BASE_ADDR_L                                                (0x500)
@@ -1010,6 +1044,26 @@
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                  (0x3053c)
 #ifndef GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
 #define GENERIC_AND_FUSE_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H                                   (0x53c)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_L                            (0x30540)
+#ifndef GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_L
+#define GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_L                                             (0x540)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_H                            (0x30544)
+#ifndef GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_H
+#define GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_BASE_ADDR_H                                             (0x544)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_SIZE                                   (0x30548)
+#ifndef GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_SIZE
+#define GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_SIZE                                                    (0x548)
+#define GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_SIZE_SIZE_LOW                                           (0)
+#define GENERIC_AND_FUSE_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK                                          (0xffff)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL                                      (0x3054c)
+#ifndef GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL
+#define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL                                                       (0x54c)
+#define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_LOW                                  (0)
+#define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK                                 (0x1)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0                                    (0x305a0)
 #ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0

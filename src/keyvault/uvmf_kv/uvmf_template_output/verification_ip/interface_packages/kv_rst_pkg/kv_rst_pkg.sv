@@ -74,6 +74,14 @@ package kv_rst_pkg;
 
    `include "src/kv_rst_responder_sequence.svh"
    `include "src/kv_rst2reg_adapter.svh"
+
+   `include "src/kv_rst_agent.svh"
+
+   // pragma uvmf custom package_item_additional begin
+   // UVMF_CHANGE_ME : When adding new interface sequences to the src directory
+   //    be sure to add the sequence file here so that it will be
+   //    compiled as part of the interface package.  Be sure to place
+   //    the new sequence after any base sequences of the new sequence.
    `include "src/kv_rst_poweron_sequence.svh"
    `include "src/kv_rst_warm_rst_sequence.svh"
    `include "src/kv_rst_cold_rst_sequence.svh"
@@ -83,14 +91,6 @@ package kv_rst_pkg;
    `include "src/kv_rst_debug_off_sequence.svh"
    `include "src/kv_rst_scan_on_sequence.svh"
    `include "src/kv_rst_scan_off_sequence.svh"
-
-   `include "src/kv_rst_agent.svh"
-
-   // pragma uvmf custom package_item_additional begin
-   // UVMF_CHANGE_ME : When adding new interface sequences to the src directory
-   //    be sure to add the sequence file here so that it will be
-   //    compiled as part of the interface package.  Be sure to place
-   //    the new sequence after any base sequences of the new sequence.
    // pragma uvmf custom package_item_additional end
 
 endpackage

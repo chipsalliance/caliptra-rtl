@@ -45,14 +45,16 @@ package kv_parameters_pkg;
   parameter string kv_mlkem_write_agent_BFM  = "kv_mlkem_write_agent_BFM"; /* [3] */
   parameter string kv_ecc_write_agent_BFM  = "kv_ecc_write_agent_BFM"; /* [4] */
   parameter string kv_doe_write_agent_BFM  = "kv_doe_write_agent_BFM"; /* [5] */
-  parameter string kv_hmac_key_read_agent_BFM  = "kv_hmac_key_read_agent_BFM"; /* [6] */
-  parameter string kv_hmac_block_read_agent_BFM  = "kv_hmac_block_read_agent_BFM"; /* [7] */
-  parameter string kv_mldsa_key_read_agent_BFM  = "kv_mldsa_key_read_agent_BFM"; /* [8] */
-  parameter string kv_ecc_privkey_read_agent_BFM  = "kv_ecc_privkey_read_agent_BFM"; /* [9] */
-  parameter string kv_ecc_seed_read_agent_BFM  = "kv_ecc_seed_read_agent_BFM"; /* [10] */
-  parameter string kv_aes_key_read_agent_BFM  = "kv_aes_key_read_agent_BFM"; /* [11] */
-  parameter string kv_mlkem_seed_read_agent_BFM  = "kv_mlkem_seed_read_agent_BFM"; /* [12] */
-  parameter string kv_mlkem_msg_read_agent_BFM  = "kv_mlkem_msg_read_agent_BFM"; /* [13] */
+  parameter string kv_aes_write_agent_BFM  = "kv_aes_write_agent_BFM"; /* [6] */
+  parameter string kv_hmac_key_read_agent_BFM  = "kv_hmac_key_read_agent_BFM"; /* [7] */
+  parameter string kv_hmac_block_read_agent_BFM  = "kv_hmac_block_read_agent_BFM"; /* [8] */
+  parameter string kv_mldsa_key_read_agent_BFM  = "kv_mldsa_key_read_agent_BFM"; /* [9] */
+  parameter string kv_ecc_privkey_read_agent_BFM  = "kv_ecc_privkey_read_agent_BFM"; /* [10] */
+  parameter string kv_ecc_seed_read_agent_BFM  = "kv_ecc_seed_read_agent_BFM"; /* [11] */
+  parameter string kv_aes_key_read_agent_BFM  = "kv_aes_key_read_agent_BFM"; /* [12] */
+  parameter string kv_mlkem_seed_read_agent_BFM  = "kv_mlkem_seed_read_agent_BFM"; /* [13] */
+  parameter string kv_mlkem_msg_read_agent_BFM  = "kv_mlkem_msg_read_agent_BFM"; /* [14] */
+  parameter string kv_dma_read_agent_BFM  = "kv_dma_read_agent_BFM"; /* [15] */
 
   // pragma uvmf custom package_item_additional begin
   // pragma uvmf custom package_item_additional end

@@ -50,6 +50,7 @@
 `define SHA256_PATH         `CPTRA_TOP_PATH.sha256.sha256_inst
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
+`define AXI_DMA_CTRL_PATH   `SOC_IFC_TOP_PATH.i_axi_dma.i_axi_dma_ctrl
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define ABR_RAMS_PATH       `SERVICES_PATH.abr_mem_top_inst
 `define ABR_TOP_PATH        `CPTRA_TOP_PATH.abr_inst
@@ -70,6 +71,7 @@
 module caliptra_top_sva
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
+  import axi_dma_reg_pkg::*;
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -144,6 +146,26 @@ module caliptra_top_sva
                                             ~`DOE_PATH.rst_b |-> $past(`DOE_PATH.lock_fe_flow) == `DOE_PATH.lock_fe_flow
                                           )
                             else $display("SVA ERROR: lock_fe_flow toggled after warm reset");
+
+  DOE_lock_hek_set:        assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            disable iff (~`SVA_RST)
+                                            $rose(`DOE_PATH.flow_done) && $past(doe_cmd_reg_t'(`DOE_PATH.doe_cmd_reg.cmd) == DOE_HEK) |=> `DOE_PATH.lock_hek_flow
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow was not set after HEK flow");
+
+  DOE_lock_hek_cold_reset:   assert property (
+                                            @(posedge `SVA_CLK)
+                                            ~`DOE_PATH.hard_rst_b |-> (`DOE_PATH.lock_hek_flow == 0)
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow was not reset to expected value on hard reset");
+
+  DOE_lock_hek_warm_reset:   assert property (
+                                            @(posedge `SVA_CLK)
+                                            disable iff (~`DOE_PATH.rst_b && ~`DOE_PATH.hard_rst_b)
+                                            ~`DOE_PATH.rst_b |-> $past(`DOE_PATH.lock_hek_flow) == `DOE_PATH.lock_hek_flow
+                                          )
+                            else $display("SVA ERROR: lock_hek_flow toggled after warm reset");
 
   //Corner case: when clear_obf_secrets and reset events happen in the same cycle, reset deassertion will cause SVA to start checking
   //But if clear_obf_secrets was already 1 (not a pulse), it expects to see status valid in the next clk, but in design, it takes an extra
@@ -255,6 +277,65 @@ module caliptra_top_sva
     end
   endgenerate
 
+
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+
+  // Helper function to check if any key data from KEY_ENTRY[23] exists in DMA FIFO
+  function automatic logic key_data_exists_in_fifo();
+    logic match_found;
+    logic [31:0] key_word;
+    logic [31:0] fifo_entry;
+
+    match_found = 1'b0;
+
+    // Check each of the 16 x 32-bit words in KEY_ENTRY[23]
+    for (int key_word_idx = 0; key_word_idx < 16; key_word_idx++) begin
+      key_word = `KEYVAULT_PATH.kv_reg_hwif_out.KEY_ENTRY[23][key_word_idx];
+
+      // Skip if key word is all zeros (not sensitive data)
+      if (key_word != '0) begin
+        // Search through all 128 FIFO entries
+        for (int fifo_idx = 0; fifo_idx < 128; fifo_idx++) begin
+          fifo_entry = `AXI_DMA_CTRL_PATH.i_fifo.gen_normal_fifo.storage[fifo_idx];
+
+          // Check if this key word matches the FIFO entry
+          if (fifo_entry == key_word) begin
+            $display("[%t] SVA ERROR: AXI DMA KV Assertion: Found key in DMA FIFO: KEY_ENTRY[23][%0d] = %h FIFO entry[%0d] = %h", $time, fifo_idx, fifo_entry, key_word_idx, key_word);
+            match_found = 1'b1;
+            break;
+          end
+        end
+        if (match_found) break;
+      end
+    end
+
+    return match_found;
+  endfunction
+
+    // Main assertion
+  property p_axi_dma_kv_data_isolation;
+    @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+
+    // Trigger condition: DMA FSM transitions to IDLE with KEYVAULT write route
+    ($rose(int'(`AXI_DMA_CTRL_PATH.ctrl_fsm_ps) == int'(axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_IDLE)) &&
+     (int'(`AXI_DMA_CTRL_PATH.wr_route) == int'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)))
+
+    |->
+
+    // Check condition: No key data should exist in DMA FIFO
+    (!key_data_exists_in_fifo());
+
+  endproperty
+
+  // Assertion instantiation
+  assert_axi_dma_kv_data_isolation: assert property (p_axi_dma_kv_data_isolation)
+    else begin
+      $display("SVA ERROR: AXI DMA Key Vault Data Isolation Violation: KEY_ENTRY[23] data detected in DMA FIFO after KEYVAULT operation completion");
+    end
+
+`endif 
+
+
   `ifndef VERILATOR
   generate
     begin: SHA256_WNTZ_data_check
@@ -292,6 +373,20 @@ module caliptra_top_sva
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
+
+    end
+    end
+  endgenerate
+  generate
+    begin: HEK_data_check
+    for(genvar dword = 0; dword < kv_defines_pkg::OCP_LOCK_HEK_NUM_DWORDS; dword++) begin
+
+      DOE_HEK_data_check:  assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
+                                          )
+                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
 
     end
     end

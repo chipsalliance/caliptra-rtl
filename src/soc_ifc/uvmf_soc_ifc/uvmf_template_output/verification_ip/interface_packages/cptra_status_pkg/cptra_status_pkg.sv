@@ -52,6 +52,7 @@ package cptra_status_pkg;
    `include "uvm_macros.svh"
 
    // pragma uvmf custom package_imports_additional begin 
+   import kv_defines_pkg::*;
    // pragma uvmf custom package_imports_additional end
    `include "src/cptra_status_macros.svh"
 

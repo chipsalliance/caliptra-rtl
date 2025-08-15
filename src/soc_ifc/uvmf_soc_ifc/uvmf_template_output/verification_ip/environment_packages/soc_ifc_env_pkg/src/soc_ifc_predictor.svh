@@ -248,6 +248,8 @@ class soc_ifc_predictor #(
       bit [63:0] external_staging_area_base_addr;
       bit [63:0] otp_fc_base_addr;
       bit [63:0] uds_seed_base_addr;
+      bit [63:0] key_release_base_addr;
+      bit [15:0] key_release_key_size;
       bit [31:0] prod_debug_unlock_auth_pk_hash_reg_bank_offset;
       bit [31:0] num_of_prod_debug_unlock_auth_pk_hashes;
       bit [31:0] caliptra_dma_axi_user;
@@ -319,6 +321,7 @@ class soc_ifc_predictor #(
   extern function bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0] get_expected_obf_key_reg();
   extern function bit [`CLP_OBF_FE_DWORDS-1:0]  [31:0] get_expected_obf_field_entropy();
   extern function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] get_expected_obf_uds_seed();
+  extern function bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] get_expected_obf_hek_seed();
   extern function void populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
   extern function void populate_expected_cptra_status_txn(ref cptra_sb_ap_output_transaction_t txn);
   extern function void populate_expected_ss_mode_status_txn(ref ss_mode_sb_ap_output_transaction_t txn);
@@ -816,6 +819,8 @@ class soc_ifc_predictor #(
         this.strap_ss_val.external_staging_area_base_addr                = (t.strap_ss_external_staging_area_base_addr               );
         this.strap_ss_val.otp_fc_base_addr                               = (t.strap_ss_otp_fc_base_addr                              );
         this.strap_ss_val.uds_seed_base_addr                             = (t.strap_ss_uds_seed_base_addr                            );
+        this.strap_ss_val.key_release_base_addr                          = (t.strap_ss_key_release_base_addr                         );
+        this.strap_ss_val.key_release_key_size                           = (t.strap_ss_key_release_key_size                          );
         this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset = (t.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset);
         this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes        = (t.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       );
         this.strap_ss_val.caliptra_dma_axi_user                          = (t.strap_ss_caliptra_dma_axi_user                         );
@@ -1670,6 +1675,13 @@ class soc_ifc_predictor #(
                         send_cptra_sts_txn       = 1'b1;
                     end
                 end
+                // Sized per OCP_LOCK_HEK_NUM_DWORDS
+                ["fuse_hek_seed[0]" :"fuse_hek_seed[7]" ]: begin
+                    if (fuse_update_enabled) begin
+                        `uvm_error("PRED_AHB", {"Unexpected write to ", axs_reg.get_name(), " should not occur when fuse_update_enabled == 1!"})
+                        send_cptra_sts_txn       = 1'b1;
+                    end
+                end
                 ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
                 ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
                 "fuse_ecc_revocation",
@@ -1705,6 +1717,9 @@ class soc_ifc_predictor #(
                 "SS_OTP_FC_BASE_ADDR_H",
                 "SS_UDS_SEED_BASE_ADDR_L",
                 "SS_UDS_SEED_BASE_ADDR_H",
+                "SS_KEY_RELEASE_BASE_ADDR_L",
+                "SS_KEY_RELEASE_BASE_ADDR_H",
+                "SS_KEY_RELEASE_SIZE",
                 "SS_CALIPTRA_DMA_AXI_USER",
                 "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
                 "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
@@ -2845,6 +2860,13 @@ class soc_ifc_predictor #(
                     send_cptra_sts_txn       = 1'b1;
                 end
             end
+            // Sized per OCP_LOCK_HEK_NUM_DWORDS
+            ["fuse_hek_seed[0]" :"fuse_hek_seed[7]" ]: begin
+                if (fuse_update_enabled                                                   && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
+                    send_cptra_sts_txn       = 1'b1;
+                end
+            end
             ["fuse_vendor_pk_hash[0]" :"fuse_vendor_pk_hash[9]"],
             ["fuse_vendor_pk_hash[10]":"fuse_vendor_pk_hash[11]"],
             "fuse_ecc_revocation",
@@ -2880,6 +2902,9 @@ class soc_ifc_predictor #(
             "SS_OTP_FC_BASE_ADDR_H",
             "SS_UDS_SEED_BASE_ADDR_L",
             "SS_UDS_SEED_BASE_ADDR_H",
+            "SS_KEY_RELEASE_BASE_ADDR_L",
+            "SS_KEY_RELEASE_BASE_ADDR_H",
+            "SS_KEY_RELEASE_SIZE",
             "SS_CALIPTRA_DMA_AXI_USER",
             "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
             "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
@@ -4389,6 +4414,9 @@ function void soc_ifc_predictor::predict_strap_values();
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H.predict                            (this.strap_ss_val.otp_fc_base_addr[63:32]                       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L.predict                          (this.strap_ss_val.uds_seed_base_addr[31:00]                     );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H.predict                          (this.strap_ss_val.uds_seed_base_addr[63:32]                     );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_L.predict                       (this.strap_ss_val.key_release_base_addr[31:00]                  );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_H.predict                       (this.strap_ss_val.key_release_base_addr[63:32]                  );
+        p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_SIZE.predict                              (this.strap_ss_val.key_release_key_size                          );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.predict(this.strap_ss_val.prod_debug_unlock_auth_pk_hash_reg_bank_offset);
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.predict       (this.strap_ss_val.num_of_prod_debug_unlock_auth_pk_hashes       );
         p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.predict                         (this.strap_ss_val.caliptra_dma_axi_user                         );
@@ -4409,6 +4437,9 @@ function void soc_ifc_predictor::predict_strap_values();
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_OTP_FC_BASE_ADDR_H                            .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_L                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H                          .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_UDS_SEED_BASE_ADDR_H                          .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_L                       .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_L                       .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_H                       .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_BASE_ADDR_H                       .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
+        `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_SIZE                              .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_KEY_RELEASE_SIZE                              .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET.get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES       .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES       .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
         `uvm_info("PRED_STRAPS", $sformatf("Reg %s updated with strap value: 0x%x", p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER                         .get_name(), p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER                         .get_mirrored_value()), UVM_LOW/*UVM_FULL*/)
@@ -4446,6 +4477,15 @@ function bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_ob
     return uds;
 endfunction
 
+function bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] soc_ifc_predictor::get_expected_obf_hek_seed();
+    byte ii;
+    bit [OCP_LOCK_HEK_NUM_DWORDS-1:0] [31:0] hek;
+    for (ii=0; ii < OCP_LOCK_HEK_NUM_DWORDS; ii++) begin
+        hek[ii] = p_soc_ifc_rm.soc_ifc_reg_rm.fuse_hek_seed[ii].get_mirrored_value();
+    end
+    return hek;
+endfunction
+
 function void soc_ifc_predictor::populate_expected_soc_ifc_status_txn(ref soc_ifc_sb_ap_output_transaction_t txn);
     txn.ready_for_fuses                    = p_soc_ifc_rm.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.ready_for_fuses.get_mirrored_value();
     txn.ready_for_mb_processing            = this.ready_for_mb_processing;
@@ -4471,6 +4511,7 @@ function void soc_ifc_predictor::populate_expected_cptra_status_txn(ref cptra_sb
     txn.cptra_obf_key_reg          = this.get_expected_obf_key_reg();
     txn.obf_field_entropy          = this.get_expected_obf_field_entropy();
     txn.obf_uds_seed               = this.get_expected_obf_uds_seed();
+    txn.obf_hek_seed               = this.get_expected_obf_hek_seed();
     txn.nmi_vector                 = this.nmi_vector;
     txn.nmi_intr_pending           = this.nmi_intr_pending;
     txn.iccm_locked                = this.iccm_locked;

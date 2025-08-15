@@ -26,11 +26,23 @@ package doe_defines_pkg;
   localparam DOE_CORE_NAME        = 64'h20202020_73206165; // "doe "
   localparam DOE_CORE_VERSION     = 64'h00000000_3630302e; // "0.60"
 
-typedef enum logic [1:0] {
-    DOE_NOP    = 2'b00,
-    DOE_UDS    = 2'b01,
-    DOE_FE     = 2'b10,
-    DOE_CLEAR  = 2'b11
+typedef enum logic [3:0] {
+    DOE_NOP     = 4'b0000,
+    DOE_UDS     = 4'b0001,
+    DOE_FE      = 4'b0010,
+    DOE_CLEAR   = 4'b0011,
+    DOE_HEK     = 4'b0100,
+    DOE_INV0    = 4'b0101, // INVALID
+    DOE_INV1    = 4'b0110, // INVALID
+    DOE_INV2    = 4'b0111, // INVALID
+    DOE_RSVD0   = 4'b1000, // RESERVED
+    DOE_INV3    = 4'b1001, // INVALID
+    DOE_INV4    = 4'b1010, // INVALID
+    DOE_INV5    = 4'b1011, // INVALID
+    DOE_RSVD1   = 4'b1100, // RESERVED
+    DOE_INV6    = 4'b1101, // INVALID
+    DOE_INV7    = 4'b1110, // INVALID
+    DOE_INV8    = 4'b1111  // INVALID
 } doe_cmd_e;
 
 typedef struct packed {

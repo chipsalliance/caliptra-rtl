@@ -640,7 +640,8 @@
     input bit [1-1:0] Fuse_Granularity,
     input bit [2-1:0] RSVD_en,
     input bit [1-1:0] LMS_acc_en,
-    input bit [1-1:0] SUBSYSTEM_MODE_en
+    input bit [1-1:0] SUBSYSTEM_MODE_en,
+    input bit [1-1:0] OCP_LOCK_MODE_en
     );
         option.per_instance = 1;
         iTRNG_en_cp : coverpoint iTRNG_en;
@@ -648,6 +649,7 @@
         RSVD_en_cp : coverpoint RSVD_en;
         LMS_acc_en_cp : coverpoint LMS_acc_en;
         SUBSYSTEM_MODE_en_cp : coverpoint SUBSYSTEM_MODE_en;
+        OCP_LOCK_MODE_en_cp : coverpoint OCP_LOCK_MODE_en;
 
     endgroup
 
@@ -1391,6 +1393,26 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__FUSE_HEK_SEED COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__fuse_hek_seed_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__fuse_hek_seed_fld_cg with function sample(
+    input bit [32-1:0] seed
+    );
+        option.per_instance = 1;
+        seed_cp : coverpoint seed;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__SS_CALIPTRA_BASE_ADDR_L COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
@@ -1711,6 +1733,85 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__SS_KEY_RELEASE_BASE_ADDR_L COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L_fld_cg with function sample(
+    input bit [32-1:0] addr_l
+    );
+        option.per_instance = 1;
+        addr_l_cp : coverpoint addr_l;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_KEY_RELEASE_BASE_ADDR_H COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H_fld_cg with function sample(
+    input bit [32-1:0] addr_h
+    );
+        option.per_instance = 1;
+        addr_h_cp : coverpoint addr_h;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_KEY_RELEASE_SIZE COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_SIZE_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_KEY_RELEASE_SIZE_fld_cg with function sample(
+    input bit [16-1:0] size
+    );
+        option.per_instance = 1;
+        size_cp : coverpoint size;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_OCP_LOCK_CTRL COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_OCP_LOCK_CTRL_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_OCP_LOCK_CTRL_fld_cg with function sample(
+    input bit [1-1:0] LOCK_IN_PROGRESS
+    );
+        option.per_instance = 1;
+        LOCK_IN_PROGRESS_cp : coverpoint LOCK_IN_PROGRESS;
+
+    endgroup
 
     /*----------------------- SOC_IFC_REG__SS_STRAP_GENERIC COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__SS_STRAP_GENERIC_bit_cg with function sample(input bit reg_bit);

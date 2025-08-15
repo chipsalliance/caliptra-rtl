@@ -1,9 +1,11 @@
 uvmf:
   benches:
     kv:
+
       active_passive:
       - bfm_name: kv_rst_agent
         value: ACTIVE
+      ########## WRITE Agents ##########
       - bfm_name: kv_hmac_write_agent
         value: ACTIVE
       - bfm_name: kv_mlkem_write_agent
@@ -12,6 +14,9 @@ uvmf:
         value: ACTIVE
       - bfm_name: kv_doe_write_agent
         value: ACTIVE
+      - bfm_name: kv_aes_write_agent
+        value: ACTIVE
+      ########## READ Agents ##########
       - bfm_name: kv_hmac_key_read_agent
         value: ACTIVE
       - bfm_name: kv_hmac_block_read_agent
@@ -28,6 +33,8 @@ uvmf:
         value: ACTIVE
       - bfm_name: kv_mlkem_msg_read_agent
         value: ACTIVE
+      - bfm_name: kv_dma_read_agent
+        value: ACTIVE
       active_passive_default: ACTIVE
       clock_half_period: 5ns
       clock_phase_offset: 0ns
@@ -36,7 +43,9 @@ uvmf:
       - name: mvc_pkg
       - name: mgc_ahb_v2_0_pkg
       interface_params: []
+
       reset_assertion_level: 'False'
       reset_duration: 200ns
+
       top_env: kv
-      use_dpi_link: 'False'
+

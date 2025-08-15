@@ -19,7 +19,12 @@ package doe_reg_pkg;
     } doe_reg__DOE_CTRL__CMD__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } doe_reg__DOE_CTRL__CMD_EXT__in_t;
+
+    typedef struct packed{
         doe_reg__DOE_CTRL__CMD__in_t CMD;
+        doe_reg__DOE_CTRL__CMD_EXT__in_t CMD_EXT;
     } doe_reg__DOE_CTRL__in_t;
 
     typedef struct packed{
@@ -45,11 +50,22 @@ package doe_reg_pkg;
     } doe_reg__DOE_STATUS__DEOBF_SECRETS_CLEARED__in_t;
 
     typedef struct packed{
+        logic next;
+    } doe_reg__DOE_STATUS__HEK_FLOW_DONE__in_t;
+
+    typedef struct packed{
+        logic hwclr;
+        logic hwset;
+    } doe_reg__DOE_STATUS__ERROR__in_t;
+
+    typedef struct packed{
         doe_reg__DOE_STATUS__READY__in_t READY;
         doe_reg__DOE_STATUS__VALID__in_t VALID;
         doe_reg__DOE_STATUS__UDS_FLOW_DONE__in_t UDS_FLOW_DONE;
         doe_reg__DOE_STATUS__FE_FLOW_DONE__in_t FE_FLOW_DONE;
         doe_reg__DOE_STATUS__DEOBF_SECRETS_CLEARED__in_t DEOBF_SECRETS_CLEARED;
+        doe_reg__DOE_STATUS__HEK_FLOW_DONE__in_t HEK_FLOW_DONE;
+        doe_reg__DOE_STATUS__ERROR__in_t ERROR;
     } doe_reg__DOE_STATUS__in_t;
 
     typedef struct packed{
@@ -116,8 +132,14 @@ package doe_reg_pkg;
     } doe_reg__DOE_CTRL__DEST__out_t;
 
     typedef struct packed{
+        logic [1:0] value;
+        logic swmod;
+    } doe_reg__DOE_CTRL__CMD_EXT__out_t;
+
+    typedef struct packed{
         doe_reg__DOE_CTRL__CMD__out_t CMD;
         doe_reg__DOE_CTRL__DEST__out_t DEST;
+        doe_reg__DOE_CTRL__CMD_EXT__out_t CMD_EXT;
     } doe_reg__DOE_CTRL__out_t;
 
     typedef struct packed{
@@ -155,6 +177,13 @@ package doe_reg_pkg;
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_FE = 'h2,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_CLEAR_OBF_SECRETS = 'h3
     } doe_reg__DOE_CTRL__CMD__doe_cmd_e_e;
+
+    typedef enum logic [31:0] {
+        doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_STD = 'h0,
+        doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_HEK = 'h1,
+        doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_RSVD0 = 'h2,
+        doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_RSVD1 = 'h3
+    } doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e_e;
 
     localparam DOE_REG_ADDR_WIDTH = 32'd12;
 

@@ -50,13 +50,13 @@ package kv_env_pkg;
   import kv_reg_model_top_pkg::*;
   import qvip_ahb_lite_slave_pkg::*;
   import qvip_ahb_lite_slave_params_pkg::*;
-  import kv_defines_pkg::*;
  
   `uvm_analysis_imp_decl(_kv_rst_agent_ae)
   `uvm_analysis_imp_decl(_kv_hmac_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_mlkem_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_ecc_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_doe_write_agent_ae)
+  `uvm_analysis_imp_decl(_kv_aes_write_agent_ae)
   `uvm_analysis_imp_decl(_kv_hmac_key_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_hmac_block_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_mldsa_key_read_agent_ae)
@@ -65,6 +65,7 @@ package kv_env_pkg;
   `uvm_analysis_imp_decl(_kv_aes_key_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_mlkem_seed_read_agent_ae)
   `uvm_analysis_imp_decl(_kv_mlkem_msg_read_agent_ae)
+  `uvm_analysis_imp_decl(_kv_dma_read_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   // `uvm_analysis_imp_decl(_expected_analysis_export)
   // `uvm_analysis_imp_decl(_actual_analysis_export)
@@ -79,6 +80,9 @@ package kv_env_pkg;
 
   `uvm_analysis_imp_decl(_expected_doe_write_analysis_export)
   `uvm_analysis_imp_decl(_actual_doe_write_analysis_export)
+
+  `uvm_analysis_imp_decl(_expected_aes_write_analysis_export)
+  `uvm_analysis_imp_decl(_actual_aes_write_analysis_export)
 
   `uvm_analysis_imp_decl(_expected_hmac_key_read_analysis_export)
   `uvm_analysis_imp_decl(_actual_hmac_key_read_analysis_export)
@@ -104,10 +108,14 @@ package kv_env_pkg;
   `uvm_analysis_imp_decl(_expected_mlkem_msg_read_analysis_export)
   `uvm_analysis_imp_decl(_actual_mlkem_msg_read_analysis_export)
 
+  `uvm_analysis_imp_decl(_expected_dma_read_analysis_export)
+  `uvm_analysis_imp_decl(_actual_dma_read_analysis_export)
+
   `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
   `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
 
   // pragma uvmf custom package_imports_additional begin
+  import kv_defines_pkg::*;
   // pragma uvmf custom package_imports_additional end
 
   // Parameters defined as HVL parameters
@@ -119,6 +127,12 @@ package kv_env_pkg;
   `include "src/kv_scoreboard.svh"
   `include "src/kv_environment.svh"
   `include "src/kv_env_sequence_base.svh"
+
+  // pragma uvmf custom package_item_additional begin
+  // UVMF_CHANGE_ME : When adding new environment level sequences to the src directory
+  //    be sure to add the sequence file here so that it will be
+  //    compiled as part of the environment package.  Be sure to place
+  //    the new sequence after any base sequence of the new sequence.
   `include "src/kv_ahb_sequence.svh"
   `include "src/kv_wr_rd_sequence.svh"
   `include "src/kv_wr_rd_rst_sequence.svh"
@@ -138,12 +152,6 @@ package kv_env_pkg;
   `include "src/kv_wr_rd_debug_warm_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_cold_rst_sequence.svh"
   `include "src/kv_wr_rd_debug_core_rst_sequence.svh"
-
-  // pragma uvmf custom package_item_additional begin
-  // UVMF_CHANGE_ME : When adding new environment level sequences to the src directory
-  //    be sure to add the sequence file here so that it will be
-  //    compiled as part of the environment package.  Be sure to place
-  //    the new sequence after any base sequence of the new sequence.
   // pragma uvmf custom package_item_additional end
 
 endpackage

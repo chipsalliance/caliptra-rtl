@@ -25,8 +25,10 @@ module doe_fsm
    ,localparam DEST_NUM_DWORDS = (DEST_WIDTH/32)
    ,localparam TOTAL_OBF_FE_BITS = `CLP_OBF_FE_DWORDS * 32
    ,localparam TOTAL_OBF_UDS_BITS = `CLP_OBF_UDS_DWORDS * 32
+   ,localparam TOTAL_OBF_HEK_BITS = OCP_LOCK_HEK_NUM_DWORDS * 32
    ,localparam FE_NUM_BLOCKS   = TOTAL_OBF_FE_BITS/SRC_WIDTH
    ,localparam UDS_NUM_BLOCKS  = TOTAL_OBF_UDS_BITS/SRC_WIDTH
+   ,localparam HEK_NUM_BLOCKS  = TOTAL_OBF_HEK_BITS/SRC_WIDTH
 )
 (
     input logic clk,
@@ -36,9 +38,11 @@ module doe_fsm
     //Obfuscated UDS and FE
     input logic [FE_NUM_BLOCKS-1:0][SRC_WIDTH-1:0] obf_field_entropy,
     input logic [UDS_NUM_BLOCKS-1:0][SRC_WIDTH-1:0] obf_uds_seed,
+    input logic [HEK_NUM_BLOCKS-1:0][SRC_WIDTH-1:0] obf_hek_seed,
 
     //client control register
     input doe_cmd_reg_t doe_cmd_reg,
+    input logic         ocp_lock_en,
 
     //interface with kv
     output kv_write_t kv_write,
@@ -55,14 +59,20 @@ module doe_fsm
     input logic [DEST_NUM_DWORDS-1:0][31:0] dest_data,
 
     output logic flow_done,
+    output logic flow_error,
     output logic flow_in_progress,
     output logic lock_uds_flow,
     output logic lock_fe_flow,
+    output logic lock_hek_flow,
     input  logic zeroize
 );
+
+`define CLP_MAX_OF(a,b) ((a > b) ? a : b)
+
 localparam UDS_BLOCK_OFFSET_W = $clog2(UDS_NUM_BLOCKS);
 localparam FE_BLOCK_OFFSET_W = $clog2(FE_NUM_BLOCKS);
-localparam BLOCK_OFFSET_W = (FE_BLOCK_OFFSET_W > UDS_BLOCK_OFFSET_W) ? FE_BLOCK_OFFSET_W : UDS_BLOCK_OFFSET_W;
+localparam HEK_BLOCK_OFFSET_W = $clog2(HEK_NUM_BLOCKS);
+localparam BLOCK_OFFSET_W = `CLP_MAX_OF(HEK_BLOCK_OFFSET_W, `CLP_MAX_OF(FE_BLOCK_OFFSET_W, UDS_BLOCK_OFFSET_W));
 localparam DEST_WR_OFFSET_W = $clog2(512/32);
 
 //declare fsm state variables
@@ -76,7 +86,12 @@ typedef enum logic [2:0] {
     DOE_DONE    = 3'b101
 } kv_doe_fsm_state_e;
 
-logic running_uds, running_fe;
+logic running_uds, running_fe, running_hek;
+
+//access filtering rule metrics
+//NOTE: must be stabilized 1 clock cycle prior to dest_data_avail
+kv_write_filter_metrics_t kv_write_metrics;
+logic                     kv_write_allow;
 
 logic [KV_ENTRY_ADDR_W-1:0] dest_addr, dest_addr_nxt;
 logic dest_addr_en;
@@ -108,23 +123,26 @@ always_ff @(posedge clk or negedge rst_b) begin
     else if (zeroize) begin
         zeroize_reg <= 1;
     end
-    else if (running_uds || running_fe) begin
+    else if (running_uds || running_fe || running_hek) begin
         zeroize_reg <= 0;
     end
 end
 
 always_comb running_uds = (doe_cmd_reg.cmd == DOE_UDS);
-always_comb running_fe = (doe_cmd_reg.cmd == DOE_FE);
+always_comb running_fe  = (doe_cmd_reg.cmd == DOE_FE );
+always_comb running_hek = (doe_cmd_reg.cmd == DOE_HEK);
 always_comb block_done = running_uds ? (block_offset == (UDS_NUM_BLOCKS-1)) :
-                                       (block_offset == (FE_NUM_BLOCKS-1)) ;
+                         running_hek ? (block_offset == (HEK_NUM_BLOCKS-1)) :
+                                       (block_offset == (FE_NUM_BLOCKS -1)) ;
 
-always_comb flow_in_progress = running_uds | running_fe;
+always_comb flow_in_progress = running_uds | running_fe | running_hek;
 always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM_DWORDS-1));
 
 //assign arc equations
 //move to init state when command is set and that command isn't locked
 always_comb arc_DOE_IDLE_DOE_INIT = (running_uds & ~lock_uds_flow) |
-                                    (running_fe & ~lock_fe_flow);
+                                    (running_fe  & ~lock_fe_flow ) |
+                                    (running_hek & ~lock_hek_flow);
 //wait to write when init is done and we have data to write
 always_comb arc_DOE_WAIT_DOE_WRITE = init_done & dest_data_avail;
 //wait to block when init is done and no data
@@ -146,12 +164,13 @@ always_comb begin : kv_doe_fsm
     dest_write_offset_en ='0;
     dest_write_offset_nxt = dest_write_offset;
     flow_done = '0;
+    flow_error = '0;
 
     unique case (kv_doe_fsm_ps)
         DOE_IDLE: begin
             if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
             //assert flow done if a locked flow is attempted
-            flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow);
+            flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow) | (running_hek & lock_hek_flow);
         end
         DOE_INIT: begin
             kv_doe_fsm_ns = DOE_WAIT;
@@ -170,10 +189,11 @@ always_comb begin : kv_doe_fsm
             else if (arc_DOE_WAIT_DOE_BLOCK) kv_doe_fsm_ns = DOE_BLOCK;
         end
         DOE_WRITE: begin
-            dest_write_en = '1;
+            dest_write_en = kv_write_allow; // If rule-check fails, no data is written to KV and FSM hangs in this state
             //increment dest offset each clock, clear when done
-            dest_write_offset_en = '1;
+            dest_write_offset_en = kv_write_allow;
             dest_write_offset_nxt = dest_write_offset + 'd1;
+            flow_error = !kv_write_allow;
 
             //go back to idle if dest done, and done with blocks
             if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
@@ -205,25 +225,55 @@ always_comb begin : kv_doe_fsm
             dest_write_offset_en ='0;
             dest_write_offset_nxt = dest_write_offset;
             flow_done = '0;
+            flow_error = '0;
         end
     endcase
 end
 
 //latch the dest addr when starting, and when we roll over dest offset
 always_comb dest_addr_en = ((kv_doe_fsm_ps == DOE_IDLE) & arc_DOE_IDLE_DOE_INIT);
-always_comb dest_addr_nxt = doe_cmd_reg.dest_sel;
+always_comb dest_addr_nxt = doe_cmd_reg.dest_sel; //running_hek ? OCP_LOCK_HEK_SEED_KV_SLOT : doe_cmd_reg.dest_sel; // TODO necessary to tie HEK dest?
+
+// check KV filtering rules
+// Use the strap ocp_lock_en instead of the register ocp_lock_in_progress because DOE
+// is a ROM flow and occurs prior to setting the register
+always_comb begin
+    `ifdef CALIPTRA_MODE_SUBSYSTEM
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_en;
+    `else
+    kv_write_metrics.ocp_lock_in_progress = 1'b0;
+    `endif
+    kv_write_metrics.kv_data0_present     = 1'b0;
+    kv_write_metrics.kv_data0_entry       = '0;
+    kv_write_metrics.kv_data1_present     = 1'b0;
+    kv_write_metrics.kv_data1_entry       = '0;
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_DOE);
+    kv_write_metrics.kv_write_entry       = dest_addr;
+    kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
+end
+
+// Output kv_write_allow will stabilize by first entry to DOE_WAIT
+kv_write_rule_check kv_write_rules
+(
+    .clk  (clk  ),
+    .rst_b(rst_b),
+
+    .write_metrics(kv_write_metrics),
+    .write_allow  (kv_write_allow  )
+);
 
 //drive outputs to kv
 always_comb kv_write.write_en = dest_write_en;
 always_comb kv_write.write_offset = dest_write_offset;
-always_comb kv_write.write_dest_valid = 'd3; //FIXME tie off dest valid, or let FW program? 
+always_comb kv_write.write_dest_valid = running_hek ? OCP_LOCK_HEK_SEED_DEST_VALID : 'd3; //FIXME tie off dest valid, or let FW program? 
 always_comb kv_write.write_entry = dest_addr;
 //swizzle big endian result to little endian storage
 always_comb kv_write.write_data = dest_write_en ? dest_data[(DEST_NUM_DWORDS-1) - dest_write_offset[DEST_OFFSET_W-1:0]] : '0;
 
-//pick uds or fe based on command
+//pick among uds, fe, hek based on command
 always_comb src_write_data = running_uds ? obf_uds_seed[block_offset[UDS_BLOCK_OFFSET_W-1:0]] : 
-                             running_fe  ? obf_field_entropy[block_offset[FE_BLOCK_OFFSET_W-1:0]] : '0;
+                             running_fe  ? obf_field_entropy[block_offset[FE_BLOCK_OFFSET_W-1:0]] : 
+                             running_hek ? obf_hek_seed[block_offset[HEK_BLOCK_OFFSET_W-1:0]] : '0;
 
 //state flops
 always_ff @(posedge clk or negedge rst_b) begin
@@ -247,15 +297,17 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
-//sticky flops for locking UDS/FE flow after execution
+//sticky flops for locking UDS/FE/HEK flow after execution
 always_ff @(posedge clk or negedge hard_rst_b) begin
     if (~hard_rst_b) begin
         lock_uds_flow <= '0;
         lock_fe_flow <= '0;
+        lock_hek_flow <= '0;
     end
     else begin
         lock_uds_flow <= running_uds & flow_done ? '1 : lock_uds_flow;
         lock_fe_flow <= running_fe & flow_done ? '1 : lock_fe_flow;
+        lock_hek_flow <= running_hek & flow_done ? '1 : lock_hek_flow;
     end
 end
 
