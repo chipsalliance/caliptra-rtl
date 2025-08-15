@@ -12,6 +12,19 @@ targets:
       - $COMPILE_ROOT/rtl/aes_pkg.sv
       - $COMPILE_ROOT/rtl/aes_sbox_canright_pkg.sv
 ---
+provides: [aes_coverage]
+schema_version: 2.4.0
+requires:
+  - libs
+  - aes_pkg
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/aes_cov_if.sv
+      - $COMPILE_ROOT/coverage/aes_cov_bind.sv
+---
 provides: [aes]
 schema_version: 2.4.0
 requires:

@@ -150,6 +150,7 @@ requires:
   - keyvault_cov
   - abr_coverage
   - axi_dma_coverage
+  - aes_coverage
 targets:
   dpi_compile:
     directories:
