@@ -48,10 +48,15 @@ interface axi_dma_top_cov_if
     localparam DMA_IDLE         = 2'h0;
     localparam DMA_WAIT_DATA    = 2'h1;
     localparam DMA_DONE         = 2'h2;
+    localparam DMA_ERROR = 2'h3;
+
+    localparam AES_ERROR = 4'h8;
+    
+    localparam FIFO_BC = 512;
 
     logic w_valid;
-    logic ctrl_fsm_ps;
-    logic ctrl_fsm_ns;
+    logic [1:0] ctrl_fsm_ps;
+    logic [1:0] ctrl_fsm_ns;
     logic ahb_rd;
     logic mb_dv;
     logic mb_wr;
@@ -68,6 +73,51 @@ interface axi_dma_top_cov_if
     logic [11:0] bytes_remaining;
 
     logic        dma_xfer_start_pulse;
+
+    logic [3:0] aes_fsm_ps;
+    logic axi_error;
+    logic mb_lock_error;
+    logic aes_error;
+    logic cmd_parse_error;
+    logic cmd_inv_aes_route_combo;
+    logic cmd_inv_aes_block_size;
+    logic cmd_inv_aes_fixed;
+    logic wr_aes_ceil_req_byte_count;
+
+    logic cmd_inv_rd_route;
+    logic cmd_inv_wr_route;
+    logic cmd_inv_route_combo;
+    logic cmd_inv_src_addr;
+    logic cmd_inv_dst_addr;
+    logic cmd_inv_byte_count;
+    logic cmd_inv_block_size;
+    logic cmd_inv_rd_fixed;
+    logic cmd_inv_wr_fixed;
+    logic cmd_inv_mbox_lock;
+    logic cmd_inv_sha_lock;
+
+    assign cmd_inv_rd_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_rd_route;
+    assign cmd_inv_wr_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_wr_route;
+    assign cmd_inv_route_combo = axi_dma_top.i_axi_dma_ctrl.cmd_inv_route_combo;
+    assign cmd_inv_src_addr = axi_dma_top.i_axi_dma_ctrl.cmd_inv_src_addr;
+    assign cmd_inv_dst_addr = axi_dma_top.i_axi_dma_ctrl.cmd_inv_dst_addr;
+    assign cmd_inv_byte_count = axi_dma_top.i_axi_dma_ctrl.cmd_inv_byte_count;
+    assign cmd_inv_block_size = axi_dma_top.i_axi_dma_ctrl.cmd_inv_block_size;
+    assign cmd_inv_rd_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_rd_fixed;
+    assign cmd_inv_wr_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_wr_fixed;
+    assign cmd_inv_mbox_lock = axi_dma_top.i_axi_dma_ctrl.cmd_inv_mbox_lock;
+    assign cmd_inv_sha_lock = axi_dma_top.i_axi_dma_ctrl.cmd_inv_sha_lock;
+
+    assign aes_fsm_ps = axi_dma_top.i_axi_dma_ctrl.aes_fsm_ps;
+    assign axi_error = axi_dma_top.i_axi_dma_ctrl.axi_error;
+    assign mb_lock_error = axi_dma_top.i_axi_dma_ctrl.mb_lock_error;
+    assign aes_error = axi_dma_top.i_axi_dma_ctrl.aes_error;
+    assign cmd_parse_error = axi_dma_top.i_axi_dma_ctrl.cmd_parse_error;
+    assign cmd_inv_aes_route_combo = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_route_combo;
+    assign cmd_inv_aes_block_size = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_block_size;
+    assign cmd_inv_aes_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_fixed;
+    assign wr_aes_ceil_req_byte_count = axi_dma_top.i_axi_dma_ctrl.wr_aes_ceil_req_byte_count;
+
 
     assign w_valid = axi_dma_top.w_valid;
     assign ctrl_fsm_ps = axi_dma_top.i_axi_dma_ctrl.ctrl_fsm_ps;
@@ -367,6 +417,110 @@ interface axi_dma_top_cov_if
         //ah2axi_ndw_byte_count: coverpoint () {
         //    bins total_byte_count_ahb2axi_match = {1};
         //}
+
+
+        
+        // 1. AES_ERROR and DMA_ERROR concurrent with aes_error only
+        aes_dma_concurrent_error: coverpoint (aes_fsm_ps == AES_ERROR && ctrl_fsm_ps == DMA_ERROR && 
+                                             aes_error && !cmd_parse_error && !axi_error && !mb_lock_error) {
+            bins concurrent_aes_dma_error = {1};
+        }
+
+        // 2a-d. AES mode enabled with specific byte counts
+        aes_mode_byte_count_4: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                          axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'h4) {
+            bins aes_byte_count_4 = {1};
+        }
+
+        aes_mode_byte_count_12: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                           axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'd12) {
+            bins aes_byte_count_12 = {1};
+        }
+
+        aes_mode_byte_count_16: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                           axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value == 32'd16) {
+            bins aes_byte_count_16 = {1};
+        }
+
+        aes_mode_byte_count_gt_fifo: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value && 
+                                                 axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value > FIFO_BC) {
+            bins aes_byte_count_gt_fifo = {1};
+        }
+
+        // 3. AXI error in DMA_WAIT_DATA with AES mode enabled
+        axi_error_dma_wait_aes: coverpoint (ctrl_fsm_ps == DMA_WAIT_DATA && axi_error && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value) {
+            bins axi_error_wait_aes = {1};
+        }
+
+        // 4a. cmd_inv_aes_route_combo with rd_route != AXI_WR (but wr_route == AXI_RD)
+        aes_route_combo_rd_not_axi_wr: coverpoint (cmd_inv_aes_route_combo && 
+                                                   axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) 
+                                                   iff (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route.value == 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)) {
+            bins rd_route_not_axi_wr = {1};
+        }
+
+        // 4b. cmd_inv_aes_route_combo with wr_route != AXI_RD (but rd_route == AXI_WR)
+        aes_route_combo_wr_not_axi_rd: coverpoint (cmd_inv_aes_route_combo && 
+                                                   axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD))
+                                                   iff (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_route.value == 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR)) {
+            bins wr_route_not_axi_rd = {1};
+        }
+
+        // 5a. AES mode with GCM mode set
+        aes_gcm_mode_set: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value) {
+            bins aes_gcm_set = {1};
+        }
+
+        // 5b. AES mode with GCM mode not set
+        aes_gcm_mode_not_set: coverpoint (axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.go.value && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_gcm_mode.value) {
+            bins aes_gcm_not_set = {1};
+        }
+
+        // 6. cmd_inv_aes_block_size exclusive
+        cmd_inv_aes_block_size_only: coverpoint (cmd_inv_aes_block_size && 
+                                                 !cmd_inv_rd_route && !cmd_inv_wr_route && !cmd_inv_route_combo && 
+                                                 !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && 
+                                                 !cmd_inv_block_size && !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && 
+                                                 !cmd_inv_mbox_lock && !cmd_inv_sha_lock && !cmd_inv_aes_route_combo && 
+                                                 !cmd_inv_aes_fixed) {
+            bins aes_block_size_only = {1};
+        }
+
+        // 7. cmd_inv_aes_fixed exclusive
+        cmd_inv_aes_fixed_only: coverpoint (cmd_inv_aes_fixed && 
+                                            !cmd_inv_rd_route && !cmd_inv_wr_route && !cmd_inv_route_combo && 
+                                            !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && 
+                                            !cmd_inv_block_size && !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && 
+                                            !cmd_inv_mbox_lock && !cmd_inv_sha_lock && !cmd_inv_aes_route_combo && 
+                                            !cmd_inv_aes_block_size) {
+            bins aes_fixed_only = {1};
+        }
+
+        // 8. cmd_inv_aes_fixed with rd_fixed and not wr_fixed
+        aes_fixed_rd_only: coverpoint (cmd_inv_aes_fixed && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_fixed.value && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_fixed.value) {
+            bins aes_fixed_rd_not_wr = {1};
+        }
+
+        // 9. cmd_inv_aes_fixed with wr_fixed and not rd_fixed
+        aes_fixed_wr_only: coverpoint (cmd_inv_aes_fixed && !axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.rd_fixed.value && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.wr_fixed.value) {
+            bins aes_fixed_wr_not_rd = {1};
+        }
+
+        // 10. cmd_inv_aes_route_combo exclusive
+        cmd_inv_aes_route_combo_only: coverpoint (cmd_inv_aes_route_combo && 
+                                                  !cmd_inv_rd_route && !cmd_inv_wr_route && !cmd_inv_route_combo && 
+                                                  !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && 
+                                                  !cmd_inv_block_size && !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && 
+                                                  !cmd_inv_mbox_lock && !cmd_inv_sha_lock && !cmd_inv_aes_block_size && 
+                                                  !cmd_inv_aes_fixed) {
+            bins aes_route_combo_only = {1};
+        }
+
+        // 11. wr_aes_ceil_req_byte_count in DMA_WAIT_DATA with AES mode
+        wr_aes_ceil_req_dma_wait: coverpoint (wr_aes_ceil_req_byte_count && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && 
+                                              ctrl_fsm_ps == DMA_WAIT_DATA) {
+            bins wr_aes_ceil_dma_wait = {1};
+        }
     endgroup
     
 
