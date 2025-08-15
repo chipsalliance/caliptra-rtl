@@ -77,13 +77,12 @@ void main(void) {
                                                                         AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_FULL_EN_MASK));
 
 
-    // FIXME if (xorshift32() % 2) {
-    // FIXME     VPRINTF(LOW, "Writing OCP lock control register\n");
-    // FIXME     lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
-    // FIXME } else {
-    // FIXME     VPRINTF(LOW, "Skipping OCP lock control register write\n");
-    // FIXME }
-    lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
+    if (xorshift32() % 2) {
+        VPRINTF(LOW, "Writing OCP lock control register\n");
+        lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
+    } else {
+        VPRINTF(LOW, "Skipping OCP lock control register write\n");
+    }
     
     uint32_t lock_status = lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL);
     uint32_t lock_in_progress = (lock_status & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) != 0;
@@ -104,6 +103,7 @@ void main(void) {
         if (aes_key.kv_intf == TRUE) {
             aes_key.kv_id = xorshift32() % 24;
         }
+
 
         if(aes_key.kv_id == 23 && lock_in_progress && aes_key.kv_intf == TRUE) {
             aes_key.kv_expect_err = TRUE;
@@ -130,7 +130,7 @@ void main(void) {
 
 
 
-        VPRINTF(LOW, "KV ID: %d, KV Intf: %d\n", aes_key.kv_id, aes_key.kv_intf);
+        VPRINTF(LOW, "KV ID: %d, KV Intf: %d, KV Expect Err: %d\n", aes_key.kv_id, aes_key.kv_intf, aes_key.kv_expect_err);
         VPRINTF(LOW, "KV_O ID: %d, KV_O Intf: %d, Expect_O Err: %d\n", aes_key_o.kv_id, aes_key_o.kv_intf, aes_key_o.kv_expect_err);
         VPRINTF(LOW, "AES MODE: %s AES ENCRYPT: %d\n", 
                 (rand_aes_mode == AES_ECB) ? "AES_ECB" :
