@@ -11,6 +11,14 @@ targets:
       - $COMPILE_ROOT/rtl/aes_reg_pkg.sv
       - $COMPILE_ROOT/rtl/aes_pkg.sv
       - $COMPILE_ROOT/rtl/aes_sbox_canright_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/aes_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_sbox_canright_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
 ---
 provides: [aes_coverage]
 schema_version: 2.4.0
@@ -70,7 +78,6 @@ targets:
       - $COMPILE_ROOT/rtl/aes_reg_status.sv
       - $COMPILE_ROOT/rtl/aes_reg_top.sv
       - $COMPILE_ROOT/rtl/aes.sv
-      - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
       - $COMPILE_ROOT/rtl/aes_clp_reg.sv
       - $COMPILE_ROOT/rtl/aes_clp_wrapper.sv
     tops: [aes_cipher_core]
