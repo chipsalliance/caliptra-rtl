@@ -57,13 +57,13 @@ import kv_defines_pkg::*;
             read_allow <= 1'b0;
             read_en_o  <= 1'b0;
         end
-        else if (read_en_i) begin
-            read_allow <= ~|rule_fail;
-            read_en_o  <= 1'b1;
-        end
         else if (read_done) begin
             read_allow <= 1'b0;
             read_en_o  <= 1'b0;
+        end
+        else if (read_en_i) begin
+            read_allow <= ~|rule_fail;
+            read_en_o  <= 1'b1;
         end
         else begin
             read_allow <= read_allow;
