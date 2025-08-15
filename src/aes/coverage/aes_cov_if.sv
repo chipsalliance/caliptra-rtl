@@ -100,7 +100,12 @@ interface aes_cov_if
       
         // OCP LOCK
         ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
-        key_release_key_size_cp: coverpoint key_release_key_size;
+        key_release_key_size_cp: coverpoint key_release_key_size {
+            bins zero = {0};
+            bins lt_64bytes = {[1:63]};
+            bins eq_64bytes = {64};
+            bins gt_64bytes = {[65:65535]};
+        }
 
         // status signals
         input_ready_o_cp: coverpoint input_ready_o;
@@ -117,10 +122,17 @@ interface aes_cov_if
         dma_req_rdata_cp: coverpoint dma_req_rdata;
       
         // kv interface
-        kv_read_cp: coverpoint kv_read;
-        kv_rd_resp_cp: coverpoint kv_rd_resp;
-        kv_write_cp: coverpoint kv_write;
-        kv_wr_resp_cp: coverpoint kv_wr_resp;
+        kv_read_read_entry_cp:   coverpoint kv_read.read_entry;
+        kv_read_read_offset_cp:  coverpoint kv_read.read_offset;
+        kv_rd_resp_error_cp:     coverpoint kv_rd_resp.error;
+        kv_rd_resp_last_cp:      coverpoint kv_rd_resp.last;
+        kv_rd_resp_read_data_cp: coverpoint kv_rd_resp.read_data;
+        kv_write_write_en_cp:         coverpoint kv_write.write_en;
+        kv_write_write_entry_cp:      coverpoint kv_write.write_entry;
+        kv_write_write_offset_cp:     coverpoint kv_write.write_offset;
+        kv_write_write_data_cp:       coverpoint kv_write.write_data;
+        kv_write_write_dest_valid_cp: coverpoint kv_write.write_dest_valid;
+        kv_wr_resp_error_cp:          coverpoint kv_wr_resp.error;
 
         busy_o_cp: coverpoint busy_o;
 
