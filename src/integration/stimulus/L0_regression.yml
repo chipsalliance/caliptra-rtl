@@ -28,6 +28,7 @@ contents:
         - ../test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
+        - ../test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml
@@ -62,7 +63,7 @@ contents:
         - ../test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
         - ../test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
         - ../test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
-        - ../test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml        
+        - ../test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow.yml
         - ../test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
