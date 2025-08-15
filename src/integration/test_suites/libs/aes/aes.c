@@ -311,7 +311,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                 }
               }
             }
-        } else if(i == 0) {
+        } else if(i == 0 && aes_input.key.kv_intf) {
           VPRINTF(LOW, "WAITING FOR KV READ TO FINISH\n");
           kv_poll_valid(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
           if(aes_input.key.kv_expect_err == TRUE) {
