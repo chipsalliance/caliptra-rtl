@@ -75,6 +75,7 @@ COMP_LIB_NAMES := aes \
 		  datavault \
 		  sha256 \
 		  sha512 \
+		  sha3 \
 		  soc_ifc \
 		  caliptra_rtl_lib \
 		  clk_gate \
