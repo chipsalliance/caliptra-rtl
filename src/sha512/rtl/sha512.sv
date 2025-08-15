@@ -331,26 +331,26 @@ module sha512
   end
 
     // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb SHA512_VAULT_RD_CTRL.read_en.swwe         = !kv_read_data_present && kv_key_ready;
-    always_comb SHA512_VAULT_RD_CTRL.read_entry.swwe      = !kv_read_data_present && kv_key_ready;
-    always_comb SHA512_VAULT_RD_CTRL.pcr_hash_extend.swwe = !kv_read_data_present && kv_key_ready;
-    always_comb SHA512_VAULT_RD_CTRL.rsvd.swwe            = !kv_read_data_present && kv_key_ready;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_en.swwe         = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_entry.swwe      = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.pcr_hash_extend.swwe = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.rsvd.swwe            = !kv_read_data_present && ready_reg && !gen_hash_ip;
 
     // KV write control must be written before SHA core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    always_comb SHA512_KV_WR_CTRL.write_en.swwe              = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.write_entry.swwe           = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.hmac_block_dest_valid.swwe = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && !gen_hash_ip;
-    always_comb SHA512_KV_WR_CTRL.rsvd.swwe                  = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_en.swwe              = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_entry.swwe           = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_block_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.rsvd.swwe                  = ready_reg && !gen_hash_ip;
 
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
   `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_read_ctrl_reg, SHA512_VAULT_RD_CTRL)

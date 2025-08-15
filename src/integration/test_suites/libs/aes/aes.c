@@ -80,7 +80,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   aes_wait_idle();
 
   //Load key from keyvault if expected
-  if (aes_input.key.kv_intf){
+  if (aes_input.key.kv_intf && !aes_input.key.kv_reuse_key) {
       // Wait for KV read logic to be idle
       while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
 
@@ -311,9 +311,21 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                 }
               }
             }
+        } else if(i == 0) {
+          VPRINTF(LOW, "WAITING FOR KV READ TO FINISH\n");
+          kv_poll_valid(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+          if(aes_input.key.kv_expect_err == TRUE) {
+              VPRINTF(LOW, "EXPECTING KV RD ERR\n");
+              kv_expect_error_check(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+              break; // If we expect an error, we break out of the loop
+          }
+          else {
+              VPRINTF(LOW, "EXPECTING NO KV RD ERR\n");
+              kv_error_check(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+          }
         }
       }
-      if (aes_input.key_o.kv_intf ) {
+      if (aes_input.key_o.kv_intf && aes_input.key.kv_expect_err == FALSE) {
         VPRINTF(LOW, "WAITING FOR KV WRITE TO FINISH\n");
         kv_poll_valid(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
         VPRINTF(LOW, "CHECKING FOR KV WRITE ERR\n");
@@ -332,7 +344,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   // Wait for IDLE
   aes_wait_idle();
 
-  if (mode == AES_GCM) {
+  if (mode == AES_GCM && aes_input.key.kv_expect_err == FALSE) {
     // If GCM set CTRL_GCM to GCM_TAG
     lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_TAG << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
                                                 (16 << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
@@ -391,10 +403,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
 }
 
-
-void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt) {
+void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt, aes_mode_e mode) {
     //CASE1
-    VPRINTF(LOW, "Loading KV via AES ECB\n");
+    VPRINTF(LOW, "Loading KV via AES\n");
 
     // Check that override_text_length is not larger than 512 bits (16 dwords)
     if (override_text_length > 16) {
@@ -402,11 +413,32 @@ void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }   
-    const char ciphertext_str[]  = "0aa9a935b694b29dd3d3e251084e7c4d393eebd18438b8d2dd609513eb21b039e27a20ca93a08897c4de30ce248867eac0e67fc54595a2559df10d8fb49fd7e1";
     const char plaintext_str[]   = "062c4cc774e213be68663bc0e933787ee2caae3afa443ee67defaa89121ca261736e6ebbb8609d3568e6b723c9bc330f0ca00eca39659172b473b9362dd33ca5";
+    const char iv_str[] = "123dead523095826abcde2957083415b"; // 16 bytes IV for AES
+    const char iv_ctr_str[] = "123dead523095826"; // 8 bytes IV for AES CTR
+    uint32_t iv[4];
+    uint32_t iv_length;
+
+    const char key_str[] = "bc623095823dafe190998314fedbac4258395063234564532123adfcefda2344";
+    uint32_t key[8];
+    uint32_t key_size;
+    
+    const char tag_str[] = "7F436394E9262FFE53C8DC33030522B3";
+    uint32_t tag[4]; 
+    uint32_t tag_length;
+
+
+    
+    
+    
+    const char ciphertext_str_GCM[]  = "77F2817A9E4651522555332B89FCC5990ED754FD2BF347F76FD4E1B852CDAC3036BEC16BF9347BD2681F02093A31B8A683C64C93A6FF43D57DC59C8AAB635BAC";
+    const char ciphertext_str_ECB[]  = "F0A5EB3C5D1F0622D3E12CB76E4BD9B4DD345BA3535C16A9EB0D31CB2F6D8DBEDC28CA9211563C2939B439828A8B2C5B2E88253DC71DC13ED228F29DA5D55A7A";
+    const char ciphertext_str_CBC[]  = "CAA1E424C31DD25C0AAC3AA86CEBC5F342D7C377A68A47AFED077E39C635622D29286EA8B9EE60EEF3FA212F0247C89038E08EF952AAC58D223C65C2BCC61169";
+    const char ciphertext_str_CFB[]  = "2386ABD46D5C7342D4AABF1A6F0B04B8A5A1E4C271F70EE176B1CDF82AD55F561890CC737704612D3449A179BDD416BEB4B61AA72BE973603767AC66F1E035E8";
+    const char ciphertext_str_OFB[]  = "23A42C6343E01582637C05325EB01C1848C7091F8BEC3C8AADEA25CEF2C4EBB30DEA0FD3A6610D8823F3BA8E77F0198B3F84A622D2385036D37DA0D36A1BAF6C";
+    const char ciphertext_str_CTR[]  = "E1C460F06FA47A18EA69CDC3E022B5BC8A3BFAB67870189C8E173B0CE6FB904E7E3676972BFF3787F4A3A6E1C22B6C4E186B3AF907CD140A8504FDE7C5153ADA";
 
     aes_op_e op = AES_DEC;
-    aes_mode_e mode = AES_ECB;
     aes_key_len_e key_len = AES_256;
     aes_flow_t aes_input;
 
@@ -419,8 +451,40 @@ void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t
         op = AES_ENC;
     }   
 
-    hex_to_uint32_array(ciphertext_str, ciphertext, &ciphertext_length);
+    if (mode == AES_CTR) {
+        hex_to_uint32_array(iv_ctr_str, iv, &iv_length);
+    } else if (mode != AES_ECB) {
+        hex_to_uint32_array(iv_str, iv, &iv_length);
+    }
+
     hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
+
+    if(mode == AES_GCM) {
+        hex_to_uint32_array(ciphertext_str_GCM, ciphertext, &ciphertext_length);
+        hex_to_uint32_array(tag_str, tag, &tag_length);
+    } else if (mode == AES_ECB) {
+        hex_to_uint32_array(ciphertext_str_ECB, ciphertext, &ciphertext_length);
+    } else if (mode == AES_CBC) {
+        hex_to_uint32_array(ciphertext_str_CBC, ciphertext, &ciphertext_length);
+    } else if (mode == AES_CFB) {
+        hex_to_uint32_array(ciphertext_str_CFB, ciphertext, &ciphertext_length);
+    } else if (mode == AES_OFB) {
+        hex_to_uint32_array(ciphertext_str_OFB, ciphertext, &ciphertext_length);
+    } else if (mode == AES_CTR) {
+        hex_to_uint32_array(ciphertext_str_CTR, ciphertext, &ciphertext_length);
+    }
+
+
+
+    hex_to_uint32_array(key_str, key, &key_size);
+    key_len = key_size == 32 ? AES_256 :
+              key_size == 16 ? AES_128 : AES_192;  
+
+    for (int i = 0; i < 8; i++) {
+        aes_key.key_share0[i] = key[i];
+        aes_key.key_share1[i] = 0x00000000;
+    }
+
 
     if(override_text_length > 0) {
         plaintext_length = override_text_length;
@@ -428,20 +492,30 @@ void populate_kv_slot_aes_ecb(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t
     }   
     VPRINTF(LOW, "Populate KV with key length: %d\n", ciphertext_length);
        
-    for (int i = 0; i < plaintext_length; i++) {
-        expected_key[i] = plaintext[i];
-    }   
+    if (encrypt) {
+      for (int i = 0; i < ciphertext_length; i++) {
+          expected_key[i] = ciphertext[i];
+      }
+    } else {
+      for (int i = 0; i < plaintext_length; i++) {
+          expected_key[i] = plaintext[i];
+      }   
+    }
+
        
+    aes_input.tag = tag;
     aes_input.key = aes_key;
-    aes_input.iv = 0;
+    aes_input.iv = iv;
     aes_input.aad = 0;
     aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
     aes_input.key_o = aes_key_o;
 
+
     //Run ENC
     aes_flow(op, mode, key_len, aes_input);
 
 }
+
 

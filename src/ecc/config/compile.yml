@@ -48,6 +48,7 @@ requires:
   - ecc_top
   - keyvault
   - caliptra_top_defines
+  - caliptra_top_reg_defines
   - ecc_coverage
 targets:
   tb:

@@ -49,7 +49,8 @@ enum tb_fifo_mode {
     RAND_DELAY_TOGGLE   = 0x8f, // Toggle random delays on the axi_sub. Applies to both.
     ZERO_KV16_KEY  = 0xc8,  // Sets KV 16 and 23 to a zero key.
     SMALL_KV23_KEY  = 0xc9,  // Sets KV 16 and 23 to a zero key.
-    LARGE_KV23_KEY  = 0xca  // Sets KV 16 and 23 to a zero key.
+    LARGE_KV23_KEY  = 0xca,  // Sets KV 16 and 23 to a zero key.
+    KV16_KEY  = 0xcc         // Sets KV 16 to a known AES key
 };
 
 
@@ -160,16 +161,14 @@ void main(void) {
             //Key from KV
             aes_key.kv_intf = TRUE;
             aes_key.kv_id = 16;
-            for (int i = 0; i < 8; i++) {
-                aes_key.key_share0[i] = 0x0;
-                aes_key.key_share1[i] = 0x00000000;
-            } 
+            aes_key.kv_reuse_key = FALSE;
+            aes_key.kv_expect_err = FALSE;
             
             // Preload KV16 with a zero key
-            SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+            SEND_STDOUT_CTRL(KV16_KEY);
 
             // Loading the KV23 slot with a key from AES
-            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+            populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, 0, AES_ECB);
 
             // We should only be sending data to SRAM up to the size of kv_key_size
             // Meaning the other SRAM locations should be zeroed out
@@ -191,12 +190,64 @@ void main(void) {
                     fail = 1;
                 }
             }
+    if (fail) {
+        VPRINTF(FATAL, "smoke_test_dma_aes_kv failed!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+            ///////////////////////////////////
+            // TEST 2: TEST AES KV 23 to DMA REUSE KV16
+            ///////////////////////////////////
+
+            // FIXME VPRINTF(LOW, "START TEST 2: TEST AES KV 23 to DMA REUSE KV16\n");
+            // FIXME // Key to KV
+            // FIXME aes_key_o.kv_intf = TRUE;
+            // FIXME aes_key_o.kv_expect_err = FALSE;
+            // FIXME aes_key_o.kv_id = 23; //KV slot 23
+            // FIXME aes_key_o.dest_valid = (dest_valid_t){0}; // Clear all destinations
+            // FIXME aes_key_o.dest_valid.dma_data = 1; // Only allow DMA access
+
+            // FIXME //Key from KV
+            // FIXME aes_key.kv_id = 16;
+            // FIXME aes_key.kv_reuse_key = TRUE;
+            // FIXME aes_key.kv_expect_err = FALSE;
+            // FIXME aes_key.kv_intf = TRUE;
+
+            // FIXME VPRINTF(LOW, "KV INTR: 0x%x\n", aes_key.kv_intf);
+        
+            // FIXME 
+            // FIXME // Preload KV16 with zero to prove we are reusing the key alread in AES
+            // FIXME SEND_STDOUT_CTRL(ZERO_KV16_KEY);
+
+            // FIXME // Loading the KV23 slot with a key from AES
+            // FIXME populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, 0, AES_ECB);
+
+            // FIXME // We should only be sending data to SRAM up to the size of kv_key_size
+            // FIXME // Meaning the other SRAM locations should be zeroed out
+            // FIXME for(int i = kv_key_size >> 2; i < 16; i++) {
+            // FIXME     kv_expected_key[i] = 0x0; // Zero out the rest of the key
+            // FIXME }
+
+            // FIXME // Transfering KV to SRAM
+            // FIXME soc_ifc_axi_dma_send_kv_to_axi(kv_key_dest, kv_key_size);
+
+            // FIXME // Checking data was sent to SRAM correctly
+            // FIXME soc_ifc_axi_dma_read_ahb_payload(kv_key_dest, 0, kv_actual_key, kv_key_size, 0);
+
+
+            // FIXME VPRINTF(LOW, "TEST 2: Checking if key stores in AXI SRAM matches expected\n");
+            // FIXME for(int i = 0; i < 16; i++) {
+            // FIXME     if(kv_expected_key[i] != kv_actual_key[i]) {
+            // FIXME         VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+            // FIXME         fail = 1;
+            // FIXME     }
+            // FIXME }
 
             ///////////////////////////////////
-            // TEST 2: ERR DMA NO ACCESS KV23
+            // TEST 3: ERR DMA NO ACCESS KV23
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 2: ERR TEST DMA NO ACCESS KV23\n");
+            VPRINTF(LOW, "START TEST 3: ERR TEST DMA NO ACCESS KV23\n");
             
             // Clearing KV23 so we can load a new key into it. 
             lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
@@ -215,13 +266,10 @@ void main(void) {
             //Key from KV
             aes_key.kv_intf = TRUE;
             aes_key.kv_id = 16;
-            for (int i = 0; i < 8; i++) {
-                aes_key.key_share0[i] = 0x0;
-                aes_key.key_share1[i] = 0x00000000;
-            } 
+            aes_key.kv_reuse_key = FALSE;
 
             // Loading the KV23 slot with a key from AES
-            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+            populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, 0, AES_ECB);
 
             // Since no access for KV23 was granted we should get a DMA ERROR
             soc_ifc_axi_dma_send_kv_to_axi_error(kv_key_dest, kv_key_size);
@@ -232,7 +280,7 @@ void main(void) {
             // No data should have been sent to the SRAM so expected should be 0.
             memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-            VPRINTF(LOW, "TEST 2: Checking if key stores in AXI SRAM matches expected\n");
+            VPRINTF(LOW, "TEST 3: Checking if key stores in AXI SRAM matches expected\n");
             for(int i = 0; i < 16; i++) {
                 if(kv_expected_key[i] != kv_actual_key[i]) {
                     VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
@@ -242,11 +290,11 @@ void main(void) {
 
 
             ///////////////////////////////////
-            // TEST 3: ERR KV SLOT KEY SMALLER THAN KEY_RELEASE_SIZE STRAP
+            // TEST 4: ERR KV SLOT KEY SMALLER THAN KEY_RELEASE_SIZE STRAP
             ///////////////////////////////////
             if(kv_key_size > 0x4) {
                 // Test when key in KV slot is smaller than the key_release_size
-                VPRINTF(LOW, "START TEST 3: SMALL KV23\n");
+                VPRINTF(LOW, "START TEST 4: SMALL KV23\n");
 
                 lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
             
@@ -262,7 +310,7 @@ void main(void) {
 
                 memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-                VPRINTF(LOW, " TEST 3: Checking if key stores in AXI SRAM matches expected\n");
+                VPRINTF(LOW, " TEST 4: Checking if key stores in AXI SRAM matches expected\n");
                 for(int i = 0; i < 16; i++) {
                     if(kv_expected_key[i] != kv_actual_key[i]) {
                         VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
@@ -270,13 +318,16 @@ void main(void) {
                     }
                 }
             }
+            else {
+                VPRINTF(LOW, "SKIP TEST 4: SMALL KV23\n");
+            }
 
             ///////////////////////////////////
-            // TEST 4: ERR KV SLOT KEY LARGER THAN KEY_RELEASE_SIZE STRAP
+            // TEST 5: ERR KV SLOT KEY LARGER THAN KEY_RELEASE_SIZE STRAP
             ///////////////////////////////////
             if(kv_key_size <= 0x3C) {
                 // Test when key in KV slot is larger than the key_release_size
-                VPRINTF(LOW, "START TEST 4: LARGE KV23\n");
+                VPRINTF(LOW, "START TEST 5: LARGE KV23\n");
 
                 lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
             
@@ -292,7 +343,7 @@ void main(void) {
 
                 memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-                VPRINTF(LOW, " TEST 4: Checking if key stores in AXI SRAM matches expected\n");
+                VPRINTF(LOW, " TEST 5: Checking if key stores in AXI SRAM matches expected\n");
                 for(int i = 0; i < 16; i++) {
                     if(kv_expected_key[i] != kv_actual_key[i]) {
                         VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
@@ -300,11 +351,14 @@ void main(void) {
                     }
                 }
             }
+            else {
+                VPRINTF(LOW, "SKIP TEST 5: LARGE KV23\n");
+            }
             
             /////////////////////////////////////
-            //// TEST 5: ERR ROUTE KV16 to FW with a DECRYPT OPERATION         
+            //// TEST 6: ERR ROUTE KV16 to FW with a DECRYPT OPERATION         
             /////////////////////////////////////
-            VPRINTF(LOW, "START TEST 5: ROUTE KV16 to FW - ERR\n");
+            VPRINTF(LOW, "START TEST 6: ROUTE KV16 to FW - ERR\n");
 
             for(int i = 0; i < 23; i++){
                 kv_set_clear(i);
@@ -317,22 +371,19 @@ void main(void) {
             //Key from KV
             aes_key.kv_intf = TRUE;
             aes_key.kv_id = 16;
-            for (int i = 0; i < 8; i++) {
-                aes_key.key_share0[i] = 0x0;
-                aes_key.key_share1[i] = 0x00000000;
-            } 
+            aes_key.kv_reuse_key = FALSE;
             
             // Preload KV16 with a zero key
             SEND_STDOUT_CTRL(ZERO_KV16_KEY);
 
             // Loading the KV23 slot with a key from AES
-            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
+            populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, 0, AES_ECB);
             
             ///////////////////////////////////
-            // TEST 6: BASIC TEST AES KV 23 to DMA
+            // TEST 7: ERR ROUTE KV16 to KV != KV23
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 6: ERR ROUTE KV16 to KV != KV23\n");
+            VPRINTF(LOW, "START TEST 7: ERR ROUTE KV16 to KV != KV23\n");
             
             // Clearing SRAM where we expect the key to be written
             soc_ifc_axi_dma_send_ahb_payload(kv_key_dest, 0, send_payload, kv_key_size, 0);
@@ -347,18 +398,13 @@ void main(void) {
             //Key from KV
             aes_key.kv_intf = TRUE;
             aes_key.kv_id = 16;
-            for (int i = 0; i < 8; i++) {
-                aes_key.key_share0[i] = 0x0;
-                aes_key.key_share1[i] = 0x00000000;
-            } 
+            aes_key.kv_reuse_key = FALSE;
             
             // Preload KV16 with a zero key
             SEND_STDOUT_CTRL(ZERO_KV16_KEY);
 
             // Loading the KV slot with a key from AES
-            populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, 0);
-
-
+            populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, 0, AES_ECB);
 
         }
         else {

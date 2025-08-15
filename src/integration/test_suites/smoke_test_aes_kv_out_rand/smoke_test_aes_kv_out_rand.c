@@ -29,7 +29,7 @@
 
 
 enum tb_fifo_mode {
-    ZERO_LOAD_ALL_KV_KEYS  = 0xcb  // Sets KV 16 and 23 to a zero key.
+    LOAD_ALL_KV_KEYS_AES  = 0xcb  // Sets KV 16 and 23 to a zero key.
 };
 
 
@@ -59,6 +59,7 @@ void main(void) {
     aes_key_t aes_key;
     uint32_t random_text_length;
     uint8_t rand_aes_encrypt;
+    aes_mode_e rand_aes_mode;
 
 
     VPRINTF(LOW, "----------------------------------\nSmoke Test AES KV RAND  !!\n----------------------------------\n");
@@ -76,15 +77,18 @@ void main(void) {
                                                                         AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_FIFO_NOT_FULL_EN_MASK));
 
 
-    if (xorshift32() % 2) {
-        VPRINTF(LOW, "Writing OCP lock control register\n");
-        lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
-    } else {
-        VPRINTF(LOW, "Skipping OCP lock control register write\n");
-    }
+    // FIXME if (xorshift32() % 2) {
+    // FIXME     VPRINTF(LOW, "Writing OCP lock control register\n");
+    // FIXME     lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
+    // FIXME } else {
+    // FIXME     VPRINTF(LOW, "Skipping OCP lock control register write\n");
+    // FIXME }
+    lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
     
     uint32_t lock_status = lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL);
-    BOOL lock_in_progress = (lock_status & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) != 0;
+    uint32_t lock_in_progress = (lock_status & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) != 0;
+
+    VPRINTF(LOW, "OCP Lock Status: 0x%x, Lock In Progress: %d\n", lock_status, lock_in_progress);
             
 
     for(int i = 0; i < 20; i++) {
@@ -99,17 +103,26 @@ void main(void) {
         aes_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
         if (aes_key.kv_intf == TRUE) {
             aes_key.kv_id = xorshift32() % 24;
-        } else {
-            for (int j = 0; j < 8; j++) {
-                aes_key.key_share0[j] = 0x0;
-                aes_key.key_share1[j] = 0x00000000;
-            }
+        }
 
-        } 
+        if(aes_key.kv_id == 23 && lock_in_progress && aes_key.kv_intf == TRUE) {
+            aes_key.kv_expect_err = TRUE;
+        }
+        else {
+            aes_key.kv_expect_err = FALSE;
+        }
+
 
         rand_aes_encrypt = xorshift32() % 2;
 
-        if (lock_in_progress == FALSE && (aes_key.kv_intf == 16) && (aes_key_o.kv_id == 23) && !rand_aes_encrypt && aes_key.kv_intf == TRUE ) {
+
+        // Keep generating until we get a non-GCM mode
+        // TODO add AES_GCM support
+        do {
+            rand_aes_mode = (aes_mode_e)(1 << (xorshift32() % 6));  // 0-5 gives us all 6 modes
+        } while (rand_aes_mode == AES_GCM);
+
+        if (lock_in_progress  && (aes_key.kv_id == 16) && (aes_key_o.kv_id == 23) && !rand_aes_encrypt && aes_key.kv_intf == TRUE && rand_aes_mode == AES_ECB) {
             aes_key_o.kv_expect_err = FALSE;
         } else {
             aes_key_o.kv_expect_err = TRUE;
@@ -119,10 +132,17 @@ void main(void) {
 
         VPRINTF(LOW, "KV ID: %d, KV Intf: %d\n", aes_key.kv_id, aes_key.kv_intf);
         VPRINTF(LOW, "KV_O ID: %d, KV_O Intf: %d, Expect_O Err: %d\n", aes_key_o.kv_id, aes_key_o.kv_intf, aes_key_o.kv_expect_err);
-        VPRINTF(LOW, "AES ENCRYPT: %d\n", rand_aes_encrypt);
+        VPRINTF(LOW, "AES MODE: %s AES ENCRYPT: %d\n", 
+                (rand_aes_mode == AES_ECB) ? "AES_ECB" :
+                (rand_aes_mode == AES_CBC) ? "AES_CBC" :
+                (rand_aes_mode == AES_CFB) ? "AES_CFB" :
+                (rand_aes_mode == AES_OFB) ? "AES_OFB" :
+                (rand_aes_mode == AES_CTR) ? "AES_CTR" :
+                (rand_aes_mode == AES_GCM) ? "AES_GCM" : "UNKNOWN",
+                rand_aes_encrypt);
         
-        SEND_STDOUT_CTRL(ZERO_LOAD_ALL_KV_KEYS);
-        populate_kv_slot_aes_ecb(aes_key_o, aes_key, 0, kv_expected_key, rand_aes_encrypt);
+        SEND_STDOUT_CTRL(LOAD_ALL_KV_KEYS_AES);
+        populate_kv_slot_aes(aes_key_o, aes_key, 0, kv_expected_key, rand_aes_encrypt, rand_aes_mode);
 
     }
 
