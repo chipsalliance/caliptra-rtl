@@ -144,6 +144,7 @@ module caliptra_top_tb_services
    //=========================================================================-
     logic                       mailbox_write;
     wire [31:0]                 WriteData;
+    logic [31:0]                prev_mailbox_data;
     logic                       mailbox_data_val;
     int                         commit_count;
 
@@ -2000,6 +2001,15 @@ endgenerate //IV_NO
         end
     `endif
 
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            prev_mailbox_data <= 'hA; // Initialize with newline character so timestamp is printed to console for the first line
+        end
+        else if(mailbox_data_val & mailbox_write) begin
+            prev_mailbox_data <= WriteData;
+        end
+    end
+
     initial cycleCnt = 0;
     initial cycleCntKillReq = 0;
     always @(negedge clk) begin
@@ -2014,6 +2024,10 @@ endgenerate //IV_NO
         end
         // console Monitor
         if( mailbox_data_val & mailbox_write) begin
+            if (prev_mailbox_data[7:0] inside {8'h0A,8'h0D}) begin
+                $fwrite(fd,"%0t - ", $time);
+                if (!UVM_TB) $write("%0t - ", $time);
+            end
             $fwrite(fd,"%c", WriteData[7:0]);
             // Prints get lost in sim.log amidst a flurry of UVM_INFO
             // messages....  best to just omit and send to console.log
