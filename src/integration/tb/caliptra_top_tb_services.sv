@@ -176,6 +176,7 @@ module caliptra_top_tb_services
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
     logic                       inject_mlkem_kv;
+    logic                       inject_aes_seed;
     logic                       inject_kv16_zero_key;
     logic                       inject_kv23_small_rand_key;
     logic                       inject_kv23_rand_length_key;
@@ -804,11 +805,12 @@ module caliptra_top_tb_services
                         end
                     end
                     else if((WriteData[7:0] == 8'h9f) && mailbox_write) begin
+                        inject_aes_seed <= 1'b1;
                         if ((WriteData[12:8] == slot_id)) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0010_0000;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'hAAAA_5555;
                         end
@@ -821,6 +823,7 @@ module caliptra_top_tb_services
                         inject_random_data <= '0;
                         inject_hmac_block <= '0;
                         inject_mlkem_kv <= 1'b0;
+                        inject_aes_seed <= '0;
                         inject_kv16_zero_key <= '0;
                         inject_kv23_small_rand_key <= '0;
                         inject_kv23_rand_length_key <= '0;
