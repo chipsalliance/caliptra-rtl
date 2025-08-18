@@ -315,7 +315,7 @@ module caliptra_top
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
-    logic aes_busy_filtered;
+    logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
 
     typedef enum logic [1:0] {
@@ -324,6 +324,7 @@ module caliptra_top
         DONE
     } crypto_state_t;
     crypto_state_t aes_state, aes_next_state;
+    crypto_state_t ecc_state, ecc_next_state;
 
     always_ff @(posedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b)
@@ -343,15 +344,33 @@ module caliptra_top
 
     always_comb aes_busy_filtered = (aes_state == DONE) ? aes_busy : 1'b0;
 
-    always_comb crypto_error =  (hmac_busy & ecc_busy)          |
-                                (hmac_busy & abr_busy)          |
-                                (hmac_busy & doe_busy)          |
-                                (hmac_busy & aes_busy_filtered) |
-                                (ecc_busy & doe_busy)           |
-                                (ecc_busy & abr_busy)           |
-                                (ecc_busy & aes_busy_filtered)  |
-                                (abr_busy & doe_busy)           |
-                                (abr_busy & aes_busy_filtered)  |
+    always_ff @(posedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b)
+            ecc_state <= IDLE;
+        else
+            ecc_state <= ecc_next_state;
+    end
+
+    always_comb begin
+        case (ecc_state)
+            IDLE:     ecc_next_state = ecc_state ? INITIAL : IDLE;
+            INITIAL:  ecc_next_state = ecc_state ? INITIAL : DONE;
+            DONE:     ecc_next_state = DONE;
+            default:  ecc_next_state = IDLE;
+        endcase
+    end
+
+    always_comb ecc_busy_filtered = (ecc_state == DONE) ? ecc_busy : 1'b0;
+
+    always_comb crypto_error =  (hmac_busy & ecc_busy_filtered)         |
+                                (hmac_busy & abr_busy)                  |
+                                (hmac_busy & doe_busy)                  |
+                                (hmac_busy & aes_busy_filtered)         |
+                                (ecc_busy_filtered & doe_busy)          |
+                                (ecc_busy_filtered & abr_busy)          |
+                                (ecc_busy_filtered & aes_busy_filtered) |
+                                (abr_busy & doe_busy)                   |
+                                (abr_busy & aes_busy_filtered)          |
                                 (doe_busy & aes_busy_filtered)  ;
             
 
