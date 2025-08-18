@@ -192,7 +192,7 @@ module aes
       // FW must arm the KV write prior to starting AES operation
       else if ((kv_data_counter == 0) && reg2hw_caliptra.data_in[0].qe) begin
           kv_data_intercept       <=  caliptra2aes.kv_en;
-          hw2reg_data_out_mask_en <= ~caliptra2aes.kv_en && ~caliptra2aes.block_reg_output; // This signal winds up being effectively (~kv_data_intercept || caliptra2aes.block_reg_output)
+          hw2reg_data_out_mask_en <= ~caliptra2aes.kv_en && ~caliptra2aes.block_reg_output; // This signal winds up being effectively (~kv_data_intercept && ~caliptra2aes.block_reg_output)
       end
       // TODO support for Manual operation mode with trigger.start.q?
       else if (kv_data_intercept_end) begin
