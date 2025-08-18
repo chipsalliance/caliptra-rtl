@@ -232,6 +232,12 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         // Wait for INPUT_READY
         while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
 
+        if (aes_input.aes_err_inj.sideload_corrupt) {
+          aes_ctrl =  lsu_read_32(CLP_AES_REG_CTRL_SHADOWED);
+          aes_ctrl ^= AES_REG_CTRL_SHADOWED_SIDELOAD_MASK; // Flip the SIDELOAD bit
+        }
+
+
         // Write Input Data Block.
         VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
         for (int j = 0; j < 4; j++) {
@@ -243,6 +249,12 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4]);
           }
         }                      
+        
+        if (aes_input.aes_err_inj.sideload_corrupt) {
+          lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+          lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT")
+        }
 
         if( !aes_input.key_o.kv_intf ) {
             uint8_t ocp_lock_block_output;
@@ -511,6 +523,7 @@ void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t ove
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
     aes_input.key_o = aes_key_o;
+    aes_input.aes_err_inj.sideload_corrupt = TRUE;
 
 
     //Run ENC
