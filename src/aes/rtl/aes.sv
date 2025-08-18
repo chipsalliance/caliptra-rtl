@@ -138,6 +138,8 @@ module aes
 
   aes_hw2reg_t hw2reg_caliptra;
   aes_reg2hw_t reg2hw_caliptra;
+  logic                        aes2caliptra_kv_data_out_valid;
+  logic [CLP_AES_KV_WR_DW-1:0] aes2caliptra_kv_data_out;
   logic kv_data_intercept;
   logic kv_data_intercept_end;
   logic [$clog2(CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE)-1:0] kv_data_counter; // This will peg at the key_size value if decrypted plaintext is larger than CLP_AES_KV_WR_DW
@@ -238,18 +240,19 @@ module aes
   // Signal data is valid for KV write client once full AES operation is done
   always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_valid_reg
       if (!rst_ni) begin
-          aes2caliptra.kv_data_out_valid <= 1'b0;
+          aes2caliptra_kv_data_out_valid <= 1'b0;
       end
       else if (caliptra2aes.clear_secrets || reg2hw_caliptra.trigger.data_out_clear.q) begin
-          aes2caliptra.kv_data_out_valid <= 1'b0;
+          aes2caliptra_kv_data_out_valid <= 1'b0;
       end
       else if (kv_data_intercept_end) begin
-          aes2caliptra.kv_data_out_valid <= 1'b1;
+          aes2caliptra_kv_data_out_valid <= 1'b1;
       end
       else if (caliptra2aes.kv_write_done) begin
-          aes2caliptra.kv_data_out_valid <= 1'b0;
+          aes2caliptra_kv_data_out_valid <= 1'b0;
       end
   end
+  assign aes2caliptra.kv_data_out_valid = aes2caliptra_kv_data_out_valid;
   assign aes2caliptra.kv_key_in_use = hw2reg.ctrl_shadowed.sideload.d;
   // TODO: Qualify this with anything?
   //       Probably not needed. Timing of the kv write request is tightly controlled, and that's the only
@@ -262,23 +265,24 @@ module aes
       for (kv_ii=0; kv_ii < CLP_AES_KV_WR_DW/CLP_AES_KV_CHUNK_SIZE; kv_ii++) begin
           always_ff @(posedge clk_i or negedge rst_ni) begin: aes2caliptra_kv_data_reg
               if (!rst_ni) begin
-                  aes2caliptra.kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra_kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
               else if ((caliptra2aes.clear_secrets) || reg2hw_caliptra.trigger.data_out_clear.q) begin
-                  aes2caliptra.kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra_kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
               else if (incr_kv_data_counter && (kv_data_counter == kv_ii)) begin
-                  aes2caliptra.kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[3].d,
+                  aes2caliptra_kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= {hw2reg_caliptra.data_out[3].d,
                                                                                                      hw2reg_caliptra.data_out[2].d,
                                                                                                      hw2reg_caliptra.data_out[1].d,
                                                                                                      hw2reg_caliptra.data_out[0].d};
               end
               else if (caliptra2aes.kv_write_done) begin
-                  aes2caliptra.kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
+                  aes2caliptra_kv_data_out[(kv_ii)*CLP_AES_KV_CHUNK_SIZE+:CLP_AES_KV_CHUNK_SIZE] <= CLP_AES_KV_CHUNK_SIZE'(0);
               end
           end
       end
   endgenerate
+  assign aes2caliptra.kv_data_out = aes2caliptra_kv_data_out;
 
   ///////////////////
   // EDN Interface //
